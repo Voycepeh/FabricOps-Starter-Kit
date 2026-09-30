@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{#
+  Material for MkDocs 9.6.x ships main.html as an extension of base.html.
+  Override only the content block and call super() so the theme's default
+  partials/content.html rendering, navigation, search, tabs, and mobile layout
+  remain owned by Material.
+#}
+{% block content %}
+  {% if page and page.file and page.content %}
+    {% include "partials/breadcrumbs.html" %}
+  {% endif %}
+  {{ super() }}
+{% endblock %}

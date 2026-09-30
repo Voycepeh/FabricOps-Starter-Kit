@@ -1,0 +1,153 @@
+site_name: FabricOps Starter Kit
+repo_url: https://github.com/Voycepeh/FabricOps-Starter-Kit
+site_url: https://voycepeh.github.io/FabricOps-Starter-Kit/
+
+theme:
+  name: material
+  custom_dir: overrides
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tooltips
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+
+nav:
+  - Home: index.md
+  - How FabricOps Works: how-fabricops-works.md
+  - Featured Solutions:
+      - AI-assisted Data Contract Authoring: solutions/ai-assisted-data-contract-authoring.md
+      - Generate Enforceable Data Quality Rules from Business Rules: solutions/business-rules-to-data-quality.md
+      - Plug-and-Play Data Pipelines with Data Contract Enforcement: solutions/plug-and-play-data-pipelines.md
+      - Scan Effective Data Access: solutions/effective-data-access.md
+  - Guided Demo:
+      - Overview: guided-demo.md
+      - "0A - Prepare Fabric Artifacts": guided-demo/00A-prepare-fabric-artifacts.md
+      - "0B - Configure Environment and Load Assets": guided-demo/00B-configure-environment-and-load-assets.md
+      - "0C - Prepare Demo Data with FabricOps I/O": guided-demo/00C-prepare-demo-data-with-fabricops-io.md
+      - "Step 1 - Establish Governance Context": guided-demo/01-establish-governance-context.md
+      - "Step 2 - Build and Run the ETL":
+          - "Full Read Pipeline": guided-demo/02-build-and-run-etl.md
+          - "Incremental Append Pipeline": guided-demo/02B-build-and-run-incremental-append-etl.md
+      - "Step 3 - Author and Freeze Data Contract": guided-demo/03-author-and-freeze-data-contract.md
+      - "Step 4 - Select and Validate Data Contract": guided-demo/04-validate-frozen-data-contract.md
+      - "Step 5 - Activate Data Contract and Promote": guided-demo/05-activate-data-contract-and-promote.md
+      - "Step 6 - Run Pipeline in Production": guided-demo/06-run-production.md
+      - "Step 7 - Consume Production Data": guided-demo/07-consume-production-data.md
+  - Download FabricOps:
+      - Releases (Python package):
+          - Overview: releases/index.md
+          - 0.2.0: releases/0.2.0/index.md
+          - 0.1.0: releases/0.1.0/index.md
+      - Notebook Templates: https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks
+      - Demo Assets: https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData
+  - Reference Documentation:
+      - Glossary: glossary.md
+      - Function Reference: reference/index.md
+      - Data Quality Rules:
+          - Overview: reference/dq-rules/index.md
+          - Completeness: reference/dq-rules/completeness.md
+          - Uniqueness: reference/dq-rules/uniqueness.md
+          - Whitelist & Blacklist (Value Lists): reference/dq-rules/value-set.md
+          - Range: reference/dq-rules/range.md
+          - Pattern: reference/dq-rules/pattern.md
+          - Column Relationship: reference/dq-rules/column-relationship.md
+          - Conditional Completeness: reference/dq-rules/conditional-completeness.md
+          - Conditional Values: reference/dq-rules/conditional-values.md
+          - Custom Expression: reference/dq-rules/custom-expression.md
+      - Metadata Tables:
+          - Overview: reference/metadata.md
+          - Data Steward: reference/metadata/metadata_data_steward.md
+          - Data Agreement: reference/metadata/metadata_data_agreement.md
+          - Source Observation: reference/metadata/metadata_source_observation.md
+          - Data Catalogue: reference/metadata/metadata_data_catalogue.md
+          - Data Profiled: reference/metadata/metadata_data_profiled.md
+          - Data Profiled Frequency: reference/metadata/metadata_data_profiled_frequency.md
+          - Data Lineage: reference/metadata/metadata_data_lineage.md
+          - Enrichment: reference/metadata/metadata_enrichment.md
+          - Guardrail: reference/metadata/metadata_guardrail.md
+          - Guardrail Results: reference/metadata/metadata_guardrail_results.md
+          - Data Contract: reference/metadata/metadata_data_contract.md
+          - Data Access: reference/metadata/metadata_data_access.md      
+  - Maintainer:
+      - Product Definition: maintainer/product-definition.md
+      - Release Guide: maintainer/index.md
+      - Public API & Architecture: maintainer/public-api-architecture.md
+      - Call Flow Dashboard Architecture: function-call-graph.md
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+hooks:
+  - docs/copy_markdown_variants.py
+  - docs/breadcrumbs.py
+  - docs/glossary_tooltips.py
+
+plugins:
+  - search
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
+  - literate-nav
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: false
+            show_signature_annotations: false
+            separate_signature: true
+            members_order: source
+            show_root_heading: false
+            show_root_toc_entry: false
+            show_if_no_docstring: true
+            docstring_style: numpy
+            docstring_section_style: table
+            docstring_options:
+              ignore_init_summary: true
+              merge_init_into_class: true
+              show_docstring_attributes: true
+              show_docstring_description: true
+              show_docstring_examples: true
+              show_docstring_other_parameters: true
+              show_docstring_parameters: true
+              show_docstring_raises: true
+              show_docstring_receives: true
+              show_docstring_returns: true
+              show_docstring_warns: true
+              show_docstring_yields: true
+
+extra_javascript:
+  - https://unpkg.com/mermaid@10/dist/mermaid.min.js
+  - javascripts/mermaid-init.js
+  - javascripts/callable-finder.js
+  - javascripts/table-controls.js
+  - javascripts/engineering-guide-deeplinks.js
+
+extra_css:
+  - stylesheets/breadcrumbs.css
+  - stylesheets/api-chips.css
+  - stylesheets/release-status.css
+  - stylesheets/release-pages.css
+  - stylesheets/layout-wide.css
+  - stylesheets/fabric-theme.css
+  - stylesheets/workflow.css
+  - stylesheets/table-controls.css
+  - stylesheets/image-borders.css

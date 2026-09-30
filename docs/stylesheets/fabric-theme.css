@@ -1,0 +1,586 @@
+:root {
+  --md-primary-fg-color: #0f8f83;
+  --md-primary-fg-color--light: #5ee6c5;
+  --md-primary-fg-color--dark: #075f59;
+
+  --md-accent-fg-color: #47d7ac;
+  --md-accent-fg-color--transparent: rgba(71, 215, 172, 0.14);
+}
+
+/* Clean Fabric-inspired top bar */
+.md-header {
+  background-color: #0f8f83;
+}
+
+/* Slightly deeper navigation tabs */
+.md-tabs {
+  background-color: #08756f;
+}
+
+/* Primary CTA buttons */
+.md-button--primary {
+  background-color: #0f8f83;
+  border-color: #0f8f83;
+  color: #ffffff;
+}
+
+.md-button--primary:hover {
+  background-color: #075f59;
+  border-color: #075f59;
+  color: #ffffff;
+}
+
+/* Secondary buttons */
+.md-button {
+  border-color: #0f8f83;
+  color: #0f8f83;
+}
+
+.md-button:hover {
+  background-color: rgba(71, 215, 172, 0.12);
+  border-color: #47d7ac;
+  color: #075f59;
+}
+
+/* Links */
+.md-typeset a {
+  color: #0f8f83;
+}
+
+.md-typeset a:hover {
+  color: #075f59;
+}
+
+/* Active and hovered navigation links */
+.md-nav__link--active,
+.md-nav__link:focus,
+.md-nav__link:hover {
+  color: #0f8f83;
+}
+
+/* Table headers */
+.md-typeset table:not([class]) th {
+  background-color: rgba(71, 215, 172, 0.12);
+}
+
+/* Admonitions */
+.md-typeset .admonition,
+.md-typeset details {
+  border-color: #47d7ac;
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary {
+  background-color: rgba(71, 215, 172, 0.12);
+}
+
+
+/* Centered CTA block for single-button documentation calls to action. */
+.md-typeset .cta-center {
+  text-align: center;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.md-typeset .cta-center .md-button {
+  display: inline-block;
+}
+
+/* Homepage landing page components. */
+.md-typeset .fabricops-landing {
+  max-width: 46rem;
+  margin: 0 auto;
+}
+
+.md-typeset .fabricops-cta {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.md-typeset .fabricops-cta .md-button {
+  margin: 0;
+}
+
+.md-typeset .fabricops-delivery-model {
+  margin: 1.5rem 0 2rem;
+}
+
+.md-typeset .fabricops-delivery-model h2 {
+  margin-top: 0;
+}
+
+.md-typeset .fabricops-architecture-image {
+  margin: 1.5rem 0 1.25rem;
+  text-align: center;
+}
+
+.md-typeset .fabricops-architecture-image img {
+  display: inline-block;
+  max-width: min(100%, 42rem);
+  width: 100%;
+  height: auto;
+}
+
+.md-typeset .fabricops-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.md-typeset .fabricops-landing-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 8.75rem;
+  padding: 1.2rem 1.3rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 0.25rem solid var(--md-primary-fg-color);
+  border-radius: 0.4rem;
+  background-color: var(--md-default-bg-color);
+  box-shadow: 0 0.12rem 0.45rem rgba(0, 0, 0, 0.04);
+  color: var(--md-default-fg-color);
+  text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.md-typeset .fabricops-landing-card:hover,
+.md-typeset .fabricops-landing-card:focus {
+  border-color: var(--md-primary-fg-color);
+  background-color: var(--md-accent-fg-color--transparent);
+  box-shadow: 0 0.25rem 0.8rem rgba(15, 143, 131, 0.16);
+  color: var(--md-default-fg-color);
+  transform: translateY(-0.05rem);
+}
+
+.md-typeset .fabricops-landing-card:focus-visible {
+  outline: 0.15rem solid var(--md-accent-fg-color);
+  outline-offset: 0.15rem;
+}
+
+.md-typeset .fabricops-landing-card__title {
+  display: block;
+  min-height: 2.65rem;
+  color: var(--md-primary-fg-color);
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+}
+
+.md-typeset .fabricops-landing-card__title strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.md-typeset .fabricops-landing-card__title span {
+  display: block;
+  line-height: 1.2;
+}
+
+.md-typeset .fabricops-landing-card__body {
+  display: block;
+  margin-top: 0.5rem;
+  max-width: 34rem;
+  color: var(--md-default-fg-color);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.md-typeset .fabricops-landing-card__meta {
+  margin-top: 0.85rem;
+  color: var(--md-primary-fg-color);
+  font-weight: 700;
+}
+
+@media screen and (max-width: 768px) {
+  .md-typeset .fabricops-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .md-typeset .fabricops-landing-card {
+    min-height: 0;
+  }
+
+  .md-typeset .fabricops-landing-card__title {
+    min-height: 0;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .md-typeset .fabricops-cta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .md-typeset .fabricops-cta .md-button {
+    text-align: center;
+  }
+}
+
+/* Scoped KPI cards for the docs homepage. */
+.md-typeset .fabricops-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.md-typeset .fabricops-kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.2rem;
+  padding: 1rem;
+}
+
+.md-typeset .fabricops-kpi-number {
+  color: var(--md-primary-fg-color);
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.md-typeset .fabricops-kpi-label {
+  color: var(--md-default-fg-color);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.md-typeset .fabricops-kpi-card p {
+  margin: 0.35rem 0 0.25rem;
+}
+
+.md-typeset .fabricops-kpi-card a {
+  margin-top: auto;
+  font-weight: 600;
+}
+
+@media screen and (max-width: 768px) {
+  .md-typeset .fabricops-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Demo programme page components. */
+.md-typeset .demo-hero,
+.md-typeset .demo-learning-outcomes,
+.md-typeset .demo-defaults,
+.md-typeset .demo-milestone-card,
+.md-typeset .demo-expected-output,
+.md-typeset .demo-evidence,
+.md-typeset .demo-next-step {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.35rem;
+  padding: 1rem;
+}
+
+.md-typeset .demo-hero {
+  background: linear-gradient(135deg, rgba(15, 143, 131, 0.12), rgba(71, 215, 172, 0.08));
+  border-color: rgba(15, 143, 131, 0.35);
+  margin: 0.5rem 0 1.25rem;
+}
+
+.md-typeset .demo-hero h2,
+.md-typeset .demo-learning-outcomes h2,
+.md-typeset .demo-defaults h2,
+.md-typeset .demo-milestone-card h2 {
+  margin-top: 0;
+}
+
+.md-typeset .demo-learning-outcomes {
+  background-color: rgba(71, 215, 172, 0.08);
+  margin: 1rem 0;
+}
+
+.md-typeset .demo-learning-outcomes ul {
+  columns: 2 16rem;
+}
+
+.md-typeset .demo-defaults {
+  background-color: var(--md-default-bg-color);
+  box-shadow: 0 0.15rem 0.6rem rgba(0, 0, 0, 0.06);
+  margin: 1rem 0 1.5rem;
+}
+
+.md-typeset .demo-defaults table:not([class]) {
+  display: table;
+  width: 100%;
+}
+
+.md-typeset .demo-milestone-card {
+  border-left: 0.28rem solid var(--md-primary-fg-color);
+  margin: 1.2rem 0;
+}
+
+.md-typeset .demo-expected-output,
+.md-typeset .demo-evidence,
+.md-typeset .demo-next-step {
+  margin: 0.9rem 0;
+  padding: 0.75rem 0.9rem;
+}
+
+.md-typeset .demo-expected-output {
+  background-color: rgba(15, 143, 131, 0.08);
+  border-color: rgba(15, 143, 131, 0.24);
+}
+
+.md-typeset .demo-evidence {
+  background-color: rgba(71, 215, 172, 0.08);
+  border-color: rgba(71, 215, 172, 0.28);
+}
+
+.md-typeset .demo-next-step {
+  background-color: var(--md-accent-fg-color--transparent);
+  border-color: var(--md-accent-fg-color);
+  font-weight: 600;
+}
+
+.md-typeset .demo-expected-output > :last-child,
+.md-typeset .demo-evidence > :last-child,
+.md-typeset .demo-next-step > :last-child {
+  margin-bottom: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .md-typeset .demo-learning-outcomes ul {
+    columns: 1;
+  }
+}
+
+/* Metadata notebook flow cards on the How FabricOps Works page. */
+.md-typeset .metadata-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin: 1rem 0 1.25rem;
+}
+
+.md-typeset .metadata-flow-card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 0.28rem solid var(--md-primary-fg-color);
+  border-radius: 0.35rem;
+  padding: 1rem;
+  background-color: var(--md-default-bg-color);
+  box-shadow: 0 0.12rem 0.45rem rgba(0, 0, 0, 0.04);
+}
+
+.md-typeset .metadata-flow-card p:first-of-type {
+  font-weight: 600;
+}
+
+.md-typeset .metadata-flow-card p:last-child {
+  margin-bottom: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .md-typeset .metadata-flow-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Template notebook cards. */
+.md-typeset .template-download-hero {
+  margin: 1rem 0 1.5rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid rgba(15, 143, 131, 0.35);
+  border-radius: 0.4rem;
+  background: linear-gradient(135deg, rgba(15, 143, 131, 0.12), rgba(71, 215, 172, 0.08));
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.md-typeset .template-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.md-typeset .template-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.md-typeset .template-card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 0.28rem solid var(--md-primary-fg-color);
+  border-radius: 0.4rem;
+  padding: 1rem;
+  background-color: var(--md-default-bg-color);
+  box-shadow: 0 0.12rem 0.45rem rgba(0, 0, 0, 0.04);
+}
+
+.md-typeset .template-card h2 {
+  margin-top: 0;
+}
+
+.md-typeset .template-card details {
+  margin-top: 0.85rem;
+  margin-bottom: 0;
+}
+
+@media screen and (max-width: 900px) {
+  .md-typeset .template-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Wide documentation tables. */
+.md-typeset .fabricops-table-wide {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.md-typeset .fabricops-table-wide table {
+  width: 100%;
+  min-width: 44rem;
+}
+
+.md-typeset .fabricops-table-wide code {
+  white-space: nowrap;
+}
+
+
+/* Desktop top-navigation dropdowns.
+   Section tabs are menu triggers instead of links to their first child. */
+@media screen and (min-width: 76.25em) {
+  .md-tabs,
+  .md-tabs .md-grid,
+  .md-tabs__list {
+    overflow: visible;
+  }
+
+  /* Material sets contain: content on the tabs list, which clips absolutely
+     positioned dropdowns even when overflow is visible. */
+  .md-tabs__list {
+    contain: none;
+  }
+
+  .md-tabs__item--dropdown {
+    position: relative;
+  }
+
+  .fabricops-tabs-trigger {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: default;
+    display: flex;
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: inherit;
+    line-height: inherit;
+    gap: 0.3rem;
+    height: 100%;
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .fabricops-tabs-trigger__chevron {
+    font-size: 0.72em;
+    line-height: 1;
+    opacity: 0.75;
+    transform: translateY(0.02rem);
+    transition: transform 120ms ease;
+  }
+
+  .fabricops-tabs-dropdown {
+    background: var(--md-default-bg-color);
+    border: 1px solid var(--md-default-fg-color--lightest);
+    border-radius: 0.25rem;
+    box-shadow: 0 0.35rem 1rem rgba(0, 0, 0, 0.16);
+    left: -0.6rem;
+    list-style: none;
+    margin: 0;
+    min-width: 17rem;
+    opacity: 0;
+    padding: 0.4rem;
+    pointer-events: none;
+    position: absolute;
+    top: calc(100% - 0.05rem);
+    transform: translateY(-0.2rem);
+    transition:
+      opacity 120ms ease,
+      transform 120ms ease,
+      visibility 120ms ease;
+    visibility: hidden;
+    z-index: 30;
+  }
+
+  .md-tabs__item--dropdown:hover > .fabricops-tabs-dropdown,
+  .md-tabs__item--dropdown:focus-within > .fabricops-tabs-dropdown {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    visibility: visible;
+  }
+
+  .md-tabs__item--dropdown:hover .fabricops-tabs-trigger__chevron,
+  .md-tabs__item--dropdown:focus-within .fabricops-tabs-trigger__chevron {
+    transform: rotate(180deg);
+  }
+
+  .fabricops-tabs-dropdown__item,
+  .fabricops-tabs-dropdown__group {
+    margin: 0;
+    padding: 0;
+  }
+
+  .fabricops-tabs-dropdown__link {
+    border-radius: 0.2rem;
+    color: var(--md-default-fg-color);
+    display: block;
+    font-size: 0.72rem;
+    line-height: 1.35;
+    padding: 0.52rem 0.65rem;
+    text-decoration: none;
+    white-space: normal;
+  }
+
+  .fabricops-tabs-dropdown__link:hover,
+  .fabricops-tabs-dropdown__link:focus,
+  .fabricops-tabs-dropdown__item--active > .fabricops-tabs-dropdown__link {
+    background: var(--md-accent-fg-color--transparent);
+    color: var(--md-primary-fg-color);
+  }
+
+  .fabricops-tabs-dropdown__group + .fabricops-tabs-dropdown__group,
+  .fabricops-tabs-dropdown__item + .fabricops-tabs-dropdown__group {
+    border-top: 1px solid var(--md-default-fg-color--lightest);
+    margin-top: 0.35rem;
+    padding-top: 0.35rem;
+  }
+
+  .fabricops-tabs-dropdown__group-title {
+    color: var(--md-default-fg-color--light);
+    display: block;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 0.42rem 0.65rem 0.25rem;
+  }
+
+  .fabricops-tabs-dropdown__nested {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .fabricops-tabs-dropdown__nested .fabricops-tabs-dropdown__link {
+    padding-left: 0.9rem;
+  }
+}

@@ -1,0 +1,515 @@
+[
+  {
+    "id": "fabricops-starter-kit",
+    "term": "FabricOps Starter Kit",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "A governed Data Engineering and Data Governance practice for Microsoft Fabric.",
+    "long_definition": "FabricOps Starter Kit is a governed Data Engineering and Data Governance practice for Microsoft Fabric, implemented through an operating workflow, standardized notebook templates, reusable notebook-facing functions, and a shared metadata model.",
+    "preferred_usage": "Use as the public project name.",
+    "avoid_usage": "full data product platform"
+  },
+  {
+    "id": "data-agreement",
+    "term": "data agreement",
+    "aliases": [
+      "data agreements"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "A governed agreement between a provider Data Steward and a recipient Data Steward that defines why data is shared, its approved uses, and the conditions that apply.",
+    "long_definition": "In FabricOps, a Data Agreement is a versioned governance record between two distinct active Data Stewards: one provider and one recipient. It records the business purpose, approved usages, validity period, supporting documents, and other governance context that establishes the sharing relationship before governed tables are contracted.",
+    "preferred_usage": "Use data agreement for the steward-to-steward governance relationship that starts the FabricOps workflow.",
+    "avoid_usage": "data contract when table-level guarantees are meant"
+  },
+  {
+    "id": "data-contract",
+    "term": "data contract",
+    "aliases": [
+      "data contracts"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "A versioned definition of the guarantees and expectations for one governed table that downstream consumers can depend on.",
+    "long_definition": "In FabricOps, a Data Contract is authored for one governed table_id. Each frozen immutable version captures the table identity and schema, processing definition, current Enrichment, and active Guardrails. After Development validation, Governance explicitly links the tested frozen version to one exact Data Agreement version during activation for Production.",
+    "preferred_usage": "Use data contract for table-level governed expectations; describe Data Agreement linkage only at activation.",
+    "avoid_usage": "data agreement when the steward-to-steward sharing relationship is meant"
+  },
+  {
+    "id": "enrichment",
+    "term": "enrichment",
+    "aliases": [
+      "metadata enrichment",
+      "enrich metadata"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "Business and governance information added to the Data Catalogue after technical metadata has been captured.",
+    "long_definition": "In FabricOps, Enrichment is descriptive metadata owned by one exact Data Contract version. It stores table and column descriptions and information classifications. Enrichment has no direct ETL enforcement semantics; enforced runtime requirements belong in Guardrails.",
+    "preferred_usage": "Use enrichment for business and governance information added to the Data Catalogue.",
+    "avoid_usage": "metadata enrichment when enrichment is sufficient"
+  },
+  {
+    "id": "guardrails",
+    "term": "guardrails",
+    "aliases": [
+      "guardrail"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "Governed rules that FabricOps evaluates against data and pipeline behaviour.",
+    "long_definition": "In FabricOps, a Guardrail is a versioned governed rule owned by one exact Data Contract version. Its normalized authoring model records a type, scope, structured subtype parameters, and a Warn or Block action. Schema, Freshness, Source Drift, Data Quality, and Sensitive Data use this same model while retaining their explicit runtime checks.",
+    "preferred_usage": "Use guardrails for the governed rules FabricOps evaluates; use singular only for grammar.",
+    "avoid_usage": "generic policy when a FabricOps Guardrail is meant"
+  },
+  {
+    "id": "sensitive-data",
+    "term": "sensitive data",
+    "aliases": [
+      "Sensitive Data Guardrail"
+    ],
+    "category": "Data Governance concepts",
+    "short_definition": "Information whose governed column requires an explicitly authored runtime treatment.",
+    "long_definition": "In FabricOps, Sensitive Data is a Guardrail subtype owned by one exact Data Contract version. It explicitly tokenizes, masks, buckets, or removes one canonical Catalogue column before a governed write. Tokenize replaces values with opaque surrogates and may return a reversible project-owned mapping; Mask preserves approved portions and obscures the rest; Bucket replaces an exact numeric value with a coarse row-preserving category rather than aggregating rows; Remove drops the column. Information Classification in Enrichment remains descriptive and never triggers treatment by itself.",
+    "preferred_usage": "Use Sensitive Data Guardrail for explicit Tokenize, Mask, Bucket, or Remove column treatment; use Classification for descriptive sensitivity labels.",
+    "avoid_usage": "anonymize or redact when the implemented treatment can be named precisely"
+  },
+  {
+    "id": "enforcement",
+    "term": "enforcement",
+    "aliases": [
+      "runtime enforcement",
+      "enforce"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "Applying active Guardrails during a pipeline run and acting on the result.",
+    "long_definition": "In FabricOps, Enforcement is the runtime application of active Guardrails. Depending on the configured rule and severity, the pipeline can continue, continue with a warning, or stop.",
+    "preferred_usage": "Use enforcement for applying active Guardrails during execution.",
+    "avoid_usage": "validation when the runtime action on a Guardrail result is meant"
+  },
+  {
+    "id": "guardrail-result",
+    "term": "guardrail result",
+    "aliases": [
+      "guardrail results"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "The recorded outcome after FabricOps evaluates a Guardrail during a pipeline run.",
+    "long_definition": "A Guardrail Result records what FabricOps checked, whether the Guardrail passed, warned, or failed, and the resulting pipeline decision or status.",
+    "preferred_usage": "Use guardrail result for the recorded outcome of a FabricOps Guardrail evaluation.",
+    "avoid_usage": "rule result"
+  },
+  {
+    "id": "governance-as-code",
+    "term": "governance as code",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "Turning governance decisions into structured metadata, rules, and contracts that the engineering workflow can directly use.",
+    "long_definition": "In FabricOps, Governance as Code means governance is not only documented in prose or handled as a separate manual process. Data Agreements, Enrichment, Guardrails, and Data Contracts are captured as structured metadata that can be reviewed, versioned, resolved by 02_pipeline, and enforced during execution. Governance defines the expectations, and Engineering consumes the same governed metadata when it validates and runs the pipeline.",
+    "preferred_usage": "Use governance as code when governance decisions are represented as structured FabricOps metadata that engineering can directly consume and enforce.",
+    "avoid_usage": "using governance as code for ordinary documentation that has no executable or metadata-driven connection to the workflow"
+  },
+  {
+    "id": "configuration-driven-engineering",
+    "term": "configuration-driven engineering",
+    "aliases": [
+      "config-driven engineering"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "Keeping pipeline code portable by resolving environment-specific targets and repeatable processing choices from shared configuration instead of hard-coding them into every notebook.",
+    "long_definition": "In FabricOps, Configuration-driven Engineering separates reusable 02_pipeline logic from environment-specific Fabric item identities and repeatable processing settings. 00_env_config defines logical targets such as source, unified, product, and metadata for the active environment, while FabricOps I/O functions resolve those logical names to the correct Lakehouse or Warehouse. This lets the same pipeline move from Development to Production, or adapt when a Fabric item changes, without rewriting paths and IDs throughout each notebook.",
+    "preferred_usage": "Use configuration-driven engineering for the separation of reusable pipeline logic from environment-specific targets, paths, IDs, and repeatable processing settings.",
+    "avoid_usage": "using configuration-driven engineering to mean that all business transformation logic must be configurable"
+  },
+  {
+    "id": "read-transform-write",
+    "term": "Read / Transform / Write",
+    "aliases": [
+      "Read \u2192 Transform \u2192 Write",
+      "RTW"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "The user-facing stages of the canonical 02_pipeline engineering flow: Read, Transform, and Write.",
+    "long_definition": "In FabricOps, Read, Transform, and Write name the user-facing stages in 02_pipeline. Read prepares and reads one or more upstream sources, Transform contains project-owned business logic, and Write prepares and publishes one governed output. Source and target remain technical terms for datasets, lineage roles, processing state, and FabricOps configuration or API fields such as store=\"Bronze\" or store=\"Silver\"; they are not competing notebook stage names.",
+    "preferred_usage": "Use Read, Transform, and Write for 02_pipeline stage names; use source and target only for the technical dataset, lineage, processing, or configuration concepts they describe.",
+    "avoid_usage": "Extract or Load as user-facing 02_pipeline stage labels"
+  },
+  {
+    "id": "full-dataset",
+    "term": "full dataset",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "A complete physical dataset used as the input to a FabricOps pipeline run.",
+    "long_definition": "In FabricOps, Full Dataset means the complete physical source is read for the run, without a source-side incremental scope or skip decision.",
+    "preferred_usage": "Use full dataset when distinguishing a complete input from an explicitly filtered project-owned query.",
+    "avoid_usage": "incremental read configuration"
+  },
+  {
+    "id": "load-strategy",
+    "term": "load strategy",
+    "aliases": [
+      "write strategy"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "The authoritative governed behaviour used to write one target table.",
+    "long_definition": "A FabricOps Load Strategy is the target Data Contract processing property that selects exactly one of overwrite, append, scd1, or scd2 together with its required parameters. It is the only FabricOps processing-strategy vocabulary.",
+    "preferred_usage": "Use load strategy for governed target write behaviour.",
+    "avoid_usage": "source pattern or Source Drift behaviour as a second strategy"
+  },
+  {
+    "id": "scheduled-refresh",
+    "term": "scheduled refresh",
+    "aliases": [
+      "notebook schedule"
+    ],
+    "category": "Microsoft Fabric concepts",
+    "short_definition": "The read-only Microsoft Fabric schedule that determines when a notebook item is configured to execute.",
+    "long_definition": "Scheduled Refresh is operational metadata discovered from the Microsoft Fabric Job Scheduler APIs. Fabric remains authoritative for whether a schedule is enabled, its recurrence, execution times, and timezone. It is distinct from a Freshness Guardrail, which expresses when governed source data is expected to have arrived.",
+    "preferred_usage": "Use scheduled refresh for discovered Fabric execution timing, and Freshness for the independently authored source-data arrival expectation.",
+    "avoid_usage": "an editable Data Contract schedule or an inferred Freshness threshold",
+    "source_url": "https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/list-item-schedules"
+  },
+  {
+    "id": "source-drift",
+    "term": "source drift",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "Whether source data previously consumed by a downstream target changed unexpectedly.",
+    "long_definition": "The Source Drift Guardrail compares the current source observation with the latest committed METADATA_SOURCE_OBSERVATION rows for the same source table_id, target table_id, and environment. The source table's governed processing and load strategy determine allowed source changes. The target identity selects that target's last-successful consumption baseline; the target's write strategy does not determine drift compatibility. Observed rows become committed only after the associated physical target write succeeds.",
+    "preferred_usage": "Distinguish Source Drift from Freshness: Freshness asks whether data is current; Source Drift asks whether source history changed unexpectedly since this target last successfully consumed it.",
+    "avoid_usage": "a freshness rule, change-required expectation, or load strategy"
+  },
+  {
+    "id": "writer-ownership",
+    "term": "writer ownership",
+    "aliases": [
+      "single writer"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "The rule that one governed target table_id has one owning pipeline or notebook writer.",
+    "long_definition": "Writer Ownership binds a governed target table_id to the logical notebook name frozen in its Data Contract. Production rejects a conflicting notebook name because independent writers can race, duplicate appends, overwrite state, break SCD history, or apply inconsistent assumptions. The physical notebook ID is retained only as diagnostic metadata because it can change across environments.",
+    "preferred_usage": "State that one governed target table_id should have one owning pipeline/notebook writer.",
+    "avoid_usage": "a scheduling or distributed locking guarantee"
+  },
+  {
+    "id": "microsoft-fabric",
+    "term": "Microsoft Fabric",
+    "aliases": [],
+    "category": "Microsoft Fabric concepts",
+    "short_definition": "Microsoft's end-to-end analytics platform for data ingestion, transformation, real-time processing, analytics, and reporting.",
+    "long_definition": "Microsoft Fabric is an end-to-end analytics platform that brings together data ingestion, transformation, real-time processing, analytics, and reporting through integrated Fabric workloads over a shared data and compute foundation.",
+    "preferred_usage": "Use the full product name on first mention.",
+    "avoid_usage": "Fabric alone when ambiguous",
+    "source_url": "https://learn.microsoft.com/en-us/fabric/fundamentals/microsoft-fabric-overview"
+  },
+  {
+    "id": "workspace",
+    "term": "workspace",
+    "aliases": [
+      "workspaces"
+    ],
+    "category": "Microsoft Fabric concepts",
+    "short_definition": "A collaborative container that brings related Fabric items together and controls access to them.",
+    "long_definition": "A Microsoft Fabric Workspace is a collection of items in a shared environment designed for collaboration. It acts as a container for items such as lakehouses, warehouses, notebooks, semantic models, and reports, and provides controls for who can access them.",
+    "preferred_usage": "Use workspace for the Fabric collaborative container that holds related items.",
+    "avoid_usage": "tenant",
+    "source_url": "https://learn.microsoft.com/en-us/fabric/fundamentals/workspaces"
+  },
+  {
+    "id": "lakehouse",
+    "term": "Lakehouse",
+    "aliases": [
+      "Lakehouses"
+    ],
+    "category": "Microsoft Fabric concepts",
+    "short_definition": "A Fabric data item that combines data-lake storage with warehouse-style querying for structured and unstructured data.",
+    "long_definition": "A Lakehouse in Microsoft Fabric stores structured and unstructured data in one location using Delta Lake and supports analysis through both Apache Spark and SQL without requiring the data to be moved between separate systems.",
+    "preferred_usage": "Use Lakehouse for the Microsoft Fabric item type.",
+    "avoid_usage": "lake house",
+    "source_url": "https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-overview"
+  },
+  {
+    "id": "warehouse",
+    "term": "Warehouse",
+    "aliases": [
+      "Warehouses"
+    ],
+    "category": "Microsoft Fabric concepts",
+    "short_definition": "A Fabric relational warehouse item for structured data with full transactional T-SQL capabilities.",
+    "long_definition": "A Warehouse in Microsoft Fabric is an enterprise-scale relational warehouse on a data-lake foundation. It is designed for structured analytics and SQL-first data warehousing workloads and supports full transactional T-SQL capabilities.",
+    "preferred_usage": "Use Warehouse for the Microsoft Fabric item type.",
+    "avoid_usage": "SQL database when Fabric Warehouse is meant",
+    "source_url": "https://learn.microsoft.com/en-us/fabric/data-warehouse/data-warehousing"
+  },
+  {
+    "id": "notebook",
+    "term": "notebook",
+    "aliases": [
+      "notebooks",
+      "Fabric notebook"
+    ],
+    "category": "Microsoft Fabric concepts",
+    "short_definition": "A Fabric code item and web-based interactive surface for developing and running data, Spark, and machine-learning workloads.",
+    "long_definition": "A Microsoft Fabric Notebook is a primary code item and web-based interactive surface used to write and execute code, combine code with Markdown and visualizations, and develop data engineering, Apache Spark, and machine-learning workloads.",
+    "preferred_usage": "Use notebook for the Microsoft Fabric notebook item.",
+    "avoid_usage": "Jupyter notebook when the Fabric runtime matters",
+    "source_url": "https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook"
+  },
+  {
+    "id": "medallion-architecture",
+    "term": "medallion architecture",
+    "aliases": [
+      "medallion architecture design"
+    ],
+    "category": "Microsoft Fabric concepts",
+    "short_definition": "A layered data architecture that progressively improves data from Bronze raw data through Silver validated and enriched data to Gold curated data.",
+    "long_definition": "In Microsoft Fabric, Medallion Architecture organizes data into Bronze, Silver, and Gold layers so data becomes progressively more reliable and useful as it moves from raw ingestion through validation and enrichment to curated consumption. Fabric implementations can use Lakehouses, Warehouses, or a combination of Fabric data stores for these layers.",
+    "preferred_usage": "Use medallion architecture for the Microsoft Fabric Bronze, Silver, and Gold layered architecture pattern.",
+    "avoid_usage": "treating Bronze, Silver, and Gold as mandatory FabricOps store names",
+    "source_url": "https://learn.microsoft.com/en-us/fabric/onelake/onelake-medallion-lakehouse-architecture"
+  },
+  {
+    "id": "metadata",
+    "term": "metadata",
+    "aliases": [],
+    "category": "Data Governance concepts",
+    "short_definition": "Information that describes data, its meaning, structure, context, management, or use.",
+    "long_definition": "Metadata is information used to describe, understand, manage, or govern data. In FabricOps this includes technical structure, Profiles, ownership, business meaning, sensitivity, Guardrails, lineage, Data Agreements, Data Contracts, and other governance and engineering context.",
+    "preferred_usage": "Use metadata for information that describes or governs data.",
+    "avoid_usage": "evidence or context when the specific metadata can be named"
+  },
+  {
+    "id": "data-steward",
+    "term": "data steward",
+    "aliases": [
+      "data stewards"
+    ],
+    "category": "Data Governance concepts",
+    "short_definition": "A person or role responsible for maintaining the meaning, quality expectations, governance rules, classification, and appropriate use of data.",
+    "long_definition": "A Data Steward helps maintain trusted governance context for data, including its business meaning, ownership or accountability, sensitivity, quality expectations, intended use, and governance decisions. FabricOps uses active Data Stewards as the provider and recipient parties in Data Agreements.",
+    "preferred_usage": "Use data steward for the governance role responsible for maintaining trusted data context.",
+    "avoid_usage": "owner when stewardship is meant"
+  },
+  {
+    "id": "data-sensitivity",
+    "term": "data sensitivity",
+    "aliases": [
+      "sensitivity"
+    ],
+    "category": "Data Governance concepts",
+    "short_definition": "How carefully data should be handled based on its confidentiality, privacy, business risk, or regulatory impact.",
+    "long_definition": "Data Sensitivity describes the level of care and protection data requires based on confidentiality, privacy, business risk, or regulatory requirements. It can influence access, masking, sharing, retention, and other governance controls.",
+    "preferred_usage": "Use data sensitivity for the handling classification of governed data.",
+    "avoid_usage": "PII when the broader sensitivity concept is meant"
+  },
+  {
+    "id": "pii",
+    "term": "PII",
+    "aliases": [
+      "personally identifiable information"
+    ],
+    "category": "Data Governance concepts",
+    "short_definition": "Information that can identify an individual directly or indirectly, on its own or when combined with other information.",
+    "long_definition": "PII, or personally identifiable information, is information that can identify or be linked to an individual. Depending on the context and applicable policy, it may require controls such as restricted access, masking, minimization, or stricter handling.",
+    "preferred_usage": "Use PII after personally identifiable information is clear from context.",
+    "avoid_usage": "sensitive data when specifically referring to personal identifiers"
+  },
+  {
+    "id": "data-access",
+    "term": "data access",
+    "aliases": [],
+    "category": "Data Governance concepts",
+    "short_definition": "The governed definition of who is allowed to access data and under what conditions.",
+    "long_definition": "Data Access describes who is permitted to use governed data, what level of access is appropriate, and what conditions or restrictions apply. Those requirements can be implemented through platform security controls such as permissions, RLS, OLS, or other mechanisms.",
+    "preferred_usage": "Use data access for the governed access requirement, not a specific technical control.",
+    "avoid_usage": "RLS or OLS when the broader access requirement is meant"
+  },
+  {
+    "id": "data-quality",
+    "term": "data quality",
+    "aliases": [
+      "DQ"
+    ],
+    "category": "Data Governance concepts",
+    "short_definition": "Whether data is fit for its intended use and meets the quality expectations that apply to it.",
+    "long_definition": "Data Quality describes whether data satisfies the expectations required for its intended use. In FabricOps authoring, Data Quality is a Guardrail subtype with rule-specific parameters; check_dq retains its dedicated runtime implementation and returns failed values to the caller without persisting them automatically.",
+    "preferred_usage": "Use data quality in narrative text; use DQ after the meaning is established.",
+    "avoid_usage": "quality alone when data quality is meant"
+  },
+  {
+    "id": "access-control",
+    "term": "access control",
+    "aliases": [],
+    "category": "Data Governance concepts",
+    "short_definition": "The rules and mechanisms that determine who can access data or system resources and what actions they can perform.",
+    "long_definition": "Access Control is the broader set of rules and technical mechanisms used to determine who can access datasets, tables, columns, workspaces, files, or other resources and what actions they are allowed to perform.",
+    "preferred_usage": "Use access control for the broad security concept; use a specific mechanism when that is what matters.",
+    "avoid_usage": "data access when discussing the technical enforcement mechanism rather than the governed requirement"
+  },
+  {
+    "id": "row-level-security",
+    "term": "row-level security",
+    "aliases": [
+      "RLS"
+    ],
+    "category": "Data Governance concepts",
+    "short_definition": "A security method that controls which rows of data a user can see.",
+    "long_definition": "Row-Level Security limits the rows available to a user based on identity, role, or access rules while allowing the same table or semantic model to serve different audiences.",
+    "preferred_usage": "Use row-level security on first mention; use RLS after it is established.",
+    "avoid_usage": "role-level security"
+  },
+  {
+    "id": "object-level-security",
+    "term": "object-level security",
+    "aliases": [
+      "OLS"
+    ],
+    "category": "Data Governance concepts",
+    "short_definition": "A security method that controls whether a user can access specific data objects such as tables or columns.",
+    "long_definition": "Object-Level Security restricts access to specific data objects, such as tables or columns, so unauthorized users cannot access those objects even when they can access the wider semantic model or resource.",
+    "preferred_usage": "Use object-level security on first mention; use OLS after it is established.",
+    "avoid_usage": "row-level security when the restriction applies to tables or columns"
+  },
+  {
+    "id": "configuration",
+    "term": "configuration",
+    "aliases": [
+      "config"
+    ],
+    "category": "Data Engineering concepts",
+    "short_definition": "Named settings that control system or pipeline behaviour without changing the underlying implementation.",
+    "long_definition": "Configuration is the set of named settings used to control environment targets, processing choices, parameters, rules, and other behaviour without rewriting the implementation.",
+    "preferred_usage": "Use configuration in narrative text; use config in code-oriented shorthand.",
+    "avoid_usage": "hard-coded values when behaviour should be configurable"
+  },
+  {
+    "id": "pipeline",
+    "term": "pipeline",
+    "aliases": [
+      "pipelines"
+    ],
+    "category": "Data Engineering concepts",
+    "short_definition": "A repeatable sequence of steps that moves, transforms, validates, or writes data.",
+    "long_definition": "A data pipeline is a repeatable processing flow that can read source data, transform it, apply checks or validations, and write results to a target.",
+    "preferred_usage": "Use pipeline for an end-to-end data-processing flow.",
+    "avoid_usage": "workflow when a data pipeline is specifically meant"
+  },
+  {
+    "id": "pyspark",
+    "term": "PySpark",
+    "aliases": [],
+    "category": "Data Engineering concepts",
+    "short_definition": "The Python API for Apache Spark.",
+    "long_definition": "PySpark lets Python code use Apache Spark for distributed data processing. FabricOps uses PySpark in Fabric notebooks for repeatable data engineering and transformation workloads.",
+    "preferred_usage": "Use PySpark when referring to Python code running on Spark.",
+    "avoid_usage": "Python when Spark execution is the important distinction"
+  },
+  {
+    "id": "profile",
+    "term": "profile",
+    "aliases": [
+      "profiles",
+      "profiling"
+    ],
+    "category": "Data Engineering concepts",
+    "short_definition": "A summary of the characteristics of a dataset at a point in time.",
+    "long_definition": "A data Profile summarizes characteristics such as row count, columns, data types, nulls, distinct values, minimum and maximum values, and value distributions. FabricOps stores these observations in Data Profiled and Data Profiled Frequency metadata.",
+    "preferred_usage": "Use profile for a summary of data characteristics at a point in time.",
+    "avoid_usage": "profile evidence; catalogue evidence"
+  },
+  {
+    "id": "schema",
+    "term": "schema",
+    "aliases": [
+      "schemas"
+    ],
+    "category": "Data Engineering concepts",
+    "short_definition": "The defined structure of data, including its fields or columns and their data types.",
+    "long_definition": "A Schema describes the structure expected for a dataset or table, including field or column names, data types, and other structural constraints or expectations.",
+    "preferred_usage": "Use schema for the defined structure of data.",
+    "avoid_usage": "layout when schema is meant"
+  },
+  {
+    "id": "watermark",
+    "term": "watermark",
+    "aliases": [],
+    "category": "Data Engineering concepts",
+    "short_definition": "A value that represents how far an incremental process has successfully published source data to a governed target.",
+    "long_definition": "A Watermark is a saved progress marker used by an incremental process to determine what data should be considered after a previously successful point. The exact uniqueness, ordering, and tie-handling requirements depend on the incremental design.",
+    "preferred_usage": "Use watermark for the incremental boundary persisted on governed target rows.",
+    "avoid_usage": "a second processing strategy outside the target load_strategy"
+  },
+  {
+    "id": "parallel-processing",
+    "term": "parallel processing",
+    "aliases": [],
+    "category": "Data Engineering concepts",
+    "short_definition": "Processing multiple independent parts of a workload at the same time.",
+    "long_definition": "Parallel Processing divides a workload so multiple tasks, partitions, or units of work can execute concurrently, which can reduce elapsed time when the workload and available compute support it.",
+    "preferred_usage": "Use parallel processing for concurrent work across tasks, partitions, or workers.",
+    "avoid_usage": "multithreading when the broader distributed-processing concept is meant"
+  },
+  {
+    "id": "data-modelling",
+    "term": "data modelling",
+    "aliases": [
+      "data modeling"
+    ],
+    "category": "Data Engineering concepts",
+    "short_definition": "Designing data structures and relationships so data can be stored, understood, and used effectively.",
+    "long_definition": "Data Modelling is the practice of designing tables, fields, keys, relationships, and structures so data supports its intended analytical, operational, or reporting use.",
+    "preferred_usage": "Use data modelling for the design of data structures and relationships.",
+    "avoid_usage": "schema when the broader model design is meant"
+  },
+  {
+    "id": "partition",
+    "term": "partition",
+    "aliases": [],
+    "category": "Data Engineering concepts",
+    "short_definition": "A subdivision of data or workload used to organize storage or processing.",
+    "long_definition": "A Partition groups part of a dataset or workload so it can be stored, scanned, processed, or managed independently. The term can refer to logical processing groups or physical storage organization depending on context.",
+    "preferred_usage": "Use partition with enough context to distinguish logical processing from physical storage.",
+    "avoid_usage": "assuming every partition is a FabricOps incremental partition"
+  },
+  {
+    "id": "physical-partitioning",
+    "term": "physical partitioning",
+    "aliases": [
+      "partition_by"
+    ],
+    "category": "Data Engineering concepts",
+    "short_definition": "Organizing stored data physically by one or more partition columns to improve management or data skipping.",
+    "long_definition": "Physical Partitioning controls how data files are organized by partition values in storage. It is a target storage and performance concern, distinct from project-owned source filtering.",
+    "preferred_usage": "Use physical partitioning when describing storage layout.",
+    "avoid_usage": "incremental partition"
+  },
+  {
+    "id": "append",
+    "term": "append",
+    "aliases": [],
+    "category": "Data Engineering concepts",
+    "short_definition": "A write strategy that adds new rows without replacing existing rows.",
+    "long_definition": "Append adds incoming rows to an existing target while leaving existing rows unchanged. It is appropriate when incoming data is additive and existing records do not need to be changed or removed.",
+    "preferred_usage": "Use append for an additive target write strategy.",
+    "avoid_usage": "incremental load when the read scope rather than write strategy is meant"
+  },
+  {
+    "id": "overwrite",
+    "term": "overwrite",
+    "aliases": [],
+    "category": "Data Engineering concepts",
+    "short_definition": "A write strategy that replaces existing target data within a defined write scope.",
+    "long_definition": "Overwrite replaces existing target data with newly prepared data. Depending on the implementation and scope, this can replace a whole table or a selected partition range.",
+    "preferred_usage": "Use overwrite for a replacement target write strategy.",
+    "avoid_usage": "SCD Type 1 when record-level matching and updates are meant"
+  },
+  {
+    "id": "slowly-changing-dimensions",
+    "term": "slowly changing dimensions",
+    "aliases": [
+      "SCD",
+      "slowly changing dimension"
+    ],
+    "category": "Data Engineering concepts",
+    "short_definition": "Patterns for handling changes to descriptive dimension records over time.",
+    "long_definition": "Slowly Changing Dimensions are data-modelling patterns for handling changes to descriptive records. Common approaches include SCD Type 1, which replaces the previous value, and SCD Type 2, which preserves history by creating versioned records.",
+    "preferred_usage": "Use slowly changing dimensions when discussing SCD patterns; introduce SCD before using the abbreviation alone.",
+    "avoid_usage": "incremental load when the history-management pattern is meant"
+  }
+]

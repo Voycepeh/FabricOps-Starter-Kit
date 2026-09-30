@@ -1,0 +1,466 @@
+/*
+  Wide-screen tuning for MkDocs Material.
+
+  Design goals:
+  - Use more horizontal space on desktop/laptop screens.
+  - Keep prose readable by limiting line length.
+  - Let diagrams/images/tables intentionally expand.
+  - Avoid brittle overrides of internal layout mechanisms.
+*/
+
+:root {
+  --md-main-width: min(96vw, 124rem);
+}
+
+/* Safe global container widening */
+.md-grid {
+  max-width: min(96vw, 124rem);
+}
+
+/* Allow content column to use available room in wider layout */
+.md-content {
+  max-width: none;
+}
+
+.md-content__inner {
+  margin: 0 auto;
+  max-width: min(100%, 108rem);
+  box-sizing: border-box;
+  padding-inline: clamp(0.8rem, 2vw, 2rem);
+}
+
+/* Let page components use the desktop canvas. Constrain prose, not the
+   entire .md-typeset container, so cards/images/tables are not squeezed. */
+.md-content__inner .md-typeset {
+  max-width: 100%;
+  width: 100%;
+}
+
+.md-content__inner .md-typeset > p,
+.md-content__inner .md-typeset > ul,
+.md-content__inner .md-typeset > ol,
+.md-content__inner .md-typeset > blockquote {
+  max-width: 84ch;
+}
+
+/* Expand media/diagram/table blocks beyond prose width when possible */
+.md-content__inner .md-typeset > p > img,
+.md-content__inner .md-typeset > p > svg,
+.md-content__inner .md-typeset > .mermaid,
+.md-content__inner .md-typeset > .mermaid svg,
+.md-content__inner .md-typeset > .md-typeset__scrollwrap,
+.md-content__inner .md-typeset > .md-typeset__table,
+.md-content__inner .md-typeset > .wide-img,
+.md-content__inner .md-typeset > .full-width,
+.md-content__inner .md-typeset > figure,
+.md-content__inner .md-typeset > .admonition {
+  max-width: 100%;
+}
+
+.md-content__inner .md-typeset > .mermaid,
+.md-content__inner .md-typeset > .md-typeset__scrollwrap,
+.md-content__inner .md-typeset > .md-typeset__table,
+.md-content__inner .md-typeset > .wide-img,
+.md-content__inner .md-typeset > .full-width,
+.md-content__inner .md-typeset > figure {
+  width: min(100%, 108rem);
+}
+
+.md-content__inner .md-typeset > .mermaid {
+  overflow-x: auto;
+}
+
+/* Optional helper classes for page authors */
+.md-typeset .wide-img,
+.md-typeset .full-width {
+  display: block;
+  width: min(100%, 108rem);
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Desktop navigation lives in the top hover menus. Reclaim both permanent
+   side rails so documentation pages can use the full desktop canvas. */
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary,
+  .md-sidebar--secondary {
+    display: none;
+  }
+
+  .md-content {
+    min-width: 0;
+  }
+
+  .md-content__inner {
+    max-width: 118rem;
+    padding-inline: clamp(1rem, 2.5vw, 2.5rem);
+  }
+}
+
+/* Preserve clean stacking on tablet/mobile */
+@media screen and (max-width: 76.1875em) {
+  :root {
+    --md-main-width: 100%;
+  }
+
+  .md-grid,
+  .md-content__inner,
+  .md-content__inner .md-typeset,
+  .md-content__inner .md-typeset > .mermaid,
+  .md-content__inner .md-typeset > .md-typeset__scrollwrap,
+  .md-content__inner .md-typeset > .md-typeset__table,
+  .md-content__inner .md-typeset > .wide-img,
+  .md-content__inner .md-typeset > .full-width,
+  .md-content__inner .md-typeset > figure {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .md-content__inner {
+    padding-inline: clamp(0.8rem, 4vw, 1rem);
+  }
+}
+
+/* Generated List of Metadata Tables overview. */
+.md-typeset .metadata-model-image {
+  margin: 1.5rem auto 2rem;
+  text-align: center;
+  width: min(100%, 62rem);
+}
+
+.md-typeset .metadata-model-image img {
+  display: inline-block;
+  height: auto;
+  max-width: 100%;
+  width: min(100%, 58rem);
+}
+
+.md-typeset .metadata-table-grid {
+  overflow-x: auto;
+}
+
+.md-typeset .metadata-table-grid table {
+  border-collapse: collapse;
+  display: table;
+  margin-top: 1rem;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.md-typeset .metadata-table-grid col.metadata-tables-overview__name {
+  width: 28%;
+}
+
+.md-typeset .metadata-table-grid col.metadata-tables-overview__purpose {
+  width: 52%;
+}
+
+.md-typeset .metadata-table-grid col.metadata-tables-overview__step {
+  width: 20%;
+}
+
+.md-typeset .metadata-table-grid th,
+.md-typeset .metadata-table-grid td {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  padding: 0.65rem 0.8rem;
+  vertical-align: top;
+}
+
+.md-typeset .metadata-table-grid th {
+  background: var(--md-default-fg-color--lightest);
+  font-weight: 700;
+}
+
+.md-typeset .metadata-table-grid td:first-child {
+  white-space: nowrap;
+  width: 28%;
+}
+
+.md-typeset .metadata-table-grid td:nth-child(2) {
+  width: 52%;
+}
+
+.md-typeset .metadata-table-grid td:nth-child(3) {
+  width: 20%;
+}
+
+.md-typeset .metadata-table-grid code {
+  white-space: nowrap;
+}
+
+/* Legacy metadata table HTML can remain deployed before MkDocs rebuilds.
+   Render it like the Material card grid so mobile does not show a cramped table. */
+.md-typeset table.metadata-tables-overview {
+  border-collapse: separate;
+  border-spacing: 0;
+  display: grid;
+  gap: 0.8rem;
+  margin: 1.2rem 0 2rem;
+  width: 100%;
+}
+
+.md-typeset table.metadata-tables-overview thead,
+.md-typeset table.metadata-tables-overview colgroup {
+  display: none;
+}
+
+.md-typeset table.metadata-tables-overview tbody {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+}
+
+.md-typeset table.metadata-tables-overview tr {
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.35rem;
+  box-shadow: 0 0.08rem 0.24rem rgba(0, 0, 0, 0.06);
+  display: block;
+  padding: 0.8rem;
+}
+
+.md-typeset table.metadata-tables-overview td {
+  border: 0;
+  display: block;
+  padding: 0;
+  width: auto !important;
+}
+
+.md-typeset table.metadata-tables-overview td + td {
+  margin-top: 0.55rem;
+}
+
+.md-typeset table.metadata-tables-overview td:first-child code {
+  font-size: 0.74rem;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.md-typeset table.metadata-tables-overview td:nth-child(3) {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.72rem;
+}
+
+.md-typeset table.metadata-tables-overview td:nth-child(3)::before {
+  color: var(--md-default-fg-color);
+  content: "Template step: ";
+  font-weight: 700;
+}
+
+/* Product-style metadata workflow list. */
+.md-content__inner .md-typeset > .metadata-workflow-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.25rem 0 2rem;
+  max-width: 100%;
+  width: min(100%, 108rem);
+}
+
+.md-typeset .metadata-workflow-row {
+  align-items: stretch;
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 0.3rem solid var(--md-accent-fg-color);
+  border-radius: 0.55rem;
+  box-shadow: 0 0.08rem 0.24rem rgba(0, 0, 0, 0.05);
+  color: inherit;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(17rem, 1fr);
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.md-typeset .metadata-workflow-row:hover {
+  border-color: var(--md-accent-fg-color);
+  box-shadow: 0 0.15rem 0.45rem rgba(0, 0, 0, 0.09);
+}
+
+.md-typeset .metadata-workflow-row__main {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.9rem;
+  min-width: 0;
+  padding: 1rem 1.1rem;
+}
+
+.md-typeset .metadata-workflow-row__step {
+  color: var(--md-default-fg-color--light);
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.7;
+}
+
+.md-typeset .metadata-workflow-row__content {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.md-typeset .metadata-workflow-row__content strong {
+  color: var(--md-accent-fg-color);
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+
+.md-typeset .metadata-workflow-row__content > span {
+  color: var(--md-default-fg-color);
+  line-height: 1.5;
+}
+
+.md-typeset .metadata-workflow-row__facts {
+  background: color-mix(in srgb, var(--md-default-fg-color--lightest) 55%, transparent);
+  border-left: 1px solid var(--md-default-fg-color--lightest);
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem 1rem;
+}
+
+.md-typeset .metadata-workflow-row__facts > span {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.md-typeset .metadata-workflow-row__facts b {
+  color: var(--md-default-fg-color);
+  display: block;
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.08rem;
+  text-transform: uppercase;
+}
+
+.md-typeset .metadata-workflow-row__facts code {
+  font-size: 0.7rem;
+  white-space: normal;
+  word-break: break-word;
+}
+
+@media screen and (max-width: 44.984375em) {
+  .md-typeset .metadata-workflow-row {
+    grid-template-columns: 1fr;
+  }
+
+  .md-typeset .metadata-workflow-row__facts {
+    border-left: 0;
+    border-top: 1px solid var(--md-default-fg-color--lightest);
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Generated public callable flow tables. */
+.md-typeset .callable-flow-table-wrap {
+  margin: 1rem 0 1.5rem;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.md-typeset .callable-flow-signal-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.md-typeset .callable-flow-signal-card {
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 0.35rem solid var(--md-accent-fg-color);
+  border-radius: 0.7rem;
+  padding: 0.8rem;
+}
+
+.md-typeset .callable-flow-signal-card.is-high {
+  border-left-color: #dc2626;
+}
+
+.md-typeset .callable-flow-signal-card.is-medium {
+  border-left-color: #eab308;
+}
+
+.md-typeset .callable-flow-signal-card.is-protect {
+  border-left-color: #16a34a;
+}
+
+.md-typeset .callable-flow-signal-card-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.md-typeset .callable-flow-signal-card-label {
+  color: var(--md-default-fg-color--light);
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-top: 0.35rem;
+}
+
+.md-typeset .callable-flow-cta {
+  text-align: center;
+}
+
+.md-typeset .callable-flow-table {
+  border-collapse: collapse;
+  display: table;
+  min-width: 88rem;
+  width: 100%;
+}
+
+.md-typeset .callable-flow-table th,
+.md-typeset .callable-flow-table td {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  padding: 0.55rem 0.7rem;
+  vertical-align: top;
+}
+
+.md-typeset .callable-flow-table th {
+  background: var(--md-default-fg-color--lightest);
+  font-weight: 700;
+}
+
+.md-typeset .callable-flow-table code,
+.md-typeset .callable-flow-table a {
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.md-typeset .callable-flow-table .flow-cell-name,
+.md-typeset .callable-flow-table .flow-cell-module,
+.md-typeset .callable-flow-table .flow-cell-qualified,
+.md-typeset .callable-flow-table .flow-cell-flag {
+  white-space: nowrap;
+}
+
+.md-typeset .callable-flow-table .flow-cell-name {
+  min-width: 14rem;
+}
+
+.md-typeset .callable-flow-table .flow-cell-module {
+  min-width: 8rem;
+}
+
+.md-typeset .callable-flow-table .flow-cell-qualified {
+  min-width: 22rem;
+}
+
+.md-typeset .callable-flow-table .flow-cell-wide {
+  min-width: 28rem;
+}
+
+.md-typeset .callable-flow-table .flow-cell-number {
+  min-width: 5.5rem;
+  text-align: right;
+  white-space: nowrap;
+  width: 1%;
+}
+
+.md-typeset .callable-flow-table .flow-cell-flag {
+  min-width: 7rem;
+}

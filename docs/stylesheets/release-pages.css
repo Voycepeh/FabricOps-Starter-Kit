@@ -1,0 +1,70 @@
+/* Focused styling for frozen release pages. */
+.fabricops-release-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+
+.fabricops-release-card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.6rem;
+  display: block;
+  padding: 1rem;
+  text-decoration: none;
+}
+
+.fabricops-release-card strong {
+  display: block;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.fabricops-release-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.fabricops-release-table table {
+  min-width: 42rem;
+  width: 100%;
+}
+
+.fabricops-release-table th,
+.fabricops-release-table td {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.fabricops-release-table code {
+  white-space: nowrap;
+}
+
+@media screen and (max-width: 700px) {
+  .fabricops-release-table table,
+  .fabricops-release-table thead,
+  .fabricops-release-table tbody,
+  .fabricops-release-table th,
+  .fabricops-release-table td,
+  .fabricops-release-table tr {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .fabricops-release-table thead {
+    display: none;
+  }
+
+  .fabricops-release-table tr {
+    border: 1px solid var(--md-default-fg-color--lightest);
+    border-radius: 0.5rem;
+    margin: 0 0 0.75rem;
+    padding: 0.35rem;
+  }
+
+  .fabricops-release-table td {
+    border: 0;
+    padding: 0.35rem 0.5rem;
+  }
+}

@@ -1,0 +1,345 @@
+(function () {
+  const BLANK = "(blank)";
+  const TABLE_CLASS = "fo-table-enhanced";
+  const state = new WeakMap();
+
+  function normalizeValue(value) {
+    return value === null || value === undefined ? "" : String(value).trim();
+  }
+
+  function cellText(row, index) {
+    const cell = row.cells[index];
+    return normalizeValue(cell ? cell.innerText || cell.textContent || "" : "");
+  }
+
+  function cellFilterValue(row, index) {
+    const cell = row.cells[index];
+    if (cell && cell.dataset && Object.prototype.hasOwnProperty.call(cell.dataset, "filterValue")) {
+      return normalizeValue(cell.dataset.filterValue);
+    }
+    return cellText(row, index);
+  }
+
+  function displayValue(value) {
+    const normalized = normalizeValue(value);
+    return normalized === "" ? BLANK : normalized;
+  }
+
+  function isNumericColumn(rows, index) {
+    const values = rows.map((row) => cellFilterValue(row, index)).filter(Boolean);
+    return values.length > 0 && values.every((value) => /^-?\d+(\.\d+)?$/.test(value.replace(/,/g, "")));
+  }
+
+  function numericValue(value) {
+    const parsed = Number(String(value).replace(/,/g, ""));
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  function compareValues(a, b, numeric) {
+    if (numeric) {
+      const left = numericValue(a);
+      const right = numericValue(b);
+      if (left === null && right === null) return 0;
+      if (left === null) return 1;
+      if (right === null) return -1;
+      return left - right;
+    }
+    return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+  }
+
+  function tableState(table) {
+    if (!state.has(table)) {
+      state.set(table, { sort: null, filters: new Map(), originalRows: Array.from(table.tBodies[0]?.rows || []) });
+    }
+    return state.get(table);
+  }
+
+  function isOptInTable(table) {
+    return table && table.dataset && table.dataset.tableControls === "excel";
+  }
+
+  function currentRows(table) {
+    return Array.from(table.tBodies[0]?.rows || []);
+  }
+
+  function isFilterableRow(table, row) {
+    const columnCount = table.tHead?.rows[0]?.cells.length || 0;
+    return !row.matches?.("[data-details-row]") && (!columnCount || row.cells.length >= columnCount);
+  }
+
+  function filterableRows(table) {
+    return tableState(table).originalRows.filter((row) => isFilterableRow(table, row));
+  }
+
+  function rowGroup(table, row) {
+    const rows = tableState(table).originalRows;
+    const index = rows.indexOf(row);
+    const group = [row];
+    const next = rows[index + 1];
+    if (next && next.matches?.("[data-details-row]")) group.push(next);
+    return group;
+  }
+
+  function uniqueValues(table, column) {
+    const rows = filterableRows(table);
+    return [...new Set(rows.map((row) => displayValue(cellFilterValue(row, column))))].sort((a, b) => compareValues(a, b, false));
+  }
+
+  function rowMatchesFilter(row, filter) {
+    const value = cellFilterValue(row, filter.column);
+    if (filter.kind === "values") {
+      return filter.values.has(displayValue(value));
+    }
+    const number = numericValue(value);
+    const a = numericValue(filter.a);
+    const b = numericValue(filter.b);
+    if (number === null) return false;
+    if (filter.operator === "equals") return number === a;
+    if (filter.operator === "greater") return a !== null && number > a;
+    if (filter.operator === "less") return a !== null && number < a;
+    if (filter.operator === "between") return a !== null && b !== null && number >= Math.min(a, b) && number <= Math.max(a, b);
+    return true;
+  }
+
+  function filteredRows(table) {
+    const cfg = tableState(table);
+    return filterableRows(table).filter((row) => [...cfg.filters.values()].every((filter) => rowMatchesFilter(row, filter)));
+  }
+
+  function getVisibleRowKeys(table) {
+    return filteredRows(table).map((row) => row.dataset?.inventoryRow || row.dataset?.rowKey || "").filter(Boolean);
+  }
+
+  function notifyApplied(table) {
+    if (typeof window.CustomEvent === "function" && typeof table.dispatchEvent === "function") {
+      table.dispatchEvent(new window.CustomEvent("fabricops:table-controls-applied", { bubbles: true, detail: { visibleRowKeys: getVisibleRowKeys(table) } }));
+    }
+  }
+
+  function applyTable(table) {
+    const cfg = tableState(table);
+    const tbody = table.tBodies[0];
+    if (!tbody) return;
+    let rows = filteredRows(table);
+    if (cfg.sort) {
+      const { column, direction, numeric } = cfg.sort;
+      const dir = direction === "desc" ? -1 : 1;
+      rows = rows.map((row, index) => ({ row, index })).sort((left, right) => {
+        const result = compareValues(cellFilterValue(left.row, column), cellFilterValue(right.row, column), numeric);
+        return result === 0 ? left.index - right.index : result * dir;
+      }).map((item) => item.row);
+    }
+    const visibleSet = new Set(rows);
+    rows.forEach((row) => rowGroup(table, row).forEach((groupRow) => tbody.appendChild(groupRow)));
+    cfg.originalRows.forEach((row) => {
+      const owner = row.matches?.("[data-details-row]") ? cfg.originalRows[cfg.originalRows.indexOf(row) - 1] : row;
+      row.hidden = !visibleSet.has(owner);
+    });
+    updateHeaderStates(table);
+    renderClearAll(table);
+    notifyApplied(table);
+  }
+
+  function closeMenus() {
+    document.querySelectorAll(".fo-table-menu").forEach((menu) => menu.remove());
+  }
+
+  function renderClearAll(table) {
+    const cfg = tableState(table);
+    let action = table.previousElementSibling;
+    if (!action || !action.classList.contains("fo-table-clear-all")) {
+      action = document.createElement("button");
+      action.type = "button";
+      action.className = "fo-table-clear-all";
+      action.textContent = "Reset column filters";
+      action.addEventListener("click", () => {
+        cfg.filters.clear();
+        cfg.sort = null;
+        applyTable(table);
+      });
+      table.parentNode.insertBefore(action, table);
+    }
+    action.hidden = cfg.filters.size === 0;
+  }
+
+  function updateHeaderStates(table) {
+    const cfg = tableState(table);
+    table.querySelectorAll("thead th").forEach((th, index) => {
+      th.classList.toggle("fo-filter-active", cfg.filters.has(index));
+      th.classList.toggle("fo-sort-active", Boolean(cfg.sort && cfg.sort.column === index));
+      th.dataset.sortDirection = cfg.sort && cfg.sort.column === index ? cfg.sort.direction : "";
+      const button = th.querySelector(".fo-table-menu-button");
+      if (button) {
+        const label = th.querySelector(".table-header-label");
+        const labelText = label ? label.textContent.trim() : th.textContent.replace("▾", "").trim();
+        button.setAttribute("aria-label", `Sort and filter ${labelText || `column ${index + 1}`}`);
+      }
+    });
+  }
+
+  function textMenu(table, column, menu) {
+    const cfg = tableState(table);
+    const active = cfg.filters.get(column);
+    menu.insertAdjacentHTML("beforeend", `<button type="button" data-sort="asc">Sort A to Z</button><button type="button" data-sort="desc">Sort Z to A</button><button type="button" data-clear-sort>Clear sort</button><label class="fo-menu-search">Search values<input type="search" data-search-values></label><label><input type="checkbox" data-select-all checked> Select all</label><div class="fo-value-list"></div><button type="button" data-apply>Apply</button><button type="button" data-clear-filter>Clear filter</button>`);
+    const list = menu.querySelector(".fo-value-list");
+    const values = uniqueValues(table, column);
+    const selected = active && active.kind === "values" ? active.values : new Set(values);
+    values.forEach((value) => {
+      const label = document.createElement("label");
+      label.innerHTML = `<input type="checkbox" value="${value.replace(/"/g, "&quot;")}" ${selected.has(value) ? "checked" : ""}> ${value}`;
+      list.appendChild(label);
+    });
+    menu.querySelector("[data-search-values]").addEventListener("input", (event) => {
+      const q = event.target.value.toLowerCase();
+      list.querySelectorAll("label").forEach((label) => { label.hidden = !label.textContent.toLowerCase().includes(q); });
+    });
+    menu.querySelector("[data-select-all]").addEventListener("change", (event) => {
+      list.querySelectorAll('input[type="checkbox"]').forEach((box) => { box.checked = event.target.checked; });
+    });
+  }
+
+  function numericMenu(menu) {
+    menu.insertAdjacentHTML("beforeend", `<button type="button" data-sort="asc">Sort smallest to largest</button><button type="button" data-sort="desc">Sort largest to smallest</button><button type="button" data-clear-sort>Clear sort</button><label>Equals<input type="number" data-op="equals"></label><label>Greater than<input type="number" data-op="greater"></label><label>Less than<input type="number" data-op="less"></label><fieldset><legend>Between</legend><input type="number" data-between="a"><input type="number" data-between="b"></fieldset><button type="button" data-apply>Apply</button><button type="button" data-clear-filter>Clear filter</button>`);
+  }
+
+  function viewportSize() {
+    const doc = document.documentElement || {};
+    return {
+      width: window.innerWidth || doc.clientWidth || 1024,
+      height: window.innerHeight || doc.clientHeight || 768,
+    };
+  }
+
+  function menuSize(menu) {
+    const rect = menu.getBoundingClientRect ? menu.getBoundingClientRect() : {};
+    return {
+      width: rect.width || menu.offsetWidth || 256,
+      height: rect.height || menu.offsetHeight || 320,
+    };
+  }
+
+  function positionMenu(button, menu) {
+    const margin = 8;
+    const sideOffset = 4;
+    const viewport = viewportSize();
+    const trigger = button.getBoundingClientRect();
+    const size = menuSize(menu);
+    const maxLeft = Math.max(margin, viewport.width - size.width - margin);
+    let left = trigger.left;
+    if (left + size.width > viewport.width - margin) {
+      left = trigger.right - size.width;
+    }
+    left = Math.min(Math.max(margin, left), maxLeft);
+    const maxTop = Math.max(margin, viewport.height - size.height - margin);
+    const top = Math.min(Math.max(margin, trigger.bottom + sideOffset), maxTop);
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+  }
+
+  function openMenu(table, th, column, button) {
+    closeMenus();
+    const rows = filterableRows(table);
+    const numeric = isNumericColumn(rows, column);
+    const menu = document.createElement("div");
+    menu.className = "fo-table-menu";
+    menu.tabIndex = -1;
+    menu.dataset.columnType = numeric ? "numeric" : "text";
+    numeric ? numericMenu(menu) : textMenu(table, column, menu);
+    document.body.appendChild(menu);
+    positionMenu(button, menu);
+    menu.addEventListener("click", (event) => {
+      const cfg = tableState(table);
+      const target = event.target;
+      if (target.matches("[data-sort]")) {
+        cfg.sort = { column, direction: target.dataset.sort, numeric };
+        applyTable(table);
+        closeMenus();
+      } else if (target.matches("[data-clear-sort]")) {
+        if (cfg.sort && cfg.sort.column === column) cfg.sort = null;
+        applyTable(table);
+        closeMenus();
+      } else if (target.matches("[data-clear-filter]")) {
+        cfg.filters.delete(column);
+        applyTable(table);
+        closeMenus();
+      } else if (target.matches("[data-apply]")) {
+        if (numeric) {
+          const betweenA = menu.querySelector('[data-between="a"]').value;
+          const betweenB = menu.querySelector('[data-between="b"]').value;
+          const opInput = [...menu.querySelectorAll("[data-op]")].find((input) => input.value !== "");
+          if (betweenA !== "" || betweenB !== "") cfg.filters.set(column, { column, kind: "numeric", operator: "between", a: betweenA, b: betweenB });
+          else if (opInput) cfg.filters.set(column, { column, kind: "numeric", operator: opInput.dataset.op, a: opInput.value });
+        } else {
+          const values = new Set([...menu.querySelectorAll('.fo-value-list input[type="checkbox"]:checked')].map((box) => box.value));
+          cfg.filters.set(column, { column, kind: "values", values });
+        }
+        applyTable(table);
+        closeMenus();
+      }
+    });
+    menu.addEventListener("keydown", (event) => { if (event.key === "Escape") closeMenus(); });
+    menu.focus();
+  }
+
+  function enhanceTable(table) {
+    if (!table.tHead || !table.tBodies[0]) return;
+    if (!isOptInTable(table)) return;
+    if (table.classList.contains(TABLE_CLASS)) {
+      const cfg = tableState(table);
+      cfg.originalRows = currentRows(table);
+      applyTable(table);
+      return;
+    }
+    table.classList.add(TABLE_CLASS);
+    tableState(table);
+    table.querySelectorAll("thead th").forEach((th, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "fo-table-menu-button";
+      button.innerHTML = "▾";
+      button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        openMenu(table, th, index, button);
+      });
+      button.classList.add("filter-trigger");
+      if (!th.querySelector(":scope > .table-header-cell")) {
+        const headerCell = document.createElement("div");
+        headerCell.className = "table-header-cell";
+        const label = document.createElement("span");
+        label.className = "table-header-label";
+        while (th.firstChild) label.appendChild(th.firstChild);
+        headerCell.appendChild(label);
+        th.appendChild(headerCell);
+      }
+      const headerCell = th.querySelector(":scope > .table-header-cell");
+      if (headerCell && !headerCell.querySelector(":scope > .fo-table-menu-button")) headerCell.appendChild(button);
+    });
+    renderClearAll(table);
+    updateHeaderStates(table);
+  }
+
+  function enhance(table) {
+    enhanceTable(table);
+  }
+
+  function enhanceAll(root = document) {
+    root.querySelectorAll('table[data-table-controls="excel"]').forEach(enhanceTable);
+  }
+
+  function resetAll(root = document) {
+    root.querySelectorAll('table[data-table-controls="excel"]').forEach((table) => {
+      const cfg = tableState(table);
+      cfg.filters.clear();
+      cfg.sort = null;
+      applyTable(table);
+    });
+  }
+
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".fo-table-menu") && !event.target.closest(".fo-table-menu-button")) closeMenus();
+  });
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeMenus(); });
+  document.addEventListener("DOMContentLoaded", () => enhanceAll());
+
+  window.FabricOpsTableControls = { enhance, enhanceAll, resetAll, getVisibleRowKeys, _test: { cellFilterValue, compareValues, displayValue, filterableRows, filteredRows, getVisibleRowKeys, normalizeValue, numericValue, positionMenu, rowMatchesFilter, uniqueValues } };
+})();
