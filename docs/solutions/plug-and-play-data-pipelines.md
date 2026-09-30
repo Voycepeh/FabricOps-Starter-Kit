@@ -23,15 +23,40 @@ Everything project-specific stays visible between those boundaries as ordinary P
 
 ```mermaid
 flowchart LR
-    ENV["00 Env Config<br/>resolve Dev / Prod"] --> PIPE["02 Pipeline<br/>promote the same notebook"]
-    CONTRACT["Data Contract<br/>table-level mode"] --> PIPE
-    PIPE --> READ["orchestrate_read()"]
-    READ --> TRANSFORM["Project-specific<br/>PySpark transformation"]
-    TRANSFORM --> WRITE["orchestrate_write()"]
-    WRITE --> TARGET["Resolved Dev / Prod<br/>destination"]
+    subgraph DEV["Development — clonable notebook stack"]
+        direction TB
+        DEV_ENV["00 Env Config<br/>resolves Development resources"]
+        subgraph DEV_PIPE["02 Pipeline"]
+            direction TB
+            DEV_CONTRACT["Select Data Contract context"]
+            DEV_READ["orchestrate_read() × N<br/>Full / Incremental"]
+            DEV_TRANSFORM["Project-specific<br/>PySpark transformation"]
+            DEV_WRITE["orchestrate_write() × N<br/>Overwrite / Append / SCD1 / SCD2"]
+            DEV_CONTRACT --> DEV_READ --> DEV_TRANSFORM --> DEV_WRITE
+        end
+        DEV_ENV --> DEV_PIPE
+        DEV_PIPE --> DEV_RES["Development resources"]
+    end
+
+    subgraph PROD["Production — same notebook stack"]
+        direction TB
+        PROD_ENV["00 Env Config<br/>resolves Production resources"]
+        subgraph PROD_PIPE["02 Pipeline"]
+            direction TB
+            PROD_CONTRACT["Select Data Contract context"]
+            PROD_READ["orchestrate_read() × N<br/>Full / Incremental"]
+            PROD_TRANSFORM["Project-specific<br/>PySpark transformation"]
+            PROD_WRITE["orchestrate_write() × N<br/>Overwrite / Append / SCD1 / SCD2"]
+            PROD_CONTRACT --> PROD_READ --> PROD_TRANSFORM --> PROD_WRITE
+        end
+        PROD_ENV --> PROD_PIPE
+        PROD_PIPE --> PROD_RES["Production resources"]
+    end
+
+    DEV ==>|"Promote 1:1"| PROD
 ```
 
-The notebook structure stays the same. What changes from pipeline to pipeline are the arguments passed to each Read and Write orchestrator and the transformation code in the middle.
+The same notebook stack exists in Development and Production. `00_env_config` resolves the stack to the resources for its environment, while `02_pipeline` is promoted unchanged from Development to Production. Inside each pipeline, Data Contract context is selected before the governed ETL flow. A pipeline can use multiple `orchestrate_read()` calls, each choosing Full or Incremental, transform the resulting DataFrames with normal project-specific PySpark, and use multiple `orchestrate_write()` calls, each independently choosing Overwrite, Append, SCD1, or SCD2.
 
 ## Read recipes
 
