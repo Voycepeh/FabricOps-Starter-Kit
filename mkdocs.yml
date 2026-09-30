@@ -53,6 +53,7 @@ nav:
       - Function Reference: reference/index.md
       - Read & Write Modes: reference/read-and-load-strategies.md
       - Sensitive Data Treatments: reference/sensitive-data-treatments.md
+      - PySpark Transformation: reference/pyspark-transformation.md
       - Data Quality Rules:
           - Overview: reference/dq-rules/index.md
           - Completeness: reference/dq-rules/completeness.md
