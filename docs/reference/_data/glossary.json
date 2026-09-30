@@ -201,7 +201,11 @@
     "short_definition": "The column or column combination that uniquely identifies a row at the table's intended level of detail.",
     "long_definition": "FabricOps can suggest grain candidates from profile evidence and validate single or composite keys. The selected grain is stored with the Data Contract and used as governed table metadata.",
     "preferred_usage": "Use grain for the governed row-level key or key combination.",
-    "avoid_usage": "primary key unless a physical database constraint is specifically meant"
+    "avoid_usage": "primary key unless a physical database constraint is specifically meant",
+    "tooltip_labels": [
+      "Row Grain",
+      "row grain"
+    ]
   },
   {
     "id": "freshness",
@@ -213,7 +217,11 @@
     "short_definition": "A Guardrail that checks whether source data is current enough for the governed expectation.",
     "long_definition": "FabricOps Freshness evaluates a configured date or datetime column against the expected source refresh timing. It is separate from the notebook's Fabric scheduled refresh.",
     "preferred_usage": "Use freshness for the governed source-data recency expectation.",
-    "avoid_usage": "scheduled refresh when the data-arrival expectation is meant"
+    "avoid_usage": "scheduled refresh when the data-arrival expectation is meant",
+    "tooltip_labels": [
+      "Freshness Guardrail",
+      "freshness guardrail"
+    ]
   },
   {
     "id": "data-catalogue",
@@ -586,7 +594,11 @@
     "short_definition": "The lifecycle state of a Data Contract version: Draft, Frozen, or Activated.",
     "long_definition": "A Draft can be edited, a Frozen version is immutable and ready for validation, and an Activated frozen version is approved for Production use and linked to a Data Agreement version.",
     "preferred_usage": "Use Draft, Frozen, and Activated for Data Contract lifecycle states.",
-    "avoid_usage": "approved when the specific FabricOps contract state is meant"
+    "avoid_usage": "approved when the specific FabricOps contract state is meant",
+    "tooltip_labels": [
+      "Data Contract status",
+      "Contract Status"
+    ]
   },
   {
     "id": "guardrail-coverage",
@@ -596,7 +608,11 @@
     "short_definition": "A write-side check that confirms required governed expectations are present before publishing a target.",
     "long_definition": "FabricOps checks Guardrail Coverage before the target write so required contract protections are not silently omitted from the governed pipeline.",
     "preferred_usage": "Use guardrail coverage for the write-side completeness check over required governed protections.",
-    "avoid_usage": "data quality coverage when the broader contract protection check is meant"
+    "avoid_usage": "data quality coverage when the broader contract protection check is meant",
+    "tooltip_labels": [
+      "Guardrail Coverage",
+      "guardrail coverage"
+    ]
   },
   {
     "id": "business-rule",
@@ -608,7 +624,13 @@
     "short_definition": "A human-readable requirement that describes how governed data should behave.",
     "long_definition": "FabricOps can translate a Business Rule into the smallest deterministic Data Quality rules it can resolve, falling back to a custom PySpark boolean expression when needed.",
     "preferred_usage": "Use business rule for the human-authored requirement before translation to executable Data Quality rules.",
-    "avoid_usage": "DQ rule when referring to the original human-readable requirement"
+    "avoid_usage": "DQ rule when referring to the original human-readable requirement",
+    "tooltip_labels": [
+      "Business Rule",
+      "Business Rules",
+      "business rule",
+      "business rules"
+    ]
   },
   {
     "id": "information-classification",
@@ -620,7 +642,11 @@
     "short_definition": "A descriptive label that records the sensitivity or governance meaning of a table or column.",
     "long_definition": "FabricOps stores Information Classification as Enrichment. It provides governance context but does not apply masking, tokenization, bucketing, removal, or other runtime treatment by itself.",
     "preferred_usage": "Use information classification for descriptive sensitivity labels.",
-    "avoid_usage": "Sensitive Data Guardrail when no runtime treatment is configured"
+    "avoid_usage": "Sensitive Data Guardrail when no runtime treatment is configured",
+    "tooltip_labels": [
+      "Information Classification",
+      "information classification"
+    ]
   },
   {
     "id": "source-observation",
@@ -632,7 +658,13 @@
     "short_definition": "A recorded view of source state used as the baseline for Source Drift checks.",
     "long_definition": "FabricOps compares the current source state with the latest committed observation for the same source, target, and environment. A new observation is committed only after the target write succeeds.",
     "preferred_usage": "Use source observation for the persisted Source Drift baseline.",
-    "avoid_usage": "profile when the drift baseline is specifically meant"
+    "avoid_usage": "profile when the drift baseline is specifically meant",
+    "tooltip_labels": [
+      "Source Observation",
+      "Source Observations",
+      "source observation",
+      "source observations"
+    ]
   },
   {
     "id": "lineage",
@@ -644,7 +676,11 @@
     "short_definition": "Metadata that records how governed data moves from source to target through a pipeline.",
     "long_definition": "FabricOps records source-to-target relationships from governed pipeline execution so a table's upstream and downstream paths can be traced.",
     "preferred_usage": "Use lineage for recorded source-to-target relationships.",
-    "avoid_usage": "dependency when recorded data movement is meant"
+    "avoid_usage": "dependency when recorded data movement is meant",
+    "tooltip_labels": [
+      "Data Lineage",
+      "data lineage"
+    ]
   },
   {
     "id": "table-id",
@@ -656,7 +692,10 @@
     "short_definition": "The stable FabricOps identifier for one governed table.",
     "long_definition": "FabricOps uses table_id to resolve a governed table across metadata, Data Contracts, profiles, guardrails, lineage, and pipeline execution without relying on a physical Fabric item name alone.",
     "preferred_usage": "Use table_id when referring to the canonical FabricOps table identifier.",
-    "avoid_usage": "table name when the governed identity is meant"
+    "avoid_usage": "table name when the governed identity is meant",
+    "tooltip_labels": [
+      "table_id"
+    ]
   },
   {
     "id": "effective-data-access",
@@ -668,6 +707,10 @@
     "short_definition": "The resolved access people have to Fabric data after combining supported access paths.",
     "long_definition": "FabricOps combines Workspace roles, SQL endpoint grants, and OneLake security roles, then resolves principals to people where possible while retaining whether access came through an individual or group.",
     "preferred_usage": "Use effective data access for the combined resolved view of supported Fabric access paths.",
-    "avoid_usage": "workspace access when multiple access paths are included"
+    "avoid_usage": "workspace access when multiple access paths are included",
+    "tooltip_labels": [
+      "Effective Data Access",
+      "effective data access"
+    ]
   }
 ]
