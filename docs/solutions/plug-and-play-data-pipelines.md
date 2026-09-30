@@ -113,20 +113,6 @@ flowchart LR
 
 See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-etl.md) to walk through this pipeline in the canonical `02_pipeline` notebook.
 
-## Data Contract enforcement
-
-Each governed table has a Data Contract selected at the start of `02_pipeline`. The Read and Write orchestrators use that table's contract to enforce the expectations that apply on the source or target side.
-
-The purpose is to catch a pipeline that can **technically succeed but still produce the wrong data**.
-
-A Data Contract brings together the governed table definition, descriptive Enrichment, executable Guardrails, and Processing expectations. See [How FabricOps Works](../how-fabricops-works.md) for how Data Contracts fit into the wider Governance and Engineering lifecycle, and [AI-Assisted Data Contract Authoring](ai-assisted-data-contract-authoring.md#what-the-data-contract-captures) for the detailed contract contents.
-
-### How enforcement works
-
-The orchestrators call the underlying FabricOps checks at the appropriate Read or Write boundary. Checks such as Schema, Freshness, Source Drift, Sensitive Data, Data Quality, and Guardrail Coverage can stop the pipeline when a blocking expectation fails. On the Write side, these checks run before `pipeline_write()`, so invalid data can fail early before writing to the target.
-
-In Development, [Guided Demo Step 4: Validate the frozen Data Contract](../guided-demo/04-validate-frozen-data-contract.md) uses this same enforcement path to validate the frozen contract against the real pipeline without writing to the target. In [Step 5](../guided-demo/05-activate-data-contract-and-promote.md), Governance activates that validated contract for Production. When the promoted `02_pipeline` runs in Production, the activated contract is resolved and enforced; only after the blocking checks succeed does the Write path continue to `pipeline_write()` and write to the target.
-
 ## Promotion
 
 `00_env_config` owns the environment-specific resolution. `02_pipeline` owns the pipeline definition.
@@ -142,6 +128,20 @@ flowchart LR
 ```
 
 See [Guided Demo Step 5: Activate the Data Contract and promote to Production](../guided-demo/05-activate-data-contract-and-promote.md) for the promotion walkthrough.
+
+## Data Contract enforcement
+
+Each governed table has a Data Contract selected at the start of `02_pipeline`. The Read and Write orchestrators use that table's contract to enforce the expectations that apply on the source or target side.
+
+The purpose is to catch a pipeline that can **technically succeed but still produce the wrong data**.
+
+A Data Contract brings together the governed table definition, descriptive Enrichment, executable Guardrails, and Processing expectations. See [How FabricOps Works](../how-fabricops-works.md) for how Data Contracts fit into the wider Governance and Engineering lifecycle, and [AI-Assisted Data Contract Authoring](ai-assisted-data-contract-authoring.md#what-the-data-contract-captures) for the detailed contract contents.
+
+### How enforcement works
+
+The orchestrators call the underlying FabricOps checks at the appropriate Read or Write boundary. Checks such as Schema, Freshness, Source Drift, Sensitive Data, Data Quality, and Guardrail Coverage can stop the pipeline when a blocking expectation fails. On the Write side, these checks run before `pipeline_write()`, so invalid data can fail early before writing to the target.
+
+In Development, [Guided Demo Step 4: Validate the frozen Data Contract](../guided-demo/04-validate-frozen-data-contract.md) uses this same enforcement path to validate the frozen contract against the real pipeline without writing to the target. In [Step 5](../guided-demo/05-activate-data-contract-and-promote.md), Governance activates that validated contract for Production. When the promoted `02_pipeline` runs in Production, the activated contract is resolved and enforced; only after the blocking checks succeed does the Write path continue to `pipeline_write()` and write to the target.
 
 ## Go deeper
 
