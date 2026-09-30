@@ -21,7 +21,6 @@ Step 4 validates the complete governed path, so every participating table needs 
 | Source | `products` | Schema |
 | Source | `order_history` | Schema |
 | Target | `curated_orders` | Schema, Sensitive Data, Data Quality |
-| Target | `curated_order_items` | Schema |
 
 Guardrail Coverage then proves that every selected source/target contract has applicable rules and that every applicable rule produced evidence in the current activity.
 
@@ -35,7 +34,7 @@ The editor uses the selected table's Catalogue and latest Profile as authoring e
 
 For `orders`, enable **Freshness**, **Schema**, and **Source Drift**. Use `modified_datetime` as the Freshness evidence column and keep the allowed age comfortably above the canonical baseline's normal age. Configure Source Drift for the source's normal overwrite behavior. Keep these rules on **Warn** for the first integration run.
 
-For `products`, `order_history`, and `curated_order_items`, a Schema rule is sufficient for this exercise. Their purpose is to make the complete two-target pipeline Guardrail-ready without inventing unrelated business rules.
+For `products` and `order_history`, a Schema rule is sufficient for this exercise. Their purpose is to make the complete `curated_orders` source → target path Guardrail-ready without inventing unrelated business rules.
 
 For `curated_orders`, enable **Schema**, add one **Sensitive Data** treatment on `customer_id` (Mask is the easiest treatment to inspect), and author the complete DQ rules below. Keep Schema and DQ on **Warn** for the first dirty run. Sensitive Data is a treatment guardrail: the integration proof is that the treatment is actually applied before DQ/publication, not that valid sensitive data is rejected.
 
@@ -114,7 +113,7 @@ This is intentionally broader than a normal contract. The Guided Demo uses it as
 
 ## 6. Freeze every participating contract
 
-Freeze the source contracts and both target contracts. Step 4 must select the exact frozen versions for all five tables; otherwise Guardrail Coverage correctly reports that the pipeline is not ready.
+Freeze the three source contracts and the `curated_orders` target contract. Step 4 must select the exact frozen versions for all four participating tables; otherwise Guardrail Coverage correctly reports that the governed source → target path is not ready.
 
 ## 7. Manifest & Freeze
 
