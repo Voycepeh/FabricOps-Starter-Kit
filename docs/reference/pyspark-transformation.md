@@ -13,6 +13,8 @@ from pyspark.sql.window import Window
 
 ## Inspect and select
 
+Use these operations to understand the DataFrame you received from `orchestrate_read()` and keep only the columns needed by the transformation. `select()` creates a DataFrame with the chosen columns; `drop()` removes columns; `withColumnRenamed()` changes a column name without changing its values.
+
 ```python
 display(df)
 df.show(20, truncate=False)
@@ -26,6 +28,10 @@ df = df.drop("temporary_column")
 
 ## Filter, derive, and cast
 
+Filtering removes rows that do not meet a condition. Deriving creates a new column from existing values. Casting changes a column to the data type expected by later transformation or the target schema.
+
+For example, if the source contains active and inactive students, `filter()` can retain only active rows. `to_date()` can then derive a date-only value from a timestamp.
+
 ```python
 df = df.filter(
     (F.col("status") == "ACTIVE")
@@ -37,6 +43,8 @@ df = df.withColumn("student_id", F.col("student_id").cast("string"))
 ```
 
 ## Conditional logic and nulls
+
+Use conditional expressions when a new value depends on existing data. `when(...).otherwise(...)` is the PySpark equivalent of CASE logic. Null-handling functions let you replace defaults, reject incomplete rows, or choose the first available value.
 
 ```python
 df = df.withColumn(
@@ -52,6 +60,10 @@ df = df.withColumn("contact", F.coalesce("mobile", "email", F.lit("no_contact"))
 ```
 
 ## Deduplication
+
+Deduplication is useful when more than one source row represents the same business record. `dropDuplicates()` keeps one row but does not give you precise control over which duplicate survives. When the newest or highest-priority record must win, use a window and `row_number()` instead.
+
+For example, partitioning by `student_id` and sorting by `modified_datetime` descending lets you retain the latest record for each student.
 
 ```python
 df = df.dropDuplicates(["student_id"])
@@ -71,6 +83,8 @@ latest_df = (
 ```
 
 ## Joins
+
+Joins combine DataFrames using a shared key. A `left` join keeps every row from the main DataFrame and adds matching lookup values. `left_anti` returns rows with no match and is useful for finding exceptions. `left_semi` returns rows that have a match without bringing columns from the second DataFrame into the result.
 
 ```python
 enriched_df = (
@@ -98,6 +112,10 @@ enriched_df = source_df.join(
 
 ## Group, aggregate, pivot, and sort
 
+Aggregation changes the grain of the data. `groupBy()` defines the grouping columns and `agg()` calculates measures such as counts, totals, or averages for each group. `pivot()` turns values from one column into separate output columns.
+
+For example, order-level rows can be grouped by customer to produce one customer-level summary row.
+
 ```python
 summary_df = (
     df
@@ -121,6 +139,10 @@ df = df.orderBy(F.col("modified_datetime").desc())
 ```
 
 ## Window functions
+
+Window functions calculate values across related rows **without collapsing those rows into one aggregate row**. They are useful for ranking, latest-record selection, previous/next comparisons, and running totals.
+
+A window normally defines a partition—such as one customer—and an ordering—such as transaction time. Spark then evaluates the window expression within that ordered group.
 
 ```python
 w = Window.partitionBy("student_id").orderBy(F.col("modified_datetime").desc())
@@ -146,6 +168,8 @@ df = df.withColumn("running_total", F.sum("amount").over(running_window))
 
 ## Strings, dates, nested data, and unions
 
+These are common reshaping operations when source data does not yet match the structure needed by the target. String functions clean text, date functions derive reporting periods, `explode()` turns array elements into rows, nested fields can be flattened with `select()`, and `unionByName()` stacks compatible DataFrames.
+
 ```python
 df = df.withColumn("name_clean", F.trim("name"))
 df = df.withColumn("full_name", F.concat_ws(" ", "first_name", "last_name"))
@@ -165,6 +189,8 @@ combined_df = df1.unionByName(df2, allowMissingColumns=True)
 
 ## Spark optimization reminders
 
+Correct transformation logic comes first. Once the result is correct, these habits help avoid unnecessary Spark work. They are guidelines rather than rules—the right choice depends on data volume, partitioning, skew, and how often a DataFrame is reused.
+
 1. Select only the columns you need.
 2. Filter rows as early as practical.
 3. Prefer built-in Spark functions over Python UDFs.
@@ -177,6 +203,8 @@ combined_df = df1.unionByName(df2, allowMissingColumns=True)
 10. Inspect the execution plan before guessing at a performance fix.
 
 ### Repartition versus coalesce
+
+Both change the number of Spark partitions, but they solve different problems. `repartition()` redistributes data and can increase or decrease parallelism; because it shuffles data, it is relatively expensive. `coalesce()` is mainly useful for reducing partitions with less movement, often near the end of processing.
 
 ```python
 df = df.repartition(200, "student_id")
@@ -194,6 +222,8 @@ Do not use either as a default performance fix.
 
 ### Cache only reused work
 
+Caching can help when the same expensive intermediate DataFrame is evaluated multiple times. It can waste memory when the DataFrame is used only once, so do not cache every transformation by default.
+
 ```python
 df.cache()
 # multiple actions that reuse df
@@ -201,6 +231,8 @@ df.unpersist()
 ```
 
 ### Inspect the execution plan
+
+When a transformation is unexpectedly slow, inspect Spark's plan before changing partition counts or adding caches. The plan shows how Spark intends to scan, join, shuffle, and aggregate the data.
 
 ```python
 df.explain(mode="formatted")
