@@ -8,9 +8,9 @@ The selector defaults every table to **Enforce**. For this step, put only `curat
 
 In the Data Contract selector at the top of `02_pipeline`:
 
-1. select the exact frozen Step 3 contract for all three sources,
-2. select the exact frozen Step 3 contract for `curated_orders`,
-3. choose **Validate** for `curated_orders` while running its validation exercise.
+1. leave every source table in **Enforce** mode and select its exact frozen Step 3 contract,
+2. choose **Validate** for `curated_orders`,
+3. select the exact frozen candidate version from Step 3 for `curated_orders`.
 
 All participating tables need selected contracts because Guardrail Coverage checks the complete source → target relationship once any contract is selected.
 
