@@ -62,7 +62,7 @@ For the first Guided Demo run, there is no Data Contract yet. Run the cell and l
 
 ## 3. Read
 
-The template contains three independent Read blocks.
+The template reads three sources through `orchestrate_read()`. You describe each source once, and FabricOps handles the governed Read lifecycle around it.
 
 | Read | Store | Schema | Table |
 | --- | --- | --- | --- |
@@ -70,24 +70,7 @@ The template contains three independent Read blocks.
 | Products | `Bronze` Lakehouse | `demo` | `products` |
 | Order History | `Gold` Warehouse | `demo` | `order_history` |
 
-### About `orchestrate_read()`
-
-`orchestrate_read()` is the standard FabricOps entry point for reading a governed source. You describe the source once, and FabricOps handles the standard Read lifecycle around it.
-
-The main parameters are:
-
-- `name` → a readable name for this source inside the notebook.
-- `store` → the logical FabricOps store defined in `00_env_config`, such as `Bronze` or `Gold`.
-- `schema` → the source schema.
-- `table_name` → the source table.
-- `read_mode` → how the source should be read, such as `"full"` or `"incremental"`.
-- `query` → optional T-SQL pushed down to a Warehouse instead of reading the complete table.
-- `target_table_id` → optional governed target context used by target-aware incremental reads.
-- `spark_session` → the Spark session used by the Read lifecycle.
-
-### Configure and run each Read
-
-With those parameters, each source can be configured directly in its own `orchestrate_read()` call.
+For the Orders source:
 
 ```python
 source = orchestrate_read(
@@ -103,22 +86,23 @@ source = orchestrate_read(
 sources["orders"] = source
 ```
 
-After the Read finishes, the returned `source` keeps the DataFrame together with the supporting Read outputs:
+Use `source["dataframe"]` for the PySpark transformation. Keep the complete result in `sources["orders"]` so the later Write can retain the source identity and lineage context.
 
-- `source["dataframe"]` → the Spark DataFrame returned by the Read.
-- `source["table_id"]` → the canonical FabricOps identity for the source table.
-- `source["freshness_result"]` → the Freshness Guardrail result.
-- `source["schema_result"]` → the Schema Guardrail result.
-- `source["dq_result"]` → the Data Quality Guardrail result.
-- `source["profile_result"]` → the profiling result when profiling applies.
-- `source["orchestration_stages"]` → the status and timing of each Read stage.
+??? info "Understand orchestrate_read()"
+    **Parameters**
 
-Store the complete result in `sources["orders"]` so later transformation and Write steps can reuse the DataFrame, canonical `table_id`, Guardrail results, profiling output, and orchestration status.
+    - `name` → readable name for the source inside the notebook.
+    - `store` → logical FabricOps store defined in `00_env_config`.
+    - `schema` → source schema.
+    - `table_name` → source table.
+    - `read_mode` → how the source is read, such as `"full"` or `"incremental"`.
+    - `query` → optional T-SQL pushed down to a Warehouse instead of reading the complete table.
+    - `target_table_id` → optional governed target context for target-aware incremental reads.
+    - `spark_session` → Spark session used by the Read lifecycle.
 
-??? info "What happens under the hood"
-    `orchestrate_read()` handles the standard FabricOps Read flow.
+    **What happens under the hood**
 
-    Under the hood, it uses `pipeline_read()` to select the appropriate Lakehouse or Warehouse read path. For Warehouse sources, it can also push down a T-SQL query when one is provided.
+    `orchestrate_read()` uses `pipeline_read()` to select the appropriate Lakehouse or Warehouse read path. For Warehouse sources, it can push down a T-SQL query when one is provided.
 
     It resolves the canonical `table_id` and runs the applicable source Guardrails defined by the Data Contract through:
 
@@ -129,6 +113,16 @@ Store the complete result in `sources["orders"]` so later transformation and Wri
     Lastly, it calls `profile_table()` when profiling applies.
 
     The returned source result is carried forward so later Write blocks can use its `table_id` for source-to-target lineage.
+
+    **What comes back**
+
+    - `source["dataframe"]` → Spark DataFrame returned by the Read.
+    - `source["table_id"]` → canonical FabricOps identity for the source table.
+    - `source["freshness_result"]` → Freshness Guardrail result.
+    - `source["schema_result"]` → Schema Guardrail result.
+    - `source["dq_result"]` → Data Quality Guardrail result.
+    - `source["profile_result"]` → profiling result when profiling applies.
+    - `source["orchestration_stages"]` → status and timing of each Read stage.
 
     These lower-level functions remain public if you need to build a custom flow.
 
@@ -153,33 +147,14 @@ You can also use Copilot, ChatGPT, Claude, or other AI coding tools to help draf
 
 ## 5. Write
 
-The template contains two independent Write blocks.
+After the PySpark transformation is ready, the template publishes two targets through `orchestrate_write()`. You provide the transformed DataFrame and target settings, and FabricOps handles the governed Write lifecycle around them.
 
 | Write | Store | Schema | Table | Load strategy |
 | --- | --- | --- | --- | --- |
 | Curated Orders | `Silver` | `demo` | `curated_orders` | `overwrite` |
 | Customer Summary | `Gold` | `demo` | `customer_summary` | `overwrite` |
 
-### About `orchestrate_write()`
-
-`orchestrate_write()` is the standard FabricOps entry point for publishing a governed target. You provide the transformed DataFrame and target settings, and FabricOps handles the standard Write lifecycle around it.
-
-The main parameters are:
-
-- `dataframe` → the transformed Spark DataFrame to publish.
-- `name` → a readable name for this target inside the notebook.
-- `sources` → the Read results that contributed to this target, used to retain source-to-target lineage.
-- `store` → the logical destination store defined in `00_env_config`.
-- `schema` → the target schema.
-- `table_name` → the target table.
-- `load_strategy` → how the target should be written, such as `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`.
-- `contracts` → the Data Contract selections used for governed validation and enforcement.
-- `repartition_by` → optional Spark partitioning control before the write.
-- `spark_session` → the Spark session used by the Write lifecycle.
-
-### Configure and run each Write
-
-After the transformation is ready, configure each target directly in its own `orchestrate_write()` call. Write strategy belongs to the target, so the same pipeline may publish different targets using different load strategies.
+For the Curated Orders target:
 
 ```python
 write_result = orchestrate_write(
@@ -200,24 +175,25 @@ write_result = orchestrate_write(
 )
 ```
 
-After the Write finishes, the returned `write_result` keeps the target identity together with the supporting Write outputs:
+If the Guardrails pass, FabricOps publishes the target and returns the Write result. The same pattern is repeated for the Customer Summary target.
 
-- `write_result["table_id"]` → the canonical FabricOps identity for the target table.
-- `write_result["schema_result"]` → the Schema Guardrail result.
-- `write_result["sensitive_result"]` → the Sensitive Data Guardrail result, including any applied treatment.
-- `write_result["source_drift_results"]` → the Source Drift results for the contributing sources.
-- `write_result["dq_result"]` → the Data Quality Guardrail result.
-- `write_result["coverage_result"]` → whether the required Guardrails are covered for the target.
-- `write_result["orchestration_stages"]` → the status and timing of each Write stage.
-- `write_result["published"]` → whether the target was physically written.
-- `write_result["profile_result"]` → the profile of the persisted target when profiling applies.
+??? info "Understand orchestrate_write()"
+    **Parameters**
 
-This keeps the publication result, Guardrail results, profiling output, and orchestration status together for later use in the notebook.
+    - `dataframe` → transformed Spark DataFrame to publish.
+    - `name` → readable name for the target inside the notebook.
+    - `sources` → Read results that contributed to the target, used for source-to-target lineage.
+    - `store` → logical destination store defined in `00_env_config`.
+    - `schema` → target schema.
+    - `table_name` → target table.
+    - `load_strategy` → how the target is written, such as `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`.
+    - `contracts` → Data Contract selections used for governed validation and enforcement.
+    - `repartition_by` → optional Spark partitioning control before the write.
+    - `spark_session` → Spark session used by the Write lifecycle.
 
-??? info "What happens under the hood"
-    `orchestrate_write()` handles the standard FabricOps Write flow.
+    **What happens under the hood**
 
-    It first resolves the target `table_id` and the `table_id` of each contributing source.
+    `orchestrate_write()` first resolves the target `table_id` and the `table_id` of each contributing source.
 
     It then runs the applicable Guardrails defined by the Data Contract through:
 
@@ -232,6 +208,18 @@ This keeps the publication result, Guardrail results, profiling output, and orch
     If the Guardrails pass, `pipeline_write()` writes to the appropriate Lakehouse or Warehouse destination and records the associated publication metadata and source-to-target lineage.
 
     Lastly, `profile_table()` profiles the persisted target.
+
+    **What comes back**
+
+    - `write_result["table_id"]` → canonical FabricOps identity for the target table.
+    - `write_result["schema_result"]` → Schema Guardrail result.
+    - `write_result["sensitive_result"]` → Sensitive Data Guardrail result, including any applied treatment.
+    - `write_result["source_drift_results"]` → Source Drift results for the contributing sources.
+    - `write_result["dq_result"]` → Data Quality Guardrail result.
+    - `write_result["coverage_result"]` → Guardrail Coverage result for the target.
+    - `write_result["orchestration_stages"]` → status and timing of each Write stage.
+    - `write_result["published"]` → whether the target was physically written.
+    - `write_result["profile_result"]` → profile of the persisted target when profiling applies.
 
     These lower-level functions remain public if you need to build a custom flow.
 
