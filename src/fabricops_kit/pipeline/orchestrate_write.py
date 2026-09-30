@@ -12,7 +12,7 @@ from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 from fabricops_kit.pipeline.shared import _run_orchestration_stage
 
 
-def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, load_strategy: str, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, spark_session=None, verbose: bool = True) -> dict[str, Any]:
+def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, spark_session=None, verbose: bool = True) -> dict[str, Any]:
     """Execute the standard FabricOps governed Write lifecycle.
 
     Parameters
@@ -29,8 +29,9 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
         Physical target schema.
     table_name : str
         Physical target table name.
-    load_strategy : str
-        Governed strategy forwarded to :func:`pipeline_write`.
+    write_mode : str
+        Notebook-facing Write mode forwarded to :func:`pipeline_write` as its
+        governed ``load_strategy``.
     contracts : dict, optional
         ``widget_select_data_contract`` result used to choose Validate or
         Enforce publication behaviour. Both modes run the same Guardrails.
@@ -63,7 +64,7 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
 
     Examples
     --------
-    >>> result = orchestrate_write(transformed_df, name="curated_orders", sources=[orders], store="Silver", schema="demo", table_name="curated_orders", load_strategy="overwrite", contracts=CONTRACTS)
+    >>> result = orchestrate_write(transformed_df, name="curated_orders", sources=[orders], store="Silver", schema="demo", table_name="curated_orders", write_mode="overwrite", contracts=CONTRACTS)
 
     See Also
     --------
@@ -106,6 +107,6 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
             "published": False,
             "validation_passed": True,
         }
-    write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=load_strategy, source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False))
+    write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=write_mode, source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False))
     profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], spark_session=spark_session))
     return {**common_results, **write_result, "published": True, "profile_result": profile}

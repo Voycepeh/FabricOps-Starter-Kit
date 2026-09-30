@@ -7108,7 +7108,7 @@
       "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 111,
+      "source_end_line": 112,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
       "source_start_line": 15,
       "supports_live_contract": false,
@@ -17388,7 +17388,7 @@
       "depth": 8,
       "direct_call_count": 9,
       "discontinued_in": null,
-      "examples": ">>> result = orchestrate_write(transformed_df, name=\"curated_orders\", sources=[orders], store=\"Silver\", schema=\"demo\", table_name=\"curated_orders\", load_strategy=\"overwrite\", contracts=CONTRACTS)",
+      "examples": ">>> result = orchestrate_write(transformed_df, name=\"curated_orders\", sources=[orders], store=\"Silver\", schema=\"demo\", table_name=\"curated_orders\", write_mode=\"overwrite\", contracts=CONTRACTS)",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -17457,8 +17457,8 @@
           "type": "str"
         },
         {
-          "description": "Governed strategy forwarded to :func:`pipeline_write`.",
-          "name": "load_strategy",
+          "description": "Notebook-facing Write mode forwarded to :func:`pipeline_write` as its governed ``load_strategy``.",
+          "name": "write_mode",
           "required": "Yes",
           "type": "str"
         },
@@ -17643,8 +17643,8 @@
         "large_width_or_depth",
         "architecture_violation"
       ],
-      "signature": "def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, load_strategy: str, contracts: dict[str, Any] | None=None, repartition_by: int | None=None, spark_session=None, verbose: bool=True) -> dict[str, Any]",
-      "source_end_line": 111,
+      "signature": "def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, contracts: dict[str, Any] | None=None, repartition_by: int | None=None, spark_session=None, verbose: bool=True) -> dict[str, Any]",
+      "source_end_line": 112,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
       "source_start_line": 15,
       "summary": "Execute the standard FabricOps governed Write lifecycle.",

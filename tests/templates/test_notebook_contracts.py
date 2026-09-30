@@ -339,9 +339,11 @@ def test_02_pipeline_demonstrates_full_refresh_writes_and_parallel_warehouse_wri
     write_1 = _cell_by_id("02_pipeline.ipynb", "write-1").source
     write_2 = _cell_by_id("02_pipeline.ipynb", "write-2").source
 
-    assert 'load_strategy="overwrite"' in write_1
+    assert 'write_mode="overwrite"' in write_1
+    assert "load_strategy=" not in write_1
     assert "repartition_by=None" in write_1
-    assert 'load_strategy="overwrite"' in write_2
+    assert 'write_mode="overwrite"' in write_2
+    assert "load_strategy=" not in write_2
     assert "repartition_by=4" in write_2
 
 

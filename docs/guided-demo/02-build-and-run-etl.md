@@ -181,14 +181,14 @@ The main parameters are:
 - `store` → the logical destination store defined in `00_env_config`.
 - `schema` → the target schema.
 - `table_name` → the target table.
-- `load_strategy` → how the target should be written, such as `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`.
+- `write_mode` → how the target should be written, such as `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`.
 - `contracts` → the Data Contract selections used for governed validation and enforcement.
 - `repartition_by` → optional Spark partitioning control before the write.
 - `spark_session` → the Spark session used by the Write lifecycle.
 
 ### Configure and run each Write
 
-Each target is configured directly in its own `orchestrate_write()` call. Write strategy belongs to the target, so the same pipeline may publish different targets using different load strategies.
+Each target is configured directly in its own `orchestrate_write()` call. Write mode belongs to the target, so the same pipeline may publish targets with different modes. FabricOps translates that public choice to the governed `load_strategy` used by internal processing.
 
 ```python
 write_result = orchestrate_write(
@@ -202,7 +202,7 @@ write_result = orchestrate_write(
     store="Silver",
     schema="demo",
     table_name="curated_orders",
-    load_strategy="overwrite",
+    write_mode="overwrite",
     contracts=CONTRACTS,
     repartition_by=None,
     spark_session=spark,
