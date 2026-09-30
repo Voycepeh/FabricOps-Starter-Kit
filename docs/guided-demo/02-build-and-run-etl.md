@@ -69,6 +69,25 @@ The template contains three independent Read blocks.
 | Products | `Bronze` Lakehouse | `demo` | `products` |
 | Order History | `Gold` Warehouse | `demo` | `order_history` |
 
+### About `orchestrate_read()`
+
+`orchestrate_read()` is the standard FabricOps entry point for reading a governed source.
+
+Instead of manually wiring together the physical read, source identity, Guardrails, and profiling, you describe the source once and FabricOps orchestrates the standard Read lifecycle around it.
+
+Under the hood, it uses `pipeline_read()` to read from the configured Lakehouse or Warehouse, resolves the canonical `table_id`, runs the applicable Freshness, Schema, and Data Quality Guardrails, and profiles the source when profiling applies.
+
+The main parameters are:
+
+- `name` → a readable name for this source inside the notebook.
+- `store` → the logical FabricOps store defined in `00_env_config`, such as `Bronze` or `Gold`.
+- `schema` → the source schema.
+- `table_name` → the source table.
+- `read_mode` → how the source should be read, such as `"full"` or `"incremental"`.
+- `query` → optional T-SQL pushed down to a Warehouse instead of reading the complete table.
+- `target_table_id` → optional governed target context used by target-aware incremental reads.
+- `spark_session` → the Spark session used by the Read lifecycle.
+
 ### Configure and run each Read
 
 Each source is configured directly in its own `orchestrate_read()` call.
@@ -143,6 +162,27 @@ The template contains two independent Write blocks.
 | --- | --- | --- | --- | --- |
 | Curated Orders | `Silver` | `demo` | `curated_orders` | `overwrite` |
 | Customer Summary | `Gold` | `demo` | `customer_summary` | `overwrite` |
+
+### About `orchestrate_write()`
+
+`orchestrate_write()` is the standard FabricOps entry point for validating and publishing a governed target.
+
+Instead of manually wiring together target identity, Data Contract Guardrails, the physical write, lineage, metadata registration, and profiling, you describe the target once and FabricOps orchestrates the standard Write lifecycle around it.
+
+Under the hood, FabricOps resolves the target `table_id` and contributing source identities, runs the applicable Schema, Sensitive Data, Source Drift, Data Quality, and Guardrail Coverage checks, then uses `pipeline_write()` to publish to the configured Lakehouse or Warehouse. The persisted target is profiled after a successful write.
+
+The main parameters are:
+
+- `dataframe` → the transformed Spark DataFrame to publish.
+- `name` → a readable name for this target inside the notebook.
+- `sources` → the Read results that contributed to this target, used to retain source-to-target lineage.
+- `store` → the logical destination store defined in `00_env_config`.
+- `schema` → the target schema.
+- `table_name` → the target table.
+- `load_strategy` → how the target should be written, such as `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`.
+- `contracts` → the Data Contract selections used for governed validation and enforcement.
+- `repartition_by` → optional Spark partitioning control before the write.
+- `spark_session` → the Spark session used by the Write lifecycle.
 
 ### Configure and run each Write
 
