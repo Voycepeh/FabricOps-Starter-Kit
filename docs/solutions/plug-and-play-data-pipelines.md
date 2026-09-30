@@ -110,23 +110,19 @@ flowchart LR
 
 See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-etl.md) to walk through this pipeline in the canonical `02_pipeline` notebook.
 
-## Data Contract enforcement is wired into the same pipeline
+## Data Contract enforcement
 
-The canonical `02_pipeline` selects Data Contract context before the ETL blocks. Contract mode is resolved **per table**, so different governed tables in the same notebook can be at different lifecycle stages.
+Each governed table has a Data Contract selected at the start of `02_pipeline`. The Read and Write orchestrators use that table's contract to enforce the expectations that apply on the source or target side.
 
-```mermaid
-flowchart LR
-    SELECT["Select Data Contract<br/>context per table"] --> READ["orchestrate_read()"]
-    READ --> TRANSFORM["Project transformation"]
-    TRANSFORM --> WRITE["orchestrate_write()"]
-    WRITE --> MODE{"Contract mode"}
-    MODE -->|Validate| VALIDATE["Run guardrails<br/>do not publish"]
-    MODE -->|Enforce / Active| PUBLISH["Run guardrails<br/>publish and profile"]
-```
+The purpose is to catch a pipeline that can **technically succeed but still produce the wrong data**.
 
-Before an applicable Data Contract exists, the same standard notebook can bootstrap normally and contract-backed checks that do not apply are visibly skipped. Once a frozen contract is selected for validation, the same pre-publication guardrails run but the target is not published. Once the approved contract is activated for enforcement, the same notebook and orchestrators enforce it and continue through publication.
+A Data Contract brings together the governed table definition, descriptive Enrichment, executable Guardrails, and Processing expectations. See [How FabricOps Works](../how-fabricops-works.md) for how Data Contracts fit into the wider Governance and Engineering lifecycle, and [AI-Assisted Data Contract Authoring](ai-assisted-data-contract-authoring.md#what-the-data-contract-captures) for the detailed contract contents.
 
-The important point is that governance is not a second pipeline implementation. **The Data Contract is wired into the same Read → Transform → Write workflow that Engineering already promotes.**
+### How enforcement works
+
+The orchestrators call the underlying FabricOps checks at the appropriate Read or Write boundary. Checks such as Schema, Freshness, Source Drift, Sensitive Data, Data Quality, and Guardrail Coverage can stop the pipeline when a blocking expectation fails. On the Write side, these checks run before `pipeline_write()`, so invalid data can fail early before the target is published.
+
+See [Guided Demo Step 4: Validate the frozen Data Contract](../guided-demo/04-validate-frozen-data-contract.md) to see the same enforcement path validate a frozen contract against the real pipeline without publishing the target.
 
 ## Promotion
 
