@@ -88,7 +88,7 @@ Each target independently chooses its Write mode through `orchestrate_write()`. 
 | SCD1 | `write_mode="scd1"` | Update matching business keys and insert new rows |
 | SCD2 | `write_mode="scd2"` | Maintain historical versions as records change |
 
-Each target has its own `orchestrate_write()` call, so the choice is per target rather than a pipeline-wide setting. See [Load Strategies](../reference/read-and-load-strategies.md) for Overwrite, Append, SCD1, SCD2, required parameters, and incremental-write safety.
+Each target has its own `orchestrate_write()` call, so the choice is per target rather than a pipeline-wide setting. See [Read & Write Modes](../reference/read-and-load-strategies.md) for Full, Incremental, Overwrite, Append, SCD1, SCD2, examples, required parameters, and incremental-write safety.
 
 !!! warning "Multiple Write blocks are not atomic"
     Each `orchestrate_write()` publishes independently. If an earlier Write succeeds and a later Write fails, the pipeline is partially published. Rerunning the notebook executes the earlier Write again, which can duplicate or otherwise repeat non-idempotent writes such as Append. If partial publication or duplicate writes are unacceptable, use separate pipeline executions for each governed target.
