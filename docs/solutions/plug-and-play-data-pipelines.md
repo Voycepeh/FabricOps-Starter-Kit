@@ -90,6 +90,26 @@ Each target independently chooses its Write mode through `orchestrate_write()`. 
 
 Each target has its own `orchestrate_write()` call, so the choice is per target rather than a pipeline-wide setting.
 
+The standard pipeline shape is:
+
+```mermaid
+flowchart LR
+    ENV["00_env_config"] --> CONTRACT["Data Contract Per Table ID"]
+
+    CONTRACT --> R1["READ 1<br/>Orders Table"]
+    CONTRACT --> R2["READ 2<br/>Products Table"]
+    CONTRACT --> R3["READ 3<br/>Order History Table"]
+
+    R1 --> TRANSFORM["PySpark Transform"]
+    R2 --> TRANSFORM
+    R3 --> TRANSFORM
+
+    TRANSFORM --> W1["WRITE 1<br/>Curated Orders Table"]
+    TRANSFORM --> W2["WRITE 2<br/>Customer Summary Table"]
+```
+
+See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-etl.md) to walk through this pipeline in the canonical `02_pipeline` notebook.
+
 ## Data Contract enforcement is wired into the same pipeline
 
 The canonical `02_pipeline` selects Data Contract context before the ETL blocks. Contract mode is resolved **per table**, so different governed tables in the same notebook can be at different lifecycle stages.
