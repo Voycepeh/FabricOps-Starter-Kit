@@ -55,6 +55,8 @@ For the first Guided Demo run, there is no Data Contract yet. Run the cell and l
 
     This is the normal pipeline path, so no mode change is required for the initial Guided Demo run.
 
+    Step 4 reuses the same cloneable blocks and switches only the governed target to Validate mode; the source tables remain in Enforce mode.
+
     ![No Data Contract selected](../assets/02/Data%20_Contract_None.png)
 
     This is expected. There is no enforceable Data Contract yet because Governance has not authored and activated one.
