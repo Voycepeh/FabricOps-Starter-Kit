@@ -9,7 +9,7 @@ Freezing creates an **immutable Data Contract** candidate for validation. Freezi
 
     To use it, meet the [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview) and set `GOVERNANCE_CONFIG.ai_enrichment.enabled = True` in `00_env_config`.
 
-    Learn more: [AI-assisted Data Sensitivity & Description](../solutions/ai-assisted-data-contract-authoring.md).
+    Learn more: [Sensitive Data Classification & Treatment](../solutions/ai-assisted-data-contract-authoring.md).
 
 ## 1. Open the Data Contract editor
 
