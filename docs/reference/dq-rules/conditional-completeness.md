@@ -1,5 +1,11 @@
 # conditional_completeness
 
+## Where this appears in the Data Contract UI
+
+**DQ Rules → Business Rules → Resolved DQ Rules**
+
+Governance describes the conditional requirement in business language, such as “Approved records require an approved date.” FabricOps resolves it to `rule_type: conditional_completeness` when the requirement is conditional requiredness.
+
 ## What this rule does
 
 Requires a target column to be populated only when a condition on another column matches.
