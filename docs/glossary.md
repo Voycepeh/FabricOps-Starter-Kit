@@ -14,7 +14,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="fabricops-starter-kit">
 <summary><strong>FabricOps Starter Kit</strong> — A lightweight governed engineering framework for Microsoft Fabric.</summary>
-<p>FabricOps combines reusable notebooks, governed read/write functions, Data Contracts, Data Agreements, and shared metadata so teams can build and run governed Fabric pipelines with less repeated plumbing.</p>
+<p>FabricOps packages reusable notebooks, governed read/write orchestration, Data Contracts, Data Agreements, and shared metadata so teams can run governed Fabric pipelines without rebuilding the same engineering and governance plumbing.</p>
 </details>
 
 <details id="data-agreement">
@@ -49,7 +49,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="guardrail-result">
 <summary><strong>Guardrail Result</strong> — The outcome of a Guardrail evaluation during a pipeline run.</summary>
-<p>A Guardrail Result records the evaluated rule, its outcome, and the resulting status or pipeline decision.</p>
+<p>FabricOps returns the evaluated rule outcome and resulting status or pipeline decision so the caller can inspect what passed, warned, or blocked.</p>
 <p><strong>Also known as:</strong> guardrail results</p>
 </details>
 
@@ -72,7 +72,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="full-dataset">
 <summary><strong>Full Dataset</strong> — A read that loads the complete selected source dataset for the run.</summary>
-<p>In FabricOps, a full read has no project-owned source filter or incremental scope applied before the dataset is returned.</p>
+<p>FabricOps returns the complete selected source without a project-owned source filter or incremental scope.</p>
 </details>
 
 <details id="load-strategy">
@@ -120,6 +120,53 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <summary><strong>pipeline_write()</strong> — The FabricOps orchestrator for validating and writing one governed target.</summary>
 <p>pipeline_write() runs the applicable write-side checks, applies the governed load strategy, writes the target through FabricOps I/O, and records the resulting metadata only after the write succeeds.</p>
 <p><strong>Also known as:</strong> governed write, write orchestrator</p>
+</details>
+
+<details id="contract-status">
+<summary><strong>Contract Status</strong> — The lifecycle state of a Data Contract version: Draft, Frozen, or Activated.</summary>
+<p>A Draft can be edited, a Frozen version is immutable and ready for validation, and an Activated frozen version is approved for Production use and linked to a Data Agreement version.</p>
+<p><strong>Also known as:</strong> Draft, Frozen, Activated</p>
+</details>
+
+<details id="guardrail-coverage">
+<summary><strong>Guardrail Coverage</strong> — A write-side check that confirms required governed expectations are present before publishing a target.</summary>
+<p>FabricOps checks Guardrail Coverage before the target write so required contract protections are not silently omitted from the governed pipeline.</p>
+</details>
+
+<details id="business-rule">
+<summary><strong>Business Rule</strong> — A human-readable requirement that describes how governed data should behave.</summary>
+<p>FabricOps can translate a Business Rule into the smallest deterministic Data Quality rules it can resolve, falling back to a custom PySpark boolean expression when needed.</p>
+<p><strong>Also known as:</strong> business rules</p>
+</details>
+
+<details id="information-classification">
+<summary><strong>Information Classification</strong> — A descriptive label that records the sensitivity or governance meaning of a table or column.</summary>
+<p>FabricOps stores Information Classification as Enrichment. It provides governance context but does not apply masking, tokenization, bucketing, removal, or other runtime treatment by itself.</p>
+<p><strong>Also known as:</strong> classification</p>
+</details>
+
+<details id="source-observation">
+<summary><strong>Source Observation</strong> — A recorded view of source state used as the baseline for Source Drift checks.</summary>
+<p>FabricOps compares the current source state with the latest committed observation for the same source, target, and environment. A new observation is committed only after the target write succeeds.</p>
+<p><strong>Also known as:</strong> source observations</p>
+</details>
+
+<details id="lineage">
+<summary><strong>Lineage</strong> — Metadata that records how governed data moves from source to target through a pipeline.</summary>
+<p>FabricOps records source-to-target relationships from governed pipeline execution so a table's upstream and downstream paths can be traced.</p>
+<p><strong>Also known as:</strong> data lineage</p>
+</details>
+
+<details id="table-id">
+<summary><strong>table_id</strong> — The stable FabricOps identifier for one governed table.</summary>
+<p>FabricOps uses table_id to resolve a governed table across metadata, Data Contracts, profiles, guardrails, lineage, and pipeline execution without relying on a physical Fabric item name alone.</p>
+<p><strong>Also known as:</strong> table ID</p>
+</details>
+
+<details id="effective-data-access">
+<summary><strong>Effective Data Access</strong> — The resolved access people have to Fabric data after combining supported access paths.</summary>
+<p>FabricOps combines Workspace roles, SQL endpoint grants, and OneLake security roles, then resolves principals to people where possible while retaining whether access came through an individual or group.</p>
+<p><strong>Also known as:</strong> effective access</p>
 </details>
 
 </details>
@@ -253,13 +300,13 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="configuration">
 <summary><strong>Configuration</strong> — Named settings that control system or pipeline behaviour without changing the underlying implementation.</summary>
-<p>Configuration is the set of named settings used to control environment targets, processing choices, parameters, rules, and other behaviour without rewriting the implementation.</p>
+<p>FabricOps uses configuration to resolve environment-specific Fabric items and repeatable pipeline settings without embedding them throughout project logic.</p>
 <p><strong>Also known as:</strong> config</p>
 </details>
 
 <details id="pipeline">
 <summary><strong>Pipeline</strong> — A repeatable sequence of steps that moves, transforms, validates, or writes data.</summary>
-<p>A data pipeline is a repeatable processing flow that can read source data, transform it, apply checks or validations, and write results to a target.</p>
+<p>In FabricOps, 02_pipeline provides the standard Read → Transform → Write flow, with governed orchestration around project-owned transformation logic.</p>
 <p><strong>Also known as:</strong> pipelines</p>
 </details>
 
@@ -276,7 +323,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="schema">
 <summary><strong>Schema</strong> — The defined structure of data, including its fields or columns and their data types.</summary>
-<p>A Schema describes the structure expected for a dataset or table, including field or column names, data types, and other structural constraints or expectations.</p>
+<p>FabricOps uses schema expectations to compare the structure of governed data, including column names and data types, at the relevant read or write boundary.</p>
 <p><strong>Also known as:</strong> schemas</p>
 </details>
 
@@ -309,12 +356,12 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="append">
 <summary><strong>Append</strong> — A load strategy that adds incoming rows to the target.</summary>
-<p>Append writes new rows without changing existing target rows.</p>
+<p>FabricOps adds the prepared incoming rows without changing existing target rows.</p>
 </details>
 
 <details id="overwrite">
 <summary><strong>Overwrite</strong> — A load strategy that replaces the target data in the write scope.</summary>
-<p>Overwrite replaces existing target data with the prepared output for the configured write scope.</p>
+<p>FabricOps replaces existing target data with the prepared output for the configured write scope.</p>
 </details>
 
 <details id="slowly-changing-dimensions">
