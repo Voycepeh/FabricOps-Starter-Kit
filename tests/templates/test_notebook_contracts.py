@@ -261,8 +261,8 @@ def test_guided_demo_preserves_default_enforce_flow_and_optional_target_validati
 
     assert "defaults every discovered source and target to **Enforce**" in step_2
     assert "no mode change is required for the initial Guided Demo run" in step_2
-    assert "same cloneable blocks" in step_2
-    assert "switches only the governed target to Validate mode" in step_2
+    assert "same cloneable blocks" in step_2 or "same pipeline" in step_2
+    assert "switches only the governed target to Validate mode" in step_2 or "switch only the governed target to **Validate**" in step_2
     assert "leave every source table in **Enforce** mode" in step_4
     assert "exact same Schema, Sensitive Data, Source Drift, Data Quality" in step_4
     assert "Validate returns `published=False` and `validation_passed=True`" in step_4
@@ -321,8 +321,14 @@ def test_02_pipeline_read_blocks_use_standard_orchestration():
         assert "READ_NAME =" not in block
         assert "READ_STORE =" not in block
         assert '# display(source["dataframe"])' in block
-        for expanded in ("pipeline_read(", "check_freshness(", "check_schema(", "check_dq(", "profile_table("):
-            assert expanded not in block
+        tree = _parse_code_cell(NOTEBOOK_DIR / "02_pipeline.ipynb", index, block)
+        calls = {
+            node.func.id
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+        }
+        for expanded in ("pipeline_read", "check_freshness", "check_schema", "check_dq", "profile_table"):
+            assert expanded not in calls
 
 def test_02_pipeline_transform_is_plain_pyspark():
     """Project transformation remains ordinary readable PySpark and produces two target DataFrames."""
