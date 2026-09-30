@@ -23,7 +23,7 @@ nav:
   - Home: index.md
   - How FabricOps Works: how-fabricops-works.md
   - Featured Solutions:
-      - AI-assisted Data Sensitivity & Description: solutions/ai-assisted-data-contract-authoring.md
+      - Sensitive Data Classification & Treatment: solutions/ai-assisted-data-contract-authoring.md
       - Generate Enforceable Data Quality Rules from Business Rules: solutions/business-rules-to-data-quality.md
       - Plug-and-Play Data Pipelines with Data Contract Enforcement: solutions/plug-and-play-data-pipelines.md
       - Scan Effective Data Access: solutions/effective-data-access.md
