@@ -139,7 +139,7 @@ Once the Read blocks return their DataFrames, FabricOps gets out of the way. Use
 - deriving new columns,
 - reshaping or selecting the final output structure.
 
-For common examples, see the [PySpark transformation cheat sheet](../reference/engineering-cheat-sheet.md#pyspark-transformation-cheat-sheet).
+Transformation remains ordinary project-owned PySpark between the governed Read and Write boundaries.
 
 ![Copilot](../assets/02/Copilot.png)
 
