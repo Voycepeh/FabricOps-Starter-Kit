@@ -108,9 +108,6 @@ Download the **entire DemoData folder**. Every retained file has an explicit Gui
 | `orders.csv`, `orders.json`, `orders.parquet`, `orders.xlsx` | 0C uses these equivalent 120-row files to demonstrate the FabricOps file readers. |
 | `products.csv` | 0C seeds `bronze.demo.products`. |
 | `order_history.csv` | 0C seeds `gold.demo.order_history` and demonstrates Warehouse reads. |
-| `orders_incremental.csv` | Kept untouched in 0C and revisited later in the `02_pipeline` walkthrough. |
-| `orders_partition_baseline.csv`, `orders_partition_changed.csv`, `orders_partition_new.csv` | Reserved for the later partition-overwrite incremental/load-strategy showcase. |
-| `orders_watermark_duplicate.csv`, `orders_watermark_null.csv` | Reserved for later incremental watermark validation examples. |
 | `orders_guardrail_failures.csv` | Reserved for the later Guardrail validation story. |
 
 ## 6. Upload the demo data
