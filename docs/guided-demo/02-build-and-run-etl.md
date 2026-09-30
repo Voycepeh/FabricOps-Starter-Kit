@@ -69,100 +69,76 @@ The template contains three independent Read blocks.
 | Products | `Bronze` Lakehouse | `demo` | `products` |
 | Order History | `Gold` Warehouse | `demo` | `order_history` |
 
-### Configure the Read block
+### Configure and run each Read
 
-!!! important "This is the part you edit"
-    Each Read block is designed to be cloned. For a normal pipeline, **these are the only Read settings you need to change**:
+Each source is configured directly in its own `orchestrate_read()` call. There are no separate `READ_*` passthrough variables. Read strategy belongs to the source, so the same pipeline may mix full and incremental reads.
 
-    - `READ_NAME` → a short notebook name used to reference this source later.
-    - `READ_STORE` → the FabricOps store defined in `00_env_config`, such as `Bronze` or `Gold`.
-    - `READ_SCHEMA` → the source schema.
-    - `READ_TABLE` → the source table.
-    - `READ_MODE` → keep as `"full"` in this full-refresh template.
-    - `READ_QUERY` → use `None` for a normal full table read, or a Warehouse `SELECT` to project/shape the full row set without turning the flow into an incremental read.
-
-```python
-READ_NAME = "orders"
-READ_STORE = "Bronze"
-READ_SCHEMA = "demo"
-READ_TABLE = "orders"
-READ_MODE = "full"
-READ_QUERY = None
-```
-
-Everything below uses those settings. You normally do not need to edit the FabricOps orchestration, checks, profiling, or registration logic.
-
-### Run the Read block
-
-`orchestrate_read()` is the normal path. It exposes each Read stage and returns the Spark DataFrame together with its canonical FabricOps `table_id`. Underneath it runs Read → Freshness → Schema → Data Quality → Profile.
+For the full-refresh Orders source in this step:
 
 ```python
 source = orchestrate_read(
-    name=READ_NAME, store=READ_STORE, schema=READ_SCHEMA,
-    table_name=READ_TABLE, read_mode=READ_MODE, query=READ_QUERY,
+    name="orders",
+    store="Bronze",
+    schema="demo",
+    table_name="orders",
+    read_mode="full",
+    query=None,
     spark_session=spark,
 )
-df = source["dataframe"]
-
-# Optional development inspection
-# display(df)
+sources["orders"] = source
 ```
 
-**You can stop here if you only want to read the data.** At this point `df` already exists and can be used in normal PySpark.
+The returned DataFrame is available as `source["dataframe"]` and the named source is available later as `sources["orders"]`.
 
 ??? info "Read block details"
-    The full Read block follows **READ → CHECK → PROFILE → KEEP**.
+    The standard Read block is intentionally small. **The `orchestrate_read()` arguments are the configuration.** FabricOps owns the governed execution behind them.
 
-    **READ**
+    **What you choose**
 
-    `pipeline_read()` gets the DataFrame and canonical `table_id`. `READ_QUERY = None` reads the full table.
+    - `name` gives the source a readable notebook name.
+    - `store`, `schema`, and `table_name` identify the logical source. `00_env_config` resolves the physical Fabric resource for the current environment.
+    - `read_mode` is chosen independently for each source. Use `"full"` when the pipeline needs the complete source, or `"incremental"` when that source should read only the new scope supported by the governed source-to-target state.
+    - `query` optionally pushes source-side SQL to a Warehouse. `query=None` uses the normal table read.
+    - `target_table_id` is supplied when an incremental read needs the governed target context used to resolve its committed incremental state.
 
-    A Warehouse source may still use `READ_QUERY` in this full-refresh template. For example, you can project only the columns needed by the pipeline while still reading the full logical row set:
-
-    ```python
-    READ_QUERY = """
-    SELECT
-        historical_order_id,
-        customer_id,
-        order_datetime,
-        net_amount
-    FROM demo.order_history
-    """
-    ```
-
-    This remains a full-read pattern because the query is not selecting an incremental scope by watermark, partition, or previously committed source state.
-
-    **CHECK**
-
-    FabricOps then runs the configured source Guardrails such as freshness, schema, and Data Quality checks. Before a Data Contract is selected, contract-backed checks safely return `SKIPPED`.
-
-    **PROFILE**
-
-    `profile_table()` profiles the complete table. For a full source read, the complete dataset is already available as a Spark DataFrame, so FabricOps profiles it directly with PySpark.
+    This means one pipeline can mix source strategies. For example, Orders can be incremental while Products remains a full reference read.
 
     ```python
-    profile_result = profile_table(
-        dataframe=df,
-        store=READ_STORE,
-        schema=READ_SCHEMA,
-        table_name=READ_TABLE,
+    orders = orchestrate_read(
+        name="orders",
+        store="Bronze",
+        schema="demo",
+        table_name="orders",
+        read_mode="incremental",
+        target_table_id=target_table_id,
         spark_session=spark,
     )
 
-    # display(profile_result["profile"])
-    # display(profile_result["frequency_profile"])
+    products = orchestrate_read(
+        name="products",
+        store="Bronze",
+        schema="demo",
+        table_name="products",
+        read_mode="full",
+        spark_session=spark,
+    )
     ```
 
-    **KEEP**
+    **What FabricOps handles**
 
-    `sources[READ_NAME] = source` keeps the completed source flow available for downstream Transform and Write blocks.
+    Behind that one call, FabricOps resolves the source and canonical `table_id`, chooses the Lakehouse or Warehouse read path, applies the standard source Guardrails such as Freshness, Schema, and Data Quality, and profiles the source when the read mode provides the complete persisted table. Stages that do not apply are reported as skipped rather than requiring notebook plumbing.
 
-    Optional inspection remains available when you need it:
+    You do **not** reconstruct `pipeline_read()`, `check_freshness()`, `check_schema()`, `check_dq()`, or `profile_table()` inside the standard `02_pipeline`. Those lower-level public functions remain available for advanced custom composition.
+
+    **What comes back**
+
+    The result keeps the Spark DataFrame, canonical source identity, Guardrail results, profile result when applicable, and orchestration stage status together. Keep the result in `sources` so the transformation can access its DataFrame and the Write block can retain source lineage.
 
     ```python
-    # display(df)
-    # display(dq_df)
-    # display(dq_failed_values)
+    sources["orders"] = source
+
+    # Optional development inspection
+    # display(source["dataframe"])
     ```
 
 ??? example "Show complete Read block output"
@@ -252,50 +228,56 @@ write_result = orchestrate_write(
 In Enforce mode, success means the target has been physically written and FabricOps records the associated Catalogue, Lineage, and Source Observation state handled by the publication flow. In Validate mode, success returns `published=False` and `validation_passed=True`; the notebook exits without writing or profiling the target.
 
 ??? info "Write block details"
-    The full Write block follows **PREPARE → CHECK → WRITE → PROFILE → KEEP**.
+    The standard Write block is intentionally small. **The `orchestrate_write()` arguments are the configuration.** FabricOps owns the governed publication lifecycle behind them.
 
-    **PREPARE**
+    **What you choose**
 
-    FabricOps resolves the target `table_id`, the source lineage, the load strategy, and any optional `WRITE_REPARTITION_BY` setting.
+    - The first argument is the project-transformed PySpark DataFrame to publish.
+    - `name` gives the target a readable notebook name.
+    - `sources` identifies the governed Read results that contributed to this target so FabricOps can retain source-to-target lineage.
+    - `store`, `schema`, and `table_name` identify the logical destination. `00_env_config` resolves the physical Fabric resource for the current environment.
+    - `load_strategy` is chosen independently for each target. Use the strategy required by that target, such as `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`.
+    - `contracts=CONTRACTS` supplies the table-level Data Contract context selected by the notebook.
+    - `repartition_by` is optional Spark write parallelism. Leave it as `None` unless the write scale or performance requires an explicit value.
 
-    **CHECK**
-
-    FabricOps validates the target schema, applies configured sensitive data handling, checks source drift, runs Data Quality rules, and confirms Guardrail coverage. Before a Data Contract is selected, contract-backed checks safely return `SKIPPED`.
-
-    **WRITE**
-
-    `pipeline_write()` is the physical publication boundary. This template deliberately uses `WRITE_LOAD_STRATEGY = "overwrite"` for every target.
-
-    `WRITE_REPARTITION_BY` optionally controls Spark write parallelism. Leave it as `None` for small or normal writes and increase it only when write scale or performance justifies the extra parallelism.
-
-    **PROFILE**
-
-    FabricOps profiles the complete persisted target after publication.
+    This means one pipeline can publish different targets with different strategies. The write strategy belongs to the target, just as the read strategy belongs to each source.
 
     ```python
-    write_profile = profile_table(
-        table_id=write_result["table_id"],
+    write_result = orchestrate_write(
+        transformed_df,
+        name="curated_orders",
+        sources=[sources["orders"], sources["products"]],
+        store="Silver",
+        schema="demo",
+        table_name="curated_orders",
+        load_strategy="overwrite",
+        contracts=CONTRACTS,
+        repartition_by=None,
         spark_session=spark,
     )
-
-    # display(write_profile["profile"])
-    # display(write_profile["frequency_profile"])
     ```
 
-    Because this is a full-refresh pattern, FabricOps profiles the complete persisted target after the overwrite succeeds.
+    **What FabricOps handles**
 
-    **KEEP**
+    Behind that one call, FabricOps resolves the canonical target identity and source lineage, then runs the standard governed target lifecycle: Schema, Sensitive Data, Source Drift, Data Quality, and Guardrail Coverage. If publication is allowed, FabricOps routes the physical write to the correct Lakehouse or Warehouse implementation, records the governed metadata, and profiles the complete persisted target.
 
-    `writes[WRITE_NAME] = write_result` keeps the completed publication result available for later notebook use.
+    You do **not** reconstruct `check_schema()`, `check_sensitive_data()`, `check_source_drift()`, `check_dq()`, `check_guardrail_coverage()`, `pipeline_write()`, or `profile_table()` inside the standard `02_pipeline`. Those lower-level public functions remain available for advanced custom composition.
 
-    Optional inspection remains available when you need it:
+    **How the Data Contract changes publication**
+
+    Validate and Enforce use the same pre-publication Guardrails. The difference is what happens after they pass:
+
+    - **Validate:** returns `published=False` and `validation_passed=True`. The target is not written or profiled.
+    - **Enforce:** continues through the physical write and profiles the persisted target.
+
+    Contract mode is resolved per governed target, so targets in the same notebook can be at different Data Contract lifecycle stages.
+
+    **What comes back**
+
+    The result keeps the canonical target identity, publication or validation state, Guardrail results, profile result when applicable, and orchestration stage status together. Keep it in `writes` when later notebook logic needs the publication result.
 
     ```python
-    # display(WRITE_DATAFRAME)
-    # display(prepared_df)
-    # display(target_dq_df)
-    # display(target_dq_failed_values)
-    # display(support_mapping_df)
+    writes["curated_orders"] = write_result
     ```
 
 ??? example "Show complete Write block outputs"
