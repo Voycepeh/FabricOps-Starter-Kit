@@ -69,8 +69,6 @@ Each source independently chooses its Read mode through `orchestrate_read()`. Th
 
 For example, one pipeline can use an Incremental read for a high-volume Orders table and a Full read for a smaller Products reference table. Each source has its own `orchestrate_read()` call, so the choice is per source rather than a pipeline-wide setting.
 
-The governed Read boundary handles the repeatable FabricOps plumbing around the source while keeping the recipe visible in `02_pipeline`.
-
 ## Transform in the notebook
 
 Transformation belongs to the project. FabricOps returns PySpark DataFrames from the Read orchestrators, and the engineer writes the joins, filters, derivations, aggregations, reshaping, and other project-specific PySpark needed between Read and Write.
