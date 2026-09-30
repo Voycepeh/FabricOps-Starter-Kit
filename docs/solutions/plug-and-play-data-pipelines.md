@@ -142,6 +142,8 @@ flowchart LR
     SAME --> PROD["Production<br/>Fabric Store locations"]
 ```
 
+See [Guided Demo Step 5: Activate the Data Contract and promote to Production](../guided-demo/05-activate-data-contract-and-promote.md) for the promotion walkthrough.
+
 ## Go deeper
 
 Follow the [Guided Demo](../guided-demo.md) to build the pipeline step by step. Use the [Function Reference](../reference/index.md) when you need the lower-level capabilities behind the orchestrators.
