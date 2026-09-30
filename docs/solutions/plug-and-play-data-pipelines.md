@@ -83,7 +83,7 @@ Each target independently chooses its Write mode through `orchestrate_write()`. 
 
 | Write mode | Setting | Typical intent |
 | --- | --- | --- |
-| Overwrite | `load_strategy="overwrite"` | Publish the complete target state |
+| Overwrite | `write_mode="overwrite"` | Publish the complete target state |
 | Append | `load_strategy="append"` | Append a new batch |
 | SCD1 | `load_strategy="scd1"` | Update matching business keys and insert new rows |
 | SCD2 | `load_strategy="scd2"` | Maintain historical versions as records change |
