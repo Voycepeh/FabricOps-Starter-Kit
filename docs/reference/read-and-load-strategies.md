@@ -1,9 +1,9 @@
-# Read & Load Strategies
+# Read & Write Modes
 
-Read Mode and Load Strategy define the two sides of governed pipeline processing:
+Read Mode and Write Mode define the two sides of governed pipeline processing:
 
 - **Read Mode** answers: *how much source data should this run process?*
-- **Load Strategy** answers: *how should the prepared data change the target?*
+- **Write Mode** answers: *how should the prepared data change the target?*
 
 They are configured independently per source and target, which lets one `02_pipeline` mix different processing patterns.
 
@@ -22,7 +22,7 @@ The standard choices are:
 | Side | Options |
 | --- | --- |
 | **Read Mode** | Full, Incremental |
-| **Load Strategy** | Overwrite, Append, SCD1, SCD2 |
+| **Write Mode** | Overwrite, Append, SCD1, SCD2 |
 
 ## Common combinations
 
@@ -40,309 +40,321 @@ The standard choices are:
 
 ## Full
 
-### What it does
+??? example "Full — example and behavior"
 
-`read_mode="full"` reads the complete governed source.
+    ### What it does
 
-### When to use it
+    `read_mode="full"` reads the complete governed source.
 
-Use Full when the complete source is required for the transformation, the source is small enough to reread, or the target strategy intentionally rebuilds/merges from complete state.
+    ### When to use it
 
-### Example
+    Use Full when the complete source is required for the transformation, the source is small enough to reread, or the target strategy intentionally rebuilds/merges from complete state.
 
-Source `orders`:
+    ### Example
 
-| order_id | modified_datetime | status |
-| --- | --- | --- |
-| O001 | 2026-09-01 09:00 | New |
-| O002 | 2026-09-02 10:00 | Shipped |
-| O003 | 2026-09-03 11:00 | Delivered |
+    Source `orders`:
 
-```python
-orders = orchestrate_read(
-    store="Bronze",
-    schema="demo",
-    table_name="orders",
-    read_mode="full",
-)
-```
+    | order_id | modified_datetime | status |
+    | --- | --- | --- |
+    | O001 | 2026-09-01 09:00 | New |
+    | O002 | 2026-09-02 10:00 | Shipped |
+    | O003 | 2026-09-03 11:00 | Delivered |
 
-Returned DataFrame:
+    ```python
+    orders = orchestrate_read(
+        store="Bronze",
+        schema="demo",
+        table_name="orders",
+        read_mode="full",
+    )
+    ```
 
-| order_id | modified_datetime | status |
-| --- | --- | --- |
-| O001 | 2026-09-01 09:00 | New |
-| O002 | 2026-09-02 10:00 | Shipped |
-| O003 | 2026-09-03 11:00 | Delivered |
+    Returned DataFrame:
 
-All three rows are in scope.
+    | order_id | modified_datetime | status |
+    | --- | --- | --- |
+    | O001 | 2026-09-01 09:00 | New |
+    | O002 | 2026-09-02 10:00 | Shipped |
+    | O003 | 2026-09-03 11:00 | Delivered |
+
+    All three rows are in scope.
 
 ## Incremental
 
-### What it does
+??? example "Incremental — example, bootstrap, and progress"
 
-`read_mode="incremental"` resolves work not yet committed for the **exact source-to-target relationship**.
+    ### What it does
 
-A `target_table_id` is required because two targets can consume the same source to different points.
+    `read_mode="incremental"` resolves work not yet committed for the **exact source-to-target relationship**.
 
-### When to use it
+    A `target_table_id` is required because two targets can consume the same source to different points.
 
-Use Incremental when only new or changed source scope should be processed instead of rereading the complete source every run.
+    ### When to use it
 
-### Watermark example
+    Use Incremental when only new or changed source scope should be processed instead of rereading the complete source every run.
 
-Assume the target has successfully consumed source changes through:
+    ### Watermark example
 
-```text
-modified_datetime = 2026-09-02 10:00
-```
+    Assume the target has successfully consumed source changes through:
 
-Current source:
+    ```text
+    modified_datetime = 2026-09-02 10:00
+    ```
 
-| order_id | modified_datetime | status |
-| --- | --- | --- |
-| O001 | 2026-09-01 09:00 | New |
-| O002 | 2026-09-02 10:00 | Shipped |
-| O003 | 2026-09-03 11:00 | Delivered |
-| O004 | 2026-09-04 12:00 | New |
+    Current source:
 
-An Incremental read returns only unconsumed work:
+    | order_id | modified_datetime | status |
+    | --- | --- | --- |
+    | O001 | 2026-09-01 09:00 | New |
+    | O002 | 2026-09-02 10:00 | Shipped |
+    | O003 | 2026-09-03 11:00 | Delivered |
+    | O004 | 2026-09-04 12:00 | New |
 
-| order_id | modified_datetime | status | Why |
-| --- | --- | --- | --- |
-| O003 | 2026-09-03 11:00 | Delivered | After committed watermark. |
-| O004 | 2026-09-04 12:00 | New | After committed watermark. |
+    An Incremental read returns only unconsumed work:
 
-```python
-orders = orchestrate_read(
-    store="Bronze",
-    schema="demo",
-    table_name="orders",
-    read_mode="incremental",
-    target_table_id=TARGET_TABLE_ID,
-)
-```
+    | order_id | modified_datetime | status | Why |
+    | --- | --- | --- | --- |
+    | O003 | 2026-09-03 11:00 | Delivered | After committed watermark. |
+    | O004 | 2026-09-04 12:00 | New | After committed watermark. |
 
-### First run
+    ```python
+    orders = orchestrate_read(
+        store="Bronze",
+        schema="demo",
+        table_name="orders",
+        read_mode="incremental",
+        target_table_id=TARGET_TABLE_ID,
+    )
+    ```
 
-If no committed source-to-target baseline exists, FabricOps performs a **full bootstrap read**.
+    ### First run
 
-Using the same four-row source, the first Incremental run therefore returns O001–O004. The target Load Strategy determines whether that bootstrap can be published safely.
+    If no committed source-to-target baseline exists, FabricOps performs a **full bootstrap read**.
 
-### Progress is committed after successful publication
+    Using the same four-row source, the first Incremental run therefore returns O001–O004. The target Write Mode determines whether that bootstrap can be published safely.
 
-Reading data does **not** advance the accepted watermark/partition baseline.
+    ### Progress is committed after successful publication
 
-```text
-Observe source
-→ resolve incremental scope
-→ read scope
-→ transform
-→ governed write succeeds
-→ commit accepted Source Observation
-```
+    Reading data does **not** advance the accepted watermark/partition baseline.
 
-If the pipeline fails before publication, the unconsumed source work remains eligible for the next run.
+    ```text
+    Observe source
+    → resolve incremental scope
+    → read scope
+    → transform
+    → governed write succeeds
+    → commit accepted Source Observation
+    ```
 
-### Notes
+    If the pipeline fails before publication, the unconsumed source work remains eligible for the next run.
 
-- Lakehouse incremental scope is applied to the Spark DataFrame.
-- Warehouse incremental scope is pushed down using FabricOps-owned SQL.
-- Caller-owned Warehouse `query` SQL cannot be combined with Incremental mode because FabricOps owns the incremental predicate.
-- `has_data` / `should_process` indicate whether the resolved scope contains work.
+    ### Notes
+
+    - Lakehouse incremental scope is applied to the Spark DataFrame.
+    - Warehouse incremental scope is pushed down using FabricOps-owned SQL.
+    - Caller-owned Warehouse `query` SQL cannot be combined with Incremental mode because FabricOps owns the incremental predicate.
+    - `has_data` / `should_process` indicate whether the resolved scope contains work.
 
 ---
 
-# Load Strategies
+# Write Modes
 
 ## Overwrite
 
-### What it does
+??? example "Overwrite — before and after"
 
-`load_strategy="overwrite"` publishes the prepared DataFrame as the target state.
+    ### What it does
 
-### When to use it
+    `load_strategy="overwrite"` publishes the prepared DataFrame as the target state.
 
-Use it when the incoming DataFrame represents the complete authoritative state, or when a governed Lakehouse partition can be safely rebuilt.
+    ### When to use it
 
-### Example
+    Use it when the incoming DataFrame represents the complete authoritative state, or when a governed Lakehouse partition can be safely rebuilt.
 
-Existing target:
+    ### Example
 
-| order_id | status |
-| --- | --- |
-| O001 | New |
-| O002 | Shipped |
+    Existing target:
 
-Prepared DataFrame:
+    | order_id | status |
+    | --- | --- |
+    | O001 | New |
+    | O002 | Shipped |
 
-| order_id | status |
-| --- | --- |
-| O001 | Delivered |
-| O003 | New |
+    Prepared DataFrame:
 
-After Overwrite:
+    | order_id | status |
+    | --- | --- |
+    | O001 | Delivered |
+    | O003 | New |
 
-| order_id | status |
-| --- | --- |
-| O001 | Delivered |
-| O003 | New |
+    After Overwrite:
 
-O002 disappears because the prepared DataFrame becomes the complete target state.
+    | order_id | status |
+    | --- | --- |
+    | O001 | Delivered |
+    | O003 | New |
 
-### Partition-scoped Overwrite
+    O002 disappears because the prepared DataFrame becomes the complete target state.
 
-When a governed `partition_column` is configured for a Lakehouse target, FabricOps can replace only affected partitions instead of the whole table.
+    ### Partition-scoped Overwrite
 
-A partial Incremental input cannot use whole-table Overwrite. FabricOps rejects that combination because unaffected target rows would otherwise be lost.
+    When a governed `partition_column` is configured for a Lakehouse target, FabricOps can replace only affected partitions instead of the whole table.
+
+    A partial Incremental input cannot use whole-table Overwrite. FabricOps rejects that combination because unaffected target rows would otherwise be lost.
 
 ---
 
 ## Append
 
-### What it does
+??? example "Append — before and after"
 
-`load_strategy="append"` adds the prepared rows to the existing target.
+    ### What it does
 
-### When to use it
+    `load_strategy="append"` adds the prepared rows to the existing target.
 
-Use Append for new immutable/event-like rows where an incoming batch should be added rather than matched against existing business keys.
+    ### When to use it
 
-### Example
+    Use Append for new immutable/event-like rows where an incoming batch should be added rather than matched against existing business keys.
 
-Existing target:
+    ### Example
 
-| order_id | status |
-| --- | --- |
-| O001 | New |
-| O002 | Shipped |
+    Existing target:
 
-Prepared DataFrame:
+    | order_id | status |
+    | --- | --- |
+    | O001 | New |
+    | O002 | Shipped |
 
-| order_id | status |
-| --- | --- |
-| O003 | Delivered |
-| O004 | New |
+    Prepared DataFrame:
 
-After Append:
+    | order_id | status |
+    | --- | --- |
+    | O003 | Delivered |
+    | O004 | New |
 
-| order_id | status |
-| --- | --- |
-| O001 | New |
-| O002 | Shipped |
-| O003 | Delivered |
-| O004 | New |
+    After Append:
 
-### Incremental bootstrap safety
+    | order_id | status |
+    | --- | --- |
+    | O001 | New |
+    | O002 | Shipped |
+    | O003 | Delivered |
+    | O004 | New |
 
-On the first Incremental → Append run, the Read side has no baseline and therefore returns the full source.
+    ### Incremental bootstrap safety
 
-FabricOps allows that bootstrap only when the target is new or empty. If the target is already populated but no committed source-to-target baseline exists, publication fails rather than silently duplicating the source.
+    On the first Incremental → Append run, the Read side has no baseline and therefore returns the full source.
+
+    FabricOps allows that bootstrap only when the target is new or empty. If the target is already populated but no committed source-to-target baseline exists, publication fails rather than silently duplicating the source.
 
 ---
 
 ## SCD1
 
-### What it does
+??? example "SCD1 — update and insert example"
 
-`load_strategy="scd1"` keeps **one current row per governed business key**.
+    ### What it does
 
-Matching keys are updated in place; new keys are inserted.
+    `load_strategy="scd1"` keeps **one current row per governed business key**.
 
-### Required parameters
+    Matching keys are updated in place; new keys are inserted.
 
-```yaml
-load_strategy: scd1
-key_columns:
-  - customer_id
-```
+    ### Required parameters
 
-### When to use it
+    ```yaml
+    load_strategy: scd1
+    key_columns:
+      - customer_id
+    ```
 
-Use SCD1 when consumers need the latest state but do not need historical versions.
+    ### When to use it
 
-### Example
+    Use SCD1 when consumers need the latest state but do not need historical versions.
 
-Existing target:
+    ### Example
 
-| customer_id | tier | country |
-| --- | --- | --- |
-| C001 | Silver | SG |
-| C002 | Gold | MY |
+    Existing target:
 
-Prepared DataFrame:
+    | customer_id | tier | country |
+    | --- | --- | --- |
+    | C001 | Silver | SG |
+    | C002 | Gold | MY |
 
-| customer_id | tier | country |
-| --- | --- | --- |
-| C001 | Gold | SG |
-| C003 | Silver | AU |
+    Prepared DataFrame:
 
-After SCD1:
+    | customer_id | tier | country |
+    | --- | --- | --- |
+    | C001 | Gold | SG |
+    | C003 | Silver | AU |
 
-| customer_id | tier | country | What happened |
-| --- | --- | --- | --- |
-| C001 | Gold | SG | Existing C001 updated. |
-| C002 | Gold | MY | Existing key not present in the batch remains. |
-| C003 | Silver | AU | New key inserted. |
+    After SCD1:
 
-There is no historical Silver version of C001 after the merge.
+    | customer_id | tier | country | What happened |
+    | --- | --- | --- | --- |
+    | C001 | Gold | SG | Existing C001 updated. |
+    | C002 | Gold | MY | Existing key not present in the batch remains. |
+    | C003 | Silver | AU | New key inserted. |
+
+    There is no historical Silver version of C001 after the merge.
 
 ---
 
 ## SCD2
 
-### What it does
+??? example "SCD2 — history example"
 
-`load_strategy="scd2"` keeps historical versions when governed values change.
+    ### What it does
 
-### Required parameters
+    `load_strategy="scd2"` keeps historical versions when governed values change.
 
-```yaml
-load_strategy: scd2
-key_columns:
-  - customer_id
-effective_column: modified_datetime
-tracked_columns:
-  - tier
-  - country
-```
+    ### Required parameters
 
-`key_columns` and `effective_column` are required. `tracked_columns` is optional.
+    ```yaml
+    load_strategy: scd2
+    key_columns:
+      - customer_id
+    effective_column: modified_datetime
+    tracked_columns:
+      - tier
+      - country
+    ```
 
-FabricOps maintains:
+    `key_columns` and `effective_column` are required. `tracked_columns` is optional.
 
-- `_effective_from`
-- `_effective_to`
-- `_is_current`
+    FabricOps maintains:
 
-### When to use it
+    - `_effective_from`
+    - `_effective_to`
+    - `_is_current`
 
-Use SCD2 when consumers need both the current state and the history of changes.
+    ### When to use it
 
-### Example
+    Use SCD2 when consumers need both the current state and the history of changes.
 
-Existing target:
+    ### Example
 
-| customer_id | tier | _effective_from | _effective_to | _is_current |
-| --- | --- | --- | --- | --- |
-| C001 | Silver | 2026-01-01 | null | true |
-| C002 | Gold | 2026-01-01 | null | true |
+    Existing target:
 
-Prepared DataFrame:
+    | customer_id | tier | _effective_from | _effective_to | _is_current |
+    | --- | --- | --- | --- | --- |
+    | C001 | Silver | 2026-01-01 | null | true |
+    | C002 | Gold | 2026-01-01 | null | true |
 
-| customer_id | tier | modified_datetime |
-| --- | --- | --- |
-| C001 | Gold | 2026-09-15 |
-| C003 | Silver | 2026-09-15 |
+    Prepared DataFrame:
 
-After SCD2:
+    | customer_id | tier | modified_datetime |
+    | --- | --- | --- |
+    | C001 | Gold | 2026-09-15 |
+    | C003 | Silver | 2026-09-15 |
 
-| customer_id | tier | _effective_from | _effective_to | _is_current | What happened |
-| --- | --- | --- | --- | --- | --- |
-| C001 | Silver | 2026-01-01 | 2026-09-15 | false | Previous C001 version closed. |
-| C001 | Gold | 2026-09-15 | null | true | New current C001 version inserted. |
-| C002 | Gold | 2026-01-01 | null | true | Unchanged existing key remains current. |
-| C003 | Silver | 2026-09-15 | null | true | New key inserted. |
+    After SCD2:
+
+    | customer_id | tier | _effective_from | _effective_to | _is_current | What happened |
+    | --- | --- | --- | --- | --- | --- |
+    | C001 | Silver | 2026-01-01 | 2026-09-15 | false | Previous C001 version closed. |
+    | C001 | Gold | 2026-09-15 | null | true | New current C001 version inserted. |
+    | C002 | Gold | 2026-01-01 | null | true | Unchanged existing key remains current. |
+    | C003 | Silver | 2026-09-15 | null | true | New key inserted. |
 
 ---
 
@@ -366,6 +378,8 @@ Likewise, Full does not automatically mean Overwrite. A Full source can still fe
 - Multiple `orchestrate_write()` calls publish independently; they are not one atomic transaction.
 
 ## Contract and metadata lifecycle
+
+The notebook-facing setting is `write_mode`. FabricOps resolves that public Write Mode to the governed `load_strategy` stored in processing metadata and passed to the lower-level `pipeline_write()` implementation.
 
 The applicable Data Contract remains authoritative for governed processing. Development can propose processing settings; selected/frozen contract validation governs Development, and the active approved contract governs Production.
 
