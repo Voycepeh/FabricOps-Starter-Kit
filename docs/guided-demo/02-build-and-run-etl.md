@@ -203,7 +203,7 @@ If the Guardrails pass, FabricOps publishes the target and returns the Write res
     - `check_dq()`
     - `check_guardrail_coverage()`
 
-    Sensitive Data treatment is applied before the remaining Data Quality checks and publication.
+    Sensitive Data treatment is applied before the remaining Data Quality checks and publication. See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for Mask, Bucket, Tokenize, and Remove behavior and examples.
 
     If the Guardrails pass, `pipeline_write()` writes to the appropriate Lakehouse or Warehouse destination and records the associated publication metadata and source-to-target lineage.
 
