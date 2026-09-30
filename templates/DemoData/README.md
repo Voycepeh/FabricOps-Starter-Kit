@@ -1,29 +1,16 @@
 # FabricOps Guided Demo data
 
-These fixtures support one Orders-domain story across setup, Engineering, incremental-load behaviour, profiling, and later Guardrail validation.
+These fixtures support one Orders-domain story across setup, Engineering, profiling, and Guardrail validation.
 
 ## Core data
 
 | File | Purpose |
 | --- | --- |
 | `orders.csv` | Canonical valid Orders baseline used by 0C to seed `bronze.demo.orders` and by the main Guided Demo. |
-| `orders_incremental.csv` | Later Orders batch intentionally left untouched in 0C and revisited during the later `02_pipeline` source-change/load-strategy story. |
 | `products.csv` | Product reference data used by 0C to seed `bronze.demo.products`. |
 | `order_history.csv` | Historical transactions used by 0C to seed `gold.demo.order_history` and demonstrate Warehouse reads. |
 
-## Incremental-load scenarios
-
-These fixtures are intentionally retained for the later incremental/load-strategy showcase rather than loaded by 0C:
-
-| File | Scenario |
-| --- | --- |
-| `orders_partition_baseline.csv` | Baseline partitioned target state used before demonstrating partition overwrite behaviour. |
-| `orders_partition_changed.csv` | Changed rows for an existing partition so the walkthrough can demonstrate replacing only the affected partition. |
-| `orders_partition_new.csv` | Rows for a new partition so the walkthrough can demonstrate adding a new partition alongside existing data. |
-| `orders_watermark_duplicate.csv` | Negative incremental-watermark fixture containing duplicate `modified_datetime` values. |
-| `orders_watermark_null.csv` | Negative incremental-watermark fixture containing a null `modified_datetime`. |
-
-These files should remain untouched during 0C. They belong to the later Engineering walkthrough where load strategy and incremental processing are demonstrated explicitly.
+The later Engineering scenarios reuse the canonical Orders baseline and create their source changes directly in the walkthrough. `modified_datetime` is available as the incremental watermark, and `order_date` can be derived from `order_datetime` when a partition column is needed. Separate incremental, partition, and watermark fixture files are therefore not required.
 
 ## Guardrail scenario
 
@@ -49,7 +36,7 @@ The normal baseline remains valid so the first Engineering run is deterministic.
 Every retained fixture has an explicit Guided Demo owner:
 
 - 0C owns the canonical file-format reads plus the initial Lakehouse/Warehouse seed tables.
-- the later `02_pipeline` walkthrough owns `orders_incremental.csv` and the partition/watermark incremental-load fixtures.
+- later Engineering scenarios mutate the canonical Orders source in the walkthrough rather than relying on separate fixture files.
 - the later Guardrail validation walkthrough owns `orders_guardrail_failures.csv`.
 
 Add new fixtures only when their owning demo/test scenario is documented alongside them.
