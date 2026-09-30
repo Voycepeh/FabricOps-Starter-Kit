@@ -1,6 +1,27 @@
 # Data Quality rules
 
-FabricOps supports **9 Data Quality rule types**.
+FabricOps supports **9 Data Quality rule types**. The Data Contract UI intentionally presents these in Governance-friendly terms rather than exposing every runtime rule name directly.
+
+## UI to DQ rule mapping
+
+| Data Contract UI | What Governance authors | FabricOps rule type |
+|---|---|---|
+| Columns → Column data quality → **Completeness** | Missing-value threshold and blank handling | [`completeness`](completeness.md) |
+| Columns → Column data quality → **Uniqueness** | Minimum unique percentage | [`uniqueness`](uniqueness.md) |
+| Columns → Column data quality → **Value Lists → Whitelist** | Values that are permitted | [`value_set`](value-set.md) with `mode: allow` |
+| Columns → Column data quality → **Value Lists → Blacklist** | Values that are rejected | [`value_set`](value-set.md) with `mode: block` |
+| Columns → Column data quality → **Value Rules** | Lower/upper bounds and inclusivity | [`range`](range.md) |
+| DQ Rules → **Business Rules** | Text-format requirement | [`pattern`](pattern.md) when resolved as a format rule |
+| DQ Rules → **Business Rules** | Direct relationship between two columns | [`column_relationship`](column-relationship.md) |
+| DQ Rules → **Business Rules** | A field is required only under a condition | [`conditional_completeness`](conditional-completeness.md) |
+| DQ Rules → **Business Rules** | A whitelist or blacklist applies only under a condition | [`conditional_values`](conditional-values.md) |
+| DQ Rules → **Business Rules** | Requirement that cannot be represented by a structured rule | [`custom_expression`](custom-expression.md) fallback |
+
+Whitelist and Blacklist are separate Governance controls but share the same underlying `value_set` rule type. If both are configured, they are persisted as independent rules.
+
+Business Rules are resolved into the smallest structured DQ rule or rules that preserve the requirement. `custom_expression` is reserved for requirements that cannot be represented without changing their meaning.
+
+## Rule reference
 
 | Rule | When to use it | Required parameters | Example |
 |---|---|---|---|
