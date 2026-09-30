@@ -123,9 +123,9 @@ A Data Contract brings together the governed table definition, descriptive Enric
 
 ### How enforcement works
 
-The orchestrators call the underlying FabricOps checks at the appropriate Read or Write boundary. Checks such as Schema, Freshness, Source Drift, Sensitive Data, Data Quality, and Guardrail Coverage can stop the pipeline when a blocking expectation fails. On the Write side, these checks run before `pipeline_write()`, so invalid data can fail early before the target is published.
+The orchestrators call the underlying FabricOps checks at the appropriate Read or Write boundary. Checks such as Schema, Freshness, Source Drift, Sensitive Data, Data Quality, and Guardrail Coverage can stop the pipeline when a blocking expectation fails. On the Write side, these checks run before `pipeline_write()`, so invalid data can fail early before writing to the target.
 
-See [Guided Demo Step 4: Validate the frozen Data Contract](../guided-demo/04-validate-frozen-data-contract.md) to see the same enforcement path validate a frozen contract against the real pipeline without publishing the target.
+In Development, [Guided Demo Step 4: Validate the frozen Data Contract](../guided-demo/04-validate-frozen-data-contract.md) uses this same enforcement path to validate the frozen contract against the real pipeline without writing to the target. In [Step 5](../guided-demo/05-activate-data-contract-and-promote.md), Governance activates that validated contract for Production. When the promoted `02_pipeline` runs in Production, the activated contract is resolved and enforced; only after the blocking checks succeed does the Write path continue to `pipeline_write()` and write to the target.
 
 ## Promotion
 
