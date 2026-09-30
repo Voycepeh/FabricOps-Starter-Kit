@@ -1,5 +1,11 @@
 # uniqueness
 
+## Where this appears in the Data Contract UI
+
+**Columns → Column data quality → Uniqueness**
+
+This is a directly authored column rule. The UI lets Governance set the minimum unique percentage; use 100% for strict uniqueness. Composite grain can also resolve to a table-level uniqueness rule. It is persisted as `rule_type: uniqueness`.
+
 ## What this rule does
 
 Checks that one column, or one combination of columns, meets the required uniqueness level.

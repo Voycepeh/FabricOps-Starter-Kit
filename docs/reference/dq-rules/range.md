@@ -1,5 +1,11 @@
 # range
 
+## Where this appears in the Data Contract UI
+
+**Columns → Column data quality → Value Rules**
+
+This is a directly authored column rule. The UI exposes lower and upper bounds plus independent inclusive-bound controls. It is persisted as `rule_type: range`.
+
 ## What this rule does
 
 Checks one numeric or date-like column against a governed minimum, maximum, or both.

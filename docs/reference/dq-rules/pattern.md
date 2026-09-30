@@ -1,5 +1,11 @@
 # pattern
 
+## Where this appears in the Data Contract UI
+
+**DQ Rules → Business Rules → Resolved DQ Rules**
+
+Pattern is not a manual regex field in the column editor. Governance describes the business requirement, and FabricOps can resolve a text-format requirement to `rule_type: pattern`; the regular expression is an implementation detail shown for review.
+
 ## What this rule does
 
 Checks populated text against a regular expression.

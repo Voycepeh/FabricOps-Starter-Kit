@@ -1,5 +1,11 @@
 # completeness
 
+## Where this appears in the Data Contract UI
+
+**Columns → Column data quality → Completeness**
+
+This is a directly authored column rule. The UI controls the maximum missing percentage and whether blank text is treated as missing. It is persisted as `rule_type: completeness`.
+
 ## What this rule does
 
 Checks whether one column is populated within an allowed missing threshold.

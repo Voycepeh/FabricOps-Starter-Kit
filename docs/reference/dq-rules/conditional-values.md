@@ -1,5 +1,11 @@
 # conditional_values
 
+## Where this appears in the Data Contract UI
+
+**DQ Rules → Business Rules → Resolved DQ Rules**
+
+Governance describes the conditional value requirement in business language, such as “When country is SG, currency must be SGD.” FabricOps resolves it to `rule_type: conditional_values` when a governed whitelist or blacklist applies only under a condition.
+
 ## What this rule does
 
 Checks a target column against a governed value set only when a condition on another column matches.
