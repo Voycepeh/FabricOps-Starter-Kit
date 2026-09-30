@@ -198,7 +198,7 @@ In other words, **Engineering supplies what physically exists; Governance adds w
 
     The exact manifest grows with the Enrichment, Processing, and Guardrails authored for the table. See [METADATA_DATA_CONTRACT](reference/metadata/metadata_data_contract.md) for the persisted table schema.
 
-[Explore AI-assisted Data Contract Authoring →](solutions/ai-assisted-data-contract-authoring.md)
+[Explore AI-assisted Data Sensitivity & Description →](solutions/ai-assisted-data-contract-authoring.md)
 
 [Explore Business Rules to Data Quality →](solutions/business-rules-to-data-quality.md)
 
@@ -248,7 +248,7 @@ In other words, **Engineering supplies what physically exists; Governance adds w
 ## Featured Solutions
 
 - [Plug-and-Play Data Pipelines with Data Contract Enforcement](solutions/plug-and-play-data-pipelines.md)
-- [AI-assisted Data Contract Authoring](solutions/ai-assisted-data-contract-authoring.md)
+- [AI-assisted Data Sensitivity & Description](solutions/ai-assisted-data-contract-authoring.md)
 - [Generate Enforceable Data Quality Rules from Business Rules](solutions/business-rules-to-data-quality.md)
 - [Scan Effective Data Access](solutions/effective-data-access.md)
 - [Explore the Public Function Call Flow](function-call-graph.md)
