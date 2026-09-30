@@ -5,7 +5,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "A lightweight governed engineering framework for Microsoft Fabric.",
-    "long_definition": "FabricOps combines reusable notebooks, governed read/write functions, Data Contracts, Data Agreements, and shared metadata so teams can build and run governed Fabric pipelines with less repeated plumbing.",
+    "long_definition": "FabricOps packages reusable notebooks, governed read/write orchestration, Data Contracts, Data Agreements, and shared metadata so teams can run governed Fabric pipelines without rebuilding the same engineering and governance plumbing.",
     "preferred_usage": "Use as the public project name.",
     "avoid_usage": "full data product platform"
   },
@@ -91,7 +91,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "The outcome of a Guardrail evaluation during a pipeline run.",
-    "long_definition": "A Guardrail Result records the evaluated rule, its outcome, and the resulting status or pipeline decision.",
+    "long_definition": "FabricOps returns the evaluated rule outcome and resulting status or pipeline decision so the caller can inspect what passed, warned, or blocked.",
     "preferred_usage": "Use guardrail result for the recorded outcome of a FabricOps Guardrail evaluation.",
     "avoid_usage": "rule result"
   },
@@ -136,7 +136,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "A read that loads the complete selected source dataset for the run.",
-    "long_definition": "In FabricOps, a full read has no project-owned source filter or incremental scope applied before the dataset is returned.",
+    "long_definition": "FabricOps returns the complete selected source without a project-owned source filter or incremental scope.",
     "preferred_usage": "Use full dataset when distinguishing a complete input from an explicitly filtered project-owned query.",
     "avoid_usage": "incremental read configuration"
   },
@@ -436,7 +436,7 @@
     ],
     "category": "Data Engineering concepts",
     "short_definition": "Named settings that control system or pipeline behaviour without changing the underlying implementation.",
-    "long_definition": "Configuration is the set of named settings used to control environment targets, processing choices, parameters, rules, and other behaviour without rewriting the implementation.",
+    "long_definition": "FabricOps uses configuration to resolve environment-specific Fabric items and repeatable pipeline settings without embedding them throughout project logic.",
     "preferred_usage": "Use configuration in narrative text; use config in code-oriented shorthand.",
     "avoid_usage": "hard-coded values when behaviour should be configurable"
   },
@@ -448,7 +448,7 @@
     ],
     "category": "Data Engineering concepts",
     "short_definition": "A repeatable sequence of steps that moves, transforms, validates, or writes data.",
-    "long_definition": "A data pipeline is a repeatable processing flow that can read source data, transform it, apply checks or validations, and write results to a target.",
+    "long_definition": "In FabricOps, 02_pipeline provides the standard Read → Transform → Write flow, with governed orchestration around project-owned transformation logic.",
     "preferred_usage": "Use pipeline for an end-to-end data-processing flow.",
     "avoid_usage": "workflow when a data pipeline is specifically meant"
   },
@@ -483,7 +483,7 @@
     ],
     "category": "Data Engineering concepts",
     "short_definition": "The defined structure of data, including its fields or columns and their data types.",
-    "long_definition": "A Schema describes the structure expected for a dataset or table, including field or column names, data types, and other structural constraints or expectations.",
+    "long_definition": "FabricOps uses schema expectations to compare the structure of governed data, including column names and data types, at the relevant read or write boundary.",
     "preferred_usage": "Use schema for the defined structure of data.",
     "avoid_usage": "layout when schema is meant"
   },
@@ -547,7 +547,7 @@
     "aliases": [],
     "category": "Data Engineering concepts",
     "short_definition": "A load strategy that adds incoming rows to the target.",
-    "long_definition": "Append writes new rows without changing existing target rows.",
+    "long_definition": "FabricOps adds the prepared incoming rows without changing existing target rows.",
     "preferred_usage": "Use append for an additive target write strategy.",
     "avoid_usage": "incremental load when the read scope rather than write strategy is meant"
   },
@@ -557,7 +557,7 @@
     "aliases": [],
     "category": "Data Engineering concepts",
     "short_definition": "A load strategy that replaces the target data in the write scope.",
-    "long_definition": "Overwrite replaces existing target data with the prepared output for the configured write scope.",
+    "long_definition": "FabricOps replaces existing target data with the prepared output for the configured write scope.",
     "preferred_usage": "Use overwrite for a replacement target write strategy.",
     "avoid_usage": "SCD Type 1 when record-level matching and updates are meant"
   },
@@ -573,5 +573,101 @@
     "long_definition": "SCD1 updates the matched record in place. SCD2 preserves history by closing the previous version and writing a new version.",
     "preferred_usage": "Use slowly changing dimensions when discussing SCD patterns; introduce SCD before using the abbreviation alone.",
     "avoid_usage": "incremental load when the history-management pattern is meant"
+  },
+  {
+    "id": "contract-status",
+    "term": "contract status",
+    "aliases": [
+      "Draft",
+      "Frozen",
+      "Activated"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "The lifecycle state of a Data Contract version: Draft, Frozen, or Activated.",
+    "long_definition": "A Draft can be edited, a Frozen version is immutable and ready for validation, and an Activated frozen version is approved for Production use and linked to a Data Agreement version.",
+    "preferred_usage": "Use Draft, Frozen, and Activated for Data Contract lifecycle states.",
+    "avoid_usage": "approved when the specific FabricOps contract state is meant"
+  },
+  {
+    "id": "guardrail-coverage",
+    "term": "guardrail coverage",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "A write-side check that confirms required governed expectations are present before publishing a target.",
+    "long_definition": "FabricOps checks Guardrail Coverage before the target write so required contract protections are not silently omitted from the governed pipeline.",
+    "preferred_usage": "Use guardrail coverage for the write-side completeness check over required governed protections.",
+    "avoid_usage": "data quality coverage when the broader contract protection check is meant"
+  },
+  {
+    "id": "business-rule",
+    "term": "business rule",
+    "aliases": [
+      "business rules"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "A human-readable requirement that describes how governed data should behave.",
+    "long_definition": "FabricOps can translate a Business Rule into the smallest deterministic Data Quality rules it can resolve, falling back to a custom PySpark boolean expression when needed.",
+    "preferred_usage": "Use business rule for the human-authored requirement before translation to executable Data Quality rules.",
+    "avoid_usage": "DQ rule when referring to the original human-readable requirement"
+  },
+  {
+    "id": "information-classification",
+    "term": "information classification",
+    "aliases": [
+      "classification"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "A descriptive label that records the sensitivity or governance meaning of a table or column.",
+    "long_definition": "FabricOps stores Information Classification as Enrichment. It provides governance context but does not apply masking, tokenization, bucketing, removal, or other runtime treatment by itself.",
+    "preferred_usage": "Use information classification for descriptive sensitivity labels.",
+    "avoid_usage": "Sensitive Data Guardrail when no runtime treatment is configured"
+  },
+  {
+    "id": "source-observation",
+    "term": "source observation",
+    "aliases": [
+      "source observations"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "A recorded view of source state used as the baseline for Source Drift checks.",
+    "long_definition": "FabricOps compares the current source state with the latest committed observation for the same source, target, and environment. A new observation is committed only after the target write succeeds.",
+    "preferred_usage": "Use source observation for the persisted Source Drift baseline.",
+    "avoid_usage": "profile when the drift baseline is specifically meant"
+  },
+  {
+    "id": "lineage",
+    "term": "lineage",
+    "aliases": [
+      "data lineage"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "Metadata that records how governed data moves from source to target through a pipeline.",
+    "long_definition": "FabricOps records source-to-target relationships from governed pipeline execution so a table's upstream and downstream paths can be traced.",
+    "preferred_usage": "Use lineage for recorded source-to-target relationships.",
+    "avoid_usage": "dependency when recorded data movement is meant"
+  },
+  {
+    "id": "table-id",
+    "term": "table_id",
+    "aliases": [
+      "table ID"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "The stable FabricOps identifier for one governed table.",
+    "long_definition": "FabricOps uses table_id to resolve a governed table across metadata, Data Contracts, profiles, guardrails, lineage, and pipeline execution without relying on a physical Fabric item name alone.",
+    "preferred_usage": "Use table_id when referring to the canonical FabricOps table identifier.",
+    "avoid_usage": "table name when the governed identity is meant"
+  },
+  {
+    "id": "effective-data-access",
+    "term": "effective data access",
+    "aliases": [
+      "effective access"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "The resolved access people have to Fabric data after combining supported access paths.",
+    "long_definition": "FabricOps combines Workspace roles, SQL endpoint grants, and OneLake security roles, then resolves principals to people where possible while retaining whether access came through an individual or group.",
+    "preferred_usage": "Use effective data access for the combined resolved view of supported Fabric access paths.",
+    "avoid_usage": "workspace access when multiple access paths are included"
   }
 ]
