@@ -1,5 +1,11 @@
 # column_relationship
 
+## Where this appears in the Data Contract UI
+
+**DQ Rules → Business Rules → Resolved DQ Rules**
+
+Governance describes the relationship in business language, such as “End date must be after start date.” FabricOps resolves the requirement to `rule_type: column_relationship` when a direct two-column comparison can preserve the requirement.
+
 ## What this rule does
 
 Compares two different columns on the same row using `=`, `!=`, `>`, `>=`, `<`, or `<=`.
