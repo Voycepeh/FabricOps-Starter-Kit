@@ -72,11 +72,7 @@ The template contains three independent Read blocks.
 
 ### About `orchestrate_read()`
 
-`orchestrate_read()` is the standard FabricOps entry point for reading a governed source.
-
-Instead of manually wiring together the physical read, source identity, Guardrails, and profiling, you describe the source once and FabricOps orchestrates the standard Read lifecycle around it.
-
-Under the hood, it uses `pipeline_read()` to read from the configured Lakehouse or Warehouse, resolves the canonical `table_id`, runs the applicable Freshness, Schema, and Data Quality Guardrails, and profiles the source when profiling applies.
+`orchestrate_read()` is the standard FabricOps entry point for reading a governed source. You describe the source once, and FabricOps handles the standard Read lifecycle around it.
 
 The main parameters are:
 
@@ -91,7 +87,7 @@ The main parameters are:
 
 ### Configure and run each Read
 
-Each source is configured directly in its own `orchestrate_read()` call.
+With those parameters, each source can be configured directly in its own `orchestrate_read()` call.
 
 ```python
 source = orchestrate_read(
@@ -107,7 +103,7 @@ source = orchestrate_read(
 sources["orders"] = source
 ```
 
-The returned `source` keeps the DataFrame together with the supporting Read outputs:
+After the Read finishes, the returned `source` keeps the DataFrame together with the supporting Read outputs:
 
 - `source["dataframe"]` → the Spark DataFrame returned by the Read.
 - `source["table_id"]` → the canonical FabricOps identity for the source table.
@@ -141,7 +137,7 @@ Store the complete result in `sources["orders"]` so later transformation and Wri
 
 ## 4. Transformation
 
-After reading the data from the Lakehouse or Warehouse into PySpark DataFrames, use normal PySpark in this section to perform your project-specific transformation logic, such as:
+Once the Read blocks return their DataFrames, FabricOps gets out of the way. Use normal PySpark for the project-specific transformation logic, such as:
 
 - joining DataFrames,
 - filtering rows,
@@ -166,11 +162,7 @@ The template contains two independent Write blocks.
 
 ### About `orchestrate_write()`
 
-`orchestrate_write()` is the standard FabricOps entry point for validating and publishing a governed target.
-
-Instead of manually wiring together target identity, Data Contract Guardrails, the physical write, lineage, metadata registration, and profiling, you describe the target once and FabricOps orchestrates the standard Write lifecycle around it.
-
-Under the hood, FabricOps resolves the target `table_id` and contributing source identities, runs the applicable Schema, Sensitive Data, Source Drift, Data Quality, and Guardrail Coverage checks, then uses `pipeline_write()` to publish to the configured Lakehouse or Warehouse. The persisted target is profiled after a successful write.
+`orchestrate_write()` is the standard FabricOps entry point for publishing a governed target. You provide the transformed DataFrame and target settings, and FabricOps handles the standard Write lifecycle around it.
 
 The main parameters are:
 
@@ -187,7 +179,7 @@ The main parameters are:
 
 ### Configure and run each Write
 
-Each target is configured directly in its own `orchestrate_write()` call. Write strategy belongs to the target, so the same pipeline may publish different targets using different load strategies.
+After the transformation is ready, configure each target directly in its own `orchestrate_write()` call. Write strategy belongs to the target, so the same pipeline may publish different targets using different load strategies.
 
 ```python
 write_result = orchestrate_write(
@@ -208,7 +200,7 @@ write_result = orchestrate_write(
 )
 ```
 
-The returned `write_result` keeps the target identity together with the supporting Write outputs:
+After the Write finishes, the returned `write_result` keeps the target identity together with the supporting Write outputs:
 
 - `write_result["table_id"]` → the canonical FabricOps identity for the target table.
 - `write_result["schema_result"]` → the Schema Guardrail result.
