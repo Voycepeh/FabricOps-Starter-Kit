@@ -186,7 +186,7 @@ If the Guardrails pass, FabricOps publishes the target and returns the Write res
     - `store` → logical destination store defined in `00_env_config`.
     - `schema` → target schema.
     - `table_name` → target table.
-    - `load_strategy` → how the target is written, such as `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`.
+    - `write_mode` → how the target is written, such as `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`.
     - `contracts` → Data Contract selections used for governed validation and enforcement.
     - `repartition_by` → optional Spark partitioning control before the write.
     - `spark_session` → Spark session used by the Write lifecycle.
