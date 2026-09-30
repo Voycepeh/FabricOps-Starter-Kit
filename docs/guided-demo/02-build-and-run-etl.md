@@ -139,7 +139,7 @@ Once the Read blocks return their DataFrames, FabricOps gets out of the way. Use
 - deriving new columns,
 - reshaping or selecting the final output structure.
 
-Transformation remains ordinary project-owned PySpark between the governed Read and Write boundaries.
+Transformation remains ordinary project-owned PySpark between the governed Read and Write boundaries. Use the [PySpark Transformation Reference](../reference/pyspark-transformation.md) for common joins, filters, derivations, aggregations, windows, reshaping, and Spark optimization reminders.
 
 ![Copilot](../assets/02/Copilot.png)
 
