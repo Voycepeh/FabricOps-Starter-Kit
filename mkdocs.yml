@@ -23,7 +23,7 @@ nav:
   - Home: index.md
   - How FabricOps Works: how-fabricops-works.md
   - Featured Solutions:
-      - AI-assisted Data Contract Authoring: solutions/ai-assisted-data-contract-authoring.md
+      - Sensitive Data Classification & Treatment: solutions/ai-assisted-data-contract-authoring.md
       - Generate Enforceable Data Quality Rules from Business Rules: solutions/business-rules-to-data-quality.md
       - Plug-and-Play Data Pipelines with Data Contract Enforcement: solutions/plug-and-play-data-pipelines.md
       - Scan Effective Data Access: solutions/effective-data-access.md
@@ -52,6 +52,8 @@ nav:
       - Glossary: glossary.md
       - Function Reference: reference/index.md
       - Read & Write Modes: reference/read-and-load-strategies.md
+      - Sensitive Data Treatments: reference/sensitive-data-treatments.md
+      - PySpark Transformation: reference/pyspark-transformation.md
       - Data Quality Rules:
           - Overview: reference/dq-rules/index.md
           - Completeness: reference/dq-rules/completeness.md
@@ -140,7 +142,6 @@ extra_javascript:
   - javascripts/mermaid-init.js
   - javascripts/callable-finder.js
   - javascripts/table-controls.js
-  - javascripts/engineering-guide-deeplinks.js
 
 extra_css:
   - stylesheets/breadcrumbs.css

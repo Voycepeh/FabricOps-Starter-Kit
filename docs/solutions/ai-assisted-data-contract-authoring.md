@@ -1,6 +1,6 @@
-# AI-assisted Data Contract Authoring
+# Sensitive Data Classification & Treatment
 
-![AI-assisted Data Contract authoring](../assets/AiDatacontract.png)
+![Sensitive Data Classification & Treatment](../assets/AiDatacontract.png)
 
 ## The problem
 
@@ -65,7 +65,7 @@ This produces one versioned manifest that Engineering can resolve and execute in
 | **Freshness** | Whether the source or governed data meets its expected freshness |
 | **Source Drift** | Whether source observations have changed outside the accepted expectation |
 | **Data Quality** | Deterministic quality rules such as completeness, uniqueness, allowed values, value rules, and patterns |
-| **Sensitive Data** | Detection and governed handling of sensitive data before publication |
+| **Sensitive Data** | Governed treatment of sensitive columns before Data Quality checks and publication. FabricOps supports Mask, Bucket, Tokenize, and Remove. See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for examples and exact runtime behavior. |
 
 Guardrails can be configured with **Warn** or **Block** behaviour. The contract records the governed expectation; FabricOps runtime functions perform the actual checks.
 
@@ -92,13 +92,13 @@ Runtime outcomes are recorded in `METADATA_GUARDRAIL_RESULTS`.
 
 ### Where AI helps
 
-AI is an **authoring assistant**, not the enforcement engine.
+Sensitive Data governance does not depend on AI. Governance can classify and configure treatment manually. AI is an optional authoring aid; it is **not the enforcement engine**.
 
-Fabric AI Functions can use the Data Catalogue and profiling context to suggest information that benefits from interpretation, including descriptions and classifications, candidate Grain & Row Keys, Sensitive Data classifications and treatments, patterns, and enforceable Data Quality rules derived from business language.
+Governance can author descriptions, classifications, and Sensitive Data treatments manually. When enabled, Fabric AI Functions can use Data Catalogue and profiling context to suggest descriptions, classifications, and Sensitive Data classification/treatment choices. Grain & Row Key candidates are derived deterministically from profile evidence, not AI. Business-language translation into enforceable Data Quality rules is a separate AI-assisted workflow; see [Generate Enforceable Data Quality Rules from Business Rules](business-rules-to-data-quality.md).
 
 Governance reviews those suggestions in the same authoring workflow as manually entered decisions. Once accepted into a frozen Data Contract, enforcement is deterministic through the FabricOps Guardrail functions.
 
-That separation is intentional: **AI helps Governance author faster; the Data Contract remains explicit and reviewable; Engineering enforcement remains deterministic.**
+That separation is intentional: **manual Governance authoring is always available; AI can accelerate interpretation-heavy authoring; the approved Data Contract remains explicit and reviewable; Engineering enforcement remains deterministic.**
 
 ## Go deeper
 

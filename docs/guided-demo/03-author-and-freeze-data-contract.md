@@ -9,7 +9,7 @@ Freezing creates an **immutable Data Contract** candidate for validation. Freezi
 
     To use it, meet the [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview) and set `GOVERNANCE_CONFIG.ai_enrichment.enabled = True` in `00_env_config`.
 
-    Learn more: [AI-assisted Data Contract Authoring](../solutions/ai-assisted-data-contract-authoring.md).
+    Learn more: [Sensitive Data Classification & Treatment](../solutions/ai-assisted-data-contract-authoring.md).
 
 ## 1. Open the Data Contract editor
 
@@ -41,7 +41,7 @@ For each governed column, review the physical definition and examples, then auth
 
 * Required
 * Classification and Description
-* Sensitive Data treatment
+* Sensitive Data treatment — see [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for Mask, Bucket, Tokenize, and Remove behavior and examples.
 * Direct column Data Quality rules: Completeness, Uniqueness, Value Lists, and Value Rules
 
 **Value Lists** uses separate comma-separated **Whitelist** and **Blacklist** inputs. Each non-empty list becomes its own deterministic Data Quality rule, and the editor shows the parsed value count before save.

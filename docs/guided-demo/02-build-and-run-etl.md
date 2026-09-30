@@ -139,7 +139,7 @@ Once the Read blocks return their DataFrames, FabricOps gets out of the way. Use
 - deriving new columns,
 - reshaping or selecting the final output structure.
 
-For common examples, see the [PySpark transformation cheat sheet](../reference/engineering-cheat-sheet.md#pyspark-transformation-cheat-sheet).
+Transformation remains ordinary project-owned PySpark between the governed Read and Write boundaries. Use the [PySpark Transformation Reference](../reference/pyspark-transformation.md) for common joins, filters, derivations, aggregations, windows, reshaping, and Spark optimization reminders.
 
 ![Copilot](../assets/02/Copilot.png)
 
@@ -203,7 +203,7 @@ If the Guardrails pass, FabricOps publishes the target and returns the Write res
     - `check_dq()`
     - `check_guardrail_coverage()`
 
-    Sensitive Data treatment is applied before the remaining Data Quality checks and publication.
+    Sensitive Data treatment is applied before the remaining Data Quality checks and publication. See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for Mask, Bucket, Tokenize, and Remove behavior and examples.
 
     If the Guardrails pass, `pipeline_write()` writes to the appropriate Lakehouse or Warehouse destination and records the associated publication metadata and source-to-target lineage.
 
