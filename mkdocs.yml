@@ -55,7 +55,7 @@ nav:
           - Overview: reference/dq-rules/index.md
           - Completeness: reference/dq-rules/completeness.md
           - Uniqueness: reference/dq-rules/uniqueness.md
-          - Value Set: reference/dq-rules/value-set.md
+          - Whitelist & Blacklist (Value Lists): reference/dq-rules/value-set.md
           - Range: reference/dq-rules/range.md
           - Pattern: reference/dq-rules/pattern.md
           - Column Relationship: reference/dq-rules/column-relationship.md
