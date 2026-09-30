@@ -20,7 +20,7 @@ The frozen-version picker appears only for a target in Validate mode. There is n
 
 Run the normal visible **Read → Transform → Write** sequence without changing `transformed_df`.
 
-The `curated_orders` Write block evaluates the frozen contract but does not publish the target. The notebook exits after the successful validation gate, so the second Write block is intentionally not reached on this run.
+The `curated_orders` Write block evaluates the frozen contract but does not publish the target. The notebook exits after the successful validation gate, so `pipeline_write()` is never reached and the second Write block is intentionally not reached on this run.
 
 Confirm:
 
@@ -161,7 +161,7 @@ Do not change the reusable `02_pipeline` template itself.
 
 Run the `curated_orders` Write block again.
 
-Because Step 3 left **Block on failure** off, the DQ guardrail can evaluate the complete ruleset and report warnings instead of terminating on the first deliberate violation. Validate mode still prevents publication.
+Because Step 3 left **Block on failure** off, the DQ guardrail can evaluate the complete ruleset and report warnings instead of terminating on the first deliberate violation. Validate mode uses the exact same Schema, Sensitive Data, Source Drift, Data Quality, and Guardrail Coverage path as Enforce, but still prevents publication.
 
 Use the returned DQ result to compare actual behavior with this matrix:
 
