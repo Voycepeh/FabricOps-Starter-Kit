@@ -142,27 +142,6 @@ flowchart LR
     SAME --> PROD["Production<br/>Fabric Store locations"]
 ```
 
-## Why one canonical pipeline template
-
-FabricOps does not need a separate notebook architecture for full refresh, incremental append, SCD1, SCD2, or combinations of them. Those are **modes selected through the orchestrators**.
-
-The stable model is:
-
-```text
-00 Env Config
-      ↓
-02 Pipeline
-  select Data Contract context
-      ↓
-  orchestrate_read(...)   ← one per source; full or incremental
-      ↓
-  project PySpark transformation
-      ↓
-  orchestrate_write(...)  ← one per target; overwrite / append / SCD1 / SCD2
-```
-
-This keeps the template easy to clone, the transformation easy to understand, promotion environment-aware, and the governed runtime behavior centralized in FabricOps rather than copied into every project notebook.
-
 ## Go deeper
 
 Follow the [Guided Demo](../guided-demo.md) to build the pipeline step by step. Use the [Function Reference](../reference/index.md) when you need the lower-level capabilities behind the orchestrators.
