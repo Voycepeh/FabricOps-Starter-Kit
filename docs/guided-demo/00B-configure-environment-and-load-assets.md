@@ -108,7 +108,6 @@ Download the **entire DemoData folder**. Every retained file has an explicit Gui
 | `orders.csv`, `orders.json`, `orders.parquet`, `orders.xlsx` | 0C uses these equivalent 120-row files to demonstrate the FabricOps file readers. |
 | `products.csv` | 0C seeds `bronze.demo.products`. |
 | `order_history.csv` | 0C seeds `gold.demo.order_history` and demonstrates Warehouse reads. |
-| `orders_guardrail_failures.csv` | Reserved for the later Guardrail validation story. |
 
 ## 6. Upload the demo data
 
