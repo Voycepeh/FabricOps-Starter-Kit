@@ -19,10 +19,6 @@ The Function Call Graph is the maintainability checkpoint for the FabricOps publ
 
 Use the dashboard to inspect a public callable, understand its dependencies and architecture signals, and export focused cleanup context before changing the implementation.
 
-<div align="center">
-  <a class="md-button md-button--primary" href="../assets/public-function-call-flows-dashboard.html">Open Call Flow Dashboard</a>
-</div>
-
 ## How it works
 
 ```mermaid
