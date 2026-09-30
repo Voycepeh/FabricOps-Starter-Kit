@@ -111,8 +111,30 @@ def test_glossary_tooltips_use_canonical_short_definitions() -> None:
     definitions = glossary_tooltip_definitions()
     for entry in _glossary():
         entry_id = str(entry["id"])
-        display_name = DISPLAY_NAMES.get(entry_id, str(entry["term"]))
-        assert definitions[display_name] == str(entry["short_definition"])
+        configured_labels = entry.get("tooltip_labels")
+        if configured_labels is not None:
+            for label in configured_labels:
+                assert definitions[str(label)] == str(entry["short_definition"])
+        else:
+            display_name = DISPLAY_NAMES.get(entry_id, str(entry["term"]))
+            assert definitions[display_name] == str(entry["short_definition"])
+
+
+def test_ambiguous_fabricops_terms_are_not_global_tooltips() -> None:
+    """Avoid turning ordinary prose into FabricOps tooltips."""
+    definitions = glossary_tooltip_definitions()
+
+    assert "Draft" not in definitions
+    assert "Frozen" not in definitions
+    assert "Activated" not in definitions
+    assert "lineage" not in definitions
+    assert "classification" not in definitions
+    assert "grain" not in definitions
+    assert "freshness" not in definitions
+    assert definitions["Data Lineage"]
+    assert definitions["Information Classification"]
+    assert definitions["Row Grain"]
+    assert definitions["Freshness Guardrail"]
 
 
 def test_all_documented_glossary_ids_resolve() -> None:
