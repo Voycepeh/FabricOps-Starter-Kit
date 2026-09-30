@@ -38,7 +38,17 @@ Activation tells FabricOps which immutable contract version Production must reso
 
 ## 4. Promote the validated pipeline
 
-The same validated engineering code now moves from Engineering Development to Engineering Production. Environment-specific Fabric items remain in `00_env_config`; the pipeline logic itself does not change.
+`00_env_config` owns the environment-specific resolution. `02_pipeline` owns the pipeline definition.
+
+That separation means Engineering promotes the same `02_pipeline` from Development to Production while `00_env_config` maps logical Fabric Stores such as Bronze, Silver, Gold, and Metadata to their environment-specific Fabric locations.
+
+```mermaid
+flowchart LR
+    DEVENV["00 Env Config<br/>DEV"] --> PIPE["02 Pipeline"]
+    PIPE --> DEV["Development<br/>Fabric Store locations"]
+    PRODENV["00 Env Config<br/>PROD"] --> SAME["Same 02 Pipeline"]
+    SAME --> PROD["Production<br/>Fabric Store locations"]
+```
 
 ![Development to Production promotion](../assets/05/PipelinesDeploymentOverview.png)
 
