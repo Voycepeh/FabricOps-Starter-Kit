@@ -65,7 +65,7 @@ This produces one versioned manifest that Engineering can resolve and execute in
 | **Freshness** | Whether the source or governed data meets its expected freshness |
 | **Source Drift** | Whether source observations have changed outside the accepted expectation |
 | **Data Quality** | Deterministic quality rules such as completeness, uniqueness, allowed values, value rules, and patterns |
-| **Sensitive Data** | Detection and governed handling of sensitive data before publication |
+| **Sensitive Data** | Governed treatment of sensitive columns before Data Quality checks and publication. FabricOps supports Mask, Bucket, Tokenize, and Remove. See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for examples and exact runtime behavior. |
 
 Guardrails can be configured with **Warn** or **Block** behaviour. The contract records the governed expectation; FabricOps runtime functions perform the actual checks.
 
