@@ -90,8 +90,6 @@ Each target independently chooses its Write mode through `orchestrate_write()`. 
 
 Each target has its own `orchestrate_write()` call, so the choice is per target rather than a pipeline-wide setting.
 
-The governed Write boundary handles the repeatable FabricOps plumbing around the target while keeping the mode visible in `02_pipeline`.
-
 ## Data Contract enforcement is wired into the same pipeline
 
 The canonical `02_pipeline` selects Data Contract context before the ETL blocks. Contract mode is resolved **per table**, so different governed tables in the same notebook can be at different lifecycle stages.
