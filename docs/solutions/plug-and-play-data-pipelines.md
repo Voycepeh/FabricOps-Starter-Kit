@@ -14,7 +14,7 @@ FabricOps abstracts the repeatable plumbing behind a small, readable notebook in
 
 FabricOps provides a **clonable two-notebook engineering stack**:
 
-- [`00_env_config.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) resolves the logical Fabric stores to the physical resources for the current Development or Production environment.
+- [`00_env_config.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) maps the logical Fabric Stores used by the pipeline to their environment-specific Fabric locations.
 - [`02_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) is the pipeline you promote unchanged between environments. It provides two plug-and-play governed ETL boundaries: [`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md).
 
 Everything project-specific stays visible between those boundaries as ordinary PySpark transformation code.
@@ -25,7 +25,7 @@ Everything project-specific stays visible between those boundaries as ordinary P
 flowchart LR
     subgraph DEV["Development — clonable notebook stack"]
         direction TB
-        DEV_ENV["00 Env Config<br/>resolves Development resources"]
+        DEV_ENV["00 Env Config<br/>resolves Development<br/>Fabric Store locations"]
         subgraph DEV_PIPE["02 Pipeline"]
             direction TB
             DEV_CONTRACT["Select Data Contract context"]
@@ -35,12 +35,12 @@ flowchart LR
             DEV_CONTRACT --> DEV_READ --> DEV_TRANSFORM --> DEV_WRITE
         end
         DEV_ENV --> DEV_PIPE
-        DEV_PIPE --> DEV_RES["Development resources"]
+        DEV_PIPE --> DEV_RES["Development<br/>Fabric Store locations"]
     end
 
     subgraph PROD["Production — same notebook stack"]
         direction TB
-        PROD_ENV["00 Env Config<br/>resolves Production resources"]
+        PROD_ENV["00 Env Config<br/>resolves Production<br/>Fabric Store locations"]
         subgraph PROD_PIPE["02 Pipeline"]
             direction TB
             PROD_CONTRACT["Select Data Contract context"]
@@ -50,59 +50,32 @@ flowchart LR
             PROD_CONTRACT --> PROD_READ --> PROD_TRANSFORM --> PROD_WRITE
         end
         PROD_ENV --> PROD_PIPE
-        PROD_PIPE --> PROD_RES["Production resources"]
+        PROD_PIPE --> PROD_RES["Production<br/>Fabric Store locations"]
     end
 
     DEV ==>|"Promote 1:1"| PROD
 ```
 
-The same notebook stack exists in Development and Production. `00_env_config` resolves the stack to the resources for its environment, while `02_pipeline` is promoted unchanged from Development to Production. Inside each pipeline, Data Contract context is selected before the governed ETL flow. A pipeline can use multiple `orchestrate_read()` calls, each choosing Full or Incremental, transform the resulting DataFrames with normal project-specific PySpark, and use multiple `orchestrate_write()` calls, each independently choosing Overwrite, Append, SCD1, or SCD2.
+The same notebook stack exists in Development and Production. `00_env_config` maps the logical Fabric Stores used by the pipeline to their environment-specific Fabric locations, while `02_pipeline` is promoted unchanged from Development to Production. Inside each pipeline, Data Contract context is selected before the governed ETL flow. A pipeline can use multiple `orchestrate_read()` calls, each choosing Full or Incremental, transform the resulting DataFrames with project-owned PySpark, and use multiple `orchestrate_write()` calls, each independently choosing Overwrite, Append, SCD1, or SCD2.
 
 ## Read recipes
 
-Each source has its **own** `orchestrate_read()` call. Read strategy is therefore a per-table decision, not a setting for the whole pipeline.
+Each source independently chooses its read strategy through `orchestrate_read()`. The same canonical `02_pipeline` can mix Full and Incremental reads without requiring a different notebook template.
 
-A pipeline can, for example, incrementally read a high-volume Orders table while fully reading a smaller Products reference table:
+| Recipe | Orchestrator choice | Typical intent |
+| --- | --- | --- |
+| Read the full table | `read_mode="full"` | Read the complete source table |
+| Read incrementally | `read_mode="incremental"` | Read only the source data required for the next processing window |
 
-```python
-orders = orchestrate_read(
-    name="orders",
-    store="Bronze",
-    schema="demo",
-    table_name="orders",
-    read_mode="incremental",
-    target_table_id=target_table_id,
-    spark_session=spark,
-)
+For example, one pipeline can use an Incremental read for a high-volume Orders table and a Full read for a smaller Products reference table. Each source has its own `orchestrate_read()` call, so the choice is per source rather than a pipeline-wide setting.
 
-products = orchestrate_read(
-    name="products",
-    store="Bronze",
-    schema="demo",
-    table_name="products",
-    read_mode="full",
-    spark_session=spark,
-)
-```
-
-The same governed boundary resolves the environment-aware source and runs the standard FabricOps Read lifecycle. The lower-level read, freshness, schema, data-quality, profiling, and routing capabilities remain behind the orchestrator. Advanced users can still compose those public capabilities directly when they genuinely need a custom lifecycle.
+The governed Read boundary handles the repeatable FabricOps plumbing around the source while keeping the recipe visible in `02_pipeline`.
 
 ## Transform in the notebook
 
-FabricOps deliberately does not hide project business logic behind a framework DSL. Once the sources return PySpark DataFrames, the middle of `02_pipeline` belongs to the project.
+Transformation belongs to the project. FabricOps returns PySpark DataFrames from the Read orchestrators, and the engineer writes the joins, filters, derivations, aggregations, reshaping, and other project-specific PySpark needed between Read and Write.
 
-```python
-orders_df = orders["dataframe"]
-products_df = products["dataframe"]
-
-transformed_df = (
-    orders_df
-    .join(products_df, "product_id")
-    # project-specific filters, derivations, joins, aggregations...
-)
-```
-
-This is also the natural place to use Microsoft Fabric Copilot or another coding assistant. FabricOps standardizes the governed boundaries while the transformation remains normal PySpark.
+FabricOps deliberately does not introduce a transformation DSL or hide this logic behind the framework. For PySpark syntax, patterns, and Fabric notebook guidance, use [Microsoft Learn: Apache Spark in Microsoft Fabric](https://learn.microsoft.com/en-us/fabric/data-engineering/spark-compute) and [Microsoft Learn: Fabric Data Engineering](https://learn.microsoft.com/en-us/fabric/data-engineering/).
 
 ## Write recipes
 
@@ -155,14 +128,14 @@ The important point is that governance is not a second pipeline implementation. 
 
 `00_env_config` owns the environment-specific resolution. `02_pipeline` owns the pipeline definition.
 
-That separation means Engineering promotes the same `02_pipeline` from Development to Production while `00_env_config` resolves logical stores such as Bronze, Silver, Gold, and Metadata to the correct physical Fabric resources for that environment.
+That separation means Engineering promotes the same `02_pipeline` from Development to Production while `00_env_config` maps logical Fabric Stores such as Bronze, Silver, Gold, and Metadata to their environment-specific Fabric locations.
 
 ```mermaid
 flowchart LR
     DEVENV["00 Env Config<br/>DEV"] --> PIPE["02 Pipeline"]
-    PIPE --> DEV["Development resources"]
+    PIPE --> DEV["Development<br/>Fabric Store locations"]
     PRODENV["00 Env Config<br/>PROD"] --> SAME["Same 02 Pipeline"]
-    SAME --> PROD["Production resources"]
+    SAME --> PROD["Production<br/>Fabric Store locations"]
 ```
 
 ## Why one canonical pipeline template
