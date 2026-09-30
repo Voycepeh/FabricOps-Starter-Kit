@@ -111,11 +111,9 @@ Read the remaining demo sources and write the managed Lakehouse and Warehouse ta
 
 ??? info "What the notebook intentionally does not load"
 
-    `orders_incremental.csv` remains in `bronze/Files/Demo/` and is **not** appended here. It is revisited later in the `02_pipeline` walkthrough so the source-change story happens at the right point in the lifecycle.
-
-    The partition and watermark fixtures are also left untouched for the later incremental and load-strategy showcase.
-
     `orders_guardrail_failures.csv` is left untouched until the later Guardrail validation step. The normal baseline stays valid so the first Engineering run is deterministic.
+
+    Later incremental and load-strategy scenarios reuse this canonical Orders source and create their source changes directly in the walkthrough. `modified_datetime` is the watermark column, and a partition date can be derived from `order_datetime` when needed.
 
 ## Expected result
 
