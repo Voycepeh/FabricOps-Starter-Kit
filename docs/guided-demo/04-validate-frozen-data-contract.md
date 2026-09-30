@@ -1,6 +1,6 @@
 # Step 4. Validate the frozen Data Contract
 
-**Use the same `02_pipeline` to prove both sides of the contract: the normal transformed target passes, then a deterministic dirty target trips every DQ behavior authored in Step 3 without publishing either validation run.**
+**Use the same `02_pipeline` to prove the complete governed path: first every Guardrail passes, then controlled source and target mutations exercise Freshness, Schema, Source Drift, Sensitive Data, every DQ behavior, and Guardrail Coverage without publishing a validation target.**
 
 The selector defaults every table to **Enforce**. For this step, put only `curated_orders` into **Validate** mode and select the exact frozen version from Step 3.
 
@@ -8,9 +8,11 @@ The selector defaults every table to **Enforce**. For this step, put only `curat
 
 In the Data Contract selector at the top of `02_pipeline`:
 
-1. leave every source table in **Enforce** mode,
-2. choose **Validate** only for `curated_orders`,
-3. select the exact frozen candidate version from Step 3.
+1. select the exact frozen Step 3 contract for all three sources,
+2. select the exact frozen Step 3 contract for both targets,
+3. choose **Validate** for `curated_orders` while running its validation exercise.
+
+All participating tables need selected contracts because Guardrail Coverage checks the complete source → target relationship once any contract is selected.
 
 The frozen-version picker appears only for a target in Validate mode. There is no separate contract dictionary to edit.
 
@@ -24,12 +26,42 @@ Confirm:
 
 - `published=False`
 - `validation_passed=True`
+- Freshness, Schema, Source Drift, Sensitive Data, Data Quality, and Guardrail Coverage all report successful evidence where applicable
+- the configured `customer_id` Sensitive Data treatment is applied in the prepared DataFrame
 - every DQ check is passed
 - `pipeline_write()` was not reached
 
 This proves the contract describes the canonical target before we deliberately break it.
 
-## 3. Build a deterministic dirty target
+## 3. Exercise the source-side Guardrails
+
+Source Guardrails are evaluated from the real source read and Source Observation metadata, so changing only `transformed_df` cannot test them. Use a controlled mutation of the Development `orders` table, then restore it from the canonical fixture.
+
+Before changing anything, the happy-path run above establishes the accepted source → target baseline used by Source Drift.
+
+Create a temporary dirty copy of the Development Orders source with two deliberate changes:
+
+- set every `modified_datetime` to an old enough value to exceed the Freshness maximum age,
+- add an unexpected column such as `unexpected_demo_column` so Schema detects drift from the frozen source schema.
+
+Overwrite only the **Development Bronze Orders table** with that temporary DataFrame, then rerun the Orders Read block and the `curated_orders` Write validation.
+
+Expected source-side evidence:
+
+| Guardrail | Deliberate condition | Expected |
+| --- | --- | --- |
+| Freshness | latest `modified_datetime` exceeds the governed maximum age | Warn/fail evidence |
+| Schema | `unexpected_demo_column` is not in the frozen schema | Warn/fail evidence |
+| Source Drift | current Orders observation differs from the last successfully consumed baseline | changed/drift evidence |
+
+Keep these rules on Warn for this run so the pipeline can reach the later target checks.
+
+!!! warning "Restore the canonical source immediately after the source test"
+    Rerun Step 00C's canonical Orders load before continuing. Do not carry the dirty Bronze source into later demo steps. The mutation is intentionally confined to Development and the canonical CSV remains unchanged.
+
+After restoration, rerun the Orders Read block so the notebook is again holding the canonical source DataFrame.
+
+## 4. Build a deterministic dirty target
 
 Rerun the notebook through the normal Transform cell. Immediately after that cell, add this temporary validation cell:
 
@@ -108,7 +140,7 @@ write_result = orchestrate_write(
 
 Do not change the reusable `02_pipeline` template itself.
 
-## 4. Run the dirty path with every rule on Warn
+## 5. Run the dirty target with every DQ rule on Warn
 
 Run the `curated_orders` Write block again.
 
@@ -145,7 +177,7 @@ Dirty target + Warn
 
 Inspect the rule-level checks rather than relying only on the aggregate DQ status. Each row in the matrix should have a corresponding failed/warning rule result.
 
-## 5. Try Block on failure
+## 6. Prove Sensitive Data treatment
 
 The walkthrough uses Warn first because a blocking rule can stop orchestration before later stages are visible.
 
@@ -160,7 +192,17 @@ To prove enforcement:
 
 The selected violation should now stop the orchestration as a blocking DQ failure. You can repeat this with any other rule if you want to exercise each Block path individually.
 
-## 6. Restore the happy path before activation
+## 8. Prove Guardrail Coverage
+
+Guardrail Coverage is not another Warn/Block rule. It is the pre-publication readiness gate that verifies every selected participant has an applicable contract and that every applicable Guardrail produced current-activity evidence.
+
+The normal complete run should return `coverage_result.status == "passed"`.
+
+For the negative exercise, temporarily deselect one participating source contract (or disable its only applicable Guardrail) and rerun the target validation. Guardrail Coverage should stop the orchestration with a clear missing-contract/no-applicable-guardrail or not-evaluated reason. Restore the selection immediately afterward.
+
+This gate intentionally blocks rather than warns: publishing without the required Guardrail evidence would defeat the coverage check.
+
+## 9. Restore the happy path before activation
 
 Remove the temporary dirty-target cell or switch the Write block back to `transformed_df`, then rerun the normal target validation using the contract version you intend to activate.
 
@@ -183,17 +225,20 @@ Data Contract UI
     → Warn / Block behavior
 ```
 
-The same Write-side orchestration also evaluates applicable Schema, Sensitive Data, Source Drift, and Guardrail Coverage checks. Those results remain visible alongside DQ; this exercise deliberately mutates only the target values so each of the nine DQ runtime types can be tested deterministically without corrupting the reusable demo environment.
+The exercise now covers both orchestrator boundaries: Read-side Freshness/Schema/DQ evidence, Write-side Schema/Sensitive Data/Source Drift/DQ, and the final Guardrail Coverage readiness gate. Source mutations are restored from the canonical fixture; target mutations remain in-session only.
 
 ## Expected result
 
-The exact frozen contract has:
+The frozen pipeline contracts have:
 
-1. passed against the canonical `curated_orders` target,
-2. detected every deliberately broken DQ behavior in the dirty target,
-3. demonstrated that Warn allows complete evidence collection,
-4. optionally demonstrated that changing a rule to Block stops orchestration,
-5. passed again on the restored happy path before activation.
+1. passed against the canonical sources and targets,
+2. detected deliberate Freshness, Schema, and Source Drift conditions,
+3. applied the configured Sensitive Data treatment,
+4. detected every deliberately broken DQ behavior in the dirty target,
+5. demonstrated that Warn allows broad failure evidence collection,
+6. demonstrated that a selected Block rule stops orchestration,
+7. demonstrated Guardrail Coverage both passing and rejecting an incomplete governed pipeline,
+8. passed again on the fully restored happy path before activation.
 
 No validation run publishes the target.
 
