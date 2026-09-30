@@ -1,6 +1,6 @@
-# AI-assisted Data Contract Authoring
+# AI-assisted Data Sensitivity & Description
 
-![AI-assisted Data Contract authoring](../assets/AiDatacontract.png)
+![AI-assisted Data Sensitivity & Description](../assets/AiDatacontract.png)
 
 ## The problem
 
@@ -92,13 +92,13 @@ Runtime outcomes are recorded in `METADATA_GUARDRAIL_RESULTS`.
 
 ### Where AI helps
 
-AI is an **authoring assistant**, not the enforcement engine.
+AI is used selectively in Data Contract authoring; it is **not the enforcement engine**.
 
-Fabric AI Functions can use the Data Catalogue and profiling context to suggest information that benefits from interpretation, including descriptions and classifications, candidate Grain & Row Keys, Sensitive Data classifications and treatments, patterns, and enforceable Data Quality rules derived from business language.
+On this authoring path, Fabric AI Functions can use Data Catalogue and profiling context to assist with **descriptions, classifications, and Sensitive Data classification/treatment suggestions**. Grain & Row Key candidates are derived deterministically from profile evidence, not AI. Business-language translation into enforceable Data Quality rules is a separate AI-assisted workflow; see [Generate Enforceable Data Quality Rules from Business Rules](business-rules-to-data-quality.md).
 
 Governance reviews those suggestions in the same authoring workflow as manually entered decisions. Once accepted into a frozen Data Contract, enforcement is deterministic through the FabricOps Guardrail functions.
 
-That separation is intentional: **AI helps Governance author faster; the Data Contract remains explicit and reviewable; Engineering enforcement remains deterministic.**
+That separation is intentional: **AI assists only the interpretation-heavy authoring steps; deterministic evidence and Governance decisions remain explicit and reviewable; Engineering enforcement remains deterministic.**
 
 ## Go deeper
 
