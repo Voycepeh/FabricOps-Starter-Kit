@@ -56,7 +56,7 @@ function hydrateNormalizedFlows(data){
         recursive
       });
       if(recursive)return;
-      if(qn!==rootQn&&fn.architecture_classification==='foundation_io')return;
+      if(qn!==rootQn&&fn.architecture_classification==='foundational_io')return;
       const next=new Set(stack);next.add(qn);
       (children.get(qn)||[]).forEach(rel=>visit(rel.callee_qualified_name,depth+1,qn,next,rel));
     }
