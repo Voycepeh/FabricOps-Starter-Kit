@@ -20,7 +20,9 @@ The frozen-version picker appears only for a target in Validate mode. There is n
 
 Run the normal visible **Read → Transform → Write** sequence without changing `transformed_df`.
 
-The `curated_orders` Write block evaluates the frozen contract but does not publish the target. The notebook exits after the successful validation gate, so `pipeline_write()` is never reached and the second Write block is intentionally not reached on this run.
+The `curated_orders` Write block evaluates the frozen contract but does not publish the target.
+
+Validate returns `published=False` and `validation_passed=True` when the frozen contract passes. The notebook exits after the successful validation gate, so `pipeline_write()` is never reached and the second Write block is intentionally not reached on this run.
 
 Confirm:
 
