@@ -58,14 +58,14 @@ flowchart LR
 
 The same notebook stack exists in Development and Production. `00_env_config` maps the logical Fabric Stores used by the pipeline to their environment-specific Fabric locations, while `02_pipeline` is promoted unchanged from Development to Production. Inside each pipeline, Data Contract context is selected before the governed ETL flow. A pipeline can use multiple `orchestrate_read()` calls, each choosing Full or Incremental, transform the resulting DataFrames with project-owned PySpark, and use multiple `orchestrate_write()` calls, each independently choosing Overwrite, Append, SCD1, or SCD2.
 
-## Read recipes
+## Read modes
 
-Each source independently chooses its read strategy through `orchestrate_read()`. The same canonical `02_pipeline` can mix Full and Incremental reads without requiring a different notebook template.
+Each source independently chooses its Read mode through `orchestrate_read()`. The same canonical `02_pipeline` can mix Full and Incremental reads.
 
-| Recipe | Orchestrator choice | Typical intent |
+| Read mode | Setting | Typical intent |
 | --- | --- | --- |
-| Read the full table | `read_mode="full"` | Read the complete source table |
-| Read incrementally | `read_mode="incremental"` | Read only the source data required for the next processing window |
+| Full | `read_mode="full"` | Read the complete source table |
+| Incremental | `read_mode="incremental"` | Read only the source data required for the next processing window |
 
 For example, one pipeline can use an Incremental read for a high-volume Orders table and a Full read for a smaller Products reference table. Each source has its own `orchestrate_read()` call, so the choice is per source rather than a pipeline-wide setting.
 
@@ -79,34 +79,20 @@ FabricOps deliberately does not introduce a transformation DSL or hide this logi
 
 In day-to-day development, you can also use Microsoft Fabric Copilot or another AI coding agent to help write the project-specific PySpark. The transformation remains ordinary PySpark owned by the project; FabricOps focuses on the governed Read and Write boundaries around it.
 
-## Write recipes
+## Write modes
 
-Each target independently chooses its publication strategy through `orchestrate_write()`. The same canonical `02_pipeline` can therefore express the supported patterns without requiring a different notebook template for each one.
+Each target independently chooses its Write mode through `orchestrate_write()`. The same canonical `02_pipeline` can mix Overwrite, Append, SCD1, and SCD2 writes.
 
-| Recipe | Orchestrator choice | Typical intent |
+| Write mode | Setting | Typical intent |
 | --- | --- | --- |
-| Replace target | `load_strategy="overwrite"` | Publish the complete target state |
-| Add new rows | `load_strategy="append"` | Append a new batch |
-| Merge current state | `load_strategy="scd1"` | Update matching business keys and insert new rows |
-| Preserve history | `load_strategy="scd2"` | Maintain historical versions as records change |
+| Overwrite | `load_strategy="overwrite"` | Publish the complete target state |
+| Append | `load_strategy="append"` | Append a new batch |
+| SCD1 | `load_strategy="scd1"` | Update matching business keys and insert new rows |
+| SCD2 | `load_strategy="scd2"` | Maintain historical versions as records change |
 
-For example:
+Each target has its own `orchestrate_write()` call, so the choice is per target rather than a pipeline-wide setting.
 
-```python
-write_result = orchestrate_write(
-    transformed_df,
-    name="curated_orders",
-    sources=[orders, products],
-    store="Silver",
-    schema="demo",
-    table_name="curated_orders",
-    load_strategy="scd1",
-    contracts=CONTRACTS,
-    spark_session=spark,
-)
-```
-
-Read and Write choices are independent. One pipeline may mix full and incremental sources, then publish multiple targets using different supported write strategies.
+The governed Write boundary handles the repeatable FabricOps plumbing around the target while keeping the mode visible in `02_pipeline`.
 
 ## Data Contract enforcement is wired into the same pipeline
 
@@ -142,7 +128,7 @@ flowchart LR
 
 ## Why one canonical pipeline template
 
-FabricOps does not need a separate notebook architecture for full refresh, incremental append, SCD1, SCD2, or combinations of them. Those are **recipes expressed through the orchestrators**.
+FabricOps does not need a separate notebook architecture for full refresh, incremental append, SCD1, SCD2, or combinations of them. Those are **modes selected through the orchestrators**.
 
 The stable model is:
 
