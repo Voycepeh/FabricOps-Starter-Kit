@@ -313,9 +313,9 @@ expandEngineeringChoiceFromHash();
 
     The goal is a self-contained Fabric operating model with explicit write ownership, a canonical asset identity, and a clear contract bridge—not an undifferentiated metadata schema or a mandated store for every support result. For the exact tables, fields, ownership, and current-state limitations, use the [Metadata Tables reference](metadata.md).
 
-### AI-assisted Data Sensitivity & Description
+### Sensitive Data Classification & Treatment
 
-`widget_data_contract()` can explicitly request AI suggestions for Description and Sensitive Data through Microsoft Fabric AI Functions. Grain & Row Key candidates are deterministic and profile-derived, not AI. Business-language DQ translation is a separate AI-assisted workflow.
+Governance can author Description and Sensitive Data classification/treatment manually in `widget_data_contract()`. Microsoft Fabric AI Functions can optionally suggest these values. Grain & Row Key candidates are deterministic and profile-derived, not AI. Business-language DQ translation is a separate optional AI-assisted workflow.
 Classification remains a manual Governance choice from the configured information-classification
 labels; FabricOps does not ask AI to classify the table or column.
 
