@@ -42,6 +42,8 @@ Before changing anything, the happy-path run above establishes the accepted sour
 Create a temporary dirty copy of the Development Orders source with two deliberate changes:
 
 ```python
+from fabricops_kit import write_lakehouse_table
+
 dirty_orders_source_df = (
     orders_df
     .withColumn("modified_datetime", F.to_timestamp(F.lit("2025-01-01 00:00:00")))
