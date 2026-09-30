@@ -986,7 +986,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'Transformed DataFrame, target name and coordinates, governed sources, load strategy and selected contracts.',
   'returns': 'Publication identity and every stage result, or a successful validation-only result.',
   'side_effects': 'Runs target Guardrails, publishes through pipeline_write, and profiles the persisted target.',
-  'preferred_example': 'result = orchestrate_write(df, name="orders", sources=[source], store="Silver", schema="demo", table_name="orders", load_strategy="overwrite", contracts=CONTRACTS)',
+  'preferred_example': 'result = orchestrate_write(df, name="orders", sources=[source], store="Silver", schema="demo", table_name="orders", write_mode="overwrite", contracts=CONTRACTS)',
   'related_functions': ['pipeline_write', 'check_schema', 'check_sensitive_data', 'check_source_drift', 'check_dq', 'check_guardrail_coverage', 'profile_table']},
  {'kind': 'function',
   'module': 'pipeline.pipeline_read',

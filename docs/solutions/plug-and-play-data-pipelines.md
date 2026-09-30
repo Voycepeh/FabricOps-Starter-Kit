@@ -67,13 +67,13 @@ Each source independently chooses its Read mode through `orchestrate_read()`. Th
 | Full | `read_mode="full"` | Read the complete source table |
 | Incremental | `read_mode="incremental"` | Read only the source data required for the next processing window |
 
-For example, one pipeline can use an Incremental read for a high-volume Orders table and a Full read for a smaller Products reference table. Each source has its own `orchestrate_read()` call, so the choice is per source rather than a pipeline-wide setting.
+For example, one pipeline can use an Incremental read for a high-volume Orders table and a Full read for a smaller Products reference table. Each source has its own `orchestrate_read()` call, so the choice is per source rather than a pipeline-wide setting. See [Read Modes](../reference/read-and-load-strategies.md) for bootstrap, incremental scope, Source Observation, and source-to-target progress semantics.
 
 ## Transform in the notebook
 
 Transformation belongs to the project. FabricOps returns PySpark DataFrames from the Read orchestrators, and the engineer writes the joins, filters, derivations, aggregations, reshaping, and other project-specific PySpark needed between Read and Write.
 
-FabricOps deliberately does not introduce a transformation DSL or hide this logic behind the framework. For practical examples, use the [FabricOps PySpark transformation cheat sheet](../reference/engineering-cheat-sheet.md#pyspark-transformation-cheat-sheet). For the broader platform guidance, use [Microsoft Learn: Apache Spark in Microsoft Fabric](https://learn.microsoft.com/en-us/fabric/data-engineering/spark-compute) and [Microsoft Learn: Fabric Data Engineering](https://learn.microsoft.com/en-us/fabric/data-engineering/).
+FabricOps deliberately does not introduce a transformation DSL or hide this logic behind the framework. Use the [PySpark Transformation Reference](../reference/pyspark-transformation.md) for common transformation patterns and optimization reminders. For broader platform guidance, use [Microsoft Learn: Apache Spark in Microsoft Fabric](https://learn.microsoft.com/en-us/fabric/data-engineering/spark-compute) and [Microsoft Learn: Fabric Data Engineering](https://learn.microsoft.com/en-us/fabric/data-engineering/).
 
 In day-to-day development, you can also use Microsoft Fabric Copilot or another AI coding agent to help write the project-specific PySpark. The transformation remains ordinary PySpark owned by the project; FabricOps focuses on the governed Read and Write boundaries around it.
 
@@ -83,12 +83,12 @@ Each target independently chooses its Write mode through `orchestrate_write()`. 
 
 | Write mode | Setting | Typical intent |
 | --- | --- | --- |
-| Overwrite | `load_strategy="overwrite"` | Publish the complete target state |
-| Append | `load_strategy="append"` | Append a new batch |
-| SCD1 | `load_strategy="scd1"` | Update matching business keys and insert new rows |
-| SCD2 | `load_strategy="scd2"` | Maintain historical versions as records change |
+| Overwrite | `write_mode="overwrite"` | Publish the complete target state |
+| Append | `write_mode="append"` | Append a new batch |
+| SCD1 | `write_mode="scd1"` | Update matching business keys and insert new rows |
+| SCD2 | `write_mode="scd2"` | Maintain historical versions as records change |
 
-Each target has its own `orchestrate_write()` call, so the choice is per target rather than a pipeline-wide setting.
+Each target has its own `orchestrate_write()` call, so the choice is per target rather than a pipeline-wide setting. See [Read & Write Modes](../reference/read-and-load-strategies.md) for Full, Incremental, Overwrite, Append, SCD1, SCD2, examples, required parameters, and incremental-write safety.
 
 !!! warning "Multiple Write blocks are not atomic"
     Each `orchestrate_write()` publishes independently. If an earlier Write succeeds and a later Write fails, the pipeline is partially published. Rerunning the notebook executes the earlier Write again, which can duplicate or otherwise repeat non-idempotent writes such as Append. If partial publication or duplicate writes are unacceptable, use separate pipeline executions for each governed target.

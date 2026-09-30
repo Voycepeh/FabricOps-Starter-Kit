@@ -9,7 +9,7 @@ Freezing creates an **immutable Data Contract** candidate for validation. It doe
 
     Meet the [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview) and set `GOVERNANCE_CONFIG.ai_enrichment.enabled = True` in `00_env_config`.
 
-    Learn more: [AI-assisted Data Contract Authoring](../solutions/ai-assisted-data-contract-authoring.md).
+    Learn more: [Sensitive Data Classification & Treatment](../solutions/ai-assisted-data-contract-authoring.md).
 
 ## 1. Cover the whole pipeline, not only the target
 

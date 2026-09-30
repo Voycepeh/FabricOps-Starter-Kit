@@ -66,7 +66,7 @@ PySpark notebooks remain the shared orchestration and transformation layer. Lake
 
 ## Featured Solutions
 
-- [AI-assisted Data Contract Authoring](https://voycepeh.github.io/FabricOps-Starter-Kit/solutions/ai-assisted-data-contract-authoring/) — accelerate governed contract authoring with profile evidence and AI while keeping human review in control.
+- [Sensitive Data Classification & Treatment](https://voycepeh.github.io/FabricOps-Starter-Kit/solutions/ai-assisted-data-contract-authoring/) — classify sensitive data and enforce governed treatments before publication, with optional AI assistance during authoring.
 - [Generate Enforceable Data Quality Rules from Business Rules](https://voycepeh.github.io/FabricOps-Starter-Kit/solutions/business-rules-to-data-quality/) — turn plain-language business rules into reviewable, deterministic Data Quality rules.
 - [Plug-and-Play Data Pipelines with Data Contract Enforcement](https://voycepeh.github.io/FabricOps-Starter-Kit/solutions/plug-and-play-data-pipelines/) — promote the same pipeline while configuration resolves environment-specific Fabric resources.
 - [Scan Effective Data Access](https://voycepeh.github.io/FabricOps-Starter-Kit/solutions/effective-data-access/) — resolve effective access across overlapping Fabric permission paths.

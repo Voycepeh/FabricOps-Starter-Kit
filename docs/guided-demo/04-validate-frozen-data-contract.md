@@ -163,7 +163,7 @@ Do not change the reusable `02_pipeline` template itself.
 
 Run the `curated_orders` Write block again.
 
-Because Step 3 left **Block on failure** off, the DQ guardrail can evaluate the complete ruleset and report warnings instead of terminating on the first deliberate violation. Validate mode uses the exact same Schema, Sensitive Data, Source Drift, Data Quality, and Guardrail Coverage path as Enforce, but still prevents publication.
+Because Step 3 left **Block on failure** off, the DQ guardrail can evaluate the complete ruleset and report warnings instead of terminating on the first deliberate violation. Validate mode uses the exact same Schema, Sensitive Data, Source Drift, Data Quality, and Guardrail Coverage path as Enforce, but still prevents publication. See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for the treatment behavior used by this check.
 
 Use the returned DQ result to compare actual behavior with this matrix:
 

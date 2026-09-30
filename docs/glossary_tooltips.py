@@ -45,12 +45,16 @@ def glossary_tooltip_definitions() -> dict[str, str]:
         entry_id = str(entry["id"])
         term = str(entry["term"])
         short_definition = str(entry["short_definition"])
-        labels = [term, DISPLAY_NAMES.get(entry_id, term)]
-        for alias in entry.get("aliases", []):
-            label = str(alias)
-            labels.append(label)
-            if label == label.lower():
-                labels.append(label.title())
+        configured_labels = entry.get("tooltip_labels")
+        if configured_labels is not None:
+            labels = [str(label) for label in configured_labels]
+        else:
+            labels = [term, DISPLAY_NAMES.get(entry_id, term)]
+            for alias in entry.get("aliases", []):
+                label = str(alias)
+                labels.append(label)
+                if label == label.lower():
+                    labels.append(label.title())
 
         for label in dict.fromkeys(labels):
             existing = definitions.get(label)
