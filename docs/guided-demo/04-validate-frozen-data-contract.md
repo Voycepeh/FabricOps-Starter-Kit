@@ -27,7 +27,7 @@ Run the same visible **Read → Transform → Write-block** sequence.
 - The Read blocks continue enforcing their own current contract state.
 - Transform remains ordinary PySpark.
 - The selected target Write block reads `CONTRACTS["tables"][target_table_id]`.
-- Validate mode runs the transformed target through the exact same Schema, [Sensitive Data](../reference/sensitive-data-treatments.md), Source Drift, Data Quality, and Guardrail Coverage functions as Enforce.
+- Validate mode runs the transformed target through the exact same Schema, Sensitive Data, Source Drift, Data Quality, and Guardrail Coverage functions as Enforce. See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for the treatment behavior used by this check.
 - The modes differ only after every applicable Guardrail passes: Validate returns `published=False` and `validation_passed=True`, while Enforce reaches `pipeline_write()` and profiles the persisted target.
 - A blocking Guardrail fails at the same stage with the same evidence and exception behaviour in either mode.
 
