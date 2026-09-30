@@ -50,8 +50,6 @@ flowchart LR
     SAME --> PROD["Production<br/>Fabric Store locations"]
 ```
 
-![Development to Production promotion](../assets/05/PipelinesDeploymentOverview.png)
-
 In the Fabric Deployment Pipeline, select the tested notebook or engineering artifact from Development and deploy it to the Production stage.
 
 ![Select the pipeline artifact for Production](../assets/05/DeploymentPipeline.png)
