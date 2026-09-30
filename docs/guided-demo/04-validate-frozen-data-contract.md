@@ -41,10 +41,23 @@ Before changing anything, the happy-path run above establishes the accepted sour
 
 Create a temporary dirty copy of the Development Orders source with two deliberate changes:
 
-- set every `modified_datetime` to an old enough value to exceed the Freshness maximum age,
-- add an unexpected column such as `unexpected_demo_column` so Schema detects drift from the frozen source schema.
+```python
+dirty_orders_source_df = (
+    orders_df
+    .withColumn("modified_datetime", F.to_timestamp(F.lit("2025-01-01 00:00:00")))
+    .withColumn("unexpected_demo_column", F.lit("schema-drift"))
+)
 
-Overwrite only the **Development Bronze Orders table** with that temporary DataFrame, then rerun the Orders Read block and the `curated_orders` Write validation.
+write_lakehouse_table(
+    dirty_orders_source_df,
+    "orders",
+    store="Bronze",
+    schema="demo",
+    mode="overwrite",
+)
+```
+
+This makes Freshness deterministically stale and adds a column that is absent from the frozen Schema. Overwrite only the **Development Bronze Orders table**, then rerun the Orders Read block and the `curated_orders` Write validation.
 
 Expected source-side evidence:
 
@@ -68,6 +81,8 @@ Rerun the notebook through the normal Transform cell. Immediately after that cel
 ```python
 dirty_transformed_df = (
     transformed_df
+    # target schema: add a column absent from the frozen contract
+    .withColumn("unexpected_target_column", F.lit("schema-drift"))
     # completeness: customer_id must be present
     .withColumn(
         "customer_id",
@@ -179,18 +194,26 @@ Inspect the rule-level checks rather than relying only on the aggregate DQ statu
 
 ## 6. Prove Sensitive Data treatment
 
+Inspect `write_result["sensitive_result"]` from the target validation. Confirm the configured `customer_id` treatment was evaluated and that the prepared DataFrame contains the treated representation.
+
+Sensitive Data is intentionally different from a validation rule: valid sensitive values are **transformed**, not failed merely because they exist. A treatment failure can Warn or Block, but manufacturing an invalid treatment configuration is not a useful data-quality scenario.
+
+Also confirm the dirty target's `unexpected_target_column` produces target **Schema** warning evidence. This is separate from the source Schema exercise above and proves the Write boundary validates the DataFrame before publication.
+
+## 7. Try Block on failure
+
 The walkthrough uses Warn first because a blocking rule can stop orchestration before later stages are visible.
 
 To prove enforcement:
 
 1. return to `01_governance`,
 2. create/refine a new contract version,
-3. turn **Block on failure** on for any one of the DQ rules above,
+3. turn **Block on failure** on for any one of the deliberately failing Freshness, Schema, or DQ rules,
 4. save and freeze the new version,
-5. select that version for `curated_orders` in Validate mode,
-6. rerun the dirty path.
+5. select that version for the relevant table,
+6. rerun its dirty path.
 
-The selected violation should now stop the orchestration as a blocking DQ failure. You can repeat this with any other rule if you want to exercise each Block path individually.
+The selected violation should now stop the orchestration at that Guardrail stage. You can repeat this with other rules if you want to exercise each Block path individually.
 
 ## 8. Prove Guardrail Coverage
 
@@ -208,7 +231,7 @@ Remove the temporary dirty-target cell or switch the Write block back to `transf
 
 Require a clean validation result before continuing to Step 5.
 
-Because the dirty path never modifies the source or target tables, restoration is simply a normal rerun of the Transform and Write blocks.
+Step 3's source-side exercise temporarily overwrites only the Development Bronze Orders table and explicitly restores it from Step 00C. The dirty target remains in-session only. After restoring Bronze, rerun the normal Reads, Transform, and Write validation so every Guardrail is green again.
 
 ## What this proves
 
@@ -218,9 +241,9 @@ This is an integration test of the complete Fabric path, not only the individual
 Data Contract UI
     → persisted frozen contract
     → contract selection
-    → orchestrate_write()
-    → DQ rule resolution
-    → Spark evaluation
+    → orchestrate_read() / orchestrate_write()
+    → Guardrail + DQ rule resolution
+    → Spark / observation evaluation
     → Guardrail results
     → Warn / Block behavior
 ```
