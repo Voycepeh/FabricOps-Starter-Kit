@@ -173,6 +173,12 @@ The template contains two independent Write blocks.
 
 ### Configure the Write block
 
+!!! warning "Multiple Write blocks are not atomic"
+    Each `orchestrate_write()` publishes independently. In this demo, WRITE 1 can successfully publish `curated_orders` before WRITE 2 fails. If you rerun the notebook, WRITE 1 runs again.
+
+    This full-refresh example uses Overwrite, so rerunning replaces the first target. With non-idempotent modes such as Append, a retry can duplicate data. If partial publication or duplicate writes are unacceptable, use separate pipeline executions for each governed target.
+
+
 !!! warning "Warehouse schema prerequisite"
     Before writing to a Fabric Warehouse, the target schema must already exist. FabricOps can create or overwrite the target table, but it does not create the Warehouse schema automatically.
 
