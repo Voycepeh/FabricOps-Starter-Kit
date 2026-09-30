@@ -90,6 +90,9 @@ Each target independently chooses its Write mode through `orchestrate_write()`. 
 
 Each target has its own `orchestrate_write()` call, so the choice is per target rather than a pipeline-wide setting.
 
+!!! warning "Multiple Write blocks are not atomic"
+    Each `orchestrate_write()` publishes independently. If an earlier Write succeeds and a later Write fails, the pipeline is partially published. Rerunning the notebook executes the earlier Write again, which can duplicate or otherwise repeat non-idempotent writes such as Append. If partial publication or duplicate writes are unacceptable, use separate pipeline executions for each governed target.
+
 The standard pipeline shape is:
 
 ```mermaid
