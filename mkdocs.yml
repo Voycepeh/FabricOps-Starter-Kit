@@ -81,6 +81,7 @@ nav:
           - Data Access: reference/metadata/metadata_data_access.md      
   - Maintainer:
       - Product Definition: maintainer/product-definition.md
+      - Single-Table Data Products: maintainer/single-table-data-products.md
       - Release Guide: maintainer/index.md
       - Public API & Architecture: maintainer/public-api-architecture.md
       - Explore How FabricOps Functions Work Under the Hood: function-call-graph.md
