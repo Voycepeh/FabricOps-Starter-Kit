@@ -1,60 +1,55 @@
-# Step 7. Consume approved Production data
+# Step 7. Publish governed data to a Fabric Data Agent
 
-**Use `99_explore` as the final handoff in the Guided Demo: project-specific consumers read approved Production data without recreating the Production engineering workflow.**
+**Turn approved Production data and its FabricOps governance context into a native Fabric Data Agent for actual consumption.**
 
-The required delivery work is already complete. Governance has established and activated the contract, and Engineering Production has published the governed output.
+Step 6 already completed the engineering handoff: the Production pipeline ran, the governed outputs exist, and approved consumers can access those tables through native Fabric permissions and interfaces.
 
-## Load the shared configuration
+Step 7 is therefore not another exploration notebook. Its purpose is to create a consumption product from the governed data.
 
-`99_explore` starts with:
+!!! note "Feature implementation status"
 
-```python
-%run 00_env_config
+    One-shot Data Agent publishing is the next FabricOps consumption feature and is not yet part of the released public API. This page defines the Guided Demo target while the publisher is implemented.
+
+## Single-table path
+
+For one governed table, FabricOps already has the context needed to ground a useful Data Agent: table purpose, grain/key evidence, column meaning, classification and sensitivity decisions, business rules, Data Quality expectations, profile evidence, lineage, and the active Data Contract.
+
+The target flow is:
+
+```text
+Approved Production table
+        +
+FabricOps governed context
+        |
+        v
+Create/configure Data Agent
+        |
+        v
+Select governed table
+        |
+        v
+Apply generated instructions
+        |
+        v
+Test and consume through the agent
 ```
 
-In a consumer workspace, configure the logical Production stores that users are allowed to read.
+The user should not have to manually rewrite FabricOps documentation into Data Agent instructions.
 
-## Read approved Production data
+## Multi-table extension
 
-Use the foundational FabricOps readers to inspect the governed Production output through its configured logical store.
+The same flow later expands to multiple governed tables once FabricOps can capture explicit primary-key and foreign-key/reference relationships between them.
 
-For example, read the appropriate Lakehouse table or Warehouse table/query without copying the `02_pipeline` transformation into the consumer workspace.
+FabricOps can provide deterministic relationship evidence and warnings, while a BI/data architect confirms the intended relationship. The confirmed relationships are then rendered into the Data Agent context together with each table's existing governed metadata.
 
-The consumer should receive the published result, not reimplement the engineering that produced it.
+This keeps FabricOps focused on governed data and relationship context rather than creating a separate semantic modelling platform.
 
-## Explore without mutating the governed workflow
+## Direct data consumption still exists
 
-`99_explore` is useful for:
+A Data Agent is the showcase Step 7 consumption interface, not the only way to use Production data.
 
-- discovery and ad hoc analysis,
-- BI, AI, and data-science exploration,
-- Warehouse SQL pushdown through `read_warehouse_query()`,
-- local exploratory profiling,
-- read-oriented catalogue inspection and troubleshooting.
+Consumers who need direct access can use the native Fabric permissions and interfaces established in Step 6. FabricOps does not require a dedicated `99_explore` notebook for that path.
 
-Keep repeatable transformation and governed publication in `02_pipeline`. Keep Governance authoring and approval in `01_governance`.
+For the full feature contract and implementation phases, see [Publish Governed Data to a Fabric Data Agent](../maintainer/single-table-data-products.md).
 
-## See how the pieces now fit together
-
-You have completed the same seven-stage operating flow described in How FabricOps Works:
-
-1. Governance created the people and agreement context.
-2. Engineering built and ran the real ETL, creating the technical evidence.
-3. Governance authored the table-specific Data Contract.
-4. Engineering selected and validated the frozen version.
-5. Governance linked the agreement, activated the tested Data Contract, and Engineering promoted the validated pipeline to Production.
-6. Engineering ran the same validated pipeline workflow again in Production.
-7. Consumers now use the approved Production output.
-
-The four reusable notebooks have different responsibilities:
-
-| Notebook | Responsibility |
-| --- | --- |
-| `00_env_config` | Environment and Fabric-store wiring. |
-| `01_governance` | Steward, agreement, Data Contract authoring, freezing, and activation. |
-| `02_pipeline` | Repeatable full-read Engineering, explicit checks, project transformation, governed publication, and technical metadata. |
-| `99_explore` | Read-oriented consumption, exploration, and troubleshooting. |
-
-That is the intended Guided Demo outcome: users should understand not just individual FabricOps functions, but how the entire operating practice fits together from setup through governed Production consumption.
-
-**Complete:** return to the [Guided Demo overview](../guided-demo.md) or continue into the [Function Reference](../reference/index.md) for exact APIs.
+**Complete:** return to the [Guided Demo overview](../guided-demo.md).
