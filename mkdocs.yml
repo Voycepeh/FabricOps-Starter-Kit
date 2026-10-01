@@ -23,8 +23,8 @@ nav:
   - Home: index.md
   - How FabricOps Works: how-fabricops-works.md
   - Featured Solutions:
-      - Sensitive Data Classification & Treatment: solutions/ai-assisted-data-contract-authoring.md
-      - Generate Enforceable Data Quality Rules from Business Rules: solutions/business-rules-to-data-quality.md
+      - Direct & Indirect PII Discovery & Treatment with Built-in AI Suggestions: solutions/ai-assisted-data-contract-authoring.md
+      - Data Quality Rules from Natural Language: solutions/business-rules-to-data-quality.md
       - Plug-and-Play Data Pipelines with Data Contract Enforcement: solutions/plug-and-play-data-pipelines.md
       - Scan Effective Data Access: solutions/effective-data-access.md
   - Guided Demo:
@@ -83,7 +83,7 @@ nav:
       - Product Definition: maintainer/product-definition.md
       - Release Guide: maintainer/index.md
       - Public API & Architecture: maintainer/public-api-architecture.md
-      - Call Flow Dashboard Architecture: function-call-graph.md
+      - Explore How FabricOps Functions Work Under the Hood: function-call-graph.md
 
 markdown_extensions:
   - abbr

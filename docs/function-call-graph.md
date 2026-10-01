@@ -1,4 +1,4 @@
-# Function Call Graph
+# Explore How FabricOps Functions Work Under the Hood
 
 <div align="center">
   <a class="md-button md-button--primary" href="../assets/public-function-call-flows-dashboard.html">Open Call Flow Dashboard</a>
