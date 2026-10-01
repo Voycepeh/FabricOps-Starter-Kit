@@ -31,7 +31,7 @@ def test_resources_reference_nav_matches_current_structure() -> None:
     assert "      - Glossary: glossary.md" in mkdocs_text
     assert "      - Call Flow: function-call-graph.md" not in mkdocs_text
     assert "      - FabricOps Engineering: reference/engineering-cheat-sheet.md" not in mkdocs_text
-    assert "      - Call Flow Dashboard Architecture: function-call-graph.md" in mkdocs_text
+    assert "      - Explore How FabricOps Functions Work Under the Hood: function-call-graph.md" in mkdocs_text
     assert "      - Functions:" not in mkdocs_text
     assert "Call Flow Dashboard: assets/public-function-call-flows-dashboard.html" not in mkdocs_text
     assert "api/reference/" not in mkdocs_text
