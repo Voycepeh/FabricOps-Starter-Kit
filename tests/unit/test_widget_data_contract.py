@@ -2468,7 +2468,7 @@ def test_table_description_matches_grain_ai_layout(widget_runtime, monkeypatch):
 
 
 def test_layout_avoids_blank_spacers_and_collapsed_columns(widget_runtime):
-    """Keep form rows explicit instead of aligning them with empty placeholder widgets."""
+    """Keep form rows explicit, aligned, and free of empty placeholder widgets."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
