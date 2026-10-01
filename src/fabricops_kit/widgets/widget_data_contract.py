@@ -25,8 +25,7 @@ from fabricops_kit.widgets.enrichment_shared import (
 
 DATA_CONTRACT_MANIFEST: dict[str, Any] | None = None
 DATA_CONTRACT_MANIFEST_JSON: str | None = None
-_TABS = ("Table", "Columns", "DQ Rules", "Manifest & Freeze")
-_CLASSIFICATIONS = ("", "Public", "Internal", "Confidential", "Restricted")
+_TABS = ("Table", "Column", "Business Rules", "Review")
 _COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range")
 _DQ_HELP = {
     "completeness": "Limit missing values, with explicit blank-text handling.",
@@ -535,6 +534,12 @@ def widget_data_contract(
     config, env, resolved = resolve_fabric_context(context=context)
     governance_config = getattr(config, "governance_config", None)
     ai_enrichment = dict(getattr(governance_config, "ai_enrichment", {}) or {})
+    classification_levels = [
+        str(value).strip()
+        for value in (getattr(governance_config, "classification_levels", []) or [])
+        if str(value).strip()
+    ] or ["Public", "Restricted", "Confidential", "Highly Sensitive"]
+    classification_options = ("", *classification_levels)
     spark = get_spark_session(spark_session)
     catalogue = contracts.list_contract_governance_state(config=config, env=env, spark_session=spark)
     table_rows = catalogue["tables"]
@@ -617,21 +622,21 @@ def widget_data_contract(
         selected_view = str(top_nav.value)
         workspace.layout.grid_template_columns = (
             "minmax(0, 1fr) minmax(0, 1fr)"
-            if selected_view == "DQ Rules"
+            if selected_view == "Business Rules"
             else "minmax(250px, 27fr) minmax(0, 73fr)"
         )
         left_children, right_children = view_content.get(selected_view, ((), ()))
         left.children = tuple(left_children)
         right.children = tuple(right_children)
-        if selected_view == "DQ Rules":
+        if selected_view == "Business Rules":
             refresh_dq_rules = state.get("_refresh_dq_rules")
             if callable(refresh_dq_rules):
                 refresh_dq_rules()
-        if selected_view == "Columns":
+        if selected_view == "Column":
             load_selected_profile = state.get("_load_selected_profile")
             if callable(load_selected_profile):
                 load_selected_profile()
-        elif str(top_nav.value) == "Manifest & Freeze":
+        elif str(top_nav.value) == "Review":
             refresh_review = state.get("_refresh_review")
             if callable(refresh_review):
                 refresh_review()
@@ -1059,7 +1064,7 @@ def widget_data_contract(
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
         ai_visible = bool(ai_enrichment.get("enabled") and ai_mode == "with_ai")
         visible_tabs = _TABS if ai_visible else tuple(
-            tab for tab in _TABS if tab != "DQ Rules"
+            tab for tab in _TABS if tab != "Business Rules"
         )
         top_nav.options = visible_tabs
         if str(top_nav.value) not in visible_tabs:
@@ -1071,8 +1076,8 @@ def widget_data_contract(
             **shared.widget_common(widgets, "Description", textarea=True),
         )
         table_classification = widgets.Dropdown(
-            options=_CLASSIFICATIONS, value=enrichment_value(enrichments, "table", "Classification"),
-            disabled=not editable, **shared.widget_common(widgets, "Classification"),
+            options=classification_options, value=enrichment_value(enrichments, "table", "Classification"),
+            disabled=True, **shared.widget_common(widgets, "Classification"),
         )
         table_description.description = ""
         table_description.layout = widgets.Layout(width="100%", min_width="0", height="110px")
@@ -1691,6 +1696,33 @@ def widget_data_contract(
                 "display": display_controls,
                 "block": block, "build_record": build_table_rule_record,
             }
+        def derive_table_classification() -> str:
+            """Return the highest ranked classification among columns retained by the write."""
+            rank = {value: index for index, value in enumerate(classification_levels)}
+            removed_columns = {
+                str(rule.get("column_id") or "")
+                for rule in session_guardrails()
+                if str(rule.get("guardrail_type") or "").lower() == "sensitive_data"
+                and bool(rule.get("is_active", True))
+                and str(_parameters(rule).get("treatment") or rule.get("rule_type") or "").lower() == "remove"
+            }
+            values = [
+                str(row.get("value") or "")
+                for row in list((state.get("current") or {}).get("enrichment", []))
+                if str(row.get("enrichment_level") or "").lower() == "column"
+                and str(row.get("enrichment_type") or "").lower() == "classification"
+                and str(row.get("column_id") or "") not in removed_columns
+                and str(row.get("value") or "") in rank
+            ]
+            return max(values, key=rank.get) if values else ""
+
+        def refresh_table_classification() -> None:
+            derived = derive_table_classification()
+            if str(table_classification.value or "") != derived:
+                table_classification.value = derived
+
+        refresh_table_classification()
+
         def sync_table_enrichment(_change: dict[str, Any] | None = None) -> None:
             if not editable:
                 return
@@ -2284,7 +2316,7 @@ def widget_data_contract(
         column_context = widgets.HTML()
         profile_context = shared.preview_region(widgets, widgets.HTML("<p>No column selected.</p>"), height="160px")
         column_description = widgets.Textarea(disabled=not editable, **shared.widget_common(widgets, "Description", textarea=True))
-        column_classification = widgets.Dropdown(options=_CLASSIFICATIONS, disabled=not editable, **shared.widget_common(widgets, "Classification"))
+        column_classification = widgets.Dropdown(options=classification_options, disabled=not editable, **shared.widget_common(widgets, "Classification"))
         column_description.description = ""
         column_description.layout = widgets.Layout(width="100%", min_width="0", height="110px")
         column_classification.description = ""
@@ -2621,7 +2653,7 @@ def widget_data_contract(
                             controls["parameters"], values.get("parameters", []), strict=False
                         ):
                             control.value = value
-                profile_context.value = "<p>Open the Columns tab to load profile evidence.</p>"
+                profile_context.value = "<p>Open the Column tab to load profile evidence.</p>"
             finally:
                 hydrating["active"] = False
 
@@ -2644,6 +2676,8 @@ def widget_data_contract(
                 control.layout.display = "" if treatment == "mask" else "none"
             for control in (bucket_bins, bucket_labels):
                 control.layout.display = "" if treatment == "bucket" else "none"
+            column_classification.disabled = (not editable) or treatment == "remove"
+            column_classification.layout.display = "none" if treatment == "remove" else ""
 
         def refresh_sensitive_rule_preview(
             _change: dict[str, Any] | None = None,
@@ -2677,12 +2711,23 @@ def widget_data_contract(
                 f"<br><span style='color:#667085;'>Reason: {html.escape(reason)}</span>"
                 if reason else ""
             )
+            current_classification = str(column_classification.value or "")
+            classification_effect = (
+                " The column will be excluded from the written target."
+                if treatment == "remove"
+                else (
+                     " Output classification: "
+                    f"<b>{html.escape(current_classification)}</b>."
+                    if current_classification else ""
+                )
+            )
             sensitive_rule_preview.value = (
                 "<div style='background:#f6f8fa;border-left:3px solid #0f6cbd;"
                 "padding:9px 11px;margin-top:8px;font-size:12px;line-height:1.5;'>"
                 "<b>ⓘ Rule</b><br>"
                 f"This column is assessed as <b>{html.escape(pii_label)}</b>. "
-                f"Treatment: <b>{html.escape(treatment)}</b>.{detail} {action}"
+                f"Treatment: <b>{html.escape(treatment)}</b>.{detail}"
+                f"{classification_effect} {action}"
                 f"{reason_line}</div>"
             )
 
@@ -2693,10 +2738,19 @@ def widget_data_contract(
             sensitive_control.observe(refresh_sensitive_rule_preview, names="value")
 
         sensitive_treatment.observe(update_sensitive_fields, names="value")
-        def working_sensitive_changed(_change: dict[str, Any]) -> None:
+        column_classification.observe(refresh_sensitive_rule_preview, names="value")
+
+        def working_sensitive_changed(change: dict[str, Any]) -> None:
             if hydrating["active"]:
                 return
-            state["_working_sensitive_enabled"] = bool(sensitive_enabled.value)
+            enabled_now = bool(sensitive_enabled.value)
+            if enabled_now and not bool(change.get("old")) and str(sensitive_treatment.value or "") != "remove":
+                current = str(column_classification.value or "")
+                if current in classification_levels:
+                    index = classification_levels.index(current)
+                    if index > 0:
+                        column_classification.value = classification_levels[index - 1]
+            state["_working_sensitive_enabled"] = enabled_now
             render_table_summary()
 
         def working_dq_changed(_change: dict[str, Any]) -> None:
@@ -2737,7 +2791,7 @@ def widget_data_contract(
             if change.get("new"):
                 selected_id = str(change["new"])
                 hydrate_column(selected_id)
-                if str(top_nav.value) == "Columns":
+                if str(top_nav.value) == "Column":
                     load_selected_profile()
                 if not state.get("_opening_with_ai"):
                     prepare_column_ai(selected_id)
@@ -3069,6 +3123,7 @@ def widget_data_contract(
                     enrichment_record("column", "Description", column_description.value, cid),
                     enrichment_record("column", "Classification", column_classification.value, cid),
                 ])
+                refresh_table_classification()
                 set_validation_error(key)
                 mark_column_hydrated("description", "classification")
             except (TypeError, ValueError, RuntimeError) as exc:
@@ -3162,6 +3217,7 @@ def widget_data_contract(
                 record = build_sensitive_record()
                 if record is not None:
                     stage_guardrails([record])
+                refresh_table_classification()
                 set_validation_error(key)
                 mark_column_hydrated(
                     "sensitive_enabled", "pii_type", "pii_reason", "sensitive_treatment",
@@ -3471,14 +3527,41 @@ def widget_data_contract(
             ),
             primary_children=[dq_primary],
         )
-        column_definition = definition_section(
-            "Column definition", column_classification, column_description,
-            column_description_ai, accept_column_description, rerun_column_description,
+        column_definition = shared.form_section(
+            widgets,
+            title="Column definition",
+            children=[
+                widgets.GridBox(
+                    [
+                        widgets.HTML("<b>Description</b>"),
+                        column_description,
+                        widgets.VBox(
+                            [
+                                column_description_ai,
+                                shared.action_row(
+                                    widgets, [accept_column_description, rerun_column_description]
+                                ),
+                            ],
+                            layout=widgets.Layout(width="100%", min_width="0", gap="4px"),
+                        ) if ai_visible else widgets.HTML(""),
+                    ],
+                    layout=widgets.Layout(
+                        width="100%",
+                        grid_template_columns=(
+                            "120px minmax(240px, 1fr) minmax(240px, 1fr)"
+                            if ai_visible else "120px minmax(240px, 1fr) 0"
+                        ),
+                        grid_gap="10px 16px",
+                        align_items="flex-start",
+                    ),
+                )
+            ],
         )
         sensitive_primary = widgets.VBox(
             [
                 pii_type,
                 sensitive_treatment,
+                column_classification,
                 mask_start,
                 mask_end,
                 mask_character,
@@ -3514,8 +3597,8 @@ def widget_data_contract(
                     "before the governed write proceeds."
                 ),
                 description=(
-                    "Classify whether this column contains PII, record the reason, and choose "
-                    "how the pipeline should treat the sensitive value."
+                    "Assess whether this column contains PII, choose how the pipeline should treat "
+                    "the sensitive value, and set the classification of the resulting output column."
                 ),
                 header_controls=[
                     sensitive_enabled,
@@ -3528,7 +3611,7 @@ def widget_data_contract(
             ),
             dq_panel,
         )
-        view_content["Columns"] = (column_left, column_right)
+        view_content["Column"] = (column_left, column_right)
 
         if ai_mode == "with_ai":
             if not str(table_grain.value or "").strip():
@@ -3546,7 +3629,7 @@ def widget_data_contract(
             if ai_mode == "with_ai":
                 prepare_column_ai(str(column_select.value))
 
-        # DQ Rules: author business intent with AI and review the shared draft rule set.
+        # Business Rules: author data-quality intent in natural language and review the shared draft rule set.
         business_saved = widgets.Select(
             **shared.widget_common(widgets, "Current DQ Rules")
         )
@@ -4327,7 +4410,7 @@ def widget_data_contract(
                 children=[business_primary],
             ),
         )
-        view_content["DQ Rules"] = (business_left, business_right)
+        view_content["Business Rules"] = (business_left, business_right)
 
 
         # Manifest: current working contract plus changes since the last persisted draft.
@@ -4599,7 +4682,7 @@ def widget_data_contract(
             ),
             *actions,
         )
-        view_content["Manifest & Freeze"] = (review_left, review_right)
+        view_content["Review"] = (review_left, review_right)
         apply_view()
 
 
