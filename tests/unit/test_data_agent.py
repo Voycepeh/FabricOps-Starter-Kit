@@ -95,8 +95,28 @@ def test_renderer_is_stable_and_omits_absent_optional_values(governed):
     assert "dbo.orders" in rendered["datasource"]
     assert "Stable order key" in rendered["datasource"]
     assert "access token" not in rendered["datasource"].casefold()
+    assert "Handling ambiguity" in rendered["agent"]
+    assert "Never silently choose" in rendered["agent"]
     minimal = shared.instruction_text({"source": {"table": "x", "schema": None}, "columns": []})
     assert "Purpose:" not in minimal["datasource"]
+
+
+def test_renderer_surfaces_datetime_ambiguity_without_inventing_default_semantics():
+    context = {
+        "source": {"table": "orders", "schema": "dbo"},
+        "columns": [
+            {"name": "order_date", "data_type": "date", "description": "Date the order was placed"},
+            {"name": "ship_date", "data_type": "timestamp", "description": "Date and time the order was shipped"},
+            {"name": "amount", "data_type": "decimal"},
+        ],
+    }
+    rendered = shared.instruction_text(context)
+    datasource = rendered["datasource"]
+    assert "## Date and time interpretation" in datasource
+    assert "- order_date: Date the order was placed" in datasource
+    assert "- ship_date: Date and time the order was shipped" in datasource
+    assert "ask which field they want" in datasource
+    assert "default date" not in datasource.casefold()
 
 
 def _responses(*responses):
