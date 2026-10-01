@@ -98,15 +98,17 @@ At runtime the AI is no longer involved. The activated Data Contract supplies th
 
 Conceptually, each applicable rule is a boolean question for each row: **does this row satisfy the rule?** Conditional rules only apply when their condition matches. FabricOps uses those evaluations to tag the DataFrame with the rules that failed and the resulting row status.
 
-For the example above, the row-level inspection would look like this:
+Using the existing Guardrail failure fixture, row-level inspection can show the generated rules catching real demo rows:
 
-| order_id | Failed rules | `_dq_check_status` | Why |
+| order_id | Failed rule | `_dq_check_status` | Why |
 | --- | --- | --- | --- |
-| O1001 | none | `passed` | All four rules pass. |
-| O1002 | shipped date, SG currency | `failed`* | Missing shipped date and USD used for an SG order. |
-| O1003 | discount maximum | `failed`* | Discount is 25%. |
-| O1004 | net amount formula | `failed`* | Expected net amount is 54, not 50. |
-| O1005 | SG currency, discount maximum | `failed`* | Draft skips the Completed-only checks, but the SG currency and discount rules still apply. |
+| GF004 | quantity range | `failed`* | `quantity = -1`. |
+| GF005 | unit price range | `failed`* | `unit_price = -399.0`. |
+| GF006 | discount range | `failed`* | `discount = 1.25`, above the 20% maximum. |
+| GF007 | order status whitelist | `failed`* | `order_status = "UNKNOWN"`. |
+| GF009 | customer completeness | `failed`* | `customer_id` is missing. |
+
+The timestamp relationship is still generated and enforced even though the current failure fixture does not deliberately violate it. A recording can therefore show both the generated rule set and several independent failures using the existing demo assets.
 
 \* The exact row status depends on each rule's configured severity/action. FabricOps distinguishes warning-only failures from blocking/error failures.
 
