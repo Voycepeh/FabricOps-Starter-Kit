@@ -6,10 +6,6 @@ Step 6 already completed the engineering handoff: the Production pipeline ran, g
 
 Step 7 adds a consumer and analytics-engineering interface over that foundation.
 
-!!! note "Planned notebook evolution"
-
-    The current template is named `99_explore`. The intended successor is `03_consumption`, reflecting its broader role as the governed handoff into consumption. The template rename and implementation changes will land with their directly affected tests and generated references.
-
 ## Review the governed context
 
 The consumer should be able to select approved Production table(s) and see the useful context FabricOps already captured: purpose, grain/key evidence, column meaning, business rules, Data Quality expectations, sensitivity/classification decisions, lineage, freshness, access information, and known limitations.
@@ -50,7 +46,7 @@ Test and consume
 
 !!! note "Feature implementation status"
 
-    One-shot Data Agent publishing and the `03_consumption` revamp are planned capabilities and are not yet part of the released public API.
+    One-shot Data Agent publishing and the `99_explore` revamp are planned capabilities and are not yet part of the released public API.
 
 ## Multi-table extension
 
