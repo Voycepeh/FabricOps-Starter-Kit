@@ -107,7 +107,7 @@ Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environ
   Development and Production keep the same logical Bronze, Silver, and Gold architecture, whether those stores are implemented as Lakehouses or Warehouses. The physical Fabric objects differ by environment, but their roles and structure stay aligned 1:1. Once `02_pipeline` is validated in Development against the frozen Data Contract, that validated notebook is promoted to the Engineering Production Workspace through the deployment flow.
 
 - **Project-Specific Consumer Workspace**  
-  Consumers use `99_explore` and read approved Production data only. Power BI, data agents, AI workloads, and other project-specific consumption should not connect to Engineering Development outputs or recreate the governed engineering pipeline.
+  Consumers receive approved Production access through native Fabric controls and use the Fabric interface appropriate to their work. FabricOps does not require a dedicated exploration notebook after the governed output is published. Data Agents provide the first productized FabricOps consumption path; other BI, AI, analytics, and data-science consumers can use the approved Production data directly.
 
 
 
@@ -221,8 +221,8 @@ In other words, **Engineering supplies what physically exists; Governance adds w
 | **3. Author and freeze the Data Contract** | Select the real `table_id`, author Enrichment, Guardrails, and Processing, then freeze the contract version. |
 | **4. Validate the frozen Data Contract** | Evaluate the exact frozen candidate against the real pipeline. |
 | **5. Activate the Data Contract and promote** | Link the tested contract version to the Data Agreement, activate it for Production, then deploy the validated engineering artifact from Development to Production. |
-| **6. Run the pipeline in Production** | Run the same validated Read → Transform → Write workflow again using Production configuration and the active Data Contract. |
-| **7. Consume approved Production data** | Read approved Production outputs from the consumer workspace. |
+| **6. Run the pipeline in Production and grant access** | Run the validated Production workflow, publish governed outputs, then grant approved consumers direct access through native Fabric permissions. |
+| **7. Publish governed data to a Data Agent** | Turn approved Production tables and FabricOps context into a native Fabric Data Agent for consumption. |
 
 **Steps 3 ↔ 4 are intentionally iterative.** Governance authors the next contract version; Engineering selects that immutable version and reruns the pipeline against it. The loop continues until the governed definition and the real engineering implementation agree.
 
@@ -238,8 +238,8 @@ In other words, **Engineering supplies what physically exists; Governance adds w
         **Steps 3 ↔ 4 are intentionally iterative.** Governance authors the next contract version; Engineering selects that immutable version and reruns the pipeline against it. If the expectation needs refinement or the implementation does not satisfy the intended rule, the flow returns to Governance for another version and then back to Engineering for another validation run. The loop continues until the governed definition and the real engineering implementation agree.
 
     5. **Governance activates the tested definition, then Engineering promotes it to Production.** [`widget_data_contract()`](api/reference/widget_data_contract.md) links the exact Data Agreement version and tags one frozen Data Contract version as active for that `table_id`. Frozen versions stay frozen; activation does not change their governed JSON. Development can validate any frozen version. Production is strict: it must resolve exactly one frozen version with `is_active=true` for each linked `table_id`. After activation, the validated engineering artifact is deployed from Engineering Development to Engineering Production through the Fabric Deployment Pipeline.
-    6. **Engineering runs the same workflow again in Production.** The promoted `02_pipeline` resolves Production stores through `00_env_config`, automatically resolves the active Data Contract, applies the same Read → Transform → Write pattern and Guardrail functions, and publishes the governed output. Successful writes commit the associated runtime Lineage and Source Observation state.
-    7. **Project teams consume the approved Production result.** `99_explore` provides the reusable read-only exploration entry point without recreating the Production ETL in every consumer workspace.
+    6. **Engineering runs the same workflow again in Production and hands off access.** The promoted `02_pipeline` resolves Production stores through `00_env_config`, automatically resolves the active Data Contract, applies the same Read → Transform → Write pattern and Guardrail functions, and publishes the governed output. Successful writes commit the associated runtime Lineage and Source Observation state. Approved consumers then receive access through native Fabric controls and can use standard Fabric interfaces directly.
+    7. **FabricOps productizes the governed result through a Data Agent.** The Data Agent publishing path assembles the approved table context into native Data Agent instructions and configuration. The first implementation targets one table; explicit PK/FK relationship context extends the same pattern to multiple governed tables.
 
 </div>
 
