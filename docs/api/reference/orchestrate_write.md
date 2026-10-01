@@ -43,7 +43,7 @@ def orchestrate_write(
     store: str,
     schema: str | None,
     table_name: str,
-    load_strategy: str,
+    write_mode: str,
     contracts: dict[str, Any] | None=None,
     repartition_by: int | None=None,
     spark_session=None,
@@ -57,7 +57,7 @@ def orchestrate_write(
 
 <div class="reference-example-usage" markdown="1">
 
->>> result = orchestrate_write(transformed_df, name="curated_orders", sources=[orders], store="Silver", schema="demo", table_name="curated_orders", load_strategy="overwrite", contracts=CONTRACTS)
+>>> result = orchestrate_write(transformed_df, name="curated_orders", sources=[orders], store="Silver", schema="demo", table_name="curated_orders", write_mode="overwrite", contracts=CONTRACTS)
 
 </div>
 
@@ -71,7 +71,7 @@ def orchestrate_write(
 | `store` | `str` | Yes | Configured destination store key. |
 | `schema` | `str \| None` | Yes | Physical target schema. |
 | `table_name` | `str` | Yes | Physical target table name. |
-| `load_strategy` | `str` | Yes | Governed strategy forwarded to :func:`pipeline_write`. |
+| `write_mode` | `str` | Yes | Notebook-facing Write mode forwarded to :func:`pipeline_write` as its governed load strategy. |
 | `contracts` | `dict[str, Any] \| None` | No | ``widget_select_data_contract`` result used to choose Validate or Enforce publication behaviour. Both modes run the same Guardrails. |
 | `repartition_by` | `int \| None` | No | Spark write partition count. |
 | `spark_session` | `object` | No | Spark session used by every stage. |
