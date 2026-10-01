@@ -139,7 +139,7 @@ def widget_runtime(monkeypatch):
     }
     enrichment = [
         {"enrichment_id": "table-description", "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev", "enrichment_level": "table", "column_id": "", "enrichment_type": "Description", "value": "Orders table"},
-        {"enrichment_id": "table-classification", "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev", "enrichment_level": "table", "column_id": "", "enrichment_type": "Classification", "value": "Internal"},
+        {"enrichment_id": "table-classification", "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev", "enrichment_level": "table", "column_id": "", "enrichment_type": "Classification", "value": "Restricted"},
         {"enrichment_id": "column-description", "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev", "enrichment_level": "column", "column_id": "col-0", "enrichment_type": "Description", "value": "Order identifier"},
         {"enrichment_id": "column-classification", "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev", "enrichment_level": "column", "column_id": "col-0", "enrichment_type": "Classification", "value": "Confidential"},
     ]
@@ -275,7 +275,7 @@ def widget_runtime(monkeypatch):
         }),
         governance_config=types.SimpleNamespace(
             ai_enrichment=ai_enrichment,
-            sensitivity_labels=["Public", "Internal", "Confidential", "Restricted"],
+            classification_levels=["Public", "Restricted", "Confidential", "Highly Sensitive"],
         ),
     )
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (config, "dev", {}))
@@ -506,7 +506,7 @@ def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_r
 
     assert controls["load_strategy"].disabled is False
     controls["load_strategy"].value = "append"
-    controls["top_nav"].value = "Manifest & Freeze"
+    controls["top_nav"].value = "Review"
     controls["save_data_contract"].click()
 
     saved = widget_runtime["calls"]["draft"][-1]
@@ -580,13 +580,13 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
     assert "fabricops-form" in controls["page"]._dom_classes
-    assert tuple(controls["top_nav"].options) == ("Table", "Columns", "Manifest & Freeze")
+    assert tuple(controls["top_nav"].options) == ("Table", "Column", "Review")
     assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
     assert len(controls["workspace"].children) == 2
     assert controls["table"].value == "orders"
     assert controls["contract"].value == "1"
     assert controls["table_description"].value == "Orders table"
-    assert controls["table_classification"].value == "Internal"
+    assert controls["table_classification"].value == "Confidential"
     assert controls["column_description"].value == "Order identifier"
     assert controls["column_classification"].value == "Confidential"
     assert controls["required"].value is True
@@ -824,7 +824,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
-    for label in ("Table", "Columns", "Manifest & Freeze"):
+    for label in ("Table", "Column", "Review"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0
@@ -871,7 +871,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert len(grain_section.children[3].children) == 1
     assert controls["table_grain"].layout.max_width == "560px"
 
-    controls["top_nav"].value = "Columns"
+    controls["top_nav"].value = "Column"
     assert controls["column_search"] in controls["left_pane"].children
     assert controls["dq_panel"].children[1].children[2] is controls["dq_primary"]
     assert list(controls["dq_family_controls"]) == [
@@ -885,8 +885,8 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "save_column" not in controls
     assert "save_dq" not in controls
 
-    assert "DQ Rules" not in tuple(controls["top_nav"].options)
-    controls["top_nav"].value = "Manifest & Freeze"
+    assert "Business Rules" not in tuple(controls["top_nav"].options)
+    controls["top_nav"].value = "Review"
     assert controls["left_pane"].children[0] is table_context
     assert "Column definitions" in controls["manifest_preview"].value
     assert "Guardrails" in controls["manifest_preview"].value
@@ -940,7 +940,7 @@ def test_profile_context_is_lazy_and_cached_per_table_and_column(widget_runtime)
 
     assert widget_runtime["calls"]["profiles"] == []
 
-    controls["top_nav"].value = "Columns"
+    controls["top_nav"].value = "Column"
     assert widget_runtime["calls"]["profiles"].count("col-0") == 1
 
     controls["column_select"].value = "col-1"
@@ -964,7 +964,7 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     assert id(controls["column_description"]) == editor_identity
     assert "column_249" in controls["column_context"].value
     assert widget_runtime["calls"]["profiles"] == []
-    controls["top_nav"].value = "Columns"
+    controls["top_nav"].value = "Column"
     assert "col-249" in controls["profile_context"].value
     assert widget_runtime["calls"]["profiles"][-1] == "col-249"
     assert controls["left_pane"].children[-1] is controls["column_select"]
@@ -1225,11 +1225,11 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert len(grain_section.children[3].children) == 2
     grain_primary = grain_section.children[3].children[0]
     assert controls["grain_profile_evidence"] in grain_primary.children
-    controls["top_nav"].value = "Columns"
+    controls["top_nav"].value = "Column"
     assert controls["dq_panel"].children[1].children[2] is controls["dq_primary"]
     assert "dq_ai_panel" not in controls
-    assert "DQ Rules" in tuple(controls["top_nav"].options)
-    controls["top_nav"].value = "DQ Rules"
+    assert "Business Rules" in tuple(controls["top_nav"].options)
+    controls["top_nav"].value = "Business Rules"
     assert controls["business_requirement"] in controls["business_ai_panel"].children
     assert controls["business_requirement"].description == ""
     assert controls["business_columns"].description == ""
@@ -1237,7 +1237,7 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert controls["workspace"].layout.grid_template_columns == "minmax(0, 1fr) minmax(0, 1fr)"
     assert "Author DQ Rules" in controls["left_pane"].children[0].children[0].value
     assert "Review &amp; Add DQ Rules" in controls["right_pane"].children[0].children[0].value
-    for label in ("Table", "Columns", "DQ Rules", "Manifest & Freeze"):
+    for label in ("Table", "Column", "Business Rules", "Review"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0
@@ -1338,7 +1338,7 @@ def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_
             "rationale": "Deterministic relationship.",
         }],
     )
-    controls["top_nav"].value = "DQ Rules"
+    controls["top_nav"].value = "Business Rules"
     controls["business_requirement"].value = "Columns must match."
     controls["business_columns"].value = ("column_0", "column_1")
     controls["resolve_business_rule"].click()
@@ -1356,7 +1356,7 @@ def test_business_rule_delete_requires_confirmation_and_stages_removal(
     """Delete removes only the selected draft Business Rule after explicit confirmation."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
-    controls["top_nav"].value = "DQ Rules"
+    controls["top_nav"].value = "Business Rules"
 
     controls["business_saved"].value = "advanced"
     assert controls["delete_business_rule"].disabled is False
@@ -1400,7 +1400,7 @@ def test_table_description_ai_uses_grain_and_manual_classification(widget_runtim
 
     table_context = captures["enrichment"][0]
     assert table_context["grain"] == "One row represents a single order line."
-    assert table_context["classification"] == "Internal"
+    assert table_context["classification"] == "Confidential"
     assert captures["grain"]
 
 
@@ -1966,14 +1966,14 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
 def test_column_authored_dq_rule_appears_in_shared_dq_rules_list(
     widget_runtime, monkeypatch
 ):
-    """Column DQ edits hydrate the DQ Rules page from the same staged draft state."""
+    """Column DQ edits hydrate the Business Rules page from the same staged draft state."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
-    controls["top_nav"].value = "Columns"
+    controls["top_nav"].value = "Column"
     controls["dq_family_controls"]["completeness"]["enabled"].value = True
 
-    controls["top_nav"].value = "DQ Rules"
+    controls["top_nav"].value = "Business Rules"
     labels = [label for label, _value in controls["business_saved"].options]
 
     assert any("Completeness" in label and "column_0" in label for label in labels)
@@ -2003,7 +2003,7 @@ def test_business_rule_resolve_apply_stages_existing_guardrail_model(
         }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "DQ Rules"
+    controls["top_nav"].value = "Business Rules"
     controls["business_saved"].value = ""
     controls["business_requirement"].value = "End date must be on or after start date."
     controls["business_columns"].value = ("column_0", "column_1")
@@ -2051,7 +2051,7 @@ def test_multiple_business_rules_remain_independent(widget_runtime, monkeypatch)
         }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "DQ Rules"
+    controls["top_nav"].value = "Business Rules"
     for requirement in requirements:
         controls["business_saved"].value = ""
         controls["business_requirement"].value = requirement
@@ -2096,7 +2096,7 @@ def test_multiple_uniqueness_business_rules_do_not_replace_table_grain(
         }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "DQ Rules"
+    controls["top_nav"].value = "Business Rules"
     for requirement, columns in requirements:
         controls["business_saved"].value = ""
         controls["business_requirement"].value = requirement
@@ -2118,7 +2118,7 @@ def test_multiple_uniqueness_business_rules_do_not_replace_table_grain(
 
 
 def test_pattern_business_rule_is_owned_by_dq_rules(widget_runtime, monkeypatch):
-    """Create Pattern through the DQ Rules workflow without a column regex editor."""
+    """Create Pattern through the Business Rules workflow without a column regex editor."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
     requirement = "Order ID must start with ORD- followed by digits."
@@ -2137,7 +2137,7 @@ def test_pattern_business_rule_is_owned_by_dq_rules(widget_runtime, monkeypatch)
         }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "DQ Rules"
+    controls["top_nav"].value = "Business Rules"
     controls["business_requirement"].value = requirement
     controls["business_columns"].value = ("column_0",)
     controls["resolve_business_rule"].click()
@@ -2176,7 +2176,7 @@ def test_single_column_business_rule_hydrates_column_rule(widget_runtime, monkey
         }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "DQ Rules"
+    controls["top_nav"].value = "Business Rules"
     controls["business_requirement"].value = "Order identifier is always required."
     controls["business_columns"].value = ("column_0",)
     controls["resolve_business_rule"].click()
@@ -2192,7 +2192,7 @@ def test_single_column_business_rule_hydrates_column_rule(widget_runtime, monkey
     assert staged["column_id"] == "col-0"
     assert controls["business_saved"].value
 
-    controls["top_nav"].value = "Columns"
+    controls["top_nav"].value = "Column"
     assert controls["dq_max_missing"].value == "0"
     assert controls["dq_family_controls"]["completeness"]["enabled"].value is True
     assert "DQ Rule added to the current draft" in state["message"]
@@ -2221,7 +2221,7 @@ def test_custom_business_rule_requires_engineering_review_before_freeze(
         }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "DQ Rules"
+    controls["top_nav"].value = "Business Rules"
     controls["business_requirement"].value = "Approved rows require an approved date."
     controls["resolve_business_rule"].click()
     controls["apply_business_rule"].click()
@@ -2472,10 +2472,10 @@ def test_table_classification_updates_left_summary_immediately(widget_runtime):
     controls = state["_controls"]
     summary = controls["left_pane"].children[0]
 
-    assert "Internal" in summary.value
+    assert "Confidential" in summary.value
     controls["table_classification"].value = "Restricted"
     assert "Restricted" in summary.value
-    assert "Internal</div>" not in summary.value
+    assert "Confidential</div>" not in summary.value
     assert widget_runtime["calls"]["enrichment"] == []
 
 
@@ -2520,7 +2520,7 @@ def test_manifest_description_is_truncated_and_expandable(widget_runtime):
     """Column descriptions stay compact without squeezing the review table."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    controls["top_nav"].value = "Manifest & Freeze"
+    controls["top_nav"].value = "Review"
 
     manifest = controls["manifest_preview"].value
     assert "table-layout:fixed" in manifest
@@ -2533,7 +2533,7 @@ def test_review_shows_changes_since_last_save(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["table_classification"].value = "Restricted"
-    controls["top_nav"].value = "Manifest & Freeze"
+    controls["top_nav"].value = "Review"
 
     assert "Changes since last save" in controls["manifest_preview"].value or state["dirty"]
     assert "Restricted" in json.dumps(state["manifest"])

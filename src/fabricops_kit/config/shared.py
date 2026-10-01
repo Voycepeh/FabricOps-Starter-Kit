@@ -404,7 +404,7 @@ class GovernanceConfig:
     sensitivity_rules : dict[str, str]
         Mapping of rule keys to expected sensitivity labels used by governance
         notebook checks and reporting summaries.
-    sensitivity_labels : list[str]
+    classification_levels : list[str]
         Controlled information-classification labels rendered by table and
         column metadata enrichment widgets.
     ai_enrichment : dict[str, Any]
@@ -418,7 +418,7 @@ class GovernanceConfig:
 
     required_classification: bool = True
     sensitivity_rules: dict[str, str] = field(default_factory=dict)
-    sensitivity_labels: list[str] = field(default_factory=lambda: ["Public", "Internal", "Confidential", "Restricted"])
+    classification_levels: list[str] = field(default_factory=lambda: ["Public", "Restricted", "Confidential", "Highly Sensitive"])
     ai_enrichment: dict[str, Any] = field(default_factory=lambda: dict(DEFAULT_AI_ENRICHMENT))
     enrichment_context_widget: dict[str, Any] = field(default_factory=lambda: {"custom_fields": []})
     enrichment_classification_widget: dict[str, Any] = field(default_factory=lambda: {"custom_fields": []})
@@ -427,8 +427,11 @@ class GovernanceConfig:
         """Validate and normalize initialized values."""
         object.__setattr__(self, "required_classification", bool(self.required_classification))
         object.__setattr__(self, "sensitivity_rules", dict(self.sensitivity_rules or {}))
-        labels = [str(option).strip() for option in (self.sensitivity_labels or []) if str(option).strip()]
-        object.__setattr__(self, "sensitivity_labels", labels or ["Public", "Internal", "Confidential", "Restricted"])
+        labels = [str(option).strip() for option in (self.classification_levels or []) if str(option).strip()]
+        labels = labels or ["Public", "Restricted", "Confidential", "Highly Sensitive"]
+        if len(labels) != len(set(labels)):
+            raise ValueError("classification_levels must contain unique ranked values.")
+        object.__setattr__(self, "classification_levels", labels)
         ai_enrichment = {**DEFAULT_AI_ENRICHMENT, **dict(self.ai_enrichment or {})}
         object.__setattr__(self, "ai_enrichment", {
             "enabled": bool(ai_enrichment.get("enabled", False)),

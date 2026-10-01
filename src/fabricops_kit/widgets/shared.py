@@ -512,7 +512,7 @@ GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
-SENSITIVITY_LABELS = ["Public", "Internal", "Confidential", "Restricted"]
+CLASSIFICATION_LEVELS = ["Public", "Restricted", "Confidential", "Highly Sensitive"]
 
 
 @dataclass
@@ -825,7 +825,7 @@ def _is_table_not_found_error(exc: Exception) -> bool:
 def enrichment_control_options(config: Any) -> tuple[list[str], list[dict[str, Any]], list[dict[str, Any]]]:
     """Return configured column metadata enrichment controls."""
     governance = getattr(config, "governance_config", None)
-    sensitivity = list(getattr(governance, "sensitivity_labels", None) or SENSITIVITY_LABELS)
+    sensitivity = list(getattr(governance, "classification_levels", None) or CLASSIFICATION_LEVELS)
     context_widget = getattr(governance, "enrichment_context_widget", None) or {}
     classification_widget = getattr(governance, "enrichment_classification_widget", None) or {}
     context_fields = list(context_widget.get("custom_fields", []) or [])
