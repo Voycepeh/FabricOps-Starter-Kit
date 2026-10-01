@@ -1,57 +1,82 @@
-# Publish a Single-Table Data Product
+# Publish Governed Data to a Fabric Data Agent
 
 FabricOps should make an activated, governed table immediately useful as a Fabric data product without inventing another semantic layer.
 
-This feature defines the first consumption accelerator after the governed Production table exists. It reuses FabricOps metadata as an AI-ready context package, then hands the table to native Microsoft Fabric capabilities.
+This feature defines the first consumption accelerator after governed Production data exists. It reuses FabricOps metadata as an AI-ready context package and publishes selected governed tables into a native Fabric Data Agent. The single-table path is the first implementation; explicit cross-table relationships extend the same contract to multi-table agents.
 
 ## Product decision
 
-For a **single governed table**, FabricOps already owns the useful source context: table identity and purpose, schema, column descriptions, grain/key evidence, profile evidence, classification, sensitive-data decisions, business rules, Data Quality expectations, lineage, and the activated Data Contract.
+The first-class Step 7 consumption interface is a **Fabric Data Agent**.
 
-FabricOps therefore should not create its own metric, dimension, relationship, or visualization metadata model.
+FabricOps should not introduce a Power BI semantic layer or report-generation dependency into this feature. Power BI consumption can evolve independently.
 
-The downstream source of truth remains the native Fabric artifact:
+For one governed table, FabricOps already owns the useful context: table identity and purpose, schema, column descriptions, grain/key evidence, profile evidence, classification, sensitive-data decisions, business rules, Data Quality expectations, lineage, and the activated Data Contract.
 
-- a **Fabric Data Agent** owns its AI instructions and datasource configuration;
-- a **Power BI semantic model** owns measures and analytical semantics;
-- a **Power BI report** owns pages, visuals, filters, slicers, and presentation.
+For multiple governed tables, the important additional context is explicit relationship intent: which column is a primary or referenced key, which column is a foreign key, and which governed table/column it references. FabricOps should capture that relationship as governed context rather than infer a semantic model.
 
-FabricOps provides governed context to accelerate creation of those artifacts.
+The downstream source of truth for the consumption experience remains the native Fabric Data Agent. FabricOps assembles and publishes the context needed for the agent to query the governed data accurately.
 
-## V1 scope: one table
-
-The user selects one activated Production `table_id` and one target consumption path.
-
-### Data Agent path
+## V1: one-shot single-table Data Agent
 
 Target experience:
 
-1. Resolve the approved Production table and its active Data Contract.
-2. Build a compact FabricOps context package from existing authoritative metadata.
-3. Create a Fabric Data Agent in the target consumer workspace.
-4. Attach the Lakehouse or Warehouse datasource.
-5. Select the governed table rather than exposing unrelated tables from the same item.
-6. Apply FabricOps context as datasource instructions and, where useful, agent-level instructions.
-7. Leave the created agent ready for review, test, and publication.
+1. Select one activated Production `table_id`.
+2. Resolve the approved Production table and its active Data Contract.
+3. Build a compact FabricOps context package from existing authoritative metadata.
+4. Create a Fabric Data Agent in the target consumer workspace.
+5. Attach the Production Lakehouse or Warehouse datasource.
+6. Select the governed table rather than exposing unrelated tables from the same item.
+7. Apply FabricOps context as datasource instructions and, where useful, agent-level instructions.
+8. Leave the created agent ready for review, test, and publication.
 
 The context should explain the table's purpose and grain, important columns, governed terminology, business rules, relevant Data Quality expectations, sensitivity/classification context that is safe for the consumer, and known usage constraints. It must not copy FabricOps metadata into a second independently maintained source of truth.
 
 Microsoft Fabric's Data Agent REST API can create a Data Agent, create staging datasources, select datasource elements, update datasource instructions, and update agent-level AI instructions. Configuration-management endpoints are currently Preview, so implementation must isolate those calls behind a small integration boundary and document that lifecycle status.
 
-### Power BI path
+## V2: relationship-aware multi-table Data Agent
 
-Target experience:
+The multi-table path extends the same publishing flow rather than introducing a separate semantic product.
 
-1. Resolve the same governed table and FabricOps context package.
-2. Create or select a Power BI semantic model over the governed Production table.
-3. Give native Power BI AI authoring the FabricOps context and a bounded authoring request.
-4. Ask it to create useful measures, descriptions, formatting, and other single-table model improvements.
-5. Build an initial report with useful pages and visuals from that semantic model.
-6. Leave the semantic model and report as native Power BI artifacts for a BI owner to review and continue editing.
+A Governance/Engineering UI should allow an expert to select governed tables and explicitly define relationships such as:
 
-The first version should prefer **native Power BI authoring capabilities** rather than FabricOps generating DAX, TMDL, PBIR, visual JSON, or a second semantic specification itself.
+```text
+Customers.customer_id  <-  Orders.customer_id
+primary/reference key      foreign key
+```
 
-Fabric exposes REST creation for semantic-model and report items. Natural-language semantic-model authoring is available through the Power BI Authoring MCP server, while the Power BI Report Authoring skill covers report pages, visuals, filters, slicers, formatting, and themes. Where a fully unattended supported API path is not available, FabricOps should generate the exact bounded authoring instruction and hand off to the native authoring experience rather than pretending the operation is automated.
+The relationship definition should identify at minimum:
+
+- source/foreign-key `table_id` and column;
+- referenced `table_id` and column;
+- key role or relationship role needed to render the context unambiguously;
+- validation evidence such as datatype compatibility, referenced-key uniqueness, foreign-key nullability, and referential coverage.
+
+FabricOps can pre-compute deterministic evidence and warnings, but an expert confirms the relationship. Statistical similarity alone must never silently become a governed relationship.
+
+Once confirmed, the publisher renders those relationships into the Data Agent datasource instructions together with the existing table and column context. Microsoft explicitly supports datasource instructions containing table descriptions, relationships, key-column details, business terminology, and query guidance, so this is the natural native destination for FabricOps relationship context.
+
+The intended flow becomes:
+
+```text
+Governed tables
+    + table context
+    + confirmed PK/FK relationships
+            |
+            v
+    FabricOps context builder
+            |
+            v
+    Data Agent instructions
+            |
+            v
+    one-shot create/configure
+            |
+            v
+    Fabric Data Agent
+            |
+            v
+       Step 7 consumption
+```
 
 ## Context package
 
@@ -87,36 +112,23 @@ The user-facing workflow should feel like one publish action even if the impleme
 Conceptually:
 
 ```python
-publish_data_product(
-    table_id="...",
-    target="data_agent",
+publish_data_agent(
+    table_ids=["..."],
     workspace="Consumer Development",
 )
 ```
 
-or:
+For the first implementation, `table_ids` contains one activated table. The same contract can later accept multiple tables once explicit relationship context is available.
 
-```python
-publish_data_product(
-    table_id="...",
-    target="power_bi",
-    workspace="Consumer Development",
-)
-```
+This is a **feature contract**, not yet a commitment to this exact Python signature. Before exposing a public API, implementation work must validate authentication, permissions, idempotency, naming, update behavior, error surfaces, publication behavior, and Preview dependencies in a real Fabric workspace.
 
-This is a **feature contract**, not yet a commitment to this exact Python signature. Before exposing a public API, implementation work must validate authentication, permissions, supported Fabric item types, idempotency, naming, update behavior, error surfaces, and Preview dependencies in a real Fabric workspace.
-
-A first implementation may separate deterministic context assembly from target adapters internally:
+Internally, keep deterministic context assembly separate from the Fabric adapter:
 
 ```text
-active table_id
-    -> build consumer context
-    -> Data Agent adapter
-       or
-    -> Power BI authoring adapter
+active table_id(s)
+    -> build Data Agent context
+    -> create/configure Data Agent
 ```
-
-The context builder must remain target-neutral. Target adapters own Fabric-specific payloads and lifecycle behavior.
 
 ## Development to Production
 
@@ -139,63 +151,37 @@ Engineering Development -> governed table
 
 ## Guided Demo acceptance target
 
-The Guided Demo should eventually prove two outcomes from the same governed single table.
+Step 7 should become an actual consumption outcome rather than stopping at `99_explore`.
 
-**Data Agent:** select the demo table, create/configure an agent from FabricOps context, then ask representative business questions without manually rewriting the table documentation into the agent.
+The first demo should prove the single-table path end to end:
 
-**Power BI:** select the same table, use the generated context with native Power BI authoring to create useful measures and an initial report page, then review the generated model and visuals.
+1. select the approved Production demo table;
+2. build its FabricOps context automatically;
+3. create and configure a Fabric Data Agent programmatically;
+4. select only the governed table;
+5. inject the generated instructions;
+6. publish/test the agent;
+7. ask representative business questions without manually rewriting table documentation.
 
-The demo should clearly distinguish what FabricOps executes from what native Fabric AI authoring executes.
+`99_explore` can remain as a direct technical consumption option, but the Data Agent becomes the showcase consumption interface.
 
-## Out of scope for V1
+A later Guided Demo extension should select multiple governed tables, confirm PK/FK relationships in the relationship-authoring UI, publish the combined context to a Data Agent, and demonstrate questions that require joins.
 
-V1 does not attempt to infer or own a multi-table semantic model.
+## Scope boundary
 
-FabricOps does not automatically decide:
+This feature does **not** require FabricOps to build a Power BI semantic model, generate a dashboard, or own BI measures and visuals. Those can be explored as a parallel consumption track.
 
-- foreign-key relationships between governed tables;
-- relationship cardinality or filter direction;
-- active versus inactive role-playing date relationships;
-- fact versus dimension design;
-- bridge tables or many-to-many modelling;
-- cross-table business measures;
-- star/snowflake redesign;
-- whether an arbitrary set of tables forms a useful analytical model.
-
-These are real data-modelling decisions and should remain reviewable work for a BI/data architect.
-
-## Next phase: multi-table product design
-
-The next useful structural context is an explicit governed reference such as:
-
-```text
-Orders.customer_id
-    references Customers.customer_id
-```
-
-FabricOps can later combine explicit foreign-key/reference metadata with deterministic evidence such as grain, uniqueness, nullability, datatype compatibility, referential coverage, lineage, and table descriptions.
-
-That evidence can help a BI/data architect assess a selected group of tables and can ground Power BI authoring, but FabricOps should not silently convert statistical similarity into a semantic relationship.
-
-A future multi-table workflow should therefore:
-
-1. let an expert select candidate governed tables;
-2. show deterministic relationship evidence and modelling warnings;
-3. capture or confirm explicit foreign-key/reference intent;
-4. produce model-authoring context for Power BI;
-5. let native Power BI own the resulting relationships, measures, and semantic model;
-6. reuse that semantic model for both reports and Data Agents where appropriate.
-
-This keeps FabricOps focused on governed evidence and context while leaving analytical modelling in the platform built for it.
+For multi-table Data Agents, FabricOps owns governed relationship context and deterministic validation evidence. It does not attempt to become a general-purpose dimensional-modelling engine. More complex analytical modelling decisions can still require a BI/data architect.
 
 ## Implementation phases
 
-**Phase 1: context contract.** Implement and test deterministic single-table context assembly from existing metadata.
+**Phase 1: single-table context contract.** Implement and test deterministic Data Agent context assembly from existing metadata.
 
-**Phase 2: Data Agent adapter.** Create/configure a single-table Data Agent through supported Fabric REST APIs, with Preview configuration calls clearly isolated.
+**Phase 2: one-shot Data Agent publisher.** Create/configure a single-table Data Agent through supported Fabric REST APIs, with Preview configuration calls clearly isolated.
 
-**Phase 3: Power BI authoring handoff.** Generate bounded semantic-model and report-authoring instructions, validate the Power BI Authoring MCP/report-authoring path in Fabric, and automate only the parts supported by stable programmatic interfaces.
+**Phase 3: Step 7 Guided Demo.** Make the Data Agent the showcase consumption outcome and retain `99_explore` as a technical direct-data option.
 
-**Phase 4: Guided Demo.** Add the single-table Data Agent and Power BI outcomes to the consumption step.
+**Phase 4: relationship metadata and UI.** Add explicit PK/FK/reference authoring between governed tables with deterministic validation evidence.
 
-**Phase 5: multi-table design.** Specify foreign-key/reference metadata and deterministic model-assessment guidance separately after the single-table path is proven.
+**Phase 5: multi-table Data Agent publishing.** Render confirmed relationships into the same context contract and publish selected related tables into one Data Agent.
+
