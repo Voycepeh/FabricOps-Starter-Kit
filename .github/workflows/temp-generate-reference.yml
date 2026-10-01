@@ -1,0 +1,47 @@
+name: Temporary generated reference refresh
+
+on:
+  push:
+    branches:
+      - chore/refresh-function-reference-artifacts-1513
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - run: uv sync --frozen --extra docs --extra dev
+      - name: Generate reference pages
+        run: PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+      - name: Capture first generation
+        run: git diff --binary > /tmp/first-generation.diff
+      - name: Verify second run is idempotent
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          git diff --binary > /tmp/second-generation.diff
+          cmp /tmp/first-generation.diff /tmp/second-generation.diff
+      - name: Commit generated diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/call-graph.md docs/reference/_data/generated-artifacts.json
+          if git diff --cached --quiet; then
+            echo "No generated changes."
+            exit 0
+          fi
+          git commit -m "Refresh generated function references"
+          git push
