@@ -28,67 +28,18 @@ flowchart LR
 
 ## Implementation details
 
-### What the Data Contract captures
+### The governed contract behind the workflow
 
-A Data Contract is the governed definition for one `table_id`. Its versioned `contract_payload_json` brings together:
+The Sensitive Data decision is saved as part of the same versioned Data Contract used by Engineering. The contract reference owns the exact persisted schema, while the function references own runtime behaviour.
 
-- **Contract lifecycle** — contract identity, version, draft/frozen state, and Production activation.
-- **Table definition** — the governed table, observed columns and data types, and processing configuration.
-- **Enrichment** — descriptions, classifications, and table grain that explain the data.
-- **Guardrails** — executable Schema, Freshness, Source Drift, Data Quality, and Sensitive Data expectations.
+For the canonical technical definitions, use:
 
-Governance authors and reviews the contract through [`widget_data_contract()`](../api/reference/widget_data_contract.md) in `01_governance`.
+- [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md) for the persisted contract schema.
+- [METADATA_GUARDRAIL](../reference/metadata/metadata_guardrail.md) for persisted Guardrail definitions.
+- [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for the supported treatments and exact runtime behaviour.
+- [Function Reference](../reference/index.md) for the checks and orchestration functions that enforce the frozen contract.
 
-### Where the definition comes from
-
-Not every part of a Data Contract is authored the same way.
-
-| Source | What it contributes | Role |
-| --- | --- | --- |
-| **FabricOps deterministic capture** | `table_id`, physical table identity, observed columns and data types, profiling and pipeline context, and processing context available from Engineering metadata | Grounds the contract in what Engineering actually produced |
-| **Manual Governance authoring** | Reviewed descriptions, classifications, grain, Guardrail configuration, actions, and other governed decisions | Creates the authoritative business and governance definition |
-| **AI-assisted suggestions** | Descriptions, classifications, Grain & Row Key suggestions, Sensitive Data assessment and treatment, Pattern suggestions, and business-rule interpretation | Accelerates authoring; Governance reviews before applying |
-
-**AI suggestions never become the governed definition simply because AI produced them.** They are proposed authoring inputs. Governance decides what is applied, saved, and frozen.
-
-### What is being captured
-
-For example, the physical columns and data types originate from the Data Catalogue. Governance can then add descriptive Enrichment and executable Guardrails against those same columns. Processing records how the governed target is expected to be written.
-
-This produces one versioned manifest that Engineering can resolve and execute instead of maintaining a separate policy document beside the pipeline.
-
-### Available Guardrails
-
-| Guardrail | What it governs |
-| --- | --- |
-| **Schema** | Whether the real data structure matches the governed definition |
-| **Freshness** | Whether the source or governed data meets its expected freshness |
-| **Source Drift** | Whether source observations have changed outside the accepted expectation |
-| **Data Quality** | Deterministic quality rules such as completeness, uniqueness, allowed values, value rules, and patterns |
-| **Sensitive Data** | Governed treatment of sensitive columns before Data Quality checks and publication. FabricOps supports Mask, Bucket, Tokenize, and Remove. See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for examples and exact runtime behavior. |
-
-Guardrails can be configured with **Warn** or **Block** behaviour. The contract records the governed expectation; FabricOps runtime functions perform the actual checks.
-
-### Where and when enforcement happens
-
-The contract moves through a deliberate Governance ↔ Engineering cycle:
-
-1. **Author** — Governance works against the real `table_id` in `01_governance`.
-2. **Freeze** — the reviewed contract version becomes immutable.
-3. **Select and validate in Development** — `02_pipeline` selects the exact frozen version and executes its Guardrails against the real pipeline.
-4. **Iterate when needed** — Governance authors another version if the definition changes; Engineering validates that new immutable version again.
-5. **Activate** — the tested frozen version is linked to the Data Agreement and marked active for Production.
-6. **Enforce in Production** — `02_pipeline` automatically resolves the active contract and executes the same governed expectations.
-
-The runtime enforcement functions are:
-
-- [`check_schema()`](../api/reference/check_schema.md)
-- [`check_freshness()`](../api/reference/check_freshness.md)
-- [`check_source_drift()`](../api/reference/check_source_drift.md)
-- [`check_dq()`](../api/reference/check_dq.md)
-- [`check_sensitive_data()`](../api/reference/check_sensitive_data.md)
-
-Runtime outcomes are recorded in `METADATA_GUARDRAIL_RESULTS`.
+For the end-to-end author → freeze → validate → activate → enforce lifecycle, see [How FabricOps Works](../how-fabricops-works.md) and the [Guided Demo](../guided-demo.md).
 
 ### Where AI helps
 
