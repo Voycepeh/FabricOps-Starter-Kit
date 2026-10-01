@@ -33,13 +33,14 @@ FabricOps gives the AI a bounded rule grammar rather than asking it to invent ar
 | **Conditional Values** | When a condition is true, another column must satisfy a whitelist or blacklist. |
 | **Custom Expression** | A constrained PySpark boolean expression for requirements the standard patterns cannot represent faithfully. |
 
-Internally these map to nine canonical `rule_type` values because Whitelist and Blacklist are the `allow` and `block` modes of `value_set`.
+<details markdown="1">
+<summary><strong>Under the hood: how AI suggestions are produced</strong></summary>
 
-## What FabricOps gives the AI
+### What FabricOps gives the AI
 
 The AI does not receive the whole source table. FabricOps builds a compact governed context containing the table name, schema, layer, table description and classification, plus each column's name, data type, description, classification, profile evidence, and a few example values. Existing DQ rules are also included so the AI does not propose duplicates.
 
-FabricOps then combines four things into the instruction sent to the model:
+FabricOps combines four things into the instruction sent to the model:
 
 1. the configured Business Rule prompt;
 2. the user's plain-language business requirement and optional selected-column constraint;
@@ -48,7 +49,7 @@ FabricOps then combines four things into the instruction sent to the model:
 
 Profile values are evidence only. The prompt explicitly tells the AI not to turn observed values into contractual thresholds, whitelists, blacklists, mappings, or patterns unless the business requirement actually states them.
 
-## How Fabric AI Functions are used
+### How Fabric AI Functions are used
 
 ![FabricOps AI-assisted DQ rule authoring implementation](../assets/business-rule-dq-implementation.svg)
 
@@ -65,6 +66,10 @@ This is deliberately a one-row AI request. The DataFrame is only the interface u
 The response must be a JSON array of atomic rule proposals. A compound requirement can therefore become several independent rules in one call.
 
 Before anything is accepted, FabricOps validates the response: rule types must be supported, referenced columns must exist, parameters must have the expected shape, selected-column constraints must be respected, and executable content is tightly constrained. A Custom Expression is accepted only as a safe PySpark boolean Column expression using the supported grammar.
+
+Internally the visible rule patterns map to nine canonical `rule_type` values because Whitelist and Blacklist are the `allow` and `block` modes of `value_set`.
+
+</details>
 
 ## Example: one business requirement becomes multiple rules
 
