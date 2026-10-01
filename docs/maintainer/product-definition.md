@@ -52,8 +52,8 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 | 3 | Governance — Author and freeze the Data Contract | Select the governed `table_id`, author descriptive Enrichment and enforced Guardrails, review the schema and processing definition, and freeze an immutable table-centric version. Do not link a Data Agreement at authoring time. |
 | 4 | Engineering Development — Select and validate | Use the current notebook's `METADATA_DATA_LINEAGE` to discover linked `table_id` values, select one frozen version independently per table, and validate the ETL. Failed validation returns to Step 3 for a new frozen version. |
 | 5 | Governance — Link the Data Agreement and activate | Select the tested frozen version, explicitly link the required exact Data Agreement version, and activate the contract for Production. |
-| 6 | Engineering Production — Promote and run | Promote the validated `02_pipeline`. Production uses the same notebook Lineage scope and automatically resolves exactly one active Data Contract per linked `table_id`; zero or multiple active versions fail resolution. |
-| 7 | Consumer — Use approved Production data directly | Use `99_explore` in a Project-Specific Consumer workspace to consume approved Production data. |
+| 6 | Engineering Production — Promote, run, and hand off access | Promote and run the validated `02_pipeline`. Production automatically resolves the active Data Contract, publishes governed outputs, and approved consumers receive access through native Fabric controls. |
+| 7 | Consumption — Publish to a Data Agent | Assemble governed context for approved Production table(s) and create/configure a native Fabric Data Agent as the productized consumption interface. |
 
 ## Canonical operating decisions
 
@@ -64,8 +64,8 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 | Development | Engineering Development supports exploration, pipeline development, profiling, testing, and review. |
 | Production | Engineering Production contains approved recurring pipelines and durable Production outputs. |
 | Standard pipeline approach | PySpark is the standard for repeatable `02_pipeline` workflows. |
-| Consumption | Project-Specific Consumer workspaces consume approved Production data for project-level AI, BI, analysis, and data science. |
-| One-off analysis | Important `99_explore` work must be preserved when reproducibility is required. |
+| Consumption | Approved consumers use native Fabric permissions and interfaces directly. FabricOps adds value where governed context is required, beginning with one-shot Data Agent publishing. |
+| One-off analysis | FabricOps does not prescribe a dedicated exploration notebook. Consumers can use standard Fabric notebooks, SQL, Lakehouse, Warehouse, and other permitted interfaces against approved Production data. |
 
 ## Canonical `02_pipeline` operating model
 
@@ -140,7 +140,7 @@ Provides reusable FabricOps helpers and orchestrators for Fabric notebook workfl
 
 ### Notebook templates
 
-Provide the user-facing implementation pattern for configuring workspaces, creating Governance records, building pipelines, reviewing Data Catalogue, profile, lineage, source observation, Guardrail Result, and contract records, and exploring approved data. The templates make the planned FabricOps workflow visible and repeatable rather than hiding it behind a separate orchestration layer.
+Provide the user-facing implementation pattern for configuring workspaces, creating Governance records, building pipelines, and reviewing Data Catalogue, profile, lineage, source observation, Guardrail Result, and contract records. The templates make the planned FabricOps workflow visible and repeatable rather than hiding it behind a separate orchestration layer.
 
 ### Shared metadata model
 
@@ -165,17 +165,9 @@ Potential future AI-augmented workflows include:
 - **Failure explanation:** turn Guardrail Results and the resolved source/read/load context into a concise explanation of what failed, which governed rule caused it, and what Engineering should inspect next.
 - **Change-impact analysis:** use contracts, lineage, profile history, source observations, read strategies, and load strategies to explain likely downstream impact before a source, target, or governed execution definition changes.
 - **Governed discovery:** answer questions such as what produces a table, which assets depend on a source, or which governed datasets have quality issues using FabricOps metadata rather than inferred notebook context alone.
-- **Consumer context preparation:** assemble a compact governed context package from active contracts, Catalogue metadata, lineage, profiles, and approved Production data for `99_explore`, BI, Data Agents, analytics, and data science work. The first productized consumption pattern is specified in [Publish Governed Data to a Fabric Data Agent](single-table-data-products.md): turn an activated governed table into a configured Fabric Data Agent without manually recreating its context. The first implementation is single-table. A later relationship-authoring extension captures explicit PK/FK references so selected governed tables can be published together with reliable join context.
+- **Consumer context preparation:** assemble a compact governed context package from active contracts, Catalogue metadata, lineage, profiles, and approved Production data for Data Agents, BI, analytics, and data science work. The first productized consumption pattern is specified in [Publish Governed Data to a Fabric Data Agent](single-table-data-products.md): turn an activated governed table into a configured Fabric Data Agent without manually recreating its context. The first implementation is single-table. A later relationship-authoring extension captures explicit PK/FK references so selected governed tables can be published together with reliable join context.
 
 These capabilities are future direction unless separately implemented and documented. Human owners remain responsible for approval, activation, promotion, and Production decisions.
-
-## Future product direction: analysis preservation
-
-Engineering Development is intentionally disposable. When important `99_explore` work must be reproduced later, FabricOps should support an analysis archive or analysis packet that preserves enough context to understand and rerun the work.
-
-!!! note "Future direction"
-
-    This is not a fully implemented Production capability. The intended purpose is reproducibility: preserving the notebook, execution context, input references or extracts, outputs, ownership, and related Governance context at an appropriate level.
 
 ## Documentation page ownership
 
