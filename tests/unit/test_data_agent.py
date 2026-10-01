@@ -108,11 +108,15 @@ def _responses(*responses):
     return transport, calls
 
 
-def _agent_context():
-    return {"table_id": "orders-id", "source": {"type": "lakehouse", "workspace_id": "source-workspace", "item_id": "source-item", "schema": "dbo", "table": "orders"}, "columns": []}
+def _agent_context(source_type="lakehouse"):
+    return {"table_id": "orders-id", "source": {"type": source_type, "workspace_id": "source-workspace", "item_id": "source-item", "schema": "dbo", "table": "orders"}, "columns": []}
 
 
-def test_successful_synchronous_agent_configuration():
+@pytest.mark.parametrize(("source_type", "expected_type", "reference_name"), [
+    ("lakehouse", "LakehouseTables", "lakehouseReference"),
+    ("warehouse", "FabricItem", "itemReference"),
+])
+def test_successful_synchronous_agent_configuration(source_type, expected_type, reference_name):
     transport, calls = _responses(
         shared.FabricResponse(201, {}, {"id": "agent-1"}),
         shared.FabricResponse(201, {}, {"id": "source-1"}),
@@ -121,27 +125,28 @@ def test_successful_synchronous_agent_configuration():
         shared.FabricResponse(200, {}, {"status": "updated"}),
         shared.FabricResponse(200, {}, {"status": "configured"}),
     )
-    result = shared.provision_data_agent(_agent_context(), target_workspace_id="target", display_name="Orders", description="desc", token_provider=lambda: "secret", transport=transport)
+    context = _agent_context(source_type)
+    result = shared.provision_data_agent(context, target_workspace_id="target", display_name="Orders", description="desc", token_provider=lambda: "secret", transport=transport)
     assert result == {"agent_id": "agent-1", "datasource_id": "source-1", "workspace_id": "target", "display_name": "Orders", "status": "configured", "source_table_id": "orders-id"}
     assert [call[0] for call in calls] == ["POST", "POST", "PATCH", "GET", "PATCH", "PATCH"]
     assert all(call[3] == "secret" for call in calls)
     assert calls[1][2] == {
         "displayName": "orders",
-        "type": "Lakehouse",
-        "itemReference": {
+        "type": expected_type,
+        reference_name: {
             "referenceType": "ById",
             "workspaceId": "source-workspace",
             "itemId": "source-item",
         },
     }
     assert calls[2][1].endswith("/staging/dataSources/source-1")
-    assert calls[2][2] == {"instructions": shared.instruction_text(_agent_context())["datasource"]}
+    assert calls[2][2] == {"instructions": shared.instruction_text(context)["datasource"]}
     assert calls[3][1].endswith("/staging/dataSources/source-1/elements")
     assert calls[3][2] is None
-    assert calls[4][1].endswith("/staging/dataSources/source-1/elements/element-1")
+    assert calls[4][1].endswith("/staging/dataSources/source-1/elements?id=element-1")
     assert calls[4][2] == {"isSelected": True}
     assert calls[5][1].endswith("/staging/settings")
-    assert calls[5][2] == {"aiInstructions": shared.instruction_text(_agent_context())["agent"]}
+    assert calls[5][2] == {"aiInstructions": shared.instruction_text(context)["agent"]}
 
 
 def test_asynchronous_creation_obeys_location_and_retry_after():

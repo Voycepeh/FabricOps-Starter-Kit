@@ -213,14 +213,30 @@ def provision_data_agent(
         raise FabricDataAgentError("Fabric create Data Agent response did not include an id.")
     staging = f"{base}/{agent_id}/staging"
     source = context["source"]
-    datasource = fabric_request("POST", f"{staging}/dataSources", {
-        "displayName": _text(source.get("table")), "type": str(source.get("type")).title(),
-        "itemReference": {
-            "referenceType": "ById",
-            "workspaceId": source.get("workspace_id"),
-            "itemId": source.get("item_id"),
-        },
-    }, token=token, transport=transport, sleep=sleep)
+    reference = {
+        "referenceType": "ById",
+        "workspaceId": source.get("workspace_id"),
+        "itemId": source.get("item_id"),
+    }
+    source_type = _text(source.get("type")).casefold()
+    if source_type == "lakehouse":
+        datasource_payload = {
+            "displayName": _text(source.get("table")),
+            "type": "LakehouseTables",
+            "lakehouseReference": reference,
+        }
+    elif source_type == "warehouse":
+        datasource_payload = {
+            "displayName": _text(source.get("table")),
+            "type": "FabricItem",
+            "itemReference": reference,
+        }
+    else:
+        raise FabricDataAgentError(f"Unsupported Fabric Data Agent datasource type: {source_type!r}.")
+    datasource = fabric_request(
+        "POST", f"{staging}/dataSources", datasource_payload,
+        token=token, transport=transport, sleep=sleep,
+    )
     datasource_id = _text(datasource.get("id"))
     if not datasource_id:
         raise FabricDataAgentError("Fabric create datasource response did not include an id.")
@@ -258,7 +274,7 @@ def provision_data_agent(
     if not element_id:
         raise FabricDataAgentError("Fabric datasource table element did not include an id.")
     fabric_request(
-        "PATCH", f"{staging}/dataSources/{datasource_id}/elements/{element_id}",
+        "PATCH", f"{staging}/dataSources/{datasource_id}/elements?id={element_id}",
         {"isSelected": True}, token=token, transport=transport, sleep=sleep,
     )
     configured = fabric_request(
