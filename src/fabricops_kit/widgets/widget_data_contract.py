@@ -1455,27 +1455,33 @@ def widget_data_contract(
                     disabled=not editable or not temporal_column_names,
                     layout=widgets.Layout(width="130px", min_width="110px"),
                 )
-                freshness_grid = widgets.GridBox(
+                def freshness_row(label: str, *controls: Any) -> Any:
+                    return widgets.HBox(
+                        [
+                            widgets.HTML(
+                                f"<div style='padding-top:7px;'>{html.escape(label)}</div>",
+                                layout=widgets.Layout(width="140px", min_width="140px"),
+                            ),
+                            *controls,
+                        ],
+                        layout=widgets.Layout(
+                            width="100%", min_width="0", gap="8px",
+                            align_items="flex-start", overflow="visible",
+                        ),
+                    )
+
+                freshness_grid = widgets.VBox(
                     [
-                        widgets.HTML("<div style='padding-top:7px;'>Refresh expectation</div>"),
-                        refresh_expectation,
-                        widgets.HTML(""),
-                        widgets.HTML("<div style='padding-top:7px;'>Timestamp column</div>"),
-                        freshness_column,
-                        widgets.HTML(""),
-                        widgets.HTML("<div style='padding-top:7px;'>Expected refresh</div>"),
-                        expected_refresh_frequency,
-                        expected_refresh_unit,
-                        widgets.HTML("<div style='padding-top:7px;'>Maximum age</div>"),
-                        maximum_age,
-                        maximum_age_unit,
+                        freshness_row("Refresh expectation", refresh_expectation),
+                        freshness_row("Timestamp column", freshness_column),
+                        freshness_row(
+                            "Expected refresh",
+                            expected_refresh_frequency,
+                            expected_refresh_unit,
+                        ),
+                        freshness_row("Maximum age", maximum_age, maximum_age_unit),
                     ],
-                    layout=widgets.Layout(
-                        width="100%",
-                        grid_template_columns="140px minmax(160px, 1fr) 140px",
-                        grid_gap="8px 8px",
-                        align_items="flex-start",
-                    ),
+                    layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
                 )
                 freshness_rule_preview = widgets.HTML()
                 freshness_unavailable = widgets.HTML()
@@ -2024,12 +2030,9 @@ def widget_data_contract(
             rule_controls["enabled"].observe(render_table_summary, names="value")
         for freshness_control in table_rules["freshness"]["parameters"]:
             freshness_control.observe(render_table_summary, names="value")
-        processing_hint_row = widgets.HBox(
-            [
-                widgets.HTML("", layout=widgets.Layout(width="150px", min_width="150px")),
-                processing_source_hint,
-            ],
-            layout=widgets.Layout(width="100%", gap="12px", align_items="flex-start"),
+        processing_hint_row = widgets.VBox(
+            [processing_source_hint],
+            layout=widgets.Layout(width="100%", min_width="0", align_items="flex-start"),
         )
         def definition_section(
             title: str,
@@ -2320,7 +2323,9 @@ def widget_data_contract(
         column_description.description = ""
         column_description.layout = widgets.Layout(width="100%", min_width="0", height="110px")
         column_classification.description = ""
-        column_classification.layout = widgets.Layout(width="250px", max_width="100%", min_width="0")
+        column_classification.layout = widgets.Layout(
+            width="100%", min_width="0", max_width="722px"
+        )
         column_description_ai = widgets.HTML()
         accept_column_description = widgets.Button(description="Apply", disabled=not editable)
         rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
@@ -2677,6 +2682,9 @@ def widget_data_contract(
             for control in (bucket_bins, bucket_labels):
                 control.layout.display = "" if treatment == "bucket" else "none"
             column_classification.disabled = (not editable) or treatment == "remove"
+            column_classification.layout.width = "100%"
+            column_classification.layout.min_width = "0"
+            column_classification.layout.max_width = "722px"
             column_classification.layout.display = "none" if treatment == "remove" else ""
 
         def refresh_sensitive_rule_preview(
@@ -3535,21 +3543,29 @@ def widget_data_contract(
                     [
                         widgets.HTML("<b>Description</b>"),
                         column_description,
-                        widgets.VBox(
+                        *(
                             [
-                                column_description_ai,
-                                shared.action_row(
-                                    widgets, [accept_column_description, rerun_column_description]
-                                ),
-                            ],
-                            layout=widgets.Layout(width="100%", min_width="0", gap="4px"),
-                        ) if ai_visible else widgets.HTML(""),
+                                widgets.VBox(
+                                    [
+                                        column_description_ai,
+                                        shared.action_row(
+                                            widgets,
+                                            [accept_column_description, rerun_column_description],
+                                        ),
+                                    ],
+                                    layout=widgets.Layout(
+                                        width="100%", min_width="0", gap="4px"
+                                    ),
+                                )
+                            ]
+                            if ai_visible else []
+                        ),
                     ],
                     layout=widgets.Layout(
                         width="100%",
                         grid_template_columns=(
                             "120px minmax(240px, 1fr) minmax(240px, 1fr)"
-                            if ai_visible else "120px minmax(240px, 1fr) 0"
+                            if ai_visible else "120px minmax(240px, 1fr)"
                         ),
                         grid_gap="10px 16px",
                         align_items="flex-start",
