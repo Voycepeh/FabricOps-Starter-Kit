@@ -215,16 +215,56 @@ def provision_data_agent(
     source = context["source"]
     datasource = fabric_request("POST", f"{staging}/dataSources", {
         "displayName": _text(source.get("table")), "type": str(source.get("type")).title(),
-        "workspaceId": source.get("workspace_id"), "itemId": source.get("item_id"),
+        "itemReference": {
+            "referenceType": "ById",
+            "workspaceId": source.get("workspace_id"),
+            "itemId": source.get("item_id"),
+        },
     }, token=token, transport=transport, sleep=sleep)
     datasource_id = _text(datasource.get("id"))
     if not datasource_id:
         raise FabricDataAgentError("Fabric create datasource response did not include an id.")
     fabric_request("PATCH", f"{staging}/dataSources/{datasource_id}", {
         "instructions": instructions["datasource"],
-        "objects": [{"type": "Table", "schema": source.get("schema"), "name": source.get("table")}],
     }, token=token, transport=transport, sleep=sleep)
-    configured = fabric_request("PATCH", staging, {"instructions": instructions["agent"]}, token=token, transport=transport, sleep=sleep)
+    elements = fabric_request(
+        "GET", f"{staging}/dataSources/{datasource_id}/elements", None,
+        token=token, transport=transport, sleep=sleep,
+    )
+    values = elements.get("value")
+    if not isinstance(values, list):
+        raise FabricDataAgentError("Fabric datasource elements response did not include a value list.")
+    requested_table = _text(source.get("table")).casefold()
+    requested_schema = _text(source.get("schema")).casefold()
+    matches = []
+    for element in values:
+        if not isinstance(element, Mapping):
+            continue
+        element_name = _text(element.get("name") or element.get("displayName")).casefold()
+        element_schema = _text(element.get("schema") or element.get("schemaName")).casefold()
+        element_type = _text(element.get("type") or element.get("elementType")).casefold()
+        if (
+            element_name == requested_table
+            and (not requested_schema or element_schema == requested_schema)
+            and (not element_type or element_type == "table")
+        ):
+            matches.append(element)
+    if len(matches) != 1:
+        raise FabricDataAgentError(
+            f"Fabric datasource must expose exactly one matching table element for "
+            f"{source.get('schema') or '<default>'}.{source.get('table')}; found {len(matches)}."
+        )
+    element_id = _text(matches[0].get("id"))
+    if not element_id:
+        raise FabricDataAgentError("Fabric datasource table element did not include an id.")
+    fabric_request(
+        "PATCH", f"{staging}/dataSources/{datasource_id}/elements/{element_id}",
+        {"isSelected": True}, token=token, transport=transport, sleep=sleep,
+    )
+    configured = fabric_request(
+        "PATCH", f"{staging}/settings", {"aiInstructions": instructions["agent"]},
+        token=token, transport=transport, sleep=sleep,
+    )
     return {
         "agent_id": agent_id, "datasource_id": datasource_id,
         "workspace_id": target_workspace_id,

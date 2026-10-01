@@ -117,12 +117,31 @@ def test_successful_synchronous_agent_configuration():
         shared.FabricResponse(201, {}, {"id": "agent-1"}),
         shared.FabricResponse(201, {}, {"id": "source-1"}),
         shared.FabricResponse(200, {}, {"status": "updated"}),
+        shared.FabricResponse(200, {}, {"value": [{"id": "element-1", "type": "Table", "schema": "dbo", "name": "orders"}]}),
+        shared.FabricResponse(200, {}, {"status": "updated"}),
         shared.FabricResponse(200, {}, {"status": "configured"}),
     )
     result = shared.provision_data_agent(_agent_context(), target_workspace_id="target", display_name="Orders", description="desc", token_provider=lambda: "secret", transport=transport)
     assert result == {"agent_id": "agent-1", "datasource_id": "source-1", "workspace_id": "target", "display_name": "Orders", "status": "configured", "source_table_id": "orders-id"}
-    assert [call[0] for call in calls] == ["POST", "POST", "PATCH", "PATCH"]
+    assert [call[0] for call in calls] == ["POST", "POST", "PATCH", "GET", "PATCH", "PATCH"]
     assert all(call[3] == "secret" for call in calls)
+    assert calls[1][2] == {
+        "displayName": "orders",
+        "type": "Lakehouse",
+        "itemReference": {
+            "referenceType": "ById",
+            "workspaceId": "source-workspace",
+            "itemId": "source-item",
+        },
+    }
+    assert calls[2][1].endswith("/staging/dataSources/source-1")
+    assert calls[2][2] == {"instructions": shared.instruction_text(_agent_context())["datasource"]}
+    assert calls[3][1].endswith("/staging/dataSources/source-1/elements")
+    assert calls[3][2] is None
+    assert calls[4][1].endswith("/staging/dataSources/source-1/elements/element-1")
+    assert calls[4][2] == {"isSelected": True}
+    assert calls[5][1].endswith("/staging/settings")
+    assert calls[5][2] == {"aiInstructions": shared.instruction_text(_agent_context())["agent"]}
 
 
 def test_asynchronous_creation_obeys_location_and_retry_after():
@@ -156,3 +175,19 @@ def test_malformed_create_response_fails():
     transport, _ = _responses(shared.FabricResponse(201, {}, {"name": "missing id"}))
     with pytest.raises(shared.FabricDataAgentError, match="did not include an id"):
         shared.provision_data_agent(_agent_context(), target_workspace_id="target", display_name="Orders", description="", token_provider=lambda: "t", transport=transport)
+
+
+@pytest.mark.parametrize("elements", [None, [], [{"id": "wrong", "type": "Table", "schema": "dbo", "name": "customers"}]])
+def test_datasource_element_discovery_requires_exact_governed_table(elements):
+    body = {} if elements is None else {"value": elements}
+    transport, _ = _responses(
+        shared.FabricResponse(201, {}, {"id": "agent-1"}),
+        shared.FabricResponse(201, {}, {"id": "source-1"}),
+        shared.FabricResponse(200, {}, {"status": "updated"}),
+        shared.FabricResponse(200, {}, body),
+    )
+    with pytest.raises(shared.FabricDataAgentError, match="value list|exactly one matching"):
+        shared.provision_data_agent(
+            _agent_context(), target_workspace_id="target", display_name="Orders", description="",
+            token_provider=lambda: "t", transport=transport,
+        )
