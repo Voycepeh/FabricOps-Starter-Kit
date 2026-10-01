@@ -60,6 +60,6 @@ A Data Agent is the first automated consumption accelerator, not the definition 
 
 Consumers can continue using notebooks, SQL, Lakehouses, Warehouses, and other native Fabric interfaces through the access established in Step 6. Power BI, reporting, and future consumption products can reuse the same governed context as parallel paths.
 
-For the full feature contract and implementation phases, see [Governed Consumption and Data Agent Publishing](../maintainer/single-table-data-products.md).
+The maintainer-facing product direction is recorded in the [FabricOps product definition](../maintainer/product-definition.md).
 
 **Complete:** return to the [Guided Demo overview](../guided-demo.md).
