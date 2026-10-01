@@ -1,12 +1,20 @@
-# Data Quality Rules
+# Data Quality Rules from Natural Language
 
 ![Business rules converted to enforceable Data Quality rules](../assets/BusinessRuletoDQ.png)
 
 ## The problem
 
-Data Quality expectations often begin as business language: what must be present, which values are valid, how columns relate, or what should be true only under certain conditions. Engineering then has to turn that intent into executable checks.
+FabricOps already provides simple controls for common Data Quality expectations. At the table level, Governance can configure Schema, Freshness, and Source Drift Guardrails. At the column level, common rules such as Completeness, Uniqueness, Value Sets, and Ranges can be configured directly.
 
-FabricOps keeps the business requirement readable while converting it into explicit Data Quality rules that can be reviewed in the Data Contract and enforced deterministically in the pipeline.
+That is a useful starting point, but real-world definitions of clean data are often more nuanced. Business rules can combine conditions, relationships, thresholds, and several columns in one requirement. Traditionally, that business knowledge has to be explained to Engineering, translated into validation logic, reviewed, and implemented.
+
+## The solution
+
+FabricOps lets users describe what clean data means in natural language. Built-in AI suggestions combine that requirement with governed table metadata, profile evidence, and a predefined list of supported DQ rule patterns to propose the smallest set of deterministic rules that represents the requirement.
+
+One business requirement can therefore become several atomic DQ rules. Standard rule patterns are used wherever possible. Only requirements that cannot be represented faithfully by those patterns fall back to a constrained Custom Expression, where Engineering review is especially important.
+
+The AI accelerates the translation from business knowledge to executable rules. It is not the runtime enforcement engine. Once reviewed and saved into the Data Contract, the resulting rules are explicit and enforced deterministically by FabricOps.
 
 ## The rule patterns
 
@@ -60,32 +68,29 @@ Before anything is accepted, FabricOps validates the response: rule types must b
 
 ## Example: one business requirement becomes multiple rules
 
-For the screen recording, use an Orders table with these columns:
+The Guided Demo already provides a canonical 120-row `orders` table and a separate `orders_guardrail_failures.csv` fixture with deliberate failures. The same data can be used to demonstrate natural-language rule authoring and enforcement.
 
-| order_id | status | country | currency | quantity | unit_price | discount | order_net_amount | shipped_date |
-| --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
-| O1001 | Completed | SG | SGD | 2 | 50 | 0.10 | 90 | 2026-09-30 |
-| O1002 | Completed | SG | USD | 1 | 100 | 0.10 | 90 | _null_ |
-| O1003 | Completed | US | USD | 2 | 40 | 0.25 | 60 | 2026-09-30 |
-| O1004 | Completed | SG | SGD | 3 | 20 | 0.10 | 50 | 2026-09-30 |
-| O1005 | Draft | SG | USD | 1 | 50 | 0.30 | 20 | _null_ |
+The Orders table contains `order_id`, `customer_id`, `order_datetime`, `modified_datetime`, `product_id`, `quantity`, `unit_price`, `discount`, `order_status`, and `shipping_country`.
 
-Enter this as the Business Rule:
+Enter one compound Business Rule:
 
-> For completed orders, a shipped date is required and the net amount must equal quantity × unit price × (1 − discount). Singapore orders must use SGD. Discount cannot exceed 20%.
+> Orders must have a customer and product. Quantity and unit price must be greater than zero. Discount must be between 0% and 20%. Order status must be NEW, PROCESSING, SHIPPED, DELIVERED, or CANCELLED. For shipped or delivered orders, the modified timestamp cannot be earlier than the order timestamp.
 
-A good translation demonstrates four different rule shapes:
+FabricOps can decompose that single requirement into multiple atomic rules:
 
-| Resulting rule | FabricOps pattern | Deterministic meaning |
+| Part of the business requirement | Suggested FabricOps rule | Deterministic meaning |
 | --- | --- | --- |
-| Completed orders require `shipped_date` | **Conditional Completeness** | If `status = "Completed"`, `shipped_date` cannot be missing. |
-| Singapore orders require SGD | **Conditional Values** | If `country = "SG"`, `currency` must be in `["SGD"]`. |
-| Discount cannot exceed 20% | **Range** | `discount <= 0.20`. |
-| Completed-order net amount formula | **Custom Expression** | If the row is Completed, `order_net_amount == quantity * unit_price * (1 - discount)`. |
+| Orders must have a customer | **Completeness** on `customer_id` | `customer_id` must be populated. |
+| Orders must have a product | **Completeness** on `product_id` | `product_id` must be populated. |
+| Quantity must be greater than zero | **Range** on `quantity` | Minimum `0`, exclusive. |
+| Unit price must be greater than zero | **Range** on `unit_price` | Minimum `0`, exclusive. |
+| Discount must be between 0% and 20% | **Range** on `discount` | `0 <= discount <= 0.20`. |
+| Only approved order statuses are valid | **Whitelist** on `order_status` | Value must be one of `NEW`, `PROCESSING`, `SHIPPED`, `DELIVERED`, or `CANCELLED`. |
+| Shipped or delivered orders cannot move backwards in time | **Custom Expression** | When status is SHIPPED or DELIVERED, `modified_datetime >= order_datetime`. |
 
-The fourth rule is where Custom Expression is useful: the requirement contains arithmetic across several columns and cannot be represented faithfully by the simpler patterns.
+This is the key feature: **one natural-language business rule can produce several known, independently reviewable DQ rules instead of one opaque AI-generated check.**
 
-The generated expression is still not arbitrary Python. It is validated against FabricOps' constrained PySpark expression grammar before it can become a rule.
+The existing failure fixture then makes the enforcement visible without inventing another demo table. For example, `GF004` has a negative quantity, `GF005` has a negative unit price, `GF006` has a discount of `1.25`, `GF007` has an `UNKNOWN` order status, and `GF009` has a missing customer.
 
 ## What enforcement looks like
 
