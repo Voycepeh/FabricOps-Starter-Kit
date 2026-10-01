@@ -1,18 +1,32 @@
-# Step 7. Publish governed data to a Fabric Data Agent
+# Step 7. Consume and productize governed data
 
-**Turn approved Production data and its FabricOps governance context into a native Fabric Data Agent for actual consumption.**
+**Use the governed consumer handoff to turn approved Production data and its FabricOps context into useful analytics and AI consumption products.**
 
-Step 6 already completed the engineering handoff: the Production pipeline ran, the governed outputs exist, and approved consumers can access those tables through native Fabric permissions and interfaces.
+Step 6 already completed the engineering handoff: the Production pipeline ran, governed outputs exist, and approved consumers can access them through native Fabric permissions and interfaces.
 
-Step 7 is therefore not another exploration notebook. Its purpose is to create a consumption product from the governed data.
+Step 7 adds a consumer and analytics-engineering interface over that foundation.
 
-!!! note "Feature implementation status"
+!!! note "Planned notebook evolution"
 
-    One-shot Data Agent publishing is the next FabricOps consumption feature and is not yet part of the released public API. This page defines the Guided Demo target while the publisher is implemented.
+    The current template is named `99_explore`. The intended successor is `03_consumption`, reflecting its broader role as the governed handoff into consumption. The template rename and implementation changes will land with their directly affected tests and generated references.
 
-## Single-table path
+## Review the governed context
 
-For one governed table, FabricOps already has the context needed to ground a useful Data Agent: table purpose, grain/key evidence, column meaning, classification and sensitivity decisions, business rules, Data Quality expectations, profile evidence, lineage, and the active Data Contract.
+The consumer should be able to select approved Production table(s) and see the useful context FabricOps already captured: purpose, grain/key evidence, column meaning, business rules, Data Quality expectations, sensitivity/classification decisions, lineage, freshness, access information, and known limitations.
+
+This is derived from authoritative FabricOps metadata rather than maintained again in the consumption notebook.
+
+## Reuse before creating
+
+Before creating another consumption artifact, FabricOps should show existing registered products that use the same or overlapping governed tables.
+
+An exact table set is a strong reuse signal, but purpose, owner, audience, relationships, and product type still matter. The user can reuse or extend an existing product or intentionally create another when its purpose is genuinely different.
+
+## First accelerator: Fabric Data Agent
+
+The first automated Step 7 target is one-shot Data Agent publishing.
+
+For one governed table, FabricOps can generate the Data Agent-ready context and configure the native agent without requiring the user to rewrite the Data Contract and catalogue information manually.
 
 The target flow is:
 
@@ -22,34 +36,34 @@ Approved Production table
 FabricOps governed context
         |
         v
-Create/configure Data Agent
+03_consumption
+        |
+        +--> discover existing products
+        |
+        +--> generate Data Agent context
+        |
+        +--> create/configure Data Agent
         |
         v
-Select governed table
-        |
-        v
-Apply generated instructions
-        |
-        v
-Test and consume through the agent
+Test and consume
 ```
 
-The user should not have to manually rewrite FabricOps documentation into Data Agent instructions.
+!!! note "Feature implementation status"
+
+    One-shot Data Agent publishing and the `03_consumption` revamp are planned capabilities and are not yet part of the released public API.
 
 ## Multi-table extension
 
-The same flow later expands to multiple governed tables once FabricOps can capture explicit primary-key and foreign-key/reference relationships between them.
+The same handoff later supports multiple governed tables. An analytics engineer selects tables, confirms explicit relationships using deterministic evidence from FabricOps, and reuses those relationships as consumption context.
 
-FabricOps can provide deterministic relationship evidence and warnings, while a BI/data architect confirms the intended relationship. The confirmed relationships are then rendered into the Data Agent context together with each table's existing governed metadata.
+That context can ground a multi-table Data Agent without turning FabricOps into a general-purpose semantic-modelling engine.
 
-This keeps FabricOps focused on governed data and relationship context rather than creating a separate semantic modelling platform.
+## Other consumption paths
 
-## Direct data consumption still exists
+A Data Agent is the first automated consumption accelerator, not the definition of Step 7.
 
-A Data Agent is the showcase Step 7 consumption interface, not the only way to use Production data.
+Consumers can continue using notebooks, SQL, Lakehouses, Warehouses, and other native Fabric interfaces through the access established in Step 6. Power BI, reporting, and future consumption products can reuse the same governed context as parallel paths.
 
-Consumers who need direct access can use the native Fabric permissions and interfaces established in Step 6. FabricOps does not require a dedicated `99_explore` notebook for that path.
-
-For the full feature contract and implementation phases, see [Publish Governed Data to a Fabric Data Agent](../maintainer/single-table-data-products.md).
+For the full feature contract and implementation phases, see [Governed Consumption and Data Agent Publishing](../maintainer/single-table-data-products.md).
 
 **Complete:** return to the [Guided Demo overview](../guided-demo.md).
