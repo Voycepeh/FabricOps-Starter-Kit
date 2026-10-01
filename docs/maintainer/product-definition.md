@@ -152,14 +152,17 @@ The metadata model is not only documentation. It is the persistent context that 
 
 The Guided Demo owns maintained execution instructions and contextual implementation rationale. Technical documentation owns detailed notebook, metadata, and Python API contracts. The Glossary owns user-facing term definitions and organizes them into FabricOps, Governance, and Engineering concepts.
 
-## Future product direction: AI-augmented workflows
+## AI-assisted capabilities and future direction
 
-**AI-assisted FabricOps workflows should augment governed human decisions, not replace them.** FabricOps is not itself an AI model or agent framework. Its opportunity is to use the structured context already captured through the workflow to make Governance, Engineering, and Consumption faster and more consistent.
+**AI-assisted FabricOps workflows augment governed human decisions rather than replacing them.** FabricOps uses the structured context already captured through the workflow to make Governance, Engineering, and Consumption faster and more consistent.
 
-Potential future AI-augmented workflows include:
+Implemented AI-assisted capabilities include:
 
-- **Enrichment suggestions:** propose business names, descriptions and information classifications from schema, profile, and governed context for steward review.
-- **Data Quality and Guardrail authoring:** suggest relevant rule types and parameters from schema, profile distributions, source observations, and previous Guardrail Results while keeping authoring and approval human-controlled.
+- **Data Contract authoring suggestions:** Fabric AI Functions can suggest table/column descriptions, grain and sensitive-data context from governed schema and profile evidence for human review. Classification and treatment remain governed decisions.
+- **Business Rules to Data Quality:** plain-language business requirements can be translated into the smallest supported deterministic DQ rules, with validated custom PySpark boolean expressions only when the supported rule grammar cannot represent the requirement.
+
+Planned AI-augmented workflows include:
+
 - **Data Contract review:** summarize what changed between contract versions, highlight changed Guardrails, load strategy, load-strategy parameters, or writer ownership, and identify items requiring explicit review before activation.
 - **Pipeline review:** inspect the planned `02_pipeline` flow, source observations, applicable Guardrails, governed load strategy, and writer ownership to identify missing validation, profiling, lineage, or unsafe execution patterns before Production.
 - **Failure explanation:** turn Guardrail Results and the resolved source/read/load context into a concise explanation of what failed, which governed rule caused it, and what Engineering should inspect next.
