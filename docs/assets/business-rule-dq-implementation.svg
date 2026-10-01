@@ -1,55 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 430" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 650" role="img" aria-labelledby="title desc">
 <title id="title">Under the hood: Business rules to enforceable Data Quality rules</title>
 <desc id="desc">FabricOps assembles governed context, invokes Microsoft Fabric AI Functions through a one-row pandas DataFrame, validates JSON rule proposals, then evaluates explicit rules deterministically in the pipeline.</desc>
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#667085"/></marker></defs>
-<rect width="1200" height="430" fill="#ffffff"/>
+<rect width="920" height="650" fill="#ffffff"/>
 <style>
-.t{font:600 22px Arial,sans-serif;fill:#101828}.h{font:600 15px Arial,sans-serif;fill:#101828}.b{font:13px Arial,sans-serif;fill:#344054}.m{font:12px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#475467}.ey{font:600 11px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#667085;letter-spacing:.8px}.box{fill:#fff;stroke:#d0d5dd;stroke-width:1.4}.focus{fill:#eff8ff;stroke:#2e90fa;stroke-width:1.8}.out{fill:#f9fafb;stroke:#98a2b3;stroke-width:1.4}.line{fill:none;stroke:#667085;stroke-width:1.6;marker-end:url(#arrow)}
+.t{font:600 22px Arial,sans-serif;fill:#101828}.h{font:600 16px Arial,sans-serif;fill:#101828}.b{font:14px Arial,sans-serif;fill:#344054}.m{font:13px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#475467}.ey{font:600 11px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#667085;letter-spacing:.8px}.box{fill:#fff;stroke:#d0d5dd;stroke-width:1.4}.focus{fill:#eff8ff;stroke:#2e90fa;stroke-width:1.8}.out{fill:#f9fafb;stroke:#98a2b3;stroke-width:1.4}.line{fill:none;stroke:#667085;stroke-width:1.6;marker-end:url(#arrow)}
 </style>
 <text x="48" y="48" class="t">Under the hood: Business rules → enforceable Data Quality rules</text>
-<text x="48" y="74" class="b">One AI authoring call produces explicit rules; runtime enforcement remains deterministic.</text>
+<text x="48" y="76" class="b">One AI authoring call produces explicit rules; runtime enforcement remains deterministic.</text>
 
-<text x="48" y="118" class="ey">CONTEXT</text>
-<rect x="48" y="138" width="210" height="220" rx="7" class="box"/>
-<text x="68" y="168" class="h">Prompt context</text>
-<text x="68" y="201" class="b">Business requirement</text>
-<text x="68" y="225" class="b">Table + column metadata</text>
-<text x="68" y="249" class="b">Profile evidence</text>
-<text x="68" y="273" class="b">Existing DQ rules</text>
-<text x="68" y="297" class="b">Column constraint</text>
-<text x="68" y="329" class="m">supported rule grammar</text>
+<text x="48" y="124" class="ey">1 · CONTEXT</text>
+<rect x="48" y="144" width="376" height="200" rx="8" class="box"/>
+<text x="72" y="178" class="h">Prompt context</text>
+<text x="72" y="214" class="b">Business requirement · table + column metadata</text>
+<text x="72" y="242" class="b">Profile evidence · existing DQ rules</text>
+<text x="72" y="270" class="b">Optional column constraint</text>
+<text x="72" y="312" class="m">supported rule grammar</text>
 
-<path d="M258 248 H290" class="line"/>
+<path d="M424 244 H496" class="line"/>
 
-<text x="290" y="118" class="ey">FABRIC AI FUNCTIONS</text>
-<rect x="290" y="138" width="270" height="220" rx="7" class="focus"/>
-<text x="310" y="168" class="h">One-row pandas DataFrame</text>
-<text x="310" y="204" class="m">fabricops_prompt</text>
-<text x="310" y="244" class="m">frame.ai.generate_response(</text>
-<text x="310" y="265" class="m">  "{fabricops_prompt}")</text>
-<text x="310" y="309" class="h">JSON array</text>
-<text x="310" y="333" class="m">[{ rule_type, columns, ... }]</text>
+<text x="496" y="124" class="ey">2 · FABRIC AI FUNCTIONS</text>
+<rect x="496" y="144" width="376" height="200" rx="8" class="focus"/>
+<text x="520" y="178" class="h">One-row pandas DataFrame</text>
+<text x="520" y="216" class="m">fabricops_prompt</text>
+<text x="520" y="254" class="m">frame.ai.generate_response(</text>
+<text x="520" y="276" class="m">  "{fabricops_prompt}")</text>
+<text x="520" y="316" class="m">→ JSON array of rule proposals</text>
 
-<path d="M560 248 H592" class="line"/>
+<path d="M684 344 V380 H236 V404" class="line"/>
 
-<text x="592" y="118" class="ey">FABRICOPS VALIDATION</text>
-<rect x="592" y="138" width="250" height="220" rx="7" class="box"/>
-<text x="612" y="168" class="h">Rule proposals</text>
-<text x="612" y="204" class="b">✓ supported rule type</text>
-<text x="612" y="228" class="b">✓ known columns</text>
-<text x="612" y="252" class="b">✓ valid parameters</text>
-<text x="612" y="276" class="b">✓ selected columns</text>
-<text x="612" y="300" class="b">✓ safe expression</text>
-<text x="612" y="333" class="m">atomic rule definitions</text>
+<text x="48" y="384" class="ey">3 · FABRICOPS VALIDATION</text>
+<rect x="48" y="404" width="376" height="190" rx="8" class="box"/>
+<text x="72" y="438" class="h">Rule proposals</text>
+<text x="72" y="474" class="b">✓ supported rule type · known columns</text>
+<text x="72" y="502" class="b">✓ valid parameters · selected columns</text>
+<text x="72" y="530" class="b">✓ safe Custom Expression</text>
+<text x="72" y="566" class="m">atomic rule definitions</text>
 
-<path d="M842 248 H874" class="line"/>
+<path d="M424 499 H496" class="line"/>
 
-<text x="874" y="118" class="ey">DETERMINISTIC RUNTIME</text>
-<rect x="874" y="138" width="278" height="220" rx="7" class="out"/>
-<text x="894" y="168" class="h">Pipeline evaluation</text>
-<text x="894" y="204" class="m">rule → boolean expression</text>
-<text x="894" y="244" class="m">_dq_failed_rules</text>
-<text x="894" y="268" class="m">_dq_check_status</text>
-<text x="894" y="309" class="h">Guardrail result</text>
-<text x="894" y="333" class="m">status · can_continue</text>
+<text x="496" y="384" class="ey">4 · DETERMINISTIC RUNTIME</text>
+<rect x="496" y="404" width="376" height="190" rx="8" class="out"/>
+<text x="520" y="438" class="h">Pipeline evaluation</text>
+<text x="520" y="474" class="m">rule → boolean expression</text>
+<text x="520" y="510" class="m">_dq_failed_rules · _dq_check_status</text>
+<text x="520" y="550" class="h">Guardrail result</text>
+<text x="520" y="576" class="m">status · can_continue</text>
 </svg>
