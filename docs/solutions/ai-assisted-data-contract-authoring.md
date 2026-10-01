@@ -8,11 +8,13 @@ Sensitive-data governance often stops at identifying PII. But knowing that a col
 
 ## The solution
 
-FabricOps keeps the governed decisions explicit while using Microsoft Fabric AI Functions as an optional authoring aid.
+FabricOps brings sensitivity, treatment, and classification into one governed workflow.
 
-AI can help identify whether a column is **Direct PII**, **Indirect PII**, or **Not PII** from the available metadata and profile context. Governance reviews the suggestion, chooses the treatment when one is required, and records the classification that applies **after treatment**.
+AI can help identify whether a column contains **Direct PII**, **Indirect PII**, or **Not PII**. Governance then reviews the suggestion, chooses the appropriate treatment where required, and records the classification that applies **after treatment**.
 
-The workflow remains usable without AI. Suggestions accelerate review; Governance remains in control and runtime enforcement stays deterministic.
+This keeps AI as an authoring aid while the actual governance decisions remain explicit. Once activated, FabricOps applies the approved treatment deterministically in the data pipeline.
+
+The workflow also works without AI. Suggestions accelerate sensitive-data discovery; they do not determine the governed outcome.
 
 ## How it works
 
