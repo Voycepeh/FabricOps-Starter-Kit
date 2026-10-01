@@ -39,8 +39,8 @@ nav:
       - "Step 3 - Author and Freeze Data Contract": guided-demo/03-author-and-freeze-data-contract.md
       - "Step 4 - Select and Validate Data Contract": guided-demo/04-validate-frozen-data-contract.md
       - "Step 5 - Activate Data Contract and Promote": guided-demo/05-activate-data-contract-and-promote.md
-      - "Step 6 - Run Pipeline in Production": guided-demo/06-run-production.md
-      - "Step 7 - Consume Production Data": guided-demo/07-consume-production-data.md
+      - "Step 6 - Run Production and Grant Access": guided-demo/06-run-production.md
+      - "Step 7 - Publish to a Data Agent": guided-demo/07-consume-production-data.md
   - Download FabricOps:
       - Releases (Python package):
           - Overview: releases/index.md
