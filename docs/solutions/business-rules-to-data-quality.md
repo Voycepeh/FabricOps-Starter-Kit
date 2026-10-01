@@ -16,22 +16,9 @@ One business requirement can therefore become several atomic DQ rules. Standard 
 
 The AI accelerates the translation from business knowledge to executable rules. It is not the runtime enforcement engine. Once reviewed and saved into the Data Contract, the resulting rules are explicit and enforced deterministically by FabricOps.
 
-## The rule patterns
+## Supported DQ rules
 
-FabricOps gives the AI a bounded rule grammar rather than asking it to invent arbitrary validation logic.
-
-| Pattern | What it expresses |
-| --- | --- |
-| **Completeness** | Maximum missing percentage for one column, with explicit blank handling. |
-| **Uniqueness** | One column or a combination of columns must meet the required uniqueness level. |
-| **Whitelist** | A column value must belong to an approved set. |
-| **Blacklist** | A column value must not belong to a blocked set. |
-| **Range** | A value must satisfy governed minimum or maximum bounds. |
-| **Pattern** | Populated text must match a governed regular expression. |
-| **Column Relationship** | Compare two columns row by row with `=`, `!=`, `>`, `>=`, `<`, or `<=`. |
-| **Conditional Completeness** | When a condition is true, another column must be populated. |
-| **Conditional Values** | When a condition is true, another column must satisfy a whitelist or blacklist. |
-| **Custom Expression** | A constrained PySpark boolean expression for requirements the standard patterns cannot represent faithfully. |
+FabricOps resolves business requirements against its canonical set of supported DQ rules before considering a Custom Expression. See the [Data Quality Rules reference](../reference/dq-rules/index.md) for the authoritative list of rule types, parameters, constraints, and examples.
 
 <details markdown="1">
 <summary><strong>Under the hood: how AI suggestions are produced</strong></summary>
@@ -45,7 +32,7 @@ FabricOps combines four things into the instruction sent to the model:
 1. the configured Business Rule prompt;
 2. the user's plain-language business requirement and optional selected-column constraint;
 3. the governed table and profile context;
-4. the supported DQ rule grammar above, including the parameters and restrictions for every rule type.
+4. the canonical supported DQ rule grammar, including the parameters and restrictions for every rule type.
 
 Profile values are evidence only. The prompt explicitly tells the AI not to turn observed values into contractual thresholds, whitelists, blacklists, mappings, or patterns unless the business requirement actually states them.
 
