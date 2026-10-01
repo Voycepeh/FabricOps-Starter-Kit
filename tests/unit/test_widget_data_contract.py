@@ -1682,7 +1682,7 @@ def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_run
     freshness = state["_controls"]["table_guardrails"]["freshness"]
 
     freshness_grid = freshness["display"][1]
-    assert [freshness_grid.children[index].value for index in (0, 3, 6, 9)] == [
+    assert [row.children[0].value for row in freshness_grid.children] == [
         "<div style='padding-top:7px;'>Refresh expectation</div>",
         "<div style='padding-top:7px;'>Timestamp column</div>",
         "<div style='padding-top:7px;'>Expected refresh</div>",
@@ -2455,7 +2455,8 @@ def test_table_description_matches_grain_ai_layout(widget_runtime, monkeypatch):
     expected_column_grid = "120px minmax(240px, 1fr) minmax(240px, 1fr)"
     assert controls["column_definition"].children[1].layout.grid_template_columns == expected_column_grid
     assert controls["table_classification"].layout.width == "250px"
-    assert controls["column_classification"].layout.width == "250px"
+    assert controls["column_classification"].layout.width == "100%"
+    assert controls["column_classification"].layout.max_width == "722px"
     assert controls["column_search"].layout.width == "100%"
     assert controls["column_select"].layout.width == "100%"
     assert [label for label, _value in controls["column_select"].options] == [
@@ -2464,6 +2465,31 @@ def test_table_description_matches_grain_ai_layout(widget_runtime, monkeypatch):
     ]
     assert "color:#0f6cbd;font-size:20px" in controls["column_context"].value
     assert "Required:" not in controls["column_context"].value
+
+
+def test_layout_avoids_blank_spacers_and_collapsed_columns(widget_runtime):
+    """Keep form rows explicit instead of aligning them with empty placeholder widgets."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    freshness_layout = controls["table_guardrails"]["freshness"]["display"][1]
+    assert len(freshness_layout.children) == 4
+    assert [len(row.children) for row in freshness_layout.children] == [2, 2, 3, 3]
+    assert all(
+        str(getattr(child, "value", "") or "").strip()
+        for row in freshness_layout.children
+        for child in row.children[:1]
+    )
+
+    processing_hint = controls["processing_source"]
+    processing_section = controls["right_pane"].children[2]
+    processing_hint_row = processing_section.children[2]
+    assert processing_hint_row.children == (processing_hint,)
+    assert processing_hint_row.layout.align_items == "flex-start"
+
+    column_definition = controls["column_definition"].children[1]
+    assert column_definition.layout.grid_template_columns == "120px minmax(240px, 1fr)"
+    assert len(column_definition.children) == 2
 
 
 def test_table_classification_updates_left_summary_immediately(widget_runtime):
