@@ -1617,7 +1617,7 @@ def test_setup_metadata_tables_verbose_false_is_silent(monkeypatch, capsys):
 def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
     """Keep prompts configurable and AI optional alongside Classification labels."""
     config = GovernanceConfig(
-        sensitivity_labels=[" Public ", "Restricted"],
+        classification_levels=[" Public ", "Restricted"],
         ai_enrichment={
             "enabled": True,
             "table_description_prompt": " describe table ",
@@ -1625,7 +1625,9 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
             "sensitive_data_prompt": " sensitive rules ",
         },
     )
-    assert config.sensitivity_labels == ["Public", "Restricted"]
+    assert config.classification_levels == ["Public", "Restricted"]
+    with pytest.raises(ValueError, match="unique ranked values"):
+        GovernanceConfig(classification_levels=["Public", "Restricted", "Restricted"])
     assert config.ai_enrichment == {
         "enabled": True,
         "table_description_prompt": "describe table",
