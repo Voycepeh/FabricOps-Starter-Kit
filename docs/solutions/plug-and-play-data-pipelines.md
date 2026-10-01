@@ -58,16 +58,11 @@ flowchart LR
 
 The same notebook stack exists in Development and Production. `00_env_config` maps the logical Fabric Stores used by the pipeline to their environment-specific Fabric locations, while `02_pipeline` is promoted unchanged from Development to Production. Inside each pipeline, Data Contract context is selected before the governed ETL flow. A pipeline can use multiple `orchestrate_read()` calls, each choosing Full or Incremental, transform the resulting DataFrames with project-owned PySpark, and use multiple `orchestrate_write()` calls, each independently choosing Overwrite, Append, SCD1, or SCD2.
 
-## Read modes
+## Choose how each source is read
 
-Each source independently chooses its Read mode through `orchestrate_read()`. The same canonical `02_pipeline` can mix Full and Incremental reads.
+Each source has its own `orchestrate_read()` call, so one pipeline can mix different read behaviours. For example, a high-volume Orders source can be incremental while a smaller Products reference source is read in full.
 
-| Read mode | Setting | Typical intent |
-| --- | --- | --- |
-| Full | `read_mode="full"` | Read the complete source table |
-| Incremental | `read_mode="incremental"` | Read only the source data required for the next processing window |
-
-For example, one pipeline can use an Incremental read for a high-volume Orders table and a Full read for a smaller Products reference table. Each source has its own `orchestrate_read()` call, so the choice is per source rather than a pipeline-wide setting. See [Read Modes](../reference/read-and-load-strategies.md) for bootstrap, incremental scope, Source Observation, and source-to-target progress semantics.
+The [Read & Write Modes reference](../reference/read-and-load-strategies.md) is the source of truth for supported Read modes, settings, required parameters, bootstrap behaviour, Source Observation, and incremental progress semantics.
 
 ## Transform in the notebook
 
@@ -77,18 +72,11 @@ FabricOps deliberately does not introduce a transformation DSL or hide this logi
 
 In day-to-day development, you can also use Microsoft Fabric Copilot or another AI coding agent to help write the project-specific PySpark. The transformation remains ordinary PySpark owned by the project; FabricOps focuses on the governed Read and Write boundaries around it.
 
-## Write modes
+## Choose how each target is written
 
-Each target independently chooses its Write mode through `orchestrate_write()`. The same canonical `02_pipeline` can mix Overwrite, Append, SCD1, and SCD2 writes.
+Each target has its own `orchestrate_write()` call, so write behaviour is selected per target rather than for the whole pipeline. A single pipeline can therefore publish different targets using different governed load strategies.
 
-| Write mode | Setting | Typical intent |
-| --- | --- | --- |
-| Overwrite | `write_mode="overwrite"` | Publish the complete target state |
-| Append | `write_mode="append"` | Append a new batch |
-| SCD1 | `write_mode="scd1"` | Update matching business keys and insert new rows |
-| SCD2 | `write_mode="scd2"` | Maintain historical versions as records change |
-
-Each target has its own `orchestrate_write()` call, so the choice is per target rather than a pipeline-wide setting. See [Read & Write Modes](../reference/read-and-load-strategies.md) for Full, Incremental, Overwrite, Append, SCD1, SCD2, examples, required parameters, and incremental-write safety.
+The [Read & Write Modes reference](../reference/read-and-load-strategies.md) is the source of truth for supported Write modes, settings, required parameters, SCD behaviour, examples, and incremental-write safety.
 
 !!! warning "Multiple Write blocks are not atomic"
     Each `orchestrate_write()` publishes independently. If an earlier Write succeeds and a later Write fails, the pipeline is partially published. Rerunning the notebook executes the earlier Write again, which can duplicate or otherwise repeat non-idempotent writes such as Append. If partial publication or duplicate writes are unacceptable, use separate pipeline executions for each governed target.
