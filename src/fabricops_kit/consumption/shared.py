@@ -111,22 +111,49 @@ def instruction_text(context: Mapping[str, Any]) -> dict[str, str]:
     """Render concise, stable agent and datasource instructions."""
     source = context["source"]
     qualified = ".".join(part for part in (_text(source.get("schema")), _text(source.get("table"))) if part)
-    agent = (
-        "Use only the configured governed Production table. Do not infer undocumented business meaning, "
-        "relationships, or classifications. State when the available metadata cannot answer a question."
-    )
-    lines = [f"Table: {qualified}."]
+    agent = """## Objective
+Help users understand and analyze the configured governed Production dataset. Base quantitative answers on queries against the underlying data rather than assumptions.
+
+## Governed interpretation
+Use the datasource instructions as authoritative business context. Do not invent undocumented business meaning, relationships, calculations, classifications, or default semantics from column names or observed values alone. State when the governed context and available data are insufficient to answer a question.
+
+## Handling ambiguity
+Never silently choose between multiple plausible columns or business concepts. When two or more fields could reasonably answer the user's question and the wording does not distinguish them, ask a concise clarification question before querying the data. This especially applies to multiple date/time fields, monetary measures, statuses, customer/account identifiers, and similarly named business concepts.
+
+## Responses
+Use the field or business concept explicitly named by the user when it is unambiguous. Clearly distinguish results calculated from the underlying data from documented business definitions. Do not claim causal explanations when the data only shows association or change."""
+    lines = [f"## Dataset\\nTable: {qualified}."]
     for label, key in (("Purpose", "description"), ("Grain", "grain"), ("Business rules", "business_rules"),
                        ("Classification", "classification"), ("Known limitations", "known_limitations")):
         if _text(context.get(key)):
             lines.append(f"{label}: {_text(context[key])}")
-    lines.append("Columns:")
-    for column in context.get("columns") or []:
+    lines.append("\\n## Governed column semantics")
+    columns = context.get("columns") or []
+    for column in columns:
         detail = [f"type={_text(column.get('data_type'))}"]
         for key in ("description", "business_terms", "classification", "sensitivity"):
             if _text(column.get(key)):
                 detail.append(f"{key.replace('_', ' ')}={_text(column[key])}")
         lines.append(f"- {_text(column.get('name'))}: " + "; ".join(detail))
+
+    datetime_columns = [
+        column for column in columns
+        if any(marker in _text(column.get("data_type")).casefold() for marker in ("date", "time", "timestamp"))
+    ]
+    if datetime_columns:
+        lines.append("\\n## Date and time interpretation")
+        lines.append("Available date/time fields:")
+        for column in datetime_columns:
+            meaning = _text(column.get("description")) or _text(column.get("business_terms"))
+            suffix = f": {meaning}" if meaning else ""
+            lines.append(f"- {_text(column.get('name'))}{suffix}")
+        if len(datetime_columns) > 1:
+            lines.append(
+                "For time grouping, filtering, comparison, or trends, use the date/time field explicitly named "
+                "by the user. If the user does not specify which date/time concept they mean and multiple fields "
+                "are plausible, ask which field they want. Do not silently choose a date/time field."
+            )
+
     if context.get("guardrails"):
         lines.append("Governed rules:")
         for rule in context["guardrails"]:
