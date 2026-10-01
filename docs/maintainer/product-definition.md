@@ -53,7 +53,7 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 | 4 | Engineering Development — Select and validate | Use the current notebook's `METADATA_DATA_LINEAGE` to discover linked `table_id` values, select one frozen version independently per table, and validate the ETL. Failed validation returns to Step 3 for a new frozen version. |
 | 5 | Governance — Link the Data Agreement and activate | Select the tested frozen version, explicitly link the required exact Data Agreement version, and activate the contract for Production. |
 | 6 | Engineering Production — Promote, run, and hand off access | Promote and run the validated `02_pipeline`. Production automatically resolves the active Data Contract, publishes governed outputs, and approved consumers receive access through native Fabric controls. |
-| 7 | Consumption — Publish to a Data Agent | Assemble governed context for approved Production table(s) and create/configure a native Fabric Data Agent as the productized consumption interface. |
+| 7 | Consumption — Consume and productize governed data | Use `03_consumption` as the consumer and analytics-engineering handoff: review governed context, discover existing consumption products, consume data directly, or publish to a target such as a Fabric Data Agent. |
 
 ## Canonical operating decisions
 
@@ -64,8 +64,8 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 | Development | Engineering Development supports exploration, pipeline development, profiling, testing, and review. |
 | Production | Engineering Production contains approved recurring pipelines and durable Production outputs. |
 | Standard pipeline approach | PySpark is the standard for repeatable `02_pipeline` workflows. |
-| Consumption | Approved consumers use native Fabric permissions and interfaces directly. FabricOps adds value where governed context is required, beginning with one-shot Data Agent publishing. |
-| One-off analysis | FabricOps does not prescribe a dedicated exploration notebook. Consumers can use standard Fabric notebooks, SQL, Lakehouse, Warehouse, and other permitted interfaces against approved Production data. |
+| Consumption | Approved consumers can use native Fabric permissions and interfaces directly. `03_consumption` is the governed handoff for analytics and AI consumers, exposing reusable context and consumption accelerators without replacing native Fabric access. |
+| Consumption products | FabricOps should surface existing products that use the same or overlapping governed tables before creating another. Data Agent publishing is the first automated target; Power BI and other consumers remain parallel paths. |
 
 ## Canonical `02_pipeline` operating model
 
@@ -165,7 +165,7 @@ Potential future AI-augmented workflows include:
 - **Failure explanation:** turn Guardrail Results and the resolved source/read/load context into a concise explanation of what failed, which governed rule caused it, and what Engineering should inspect next.
 - **Change-impact analysis:** use contracts, lineage, profile history, source observations, read strategies, and load strategies to explain likely downstream impact before a source, target, or governed execution definition changes.
 - **Governed discovery:** answer questions such as what produces a table, which assets depend on a source, or which governed datasets have quality issues using FabricOps metadata rather than inferred notebook context alone.
-- **Consumer context preparation:** assemble a compact governed context package from active contracts, Catalogue metadata, lineage, profiles, and approved Production data for Data Agents, BI, analytics, and data science work. The first productized consumption pattern is specified in [Publish Governed Data to a Fabric Data Agent](single-table-data-products.md): turn an activated governed table into a configured Fabric Data Agent without manually recreating its context. The first implementation is single-table. A later relationship-authoring extension captures explicit PK/FK references so selected governed tables can be published together with reliable join context.
+- **Consumer context preparation:** assemble a compact governed context package from active contracts, Catalogue metadata, lineage, profiles, and approved Production data for Data Agents, BI, analytics, reporting, and data science work. The governed-consumption direction is specified in [Governed Consumption and Data Agent Publishing](single-table-data-products.md): `03_consumption` becomes the consumer/analytics-engineering handoff, with one-shot Data Agent publishing as the first automated consumption accelerator and reusable relationship context extending the pattern across tables.
 
 These capabilities are future direction unless separately implemented and documented. Human owners remain responsible for approval, activation, promotion, and Production decisions.
 
