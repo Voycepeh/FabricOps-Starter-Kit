@@ -1,6 +1,6 @@
-# Sensitive Data Classification & Treatment
+# Direct & Indirect PII Discovery & Treatment with Built-in AI Suggestions
 
-![Sensitive Data Classification & Treatment](../assets/AiDatacontract.png)
+![Direct and Indirect PII Discovery and Treatment with Built-in AI Suggestions](../assets/AiDatacontract.png)
 
 ## The problem
 
