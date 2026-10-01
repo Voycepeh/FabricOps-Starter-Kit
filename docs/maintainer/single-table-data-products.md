@@ -2,7 +2,7 @@
 
 FabricOps should carry governed Production data across the handoff from Data Engineering into analytics and AI consumption without replacing the native Microsoft Fabric experiences that already serve those consumers.
 
-Step 7 is therefore **governed consumption**, not a Data Agent-specific stage. The planned `03_consumption` notebook is the consumer and analytics-engineering handoff interface. One-shot Fabric Data Agent publishing is the first productized consumption accelerator built on that interface.
+Step 7 is therefore **governed consumption**, not a Data Agent-specific stage. The planned `99_explore` notebook is the consumer and analytics-engineering handoff interface. One-shot Fabric Data Agent publishing is the first productized consumption accelerator built on that interface.
 
 ## Product decision
 
@@ -28,13 +28,13 @@ Governed Production data
       +--> future consumption products
 ```
 
-Consumers do not need FabricOps merely to query data they are permitted to access. Step 6 grants the appropriate native Fabric access. `03_consumption` adds value by presenting governed consumer-facing context and reusable accelerators at the handoff.
+Consumers do not need FabricOps merely to query data they are permitted to access. Step 6 grants the appropriate native Fabric access. `99_explore` adds value by presenting governed consumer-facing context and reusable accelerators at the handoff.
 
-The existing `99_explore` notebook is the predecessor of this role. Renaming and revamping the actual template to `03_consumption` is implementation work and should update its directly affected tests and generated references together.
+The existing `99_explore` notebook keeps its current name and becomes the governed consumer/analytics-engineering handoff. No notebook rename is required.
 
 ## Consumer handoff
 
-`03_consumption` should let an analyst or analytics engineer select approved Production table(s) and see the context needed to use them safely without understanding the engineering implementation.
+`99_explore` should let an analyst or analytics engineer select approved Production table(s) and see the context needed to use them safely without understanding the engineering implementation.
 
 Useful context includes:
 
@@ -57,7 +57,7 @@ The first consumption accelerator should make one activated Production table imm
 
 Target experience:
 
-1. Open `03_consumption` and select one activated Production `table_id`.
+1. Open `99_explore` and select one activated Production `table_id`.
 2. Resolve the approved Production table and its active Data Contract.
 3. Build the compact consumer context from existing FabricOps metadata.
 4. Check whether an existing registered consumption product already uses the same governed scope.
@@ -75,7 +75,7 @@ Microsoft Fabric's Data Agent configuration APIs are currently a Preview depende
 
 The multi-table path extends the same governed consumption flow.
 
-`03_consumption` should allow an analytics engineer or other qualified owner to select governed tables and explicitly define relationships such as:
+`99_explore` should allow an analytics engineer or other qualified owner to select governed tables and explicitly define relationships such as:
 
 ```text
 Customers.customer_id  <-  Orders.customer_id
@@ -84,7 +84,7 @@ referenced key             foreign key
 
 FabricOps can provide deterministic evidence and warnings, including datatype compatibility, referenced-key uniqueness, foreign-key nullability, and referential coverage. A human confirms the intended relationship; statistical similarity alone must not silently become governed relationship truth.
 
-The relationship-authoring UI can live in `03_consumption`, while reusable confirmed relationship metadata should be persisted centrally rather than trapped inside the notebook or a Data Agent prompt.
+The relationship-authoring UI can live in `99_explore`, while reusable confirmed relationship metadata should be persisted centrally rather than trapped inside the notebook or a Data Agent prompt.
 
 Confirmed relationships then become reusable consumption context:
 
@@ -108,7 +108,7 @@ FabricOps does not become a general-purpose dimensional-modelling engine. More c
 
 FabricOps should discourage accidental duplication without assuming that overlapping products are always duplicates.
 
-Before creating a new consumption artifact, `03_consumption` should surface existing registered products that use the same or overlapping governed tables.
+Before creating a new consumption artifact, `99_explore` should surface existing registered products that use the same or overlapping governed tables.
 
 For example:
 
@@ -160,7 +160,7 @@ approved table_id(s)
 
 ## Guided Demo acceptance target
 
-Step 7 should demonstrate the handoff into governed consumption through `03_consumption`.
+Step 7 should demonstrate the handoff into governed consumption through `99_explore`.
 
 The first showcase path should prove:
 
@@ -185,7 +185,7 @@ The reusable asset is the governed Production data plus its consumption context.
 
 **Phase 1: consumer context contract.** Implement deterministic consumer-facing context assembly from existing metadata.
 
-**Phase 2: revamp `99_explore` into `03_consumption`.** Make it the consumer/analytics-engineering handoff interface and update directly affected tests and generated references.
+**Phase 2: revamp `99_explore`.** Keep the existing notebook name while expanding it into the consumer/analytics-engineering handoff interface.
 
 **Phase 3: one-shot Data Agent publisher.** Generate instructions and create/configure a single-table Data Agent through the supported Fabric APIs.
 
