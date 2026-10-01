@@ -24,7 +24,7 @@ jobs:
       - name: Generate reference pages
         run: PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
       - name: Stage first generation
-        run: git add docs/api/reference docs/reference/index.md docs/reference/call-graph.md docs/reference/_data/generated-artifacts.json docs/index.md
+        run: git add -A docs/api/reference docs/reference docs/index.md
       - name: Verify second run produces no diff
         shell: bash
         env:
