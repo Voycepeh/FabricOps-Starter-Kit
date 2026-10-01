@@ -1,19 +1,30 @@
-# Step 3. Author and freeze the Data Contract
+# Step 3. Author and freeze the Data Contracts
 
-**Return to `01_governance`, review the generated contract against the profiled table, then freeze the version Engineering will validate in Step 4.**
+**Return to `01_governance`, author the source and target contracts used by the real pipeline, then freeze the exact versions Engineering will exercise in Step 4.**
 
-Freezing creates an **immutable Data Contract** candidate for validation. Freezing does not activate it for Production.
+Freezing creates an **immutable Data Contract** candidate for validation. It does not activate the contract for Production.
 
-!!! warning "Optional: enable Fabric AI Functions"
-    FabricOps does not require AI. AI-assisted authoring is optional.
+!!! warning "Enable Fabric AI Functions for the full DQ integration exercise"
+    The four direct Column data quality families can be authored without AI. The remaining Business Rules are resolved from business language, so the full nine-rule integration exercise requires AI-assisted authoring.
 
-    To use it, meet the [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview) and set `GOVERNANCE_CONFIG.ai_enrichment.enabled = True` in `00_env_config`.
+    Meet the [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview) and set `GOVERNANCE_CONFIG.ai_enrichment.enabled = True` in `00_env_config`.
 
     Learn more: [Sensitive Data Classification & Treatment](../solutions/ai-assisted-data-contract-authoring.md).
 
-## 1. Open the Data Contract editor
+## 1. Cover the whole pipeline, not only the target
 
-Open `01_governance`, run the setup cells, select the target produced in Step 2, then run:
+Step 4 validates the complete governed path, so every participating table needs a frozen contract:
+
+| Pipeline role | Table | Guardrails exercised |
+| --- | --- | --- |
+| Source | `orders` | Freshness, Schema, Source Drift |
+| Source | `products` | Schema |
+| Source | `order_history` | Schema |
+| Target | `curated_orders` | Schema, Sensitive Data, Data Quality |
+
+Guardrail Coverage then proves that every selected source/target contract has applicable rules and that every applicable rule produced evidence in the current activity.
+
+Open `01_governance`, run the setup cells, select each table above, then run:
 
 ```python
 widget_data_contract()
@@ -21,46 +32,92 @@ widget_data_contract()
 
 The editor uses the selected table's Catalogue and latest Profile as authoring evidence.
 
+For `orders`, enable **Freshness**, **Schema**, and **Source Drift**. Use `modified_datetime` as the Freshness evidence column and keep the allowed age comfortably above the canonical baseline's normal age. Configure Source Drift for the source's normal overwrite behavior. Keep these rules on **Warn** for the first integration run.
+
+For `products` and `order_history`, a Schema rule is sufficient for this exercise. Their purpose is to make the complete `curated_orders` source → target path Guardrail-ready without inventing unrelated business rules.
+
+For `curated_orders`, enable **Schema**, add one **Sensitive Data** treatment on `customer_id` (Mask is the easiest treatment to inspect), and author the complete DQ rules below. Keep Schema and DQ on **Warn** for the first dirty run. Sensitive Data is a treatment guardrail: the integration proof is that the treatment is actually applied before DQ/publication, not that valid sensitive data is rejected.
+
+For this walkthrough, keep every DQ rule **Enabled** but leave **Block on failure** off. Step 4 intentionally breaks every DQ behavior in one validation run; Warn lets FabricOps report all of them instead of stopping at the first blocking failure.
+
 ## 2. Table
 
 Open **Table** and review:
 
 * Description and Classification
-* Grain & Row Key
+* Grain & Row Key — use `order_id`
 * Processing
-* Freshness, when required
-* Source Drift, when required
+* Freshness, when applicable
+* Source Drift, when applicable
 
-Use AI suggestions where useful, then review them before applying.
+Use AI suggestions where useful, then review them before applying. Profile statistics are evidence only; they do not become contract requirements unless Governance authors a rule from them.
 
-## 3. Columns
+## 3. Columns — author the direct DQ rules
 
-Open **Columns**.
+Open **Columns** and configure these rules for the integration exercise:
 
-For each governed column, review the physical definition and examples, then author only what should become part of the contract:
+| UI | Column | Configuration | Runtime rule |
+| --- | --- | --- | --- |
+| **Completeness** | `customer_id` | Maximum missing = **0%**; treat blank as missing | `completeness` |
+| **Uniqueness** | `order_id` | Minimum unique = **100%** | `uniqueness` |
+| **Value Lists → Whitelist** | `order_status` | `NEW, PROCESSING, SHIPPED, DELIVERED, CANCELLED` | `value_set` / `allow` |
+| **Value Lists → Blacklist** | `shipping_country` | `UNKNOWN` | `value_set` / `block` |
+| **Value Rules** | `quantity` | Lower bound **1**, upper bound **4**, include both bounds | `range` |
 
-* Required
-* Classification and Description
-* Sensitive Data treatment — see [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for Mask, Bucket, Tokenize, and Remove behavior and examples.
-* Direct column Data Quality rules: Completeness, Uniqueness, Value Lists, and Value Rules
+Keep **Block on failure** off for each rule.
 
-**Value Lists** uses separate comma-separated **Whitelist** and **Blacklist** inputs. Each non-empty list becomes its own deterministic Data Quality rule, and the editor shows the parsed value count before save.
+Whitelist and Blacklist are separate rules even though both persist using the `value_set` runtime type. The [DQ rule reference](../reference/dq-rules/index.md) maps every authoring control to its persisted rule.
 
-Profile statistics are evidence only. They do not become contract requirements unless Governance authors a rule from them.
+## 4. DQ Rules — exercise every Business Rule path
 
-## 4. DQ Rules
+Open **DQ Rules** and resolve each requirement below. Review the proposed rule before choosing **Add DQ Rule**.
 
-Open **DQ Rules** when AI is enabled to describe requirements in business language. FabricOps resolves the governed table context into one or more atomic enforceable DQ rules; the same draft list also includes rules authored directly from the Columns page.
+| Business requirement to enter | Expected resolved rule | Why the clean target passes |
+| --- | --- | --- |
+| Order ID must start with O followed by exactly four digits. | `pattern` | Canonical IDs use `O0001` through `O0120`. |
+| Modified datetime must be on or after order datetime. | `column_relationship` | Every canonical order is modified after it is created. |
+| When order status is DELIVERED, shipping country is required. | `conditional_completeness` | Delivered baseline rows have a shipping country. |
+| When shipping country is SG, order status must be NEW. | `conditional_values` | The canonical demo data uses NEW for SG rows. |
+| Order net amount must not exceed quantity multiplied by unit price. | `custom_expression` | A non-negative discount makes net amount less than or equal to gross amount. |
 
-Use **DQ Rules** for Pattern requirements as well. Describe the format in business language and let FabricOps resolve it into the deterministic Pattern rule; there is no regex authoring field on the Columns page.
+For each proposal:
 
-With AI enabled, describe the requirement and resolve it into a deterministic FabricOps Data Quality rule. Review the result before applying it.
+1. confirm the **Expected resolved rule** above,
+2. keep the rule **Enabled**,
+3. leave **Block on failure** off,
+4. add it to the draft.
 
-Learn more: [Generate Enforceable Data Quality Rules from Business Rules](../solutions/business-rules-to-data-quality.md).
+!!! important "Custom Expression must remain the fallback"
+    The final requirement deliberately contains arithmetic that the structured rule types cannot preserve. Confirm that FabricOps resolves it to `custom_expression`, review the constrained PySpark expression, and complete the required **Engineering review** before freeze.
 
-## 5. Manifest & Freeze
+If AI resolves one of these requirements to a different rule, do not accept it just to continue the demo. Refine the business wording until the intended deterministic rule is produced.
 
-Open **Manifest & Freeze** and review the complete contract.
+## 5. Confirm the complete DQ contract
+
+Before freezing, the contract should exercise all nine supported runtime DQ types and both Value List behaviors:
+
+| Coverage | Expected |
+| --- | --- |
+| Completeness | ✓ |
+| Uniqueness | ✓ |
+| Whitelist | ✓ `value_set / allow` |
+| Blacklist | ✓ `value_set / block` |
+| Range | ✓ |
+| Pattern | ✓ |
+| Column Relationship | ✓ |
+| Conditional Completeness | ✓ |
+| Conditional Values | ✓ |
+| Custom Expression | ✓ |
+
+This is intentionally broader than a normal contract. The Guided Demo uses it as the canonical Fabric integration exercise for the complete DQ authoring and execution path.
+
+## 6. Freeze every participating contract
+
+Freeze the three source contracts and the `curated_orders` target contract. Step 4 must select the exact frozen versions for all four participating tables; otherwise Guardrail Coverage correctly reports that the governed source → target path is not ready.
+
+## 7. Manifest & Freeze
+
+Open **Manifest & Freeze** and review the complete contract, including the DQ rules above.
 
 Choose **Save Data Contract** while the version is still a draft. When it is ready for Engineering validation, choose **Freeze**.
 
@@ -68,7 +125,7 @@ The frozen version is immutable and becomes the exact candidate Engineering sele
 
 ## Expected result
 
-You now have one frozen Data Contract ready for Engineering validation.
+You now have frozen contracts for the complete demo pipeline. `curated_orders` represents all nine DQ rule types, `orders` supplies the source-side Freshness and Source Drift expectations, Schema is represented across the pipeline, and Sensitive Data treatment is configured on the governed target. Step 4 can now exercise every Guardrail stage that the orchestrators actually run.
 
 **Previous:** [Step 2. Run the Development pipeline](02-build-and-run-etl.md)  
 **Next:** [Step 4. Select and validate the Data Contract](04-validate-frozen-data-contract.md)

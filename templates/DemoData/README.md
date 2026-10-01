@@ -12,11 +12,11 @@ These fixtures support one Orders-domain story across setup, Engineering, profil
 
 The later Engineering scenarios reuse the canonical Orders baseline and create their source changes directly in the walkthrough. `modified_datetime` is available as the incremental watermark, and `order_date` can be derived from `order_datetime` when a partition column is needed. Separate incremental, partition, and watermark fixture files are therefore not required.
 
-## Guardrail scenario
+## Guided Demo mutations
 
-`orders_guardrail_failures.csv` contains deliberate independent failures for the later contract/Guardrail validation story, including missing identifiers, duplicate identifiers, negative quantity/price, invalid discount, invalid status, unknown product, missing customer, null watermark, and invalid country.
+Later Engineering and Guardrail scenarios derive their test conditions from the canonical Orders baseline inside the walkthrough. This keeps each mutation visible, reproducible, and attributable to the behavior being demonstrated; no separate incremental, partition, watermark, or Guardrail-failure Orders fixture is required.
 
-The normal baseline remains valid so the first Engineering run is deterministic. Failure fixtures should only be introduced when explicitly testing validation behaviour.
+The normal baseline remains valid so the first Engineering and contract-validation runs are deterministic.
 
 ## File-format variants
 
@@ -37,6 +37,6 @@ Every retained fixture has an explicit Guided Demo owner:
 
 - 0C owns the canonical file-format reads plus the initial Lakehouse/Warehouse seed tables.
 - later Engineering scenarios mutate the canonical Orders source in the walkthrough rather than relying on separate fixture files.
-- the later Guardrail validation walkthrough owns `orders_guardrail_failures.csv`.
+- later Guardrail validation creates a temporary dirty transformed DataFrame in the notebook session and never modifies the canonical fixture.
 
 Add new fixtures only when their owning demo/test scenario is documented alongside them.
