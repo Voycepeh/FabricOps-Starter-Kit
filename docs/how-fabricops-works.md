@@ -107,7 +107,7 @@ Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environ
   Development and Production keep the same logical Bronze, Silver, and Gold architecture, whether those stores are implemented as Lakehouses or Warehouses. The physical Fabric objects differ by environment, but their roles and structure stay aligned 1:1. Once `02_pipeline` is validated in Development against the frozen Data Contract, that validated notebook is promoted to the Engineering Production Workspace through the deployment flow.
 
 - **Project-Specific Consumer Workspace**  
-  Consumers receive approved Production access through native Fabric controls and can use the Fabric interface appropriate to their work. The planned `03_consumption` notebook provides the governed handoff into analytics and AI: consumer-facing context, discovery of existing consumption products, and target-specific accelerators. Data Agent publishing is the first automated target; direct analytics and future Power BI/reporting paths reuse the same governed foundation.
+  Consumers receive approved Production access through native Fabric controls and can use the Fabric interface appropriate to their work. The planned `99_explore` notebook provides the governed handoff into analytics and AI: consumer-facing context, discovery of existing consumption products, and target-specific accelerators. Data Agent publishing is the first automated target; direct analytics and future Power BI/reporting paths reuse the same governed foundation.
 
 
 
@@ -222,7 +222,7 @@ In other words, **Engineering supplies what physically exists; Governance adds w
 | **4. Validate the frozen Data Contract** | Evaluate the exact frozen candidate against the real pipeline. |
 | **5. Activate the Data Contract and promote** | Link the tested contract version to the Data Agreement, activate it for Production, then deploy the validated engineering artifact from Development to Production. |
 | **6. Run the pipeline in Production and grant access** | Run the validated Production workflow, publish governed outputs, then grant approved consumers direct access through native Fabric permissions. |
-| **7. Consume and productize governed data** | Use `03_consumption` to hand governed context to analytics and AI consumers, reuse existing consumption products where appropriate, and publish to targets such as a Fabric Data Agent. |
+| **7. Consume and productize governed data** | Use `99_explore` to hand governed context to analytics and AI consumers, reuse existing consumption products where appropriate, and publish to targets such as a Fabric Data Agent. |
 
 **Steps 3 ↔ 4 are intentionally iterative.** Governance authors the next contract version; Engineering selects that immutable version and reruns the pipeline against it. The loop continues until the governed definition and the real engineering implementation agree.
 
@@ -239,7 +239,7 @@ In other words, **Engineering supplies what physically exists; Governance adds w
 
     5. **Governance activates the tested definition, then Engineering promotes it to Production.** [`widget_data_contract()`](api/reference/widget_data_contract.md) links the exact Data Agreement version and tags one frozen Data Contract version as active for that `table_id`. Frozen versions stay frozen; activation does not change their governed JSON. Development can validate any frozen version. Production is strict: it must resolve exactly one frozen version with `is_active=true` for each linked `table_id`. After activation, the validated engineering artifact is deployed from Engineering Development to Engineering Production through the Fabric Deployment Pipeline.
     6. **Engineering runs the same workflow again in Production and hands off access.** The promoted `02_pipeline` resolves Production stores through `00_env_config`, automatically resolves the active Data Contract, applies the same Read → Transform → Write pattern and Guardrail functions, and publishes the governed output. Successful writes commit the associated runtime Lineage and Source Observation state. Approved consumers then receive access through native Fabric controls and can use standard Fabric interfaces directly.
-    7. **Analytics and AI consumers receive the governed handoff through `03_consumption`.** The interface exposes consumer-facing context, surfaces existing consumption products using the same or overlapping governed tables, and supports target-specific accelerators. One-shot Data Agent publishing is the first automated target; explicit reusable relationship context later extends the same pattern to multiple tables and other consumers.
+    7. **Analytics and AI consumers receive the governed handoff through `99_explore`.** The interface exposes consumer-facing context, surfaces existing consumption products using the same or overlapping governed tables, and supports target-specific accelerators. One-shot Data Agent publishing is the first automated target; explicit reusable relationship context later extends the same pattern to multiple tables and other consumers.
 
 </div>
 
