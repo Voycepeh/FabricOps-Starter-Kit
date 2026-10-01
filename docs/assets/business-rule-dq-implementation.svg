@@ -43,7 +43,7 @@
 <text x="732" y="303" class="m">rule_type + columns + parameters + rationale</text>
 <text x="732" y="329" class="b">Human review before the Data Contract is frozen</text>
 
-<path d="M932 352 V405" class="line"/>
+<path d="M932 352 V390 H313 V425" class="line"/>
 
 <text x="48" y="405" class="ey">DETERMINISTIC RUNTIME</text>
 <rect x="48" y="425" width="530" height="142" rx="7" class="out"/>
