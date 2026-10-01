@@ -4,7 +4,7 @@
 
 ## The problem
 
-Sensitive-data governance is easy to make either too manual or too opaque. Governance users need to identify Direct and Indirect PII, decide how it should be treated, and understand the resulting classification without handing the governed decision over to AI.
+Sensitive-data governance often stops at identifying PII. But knowing that a column contains Direct or Indirect PII is only the first step. Governance users still need to decide how that data should be treated and understand what its classification becomes after that treatment is applied.
 
 ## The solution
 
