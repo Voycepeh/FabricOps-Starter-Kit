@@ -40,7 +40,7 @@ nav:
       - "Step 4 - Select and Validate Data Contract": guided-demo/04-validate-frozen-data-contract.md
       - "Step 5 - Activate Data Contract and Promote": guided-demo/05-activate-data-contract-and-promote.md
       - "Step 6 - Run Production and Grant Access": guided-demo/06-run-production.md
-      - "Step 7 - Publish to a Data Agent": guided-demo/07-consume-production-data.md
+      - "Step 7 - Governed Consumption": guided-demo/07-consume-production-data.md
   - Download FabricOps:
       - Releases (Python package):
           - Overview: releases/index.md
@@ -81,7 +81,7 @@ nav:
           - Data Access: reference/metadata/metadata_data_access.md      
   - Maintainer:
       - Product Definition: maintainer/product-definition.md
-      - Publish Governed Data to a Data Agent: maintainer/single-table-data-products.md
+      - Governed Consumption & Data Agent Publishing: maintainer/single-table-data-products.md
       - Release Guide: maintainer/index.md
       - Public API & Architecture: maintainer/public-api-architecture.md
       - Explore How FabricOps Functions Work Under the Hood: function-call-graph.md
