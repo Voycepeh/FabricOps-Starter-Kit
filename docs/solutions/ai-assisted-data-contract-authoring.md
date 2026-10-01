@@ -4,104 +4,85 @@
 
 ## The problem
 
-A useful Data Contract has to combine what Engineering actually produced with Governance decisions about meaning, quality, sensitivity, and acceptable behaviour. Recreating technical metadata manually is slow, while allowing AI-generated suggestions to become policy automatically would make the governed definition difficult to trust and review.
+Sensitive-data governance is easy to make either too manual or too opaque. Governance users need to identify Direct and Indirect PII, decide how it should be treated, and understand the resulting classification without handing the governed decision over to AI.
 
 ## The solution
 
-FabricOps makes the Data Contract explicit, versioned, and executable. Microsoft Fabric AI Functions can assist where interpretation is useful, while deterministic FabricOps metadata and Governance decisions remain the source of truth.
+FabricOps keeps the governed decisions explicit while using Microsoft Fabric AI Functions as an optional authoring aid.
 
-The contract combines the observed Engineering definition with Governance-owned decisions rather than asking users to recreate technical metadata manually.
+AI can help identify whether a column is **Direct PII**, **Indirect PII**, or **Not PII** from the available metadata and profile context. Governance reviews the suggestion, chooses the treatment when one is required, and records the classification that applies **after treatment**.
+
+The workflow remains usable without AI. Suggestions accelerate review; Governance remains in control and runtime enforcement stays deterministic.
 
 ## How it works
 
 ```mermaid
 flowchart LR
-    A["Observe Engineering<br/>metadata"] --> B["Author contract"]
-    C["AI-assisted<br/>suggestions"] --> B
-    B --> D["Governance review"]
-    D --> E["Freeze version"]
-    E --> F["Validate in Development"]
-    F --> G["Activate"]
-    G --> H["Enforce in Production"]
-    F -. "iterate" .-> B
+    A["Column metadata<br/>+ profile evidence"] --> B["AI sensitivity<br/>suggestion"]
+    B --> C["Governance review"]
+    C --> D["Select treatment<br/>when required"]
+    D --> E["Post-treatment<br/>classification"]
+    E --> F["Freeze Data Contract"]
+    F --> G["Deterministic<br/>pipeline enforcement"]
 ```
 
-## Implementation details
+## What Governance decides
 
-### What the Data Contract captures
+For each governed column, FabricOps presents sensitivity, treatment, and classification together because the classification should describe the data that downstream users actually receive.
 
-A Data Contract is the governed definition for one `table_id`. Its versioned `contract_payload_json` brings together:
-
-- **Contract lifecycle** — contract identity, version, draft/frozen state, and Production activation.
-- **Table definition** — the governed table, observed columns and data types, and processing configuration.
-- **Enrichment** — descriptions, classifications, and table grain that explain the data.
-- **Guardrails** — executable Schema, Freshness, Source Drift, Data Quality, and Sensitive Data expectations.
-
-Governance authors and reviews the contract through [`widget_data_contract()`](../api/reference/widget_data_contract.md) in `01_governance`.
-
-### Where the definition comes from
-
-Not every part of a Data Contract is authored the same way.
-
-| Source | What it contributes | Role |
-| --- | --- | --- |
-| **FabricOps deterministic capture** | `table_id`, physical table identity, observed columns and data types, profiling and pipeline context, and processing context available from Engineering metadata | Grounds the contract in what Engineering actually produced |
-| **Manual Governance authoring** | Reviewed descriptions, classifications, grain, Guardrail configuration, actions, and other governed decisions | Creates the authoritative business and governance definition |
-| **AI-assisted suggestions** | Descriptions, classifications, Grain & Row Key suggestions, Sensitive Data assessment and treatment, Pattern suggestions, and business-rule interpretation | Accelerates authoring; Governance reviews before applying |
-
-**AI suggestions never become the governed definition simply because AI produced them.** They are proposed authoring inputs. Governance decides what is applied, saved, and frozen.
-
-### What is being captured
-
-For example, the physical columns and data types originate from the Data Catalogue. Governance can then add descriptive Enrichment and executable Guardrails against those same columns. Processing records how the governed target is expected to be written.
-
-This produces one versioned manifest that Engineering can resolve and execute instead of maintaining a separate policy document beside the pipeline.
-
-### Available Guardrails
-
-| Guardrail | What it governs |
+| Decision | Meaning |
 | --- | --- |
-| **Schema** | Whether the real data structure matches the governed definition |
-| **Freshness** | Whether the source or governed data meets its expected freshness |
-| **Source Drift** | Whether source observations have changed outside the accepted expectation |
-| **Data Quality** | Deterministic quality rules such as completeness, uniqueness, allowed values, value rules, and patterns |
-| **Sensitive Data** | Governed treatment of sensitive columns before Data Quality checks and publication. FabricOps supports Mask, Bucket, Tokenize, and Remove. See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for examples and exact runtime behavior. |
+| **Sensitivity** | Whether the column is Direct PII, Indirect PII, or Not PII |
+| **Treatment** | The transformation Governance chooses for sensitive data before publication |
+| **Classification** | The governed classification of the column after the selected treatment is applied |
 
-Guardrails can be configured with **Warn** or **Block** behaviour. The contract records the governed expectation; FabricOps runtime functions perform the actual checks.
+For example, a Direct PII column may require treatment before publication. Once that treatment is selected, Governance records the classification appropriate to the resulting column. A non-PII column with no treatment can simply retain the classification appropriate to its state.
 
-### Where and when enforcement happens
+## Where AI helps
 
-The contract moves through a deliberate Governance ↔ Engineering cycle:
+Sensitive Data governance does not depend on AI.
 
-1. **Author** — Governance works against the real `table_id` in `01_governance`.
-2. **Freeze** — the reviewed contract version becomes immutable.
-3. **Select and validate in Development** — `02_pipeline` selects the exact frozen version and executes its Guardrails against the real pipeline.
-4. **Iterate when needed** — Governance authors another version if the definition changes; Engineering validates that new immutable version again.
-5. **Activate** — the tested frozen version is linked to the Data Agreement and marked active for Production.
-6. **Enforce in Production** — `02_pipeline` automatically resolves the active contract and executes the same governed expectations.
+When enabled, Fabric AI Functions use the available column metadata and profiling context to help assess Direct PII, Indirect PII, or Not PII. Governance reviews the suggestion and remains responsible for the governed treatment and classification.
 
-The runtime enforcement functions are:
+Grain & Row Key candidates are derived deterministically from profile evidence. Business-language translation into enforceable Data Quality rules is a separate AI-assisted workflow; see [Generate Enforceable Data Quality Rules from Business Rules](business-rules-to-data-quality.md).
 
-- [`check_schema()`](../api/reference/check_schema.md)
-- [`check_freshness()`](../api/reference/check_freshness.md)
-- [`check_source_drift()`](../api/reference/check_source_drift.md)
-- [`check_dq()`](../api/reference/check_dq.md)
-- [`check_sensitive_data()`](../api/reference/check_sensitive_data.md)
+<details markdown="1">
+<summary><strong>Under the hood: how AI sensitivity suggestions are produced</strong></summary>
 
-Runtime outcomes are recorded in `METADATA_GUARDRAIL_RESULTS`.
+### What FabricOps gives the AI
 
-### Where AI helps
+FabricOps does not send the whole source table. It builds a compact context from governed metadata and profiling evidence, including the table identity and description plus each column's name, data type, description, current classification, profile statistics, and limited frequency evidence.
 
-Sensitive Data governance does not depend on AI. Governance can classify and configure treatment manually. AI is an optional authoring aid; it is **not the enforcement engine**.
+Raw business-table rows are not included in this context.
 
-Governance can author descriptions, classifications, and Sensitive Data treatments manually. When enabled, Fabric AI Functions can use Data Catalogue and profiling context to suggest descriptions, classifications, and Sensitive Data classification/treatment choices. Grain & Row Key candidates are derived deterministically from profile evidence, not AI. Business-language translation into enforceable Data Quality rules is a separate AI-assisted workflow; see [Generate Enforceable Data Quality Rules from Business Rules](business-rules-to-data-quality.md).
+### How Fabric AI Functions are used
 
-Governance reviews those suggestions in the same authoring workflow as manually entered decisions. Once accepted into a frozen Data Contract, enforcement is deterministic through the FabricOps Guardrail functions.
+FabricOps places the complete instruction into a single-row temporary pandas DataFrame with one column named `fabricops_prompt`, then invokes Microsoft Fabric AI Functions through:
 
-That separation is intentional: **manual Governance authoring is always available; AI can accelerate interpretation-heavy authoring; the approved Data Contract remains explicit and reviewable; Engineering enforcement remains deterministic.**
+```python
+frame.ai.generate_response("{fabricops_prompt}")
+```
+
+This is a one-row AI request. The DataFrame is only the interface used to invoke Fabric AI Functions; FabricOps is not asking the model to process the business table row by row.
+
+The response is expected as structured JSON covering the supplied columns. Before a suggestion is shown, FabricOps validates that referenced columns exist and that the returned sensitivity values use the supported **Direct PII**, **Indirect PII**, or **Not PII** model.
+
+The suggestion remains transient authoring assistance. Governance reviews what should enter the Data Contract; saving, freezing, activation, and runtime enforcement remain explicit FabricOps lifecycle actions.
+
+For the canonical persisted schema and runtime behaviour, use [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md), [METADATA_GUARDRAIL](../reference/metadata/metadata_guardrail.md), and [Sensitive Data Treatments](../reference/sensitive-data-treatments.md).
+
+</details>
+
+## Runtime enforcement
+
+Sensitive Data is a write-side Guardrail. Once a reviewed Data Contract is frozen, validated, and activated, the pipeline applies the governed treatment deterministically through [`check_sensitive_data()`](../api/reference/check_sensitive_data.md) before publication.
+
+FabricOps supports **Mask, Bucket, Tokenize, and Remove**. See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for the exact runtime behaviour.
+
+The separation is deliberate: **AI helps surface potential sensitive data; Governance decides the governed outcome; FabricOps enforces the approved contract deterministically.**
 
 ## Go deeper
 
-For the hands-on workflow, see [Step 3: Author and freeze the Data Contract](../guided-demo/03-author-and-freeze-data-contract.md).
+For the authoring workflow, see [Step 3: Author and freeze the Data Contract](../guided-demo/03-author-and-freeze-data-contract.md).
 
 For the persisted contract schema, see [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).
