@@ -11,6 +11,11 @@ Freezing creates an **immutable Data Contract** candidate for validation. It doe
 
     Learn more: [Sensitive Data Classification & Treatment](../solutions/ai-assisted-data-contract-authoring.md).
 
+!!! note "Scheduled Refresh not showing?"
+    FabricOps reads the current notebook schedule from Microsoft Fabric using the notebook or pipeline execution identity. In the normal Guided Demo setup, the person developing the pipeline should already have **Contributor, Member, or Admin** access to the Engineering workspace. If Scheduled Refresh shows `Unavailable`, confirm that the execution identity can access the notebook and can read its schedule through the Fabric API. `Unavailable` means FabricOps could not observe the schedule; it does not mean that no schedule exists.
+
+    See Microsoft's [workspace roles](https://learn.microsoft.com/en-us/fabric/fundamentals/roles-workspaces) and [List Item Schedules API](https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/list-item-schedules) for the underlying access requirements.
+
 ## 1. Cover the whole pipeline, not only the target
 
 Step 4 validates the complete governed path, so every participating table needs a frozen contract:
