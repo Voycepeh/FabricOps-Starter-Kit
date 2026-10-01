@@ -1,6 +1,6 @@
 # Step 6. Run the pipeline in Production
 
-**Run the promoted engineering workflow again in Engineering Production using the Production environment configuration and the active Data Contract.**
+**Run the promoted engineering workflow in Engineering Production, publish the governed Production output, then hand direct data access to consumers through native Microsoft Fabric permissions and interfaces.**
 
 There is no new engineering pattern in this step. The point is to execute the same tested workflow in the Production environment.
 
@@ -33,8 +33,18 @@ The key difference is Data Contract resolution:
 
 The same Guardrail functions therefore enforce the Production-active definition, and `pipeline_write()` uses the active governed Processing configuration for each target.
 
+## 3. Grant direct consumer access
+
+Once the governed Production output exists, consumers do not need a FabricOps exploration notebook to use it.
+
+Grant the required access through the appropriate native Fabric path, such as Workspace roles, SQL endpoint grants, or OneLake security roles. Keep access scoped to the approved Production data the consumer needs.
+
+Consumers can then use the standard Fabric experience that fits their work: connect a notebook to the permitted Lakehouse, query the Warehouse or SQL analytics endpoint, use SQL tooling, or connect another supported Fabric consumer. They should not need to recreate the Production engineering pipeline or use FabricOps readers merely to access an already-published table.
+
+FabricOps remains relevant to the access boundary through its effective-access scanning and governance context. It does not need to own the consumer's exploration interface.
+
 ## Expected result
 
-Engineering Production completes the same validated pipeline workflow against Production-configured Fabric items and publishes governed Production outputs using the active Data Contract.
+Engineering Production completes the validated pipeline workflow, publishes governed Production outputs using the active Data Contract, and approved consumers can reach those outputs through native Fabric access controls and interfaces.
 
-**Next:** [Step 7. Consume approved Production data](07-consume-production-data.md)
+**Next:** [Step 7. Publish governed data to a Fabric Data Agent](07-consume-production-data.md)

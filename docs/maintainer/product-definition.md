@@ -52,8 +52,8 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 | 3 | Governance — Author and freeze the Data Contract | Select the governed `table_id`, author descriptive Enrichment and enforced Guardrails, review the schema and processing definition, and freeze an immutable table-centric version. Do not link a Data Agreement at authoring time. |
 | 4 | Engineering Development — Select and validate | Use the current notebook's `METADATA_DATA_LINEAGE` to discover linked `table_id` values, select one frozen version independently per table, and validate the ETL. Failed validation returns to Step 3 for a new frozen version. |
 | 5 | Governance — Link the Data Agreement and activate | Select the tested frozen version, explicitly link the required exact Data Agreement version, and activate the contract for Production. |
-| 6 | Engineering Production — Promote and run | Promote the validated `02_pipeline`. Production uses the same notebook Lineage scope and automatically resolves exactly one active Data Contract per linked `table_id`; zero or multiple active versions fail resolution. |
-| 7 | Consumer — Use approved Production data directly | Use `99_explore` in a Project-Specific Consumer workspace to consume approved Production data. |
+| 6 | Engineering Production — Promote, run, and hand off access | Promote and run the validated `02_pipeline`. Production automatically resolves the active Data Contract, publishes governed outputs, and approved consumers receive access through native Fabric controls. |
+| 7 | Consumption — Consume and productize governed data | Use `99_explore` as the consumer and analytics-engineering handoff: review governed context, discover existing consumption products, consume data directly, or publish to a target such as a Fabric Data Agent. |
 
 ## Canonical operating decisions
 
@@ -64,73 +64,19 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 | Development | Engineering Development supports exploration, pipeline development, profiling, testing, and review. |
 | Production | Engineering Production contains approved recurring pipelines and durable Production outputs. |
 | Standard pipeline approach | PySpark is the standard for repeatable `02_pipeline` workflows. |
-| Consumption | Project-Specific Consumer workspaces consume approved Production data for project-level AI, BI, analysis, and data science. |
-| One-off analysis | Important `99_explore` work must be preserved when reproducibility is required. |
+| Consumption | Approved consumers can use native Fabric permissions and interfaces directly. `99_explore` is the governed handoff for analytics and AI consumers, exposing reusable context and consumption accelerators without replacing native Fabric access. |
+| Consumption products | FabricOps should surface existing products that use the same or overlapping governed tables before creating another. Data Agent publishing is the first automated target; Power BI and other consumers remain parallel paths. |
 
-## Canonical `02_pipeline` operating model
+## Canonical engineering boundary
 
-FabricOps standardizes the governed boundaries around ETL without taking ownership of the engineer's business transformation logic.
+`02_pipeline` is the repeatable engineering workflow. FabricOps governs the boundaries around the engineer's transformation rather than replacing the transformation itself.
 
-**0. Environment → E. Extract → T. Transform → L. Load**
+- **Read:** resolve the governed source, apply source-side checks, read the data, and capture the applicable profile, lineage, and source evidence.
+- **Transform:** remains project-specific engineering logic.
+- **Write:** apply target-side checks and the governed load strategy, persist the target, then capture the resulting profile, lineage, and runtime evidence.
+- **Ownership:** one governed target `table_id` has one owning pipeline/notebook writer.
 
-### 0. Environment
-
-`00_env_config` establishes whether the pipeline is running in Engineering Development or Engineering Production and therefore which governed definitions apply.
-
-- **Development** supports current authoring and testing, including testing a selected Data Contract.
-- **Production** uses the approved active Data Contract as the governed runtime definition.
-
-### R. Read
-
-Read establishes the governed source inputs before transformation.
-
-For one or more source table IDs, the pipeline:
-
-- defines the source tables in play
-- resolves the applicable source Guardrails from the selected or active Data Contract, or from current Guardrail metadata during Development authoring
-- checks source schema, freshness, and change state before the business-data read
-- reads each source table into a DataFrame
-- runs data-quality checks on the DataFrame being processed
-- profiles and registers a source only when the DataFrame represents the complete physical table, updating the relevant Data Profiled and Data Lineage metadata
-
-The governed preparation and check functions are table-scoped. Engineers compose multiple governed source and target flows by repeating the same pattern for each relevant table relationship, so one `02_pipeline` can contain multiple reads, transformations, and writes without requiring a single multi-table orchestration call.
-
-A filtered or aggregated source DataFrame must not replace the latest valid complete-table source profile.
-
-### T. Transform
-
-Transform is intentionally user-defined.
-
-The engineer applies the business logic required to turn validated source DataFrames into one or more target DataFrames. FabricOps governs the inputs and outputs around this step without prescribing the transformation itself.
-
-When a transformation combines multiple source DataFrames, the engineer remains responsible for the business semantics of that combination. FabricOps continues to govern each source and target boundary independently, including the applicable Guardrails, load strategy, and persistence behaviour.
-
-### W. Write
-
-Write establishes the governed target outputs and persists them.
-
-For one or more target table IDs, the pipeline:
-
-- defines the target tables in play
-- resolves the applicable target Guardrails and governed load strategy from the selected or active Data Contract, or from current Development authoring
-- validates target schema and data quality before persistence
-- records DQ outcomes so written data can be traced back to the relevant Guardrail Results
-- prepares the DataFrame for the governed load strategy and adds FabricOps audit, lifecycle, and other required technical columns
-- writes the target using the applicable governed load behaviour
-- reads the persisted target back as a complete table
-- profiles and registers that complete persisted target, updating the relevant Data Profiled and Data Lineage metadata
-
-Each governed target is prepared and written using its resolved load strategy and parameters. The same table-scoped pattern can therefore be repeated for multiple targets in one notebook.
-
-The governed load strategy controls how the target is maintained. It does not define the engineer's business transformation logic.
-
-One governed target `table_id` should have one owning pipeline/notebook writer. The frozen Data Contract records that owner together with the authoritative load strategy. Multiple independent writers are unsafe because they can race, duplicate writes, overwrite state, break SCD history, or use conflicting target assumptions.
-
-The Source Drift Guardrail detects whether previously consumed source data mutated or disappeared. The source table's governed load strategy defines allowed source changes: for example, append expects historical source data to remain stable. The downstream target identity selects that target's last-successful Source Observation baseline; the target's own write strategy does not determine drift compatibility.
-
-Raw `METADATA_SOURCE_OBSERVATION` rows use `observation_status="observed"` and are attempt evidence, not an accepted baseline. Only a successful physical target write appends `committed` rows for the same logical notebook name, source `table_id`, and target `table_id` relationship.
-
-**FabricOps governs the boundaries around ETL rather than replacing ETL.** It standardizes environment resolution, contracts, Guardrails, source observation, profiling, lineage, load-strategy resolution, and governed persistence while leaving transformation logic with the engineer.
+Detailed read/write sequencing, source-observation behaviour, load-strategy mechanics, and API contracts belong in the Guided Demo and technical/reference documentation rather than this product definition.
 
 ## Product components
 
@@ -140,11 +86,11 @@ Provides reusable FabricOps helpers and orchestrators for Fabric notebook workfl
 
 ### Notebook templates
 
-Provide the user-facing implementation pattern for configuring workspaces, creating Governance records, building pipelines, reviewing Data Catalogue, profile, lineage, source observation, Guardrail Result, and contract records, and exploring approved data. The templates make the planned FabricOps workflow visible and repeatable rather than hiding it behind a separate orchestration layer.
+Provide the user-facing implementation pattern for configuring workspaces, creating Governance records, building pipelines, and reviewing Data Catalogue, profile, lineage, source observation, Guardrail Result, and contract records. The templates make the planned FabricOps workflow visible and repeatable rather than hiding it behind a separate orchestration layer.
 
 ### Shared metadata model
 
-Connects Governance intent with recorded Engineering metadata. Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Source Observation, Enrichment, Guardrails, Guardrail Results, and Data Agreement records feed the normal operating workflow. A Data Contract version freezes the governed expectation for one table, including the applicable processing definition such as load strategy and parameters. Development selects frozen versions independently for each `table_id` linked to the current notebook; Governance links the tested version to an exact Data Agreement version during activation; Production automatically resolves exactly one active version per linked table. A standardised promotion mechanism remains planned. Candidate implementation paths are Fabric deployment or pipeline approval, Git-based CI/CD, or a controlled manual approval-and-ferry process.
+Connects Governance intent with recorded Engineering metadata. Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Source Observation, Enrichment, Guardrails, Guardrail Results, and Data Agreement records feed the normal operating workflow. A Data Contract version freezes the governed expectation for one table, including its processing definition. Development validates frozen versions; Governance links the tested version to an exact Data Agreement version and activates it; the validated engineering artifact is promoted through the Fabric Deployment Pipeline; Production resolves the active contract.
 
 The metadata model is not only documentation. It is the persistent context that allows Governance, Engineering, Production validation, downstream consumers, and future AI-assisted workflows to reason from the recorded Catalogue structure, profiles, lineage, source observations, Guardrail definitions and results, Data Agreements, Data Contracts, and governance decisions.
 
@@ -152,30 +98,28 @@ The metadata model is not only documentation. It is the persistent context that 
 
 The Guided Demo owns maintained execution instructions and contextual implementation rationale. Technical documentation owns detailed notebook, metadata, and Python API contracts. The Glossary owns user-facing term definitions and organizes them into FabricOps, Governance, and Engineering concepts.
 
-## Future product direction: AI-augmented workflows
+## AI-assisted capabilities
 
-**AI-assisted FabricOps workflows should augment governed human decisions, not replace them.** FabricOps is not itself an AI model or agent framework. Its opportunity is to use the structured context already captured through the workflow to make Governance, Engineering, and Consumption faster and more consistent.
+AI augments governed human decisions rather than replacing them.
 
-Potential future AI-augmented workflows include:
+Implemented capabilities include:
 
-- **Enrichment suggestions:** propose business names, descriptions and information classifications from schema, profile, and governed context for steward review.
-- **Data Quality and Guardrail authoring:** suggest relevant rule types and parameters from schema, profile distributions, source observations, and previous Guardrail Results while keeping authoring and approval human-controlled.
-- **Data Contract review:** summarize what changed between contract versions, highlight changed Guardrails, load strategy, load-strategy parameters, or writer ownership, and identify items requiring explicit review before activation.
-- **Pipeline review:** inspect the planned `02_pipeline` flow, source observations, applicable Guardrails, governed load strategy, and writer ownership to identify missing validation, profiling, lineage, or unsafe execution patterns before Production.
-- **Failure explanation:** turn Guardrail Results and the resolved source/read/load context into a concise explanation of what failed, which governed rule caused it, and what Engineering should inspect next.
-- **Change-impact analysis:** use contracts, lineage, profile history, source observations, read strategies, and load strategies to explain likely downstream impact before a source, target, or governed execution definition changes.
-- **Governed discovery:** answer questions such as what produces a table, which assets depend on a source, or which governed datasets have quality issues using FabricOps metadata rather than inferred notebook context alone.
-- **Consumer context preparation:** assemble a compact governed context package from active contracts, Catalogue metadata, lineage, profiles, and approved Production data for `99_explore`, BI, Data Agents, analytics, and data science work.
+- **AI-assisted Data Contract authoring:** governed schema and profile evidence can be used to suggest descriptions, grain, and sensitive-data context for human review.
+- **Business Rules to Data Quality:** plain-language requirements can be translated into supported deterministic DQ rules, with constrained custom PySpark boolean expressions only when needed.
 
-These capabilities are future direction unless separately implemented and documented. Human owners remain responsible for approval, activation, promotion, and Production decisions.
+Classification, treatment, contract approval, activation, promotion, and Production decisions remain human-governed.
 
-## Future product direction: analysis preservation
+## Active product direction
 
-Engineering Development is intentionally disposable. When important `99_explore` work must be reproduced later, FabricOps should support an analysis archive or analysis packet that preserves enough context to understand and rerun the work.
+The active next product direction is **governed consumption**.
 
-!!! note "Future direction"
+`99_explore` keeps its current name and evolves into the handoff from governed Production data to analytics and AI consumers. Native Fabric permissions remain the access mechanism; FabricOps adds reusable consumer-facing context derived from existing authoritative metadata.
 
-    This is not a fully implemented Production capability. The intended purpose is reproducibility: preserving the notebook, execution context, input references or extracts, outputs, ownership, and related Governance context at an appropriate level.
+The first planned automated accelerator is **one-shot Fabric Data Agent publishing**: select an activated Production table, assemble its governed context, check for an existing consumption product with the same or overlapping scope, configure the native Data Agent, and leave it ready for review and testing.
+
+Multi-table consumption will require explicit, reusable relationship context. FabricOps can provide deterministic relationship evidence, but a human confirms relationship intent. Consumption-product discovery should surface overlap without assuming that overlapping products are automatically duplicates.
+
+Data Agents are the first planned automated destination, not the definition of consumption. Direct notebooks, SQL, Lakehouses, Warehouses, Power BI, reporting, and future consumers can reuse the same governed Production foundation.
 
 ## Documentation page ownership
 
