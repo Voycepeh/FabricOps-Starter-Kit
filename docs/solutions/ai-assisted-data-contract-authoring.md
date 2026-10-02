@@ -40,7 +40,10 @@ The core of the workflow is the governed decision itself, not a sequence of AI s
 
 Together, these decisions form the sensitive-data portion of the **Data Contract**. Fabric AI assists during authoring, but the reviewed contract is the boundary between suggestion and enforcement:
 
-**Metadata + profile evidence → AI-assisted suggestions → Governance reviews the three decisions → Data Contract → deterministic pipeline enforcement**
+- FabricOps uses metadata and profile evidence as context for AI-assisted suggestions.
+- Governance reviews the sensitivity, treatment, and post-treatment classification.
+- The reviewed decisions are captured in the Data Contract.
+- Once activated, the pipeline enforces the approved treatment deterministically.
 
 ## What Governance decides
 
