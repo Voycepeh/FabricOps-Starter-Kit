@@ -28,43 +28,16 @@ AI therefore accelerates the workflow, while the final decision lies with a huma
 
 ## How it works
 
-The core of the workflow is the governed decision itself, not a sequence of AI steps:
+FabricOps separates the parts that need human judgement from the parts AI can accelerate and the parts the platform can enforce consistently.
 
-| Governance decision | What FabricOps captures | AI assistance |
-| --- | --- | --- |
-| **1. Sensitivity** | Direct PII, Indirect PII, or Not PII | Suggests a first-pass PII type from metadata and profile evidence |
-| **2. Treatment** | Mask, Bucket, Tokenize, or Remove for sensitive columns | Suggests a supported treatment and parameters |
-| **3. Post-treatment classification** | The classification of the data downstream consumers will receive | Remains an explicit Governance decision in the current implementation |
-
-Together, these decisions form the sensitive-data portion of the **Data Contract**. Fabric AI assists during authoring, but the reviewed contract is the boundary between suggestion and enforcement:
-
-- FabricOps uses metadata and profile evidence as context for AI-assisted suggestions.
-- Governance reviews the sensitivity, treatment, and post-treatment classification.
-- The reviewed decisions are captured in the Data Contract.
-- Once activated, the pipeline enforces the approved treatment deterministically.
-
-## What Governance decides
-
-For each governed column, FabricOps presents sensitivity, treatment, and classification together because the classification should describe the data that downstream users actually receive.
-
-| Decision | Meaning |
+| Responsibility | What happens |
 | --- | --- |
-| **Sensitivity** | Whether the column is Direct PII, Indirect PII, or Not PII |
-| **Treatment** | The transformation Governance chooses for sensitive data before publication |
-| **Classification** | The governed classification of the column after the selected treatment is applied |
-
-For example, a Direct PII column may require treatment before publication. Once that treatment is selected, Governance records the classification appropriate to the resulting column. A non-PII column with no treatment can simply retain the classification appropriate to its state.
-
-## Where AI helps
-
-Sensitive Data governance does not depend on AI.
-
-When enabled, Fabric AI Functions use the available column metadata and profiling context to help assess Direct PII, Indirect PII, or Not PII. Governance reviews the suggestion and remains responsible for the governed treatment and classification.
-
-Grain & Row Key candidates are derived deterministically from profile evidence. Business-language translation into enforceable Data Quality rules is a separate AI-assisted workflow; see [Generate Enforceable Data Quality Rules from Business Rules](business-rules-to-data-quality.md).
+| **Human configures and decides** | Review or change the sensitivity and treatment for each governed column, then record the final post-treatment classification. |
+| **AI supports** | Uses governed metadata and profile evidence to suggest **Direct PII**, **Indirect PII**, or **Not PII** and, for sensitive columns, a supported treatment and parameters. |
+| **FabricOps handles deterministically** | Validates supported values and treatment parameters, records the reviewed decisions in the Data Contract, and applies the approved **Mask, Bucket, Tokenize, or Remove** treatment when the pipeline writes the governed output. |
 
 <details markdown="1">
-<summary><strong>Under the hood: how AI sensitivity suggestions are produced</strong></summary>
+<summary><strong>Under the hood: how AI suggestions and enforcement work</strong></summary>
 
 ### What FabricOps gives the AI
 
@@ -86,19 +59,31 @@ This is a one-row AI request. The DataFrame is only the interface used to invoke
 
 The response is expected as structured JSON covering the supplied columns, including the suggested PII type, reason, treatment, action, and treatment parameters. Before a suggestion is shown, FabricOps validates the returned columns and values against the supported sensitive-data model.
 
-The suggestion remains transient authoring assistance. A human reviews or changes the sensitivity and treatment, then records the final post-treatment classification. Saving, freezing, and activation remain explicit FabricOps lifecycle actions; once activated, the approved treatment is applied deterministically by the pipeline.
+### How the approved decision is enforced
 
-For the canonical persisted schema and runtime behaviour, use [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md), [METADATA_GUARDRAIL](../reference/metadata/metadata_guardrail.md), and [Sensitive Data Treatments](../reference/sensitive-data-treatments.md).
+The AI suggestion is authoring assistance only. A human reviews or changes the sensitivity and treatment, then records the final post-treatment classification.
+
+Once the reviewed Data Contract is frozen, validated, and activated, FabricOps uses those approved decisions when the pipeline writes the data. For example, a column approved for masking is masked before the governed output is published. The AI is not asked to make the decision again during pipeline execution.
+
+For the canonical persisted schema and treatment behaviour, use [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md), [METADATA_GUARDRAIL](../reference/metadata/metadata_guardrail.md), and [Sensitive Data Treatments](../reference/sensitive-data-treatments.md).
 
 </details>
 
-## How FabricOps applies the treatment
+## Example
 
-Once the Data Contract is activated, FabricOps automatically applies the approved treatment when the pipeline writes the data. For example, a column marked for masking is masked before the governed output is published.
+<details markdown="1">
+<summary><strong>Example: protecting a sensitive customer column</strong></summary>
 
-FabricOps supports **Mask, Bucket, Tokenize, and Remove**. The treatment is applied deterministically, so the pipeline follows the approved Data Contract rather than asking AI to make the decision again.
+Suppose profiling and metadata show a customer column that contains sensitive identifying information.
 
-See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for the exact behaviour of each treatment.
+1. **AI supports the first pass.** FabricOps provides the governed metadata and profile evidence to Fabric AI Functions, which can suggest that the column is **Direct PII** and propose one of the supported treatments.
+2. **A human makes the final decision.** The reviewer can accept or change the sensitivity and treatment, configure any required treatment parameters, and record the appropriate post-treatment classification.
+3. **The Data Contract records the decision.** The reviewed configuration becomes part of the governed contract rather than remaining an AI response.
+4. **FabricOps applies it consistently.** After the contract is activated, the pipeline applies the approved treatment before publishing the governed output.
+
+The same pattern applies to **Mask, Bucket, Tokenize, and Remove**: AI can accelerate authoring, a human owns the final decision, and FabricOps performs the approved treatment deterministically.
+
+</details>
 
 ## Go deeper
 
