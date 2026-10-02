@@ -16,8 +16,6 @@ FabricOps turns sensitive-data governance into a three-step workflow:
 2. **Apply treatment** — for sensitive columns, choose how the data should be handled before publication. FabricOps supports **Mask, Bucket, Tokenize, and Remove**.
 3. **Classify the governed output** — record the classification that applies **after treatment**, so it describes the data downstream consumers actually receive.
 
-**Sensitivity → Treatment → Post-treatment Classification**
-
 These decisions are captured in the Data Contract. Once the reviewed contract is frozen, validated, and activated, FabricOps applies the approved treatment deterministically in the data pipeline.
 
 ### AI-assisted authoring
