@@ -24,7 +24,7 @@ FabricOps taps into Microsoft Fabric AI capabilities to make the authoring workf
 
 Governance reviews and can change those suggestions, then records the final post-treatment classification. Classification is deliberately not inferred automatically by the current AI suggestion path; it remains an explicit governance decision describing the governed output.
 
-AI therefore accelerates the workflow without becoming the governance authority: **AI suggests → Governance decides → Data Contract records → Pipeline enforces**.
+AI therefore accelerates the workflow while keeping the human in control: **AI suggests → Human decides → Data Contract records → Pipeline enforces**.
 
 ## How it works
 
