@@ -4,7 +4,9 @@
 
 ## The problem
 
-Sensitive-data governance often stops at identifying PII. But knowing that a column contains Direct or Indirect PII is only the first step. Governance users still need to decide how that data should be treated and understand what its classification becomes after that treatment is applied.
+Identifying sensitive data is only the first step. The more important governance decision often comes next: what should happen to that data?
+
+Governance users still need to decide how Direct or Indirect PII should be treated and understand what its classification becomes after that treatment is applied.
 
 ## The solution
 
