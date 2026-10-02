@@ -89,4 +89,6 @@ The same pattern applies to **Mask, Bucket, Tokenize, and Remove**: AI can accel
 
 For the authoring workflow, see [Step 3: Author and freeze the Data Contract](../guided-demo/03-author-and-freeze-data-contract.md).
 
+For the supported Mask, Bucket, Tokenize, and Remove behaviour, see [Sensitive Data Treatments](../reference/sensitive-data-treatments.md).
+
 For the persisted contract schema, see [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md).
