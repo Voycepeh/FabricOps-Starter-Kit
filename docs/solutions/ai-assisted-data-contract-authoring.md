@@ -10,13 +10,23 @@ Governance users still need to decide how Direct or Indirect PII should be treat
 
 ## The solution
 
-FabricOps brings sensitivity, treatment, and classification into one governed workflow.
+FabricOps turns sensitive-data governance into a three-step workflow:
 
-AI can help identify whether a column contains **Direct PII**, **Indirect PII**, or **Not PII**. Governance then reviews the suggestion, chooses the appropriate treatment where required, and records the classification that applies **after treatment**.
+1. **Identify sensitivity** — tag each governed column as **Direct PII**, **Indirect PII**, or **Not PII**.
+2. **Apply treatment** — for sensitive columns, choose how the data should be handled before publication. FabricOps supports **Mask, Bucket, Tokenize, and Remove**.
+3. **Classify the governed output** — record the classification that applies **after treatment**, so it describes the data downstream consumers actually receive.
 
-This keeps AI as an authoring aid while the actual governance decisions remain explicit. Once activated, FabricOps applies the approved treatment deterministically in the data pipeline.
+**Sensitivity → Treatment → Post-treatment Classification**
 
-The workflow also works without AI. Suggestions accelerate sensitive-data discovery; they do not determine the governed outcome.
+These decisions are captured in the Data Contract. Once the reviewed contract is frozen, validated, and activated, FabricOps applies the approved treatment deterministically in the data pipeline.
+
+### AI-assisted authoring
+
+FabricOps taps into Microsoft Fabric AI capabilities to make the authoring workflow faster. Using the metadata and profiling evidence FabricOps has already captured, AI can provide a first-pass suggestion for whether a column contains **Direct PII**, **Indirect PII**, or **Not PII** and, for sensitive columns, suggest one of the four supported treatments.
+
+Governance reviews and can change those suggestions, then records the final post-treatment classification. Classification is deliberately not inferred automatically by the current AI suggestion path; it remains an explicit governance decision describing the governed output.
+
+AI therefore accelerates the workflow without becoming the governance authority: **AI suggests → Governance decides → Data Contract records → Pipeline enforces**.
 
 ## How it works
 
