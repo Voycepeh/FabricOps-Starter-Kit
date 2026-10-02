@@ -1,0 +1,45 @@
+name: Temporary generated-reference refresh
+
+on:
+  push:
+    branches:
+      - chore/regenerate-data-agent-references
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --all-extras --dev
+      - name: Generate owned references twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PYTHONPATH=src
+          uv run python scripts/generate_public_function_call_flows_json.py
+          uv run python scripts/generate_individual_function_reference_pages.py
+          git diff --exit-code > /tmp/first-pass.diff || true
+          uv run python scripts/generate_public_function_call_flows_json.py
+          uv run python scripts/generate_individual_function_reference_pages.py
+          git diff > /tmp/second-pass.diff
+          test -s /tmp/first-pass.diff
+      - name: Remove temporary workflow and commit generated artifacts
+        shell: bash
+        run: |
+          rm .github/workflows/temp-regenerate-data-agent-references.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md .github/workflows/temp-regenerate-data-agent-references.yml
+          git diff --cached --quiet && exit 1
+          git commit -m "docs: regenerate Data Agent references"
+          git push
