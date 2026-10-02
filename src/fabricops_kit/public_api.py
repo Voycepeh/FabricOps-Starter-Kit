@@ -25,9 +25,9 @@ SUPPORTED_PUBLIC_API = (
 # Preview public functions remain importable for evaluation, but are not part of
 # the supported compatibility surface until promoted in a future release.
 PREVIEW_PUBLIC_API = (
-    "fabricops_kit.consumption.build_consumer_context.build_consumer_context",
-    "fabricops_kit.consumption.render_data_agent_instructions.render_data_agent_instructions",
-    "fabricops_kit.consumption.create_data_agent.create_data_agent",
+    "fabricops_kit.data_agent.build_consumer_context.build_consumer_context",
+    "fabricops_kit.data_agent.render_data_agent_instructions.render_data_agent_instructions",
+    "fabricops_kit.data_agent.create_data_agent.create_data_agent",
     "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
     "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
     "fabricops_kit.widgets.widget_data_contract.widget_data_contract",

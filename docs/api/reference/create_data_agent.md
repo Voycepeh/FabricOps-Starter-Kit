@@ -12,9 +12,9 @@ Create and configure one native Fabric Data Agent from an activated Production t
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/consumption/create_data_agent.py:8`
+`fabricops_kit/data_agent/create_data_agent.py:8`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/consumption/create_data_agent.py#L8-L82">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agent/create_data_agent.py#L8-L82">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
