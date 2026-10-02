@@ -39,7 +39,7 @@ jobs:
           rm .github/workflows/temp-regenerate-data-agent-references.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md .github/workflows/temp-regenerate-data-agent-references.yml
+          git add -A
           git diff --cached --quiet && exit 1
           git commit -m "docs: regenerate Data Agent references"
           git push
