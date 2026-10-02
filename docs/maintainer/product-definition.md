@@ -106,6 +106,7 @@ Implemented capabilities include:
 
 - **AI-assisted Data Contract authoring:** governed schema and profile evidence can be used to suggest descriptions, grain, and sensitive-data context for human review.
 - **Business Rules to Data Quality:** plain-language requirements can be translated into supported deterministic DQ rules, with constrained custom PySpark boolean expressions only when needed.
+- **Single-table Fabric Data Agent publishing:** an activated Production `table_id` can be resolved into deterministic consumer context and used to create and configure a native Fabric Data Agent without copying governed metadata by hand.
 
 Classification, treatment, contract approval, activation, promotion, and Production decisions remain human-governed.
 
@@ -115,7 +116,7 @@ The active next product direction is **governed consumption**.
 
 `99_explore` keeps its current name and evolves into the handoff from governed Production data to analytics and AI consumers. Native Fabric permissions remain the access mechanism; FabricOps adds reusable consumer-facing context derived from existing authoritative metadata.
 
-The first planned automated accelerator is **one-shot Fabric Data Agent publishing**: select an activated Production table, assemble its governed context, check for an existing consumption product with the same or overlapping scope, configure the native Data Agent, and leave it ready for review and testing.
+The first implemented automated accelerator is **single-table Fabric Data Agent publishing**: select an activated Production table, assemble its governed context, configure the native Data Agent, and leave it ready for review and testing. Consumption-product registration and overlap discovery remain later work.
 
 Multi-table consumption will require explicit, reusable relationship context. FabricOps can provide deterministic relationship evidence, but a human confirms relationship intent. Consumption-product discovery should surface overlap without assuming that overlapping products are automatically duplicates.
 

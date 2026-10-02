@@ -12,17 +12,25 @@ The consumer should be able to select approved Production table(s) and see the u
 
 This is derived from authoritative FabricOps metadata rather than maintained again in the consumption notebook.
 
-## Reuse before creating
+## Create a single-table Data Agent
 
-Before creating another consumption artifact, FabricOps should show existing registered products that use the same or overlapping governed tables.
+FabricOps V1 exposes a thin programmatic handoff:
 
-An exact table set is a strong reuse signal, but purpose, owner, audience, relationships, and product type still matter. The user can reuse or extend an existing product or intentionally create another when its purpose is genuinely different.
+```python
+from fabricops_kit import build_consumer_context, create_data_agent
 
-## First accelerator: Fabric Data Agent
+consumer_context = build_consumer_context(table_id=production_table_id)
+display(consumer_context)
 
-The first automated Step 7 target is one-shot Data Agent publishing.
+result = create_data_agent(
+    table_id=production_table_id,
+    target_workspace_id=consumer_workspace_id,
+    display_name="Governed orders",
+)
+display(result)
+```
 
-For one governed table, FabricOps can generate the Data Agent-ready context and configure the native agent without requiring the user to rewrite the Data Contract and catalogue information manually.
+The context is derived deterministically from the active frozen Data Contract, `METADATA_DATA_CATALOGUE`, Enrichment, Guardrails, and configured Production store. It excludes credentials, tokens, profile samples, and raw sensitive values. The creator then creates a native Data Agent, adds its staging Lakehouse or Warehouse datasource, selects the governed table, and applies separate agent and datasource instructions.
 
 The target flow is:
 
@@ -32,9 +40,7 @@ Approved Production table
 FabricOps governed context
         |
         v
-03_consumption
-        |
-        +--> discover existing products
+99_explore or another consumer notebook
         |
         +--> generate Data Agent context
         |
@@ -46,7 +52,17 @@ Test and consume
 
 !!! note "Feature implementation status"
 
-    One-shot Data Agent publishing and the `99_explore` revamp are planned capabilities and are not yet part of the released public API.
+    The single-table API is Preview. Multi-table agents, relationship authoring, product registration and overlap detection, evaluation, and automatic publication remain deliberately out of scope.
+
+## Prerequisites
+
+- Run on a [Fabric capacity that supports Data Agents](https://learn.microsoft.com/fabric/data-science/data-agent-concept).
+- Give the caller access to the governed Production Lakehouse or Warehouse and permission to create and configure items in the target workspace.
+- Configure both physical source identifiers through `00_env_config`; the flow does not infer a default Lakehouse.
+- Activate one frozen Production Data Contract linked to an exact Data Agreement version.
+- Use the current [Fabric Data Agent REST APIs](https://learn.microsoft.com/rest/api/fabric/data-agent/items) for item creation and the documented staging datasource and instruction resources. These APIs may remain Preview; review Microsoft's current limitations before production adoption.
+
+FabricOps acquires the Fabric API token from `notebookutils`; do not paste or persist bearer tokens. Permission failures retain the underlying Fabric HTTP status and response details.
 
 ## Multi-table extension
 
