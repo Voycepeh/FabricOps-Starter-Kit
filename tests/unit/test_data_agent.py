@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from fabricops_kit.consumption import shared
+from fabricops_kit.data_agent import shared
 
 
 def _config(kind="lakehouse"):
