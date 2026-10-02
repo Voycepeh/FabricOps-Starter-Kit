@@ -69,6 +69,45 @@ Use these patterns deliberately:
 - End user-facing procedure pages with an `Expected result` or equivalent outcome and a clear `Next` link where appropriate.
 - Keep terminology exactly aligned with FabricOps canonical terms such as Governance, Engineering Development, Engineering Production, Project-Specific Consumer, Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Enrichment, Guardrails, Guardrail Results, Data Agreement, and Data Contract.
 
+### Featured Solutions page pattern
+
+Treat every page listed under **Featured Solutions** in `mkdocs.yml` as part of one documentation family. Standardize the page around the same reader journey:
+
+```text
+# Solution title
+
+Short lead sentence.
+
+## The problem
+## The solution
+## How it works
+## Under the hood
+## Example
+## Go deeper
+```
+
+Apply the sections as follows:
+
+- **The problem** states the concrete problem without turning into a long product pitch.
+- **The solution** states what FabricOps changes and the practical outcome.
+- **How it works** explains the visible operating flow. Where relevant, separate what a human configures or decides, what AI supports, and what FabricOps does deterministically.
+- **Under the hood** contains implementation mechanics: metadata inputs, AI context and outputs, scanners, generators, validation, enforcement, or runtime behaviour. Keep implementation mechanics out of the main user flow unless the user must act on them.
+- When **Under the hood** benefits from a visual, prefer an editable, source-controlled SVG diagram. Follow the FabricOps diagram standard at https://github.com/cathrynlavery/diagram-design for layout, typography, spacing, hierarchy, alignment, styling, and information density.
+- The SVG must explain the real implementation flow rather than act as a marketing illustration. Use canonical FabricOps metadata, function, and component names from the current implementation. Where relevant, visually distinguish human decisions, AI-assisted suggestions or translation, and deterministic FabricOps validation, persistence, or enforcement.
+- Keep the diagram focused enough to understand on its own. Preserve useful implementation detail, but move secondary explanation into nearby prose rather than overcrowding the SVG.
+- **Example** makes the feature concrete with a compact scenario, sample input/output, screenshot, or other maintained demonstration. Prefer maintainable text or screenshots until a demo video exists; do not block a page on video production.
+- **Go deeper** links to the most relevant Guided Demo step, reference material, implementation page, or adjacent solution.
+
+Omit a standard section only when it genuinely adds no value. Do not invent alternative `##` headings for the same role. Existing material such as `The big picture`, `Consumption flow`, `Implementation details`, `Runtime enforcement`, or feature-specific mechanics should be moved beneath the appropriate standard heading, usually as `###` subsections.
+
+For AI-assisted solutions, explicitly distinguish:
+
+- **Human** — reviews and makes the governed decision where the workflow requires approval.
+- **AI** — suggests, interprets, or translates from supplied metadata, profile evidence, or context.
+- **FabricOps** — performs deterministic persistence, validation, enforcement, scanning, generation, or execution.
+
+Do not describe AI suggestions as authoritative governance decisions. Keep terminology aligned with the implemented metadata and current Guided Demo.
+
 ### Guided Demo page pattern
 
 Guided Demo action pages should normally follow this structure where applicable:

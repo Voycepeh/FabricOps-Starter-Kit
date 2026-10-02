@@ -256,6 +256,23 @@ Human-facing pages should be scannable before they are read in detail. Use the d
 
 The Maintainer Release Guide has a separate source-of-truth rule: `.agents/skills/fabricops-release/SKILL.md` owns the workflow and `docs/maintainer/index.md` is synchronised from it.
 
+### Featured Solutions page pattern
+
+Pages listed under **Featured Solutions** in `mkdocs.yml` are one documentation family and should use the same reader-facing structure, even when the implementation behind each solution differs.
+
+Use this order:
+
+1. **The problem** — the concrete user or platform problem the solution addresses.
+2. **The solution** — the FabricOps approach and the outcome it enables.
+3. **How it works** — the user-facing flow. Make the division of responsibility explicit where relevant: what a human configures or decides, what AI assists with, and what FabricOps performs deterministically.
+4. **Under the hood** — implementation detail that explains how the solution is powered, including AI inputs/outputs, deterministic enforcement, metadata, scanners, generators, or runtime mechanics as applicable. Keep this separate from the user-facing flow.
+5. **Example** — a concrete, compact example. Prefer text or screenshots when they are the clearest maintained artifact; a demo video may replace or supplement them later.
+6. **Go deeper** — links to the relevant Guided Demo step, reference page, implementation detail, or related solution. Use descriptive link labels rather than repeating the page narrative.
+
+A section may be omitted only when it genuinely has no useful content for that solution. Do not replace these headings with near-equivalent top-level sections such as `The big picture`, `Implementation details`, `Runtime enforcement`, or `Consumption flow`; put that material under the appropriate standard section instead. Feature-specific detail should normally be expressed as `###` subsections inside the standard structure.
+
+For AI-assisted solutions, do not imply that AI owns governed decisions. Describe AI as suggestion or translation support, identify the evidence or context supplied to it, and keep the final governed decision with a human where that is the implemented workflow. Distinguish this from deterministic FabricOps validation or enforcement.
+
 ### Notebook release snapshots
 
 `templates/notebooks/` is the evolving latest notebook-template surface. At each FabricOps release, preserve the exact release-tag versions of `00_env_config.ipynb` and `02_pipeline.ipynb` under `templates/releases/vX.Y.Z/`. The release tag is authoritative. Frozen copies are immutable provenance and migration fixtures: never modernize, reformat, or backport later template changes into them. Publish those exact two notebooks individually as downloadable GitHub Release assets for the matching version; do not require a ZIP bundle. These snapshots remain outside the formal Python package asset lifecycle. Change the skill first rather than independently editing the published guide.
