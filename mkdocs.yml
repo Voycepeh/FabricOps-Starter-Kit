@@ -23,11 +23,12 @@ nav:
   - Home: index.md
   - How FabricOps Works: how-fabricops-works.md
   - Featured Solutions:
+      - Plug-and-Play Data Pipelines with Data Contract Enforcement: solutions/plug-and-play-data-pipelines.md
       - Production Table to Data Agent: solutions/production-table-to-data-agent.md
       - Direct & Indirect PII Discovery & Treatment with Built-in AI Suggestions: solutions/ai-assisted-data-contract-authoring.md
       - Data Quality Rules from Natural Language: solutions/business-rules-to-data-quality.md
-      - Plug-and-Play Data Pipelines with Data Contract Enforcement: solutions/plug-and-play-data-pipelines.md
       - Scan Effective Data Access: solutions/effective-data-access.md
+      - Explore How FabricOps Functions Work Under the Hood: function-call-graph.md
   - Guided Demo:
       - Overview: guided-demo.md
       - "0A - Prepare Fabric Artifacts": guided-demo/00A-prepare-fabric-artifacts.md

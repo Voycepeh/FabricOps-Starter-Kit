@@ -18,7 +18,7 @@ When an activated Production table becomes a Data Agent, FabricOps makes a first
 
 The Data Agent still queries the **actual Production data** through Microsoft Fabric. FabricOps does not copy the business-table rows into the prompt or replace Fabric permissions. It supplies business context that cannot always be inferred safely from the data alone.
 
-![Production Table to Data Agent](../assets/ProductionTableToDataAgent.png)
+![Production Table to Data Agent](../assets/DataAgentsBootstrap.png)
 
 ## Ask instead of guess
 
