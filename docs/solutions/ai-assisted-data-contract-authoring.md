@@ -74,6 +74,8 @@ Raw business-table rows are not included in this context.
 
 ### How Fabric AI Functions are used
 
+![FabricOps AI-assisted sensitive data authoring implementation](../assets/sensitive-data-ai-implementation.svg)
+
 FabricOps places the complete instruction into a single-row temporary pandas DataFrame with one column named `fabricops_prompt`, then invokes Microsoft Fabric AI Functions through:
 
 ```python
@@ -82,9 +84,9 @@ frame.ai.generate_response("{fabricops_prompt}")
 
 This is a one-row AI request. The DataFrame is only the interface used to invoke Fabric AI Functions; FabricOps is not asking the model to process the business table row by row.
 
-The response is expected as structured JSON covering the supplied columns. Before a suggestion is shown, FabricOps validates that referenced columns exist and that the returned sensitivity values use the supported **Direct PII**, **Indirect PII**, or **Not PII** model.
+The response is expected as structured JSON covering the supplied columns, including the suggested PII type, reason, treatment, action, and treatment parameters. Before a suggestion is shown, FabricOps validates the returned columns and values against the supported sensitive-data model.
 
-The suggestion remains transient authoring assistance. Governance reviews what should enter the Data Contract; saving, freezing, activation, and runtime enforcement remain explicit FabricOps lifecycle actions.
+The suggestion remains transient authoring assistance. A human reviews or changes the sensitivity and treatment, then records the final post-treatment classification. Saving, freezing, and activation remain explicit FabricOps lifecycle actions; once activated, the approved treatment is applied deterministically by the pipeline.
 
 For the canonical persisted schema and runtime behaviour, use [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md), [METADATA_GUARDRAIL](../reference/metadata/metadata_guardrail.md), and [Sensitive Data Treatments](../reference/sensitive-data-treatments.md).
 
