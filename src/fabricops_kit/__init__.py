@@ -17,7 +17,7 @@ from .config import (
     setup_metadata_tables,
     setup_notebook,
 )
-from .consumption import (
+from .data_agent import (
     build_consumer_context,
     create_data_agent,
     render_data_agent_instructions,
@@ -66,7 +66,7 @@ CONFIG_EXPORTS = (
     "setup_metadata_tables",
 )
 
-CONSUMPTION_EXPORTS = (
+DATA_AGENT_EXPORTS = (
     "build_consumer_context",
     "render_data_agent_instructions",
     "create_data_agent",
@@ -139,4 +139,4 @@ def _load_package_version() -> str:
 
 __version__ = _load_package_version()
 
-__all__ = [*ACCESS_EXPORTS, *CONFIG_EXPORTS, *CONSUMPTION_EXPORTS, *IO_EXPORTS, *PIPELINE_EXPORTS, *WIDGET_EXPORTS]
+__all__ = [*ACCESS_EXPORTS, *CONFIG_EXPORTS, *DATA_AGENT_EXPORTS, *IO_EXPORTS, *PIPELINE_EXPORTS, *WIDGET_EXPORTS]
