@@ -30,15 +30,17 @@ AI therefore accelerates the workflow without becoming the governance authority:
 
 ## How it works
 
-```mermaid
-flowchart LR
-    A["Column metadata<br/>+ profile evidence"] --> B["AI sensitivity<br/>suggestion"]
-    B --> C["Governance review"]
-    C --> D["Select treatment<br/>when required"]
-    D --> E["Post-treatment<br/>classification"]
-    E --> F["Freeze Data Contract"]
-    F --> G["Deterministic<br/>pipeline enforcement"]
-```
+The core of the workflow is the governed decision itself, not a sequence of AI steps:
+
+| Governance decision | What FabricOps captures | AI assistance |
+| --- | --- | --- |
+| **1. Sensitivity** | Direct PII, Indirect PII, or Not PII | Suggests a first-pass PII type from metadata and profile evidence |
+| **2. Treatment** | Mask, Bucket, Tokenize, or Remove for sensitive columns | Suggests a supported treatment and parameters |
+| **3. Post-treatment classification** | The classification of the data downstream consumers will receive | Remains an explicit Governance decision in the current implementation |
+
+Together, these decisions form the sensitive-data portion of the **Data Contract**. Fabric AI assists during authoring, but the reviewed contract is the boundary between suggestion and enforcement:
+
+**Metadata + profile evidence → AI-assisted suggestions → Governance reviews the three decisions → Data Contract → deterministic pipeline enforcement**
 
 ## What Governance decides
 
