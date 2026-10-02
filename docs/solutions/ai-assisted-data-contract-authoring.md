@@ -92,13 +92,13 @@ For the canonical persisted schema and runtime behaviour, use [METADATA_DATA_CON
 
 </details>
 
-## Runtime enforcement
+## How FabricOps applies the treatment
 
-Sensitive Data is a write-side Guardrail. Once a reviewed Data Contract is frozen, validated, and activated, the pipeline applies the governed treatment deterministically through [`check_sensitive_data()`](../api/reference/check_sensitive_data.md) before publication.
+Once the Data Contract is activated, FabricOps automatically applies the approved treatment when the pipeline writes the data. For example, a column marked for masking is masked before the governed output is published.
 
-FabricOps supports **Mask, Bucket, Tokenize, and Remove**. See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for the exact runtime behaviour.
+FabricOps supports **Mask, Bucket, Tokenize, and Remove**. The treatment is applied deterministically, so the pipeline follows the approved Data Contract rather than asking AI to make the decision again.
 
-The separation is deliberate: **AI helps surface potential sensitive data; Governance decides the governed outcome; FabricOps enforces the approved contract deterministically.**
+See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for the exact behaviour of each treatment.
 
 ## Go deeper
 
