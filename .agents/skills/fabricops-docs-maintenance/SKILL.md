@@ -92,6 +92,9 @@ Apply the sections as follows:
 - **The solution** states what FabricOps changes and the practical outcome.
 - **How it works** explains the visible operating flow. Where relevant, separate what a human configures or decides, what AI supports, and what FabricOps does deterministically.
 - **Under the hood** contains implementation mechanics: metadata inputs, AI context and outputs, scanners, generators, validation, enforcement, or runtime behaviour. Keep implementation mechanics out of the main user flow unless the user must act on them.
+- When **Under the hood** benefits from a visual, prefer an editable, source-controlled SVG diagram. Follow the FabricOps diagram standard at https://github.com/cathrynlavery/diagram-design for layout, typography, spacing, hierarchy, alignment, styling, and information density.
+- The SVG must explain the real implementation flow rather than act as a marketing illustration. Use canonical FabricOps metadata, function, and component names from the current implementation. Where relevant, visually distinguish human decisions, AI-assisted suggestions or translation, and deterministic FabricOps validation, persistence, or enforcement.
+- Keep the diagram focused enough to understand on its own. Preserve useful implementation detail, but move secondary explanation into nearby prose rather than overcrowding the SVG.
 - **Example** makes the feature concrete with a compact scenario, sample input/output, screenshot, or other maintained demonstration. Prefer maintainable text or screenshots until a demo video exists; do not block a page on video production.
 - **Go deeper** links to the most relevant Guided Demo step, reference material, implementation page, or adjacent solution.
 
