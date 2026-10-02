@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+<title id="title">FabricOps AI-assisted sensitive data authoring implementation</title>
+<desc id="desc">FabricOps assembles governed metadata and profile evidence, sends one prompt through Microsoft Fabric AI Functions, validates structured sensitivity and treatment suggestions, keeps the final decisions with a human, records them in the Data Contract, and applies approved treatments deterministically in the pipeline.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#667085"/></marker></defs>
+<rect width="1200" height="620" fill="#ffffff"/>
+<style>
+.t{font:600 22px Arial,sans-serif;fill:#101828}.h{font:600 15px Arial,sans-serif;fill:#101828}.b{font:13px Arial,sans-serif;fill:#344054}.m{font:12px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#475467}.ey{font:600 11px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#667085;letter-spacing:.8px}.box{fill:#fff;stroke:#d0d5dd;stroke-width:1.4}.focus{fill:#eff8ff;stroke:#2e90fa;stroke-width:1.8}.out{fill:#f9fafb;stroke:#98a2b3;stroke-width:1.4}.line{fill:none;stroke:#667085;stroke-width:1.6;marker-end:url(#arrow)}
+</style>
+<text x="48" y="48" class="t">How AI-assisted sensitive data authoring actually works</text>
+<text x="48" y="74" class="b">AI suggests sensitivity and treatment. A human makes the final decisions. The pipeline applies the approved treatment.</text>
+<text x="48" y="118" class="ey">GOVERNED CONTEXT</text>
+<rect x="48" y="138" width="260" height="214" rx="7" class="box"/>
+<text x="68" y="168" class="h">Context assembled by FabricOps</text>
+<text x="68" y="198" class="b">Table identity + description</text>
+<text x="68" y="222" class="b">Column metadata + descriptions</text>
+<text x="68" y="246" class="b">Current classification</text>
+<text x="68" y="270" class="b">Profile statistics</text>
+<text x="68" y="294" class="b">Limited frequency evidence</text>
+<text x="68" y="326" class="m">No raw business-table rows</text>
+<path d="M308 245 H360" class="line"/>
+<text x="372" y="118" class="ey">FABRIC AI FUNCTIONS</text>
+<rect x="360" y="138" width="300" height="214" rx="7" class="focus"/>
+<text x="380" y="168" class="h">One-row temporary pandas DataFrame</text>
+<text x="380" y="201" class="m">fabricops_prompt = full instruction</text>
+<text x="380" y="229" class="b">Context is serialized into one prompt</text>
+<text x="380" y="251" class="b">cell, not sent as business-data rows.</text>
+<text x="380" y="285" class="m">frame.ai.generate_response(</text>
+<text x="380" y="306" class="m">  "{fabricops_prompt}")</text>
+<text x="380" y="334" class="b">Returns structured JSON suggestions</text>
+<path d="M660 245 H712" class="line"/>
+<text x="724" y="118" class="ey">FABRICOPS + HUMAN REVIEW</text>
+<rect x="712" y="138" width="440" height="214" rx="7" class="box"/>
+<text x="732" y="168" class="h">Suggestions become reviewable decisions</text>
+<text x="732" y="199" class="b">PII type: Direct · Indirect · Not PII</text>
+<text x="732" y="223" class="b">Treatment: Mask · Bucket · Tokenize · Remove</text>
+<text x="732" y="247" class="b">Treatment parameters validated by FabricOps</text>
+<text x="732" y="271" class="b">Human accepts or changes sensitivity and treatment</text>
+<text x="732" y="295" class="b">Human sets the post-treatment classification</text>
+<text x="732" y="329" class="m">Approved decisions → Data Contract</text>
+<path d="M932 352 V390 H313 V425" class="line"/>
+<text x="48" y="405" class="ey">DETERMINISTIC PIPELINE</text>
+<rect x="48" y="425" width="530" height="142" rx="7" class="out"/>
+<text x="68" y="455" class="h">Activated Data Contract</text>
+<text x="68" y="485" class="b">The reviewed sensitive-data decisions become the</text>
+<text x="68" y="509" class="b">governed instructions used by the pipeline.</text>
+<text x="68" y="539" class="m">sensitivity · treatment · classification</text>
+<path d="M578 496 H630" class="line"/>
+<rect x="630" y="425" width="522" height="142" rx="7" class="out"/>
+<text x="650" y="455" class="h">Approved treatment is applied on write</text>
+<text x="650" y="485" class="b">FabricOps applies the selected treatment before</text>
+<text x="650" y="509" class="b">the governed output is published.</text>
+<text x="650" y="539" class="m">Mask · Bucket · Tokenize · Remove</text>
+<text x="48" y="600" class="m">AI is used during authoring only; the activated Data Contract drives deterministic pipeline behaviour.</text>
+</svg>
