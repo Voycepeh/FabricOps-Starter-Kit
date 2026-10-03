@@ -17,11 +17,7 @@ from .config import (
     setup_metadata_tables,
     setup_notebook,
 )
-from .data_agent import (
-    build_consumer_context,
-    create_data_agent,
-    render_data_agent_instructions,
-)
+from .data_agent import create_data_agent
 from .io import (
     read_lakehouse_csv,
     read_lakehouse_excel,
@@ -67,8 +63,6 @@ CONFIG_EXPORTS = (
 )
 
 DATA_AGENT_EXPORTS = (
-    "build_consumer_context",
-    "render_data_agent_instructions",
     "create_data_agent",
 )
 

@@ -198,8 +198,6 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'NotebookSetupContext',
         'setup_notebook',
         'setup_metadata_tables',
-        'build_consumer_context',
-        'render_data_agent_instructions',
         'create_data_agent',
         'read_lakehouse_table',
         'write_lakehouse_table',

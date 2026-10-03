@@ -17,10 +17,7 @@ This is derived from authoritative FabricOps metadata rather than maintained aga
 FabricOps V1 exposes a thin programmatic handoff:
 
 ```python
-from fabricops_kit import build_consumer_context, create_data_agent
-
-consumer_context = build_consumer_context(table_id=production_table_id)
-display(consumer_context)
+from fabricops_kit import create_data_agent
 
 result = create_data_agent(
     table_id=production_table_id,
@@ -30,7 +27,7 @@ result = create_data_agent(
 display(result)
 ```
 
-The context is derived deterministically from the active frozen Data Contract, `METADATA_DATA_CATALOGUE`, Enrichment, Guardrails, and configured Production store. It excludes credentials, tokens, profile samples, and raw sensitive values. The creator then creates a native Data Agent, adds its staging Lakehouse or Warehouse datasource, selects the governed table, and applies separate agent and datasource instructions.
+`create_data_agent()` internally derives governed context from the active frozen Data Contract, `METADATA_DATA_CATALOGUE`, Enrichment, Guardrails, and configured Production store. It excludes credentials, tokens, profile samples, and raw sensitive values. The function converts that context into instructions, creates a native Data Agent, adds its staging Lakehouse or Warehouse datasource, selects the governed table, and applies separate agent and datasource instructions.
 
 The target flow is:
 
@@ -42,9 +39,11 @@ FabricOps governed context
         v
 99_explore or another consumer notebook
         |
-        +--> generate Data Agent context
-        |
-        +--> create/configure Data Agent
+        +--> create_data_agent()
+                |
+                +--> build governed context
+                +--> render instructions
+                +--> create/configure Data Agent
         |
         v
 Test and consume

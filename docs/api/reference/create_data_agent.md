@@ -14,7 +14,7 @@ Create and configure one native Fabric Data Agent from an activated Production t
 
 `fabricops_kit/data_agent/create_data_agent.py:8`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agent/create_data_agent.py#L8-L82">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agent/create_data_agent.py#L8-L79">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -91,8 +91,10 @@ Raises for invalid governed sources, authentication, permission, REST, malformed
 
 This Preview API requires a supported Fabric capacity, access to the Production
 Lakehouse or Warehouse, and permission to create and configure Data Agents in
-the target workspace. It creates a staging datasource, selects one table, and
-applies datasource and agent instructions. It does not publish the agent.
+the target workspace. It builds governed consumer context from the active
+Production Data Contract, renders deterministic instructions, creates a staging
+datasource, selects one table, and applies the datasource and agent instructions.
+It does not publish the agent.
 
 </div>
 

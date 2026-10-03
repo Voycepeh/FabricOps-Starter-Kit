@@ -88,6 +88,6 @@ For the exact callable contracts and implementation details, use the generated f
 
 ## Go deeper
 
-See [`create_data_agent()`](../api/reference/create_data_agent.md) for the public creation API, [`build_consumer_context()`](../api/reference/build_consumer_context.md) for context assembly, and [`render_data_agent_instructions()`](../api/reference/render_data_agent_instructions.md) for instruction generation.
+See [`create_data_agent()`](../api/reference/create_data_agent.md) for the single public Preview API that performs the complete governed handoff.
 
 For where this fits in the lifecycle, see [Step 7: Governed Consumption](../guided-demo/07-consume-production-data.md).
