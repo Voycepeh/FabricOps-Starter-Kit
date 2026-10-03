@@ -220,6 +220,41 @@ df = df.coalesce(10)
 
 Do not use either as a default performance fix.
 
+### Join and shuffle habits
+
+Joins and aggregations are common shuffle boundaries, so reduce the amount of data reaching them before tuning partition counts. Select only required columns and filter rows as early as practical. When a large join is repeatedly expensive, inspect whether the data is distributed sensibly for the join key rather than adding `repartition()` automatically.
+
+```python
+filtered_df = (
+    source_df
+    .select("student_id", "programme_code", "status")
+    .filter(F.col("status") == "ACTIVE")
+)
+
+prepared_df = filtered_df.repartition("programme_code")
+joined_df = prepared_df.join(programme_df, "programme_code", "left")
+```
+
+Repartitioning by a join key can help in some workloads, but it also creates a shuffle itself. Use the execution plan and Spark UI to confirm that the extra redistribution is worthwhile. In the Spark UI, large shuffle read/write volumes, uneven task sizes, and long-running straggler tasks are useful signals for shuffle or skew problems.
+
+### Partition sizing and partitioned writes
+
+Avoid both a very small number of oversized partitions and a very large number of tiny partitions. A target around **128 MB per partition** can be a useful starting heuristic for some workloads, but it is not a FabricOps requirement or a universal Spark optimum. Data shape, executor resources, skew, compression, and the operation being performed all affect the right size.
+
+Storage partitioning is a separate decision. Partitioning a large output by a column commonly used for filtering, such as a date, can enable partition pruning and reduce the amount of data scanned. Avoid high-cardinality partition columns that create excessive directories or small files.
+
+```python
+(
+    df.write
+    .mode("overwrite")
+    .partitionBy("event_date")
+    .format("delta")
+    .save(output_path)
+)
+```
+
+When using FabricOps write helpers, prefer the supported write configuration rather than bypassing the helper solely to control physical partitioning.
+
 ### Cache only reused work
 
 Caching can help when the same expensive intermediate DataFrame is evaluated multiple times. It can waste memory when the DataFrame is used only once, so do not cache every transformation by default.
