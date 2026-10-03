@@ -357,6 +357,7 @@ Refer to the <a href="guided-demo/">Guided Demo</a> for how to use these assets.
   <a class="fabricops-home-quicklink" href="reference/">Function Reference</a>
   <a class="fabricops-home-quicklink" href="reference/dq-rules/">Data Quality Rules</a>
   <a class="fabricops-home-quicklink" href="reference/metadata/">Metadata Tables</a>
+  <a class="fabricops-home-quicklink" href="reference/pyspark-transformation/">PySpark Transformation</a>
   <a class="fabricops-home-quicklink" href="glossary/">Glossary</a>
 </div>
 
