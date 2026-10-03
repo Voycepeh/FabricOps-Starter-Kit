@@ -4,22 +4,20 @@
 
 ## The problem
 
-Building a governed data pipeline involves much more than reading a table, transforming a DataFrame, and writing the result. Engineers also need to handle environment resolution, incremental processing, load strategies, metadata, profiling, Data Contracts, Guardrails, validation, lineage, and the differences between Fabric Lakehouses and Warehouses.
+A production data pipeline needs more than ETL. Engineers also need consistent environment handling, governed reads and writes, validation, metadata, profiling, lineage, and Data Contract enforcement.
 
-A new engineer should not need to understand or rebuild all of that governance and engineering plumbing before they can create a reliable pipeline. At the same time, the framework should not hide so much that nobody can understand what the pipeline is doing.
-
-FabricOps abstracts the repeatable plumbing behind a small, readable notebook interface: **choose how each source is read, write the project transformation in normal PySpark, choose how each target is written, and let FabricOps apply the governed lifecycle around it.**
+That repeatable plumbing should not have to be rebuilt for every project, and it should not hide the project-specific transformation logic that engineers still need to own.
 
 ## The solution
 
 FabricOps provides a **clonable two-notebook engineering stack**:
 
-- [`00_env_config.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) maps the logical Fabric Stores used by the pipeline to their environment-specific Fabric locations.
-- [`02_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) is the pipeline you promote unchanged between environments. It provides two plug-and-play governed ETL boundaries: [`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md).
+- [`00_env_config.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) maps logical Fabric Stores to the correct environment-specific Fabric locations.
+- [`02_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) keeps the pipeline definition portable between environments, with governed Read and Write boundaries around ordinary project-owned PySpark.
 
-Everything project-specific stays visible between those boundaries as ordinary PySpark transformation code.
+The result is a pipeline pattern that engineers can clone and adapt without rebuilding the governance and engineering plumbing each time.
 
-## The big picture
+### The big picture
 
 ```mermaid
 flowchart LR
@@ -56,81 +54,69 @@ flowchart LR
     DEV ==>|"Promote 1:1"| PROD
 ```
 
-The same notebook stack exists in Development and Production. `00_env_config` maps the logical Fabric Stores used by the pipeline to their environment-specific Fabric locations, while `02_pipeline` is promoted unchanged from Development to Production. Inside each pipeline, Data Contract context is selected before the governed ETL flow. A pipeline can use multiple `orchestrate_read()` calls, each choosing Full or Incremental, transform the resulting DataFrames with project-owned PySpark, and use multiple `orchestrate_write()` calls, each independently choosing Overwrite, Append, SCD1, or SCD2.
+The same pipeline pattern runs across environments. Environment configuration resolves where the pipeline reads and writes, while the pipeline itself keeps the governed flow consistent: **Read → project-owned PySpark → Write**.
 
-## Choose how each source is read
+FabricOps owns the repeatable boundaries around that flow. The engineer still owns the transformation in the middle.
 
-Each source has its own `orchestrate_read()` call, so one pipeline can mix different read behaviours. For example, a high-volume Orders source can be incremental while a smaller Products reference source is read in full.
+## How it works
 
-The [Read & Write Modes reference](../reference/read-and-load-strategies.md) is the source of truth for supported Read modes, settings, required parameters, bootstrap behaviour, Source Observation, and incremental progress semantics.
+### What the engineer configures
 
-## Transform in the notebook
+- The logical sources and targets used by the pipeline.
+- How each source is read and each target is written.
+- The project-specific PySpark transformation.
+- The Data Contract context for governed tables.
 
-Transformation belongs to the project. FabricOps returns PySpark DataFrames from the Read orchestrators, and the engineer writes the joins, filters, derivations, aggregations, reshaping, and other project-specific PySpark needed between Read and Write.
+### What AI can support
 
-FabricOps deliberately does not introduce a transformation DSL or hide this logic behind the framework. Use the [PySpark Transformation Reference](../reference/pyspark-transformation.md) for common transformation patterns and optimization reminders. For broader platform guidance, use [Microsoft Learn: Apache Spark in Microsoft Fabric](https://learn.microsoft.com/en-us/fabric/data-engineering/spark-compute) and [Microsoft Learn: Fabric Data Engineering](https://learn.microsoft.com/en-us/fabric/data-engineering/).
+AI is optional. Microsoft Fabric Copilot or another coding agent can help write or refactor the project-specific PySpark, but AI is not part of pipeline execution or enforcement.
 
-In day-to-day development, you can also use Microsoft Fabric Copilot or another AI coding agent to help write the project-specific PySpark. The transformation remains ordinary PySpark owned by the project; FabricOps focuses on the governed Read and Write boundaries around it.
+### What FabricOps handles deterministically
 
-## Choose how each target is written
+- Resolving environment-specific Fabric locations.
+- Running governed Read and Write orchestration.
+- Applying the selected Data Contract and executable Guardrails.
+- Capturing the metadata, profiling, lineage, and processing state needed by the governed lifecycle.
 
-Each target has its own `orchestrate_write()` call, so write behaviour is selected per target rather than for the whole pipeline. A single pipeline can therefore publish different targets using different governed load strategies.
+## Under the hood
 
-The [Read & Write Modes reference](../reference/read-and-load-strategies.md) is the source of truth for supported Write modes, settings, required parameters, SCD behaviour, examples, and incremental-write safety.
-
-!!! warning "Multiple Write blocks are not atomic"
-    Each `orchestrate_write()` publishes independently. If an earlier Write succeeds and a later Write fails, the pipeline is partially published. Rerunning the notebook executes the earlier Write again, which can duplicate or otherwise repeat non-idempotent writes such as Append. If partial publication or duplicate writes are unacceptable, use separate pipeline executions for each governed target.
-
-The standard pipeline shape is:
-
-```mermaid
-flowchart LR
-    ENV["00_env_config"] --> CONTRACT["Data Contract Per Table ID"]
-
-    CONTRACT --> R1["READ 1<br/>Orders Table"]
-    CONTRACT --> R2["READ 2<br/>Products Table"]
-    CONTRACT --> R3["READ 3<br/>Order History Table"]
-
-    R1 --> TRANSFORM["PySpark Transform"]
-    R2 --> TRANSFORM
-    R3 --> TRANSFORM
-
-    TRANSFORM --> W1["WRITE 1<br/>Curated Orders Table"]
-    TRANSFORM --> W2["WRITE 2<br/>Customer Summary Table"]
-```
-
-See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-etl.md) to walk through this pipeline in the canonical `02_pipeline` notebook.
-
-## Promotion
-
-`00_env_config` owns the environment-specific resolution. `02_pipeline` owns the pipeline definition.
-
-That separation means Engineering promotes the same `02_pipeline` from Development to Production while `00_env_config` maps logical Fabric Stores such as Bronze, Silver, Gold, and Metadata to their environment-specific Fabric locations.
+FabricOps deliberately leaves project logic visible while standardising the boundaries around it.
 
 ```mermaid
 flowchart LR
-    DEVENV["00 Env Config<br/>DEV"] --> PIPE["02 Pipeline"]
-    PIPE --> DEV["Development<br/>Fabric Store locations"]
-    PRODENV["00 Env Config<br/>PROD"] --> SAME["Same 02 Pipeline"]
-    SAME --> PROD["Production<br/>Fabric Store locations"]
+    ENV["00 Env Config"] --> READ["Governed Read"]
+    READ --> TRANSFORM["Your PySpark"]
+    TRANSFORM --> WRITE["Governed Write"]
+
+    CONTRACT["Data Contract"] --> READ
+    CONTRACT --> WRITE
+
+    READ --> META["Metadata + Profile + State"]
+    WRITE --> META
+    WRITE --> LINEAGE["Lineage"]
 ```
 
-See [Guided Demo Step 5: Activate the Data Contract and promote to Production](../guided-demo/05-activate-data-contract-and-promote.md) for the promotion walkthrough.
+The orchestrators provide the stable framework boundary. Lower-level implementation details such as Full versus Incremental reads, load strategies, validation behaviour, and deployment are documented separately so this page can stay focused on the overall solution.
 
-## Data Contract enforcement
+## Example
 
-Each governed table has a Data Contract selected at the start of `02_pipeline`. The Read and Write orchestrators use that table's contract to enforce the expectations that apply on the source or target side.
+??? example "Orders + Products → Curated Orders"
 
-The purpose is to catch a pipeline that can **technically succeed but still produce the wrong data**.
+    A project can read an Orders source and a Products reference table through governed Read boundaries, join and transform them using ordinary PySpark, then publish a Curated Orders table through a governed Write boundary.
 
-A Data Contract brings together the governed table definition, descriptive Enrichment, executable Guardrails, and Processing expectations. See [How FabricOps Works](../how-fabricops-works.md) for how Data Contracts fit into the wider Governance and Engineering lifecycle, and [AI-Assisted Data Contract Authoring](ai-assisted-data-contract-authoring.md#what-the-data-contract-captures) for the detailed contract contents.
+    The engineer owns the transformation. FabricOps handles the repeatable environment, governance, metadata, and enforcement plumbing around it.
 
-### How enforcement works
-
-The orchestrators call the underlying FabricOps checks at the appropriate Read or Write boundary. Checks such as Schema, Freshness, Source Drift, Sensitive Data, Data Quality, and Guardrail Coverage can stop the pipeline when a blocking expectation fails. On the Write side, these checks run before `pipeline_write()`, so invalid data can fail early before writing to the target.
-
-In Development, [Guided Demo Step 4: Validate the frozen Data Contract](../guided-demo/04-validate-frozen-data-contract.md) uses this same enforcement path to validate the frozen contract against the real pipeline without writing to the target. In [Step 5](../guided-demo/05-activate-data-contract-and-promote.md), Governance activates that validated contract for Production. When the promoted `02_pipeline` runs in Production, the activated contract is resolved and enforced; only after the blocking checks succeed does the Write path continue to `pipeline_write()` and write to the target.
+    See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-etl.md) for the working pipeline example.
 
 ## Go deeper
 
-Follow the [Guided Demo](../guided-demo.md) to build the pipeline step by step. Use the [Function Reference](../reference/index.md) when you need the lower-level capabilities behind the orchestrators.
+Use [How FabricOps Works](../how-fabricops-works.md) for the wider Governance and Engineering lifecycle.
+
+For implementation details:
+
+- [Read & Write Modes](../reference/read-and-load-strategies.md) — Full and Incremental reads, Overwrite, Append, SCD1, SCD2, and processing semantics.
+- [PySpark Transformation](../reference/pyspark-transformation.md) — project-owned transformation patterns and performance guidance.
+- [Guided Demo Step 2](../guided-demo/02-build-and-run-etl.md) — build and run the canonical pipeline.
+- [Guided Demo Step 4](../guided-demo/04-validate-frozen-data-contract.md) — validate the frozen Data Contract against the pipeline.
+- [Guided Demo Step 5](../guided-demo/05-activate-data-contract-and-promote.md) — activate the contract and promote the pipeline to Production.
+- [Function Reference](../reference/index.md) — lower-level FabricOps APIs and orchestrators.
