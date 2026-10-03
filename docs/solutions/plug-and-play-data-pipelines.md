@@ -4,9 +4,11 @@
 
 ## The problem
 
-A production data pipeline needs more than ETL. Engineers also need consistent environment handling, governed reads and writes, validation, metadata, profiling, lineage, and Data Contract enforcement.
+Building a governed data pipeline involves much more than reading a table, transforming a DataFrame, and writing the result. Engineers also need to handle environment resolution, incremental processing, load strategies, metadata, profiling, Data Contracts, Guardrails, validation, lineage, and the differences between Fabric Lakehouses and Warehouses.
 
-That repeatable plumbing should not have to be rebuilt for every project, and it should not hide the project-specific transformation logic that engineers still need to own.
+A new engineer should not need to understand or rebuild all of that governance and engineering plumbing before they can create a reliable pipeline. At the same time, the framework should not hide so much that nobody can understand what the pipeline is doing.
+
+FabricOps abstracts the repeatable plumbing behind a small, readable notebook interface: **choose how each source is read, write the project transformation in normal PySpark, choose how each target is written, and let FabricOps apply the governed lifecycle around it.**
 
 ## The solution
 
