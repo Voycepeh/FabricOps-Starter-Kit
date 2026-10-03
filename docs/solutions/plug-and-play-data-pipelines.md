@@ -21,42 +21,56 @@ The result is a pipeline pattern that engineers can clone and adapt without rebu
 
 ```mermaid
 flowchart LR
-    subgraph DEV["Development — clonable notebook stack"]
+    GOV["Governance<br/>Data Contract<br/>Enrichment + Guardrails"]
+
+    subgraph DEV["Engineering Development"]
         direction TB
-        DEV_ENV["00 Env Config<br/>resolves Development<br/>Fabric Store locations"]
+        DEV_ENV["00 Env Config<br/>Development Fabric Stores"]
         subgraph DEV_PIPE["02 Pipeline"]
-            direction TB
-            DEV_CONTRACT["Select Data Contract context"]
-            DEV_READ["orchestrate_read() × N<br/>Full / Incremental"]
-            DEV_TRANSFORM["Project-specific<br/>PySpark transformation"]
-            DEV_WRITE["orchestrate_write() × N<br/>Overwrite / Append / SCD1 / SCD2"]
-            DEV_CONTRACT --> DEV_READ --> DEV_TRANSFORM --> DEV_WRITE
+            direction LR
+            DEV_READ["Governed Read<br/>Full / Incremental"]
+            DEV_TRANSFORM["Project-owned<br/>PySpark"]
+            DEV_WRITE["Governed Write<br/>Overwrite / Append / SCD1 / SCD2"]
+            DEV_READ --> DEV_TRANSFORM --> DEV_WRITE
         end
         DEV_ENV --> DEV_PIPE
-        DEV_PIPE --> DEV_RES["Development<br/>Fabric Store locations"]
+        DEV_PIPE --> DEV_DATA["Development<br/>Lakehouse / Warehouse"]
     end
 
-    subgraph PROD["Production — same notebook stack"]
+    META["Shared FabricOps Metadata<br/>Catalogue + Profile + State<br/>Guardrail Results + Lineage"]
+
+    subgraph PROD["Engineering Production"]
         direction TB
-        PROD_ENV["00 Env Config<br/>resolves Production<br/>Fabric Store locations"]
-        subgraph PROD_PIPE["02 Pipeline"]
-            direction TB
-            PROD_CONTRACT["Select Data Contract context"]
-            PROD_READ["orchestrate_read() × N<br/>Full / Incremental"]
-            PROD_TRANSFORM["Project-specific<br/>PySpark transformation"]
-            PROD_WRITE["orchestrate_write() × N<br/>Overwrite / Append / SCD1 / SCD2"]
-            PROD_CONTRACT --> PROD_READ --> PROD_TRANSFORM --> PROD_WRITE
+        PROD_ENV["00 Env Config<br/>Production Fabric Stores"]
+        subgraph PROD_PIPE["Same 02 Pipeline"]
+            direction LR
+            PROD_READ["Governed Read"]
+            PROD_TRANSFORM["Same project<br/>PySpark"]
+            PROD_WRITE["Governed Write"]
+            PROD_READ --> PROD_TRANSFORM --> PROD_WRITE
         end
         PROD_ENV --> PROD_PIPE
-        PROD_PIPE --> PROD_RES["Production<br/>Fabric Store locations"]
+        PROD_PIPE --> PROD_DATA["Governed Production<br/>Lakehouse / Warehouse"]
     end
 
-    DEV ==>|"Promote 1:1"| PROD
+    GOV -->|"Development: select + validate"| DEV_PIPE
+    DEV_PIPE -->|"Profile + observations + results"| META
+    META -->|"Evidence for Governance"| GOV
+    DEV_PIPE ==>|"Validate, then promote unchanged"| PROD_PIPE
+    GOV -->|"Production: active contract"| PROD_PIPE
+    PROD_PIPE -->|"Profile + lineage + results"| META
 ```
 
-The same pipeline pattern runs across environments. Environment configuration resolves where the pipeline reads and writes, while the pipeline itself keeps the governed flow consistent: **Read → project-owned PySpark → Write**.
+The picture has four important parts working together:
 
-FabricOps owns the repeatable boundaries around that flow. The engineer still owns the transformation in the middle.
+1. **Environment-aware configuration.** Each environment has its own `00_env_config`, which resolves the logical Fabric Stores to the correct Development or Production locations.
+2. **A portable pipeline.** `02_pipeline` keeps the same governed shape: **Read → project-owned PySpark → Write**. The engineer changes the project logic, not the surrounding operating pattern.
+3. **Executable governance.** Governance defines the Data Contract and Guardrails. Engineering selects and validates that contract in Development; after approval, Production resolves the active contract and enforces it through the same pipeline boundaries.
+4. **A shared evidence layer.** Reads and writes continuously produce the Catalogue, profiles, processing state, Guardrail results, and lineage that connect the physical pipeline back to Governance.
+
+Once the Development implementation and Data Contract agree, the validated `02_pipeline` is promoted unchanged. Production uses its own environment configuration and the active contract, so the same engineering definition runs against Production Fabric Stores without embedding environment-specific locations in the pipeline.
+
+This is the core FabricOps pipeline model: **the engineer owns the transformation; Governance owns the governed definition; FabricOps makes the surrounding lifecycle repeatable and executable across environments.**
 
 ## How it works
 
