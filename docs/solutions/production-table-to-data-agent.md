@@ -6,88 +6,101 @@ Microsoft Fabric Data Agents can already work well out of the box, particularly 
 
 The harder cases are the business semantics that the data alone cannot reliably resolve. A table might contain `order_date`, `ship_date`, and `payment_date`; `gross_amount` and `net_amount`; or several similar customer identifiers. Every column may be valid, but choosing the wrong one can produce a technically correct query that answers the wrong business question.
 
+Teams can compensate by manually writing detailed Data Agent instructions, but that creates another semantic-authoring workflow to maintain. Much of that meaning may already have been captured while the Production table was governed.
+
 ## The solution
 
-FabricOps already captures much of the context needed to close that gap while the table is governed: descriptions, grain, business terminology, business rules, known limitations, column meaning, classification, sensitivity, and other Data Contract context.
+FabricOps reuses the governed context it already has: table purpose, grain, business terminology, column descriptions, approved business rules, known limitations, classification, sensitivity, and other Data Contract context.
 
-That gives FabricOps part of the semantic context a Data Agent needs without asking users to describe the same Production table again.
-
-When an activated Production table becomes a Data Agent, FabricOps makes a first pass at translating the context it already has into Data Agent instructions.
+When an activated Production table becomes a Data Agent, FabricOps makes a deterministic first pass at translating the useful consumer context into Data Agent instructions.
 
 **Production table + existing FabricOps context → better-configured Data Agent**
 
-The Data Agent still queries the **actual Production data** through Microsoft Fabric. FabricOps does not copy the business-table rows into the prompt or replace Fabric permissions. It supplies business context that cannot always be inferred safely from the data alone.
+The Data Agent still queries the **actual Production data** through Microsoft Fabric. FabricOps does not copy business-table rows into the prompt or replace Fabric permissions. It supplies business context that cannot always be inferred safely from the data alone.
 
 ![Production Table to Data Agent](../assets/DataAgentsBootstrap.png)
 
-## Ask instead of guess
+This first version deliberately focuses on **one governed Production table**. Multi-table relationship modelling and broader semantic modelling remain outside the MVP.
 
-FabricOps does not need to pretend it knows every business interpretation.
+## How it works
 
-For example, an orders table might contain:
+### What the human governs
 
-| Field | Governed meaning |
-| --- | --- |
-| `order_date` | Date the order was placed |
-| `ship_date` | Date the order was shipped |
-| `payment_date` | Date payment was received |
+The useful meaning is captured during the normal FabricOps lifecycle rather than authored again just for the Data Agent. This can include:
 
-If a consumer asks **"Show me monthly orders for 2026"**, several interpretations are plausible. FabricOps does not invent a default business date. The generated context tells the Data Agent that these date concepts are distinct and that genuine ambiguity should be clarified.
+- Table purpose and grain.
+- Business terminology and column descriptions.
+- Approved business rules and known limitations.
+- Classification and sensitivity decisions.
 
-> **Consumer:** Show me monthly orders for 2026.
->
-> **Data Agent:** There are multiple date fields that could be used for a monthly view: `order_date`, `ship_date`, and `payment_date`. Which date would you like to use?
+The human remains responsible for the governed meaning. FabricOps does not invent missing business definitions.
 
-The same principle applies to other ambiguous concepts such as gross versus net amounts, different lifecycle statuses, or multiple customer and account identifiers: **use governed meaning when it is explicit; ask when it is genuinely ambiguous.**
+### What the Data Agent does
 
-## Reuse the context we already have
+The native Microsoft Fabric Data Agent uses those instructions when interpreting consumer questions and queries the actual Production table through Fabric.
 
-The first pass uses context FabricOps already captures during the lifecycle rather than introducing a second semantic-authoring workflow.
+When the governed context makes the intended concept clear, the agent can use it. When multiple plausible concepts remain, the instructions tell the agent to ask rather than guess.
 
-This can include table purpose and grain, business terminology, column descriptions, approved business rules, known limitations, classification and sensitivity context, and the schema needed to recognise potentially ambiguous concepts.
+### What FabricOps does deterministically
 
-Not every piece of governance metadata belongs in a Data Agent instruction. FabricOps translates the useful consumer context rather than dumping internal metadata or raw business data into the prompt.
+FabricOps:
 
-## Consumption flow
+- Resolves the activated Production Data Contract and catalogue identity for the selected `table_id`.
+- Selects the governed context useful to a consumer rather than dumping internal metadata or raw business data into instructions.
+- Renders separate agent and datasource instructions.
+- Creates and configures the native Fabric Data Agent through the Fabric REST API.
+- Attaches the governed single Production Lakehouse or Warehouse table as its datasource.
+
+Fabric permissions remain authoritative for access to the Production data and for creating the Data Agent.
+
+## Under the hood
 
 ```mermaid
 flowchart LR
-    A["Activated Production table"] --> B["Existing FabricOps context"]
-    B --> C["create_data_agent()"]
-    C --> D["Microsoft Fabric Data Agent"]
-    D --> E{"Question unambiguous?"}
-    E -- Yes --> F["Query Production data"]
-    E -- No --> G["Ask for clarification"]
-    G --> F
+    TABLE["Activated Production table"] --> ID["table_id"]
+    CONTRACT["Active Data Contract"] --> CONTEXT["Governed consumer context"]
+    CATALOGUE["Catalogue + Enrichment"] --> CONTEXT
+    ID --> CONTEXT
+    CONTEXT --> INSTRUCTIONS["Deterministic<br/>agent + datasource instructions"]
+    INSTRUCTIONS --> API["create_data_agent()<br/>Fabric REST API"]
+    API --> AGENT["Native Fabric Data Agent"]
+    TABLE -->|"Production datasource<br/>Fabric permissions apply"| AGENT
+    AGENT --> QUESTION{"Question<br/>unambiguous?"}
+    QUESTION -->|"Yes"| QUERY["Query Production data"]
+    QUESTION -->|"No"| CLARIFY["Ask for clarification"]
+    CLARIFY --> QUERY
 ```
 
-## More context, better interpretation
+`create_data_agent()` uses the current Fabric notebook caller identity to call the Microsoft Fabric REST API. It creates the Data Agent, attaches the configured Production Lakehouse or Warehouse datasource, selects the governed table, and applies the generated datasource and agent instructions.
 
-This first pass is intentionally built from context FabricOps already owns.
+FabricOps does **not** copy the Production table into an AI prompt. The table remains a Fabric datasource and the caller's Fabric permissions continue to control access.
 
-As FabricOps captures richer consumer semantics in the future—such as explicitly governed metric definitions, units, preferred terminology, status meanings, default filters, relationships, or other business context—the same pattern can provide richer instructions to the Data Agent.
+The API is currently **Preview** and the MVP remains single-table. Multi-table relationship authoring, duplicate-agent registration, evaluation, and automatic publication are outside this capability.
 
-The direction is incremental: **reuse what FabricOps already knows first, then improve the Data Agent as the governed context becomes richer.**
+## Example
 
-<details markdown="1">
-<summary><strong>Under the hood</strong></summary>
+??? example "Ask instead of guess"
 
-FabricOps deterministically builds consumer context from the activated Production Data Contract and catalogue identity.
+    An orders table might contain:
 
-The generated agent instructions define behavioural boundaries: use governed business meaning, do not invent undocumented semantics, and ask when multiple plausible concepts remain. Datasource instructions carry the table-specific context.
+    | Field | Governed meaning |
+    | --- | --- |
+    | `order_date` | Date the order was placed |
+    | `ship_date` | Date the order was shipped |
+    | `payment_date` | Date payment was received |
 
-For date/time ambiguity, FabricOps identifies date/time fields from the governed schema and includes their descriptions or business terms when available. It does not infer which date represents the user's intended business concept.
+    If a consumer asks **"Show me monthly orders for 2026"**, several interpretations are plausible.
 
-`create_data_agent()` uses the current Fabric notebook caller identity to call the Microsoft Fabric REST API, creates the Data Agent, attaches the single governed Production Lakehouse or Warehouse table, selects that table, and applies the generated datasource and agent instructions.
+    FabricOps does not invent a default business date. The generated context tells the Data Agent that these date concepts are distinct and that genuine ambiguity should be clarified.
 
-The MVP remains single-table. Multi-table relationship modelling, ontology authoring, duplicate-agent registration, evaluation, and automatic publication are outside this capability.
+    > **Consumer:** Show me monthly orders for 2026.
+    >
+    > **Data Agent:** There are multiple date fields that could be used for a monthly view: `order_date`, `ship_date`, and `payment_date`. Which date would you like to use?
 
-For the exact callable contracts and implementation details, use the generated function references rather than this solution page.
-
-</details>
+    The same principle applies to gross versus net amounts, lifecycle statuses, or multiple customer and account identifiers: **use governed meaning when it is explicit; ask when it is genuinely ambiguous.**
 
 ## Go deeper
 
-See [`create_data_agent()`](../api/reference/create_data_agent.md) for the single public Preview API that performs the complete governed handoff.
+Use [Step 7: Governed Consumption](../guided-demo/07-consume-production-data.md) to see where the Data Agent handoff fits in the governed consumer lifecycle.
 
-For where this fits in the lifecycle, see [Step 7: Governed Consumption](../guided-demo/07-consume-production-data.md).
+Use the generated [`create_data_agent()` reference](../api/reference/create_data_agent.md) for the exact Preview API contract, prerequisites, parameters, errors, and implementation details.
