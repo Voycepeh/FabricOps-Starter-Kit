@@ -350,9 +350,9 @@
       "qualified_name": "fabricops_kit.__getattr__",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 124,
+      "source_end_line": 118,
       "source_path": "src/fabricops_kit/__init__.py",
-      "source_start_line": 114,
+      "source_start_line": 108,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -377,9 +377,9 @@
       "qualified_name": "fabricops_kit._load_package_version",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 137,
+      "source_end_line": 131,
       "source_path": "src/fabricops_kit/__init__.py",
-      "source_start_line": 127,
+      "source_start_line": 121,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -3220,31 +3220,6 @@
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
-      "function_name": "build_consumer_context",
-      "function_type": "public_function",
-      "inbound_callers": [],
-      "inbound_source_references": [],
-      "lifecycle_status": "preview",
-      "live_impact_level": "preview_only",
-      "live_since": null,
-      "public_flow_reachable": true,
-      "qualified_name": "fabricops_kit.data_agent.build_consumer_context.build_consumer_context",
-      "release_history": [],
-      "release_versions": [],
-      "source_end_line": 58,
-      "source_path": "src/fabricops_kit/data_agent/build_consumer_context.py",
-      "source_start_line": 8,
-      "supports_live_contract": false,
-      "transitive_live_dependent_count": 0,
-      "transitive_live_dependents": []
-    },
-    {
-      "architecture_classification": "capability",
-      "contract_classification": "preview_public_function",
-      "contract_display": "Preview",
-      "direct_live_dependent_count": 0,
-      "direct_live_dependents": [],
-      "discontinued_in": null,
       "function_name": "create_data_agent",
       "function_type": "public_function",
       "inbound_callers": [],
@@ -3256,33 +3231,8 @@
       "qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 82,
+      "source_end_line": 79,
       "source_path": "src/fabricops_kit/data_agent/create_data_agent.py",
-      "source_start_line": 8,
-      "supports_live_contract": false,
-      "transitive_live_dependent_count": 0,
-      "transitive_live_dependents": []
-    },
-    {
-      "architecture_classification": "capability",
-      "contract_classification": "preview_public_function",
-      "contract_display": "Preview",
-      "direct_live_dependent_count": 0,
-      "direct_live_dependents": [],
-      "discontinued_in": null,
-      "function_name": "render_data_agent_instructions",
-      "function_type": "public_function",
-      "inbound_callers": [],
-      "inbound_source_references": [],
-      "lifecycle_status": "preview",
-      "live_impact_level": "preview_only",
-      "live_since": null,
-      "public_flow_reachable": true,
-      "qualified_name": "fabricops_kit.data_agent.render_data_agent_instructions.render_data_agent_instructions",
-      "release_history": [],
-      "release_versions": [],
-      "source_end_line": 43,
-      "source_path": "src/fabricops_kit/data_agent/render_data_agent_instructions.py",
       "source_start_line": 8,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
@@ -3366,12 +3316,9 @@
       "function_name": "configured_context",
       "function_type": "shared_function",
       "inbound_callers": [
-        "fabricops_kit.data_agent.build_consumer_context.build_consumer_context",
         "fabricops_kit.data_agent.create_data_agent.create_data_agent"
       ],
       "inbound_source_references": [
-        "fabricops_kit.data_agent.build_consumer_context.build_consumer_context",
-        "fabricops_kit.data_agent.build_consumer_context::<module>",
         "fabricops_kit.data_agent.create_data_agent.create_data_agent",
         "fabricops_kit.data_agent.create_data_agent::<module>"
       ],
@@ -3399,15 +3346,11 @@
       "function_name": "consumer_context",
       "function_type": "shared_function",
       "inbound_callers": [
-        "fabricops_kit.data_agent.build_consumer_context.build_consumer_context",
         "fabricops_kit.data_agent.create_data_agent.create_data_agent"
       ],
       "inbound_source_references": [
-        "fabricops_kit.data_agent.build_consumer_context.build_consumer_context",
-        "fabricops_kit.data_agent.build_consumer_context::<module>",
         "fabricops_kit.data_agent.create_data_agent.create_data_agent",
-        "fabricops_kit.data_agent.create_data_agent::<module>",
-        "fabricops_kit.data_agent.render_data_agent_instructions.render_data_agent_instructions"
+        "fabricops_kit.data_agent.create_data_agent::<module>"
       ],
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
@@ -3521,12 +3464,9 @@
       "function_name": "instruction_text",
       "function_type": "shared_function",
       "inbound_callers": [
-        "fabricops_kit.data_agent.render_data_agent_instructions.render_data_agent_instructions",
         "fabricops_kit.data_agent.shared.provision_data_agent"
       ],
       "inbound_source_references": [
-        "fabricops_kit.data_agent.render_data_agent_instructions.render_data_agent_instructions",
-        "fabricops_kit.data_agent.render_data_agent_instructions::<module>",
         "fabricops_kit.data_agent.shared.provision_data_agent"
       ],
       "lifecycle_status": "internal",
@@ -16881,78 +16821,6 @@
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
-      "depth": 4,
-      "direct_call_count": 2,
-      "discontinued_in": null,
-      "examples": ">>> context = build_consumer_context(\"lakehouse||production||dbo||orders\")\n>>> context[\"environment\"]\n'prod'",
-      "files_touched": [
-        "src/fabricops_kit/config/metadata_schemas.py",
-        "src/fabricops_kit/config/shared.py",
-        "src/fabricops_kit/data_agent/build_consumer_context.py",
-        "src/fabricops_kit/data_agent/shared.py",
-        "src/fabricops_kit/io/read_lakehouse_table.py",
-        "src/fabricops_kit/pipeline/shared.py"
-      ],
-      "function_name": "build_consumer_context",
-      "has_architecture_violation": false,
-      "has_large_width_or_depth": false,
-      "lifecycle_status": "preview",
-      "live_critical_dependencies": [],
-      "live_critical_dependency_count": 0,
-      "live_since": null,
-      "max_depth": 4,
-      "parameters": [
-        {
-          "description": "Canonical FabricOps table identity.",
-          "name": "table_id",
-          "required": "Yes",
-          "type": "str"
-        },
-        {
-          "description": "FabricOps configuration. The configured notebook value is used when omitted.",
-          "name": "config",
-          "required": "No",
-          "type": "Any"
-        },
-        {
-          "description": "FabricOps runtime context used to resolve configuration and Spark.",
-          "name": "context",
-          "required": "No",
-          "type": "Mapping[str, Any] | None"
-        },
-        {
-          "description": "Explicit Spark session used to read metadata.",
-          "name": "spark_session",
-          "required": "No",
-          "type": "Any"
-        }
-      ],
-      "public_import_path": "fabricops_kit.build_consumer_context",
-      "public_signals": [],
-      "qualified_name": "fabricops_kit.data_agent.build_consumer_context.build_consumer_context",
-      "raises_documentation": "ValueError\n    If the table is missing, is not a Production asset, has no active Data\n    Contract, or its configured source is unsupported or incomplete.\nRuntimeError\n    If authoritative metadata records conflict.",
-      "refactor_signals": [],
-      "refactor_summary": "No refactor signals detected.",
-      "release_history": [],
-      "release_versions": [],
-      "returns_documentation": "dict[str, Any]\n    Stable, JSON-safe table, contract, source, column, and rule context. Profile\n    samples, credentials, access tokens, and raw sensitive values are excluded.",
-      "scope": 15,
-      "signals": [],
-      "signature": "def build_consumer_context(table_id: str, *, config: Any=None, context: Mapping[str, Any] | None=None, spark_session: Any=None) -> dict[str, Any]",
-      "source_end_line": 58,
-      "source_path": "src/fabricops_kit/data_agent/build_consumer_context.py",
-      "source_start_line": 8,
-      "summary": "Build deterministic consumer context for one governed Production table.",
-      "transitive_function_count": 15,
-      "usage_notes": "This Preview function reads ``METADATA_DATA_CATALOGUE`` and the active frozen\n``METADATA_DATA_CONTRACT`` in the configured Metadata Lakehouse. It does not\ncall AI or persist a second copy of the governed metadata.",
-      "width": 2
-    },
-    {
-      "architecture_classification": "capability",
-      "architecture_violation_count": 0,
-      "contract_classification": "preview_public_function",
-      "contract_display": "Preview",
-      "contract_risk": "preview",
       "depth": 6,
       "direct_call_count": 6,
       "discontinued_in": null,
@@ -17708,12 +17576,12 @@
       "scope": 19,
       "signals": [],
       "signature": "def create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str='FabricOps governed single-table Data Agent', config: Any=None, context: Mapping[str, Any] | None=None, spark_session: Any=None, token_provider: Callable[[], str]=default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse]=http_request) -> dict[str, Any]",
-      "source_end_line": 82,
+      "source_end_line": 79,
       "source_path": "src/fabricops_kit/data_agent/create_data_agent.py",
       "source_start_line": 8,
       "summary": "Create and configure a native Data Agent from governed Production metadata.",
       "transitive_function_count": 19,
-      "usage_notes": "This Preview API requires a supported Fabric capacity, access to the Production\nLakehouse or Warehouse, and permission to create and configure Data Agents in\nthe target workspace. It creates a staging datasource, selects one table, and\napplies datasource and agent instructions. It does not publish the agent.",
+      "usage_notes": "This Preview API requires a supported Fabric capacity, access to the Production\nLakehouse or Warehouse, and permission to create and configure Data Agents in\nthe target workspace. It builds governed consumer context from the active\nProduction Data Contract, renders deterministic instructions, creates a staging\ndatasource, selects one table, and applies the datasource and agent instructions.\nIt does not publish the agent.",
       "width": 3
     },
     {
@@ -19544,56 +19412,6 @@
       "transitive_function_count": 15,
       "usage_notes": "FabricOps resolves the configured Warehouse target and table name, then\ndelegates to the Fabric Warehouse Spark connector. Conceptual example:\n\n``df = read_warehouse_table(schema=\"dbo\", table_name=\"DimDepartment\")``\n\nUse ``read_warehouse_query`` instead when you need selected columns, row\nfiltering, aggregation, joins, row limits, or other caller-controlled SQL\npushdown before Spark receives rows.",
       "width": 3
-    },
-    {
-      "architecture_classification": "capability",
-      "architecture_violation_count": 0,
-      "contract_classification": "preview_public_function",
-      "contract_display": "Preview",
-      "contract_risk": "preview",
-      "depth": 2,
-      "direct_call_count": 1,
-      "discontinued_in": null,
-      "examples": ">>> instructions = render_data_agent_instructions({\"source\": {\"table\": \"orders\", \"schema\": \"dbo\"}, \"columns\": []})\n>>> \"dbo.orders\" in instructions[\"datasource\"]\nTrue",
-      "files_touched": [
-        "src/fabricops_kit/data_agent/render_data_agent_instructions.py",
-        "src/fabricops_kit/data_agent/shared.py"
-      ],
-      "function_name": "render_data_agent_instructions",
-      "has_architecture_violation": false,
-      "has_large_width_or_depth": false,
-      "lifecycle_status": "preview",
-      "live_critical_dependencies": [],
-      "live_critical_dependency_count": 0,
-      "live_since": null,
-      "max_depth": 2,
-      "parameters": [
-        {
-          "description": "Context returned by :func:`build_consumer_context`.",
-          "name": "consumer_context",
-          "required": "Yes",
-          "type": "Mapping[str, Any]"
-        }
-      ],
-      "public_import_path": "fabricops_kit.render_data_agent_instructions",
-      "public_signals": [],
-      "qualified_name": "fabricops_kit.data_agent.render_data_agent_instructions.render_data_agent_instructions",
-      "raises_documentation": "KeyError\n    If required source context is absent.",
-      "refactor_signals": [],
-      "refactor_summary": "No refactor signals detected.",
-      "release_history": [],
-      "release_versions": [],
-      "returns_documentation": "dict[str, str]\n    Separate ``agent`` and ``datasource`` instruction strings.",
-      "scope": 2,
-      "signals": [],
-      "signature": "def render_data_agent_instructions(consumer_context: Mapping[str, Any]) -> dict[str, str]",
-      "source_end_line": 43,
-      "source_path": "src/fabricops_kit/data_agent/render_data_agent_instructions.py",
-      "source_start_line": 8,
-      "summary": "Render deterministic instructions for one table's Data Agent configuration.",
-      "transitive_function_count": 2,
-      "usage_notes": "Rendering is deterministic and invokes no AI service. The output contains no\ntokens, credentials, or profile sample values.",
-      "width": 1
     },
     {
       "architecture_classification": "capability",
@@ -22381,28 +22199,6 @@
       "architecture_violations": [],
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.data_agent.shared.configured_context",
-      "caller_qualified_name": "fabricops_kit.data_agent.build_consumer_context.build_consumer_context",
-      "violation_details": [],
-      "violation_types": []
-    },
-    {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [],
-      "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.data_agent.shared.consumer_context",
-      "caller_qualified_name": "fabricops_kit.data_agent.build_consumer_context.build_consumer_context",
-      "violation_details": [],
-      "violation_types": []
-    },
-    {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [],
-      "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.data_agent.shared.configured_context",
       "caller_qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
       "violation_details": [],
       "violation_types": []
@@ -22426,17 +22222,6 @@
       "call_count": 1,
       "callee_qualified_name": "fabricops_kit.data_agent.shared.provision_data_agent",
       "caller_qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
-      "violation_details": [],
-      "violation_types": []
-    },
-    {
-      "architecture_signal_details": [],
-      "architecture_signal_types": [],
-      "architecture_signals": [],
-      "architecture_violations": [],
-      "call_count": 1,
-      "callee_qualified_name": "fabricops_kit.data_agent.shared.instruction_text",
-      "caller_qualified_name": "fabricops_kit.data_agent.render_data_agent_instructions.render_data_agent_instructions",
       "violation_details": [],
       "violation_types": []
     },
@@ -33179,7 +32964,7 @@
     "latest_release_version": "0.2.0",
     "live_critical_internal_count": 215,
     "live_public_function_count": 17,
-    "preview_public_function_count": 18,
+    "preview_public_function_count": 16,
     "release_versions": [
       "0.1.0",
       "0.2.0"
@@ -33234,13 +33019,13 @@
   ],
   "summary": {
     "defined_but_not_used_count": 33,
-    "defined_function_count": 487,
+    "defined_function_count": 485,
     "detached_function_count": 48,
     "implicit_runtime_hook_count": 3,
-    "public_function_count": 35,
-    "relationship_count": 1040,
+    "public_function_count": 33,
+    "relationship_count": 1037,
     "source_referenced_function_count": 45,
-    "used_function_count": 406
+    "used_function_count": 404
   },
   "used_functions": [
     "fabricops_kit.access_scanner.scan_onelake_access._access_rows",
@@ -33312,9 +33097,7 @@
     "fabricops_kit.config.shared.resolve_runtime_context",
     "fabricops_kit.config.shared.stable_metadata_id",
     "fabricops_kit.config.shared.validate_framework_config",
-    "fabricops_kit.data_agent.build_consumer_context.build_consumer_context",
     "fabricops_kit.data_agent.create_data_agent.create_data_agent",
-    "fabricops_kit.data_agent.render_data_agent_instructions.render_data_agent_instructions",
     "fabricops_kit.data_agent.shared._header",
     "fabricops_kit.data_agent.shared._text",
     "fabricops_kit.data_agent.shared.configured_context",

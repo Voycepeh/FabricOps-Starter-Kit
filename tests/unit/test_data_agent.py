@@ -6,6 +6,8 @@ from types import SimpleNamespace
 
 import pytest
 
+import fabricops_kit
+import fabricops_kit.data_agent as data_agent
 from fabricops_kit.data_agent import shared
 
 
@@ -130,6 +132,38 @@ def _responses(*responses):
 
 def _agent_context(source_type="lakehouse"):
     return {"table_id": "orders-id", "source": {"type": source_type, "workspace_id": "source-workspace", "item_id": "source-item", "schema": "dbo", "table": "orders"}, "columns": []}
+
+
+def test_create_data_agent_is_the_only_public_data_agent_function():
+    assert fabricops_kit.create_data_agent is data_agent.create_data_agent
+    assert "create_data_agent" in fabricops_kit.__all__
+    assert data_agent.__all__ == ["FabricDataAgentError", "create_data_agent"]
+    assert "build_consumer_context" not in fabricops_kit.__all__
+    assert "render_data_agent_instructions" not in fabricops_kit.__all__
+    assert not hasattr(fabricops_kit, "build_consumer_context")
+    assert not hasattr(fabricops_kit, "render_data_agent_instructions")
+
+
+def test_create_data_agent_builds_context_and_instructions_internally(governed, monkeypatch):
+    monkeypatch.setattr(shared, "resolve_fabric_context", lambda **_kwargs: (_config(), "prod", {"spark": None}))
+    transport, calls = _responses(
+        shared.FabricResponse(201, {}, {"id": "agent-1"}),
+        shared.FabricResponse(201, {}, {"id": "source-1"}),
+        shared.FabricResponse(200, {}, {"status": "updated"}),
+        shared.FabricResponse(200, {}, {"value": [{"id": "element-1", "type": "Table", "schema": "dbo", "name": "orders"}]}),
+        shared.FabricResponse(200, {}, {"status": "updated"}),
+        shared.FabricResponse(200, {}, {"status": "configured"}),
+    )
+
+    result = fabricops_kit.create_data_agent(
+        "orders-id", target_workspace_id="target", display_name="Orders Agent",
+        token_provider=lambda: "secret", transport=transport,
+    )
+
+    assert result["status"] == "configured"
+    assert "Approved customer orders" in calls[2][2]["instructions"]
+    assert "Stable order key" in calls[2][2]["instructions"]
+    assert "Handling ambiguity" in calls[5][2]["aiInstructions"]
 
 
 @pytest.mark.parametrize(("source_type", "expected_type", "reference_name"), [

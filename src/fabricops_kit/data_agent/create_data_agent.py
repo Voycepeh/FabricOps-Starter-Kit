@@ -53,8 +53,10 @@ def create_data_agent(
     -----
     This Preview API requires a supported Fabric capacity, access to the Production
     Lakehouse or Warehouse, and permission to create and configure Data Agents in
-    the target workspace. It creates a staging datasource, selects one table, and
-    applies datasource and agent instructions. It does not publish the agent.
+    the target workspace. It builds governed consumer context from the active
+    Production Data Contract, renders deterministic instructions, creates a staging
+    datasource, selects one table, and applies the datasource and agent instructions.
+    It does not publish the agent.
 
     Examples
     --------
@@ -65,11 +67,6 @@ def create_data_agent(
     ... )
     >>> result["status"]
     'configured'
-
-    See Also
-    --------
-    build_consumer_context
-    render_data_agent_instructions
 
     """
     if not str(target_workspace_id or "").strip() or not str(display_name or "").strip():
