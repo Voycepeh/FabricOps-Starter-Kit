@@ -173,10 +173,19 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "docs/reference/function-call-graph.md" not in generator_source
 
 
-def test_fabricops_skill_file_exists() -> None:
-    """Verify fabricops skill file exists."""
-    assert (ROOT / ".agents" / "skills" / "fabricops" / "SKILL.md").exists()
-    assert not (ROOT / ".automation tools" / "skills" / "fabricops" / "SKILL.md").exists()
+def test_fabricops_specialized_skill_files_exist() -> None:
+    """Verify FabricOps uses focused skills without a generic catch-all."""
+    skills_dir = ROOT / ".agents" / "skills"
+    expected_skills = {
+        "fabricops-docs-maintenance",
+        "fabricops-notebook-template",
+        "fabricops-public-api-change",
+        "fabricops-release",
+    }
+
+    assert not (skills_dir / "fabricops" / "SKILL.md").exists()
+    for skill_name in expected_skills:
+        assert (skills_dir / skill_name / "SKILL.md").exists()
 
 
 def test_every_callable_page_has_curated_public_reference_sections() -> None:

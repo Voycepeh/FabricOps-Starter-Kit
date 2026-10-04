@@ -7,7 +7,9 @@ description: Use when creating, updating, or reviewing FabricOps notebook templa
 
 ## Purpose
 
-Guide notebook template work so templates remain public-safe, understandable, Microsoft Fabric aware, and clearly separated from the formal FabricOps package release contract.
+Guide all living standard notebook template work so templates remain public-safe, understandable, Microsoft Fabric aware, and clearly separated from the formal FabricOps package release contract.
+
+This skill owns the current standard templates under `templates/notebooks/`, including `00_env_config`, `01_governance`, `02_pipeline`, and `99_explore`. The release workflow has a narrower responsibility: it freezes and publishes only the notebook templates explicitly included in the release snapshot contract.
 
 ## When to use this skill
 
@@ -27,14 +29,15 @@ Do not use this skill for package implementation changes unless the notebook tas
 ## Implementation workflow
 
 1. Define Context, Task, Constraints, Expected output, and Verification.
-2. Treat `templates/notebooks/` as the evolving latest templates. At each FabricOps release, preserve the release-tag versions of `00_env_config.ipynb` and `02_pipeline.ipynb` as immutable snapshots under `templates/releases/vX.Y.Z/`.
-3. Use public FabricOps APIs only; avoid internal package imports, private helpers, generated metadata internals, or test-only helpers. For ordinary Fabric table/file reads and writes, use the public foundational I/O functions instead of raw Spark/connector/path persistence when FabricOps provides the operation.
-4. Keep notebooks executable block by block in Microsoft Fabric and understandable for junior engineers.
-5. Reuse canonical defaults and public helpers from `src/fabricops_kit/` instead of duplicating constants or metadata-routing logic inline.
-6. Avoid duplicating long explanations already maintained in guided demos or the template implementation guide; link to canonical docs when useful.
-7. Include or preserve a concise "Tested with FabricOps" record when the task touches template validation status. It should contain version, date, and tester.
-8. Claim Microsoft Fabric runtime success only after actual Fabric execution by the named tester. Local Python checks may support compatibility claims but cannot prove Fabric execution.
-9. Preserve sample assets only when they are public-safe and genuinely required by the template.
+2. Treat all notebooks under `templates/notebooks/` as evolving latest templates. Preserve each notebook's existing responsibility: `00_env_config` for environment/runtime configuration, `01_governance` for governance authoring and review, `02_pipeline` for governed pipeline execution, and `99_explore` for consumer exploration. Do not assume that release snapshot eligibility defines notebook-template ownership.
+3. At each FabricOps release, the release skill freezes only `00_env_config.ipynb` and `02_pipeline.ipynb` under `templates/releases/vX.Y.Z/` unless the release snapshot contract is explicitly changed.
+4. Use public FabricOps APIs only; avoid internal package imports, private helpers, generated metadata internals, or test-only helpers. For ordinary Fabric table/file reads and writes, use the public foundational I/O functions instead of raw Spark/connector/path persistence when FabricOps provides the operation.
+5. Keep notebooks executable block by block in Microsoft Fabric and understandable for junior engineers.
+6. Reuse canonical defaults and public helpers from `src/fabricops_kit/` instead of duplicating constants or metadata-routing logic inline.
+7. Avoid duplicating long explanations already maintained in guided demos or the template implementation guide; link to canonical docs when useful.
+8. Include or preserve a concise "Tested with FabricOps" record when the task touches template validation status. It should contain version, date, and tester.
+9. Claim Microsoft Fabric runtime success only after actual Fabric execution by the named tester. Local Python checks may support compatibility claims but cannot prove Fabric execution.
+10. Preserve sample assets only when they are public-safe and genuinely required by the template.
 
 ## Standard 02 pipeline migration contract
 
@@ -82,14 +85,13 @@ Notebook template changes should be limited to `templates/notebooks/`, directly 
 
 ## Verification
 
-Use existing repository checks relevant to template changes:
+Use checks proportional to the notebook change. Start with the directly affected template tests and structural checks:
 
 ```bash
 uv run pytest tests/templates
-uv run python -m compileall src tests
-uv run python -m pytest -q
-uv run ruff check .
 ```
+
+Run broader `compileall`, repository-wide pytest, or Ruff only when shared package behaviour, extracted Python, or the scope of the change makes those checks relevant. Do not turn a notebook wording or layout change into an unrelated full-suite requirement.
 
 When Fabric runtime validation is required, report the Fabric workspace execution as a manual or maintainer-confirmed step with version, date, tester, notebook name, and outcome. Do not fabricate this record.
 
