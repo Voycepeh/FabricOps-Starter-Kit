@@ -24,7 +24,9 @@ The Data Agent still queries the **actual Production data** through Microsoft Fa
 
 ![Production Table to Data Agent](../assets/DataAgentsBootstrap.png)
 
-This first version deliberately focuses on **one governed Production table**. Multi-table relationship modelling and broader semantic modelling remain outside the MVP.
+!!! note "Work in progress"
+
+    FabricOps currently provides `create_data_agent()`, which creates and configures a Data Agent from **one governed Production table**. In future iterations, we plan to extend this to support **multiple related governed tables within a Data Agent**.
 
 ## How it works
 
