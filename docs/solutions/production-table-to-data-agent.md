@@ -6,7 +6,9 @@ Microsoft Fabric Data Agents can already work well out of the box, particularly 
 
 The harder cases are the business semantics that the data alone cannot reliably resolve. A table might contain `order_date`, `ship_date`, and `payment_date`; `gross_amount` and `net_amount`; or several similar customer identifiers. Every column may be valid, but choosing the wrong one can produce a technically correct query that answers the wrong business question.
 
-Teams can compensate by manually writing detailed Data Agent instructions, but that creates another semantic-authoring workflow to maintain. Much of that meaning may already have been captured while the Production table was governed.
+To configure a Data Agent well, teams usually need to provide this business context manually. But by the time a table has gone through the previous six FabricOps lifecycle steps, much of that work has already been done: its purpose, grain, column meaning, business rules, sensitivity, limitations, and other governed context have already been captured.
+
+That creates a natural opportunity: **reuse the context FabricOps already has to bootstrap a better-configured Data Agent instead of asking the team to describe the Production table again.**
 
 ## The solution
 
