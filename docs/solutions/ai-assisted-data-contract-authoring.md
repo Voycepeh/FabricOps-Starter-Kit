@@ -1,5 +1,7 @@
 # Direct & Indirect PII Discovery & Treatment with Built-in AI Suggestions
 
+<span class="fabricops-release-status fabricops-release-status--preview">Preview</span>
+
 ![Direct and Indirect PII Discovery and Treatment with Built-in AI Suggestions](../assets/AiDatacontract.png)
 
 ## The problem

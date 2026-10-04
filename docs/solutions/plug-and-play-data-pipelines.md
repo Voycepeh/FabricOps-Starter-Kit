@@ -1,5 +1,7 @@
 # Plug-and-Play Data Pipelines with Data Contract Enforcement
 
+<span class="fabricops-release-status fabricops-release-status--preview">Preview</span>
+
 ![Development to Production pipeline promotion](../assets/05/PipelinesDeploymentOverview.png)
 
 ## The problem
