@@ -61,15 +61,7 @@ Fabric permissions remain authoritative for access to the Production data and fo
 
 ## Under the hood
 
-```mermaid
-flowchart TD
-    A["Governed Production Table<br/>+ FabricOps Context"]
-    B["Data Agent Instructions"]
-    C["create_data_agent()<br/>Fabric API"]
-    D["Data Agent<br/>Ready for Consumption"]
-
-    A --> B --> C --> D
-```
+![FabricOps Production table to Data Agent implementation](../assets/data-agent-bootstrap-implementation.svg)
 
 `create_data_agent()` uses the current Fabric notebook caller identity to call the Microsoft Fabric REST API. It creates the Data Agent, attaches the configured Production Lakehouse or Warehouse datasource, selects the governed table, and applies the generated datasource and agent instructions.
 
