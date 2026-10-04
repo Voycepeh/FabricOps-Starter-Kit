@@ -1,5 +1,7 @@
 # Scan Effective Data Access
 
+<span class="fabricops-release-status fabricops-release-status--preview">Preview</span>
+
 ![Effective data access scan](../assets/EffectiveAccessScan.png)
 
 ## The problem
