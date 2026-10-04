@@ -62,7 +62,7 @@ Fabric permissions remain authoritative for access to the Production data and fo
 ## Under the hood
 
 ```mermaid
-flowchart LR
+flowchart TD
     TABLE["Activated Production table"] --> ID["table_id"]
     CONTRACT["Active Data Contract"] --> CONTEXT["Governed consumer context"]
     CATALOGUE["Catalogue + Enrichment"] --> CONTEXT
