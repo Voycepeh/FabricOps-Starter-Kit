@@ -1,5 +1,7 @@
 # Data Quality Rules from Natural Language
 
+<span class="fabricops-release-status fabricops-release-status--preview">Preview</span>
+
 ![Business rules converted to enforceable Data Quality rules](../assets/BusinessRuletoDQ.png)
 
 ## The problem
