@@ -9,6 +9,8 @@ description: Use when adding, changing, promoting, deprecating, removing, refact
 
 Guide focused callable-level source changes while applying the repository contracts in `AGENTS.md`.
 
+Lifecycle determines compatibility. Live public callables are backward-compatible by default and their observable contracts must be preserved unless the task explicitly authorizes a breaking change. Preview callables may change cleanly without compatibility wrappers or transitional shims unless migration support is explicitly requested. Discontinued callables do not imply current compatibility support.
+
 Do not use this skill for docs-only wording, release-only presentation, or notebook template edits unless function-level package source also changes.
 
 ## Context to inspect
@@ -28,7 +30,7 @@ The current call-flow JSON is normalized rather than storing a duplicated expand
 
 ## Workflow
 
-1. Classify the callable as Live, Preview, Discontinued, Internal, or Private.
+1. Classify the callable as Live, Preview, Discontinued, Internal, or Private before deciding compatibility requirements. For Live callables, identify the existing observable contract before editing. For Preview, Internal, or Private callables, do not preserve obsolete structure merely for backwards compatibility.
 2. Identify the smallest valid owner-file seam and reuse existing shared helpers.
 3. Inspect the observable contract and current call flow. Find the callable by `qualified_name`, then inspect direct relationships and recurse only when the downstream scope is relevant. Check whether a physical read/write is genuinely reusable/user-facing or only workflow-specific.
 4. Implement only the required source change. Route genuinely reusable physical reads/writes through foundational I/O owner functions; keep niche workflow-specific I/O and domain-specific mutations with their owning domain when that is the clearer implementation.
