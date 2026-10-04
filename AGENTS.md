@@ -59,24 +59,20 @@ Inspect and reuse current implementations before creating parallel paths. Avoid 
 
 ## Task-specific skills
 
-Use the relevant workflow skill:
+`AGENTS.md` is the repository-wide contract. Load the most specific workflow skill for the requested change:
 
-- Public callable or function-level source changes:
-  `.agents/skills/fabricops-public-api-change/SKILL.md`
-- Release preparation:
-  `.agents/skills/fabricops-release/SKILL.md`
-- Documentation cleanup:
-  `.agents/skills/fabricops-docs-maintenance/SKILL.md`
-- Notebook template work:
-  `.agents/skills/fabricops-notebook-template/SKILL.md`
+| Change | Skill |
+| --- | --- |
+| Public callable or function-level package source | `.agents/skills/fabricops-public-api-change/SKILL.md` |
+| Notebook templates under `templates/notebooks/` | `.agents/skills/fabricops-notebook-template/SKILL.md` |
+| Documentation cleanup, structure, or presentation | `.agents/skills/fabricops-docs-maintenance/SKILL.md` |
+| Release preparation, versioning, tagging, or publishing | `.agents/skills/fabricops-release/SKILL.md` |
 
-`AGENTS.md` is the repository-wide contract. Skills provide focused procedures and must not override it.
+Use a secondary skill only when the requested change genuinely crosses that boundary. For example, a package change that directly requires a notebook-template update uses the public-API skill as the primary workflow and the notebook skill for the affected template work.
 
-### Release-note presentation
+Skills own task-specific procedure. They may specialize how to perform a task, but they must not override repository-wide contracts in this file. When guidance overlaps, keep the invariant here and the detailed procedure in the owning skill rather than maintaining two copies.
 
-For release changelogs and GitHub Release notes, include only sections that contain meaningful content for that release. Do not emit empty headings such as `Deprecated`, `Removed`, `Fixed`, `Security`, `Documentation`, `Breaking changes`, `Notebook templates`, or `Skills` when there is nothing to report.
-
-Release notes describe the formal package release contract first. Notebook templates, skills, samples, guided demos, DQ assets, and environment resources are independently maintained and must not receive dedicated release-note sections merely because they exist in the repository. `00_env_config.ipynb` and `02_pipeline.ipynb` are still snapshotted at every release tag as immutable provenance and migration fixtures; this does not make them Python package release assets. Mention them only when a release-specific note materially affects users, for example to restate that they remain outside the formal package release contract.
+There is intentionally no generic catch-all FabricOps skill. When no specialized skill applies, follow this file and the authoritative repository sources directly.
 
 ## Backward compatibility and public contracts
 
@@ -226,72 +222,10 @@ Validation builds do not make generated files on `main` current unless those fil
 - Do not manually edit generated reference pages as source of truth.
 - `src/fabricops_kit/config/metadata_schemas.py` is the canonical implemented metadata schema source.
 - `Managed by` entries should identify exact source functions when traceable.
-
-### Documentation ownership
-
-Give each topic one canonical home based on what the reader is trying to learn. Before adding a page or expanding an existing one, classify the content and update the canonical owner instead of creating overlapping explanations.
-
-- **Product Definition** owns what FabricOps is: the original product intent, scope, audience, positioning, operating decisions, and product-level boundaries.
-- **Glossary** owns canonical user-facing term definitions and the **FabricOps concepts / Governance concepts / Engineering concepts** grouping.
-- **How FabricOps Works** owns the high-level explanation of how the complete FabricOps workflow fits together. It should be understandable without implementation-level detail.
-- **Guided Demo** owns practical implementation: what users do, run, configure, and observe when applying the FabricOps workflow. Put useful technical rationale, trade-offs, caveats, and edge cases beside the relevant step in focused collapsible blocks instead of creating a separate rationale layer. Each action page should surface only the glossary concepts needed for that step rather than requiring users to read the full glossary first.
-- **Function Reference** owns exact callable contracts: parameters, returns, side effects, failure behaviour, and callable-specific usage guidance.
-
-Cross-link between these layers instead of copying the same explanation into several pages. Keep overview pages high level, Guided Demo pages actionable with optional contextual rationale, and reference pages exact.
-
-### Human-facing documentation readability
-
-Human-facing pages should be scannable before they are read in detail. Use the documentation-maintenance skill for the full pattern, and apply these repository-wide defaults:
-
-- Prefer **page title → short lead sentence → visual/table → short sections → focused callout → next action**.
-- Start major sections with a short bold summary sentence when it helps readers understand the point quickly.
-- Break long prose into descriptive `##` and `###` sections, bullets, numbered steps, or compact tables.
-- Use Material admonitions only for important notes, warnings, and rules. Avoid excessive boxes.
-- Use collapsible `???` detail blocks for optional background, exceptions, troubleshooting, rationale, trade-offs, and long secondary explanations.
-- Do not repeat a diagram's full meaning in several paragraphs directly below it.
-- Procedure pages should normally end with an expected result and a clear next step.
-- Prefer existing Markdown and MkDocs Material patterns before adding custom HTML or decorative components.
-- Preserve exact FabricOps terminology and do not replace canonical repo terms with generic alternatives.
-- Keep layouts readable on mobile as well as desktop.
-
-The Maintainer Release Guide has a separate source-of-truth rule: `.agents/skills/fabricops-release/SKILL.md` owns the workflow and `docs/maintainer/index.md` is synchronised from it.
-
-### Featured Solutions page pattern
-
-Pages listed under **Featured Solutions** in `mkdocs.yml` are one documentation family and should use the same reader-facing structure, even when the implementation behind each solution differs.
-
-Use this order:
-
-1. **The problem** — the concrete user or platform problem the solution addresses.
-2. **The solution** — the FabricOps approach and the outcome it enables.
-3. **How it works** — the user-facing flow. Make the division of responsibility explicit where relevant: what a human configures or decides, what AI assists with, and what FabricOps performs deterministically.
-4. **Under the hood** — implementation detail that explains how the solution is powered, including AI inputs/outputs, deterministic enforcement, metadata, scanners, generators, or runtime mechanics as applicable. Keep this separate from the user-facing flow.
-5. **Example** — a concrete, compact example. Prefer text or screenshots when they are the clearest maintained artifact; a demo video may replace or supplement them later.
-6. **Go deeper** — links to the relevant Guided Demo step, reference page, implementation detail, or related solution. Use descriptive link labels rather than repeating the page narrative.
-
-A section may be omitted only when it genuinely has no useful content for that solution. Do not replace these headings with near-equivalent top-level sections such as `The big picture`, `Implementation details`, `Runtime enforcement`, or `Consumption flow`; put that material under the appropriate standard section instead. Feature-specific detail should normally be expressed as `###` subsections inside the standard structure.
-
-For AI-assisted solutions, do not imply that AI owns governed decisions. Describe AI as suggestion or translation support, identify the evidence or context supplied to it, and keep the final governed decision with a human where that is the implemented workflow. Distinguish this from deterministic FabricOps validation or enforcement.
-
-### Notebook release snapshots
-
-`templates/notebooks/` is the evolving latest notebook-template surface. At each FabricOps release, preserve the exact release-tag versions of `00_env_config.ipynb` and `02_pipeline.ipynb` under `templates/releases/vX.Y.Z/`. The release tag is authoritative. Frozen copies are immutable provenance and migration fixtures: never modernize, reformat, or backport later template changes into them. Publish those exact two notebooks individually as downloadable GitHub Release assets for the matching version; do not require a ZIP bundle. These snapshots remain outside the formal Python package asset lifecycle. Change the skill first rather than independently editing the published guide.
-
-### Public API docstrings
-
-For new or modified public APIs:
-
-- use complete NumPy-style docstrings
-- document every signature parameter
-- describe actual behaviour without placeholder text
-- document return meaning, relevant side effects, failure behaviour, and Fabric runtime assumptions
-- include relevant `Parameters`, `Returns`, `Raises`, `Notes`, `Examples`, and `See Also` sections
-- use valid examples that match the real signature
-- do not mix Google-style and NumPy-style headers
-
-Live callables must document actual behaviour, meaningful side effects, return interpretation, failure behaviour, runtime assumptions, and at least one valid example. Preview callables may use lighter documentation while unstable, but must meet the Live standard before promotion.
-
-The active Ruff configuration enforces docstring rules. Use correct section spacing and document every parameter when a `Parameters` section is present.
+- Use `.agents/skills/fabricops-docs-maintenance/SKILL.md` for documentation ownership, readability, Guided Demo, Featured Solutions, and diagram procedure.
+- Use `.agents/skills/fabricops-notebook-template/SKILL.md` for all living standard notebook templates. Only `00_env_config.ipynb` and `02_pipeline.ipynb` are currently part of the release snapshot contract.
+- Use `.agents/skills/fabricops-release/SKILL.md` for release notes, release snapshots, versioning, tagging, and publishing procedure.
+- Use `.agents/skills/fabricops-public-api-change/SKILL.md` for callable documentation and lifecycle-specific API procedure.
 
 ## Interactive widgets
 
