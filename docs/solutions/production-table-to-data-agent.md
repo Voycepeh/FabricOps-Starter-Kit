@@ -61,35 +61,43 @@ Fabric permissions remain authoritative for access to the Production data and fo
 
 ## Under the hood
 
+<details markdown="1">
+<summary><strong>How FabricOps prepares and applies the Data Agent instructions</strong></summary>
+
 ![FabricOps Production table to Data Agent implementation](../assets/data-agent-bootstrap-implementation.svg)
 
 `create_data_agent()` uses the current Fabric notebook caller identity to call the Microsoft Fabric REST API. It creates the Data Agent, attaches the configured Production Lakehouse or Warehouse datasource, selects the governed table, and applies the generated datasource and agent instructions.
 
 FabricOps does **not** copy the Production table into an AI prompt. The table remains a Fabric datasource and the caller's Fabric permissions continue to control access.
 
-The API is currently **Preview** and the MVP remains single-table. Multi-table relationship authoring, duplicate-agent registration, evaluation, and automatic publication are outside this capability.
+</details>
 
 ## Example
 
-??? example "Ask instead of guess"
+??? example "Example Data Agent instructions"
 
-    An orders table might contain:
+    For a governed Orders table, FabricOps can prepare instructions such as:
 
-    | Field | Governed meaning |
-    | --- | --- |
-    | `order_date` | Date the order was placed |
-    | `ship_date` | Date the order was shipped |
-    | `payment_date` | Date payment was received |
+    **Table context**
 
-    If a consumer asks **"Show me monthly orders for 2026"**, several interpretations are plausible.
+    - Purpose: Governed Production order records.
+    - Grain: One row per order.
+    - `order_date`: Date the order was placed.
+    - `ship_date`: Date the order was shipped.
+    - `payment_date`: Date payment was received.
+    - `gross_amount`: Amount before deductions.
+    - `net_amount`: Amount after deductions.
 
-    FabricOps does not invent a default business date. The generated context tells the Data Agent that these date concepts are distinct and that genuine ambiguity should be clarified.
+    **Data Agent instructions**
 
-    > **Consumer:** Show me monthly orders for 2026.
-    >
-    > **Data Agent:** There are multiple date fields that could be used for a monthly view: `order_date`, `ship_date`, and `payment_date`. Which date would you like to use?
+    - Use the governed table and column descriptions when interpreting business questions.
+    - Do not invent business meaning that is not provided in the governed context.
+    - Treat `order_date`, `ship_date`, and `payment_date` as distinct business concepts.
+    - Treat `gross_amount` and `net_amount` as distinct measures.
+    - When a question could reasonably refer to multiple governed concepts, ask the user to clarify before choosing one.
+    - For example, if a user asks for "monthly orders", clarify which governed date concept they intend when the question does not make that clear.
 
-    The same principle applies to gross versus net amounts, lifecycle statuses, or multiple customer and account identifiers: **use governed meaning when it is explicit; ask when it is genuinely ambiguous.**
+    The exact instructions are generated from the governed context available for the selected Production table rather than maintained as a separate manual description of the same table.
 
 ## Go deeper
 
