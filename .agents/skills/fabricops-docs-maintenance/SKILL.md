@@ -181,11 +181,13 @@ A docs maintenance change should contain only the focused Markdown, image refere
 
 ## Verification
 
-Run deterministic checks that apply to the change:
+Run deterministic checks that apply to the change. For human-facing MkDocs content, navigation, or configuration changes, run:
 
 ```bash
 uv run mkdocs build --strict
 ```
+
+For prompt-only changes to `AGENTS.md` or `.agents/skills/`, review Markdown structure, links, ownership, and the final diff; a full MkDocs build is not required unless published documentation is also affected.
 
 Also review:
 
