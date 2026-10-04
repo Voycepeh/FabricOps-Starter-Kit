@@ -14,9 +14,11 @@ That creates a natural opportunity: **reuse the context FabricOps already has to
 
 FabricOps reuses the governed context it already has: table purpose, grain, business terminology, column descriptions, approved business rules, known limitations, classification, sensitivity, and other Data Contract context.
 
-When an activated Production table becomes a Data Agent, FabricOps makes a deterministic first pass at translating the useful consumer context into Data Agent instructions.
+FabricOps prepares the governed context of the Production table into Data Agent instructions, then uses the Microsoft Fabric API to create and configure the Data Agent with those instructions.
 
-**Production table + existing FabricOps context → better-configured Data Agent**
+This means that at **Step 7, the final stage of the FabricOps lifecycle**, the governed Production table can be handed off as a ready-to-use Data Agent for consumption, reusing the context captured throughout the previous six steps.
+
+**Governed Production Table + FabricOps Context → Data Agent Instructions → Fabric API → Data Agent ready for consumption**
 
 The Data Agent still queries the **actual Production data** through Microsoft Fabric. FabricOps does not copy business-table rows into the prompt or replace Fabric permissions. It supplies business context that cannot always be inferred safely from the data alone.
 
