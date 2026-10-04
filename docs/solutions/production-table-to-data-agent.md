@@ -1,5 +1,7 @@
 # Production Table to Data Agent
 
+<span class="fabricops-release-status fabricops-release-status--preview">Preview</span>
+
 ## The problem
 
 Microsoft Fabric Data Agents can already work well out of the box, particularly with a single, well-structured table.
@@ -24,9 +26,7 @@ The Data Agent still queries the **actual Production data** through Microsoft Fa
 
 ![Production Table to Data Agent](../assets/DataAgentsBootstrap.png)
 
-!!! note "Work in progress"
-
-    FabricOps currently provides `create_data_agent()`, which creates and configures a Data Agent from **one governed Production table**. In future iterations, we plan to extend this to support **multiple related governed tables within a Data Agent**.
+**Current Preview scope:** FabricOps currently provides `create_data_agent()`, which creates and configures a Data Agent from **one governed Production table**. Multi-table support is planned for a future iteration.
 
 ## How it works
 
