@@ -25,6 +25,12 @@
   border-color: color-mix(in srgb, #d9a300 38%, transparent);
 }
 
+.fabricops-release-status--maintainer {
+  color: var(--md-default-fg-color--light);
+  background: color-mix(in srgb, var(--md-default-fg-color) 8%, var(--md-default-bg-color, #ffffff));
+  border-color: color-mix(in srgb, var(--md-default-fg-color) 20%, transparent);
+}
+
 .fabricops-release-status--discontinued {
   color: #7a2f2f;
   background: color-mix(in srgb, #c75252 14%, var(--md-default-bg-color, #ffffff));
@@ -41,6 +47,12 @@
   color: #f4d991;
   background: color-mix(in srgb, #c99a2c 26%, var(--md-default-bg-color, #1f1f1f));
   border-color: color-mix(in srgb, #e0b84f 45%, transparent);
+}
+
+[data-md-color-scheme="slate"] .fabricops-release-status--maintainer {
+  color: var(--md-default-fg-color--light);
+  background: color-mix(in srgb, var(--md-default-fg-color) 16%, var(--md-default-bg-color, #1f1f1f));
+  border-color: color-mix(in srgb, var(--md-default-fg-color) 32%, transparent);
 }
 
 [data-md-color-scheme="slate"] .fabricops-release-status--discontinued {
