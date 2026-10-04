@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+<title id="title">How FabricOps bootstraps a Production table into a Data Agent</title>
+<desc id="desc">FabricOps reuses governed context from the Production table to prepare Data Agent instructions, including guidance to ask instead of guess when business meaning is ambiguous. The Fabric API creates the native Data Agent while the governed Production table remains its actual datasource.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#667085"/></marker></defs>
+<rect width="1200" height="650" fill="#ffffff"/>
+<style>.t{font:600 22px Arial,sans-serif;fill:#101828}.h{font:600 15px Arial,sans-serif;fill:#101828}.b{font:13px Arial,sans-serif;fill:#344054}.m{font:12px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#475467}.ey{font:600 11px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#667085;letter-spacing:.8px}.box{fill:#fff;stroke:#d0d5dd;stroke-width:1.4}.focus{fill:#eff8ff;stroke:#2e90fa;stroke-width:1.8}.out{fill:#f9fafb;stroke:#98a2b3;stroke-width:1.4}.line{fill:none;stroke:#667085;stroke-width:1.6;marker-end:url(#arrow)}.dash{fill:none;stroke:#98a2b3;stroke-width:1.5;stroke-dasharray:6 5;marker-end:url(#arrow)}</style>
+<text x="48" y="48" class="t">How FabricOps bootstraps a Production table into a Data Agent</text>
+<text x="48" y="74" class="b">Governed context becomes agent instructions. Production data remains the native Fabric datasource.</text>
+<text x="48" y="118" class="ey">WHAT FABRICOPS ALREADY KNOWS</text>
+<rect x="48" y="138" width="300" height="224" rx="7" class="box"/>
+<text x="68" y="168" class="h">Governed Production table</text>
+<text x="68" y="199" class="b">Table purpose + grain</text><text x="68" y="223" class="b">Column meaning + business terms</text><text x="68" y="247" class="b">Approved business rules</text><text x="68" y="271" class="b">Known limitations</text><text x="68" y="295" class="b">Classification + sensitivity context</text><text x="68" y="333" class="m">Context captured in Steps 1–6</text>
+<path d="M348 250 H398" class="line"/>
+<text x="410" y="118" class="ey">WHAT FABRICOPS PREPARES</text>
+<rect x="398" y="138" width="354" height="224" rx="7" class="focus"/>
+<text x="418" y="168" class="h">Data Agent instructions</text>
+<text x="418" y="199" class="b">Use governed business meaning</text><text x="418" y="223" class="b">Do not invent undocumented semantics</text><text x="418" y="247" class="b">Recognise distinct date / amount concepts</text><text x="418" y="271" class="b">Ask when multiple meanings are plausible</text><text x="418" y="309" class="m">"monthly orders" → which date?</text><text x="418" y="333" class="m">order_date · ship_date · payment_date</text>
+<path d="M752 250 H802" class="line"/>
+<text x="814" y="118" class="ey">WHAT FABRIC CREATES</text>
+<rect x="802" y="138" width="350" height="224" rx="7" class="box"/>
+<text x="822" y="168" class="h">Native Microsoft Fabric Data Agent</text>
+<text x="822" y="199" class="m">create_data_agent()</text><text x="822" y="223" class="b">Creates and configures via Fabric API</text><text x="822" y="247" class="b">Applies agent + datasource instructions</text><text x="822" y="271" class="b">Attaches the governed Production table</text><text x="822" y="309" class="b">Ready for consumer questions at Step 7</text><text x="822" y="333" class="m">Fabric permissions still apply</text>
+<text x="48" y="415" class="ey">DATA STAYS DATA</text>
+<rect x="48" y="435" width="1104" height="142" rx="7" class="out"/>
+<text x="68" y="467" class="h">The Production table is the datasource, not prompt content</text>
+<text x="68" y="497" class="b">FabricOps prepares governed business context as instructions; it does not copy the Production table rows into an AI prompt.</text>
+<text x="68" y="525" class="b">The Data Agent queries the actual Production Lakehouse or Warehouse through Microsoft Fabric under the caller's Fabric permissions.</text>
+<path d="M245 435 V390 H977 V362" class="dash"/>
+<text x="48" y="620" class="m">Current Preview capability: one governed Production table per Data Agent. Multi-table support is planned.</text>
+</svg>
