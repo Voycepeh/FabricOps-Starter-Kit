@@ -1,5 +1,9 @@
 # Explore How FabricOps Functions Work Under the Hood
 
+<span class="fabricops-release-status fabricops-release-status--live">Live</span> <span class="fabricops-release-status fabricops-release-status--maintainer">Maintainer</span>
+
+This is a maintainer review surface for inspecting FabricOps public callable architecture. It is generated from repository source and used as part of the active maintenance workflow.
+
 <div align="center">
   <a class="md-button md-button--primary" href="../assets/public-function-call-flows-dashboard.html">Open Call Flow Dashboard</a>
   <a class="md-button" href="../reference/_data/public-function-call-flows.json">View JSON Contract</a>
@@ -7,19 +11,15 @@
 
 [![Public Function Call Flows Dashboard](assets/fabricops-call-graph-dashboard.png)](assets/public-function-call-flows-dashboard.html)
 
-## The problem
+## Purpose
 
-FabricOps can move quickly from an idea to a working public callable function, especially with AI-assisted development. As the public API grows, reviewing functions one file at a time makes it harder to see helper reachability, architecture boundaries, call-tree complexity, and the impact of a change.
+As the public API grows, reviewing functions one file at a time makes it harder to see helper reachability, architecture boundaries, call-tree complexity, and the impact of a change. The Function Call Graph is the maintainability checkpoint for that work.
 
-## The solution
-
-The Function Call Graph is the maintainability checkpoint for the FabricOps public API. A deterministic generator scans the repository into a versioned call-flow JSON contract, and the interactive dashboard turns that contract into a focused review surface.
+A deterministic generator scans the repository into a versioned call-flow JSON contract, and the interactive dashboard turns that contract into a focused review surface. Use it to inspect a public callable, understand its dependencies and architecture signals, and export focused cleanup context before changing the implementation.
 
 > **First make it exist. Then make it good.**
 
-Use the dashboard to inspect a public callable, understand its dependencies and architecture signals, and export focused cleanup context before changing the implementation.
-
-## How it works
+## Maintainer workflow
 
 ```mermaid
 flowchart LR
