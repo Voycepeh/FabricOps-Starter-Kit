@@ -28,6 +28,7 @@ Lineage and Source Observation metadata only after publication succeeds.
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L336-L747">View on GitHub</a>
 </div>
 
+
 ## Usage notes
 
 Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
