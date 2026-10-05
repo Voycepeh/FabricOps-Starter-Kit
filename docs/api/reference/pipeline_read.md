@@ -3,7 +3,6 @@
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.2.0</span>
-<span class="reference-chip reference-chip-muted">Public function</span>
 </p>
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
@@ -31,11 +30,8 @@ choose between Lakehouse and Warehouse table readers.
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02B_incremental_append_pipeline</span>
 </p>
-
-**Used in notebooks:** `02B_incremental_append_pipeline`
 
 ## Usage notes
 
