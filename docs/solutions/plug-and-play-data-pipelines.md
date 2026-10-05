@@ -25,44 +25,55 @@ The result is a pipeline pattern that engineers can clone and adapt without rebu
 
 ```mermaid
 flowchart LR
-    GOV["Governance<br/>Data Contract<br/>Enrichment + Guardrails"]
-
-    subgraph DEV["Engineering Development"]
+    subgraph DEV["Development — clonable notebook stack"]
         direction TB
-        DEV_ENV["00 Env Config<br/>Development Fabric Stores"]
+        DEV_ENV["00 Env Config<br/>resolves Development<br/>Fabric Store locations"]
         subgraph DEV_PIPE["02 Pipeline"]
-            direction LR
-            DEV_READ["Governed Read<br/>Full / Incremental"]
-            DEV_TRANSFORM["Project-owned<br/>PySpark"]
-            DEV_WRITE["Governed Write<br/>Overwrite / Append / SCD1 / SCD2"]
-            DEV_READ --> DEV_TRANSFORM --> DEV_WRITE
+            direction TB
+            DEV_CONTRACT["Select Data Contract context"]
+            DEV_READ_FULL["Read Table 1<br/>Full"]
+            DEV_READ_INC["Read Table 2<br/>Incremental"]
+            DEV_TRANSFORM["Project-specific<br/>PySpark transformation"]
+            DEV_WRITE_OVERWRITE["Write Table 1<br/>Overwrite"]
+            DEV_WRITE_APPEND["Write Table 2<br/>Append"]
+            DEV_WRITE_SCD1["Write Table 3<br/>SCD1"]
+            DEV_WRITE_SCD2["Write Table 4<br/>SCD2"]
+            DEV_CONTRACT --> DEV_READ_FULL --> DEV_TRANSFORM
+            DEV_CONTRACT --> DEV_READ_INC --> DEV_TRANSFORM
+            DEV_TRANSFORM --> DEV_WRITE_OVERWRITE
+            DEV_TRANSFORM --> DEV_WRITE_APPEND
+            DEV_TRANSFORM --> DEV_WRITE_SCD1
+            DEV_TRANSFORM --> DEV_WRITE_SCD2
         end
         DEV_ENV --> DEV_PIPE
-        DEV_PIPE --> DEV_DATA["Development<br/>Lakehouse / Warehouse"]
+        DEV_PIPE --> DEV_RES["Development<br/>Fabric Store locations"]
     end
 
-    META["Shared FabricOps Metadata<br/>Catalogue + Profile + State<br/>Guardrail Results + Lineage"]
-
-    subgraph PROD["Engineering Production"]
+    subgraph PROD["Production — same notebook stack"]
         direction TB
-        PROD_ENV["00 Env Config<br/>Production Fabric Stores"]
-        subgraph PROD_PIPE["Same 02 Pipeline"]
-            direction LR
-            PROD_READ["Governed Read"]
-            PROD_TRANSFORM["Same project<br/>PySpark"]
-            PROD_WRITE["Governed Write"]
-            PROD_READ --> PROD_TRANSFORM --> PROD_WRITE
+        PROD_ENV["00 Env Config<br/>resolves Production<br/>Fabric Store locations"]
+        subgraph PROD_PIPE["02 Pipeline"]
+            direction TB
+            PROD_CONTRACT["Select Data Contract context"]
+            PROD_READ_FULL["Read Table 1<br/>Full"]
+            PROD_READ_INC["Read Table 2<br/>Incremental"]
+            PROD_TRANSFORM["Project-specific<br/>PySpark transformation"]
+            PROD_WRITE_OVERWRITE["Write Table 1<br/>Overwrite"]
+            PROD_WRITE_APPEND["Write Table 2<br/>Append"]
+            PROD_WRITE_SCD1["Write Table 3<br/>SCD1"]
+            PROD_WRITE_SCD2["Write Table 4<br/>SCD2"]
+            PROD_CONTRACT --> PROD_READ_FULL --> PROD_TRANSFORM
+            PROD_CONTRACT --> PROD_READ_INC --> PROD_TRANSFORM
+            PROD_TRANSFORM --> PROD_WRITE_OVERWRITE
+            PROD_TRANSFORM --> PROD_WRITE_APPEND
+            PROD_TRANSFORM --> PROD_WRITE_SCD1
+            PROD_TRANSFORM --> PROD_WRITE_SCD2
         end
         PROD_ENV --> PROD_PIPE
-        PROD_PIPE --> PROD_DATA["Governed Production<br/>Lakehouse / Warehouse"]
+        PROD_PIPE --> PROD_RES["Production<br/>Fabric Store locations"]
     end
 
-    GOV -->|"Development: select + validate"| DEV_PIPE
-    DEV_PIPE -->|"Profile + observations + results"| META
-    META -->|"Evidence for Governance"| GOV
-    DEV_PIPE ==>|"Validate, then promote unchanged"| PROD_PIPE
-    GOV -->|"Production: active contract"| PROD_PIPE
-    PROD_PIPE -->|"Profile + lineage + results"| META
+    DEV ==>|"Promote 1:1"| PROD
 ```
 
 The picture has four important parts working together:
@@ -98,23 +109,26 @@ AI is optional. Microsoft Fabric Copilot or another coding agent can help write 
 
 ## Under the hood
 
-FabricOps deliberately leaves project logic visible while standardising the boundaries around it.
+<details markdown="1">
+<summary><strong>What happens in a standard FabricOps Pipeline</strong></summary>
 
 ```mermaid
 flowchart LR
-    ENV["00 Env Config"] --> READ["Governed Read"]
-    READ --> TRANSFORM["Your PySpark"]
-    TRANSFORM --> WRITE["Governed Write"]
+    CONTRACT["Data Contract"] --> READ["orchestrate_read()"]
+    READ --> READ_CHECKS["✓ Freshness<br/>✓ Schema<br/>✓ DQ"] --> TRANSFORM["Your PySpark"]
+    READ --> PROFILE["Profile<br/>Full dataset profiling"]
 
-    CONTRACT["Data Contract"] --> READ
-    CONTRACT --> WRITE
-
-    READ --> META["Metadata + Profile + State"]
-    WRITE --> META
+    TRANSFORM --> WRITE["orchestrate_write()"]
+    WRITE --> WRITE_CHECKS["✓ Schema → ✓ Sensitive Data → ✓ Source Drift → ✓ DQ → ✓ Guardrail Coverage"]
+    WRITE_CHECKS --> PUBLISH["Write"] --> WRITE_PROFILE["Profile<br/>Full dataset profiling"]
     WRITE --> LINEAGE["Lineage"]
 ```
 
-The orchestrators provide the stable framework boundary. Lower-level implementation details such as Full versus Incremental reads, load strategies, validation behaviour, and deployment are documented separately so this page can stay focused on the overall solution.
+The Read boundary resolves the governed table and runs Freshness, Schema, and DQ checks before the DataFrame reaches the project-owned PySpark transformation. Full reads also produce full dataset profiling as part of the Read orchestration without making Profile another inline guardrail stage. The Write boundary applies pre-publication guardrails before writing, then performs full dataset profiling on the published table and records lineage.
+
+The orchestrators provide the stable framework boundary. Read modes, Write modes, validation behaviour, and deployment are documented separately so this page can stay focused on the overall solution.
+
+</details>
 
 ## Example
 
