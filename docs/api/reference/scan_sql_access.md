@@ -39,6 +39,7 @@ physical item identifier.
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_sql_access.py#L251-L378">View on GitHub</a>
 </div>
 
+
 ## Usage notes
 
 Use for repeatable SQL permission inventory snapshots that should link back to governed FabricOps table identities.
