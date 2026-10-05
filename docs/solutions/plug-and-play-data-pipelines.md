@@ -31,10 +31,13 @@ flowchart LR
         subgraph DEV_PIPE["02 Pipeline"]
             direction TB
             DEV_CONTRACT["Select Data Contract context"]
-            DEV_READ["orchestrate_read() × N<br/>Full / Incremental"]
+            DEV_READ_FULL["Read Table 1<br/>Full"]
+            DEV_READ_INC["Read Table 2<br/>Incremental"]
             DEV_TRANSFORM["Project-specific<br/>PySpark transformation"]
             DEV_WRITE["orchestrate_write() × N<br/>Overwrite / Append / SCD1 / SCD2"]
-            DEV_CONTRACT --> DEV_READ --> DEV_TRANSFORM --> DEV_WRITE
+            DEV_CONTRACT --> DEV_READ_FULL --> DEV_TRANSFORM
+            DEV_CONTRACT --> DEV_READ_INC --> DEV_TRANSFORM
+            DEV_TRANSFORM --> DEV_WRITE
         end
         DEV_ENV --> DEV_PIPE
         DEV_PIPE --> DEV_RES["Development<br/>Fabric Store locations"]
@@ -46,10 +49,13 @@ flowchart LR
         subgraph PROD_PIPE["02 Pipeline"]
             direction TB
             PROD_CONTRACT["Select Data Contract context"]
-            PROD_READ["orchestrate_read() × N<br/>Full / Incremental"]
+            PROD_READ_FULL["Read Table 1<br/>Full"]
+            PROD_READ_INC["Read Table 2<br/>Incremental"]
             PROD_TRANSFORM["Project-specific<br/>PySpark transformation"]
             PROD_WRITE["orchestrate_write() × N<br/>Overwrite / Append / SCD1 / SCD2"]
-            PROD_CONTRACT --> PROD_READ --> PROD_TRANSFORM --> PROD_WRITE
+            PROD_CONTRACT --> PROD_READ_FULL --> PROD_TRANSFORM
+            PROD_CONTRACT --> PROD_READ_INC --> PROD_TRANSFORM
+            PROD_TRANSFORM --> PROD_WRITE
         end
         PROD_ENV --> PROD_PIPE
         PROD_PIPE --> PROD_RES["Production<br/>Fabric Store locations"]
