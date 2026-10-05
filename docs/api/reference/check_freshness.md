@@ -16,10 +16,6 @@ Check whether source timing satisfies direct or approved freshness intent.
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L20-L207">View on GitHub</a>
 </div>
 
-<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">02B_incremental_append_pipeline</span>
-</p>
-
 ## Usage notes
 
 Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
