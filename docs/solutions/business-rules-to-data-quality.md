@@ -35,7 +35,7 @@ AI helps author the rules. **FabricOps enforces them.**
 ## Under the hood
 
 <details class="fabricops-solution-details" markdown="1">
-<summary><strong>Under the hood: how natural language becomes governed rules</strong></summary>
+<summary><strong>How natural language becomes governed rules</strong></summary>
 
 ### What FabricOps gives the AI
 
