@@ -44,15 +44,19 @@ def test_every_public_function_is_in_exactly_one_group() -> None:
     assert rows
     assert len(rows) == len(set(rows))
 
-    group_bodies = re.findall(
-        r'<details class="reference-function-group"[^>]*>([\s\S]*?)</details>',
-        text,
+    group_starts = list(
+        re.finditer(r'<details class="reference-function-group"[^>]*>', text)
     )
-    grouped_rows = [
-        name
-        for body in group_bodies
-        for name in re.findall(r'data-callable-row="true" data-callable-name="([^"]+)"', body)
-    ]
+    assert len(group_starts) == 5
+
+    grouped_rows: list[str] = []
+    for index, match in enumerate(group_starts):
+        end = group_starts[index + 1].start() if index + 1 < len(group_starts) else len(text)
+        body = text[match.end():end]
+        grouped_rows.extend(
+            re.findall(r'data-callable-row="true" data-callable-name="([^"]+)"', body)
+        )
+
     assert sorted(grouped_rows) == sorted(rows)
 
 
