@@ -43,7 +43,7 @@ INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
 GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
-CORE_TEMPLATE_KEYS = {"00_env_config", "01_governance", "02_pipeline", "99_explore"}
+CORE_TEMPLATE_KEYS = {"00_env_config", "00C_demo_setup", "01_governance", "02_pipeline", "99_explore"}
 AUDIT_FIELD_DESCRIPTIONS = {
     "_committed_by": "User principal or runtime identity that committed the metadata row.",
     "_committed_at": "Timestamp when the metadata row was committed.",
@@ -5448,7 +5448,7 @@ def main() -> None:
         symbol = symbol_map[name]
         symbol_link = public_reference_link(name, docs_metadata, context="reference")
         starter_path = ", ".join(core_template_usage_by_symbol.get(name, [])) or "—"
-        usage_source = ", ".join(template_usage_by_symbol.get(name, [])) or "—"
+        usage_source = ", ".join(core_template_usage_by_symbol.get(name, [])) or "—"
         purpose = symbol.purpose or symbol.summary or "—"
         display_module = symbol.public_module
         starter_path_attribute = f' data-callable-starter-path="{_esc(starter_path)}"' if starter_path != "—" else ""
@@ -5602,7 +5602,7 @@ def main() -> None:
             input_lines = _render_parameter_definitions(parameter_rows, parameter_overrides, PARAMETER_DISPLAY_TYPES.get(short_name, {}))
             public_flow = public_flow_by_name.get(short_name, public_flow_by_qn[qn])
             lifecycle_status = _lifecycle_status(public_flow)
-            used_in_templates = template_usage_by_symbol.get(short_name, [])
+            used_in_templates = core_template_usage_by_symbol.get(short_name, [])
             notebook_usage_chips = [
                 f'<span class="reference-chip">{html_escape(template)}</span>' for template in used_in_templates
             ]
