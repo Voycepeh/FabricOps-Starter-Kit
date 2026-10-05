@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+<title id="title">How FabricOps scans effective data access</title>
+<desc id="desc">The Account running the scan observes three permission surfaces: workspace roles, OneLake Security roles, and SQL endpoint grants. FabricOps scans each visible surface, maps observations to canonical table identities, and writes normalized access evidence to METADATA_DATA_ACCESS. A surface the account running the scan cannot read remains unobserved.</desc>
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#667085"/></marker>
+  <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#2e90fa"/></marker>
+</defs>
+<rect width="1200" height="620" fill="#ffffff"/>
+<style>
+.t{font:600 22px Arial,sans-serif;fill:#101828}.h{font:600 15px Arial,sans-serif;fill:#101828}.b{font:13px Arial,sans-serif;fill:#344054}.m{font:12px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#475467}.ey{font:600 11px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#667085;letter-spacing:.8px}.box{fill:#fff;stroke:#d0d5dd;stroke-width:1.4}.focus{fill:#eff8ff;stroke:#2e90fa;stroke-width:1.8}.soft{fill:#f9fafb;stroke:#98a2b3;stroke-width:1.4}.warn{fill:#fffaf0;stroke:#f5b546;stroke-width:1.4;stroke-dasharray:6 5}.line{fill:none;stroke:#667085;stroke-width:1.6;marker-end:url(#arrow)}.blue{fill:none;stroke:#2e90fa;stroke-width:1.8;marker-end:url(#arrow-blue)}.dash{fill:none;stroke:#98a2b3;stroke-width:1.5;stroke-dasharray:6 5}.sep{stroke:#d0d5dd;stroke-width:1}
+</style>
+
+<text x="48" y="48" class="t">How FabricOps scans effective data access</text>
+<text x="48" y="76" class="b">FabricOps scans only the permission information visible to the account running the notebook or pipeline.</text>
+
+<text x="48" y="120" class="ey">WHAT THE ACCOUNT RUNNING THE SCAN CAN OBSERVE</text>
+<rect x="48" y="140" width="336" height="152" rx="7" class="focus"/>
+<text x="68" y="172" class="h">Account running the scan</text>
+<text x="68" y="200" class="b">Notebook or pipeline account</text>
+<text x="68" y="224" class="b">FabricOps can scan only what this account</text>
+<text x="68" y="248" class="b">is allowed to inspect.</text>
+<text x="68" y="272" class="m">not visible ≠ no access</text>
+
+<path d="M384 184 H432" class="blue"/>
+<path d="M384 216 H408 V328 H432" class="blue"/>
+<path d="M384 248 H408 V480 H432" class="blue"/>
+
+<text x="432" y="120" class="ey">PERMISSION SURFACES</text>
+<rect x="432" y="140" width="288" height="112" rx="7" class="box"/>
+<text x="452" y="172" class="h">Workspace roles</text>
+<text x="452" y="200" class="m">scan_workspace_access()</text>
+<text x="452" y="224" class="b">Viewer · Contributor · Member · Admin</text>
+
+<rect x="432" y="292" width="288" height="112" rx="7" class="box"/>
+<text x="452" y="324" class="h">OneLake Security roles</text>
+<text x="452" y="352" class="m">scan_onelake_access()</text>
+<text x="452" y="376" class="b">dataAccessRoles · table / schema paths</text>
+
+<rect x="432" y="444" width="288" height="112" rx="7" class="box"/>
+<text x="452" y="476" class="h">SQL endpoint grants</text>
+<text x="452" y="504" class="m">scan_sql_access()</text>
+<text x="452" y="528" class="b">direct grants · explicit database roles</text>
+
+<path d="M720 196 H768 V312 H816" class="line"/>
+<path d="M720 348 H816" class="line"/>
+<path d="M720 500 H768 V384 H816" class="line"/>
+
+<text x="816" y="120" class="ey">FABRICOPS NORMALIZATION</text>
+<rect x="816" y="260" width="336" height="176" rx="7" class="focus"/>
+<text x="836" y="292" class="h">Map evidence to governed tables</text>
+<text x="836" y="324" class="b">Resolve canonical table_id</text>
+<text x="836" y="348" class="b">Preserve permission source + principal</text>
+<text x="836" y="372" class="b">Normalize READ / READWRITE evidence</text>
+<line x1="836" y1="392" x2="1132" y2="392" class="sep"/>
+<text x="836" y="416" class="m">groups remain groups when returned</text>
+
+<path d="M984 436 V484" class="blue"/>
+<rect x="816" y="484" width="336" height="112" rx="7" class="soft"/>
+<text x="836" y="516" class="h">METADATA_DATA_ACCESS</text>
+<text x="836" y="544" class="b">Normalized access evidence</text>
+<text x="836" y="568" class="m">table_id · principal · source · access</text>
+
+</svg>

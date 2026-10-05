@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 540" role="img" aria-labelledby="title desc">
+<title id="title">Example of multi-path access evidence for one governed Orders table</title>
+<desc id="desc">A governed Orders table can receive access evidence from workspace roles, OneLake Security roles, and SQL endpoint grants. FabricOps brings visible observations together under the same table identity. If the account running the scan cannot inspect OneLake Security, that path is simply not visible to FabricOps and is not treated as no access.</desc>
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#667085"/></marker>
+  <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#2e90fa"/></marker>
+</defs>
+<rect width="1200" height="540" fill="#ffffff"/>
+<style>
+.t{font:600 22px Arial,sans-serif;fill:#101828}.h{font:600 15px Arial,sans-serif;fill:#101828}.b{font:13px Arial,sans-serif;fill:#344054}.m{font:12px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#475467}.ey{font:600 11px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#667085;letter-spacing:.8px}.box{fill:#fff;stroke:#d0d5dd;stroke-width:1.4}.focus{fill:#eff8ff;stroke:#2e90fa;stroke-width:1.8}.soft{fill:#f9fafb;stroke:#98a2b3;stroke-width:1.4}.warn{fill:#fffaf0;stroke:#f5b546;stroke-width:1.4;stroke-dasharray:6 5}.line{fill:none;stroke:#667085;stroke-width:1.6;marker-end:url(#arrow)}.blue{fill:none;stroke:#2e90fa;stroke-width:1.8;marker-end:url(#arrow-blue)}.dash{fill:none;stroke:#98a2b3;stroke-width:1.5;stroke-dasharray:6 5}
+</style>
+
+<text x="48" y="48" class="t">One governed table can be reachable through multiple paths</text>
+<text x="48" y="76" class="b">FabricOps brings the visible permission evidence together under the same canonical table identity.</text>
+
+<text x="48" y="120" class="ey">OBSERVED ACCESS EVIDENCE</text>
+<rect x="48" y="140" width="304" height="88" rx="7" class="box"/>
+<text x="68" y="172" class="h">Workspace role</text>
+<text x="68" y="200" class="m">Viewer → READ</text>
+
+<rect x="48" y="260" width="304" height="88" rx="7" class="box"/>
+<text x="68" y="292" class="h">OneLake Security role</text>
+<text x="68" y="320" class="m">SalesReaders → READ</text>
+
+<rect x="48" y="380" width="304" height="88" rx="7" class="box"/>
+<text x="68" y="412" class="h">SQL endpoint grant</text>
+<text x="68" y="440" class="m">SELECT → READ</text>
+
+<path d="M352 184 H432 V276 H504" class="line"/>
+<path d="M352 304 H504" class="line"/>
+<path d="M352 424 H432 V332 H504" class="line"/>
+
+<text x="504" y="120" class="ey">SAME GOVERNED TABLE</text>
+<rect x="504" y="220" width="296" height="168" rx="7" class="focus"/>
+<text x="524" y="252" class="h">Production Orders</text>
+<text x="524" y="284" class="m">table_id: orders</text>
+<text x="524" y="316" class="b">3 visible permission paths</text>
+<text x="524" y="340" class="b">normalized together for review</text>
+<text x="524" y="364" class="m">METADATA_DATA_ACCESS</text>
+
+<path d="M800 304 H848" class="blue"/>
+
+<text x="848" y="120" class="ey">VISIBILITY MATTERS</text>
+<rect x="848" y="220" width="304" height="168" rx="7" class="warn"/>
+<text x="868" y="252" class="h">If OneLake cannot be inspected</text>
+<text x="868" y="284" class="b">Workspace evidence still appears</text>
+<text x="868" y="308" class="b">SQL evidence still appears</text>
+<text x="868" y="332" class="b">OneLake access is not visible</text>
+<text x="868" y="364" class="m">not visible ≠ no access</text>
+
+<text x="48" y="512" class="m">The scanner inventories visible evidence; it does not grant, revoke, or infer hidden permissions.</text>
+</svg>
