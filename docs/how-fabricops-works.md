@@ -20,6 +20,58 @@
   margin-bottom: 0;
 }
 
+.md-typeset .fabricops-section-lead {
+  max-width: 52rem;
+  margin: -0.15rem 0 1rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.md-typeset .fabricops-solution-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+}
+
+.md-typeset .fabricops-solution-card {
+  display: block;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.4rem;
+  color: var(--md-default-fg-color) !important;
+  text-decoration: none;
+}
+
+.md-typeset .fabricops-solution-card:hover,
+.md-typeset .fabricops-solution-card:focus {
+  border-color: var(--md-primary-fg-color);
+  background: var(--md-accent-fg-color--transparent);
+}
+
+.md-typeset .fabricops-solution-card strong {
+  display: block;
+  margin: 0.25rem 0 0.25rem;
+}
+
+.md-typeset .fabricops-solution-card small {
+  display: block;
+  color: var(--md-default-fg-color--light);
+  line-height: 1.45;
+}
+
+.md-typeset .fabricops-solution-status {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-primary-fg-color) 10%, transparent);
+  color: var(--md-primary-fg-color);
+  font-size: 0.64rem;
+  font-weight: 800;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
 .md-typeset .fabricops-big-picture {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -62,7 +114,8 @@
 }
 
 @media (max-width: 960px) {
-  .md-typeset .fabricops-assets-grid {
+  .md-typeset .fabricops-assets-grid,
+  .md-typeset .fabricops-solution-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -247,17 +300,27 @@ In other words, **Engineering supplies what physically exists; Governance adds w
 
 ## Featured Solutions
 
-- [Plug-and-Play Data Pipelines with Data Contract Enforcement](solutions/plug-and-play-data-pipelines.md)
-- [Sensitive Data Classification & Treatment](solutions/ai-assisted-data-contract-authoring.md)
-- [Generate Enforceable Data Quality Rules from Business Rules](solutions/business-rules-to-data-quality.md)
-- [Scan Effective Data Access](solutions/effective-data-access.md)
-- [Explore the Public Function Call Flow](function-call-graph.md)
+<p class="fabricops-section-lead">
+The operating model above is the shared foundation. Featured Solutions show how FabricOps applies that foundation to specific engineering, governance, access, and consumption problems.
+</p>
 
-## Read more documentation
+<div class="fabricops-solution-grid">
+<a class="fabricops-solution-card" href="../solutions/plug-and-play-data-pipelines/"><span class="fabricops-solution-status">Preview</span><strong>Plug-and-Play Data Pipelines with Data Contract Enforcement</strong><small>Run a standard FabricOps pipeline pattern across Development and Production with governed boundaries around project-specific PySpark.</small></a>
+<a class="fabricops-solution-card" href="../solutions/production-table-to-data-agent/"><span class="fabricops-solution-status">Preview</span><strong>Production Table to Data Agent</strong><small>Carry governed Production table context forward into a Microsoft Fabric Data Agent.</small></a>
+<a class="fabricops-solution-card" href="../solutions/ai-assisted-data-contract-authoring/"><span class="fabricops-solution-status">Preview</span><strong>Direct &amp; Indirect PII Discovery &amp; Treatment with Built-in AI Suggestions</strong><small>Identify sensitive data, review suggested classifications, and apply governed treatments while keeping the final decision with a human.</small></a>
+<a class="fabricops-solution-card" href="../solutions/business-rules-to-data-quality/"><span class="fabricops-solution-status">Preview</span><strong>Data Quality Rules from Natural Language</strong><small>Translate business requirements into reviewable Data Quality rules that FabricOps can enforce deterministically.</small></a>
+<a class="fabricops-solution-card" href="../solutions/effective-data-access/"><span class="fabricops-solution-status">Preview</span><strong>Scan Effective Data Access</strong><small>Resolve who can reach governed data across the Fabric permission paths visible to the identity running the scan.</small></a>
+<a class="fabricops-solution-card" href="../function-call-graph/"><span class="fabricops-solution-status">Live · Maintainer</span><strong>Explore How FabricOps Functions Work Under the Hood</strong><small>Inspect the generated public function call-flow model, callable relationships, and architecture signals.</small></a>
+</div>
 
-- [Function Reference](reference/index.md)
-- [Data Quality Rules](reference/dq-rules/index.md)
-- [Metadata Tables](reference/metadata.md)
-- [Glossary](glossary.md)
+## Go deeper
+
+Continue from the operating model into the level of detail you need:
+
+- [Run the Guided Demo](guided-demo.md) to walk through the lifecycle end to end.
+- [Browse the Function Reference](reference/index.md) for public APIs and callable behaviour.
+- [Review Data Quality Rules](reference/dq-rules/index.md) for supported deterministic checks.
+- [Inspect Metadata Tables](reference/metadata.md) for the persisted governance and engineering model.
+- [Use the Glossary](glossary.md) for FabricOps terminology.
 
 </div>
