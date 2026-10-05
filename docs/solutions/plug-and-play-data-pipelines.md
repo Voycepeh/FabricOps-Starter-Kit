@@ -23,9 +23,65 @@ The result is a pipeline pattern that engineers can clone and adapt without rebu
 
 ### The big picture
 
-![Development to Production FabricOps pipeline promotion](../assets/pipeline-promotion-overview.svg){ .fabricops-solution-diagram }
+```mermaid
+flowchart LR
+    subgraph DEV["Development — clonable notebook stack"]
+        direction TB
+        DEV_ENV["00 Env Config<br/>resolves Development<br/>Fabric Store locations"]
+        subgraph DEV_PIPE["02 Pipeline"]
+            direction TB
+            DEV_CONTRACT["Select Data Contract context"]
+            DEV_READ_FULL["Read Table 1<br/>Full"]
+            DEV_READ_INC["Read Table 2<br/>Incremental"]
+            DEV_TRANSFORM["Project-specific<br/>PySpark transformation"]
+            DEV_WRITE_OVERWRITE["Write Table 1<br/>Overwrite"]
+            DEV_WRITE_APPEND["Write Table 2<br/>Append"]
+            DEV_WRITE_SCD1["Write Table 3<br/>SCD1"]
+            DEV_WRITE_SCD2["Write Table 4<br/>SCD2"]
+            DEV_CONTRACT --> DEV_READ_FULL --> DEV_TRANSFORM
+            DEV_CONTRACT --> DEV_READ_INC --> DEV_TRANSFORM
+            DEV_TRANSFORM --> DEV_WRITE_OVERWRITE
+            DEV_TRANSFORM --> DEV_WRITE_APPEND
+            DEV_TRANSFORM --> DEV_WRITE_SCD1
+            DEV_TRANSFORM --> DEV_WRITE_SCD2
+        end
+        DEV_ENV --> DEV_PIPE
+        DEV_PIPE --> DEV_RES["Development<br/>Fabric Store locations"]
+    end
 
-The same two-notebook pattern moves from Development to Production. Each environment resolves its own Fabric Store locations through `00_env_config`, while the validated `02_pipeline` keeps the same governed shape: **Data Contract context → Full or Incremental reads → project-owned PySpark → Overwrite, Append, SCD1, or SCD2 writes**.
+    subgraph PROD["Production — same notebook stack"]
+        direction TB
+        PROD_ENV["00 Env Config<br/>resolves Production<br/>Fabric Store locations"]
+        subgraph PROD_PIPE["02 Pipeline"]
+            direction TB
+            PROD_CONTRACT["Select Data Contract context"]
+            PROD_READ_FULL["Read Table 1<br/>Full"]
+            PROD_READ_INC["Read Table 2<br/>Incremental"]
+            PROD_TRANSFORM["Project-specific<br/>PySpark transformation"]
+            PROD_WRITE_OVERWRITE["Write Table 1<br/>Overwrite"]
+            PROD_WRITE_APPEND["Write Table 2<br/>Append"]
+            PROD_WRITE_SCD1["Write Table 3<br/>SCD1"]
+            PROD_WRITE_SCD2["Write Table 4<br/>SCD2"]
+            PROD_CONTRACT --> PROD_READ_FULL --> PROD_TRANSFORM
+            PROD_CONTRACT --> PROD_READ_INC --> PROD_TRANSFORM
+            PROD_TRANSFORM --> PROD_WRITE_OVERWRITE
+            PROD_TRANSFORM --> PROD_WRITE_APPEND
+            PROD_TRANSFORM --> PROD_WRITE_SCD1
+            PROD_TRANSFORM --> PROD_WRITE_SCD2
+        end
+        PROD_ENV --> PROD_PIPE
+        PROD_PIPE --> PROD_RES["Production<br/>Fabric Store locations"]
+    end
+
+    DEV ==>|"Promote 1:1"| PROD
+```
+
+The picture has four important parts working together:
+
+1. **Environment-aware configuration.** Each environment has its own `00_env_config`, which resolves the logical Fabric Stores to the correct Development or Production locations.
+2. **A portable pipeline.** `02_pipeline` keeps the same governed shape: **Read → project-owned PySpark → Write**. The engineer changes the project logic, not the surrounding operating pattern.
+3. **Executable governance.** Governance defines the Data Contract and Guardrails. Engineering selects and validates that contract in Development; after approval, Production resolves the active contract and enforces it through the same pipeline boundaries.
+4. **A shared evidence layer.** Reads and writes continuously produce the Catalogue, profiles, processing state, Guardrail results, and lineage that connect the physical pipeline back to Governance.
 
 Once the Development implementation and Data Contract agree, the validated `02_pipeline` is promoted unchanged. Production uses its own environment configuration and the active contract, so the same engineering definition runs against Production Fabric Stores without embedding environment-specific locations in the pipeline.
 
