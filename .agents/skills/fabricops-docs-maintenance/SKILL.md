@@ -98,7 +98,24 @@ Apply the sections as follows:
 - **Example** makes the feature concrete with a compact scenario, sample input/output, screenshot, or other maintained demonstration. Prefer maintainable text or screenshots until a demo video exists; do not block a page on video production.
 - **Go deeper** links to the most relevant Guided Demo step, reference material, implementation page, or adjacent solution.
 
-Omit a standard section only when it genuinely adds no value. Do not invent alternative `##` headings for the same role. Existing material such as `The big picture`, `Consumption flow`, `Implementation details`, `Runtime enforcement`, or feature-specific mechanics should be moved beneath the appropriate standard heading, usually as `###` subsections.
+Treat those six `##` sections as the minimum contract for every **end-user Featured Solution** page. A solution can add useful `###` subsections inside them, but it must not replace or omit the standard sections. The maintainer-only Function Call Flow page is explicitly outside this end-user template.
+
+#### Featured Solutions presentation standard
+
+Standardize presentation as deliberately as content structure:
+
+- Add the `fabricops-solution-hero` class to the primary solution image so every page opens with the same visual width and spacing.
+- Keep **The problem** and **The solution** as compact prose. Split only when the content contains distinct decisions or steps.
+- Use a compact table for **How it works** when it clarifies responsibilities or paths. For AI-assisted features, prefer the shared **Human / AI / FabricOps** responsibility pattern. For features whose meaning is inherently path-based, use the equivalent path/result table rather than forcing artificial roles.
+- Put **Under the hood** inside `<details class="fabricops-solution-details" markdown="1">` and keep implementation mechanics collapsed by default.
+- When an implementation visual materially improves comprehension, use one editable, source-controlled SVG inside **Under the hood**, add the `fabricops-solution-diagram` class, and follow the Diagram Design skill. Do not use Mermaid for Featured Solution implementation diagrams.
+- Put **Example** inside the same `fabricops-solution-details` collapsible treatment so examples and technical detail behave consistently across pages.
+- Prefer a table over a diagram when rows and columns communicate the same meaning more clearly. Prefer a diagram over prose when topology, sequence, branching, or hand-offs are the point.
+- Keep visual density low. Do not add decorative cards, repeated screenshots, or extra diagrams merely to make a page look fuller.
+- Apply shared presentation through `docs/stylesheets/featured-solutions.css`; do not create page-local CSS for ordinary Featured Solution layout.
+- Keep `tests/unit/test_featured_solution_template.py` current when the template contract changes so new solution pages cannot silently regress to different headings, Mermaid diagrams, or inconsistent collapsible markup.
+
+Do not invent alternative `##` headings for the same role. Existing material such as `The big picture`, `Consumption flow`, `Implementation details`, `Runtime enforcement`, or feature-specific mechanics should be moved beneath the appropriate standard heading, usually as `###` subsections.
 
 For AI-assisted solutions, explicitly distinguish:
 
