@@ -16,6 +16,7 @@ Evaluate current active governed DQ rules and persist linked rule and failed-row
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L13-L178">View on GitHub</a>
 </div>
 
+
 ## Usage notes
 
 Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
