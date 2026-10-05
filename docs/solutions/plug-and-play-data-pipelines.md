@@ -24,23 +24,45 @@ The result is a pipeline pattern that engineers can clone and adapt without rebu
 ### The big picture
 
 ```mermaid
-flowchart TD
-    GOV["Governance<br/>Data Contract + Guardrails"]
+flowchart LR
+    GOV["Governance<br/>Data Contract<br/>Enrichment + Guardrails"]
 
-    DEV_ENV["Development<br/>00 Env Config"]
-    DEV_PIPE["Development<br/>02 Pipeline"]
-    PROMOTE["Validate + Promote<br/>same pipeline"]
-    PROD_ENV["Production<br/>00 Env Config"]
-    PROD_PIPE["Production<br/>02 Pipeline"]
-    META["Shared FabricOps Evidence<br/>Metadata + Profiles + Lineage"]
+    subgraph DEV["Engineering Development"]
+        direction TB
+        DEV_ENV["00 Env Config<br/>Development Fabric Stores"]
+        subgraph DEV_PIPE["02 Pipeline"]
+            direction LR
+            DEV_READ["Governed Read<br/>Full / Incremental"]
+            DEV_TRANSFORM["Project-owned<br/>PySpark"]
+            DEV_WRITE["Governed Write<br/>Overwrite / Append / SCD1 / SCD2"]
+            DEV_READ --> DEV_TRANSFORM --> DEV_WRITE
+        end
+        DEV_ENV --> DEV_PIPE
+        DEV_PIPE --> DEV_DATA["Development<br/>Lakehouse / Warehouse"]
+    end
 
-    GOV -->|"select + validate"| DEV_PIPE
-    DEV_ENV --> DEV_PIPE
-    DEV_PIPE --> PROMOTE --> PROD_PIPE
-    GOV -->|"active contract"| PROD_PIPE
-    PROD_ENV --> PROD_PIPE
-    DEV_PIPE --> META
-    PROD_PIPE --> META
+    META["Shared FabricOps Metadata<br/>Catalogue + Profile + State<br/>Guardrail Results + Lineage"]
+
+    subgraph PROD["Engineering Production"]
+        direction TB
+        PROD_ENV["00 Env Config<br/>Production Fabric Stores"]
+        subgraph PROD_PIPE["Same 02 Pipeline"]
+            direction LR
+            PROD_READ["Governed Read"]
+            PROD_TRANSFORM["Same project<br/>PySpark"]
+            PROD_WRITE["Governed Write"]
+            PROD_READ --> PROD_TRANSFORM --> PROD_WRITE
+        end
+        PROD_ENV --> PROD_PIPE
+        PROD_PIPE --> PROD_DATA["Governed Production<br/>Lakehouse / Warehouse"]
+    end
+
+    GOV -->|"Development: select + validate"| DEV_PIPE
+    DEV_PIPE -->|"Profile + observations + results"| META
+    META -->|"Evidence for Governance"| GOV
+    DEV_PIPE ==>|"Validate, then promote unchanged"| PROD_PIPE
+    GOV -->|"Production: active contract"| PROD_PIPE
+    PROD_PIPE -->|"Profile + lineage + results"| META
 ```
 
 The picture has four important parts working together:
