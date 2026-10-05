@@ -22,5 +22,6 @@ def test_only_supported_rule_pages_are_in_current_navigation():
     actual_pages = {path.name for path in docs_dir.glob("*.md")} - {"index.md"}
 
     assert actual_pages == expected_pages
+    assert "      - Data Quality Rules: reference/dq-rules/index.md" in mkdocs_text
     for page_name in expected_pages:
-        assert f"reference/dq-rules/{page_name}" in mkdocs_text
+        assert f"reference/dq-rules/{page_name}" not in mkdocs_text
