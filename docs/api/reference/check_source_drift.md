@@ -24,6 +24,7 @@ the source table's governed load behaviour.
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_drift.py#L17-L201">View on GitHub</a>
 </div>
 
+
 ## Usage notes
 
 Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
