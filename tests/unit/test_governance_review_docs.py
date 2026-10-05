@@ -14,13 +14,13 @@ def test_dq_rule_index_contains_exact_supported_catalogue():
     assert "Freshness is a dedicated guardrail" in text
 
 
-def test_only_supported_rule_pages_are_in_current_navigation():
-    """Remove obsolete rule pages and navigation entries rather than keeping aliases."""
+def test_only_supported_rule_pages_are_linked_from_landing_page():
+    """Keep supported rule pages discoverable through the DQ landing page."""
     docs_dir = Path("docs/reference/dq-rules")
-    mkdocs_text = Path("mkdocs.yml").read_text(encoding="utf-8")
+    index_text = Path("docs/reference/dq-rules/index.md").read_text(encoding="utf-8")
     expected_pages = {rule_type.replace("_", "-") + ".md" for rule_type in governance.DQ_RULE_TYPES}
     actual_pages = {path.name for path in docs_dir.glob("*.md")} - {"index.md"}
 
     assert actual_pages == expected_pages
     for page_name in expected_pages:
-        assert f"reference/dq-rules/{page_name}" in mkdocs_text
+        assert f"./{page_name}" in index_text or f"({page_name})" in index_text
