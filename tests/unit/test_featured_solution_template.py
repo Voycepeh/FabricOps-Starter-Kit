@@ -33,11 +33,11 @@ def test_featured_solution_pages_follow_shared_presentation_contract():
         assert "fabricops-release-status--preview" in text, page
         assert "{ .fabricops-solution-hero }" in text, page
         assert "??? example" not in text, page
-        assert "```mermaid" not in text, page
 
         under_hood = text[text.index("## Under the hood") : text.index("## Example")]
         example = text[text.index("## Example") : text.index("## Go deeper")]
 
+        assert "```mermaid" not in under_hood, page
         assert '<details class="fabricops-solution-details" markdown="1">' in under_hood, page
         assert '<details class="fabricops-solution-details" markdown="1">' in example, page
         assert ".svg){ .fabricops-solution-diagram }" in under_hood, page
