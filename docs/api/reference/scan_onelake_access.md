@@ -31,6 +31,7 @@ OneLake permissions.
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_onelake_access.py#L258-L341">View on GitHub</a>
 </div>
 
+
 ## Usage notes
 
 Use for repeatable OneLake Security access inventory snapshots.
