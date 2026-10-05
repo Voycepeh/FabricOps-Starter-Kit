@@ -16,6 +16,7 @@ Resolve current-notebook Lineage and select one immutable Data Contract independ
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L141-L507">View on GitHub</a>
 </div>
 
+
 ## Usage notes
 
 Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
