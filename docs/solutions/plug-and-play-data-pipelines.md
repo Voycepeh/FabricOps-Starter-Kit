@@ -110,9 +110,7 @@ AI is optional. Microsoft Fabric Copilot or another coding agent can help write 
 ## Under the hood
 
 <details markdown="1">
-<summary><strong>How FabricOps governs the pipeline boundaries</strong></summary>
-
-FabricOps deliberately leaves project logic visible while standardising the boundaries around it.
+<summary><strong>What happens in a standard FabricOps Pipeline</strong></summary>
 
 ```mermaid
 flowchart LR
