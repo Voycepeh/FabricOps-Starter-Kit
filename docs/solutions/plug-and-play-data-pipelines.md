@@ -117,16 +117,16 @@ FabricOps deliberately leaves project logic visible while standardising the boun
 ```mermaid
 flowchart LR
     CONTRACT["Data Contract"] --> READ["orchestrate_read()"]
-    READ --> FRESH["✓ Freshness"] --> SCHEMA["✓ Schema"] --> DQ["✓ DQ"] --> TRANSFORM["Your PySpark"]
-    READ --> PROFILE["✓ Profile<br/>Full only"]
+    READ --> READ_CHECKS["✓ Freshness<br/>✓ Schema<br/>✓ DQ"] --> TRANSFORM["Your PySpark"]
+    READ --> PROFILE["Profile<br/>Full dataset profiling"]
 
     TRANSFORM --> WRITE["orchestrate_write()"]
     WRITE --> WRITE_CHECKS["✓ Schema → ✓ Sensitive Data → ✓ Source Drift → ✓ DQ → ✓ Guardrail Coverage"]
-    WRITE_CHECKS --> PUBLISH["Write → ✓ Profile"]
+    WRITE_CHECKS --> PUBLISH["Write"] --> WRITE_PROFILE["Profile<br/>Full dataset profiling"]
     WRITE --> LINEAGE["Lineage"]
 ```
 
-The Read boundary resolves the governed table and runs Freshness, Schema, and DQ checks before the DataFrame reaches the project-owned PySpark transformation. Full reads also produce a profile as part of the Read orchestration without making Profile another inline guardrail stage. The Write boundary applies pre-publication guardrails before writing, then profiles the published table and records lineage.
+The Read boundary resolves the governed table and runs Freshness, Schema, and DQ checks before the DataFrame reaches the project-owned PySpark transformation. Full reads also produce full dataset profiling as part of the Read orchestration without making Profile another inline guardrail stage. The Write boundary applies pre-publication guardrails before writing, then performs full dataset profiling on the published table and records lineage.
 
 The orchestrators provide the stable framework boundary. Read modes, Write modes, validation behaviour, and deployment are documented separately so this page can stay focused on the overall solution.
 
