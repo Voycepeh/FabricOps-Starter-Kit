@@ -95,16 +95,16 @@
 <text x="480" y="766" class="h">Write 4</text>
 <text x="480" y="788" class="b">SCD2</text>
 
-<path class="line" d="M500 564 V582 H154 V604"/>
-<path class="line" d="M500 564 V582 H276 V604"/>
-<path class="line" d="M500 564 V582 H398 V604"/>
-<path class="line" d="M500 564 V582 H520 V604"/>
+<path class="line" d="M350 682 V710 H154 V742"/>
+<path class="line" d="M350 682 V710 H276 V742"/>
+<path class="line" d="M350 682 V710 H398 V742"/>
+<path class="line" d="M350 682 V710 H520 V742"/>
 
 <path class="line" d="M351 312 V336"/>
 
 <!-- PRODUCTION -->
 <g filter="url(#shadow)">
-  <rect x="786" y="130" width="606" height="634" rx="14" class="outer"/>
+  <rect x="786" y="130" width="606" height="676" rx="14" class="outer"/>
   <path d="M786 144a14 14 0 0 1 14-14h578a14 14 0 0 1 14 14v78H786z" fill="url(#prodHead)"/>
 </g>
 <text x="814" y="166" class="paneltitle">Production</text>
@@ -113,7 +113,7 @@
 <text x="836" y="265" class="ey">00 ENV CONFIG</text>
 <text x="836" y="289" class="h">Resolve Production Fabric Store locations</text>
 
-<rect x="814" y="336" width="550" height="352" rx="10" class="pipeline"/>
+<rect x="814" y="336" width="550" height="394" rx="10" class="pipeline"/>
 <text x="836" y="363" class="ey">02 PIPELINE</text>
 <line x1="836" y1="376" x2="1342" y2="376" class="divider"/>
 
@@ -153,10 +153,10 @@
 <text x="1218" y="766" class="h">Write 4</text>
 <text x="1218" y="788" class="b">SCD2</text>
 
-<path class="line" d="M1238 564 V582 H892 V604"/>
-<path class="line" d="M1238 564 V582 H1014 V604"/>
-<path class="line" d="M1238 564 V582 H1136 V604"/>
-<path class="line" d="M1238 564 V582 H1258 V604"/>
+<path class="line" d="M1088 682 V710 H892 V742"/>
+<path class="line" d="M1088 682 V710 H1014 V742"/>
+<path class="line" d="M1088 682 V710 H1136 V742"/>
+<path class="line" d="M1088 682 V710 H1258 V742"/>
 
 <path class="line" d="M1089 312 V336"/>
 
