@@ -43,7 +43,7 @@ INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
 GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
-CORE_TEMPLATE_KEYS = {"00_env_config", "01_governance", "02_pipeline", "99_explore"}
+CORE_TEMPLATE_KEYS = {"00_env_config", "00C_demo_setup", "01_governance", "02_pipeline", "99_explore"}
 AUDIT_FIELD_DESCRIPTIONS = {
     "_committed_by": "User principal or runtime identity that committed the metadata row.",
     "_committed_at": "Timestamp when the metadata row was committed.",
@@ -1572,7 +1572,6 @@ def _lifecycle_header_lines(row: dict[str, Any]) -> list[str]:
         chips.append(_lifecycle_chip(status, f"Live since {row['live_since']}", prominent=True))
     if status == "Discontinued" and row.get("discontinued_in"):
         chips.append(_lifecycle_chip(status, f"Discontinued in {row['discontinued_in']}", prominent=True))
-    chips.append('<span class="reference-chip reference-chip-muted">Public function</span>')
     notices = {
         "Live": "This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.",
         "Preview": "This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.",
@@ -5204,13 +5203,9 @@ def main() -> None:
             raise RuntimeError(f"Underscore callable cannot be public callable: {symbol.name}")
 
     _validate_template_flow_docs(template_flow_docs, set(symbol_map))
-    core_template_usage_by_symbol, example_template_usage_by_symbol = _derive_template_usage_by_kind(
+    core_template_usage_by_symbol, _ = _derive_template_usage_by_kind(
         template_flow_docs, symbol_map
     )
-    template_usage_by_symbol = {
-        name: [*core_template_usage_by_symbol.get(name, []), *example_template_usage_by_symbol.get(name, [])]
-        for name in symbol_map
-    }
     nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
     node_by_qn = {n["qualified_name"]: n for n in nodes}
     calls_by_qn: dict[str, list[str]] = {}
@@ -5449,7 +5444,7 @@ def main() -> None:
         symbol = symbol_map[name]
         symbol_link = public_reference_link(name, docs_metadata, context="reference")
         starter_path = ", ".join(core_template_usage_by_symbol.get(name, [])) or "—"
-        usage_source = ", ".join(template_usage_by_symbol.get(name, [])) or "—"
+        usage_source = ", ".join(core_template_usage_by_symbol.get(name, [])) or "—"
         purpose = symbol.purpose or symbol.summary or "—"
         display_module = symbol.public_module
         starter_path_attribute = f' data-callable-starter-path="{_esc(starter_path)}"' if starter_path != "—" else ""
@@ -5463,36 +5458,6 @@ def main() -> None:
             lifecycle_extra_chip = _lifecycle_chip(lifecycle_status, f"Live since {live_since}")
         elif lifecycle_status == "Discontinued" and public_flow.get("discontinued_in"):
             lifecycle_extra_chip = _lifecycle_chip(lifecycle_status, f"Discontinued in {public_flow['discontinued_in']}")
-        downstream_callables = _expanded_downstream_qualified_names(
-            str(public_flow["qualified_name"]),
-            dashboard_inventory_data.get("relationships", []),
-        )
-
-        def _catalogue_relationship_list(items: list[str]) -> str:
-            rows = []
-            for item in items:
-                related_node = node_by_qn.get(item, {})
-                short = related_node.get("callable_name") or item.split(".")[-1]
-                if related_node.get("exported"):
-                    href = public_reference_link(short, docs_metadata, context="reference")
-                    rows.append(f'<li><a href="{_esc(href)}"><code>{_esc(short)}</code></a></li>')
-                else:
-                    rows.append(f'<li><code>{_esc(short)}</code></li>')
-            return "<ul>" + "".join(rows) + "</ul>"
-
-        def _catalogue_count_details(singular_label: str, plural_label: str, items: list[str]) -> str:
-            count = len(items)
-            if count == 0:
-                return ""
-            label = singular_label if count == 1 else plural_label
-            return (
-                '    <details class="reference-count-details"><summary>'
-                f'<span class="reference-chip reference-chip-count">{_esc(label.format(count=count))}</span>'
-                "</summary>"
-                + _catalogue_relationship_list(items)
-                + "</details>"
-            )
-
         item_lines = [
                 (
                     f'<article id="{_esc(module_name)}-{_esc(name)}" class="reference-catalogue-item" '
@@ -5509,19 +5474,13 @@ def main() -> None:
                     '  <p class="reference-catalogue-item-meta reference-catalogue-item-badges">'
                     f'{_lifecycle_chip(lifecycle_status, prominent=True)}'
                     f'{lifecycle_extra_chip}'
-                    f'<span class="reference-chip reference-chip-muted">{_esc("Public function")}</span>'
-                    f'<span class="reference-chip">{_esc(usage_source)}</span>'
-                    "</p>"
+                    + (
+                        f'<span class="reference-chip">{_esc(usage_source)}</span>'
+                        if usage_source != "—"
+                        else ""
+                    )
+                    + "</p>"
                 ),
-                (
-                    f'  <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> {_esc(usage_source)}</p>'
-                    if usage_source != "—"
-                    else ""
-                ),
-                '  <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>',
-                '  <div class="reference-catalogue-item-counts">',
-                _catalogue_count_details("Downstream callables: {count}", "Downstream callables: {count}", downstream_callables),
-                "  </div>",
                 "</article>",
             ]
         group_key = next(
@@ -5639,16 +5598,19 @@ def main() -> None:
             input_lines = _render_parameter_definitions(parameter_rows, parameter_overrides, PARAMETER_DISPLAY_TYPES.get(short_name, {}))
             public_flow = public_flow_by_name.get(short_name, public_flow_by_qn[qn])
             lifecycle_status = _lifecycle_status(public_flow)
-            used_in_templates = template_usage_by_symbol.get(short_name, [])
+            used_in_templates = core_template_usage_by_symbol.get(short_name, [])
             notebook_usage_chips = [
                 f'<span class="reference-chip">{html_escape(template)}</span>' for template in used_in_templates
-            ] or ['<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>']
-            page_chip_lines = [
-                '<p class="reference-catalogue-item-meta reference-catalogue-item-badges">',
-                '<span class="reference-chip">Public Starter Kit function</span>',
-                *notebook_usage_chips,
-                '</p>',
             ]
+            page_chip_lines = (
+                [
+                    '<p class="reference-catalogue-item-meta reference-catalogue-item-badges">',
+                    *notebook_usage_chips,
+                    '</p>',
+                ]
+                if notebook_usage_chips
+                else []
+            )
             usage_notes = _usage_notes_for_public_function(
                 function_name=short_name,
                 source_path=source_path,
@@ -5695,13 +5657,6 @@ def main() -> None:
                 *_source_card_lines(source_path=source_path, source_start_line=source_start_line, source_ref=source_ref, short_name=short_name),
                 "",
                 *page_chip_lines,
-                "",
-                "**Used in notebooks:** "
-                + (
-                    ", ".join(f"`{template}`" for template in used_in_templates)
-                    if used_in_templates
-                    else "Usage detection may exclude indirect or generated references."
-                ),
                 "",
                 *usage_guidance_lines,
                 "",

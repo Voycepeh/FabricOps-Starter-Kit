@@ -16,7 +16,7 @@ except ModuleNotFoundError:  # Direct execution via ``python scripts/release_nav
 
 MKDOCS_PATH = ROOT / "mkdocs.yml"
 MANIFESTS_DIR = ROOT / "docs" / "releases" / "manifests"
-RELEASES_HEADING = "      - Releases (Python package):"
+RELEASES_ENTRY = "      - Releases (Python package): releases/index.md"
 
 
 def live_release_versions(manifests_dir: Path = MANIFESTS_DIR) -> list[str]:
@@ -31,31 +31,16 @@ def live_release_versions(manifests_dir: Path = MANIFESTS_DIR) -> list[str]:
 
 
 def render_release_navigation(manifests_dir: Path = MANIFESTS_DIR) -> str:
-    """Render the canonical nested MkDocs Releases navigation block."""
-    lines = [RELEASES_HEADING, "          - Overview: releases/index.md"]
-    lines.extend(
-        f"          - {version}: releases/{version}/index.md"
-        for version in live_release_versions(manifests_dir)
-    )
-    return "\n".join(lines) + "\n"
+    """Render the canonical MkDocs release landing-page entry."""
+    return RELEASES_ENTRY + "\n"
 
 
 def expected_mkdocs_text(current: str, manifests_dir: Path = MANIFESTS_DIR) -> str:
-    """Return MkDocs content with the nested Releases block synchronized."""
-    lines = current.splitlines(keepends=True)
-    start = next((index for index, line in enumerate(lines) if line.rstrip("\n") == RELEASES_HEADING), None)
-    if start is None:
-        raise ValueError("mkdocs.yml does not contain the expected nested Releases navigation section.")
-
-    end = len(lines)
-    for index in range(start + 1, len(lines)):
-        line = lines[index]
-        if line.startswith("      - ") and not line.startswith("          - "):
-            end = index
-            break
-
-    replacement = render_release_navigation(manifests_dir)
-    return "".join(lines[:start]) + replacement + "".join(lines[end:])
+    """Return MkDocs content when the release landing-page entry is current."""
+    del manifests_dir
+    if RELEASES_ENTRY not in current.splitlines():
+        raise ValueError("mkdocs.yml does not contain the expected Releases landing-page entry.")
+    return current
 
 
 def sync_release_navigation(

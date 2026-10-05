@@ -2,7 +2,6 @@
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
-<span class="reference-chip reference-chip-muted">Public function</span>
 </p>
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
@@ -25,12 +24,6 @@ the source table's governed load behaviour.
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_drift.py#L17-L201">View on GitHub</a>
 </div>
 
-<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">02B_incremental_append_pipeline</span>
-</p>
-
-**Used in notebooks:** `02B_incremental_append_pipeline`
 
 ## Usage notes
 

@@ -3,7 +3,6 @@
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.1.0</span>
-<span class="reference-chip reference-chip-muted">Public function</span>
 </p>
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
@@ -35,11 +34,8 @@ the corresponding ABFSS path before delegating to Spark.
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">99_explore</span>
+<span class="reference-chip">00C_demo_setup</span>
 </p>
-
-**Used in notebooks:** `99_explore`
 
 ## Usage notes
 

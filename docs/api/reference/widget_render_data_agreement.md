@@ -3,7 +3,6 @@
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.2.0</span>
-<span class="reference-chip reference-chip-muted">Public function</span>
 </p>
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
@@ -26,11 +25,8 @@ appends one complete agreement row only after final validation.
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">01_governance</span>
 </p>
-
-**Used in notebooks:** `01_governance`
 
 ## Usage notes
 

@@ -3,7 +3,6 @@
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.2.0</span>
-<span class="reference-chip reference-chip-muted">Public function</span>
 </p>
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
@@ -34,11 +33,8 @@ guardrail results.
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">00_env_config</span>
 </p>
-
-**Used in notebooks:** `00_env_config`
 
 ## Usage notes
 
