@@ -85,6 +85,7 @@
     const status = document.getElementById("callable-finder-status");
     const empty = document.querySelector("[data-callable-finder-empty]");
     const rows = Array.from(document.querySelectorAll("[data-callable-row='true']"));
+    const groups = Array.from(document.querySelectorAll("[data-callable-group]"));
     if (!container || !input || !status || !empty || rows.length === 0) return;
     if (container.dataset.callableFinderInitialized === "true") return;
     container.dataset.callableFinderInitialized = "true";
@@ -127,6 +128,12 @@
         .forEach(({ entry }) => {
           entry.row.parentElement.appendChild(entry.row);
         });
+      groups.forEach((group) => {
+        const hasVisibleRows = Array.from(group.querySelectorAll("[data-callable-row='true']"))
+          .some((row) => !row.hidden);
+        group.hidden = Boolean(query) && !hasVisibleRows;
+        group.open = query ? hasVisibleRows : group.dataset.defaultOpen === "true";
+      });
       empty.hidden = matched !== 0;
       status.textContent = `Showing ${matched} of ${total} functions.`;
     }

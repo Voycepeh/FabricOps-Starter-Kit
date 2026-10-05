@@ -282,6 +282,71 @@
   color: var(--md-default-fg-color);
 }
 
+.reference-function-group {
+  margin: 0.75rem 0;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--md-default-bg-color) 97%, rgb(99, 102, 241) 3%);
+  overflow: hidden;
+}
+
+.reference-function-group > summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  list-style: none;
+  background: color-mix(in srgb, var(--md-default-bg-color) 92%, rgb(99, 102, 241) 8%);
+}
+
+.reference-function-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.reference-function-group > summary::after {
+  content: "›";
+  flex: none;
+  font-size: 1.15rem;
+  line-height: 1;
+  transform: rotate(90deg);
+  transition: transform 120ms ease;
+}
+
+.reference-function-group[open] > summary::after {
+  transform: rotate(-90deg);
+}
+
+.reference-function-group-title {
+  font-weight: 700;
+  color: var(--md-default-fg-color);
+}
+
+.reference-function-group-meta {
+  margin-left: auto;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.reference-function-group-description {
+  margin: 0;
+  padding: 0.8rem 1rem 0;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.reference-function-group .reference-catalogue-list {
+  padding: 0.8rem 1rem 1rem;
+}
+
+.reference-function-group[hidden] {
+  display: none !important;
+}
+
 .reference-catalogue-list {
   display: grid;
   gap: 0.72rem;
@@ -425,6 +490,26 @@
 }
 
 @media screen and (max-width: 760px) {
+  .reference-function-group > summary {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 0.75rem 0.8rem;
+  }
+
+  .reference-function-group-meta {
+    width: 100%;
+    margin-left: 0;
+    white-space: normal;
+  }
+
+  .reference-function-group-description {
+    padding: 0.7rem 0.8rem 0;
+  }
+
+  .reference-function-group .reference-catalogue-list {
+    padding: 0.7rem 0.8rem 0.8rem;
+  }
+
   .callable-finder {
     padding: 0.85rem 0.8rem;
   }

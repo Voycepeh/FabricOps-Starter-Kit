@@ -354,7 +354,8 @@ def test_individual_reference_generation_script_succeeds_without_module_docs():
     assert "Shared helpers:" not in function_text
     assert "Private helpers:" not in function_text
     reference_index = (root / "docs" / "reference" / "index.md").read_text(encoding="utf-8")
-    assert "Lifecycle" in reference_index
+    assert 'data-callable-group="standard-orchestration"' in reference_index
+    assert 'reference-lifecycle-chip reference-lifecycle-live' in reference_index
     assert "Live since 0.1.0" in reference_index
     assert "api-chip-module" not in function_text
     assert not (root / "docs" / "api" / "modules" / "config.md").exists()
