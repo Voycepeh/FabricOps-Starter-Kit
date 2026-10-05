@@ -48,13 +48,13 @@ nav:
       - Notebook Templates: https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks
       - Demo Assets: https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData
   - Reference Documentation:
-      - Glossary: glossary.md
       - Function Reference: reference/index.md
+      - Metadata Tables: reference/metadata.md
+      - Data Quality Rules: reference/dq-rules/index.md
       - Read & Write Modes: reference/read-and-load-strategies.md
       - Sensitive Data Treatments: reference/sensitive-data-treatments.md
       - PySpark Transformation: reference/pyspark-transformation.md
-      - Data Quality Rules: reference/dq-rules/index.md
-      - Metadata Tables: reference/metadata.md      
+      - Glossary: glossary.md      
   - Maintainer:
       - Product Definition: maintainer/product-definition.md
       - Release Guide: maintainer/index.md
