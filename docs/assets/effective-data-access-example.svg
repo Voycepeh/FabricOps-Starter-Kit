@@ -45,8 +45,8 @@
 <text x="868" y="252" class="h">If OneLake cannot be inspected</text>
 <text x="868" y="284" class="b">Workspace evidence still appears</text>
 <text x="868" y="308" class="b">SQL evidence still appears</text>
-<text x="868" y="332" class="b">OneLake evidence is unobserved</text>
-<text x="868" y="364" class="m">unobserved ≠ no access</text>
+<text x="868" y="332" class="b">OneLake access is not visible</text>
+<text x="868" y="364" class="m">not visible ≠ no access</text>
 
 <text x="48" y="512" class="m">The scanner inventories visible evidence; it does not grant, revoke, or infer hidden permissions.</text>
 </svg>
