@@ -2,14 +2,14 @@
 
 <span class="fabricops-release-status fabricops-release-status--live">Live</span> <span class="fabricops-release-status fabricops-release-status--maintainer">Maintainer</span>
 
+[![Public Function Call Flows Dashboard](assets/fabricops-call-graph-dashboard.png)](assets/public-function-call-flows-dashboard.html)
+
 This is a maintainer review surface for inspecting FabricOps public callable architecture. It is generated from repository source and used as part of the active maintenance workflow.
 
 <div align="center">
   <a class="md-button md-button--primary" href="../assets/public-function-call-flows-dashboard.html">Open Call Flow Dashboard</a>
   <a class="md-button" href="../reference/_data/public-function-call-flows.json">View JSON Contract</a>
 </div>
-
-[![Public Function Call Flows Dashboard](assets/fabricops-call-graph-dashboard.png)](assets/public-function-call-flows-dashboard.html)
 
 ## Purpose
 
