@@ -1,64 +1,69 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
 <title id="title">FabricOps AI-assisted Data Quality rule authoring implementation</title>
-<desc id="desc">Governed context and a business requirement are assembled into one prompt, passed through a one-row pandas DataFrame to Microsoft Fabric AI Functions, validated into deterministic Data Quality rules, then evaluated against pipeline rows.</desc>
+<desc id="desc">Governed context is sent through Fabric AI Functions as one prompt, validated into explicit Data Quality rules, reviewed into the Data Contract, then evaluated deterministically at runtime.</desc>
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#667085"/></marker></defs>
 <rect width="1200" height="620" fill="#ffffff"/>
 <style>
-.t{font:600 22px Arial,sans-serif;fill:#101828}.h{font:600 15px Arial,sans-serif;fill:#101828}.b{font:13px Arial,sans-serif;fill:#344054}.m{font:12px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#475467}.ey{font:600 11px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#667085;letter-spacing:.8px}.box{fill:#fff;stroke:#d0d5dd;stroke-width:1.4}.focus{fill:#eff8ff;stroke:#2e90fa;stroke-width:1.8}.out{fill:#f9fafb;stroke:#98a2b3;stroke-width:1.4}.line{fill:none;stroke:#667085;stroke-width:1.6;marker-end:url(#arrow)}
+.t{font:600 22px Arial,sans-serif;fill:#101828}.h{font:600 15px Arial,sans-serif;fill:#101828}.b{font:13px Arial,sans-serif;fill:#344054}.m{font:12px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#475467}.ey{font:600 11px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#667085;letter-spacing:.8px}.ex{font:600 10px Arial,sans-serif;fill:#667085;letter-spacing:.6px}.box{fill:#fff;stroke:#d0d5dd;stroke-width:1.4}.focus{fill:#eff8ff;stroke:#2e90fa;stroke-width:1.8}.out{fill:#f9fafb;stroke:#98a2b3;stroke-width:1.4}.line{fill:none;stroke:#667085;stroke-width:1.6;marker-end:url(#arrow)}.sep{stroke:#d0d5dd;stroke-width:1}
 </style>
-<text x="48" y="48" class="t">How AI-assisted DQ rule authoring actually works</text>
-<text x="48" y="74" class="b">AI proposes structured rules. FabricOps validates them. Runtime enforcement stays deterministic.</text>
+<text x="48" y="48" class="t">How AI-assisted DQ rule authoring works</text>
+<text x="48" y="74" class="b">AI suggests rules. FabricOps validates them. Human review controls what enters the Data Contract.</text>
 
-<text x="48" y="118" class="ey">GOVERNED INPUTS</text>
+<text x="48" y="118" class="ey">GOVERNED CONTEXT</text>
 <rect x="48" y="138" width="260" height="214" rx="7" class="box"/>
-<text x="68" y="168" class="h">Context assembled by FabricOps</text>
+<text x="68" y="168" class="h">FabricOps assembles context</text>
 <text x="68" y="198" class="b">Business requirement</text>
 <text x="68" y="222" class="b">Table + column metadata</text>
 <text x="68" y="246" class="b">Profile evidence + examples</text>
 <text x="68" y="270" class="b">Existing DQ rules</text>
-<text x="68" y="294" class="b">Optional column constraint</text>
-<text x="68" y="326" class="m">10 authoring patterns*</text>
+<line x1="68" y1="290" x2="288" y2="290" class="sep"/>
+<text x="68" y="310" class="ex">AUTHORING GRAMMAR</text>
+<text x="68" y="332" class="m">9 rule_type values*</text>
 
 <path d="M308 245 H360" class="line"/>
 
 <text x="372" y="118" class="ey">FABRIC AI FUNCTIONS</text>
 <rect x="360" y="138" width="300" height="214" rx="7" class="focus"/>
-<text x="380" y="168" class="h">One-row temporary pandas DataFrame</text>
-<text x="380" y="201" class="m">fabricops_prompt = full instruction</text>
-<text x="380" y="229" class="b">The context is serialized into one prompt</text>
-<text x="380" y="251" class="b">cell, not sent as business-data rows.</text>
-<text x="380" y="285" class="m">frame.ai.generate_response(</text>
-<text x="380" y="306" class="m">  "{fabricops_prompt}")</text>
-<text x="380" y="334" class="b">Returns JSON rule proposals</text>
+<text x="380" y="168" class="h">AI suggests supported rules</text>
+<text x="380" y="198" class="b">One prompt, one JSON response</text>
+<text x="380" y="222" class="b">via a one-row temporary DataFrame</text>
+<line x1="380" y1="246" x2="640" y2="246" class="sep"/>
+<text x="380" y="266" class="ex">IMPLEMENTATION</text>
+<text x="380" y="290" class="m">fabricops_prompt = full instruction</text>
+<text x="380" y="314" class="m">frame.ai.generate_response(</text>
+<text x="380" y="334" class="m">  "{fabricops_prompt}")</text>
 
 <path d="M660 245 H712" class="line"/>
 
 <text x="724" y="118" class="ey">FABRICOPS VALIDATION</text>
 <rect x="712" y="138" width="440" height="214" rx="7" class="box"/>
-<text x="732" y="168" class="h">AI output becomes explicit rule definitions</text>
-<text x="732" y="199" class="b">Known columns only · supported rule types only</text>
-<text x="732" y="223" class="b">Parameters normalized and validated</text>
-<text x="732" y="247" class="b">Compound requirement → multiple atomic rules</text>
-<text x="732" y="271" class="b">Custom expression only when patterns cannot represent intent</text>
-<text x="732" y="303" class="m">rule_type + columns + parameters + rationale</text>
-<text x="732" y="329" class="b">Human review before the Data Contract is frozen</text>
+<text x="732" y="168" class="h">FabricOps validates proposed rules</text>
+<text x="732" y="198" class="b">Known columns · supported types · valid parameters</text>
+<text x="732" y="222" class="b">Compound requirements become atomic rules</text>
+<text x="732" y="246" class="b">Safe Custom Expression only when needed</text>
+<line x1="732" y1="266" x2="1132" y2="266" class="sep"/>
+<text x="732" y="286" class="ex">RULE STRUCTURE</text>
+<text x="732" y="308" class="m">rule_type + columns + parameters + rationale</text>
+<text x="732" y="332" class="b">Human review → Data Contract</text>
 
 <path d="M932 352 V390 H313 V425" class="line"/>
 
 <text x="48" y="405" class="ey">DETERMINISTIC RUNTIME</text>
 <rect x="48" y="425" width="530" height="142" rx="7" class="out"/>
-<text x="68" y="455" class="h">Pipeline rows → boolean rule evaluation</text>
-<text x="68" y="485" class="b">Each applicable rule evaluates pass / fail for each row.</text>
-<text x="68" y="511" class="m">_dq_failed_rules   ["currency_sg", "discount_max"]</text>
-<text x="68" y="537" class="m">_dq_check_status   passed | warning | failed</text>
+<text x="68" y="455" class="h">FabricOps evaluates approved DQ rules</text>
+<text x="68" y="483" class="b">Applicable rules evaluate the pipeline DataFrame.</text>
+<line x1="68" y1="501" x2="558" y2="501" class="sep"/>
+<text x="68" y="521" class="ex">RUNTIME OUTPUT</text>
+<text x="68" y="545" class="m">_dq_failed_rules · _dq_check_status</text>
 
 <path d="M578 496 H630" class="line"/>
 
 <rect x="630" y="425" width="522" height="142" rx="7" class="out"/>
-<text x="650" y="455" class="h">Aggregate Guardrail result</text>
-<text x="650" y="485" class="b">One persisted outcome per Guardrail / contract / execution.</text>
-<text x="650" y="511" class="m">status · can_continue · severity · reason</text>
-<text x="650" y="537" class="m">result_payload_json · run_id · execution_type</text>
+<text x="650" y="455" class="h">FabricOps persists the Guardrail result</text>
+<text x="650" y="483" class="b">One aggregate outcome per Guardrail / contract / execution.</text>
+<line x1="650" y1="501" x2="1132" y2="501" class="sep"/>
+<text x="650" y="521" class="ex">RESULT</text>
+<text x="650" y="545" class="m">status · can_continue · severity · result_payload_json</text>
 
-<text x="48" y="600" class="m">* 9 canonical rule_type values; value_set has allow (whitelist) and block (blacklist) modes.</text>
+<text x="48" y="600" class="m">* value_set covers allow (whitelist) and block (blacklist) modes.</text>
 </svg>
