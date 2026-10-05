@@ -27,6 +27,7 @@ the Engineering pipeline.
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_data_contract.py#L68-L402">View on GitHub</a>
 </div>
 
+
 ## Usage notes
 
 Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
