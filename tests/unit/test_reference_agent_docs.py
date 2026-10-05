@@ -206,7 +206,7 @@ def test_every_callable_page_has_curated_public_reference_sections() -> None:
             assert "Public config class" in text, page
             assert "Public Starter Kit function" not in text, page
         else:
-            assert "Public Starter Kit function" in text, page
+            assert "Public Starter Kit function" not in text, page
         assert "## Relationships" not in text, page
         assert "## Maintainer/developer implementation details" not in text, page
         assert "## Source link" not in text, page
@@ -676,7 +676,7 @@ def test_function_catalogue_uses_simplified_callable_flow_chips() -> None:
     assert "internal helpers" not in text
     assert "Calls 1 public function" not in text
     assert "nested helper functions" not in text
-    assert "Dependency data is generated from the callable architecture inventory." in text
+    assert "Dependency data is generated from the callable architecture inventory." not in text
     assert 'href="../api/reference/profile_table/"' in text
     assert "<code>profile_table</code>" in text
 
