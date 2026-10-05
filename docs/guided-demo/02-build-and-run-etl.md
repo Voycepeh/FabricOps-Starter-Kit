@@ -62,7 +62,7 @@ For the first Guided Demo run, there is no Data Contract yet. Run the cell and l
 
 ## 3. Read
 
-The template reads three sources through `orchestrate_read()`. You describe each source once, and FabricOps handles the governed Read lifecycle around it.
+The template reads three sources through [`orchestrate_read()`](../api/reference/orchestrate_read.md). You describe each source once, and FabricOps handles the governed Read lifecycle around it.
 
 | Read | Store | Schema | Table |
 | --- | --- | --- | --- |
@@ -102,15 +102,15 @@ Use `source["dataframe"]` for the PySpark transformation. Keep the complete resu
 
     **What happens under the hood**
 
-    `orchestrate_read()` uses `pipeline_read()` to select the appropriate Lakehouse or Warehouse read path. For Warehouse sources, it can push down a T-SQL query when one is provided.
+    [`orchestrate_read()`](../api/reference/orchestrate_read.md) uses [`pipeline_read()`](../api/reference/pipeline_read.md) to select the appropriate Lakehouse or Warehouse read path. For Warehouse sources, it can push down a T-SQL query when one is provided.
 
     It resolves the canonical `table_id` and runs the applicable source Guardrails defined by the Data Contract through:
 
-    - `check_freshness()`
-    - `check_schema()`
-    - `check_dq()`
+    - [`check_freshness()`](../api/reference/check_freshness.md)
+    - [`check_schema()`](../api/reference/check_schema.md)
+    - [`check_dq()`](../api/reference/check_dq.md)
 
-    Lastly, it calls `profile_table()` when profiling applies.
+    Lastly, it calls [`profile_table()`](../api/reference/profile_table.md) when profiling applies.
 
     The returned source result is carried forward so later Write blocks can use its `table_id` for source-to-target lineage.
 
@@ -147,7 +147,7 @@ You can also use Copilot, ChatGPT, Claude, or other AI coding tools to help draf
 
 ## 5. Write
 
-After the PySpark transformation is ready, the template publishes two targets through `orchestrate_write()`. You provide the transformed DataFrame and target settings, and FabricOps handles the governed Write lifecycle around them.
+After the PySpark transformation is ready, the template publishes two targets through [`orchestrate_write()`](../api/reference/orchestrate_write.md). You provide the transformed DataFrame and target settings, and FabricOps handles the governed Write lifecycle around them.
 
 | Write | Store | Schema | Table | Load strategy |
 | --- | --- | --- | --- | --- |
@@ -193,21 +193,21 @@ If the Guardrails pass, FabricOps publishes the target and returns the Write res
 
     **What happens under the hood**
 
-    `orchestrate_write()` first resolves the target `table_id` and the `table_id` of each contributing source.
+    [`orchestrate_write()`](../api/reference/orchestrate_write.md) first resolves the target `table_id` and the `table_id` of each contributing source.
 
     It then runs the applicable Guardrails defined by the Data Contract through:
 
-    - `check_schema()`
-    - `check_sensitive_data()`
-    - `check_source_drift()`
-    - `check_dq()`
-    - `check_guardrail_coverage()`
+    - [`check_schema()`](../api/reference/check_schema.md)
+    - [`check_sensitive_data()`](../api/reference/check_sensitive_data.md)
+    - [`check_source_drift()`](../api/reference/check_source_drift.md)
+    - [`check_dq()`](../api/reference/check_dq.md)
+    - [`check_guardrail_coverage()`](../api/reference/check_guardrail_coverage.md)
 
     Sensitive Data treatment is applied before the remaining Data Quality checks and publication. See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for Mask, Bucket, Tokenize, and Remove behavior and examples.
 
-    If the Guardrails pass, `pipeline_write()` writes to the appropriate Lakehouse or Warehouse destination and records the associated publication metadata and source-to-target lineage.
+    If the Guardrails pass, [`pipeline_write()`](../api/reference/pipeline_write.md) writes to the appropriate Lakehouse or Warehouse destination and records the associated publication metadata and source-to-target lineage.
 
-    Lastly, `profile_table()` profiles the persisted target.
+    Lastly, [`profile_table()`](../api/reference/profile_table.md) profiles the persisted target.
 
     **What comes back**
 
@@ -271,7 +271,7 @@ At the end of Step 2 you should have:
 
 - three source tables read through FabricOps into Spark DataFrames,
 - `demo.curated_orders` fully overwritten in the Silver Lakehouse and `demo.customer_summary` fully overwritten in the Gold Warehouse,
-- Catalogue, profile, lineage, and source observation metadata recorded for the pipeline,
+- [Catalogue](../reference/metadata/metadata_data_catalogue.md), [profile](../reference/metadata/metadata_data_profiled.md), [lineage](../reference/metadata/metadata_data_lineage.md), and [source observation](../reference/metadata/metadata_source_observation.md) metadata recorded for the pipeline,
 - contract-backed checks shown as `SKIPPED` in Development because no Data Contract has been selected yet.
 
 **Next:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
