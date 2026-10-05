@@ -436,11 +436,11 @@ def test_release_generation_is_deterministic_and_second_run_clean():
     assert first == second
 
 
-def test_mkdocs_navigation_links_release_overview_after_release_exists():
-    """Verify 0.1.0 navigation links the frozen release overview."""
+def test_mkdocs_navigation_links_release_landing_page_only():
+    """Verify release history stays behind the Releases landing page."""
     content = (ri.ROOT / "mkdocs.yml").read_text(encoding="utf-8")
-    assert "releases/index.md" in content
-    assert "0.1.0: releases/0.1.0/index.md" in content
+    assert "Releases (Python package): releases/index.md" in content
+    assert "0.1.0: releases/0.1.0/index.md" not in content
     assert "releases/0.1.0/functions/index.md" not in content
 
 
