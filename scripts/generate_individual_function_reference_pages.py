@@ -5548,7 +5548,7 @@ def main() -> None:
 
     for group in reference_groups:
         items = group_items[group["key"]]
-        count = len(items)
+        count = len(group["functions"])
         open_attribute = " open" if group["open"] else ""
         default_open = "true" if group["open"] else "false"
         ref.extend(
