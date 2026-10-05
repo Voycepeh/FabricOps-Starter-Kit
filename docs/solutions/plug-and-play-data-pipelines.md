@@ -109,23 +109,28 @@ AI is optional. Microsoft Fabric Copilot or another coding agent can help write 
 
 ## Under the hood
 
+<details markdown="1">
+<summary><strong>How FabricOps governs the pipeline boundaries</strong></summary>
+
 FabricOps deliberately leaves project logic visible while standardising the boundaries around it.
 
 ```mermaid
 flowchart LR
-    ENV["00 Env Config"] --> READ["Governed Read"]
+    CONTRACT["Data Contract"] --> READ["orchestrate_read()"]
     READ --> TRANSFORM["Your PySpark"]
-    TRANSFORM --> WRITE["Governed Write"]
+    TRANSFORM --> WRITE["orchestrate_write()"]
 
-    CONTRACT["Data Contract"] --> READ
-    CONTRACT --> WRITE
-
-    READ --> META["Metadata + Profile + State"]
-    WRITE --> META
+    READ --> READ_CHECKS["Freshness → Schema → DQ → Profile"]
+    WRITE --> WRITE_CHECKS["Schema → Sensitive Data → Source Drift → DQ → Guardrail Coverage"]
+    WRITE_CHECKS --> PUBLISH["Write → Profile"]
     WRITE --> LINEAGE["Lineage"]
 ```
 
-The orchestrators provide the stable framework boundary. Lower-level implementation details such as Full versus Incremental reads, load strategies, validation behaviour, and deployment are documented separately so this page can stay focused on the overall solution.
+The Read boundary resolves the governed table, applies the applicable contract checks, and profiles Full reads. The Write boundary applies pre-publication guardrails before writing, then profiles the published table and records lineage.
+
+The orchestrators provide the stable framework boundary. Read modes, Write modes, validation behaviour, and deployment are documented separately so this page can stay focused on the overall solution.
+
+</details>
 
 ## Example
 
