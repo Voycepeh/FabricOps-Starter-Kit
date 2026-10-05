@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 820" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 860" role="img" aria-labelledby="title desc">
 <title id="title">Development to Production FabricOps pipeline promotion</title>
-<desc id="desc">Two mirrored Development and Production panels show 00 Env Config resolving environment-specific Fabric Store locations and the same 02 Pipeline containing Data Contract context, Full and Incremental reads, project-owned PySpark transformation, and Overwrite, Append, SCD1, and SCD2 writes. The validated Development pipeline is promoted one-to-one to Production.</desc>
+<desc id="desc">Two mirrored Development and Production panels show 00 Env Config resolving environment-specific Fabric Store locations and the same 02 Pipeline containing Data Contract context, Full and Incremental reads, a centered project-owned PySpark transformation below the reads, and Overwrite, Append, SCD1, and SCD2 writes below the transformation. A promotion connector links the Development and Production pipeline containers directly.</desc>
 <defs>
   <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
     <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#101828" flood-opacity=".08"/>
@@ -20,7 +20,7 @@
     <stop offset="1" stop-color="#f8fbff"/>
   </linearGradient>
 </defs>
-<rect width="1440" height="820" fill="#ffffff"/>
+<rect width="1440" height="860" fill="#ffffff"/>
 <style>
 .title{font:700 26px Arial,sans-serif;fill:#101828}
 .subtitle{font:13px Arial,sans-serif;fill:#667085}
@@ -44,14 +44,9 @@
 <text x="56" y="48" class="title">Same pipeline definition, promoted from Development to Production</text>
 <text x="56" y="72" class="subtitle">Environment configuration changes. The governed pipeline shape and project-owned transformation stay the same.</text>
 
-<!-- promotion -->
-<path class="accent" d="M654 106 H786"/>
-<rect x="673" y="88" width="94" height="32" rx="16" fill="#ffffff" stroke="#b7e3d8"/>
-<text x="720" y="108" text-anchor="middle" class="ey" style="fill:#0f8f83">PROMOTE 1:1</text>
-
 <!-- DEVELOPMENT -->
 <g filter="url(#shadow)">
-  <rect x="48" y="130" width="606" height="634" rx="14" class="outer"/>
+  <rect x="48" y="130" width="606" height="676" rx="14" class="outer"/>
   <path d="M48 144a14 14 0 0 1 14-14h578a14 14 0 0 1 14 14v78H48z" fill="url(#devHead)"/>
 </g>
 <text x="76" y="166" class="paneltitle">Development</text>
@@ -60,7 +55,7 @@
 <text x="98" y="265" class="ey">00 ENV CONFIG</text>
 <text x="98" y="289" class="h">Resolve Development Fabric Store locations</text>
 
-<rect x="76" y="336" width="550" height="352" rx="10" class="pipeline"/>
+<rect x="76" y="336" width="550" height="394" rx="10" class="pipeline"/>
 <text x="98" y="363" class="ey">02 PIPELINE</text>
 <line x1="98" y1="376" x2="604" y2="376" class="divider"/>
 
@@ -68,47 +63,43 @@
 <text x="114" y="419" class="h">Data Contract context</text>
 <text x="114" y="440" class="small">Select governed contract</text>
 
-<rect x="98" y="486" width="132" height="66" rx="8" class="read"/>
+<rect x="98" y="486" width="150" height="72" rx="8" class="read"/>
 <text x="114" y="511" class="h">Read Table 1</text>
 <text x="114" y="534" class="b">Full</text>
 
-<rect x="242" y="486" width="132" height="66" rx="8" class="read"/>
-<text x="258" y="511" class="h">Read Table 2</text>
-<text x="258" y="534" class="b">Incremental</text>
+<rect x="312" y="486" width="150" height="72" rx="8" class="read"/>
+<text x="328" y="511" class="h">Read Table 2</text>
+<text x="328" y="534" class="b">Incremental</text>
 
-<rect x="398" y="474" width="204" height="90" rx="9" class="focus"/>
-<text x="416" y="499" class="ey" style="fill:#0f8f83">PROJECT OWNED</text>
-<text x="416" y="526" class="h">PySpark transformation</text>
-<text x="416" y="548" class="small">Visible project logic</text>
+<rect x="180" y="592" width="340" height="90" rx="9" class="focus"/>
+<text x="200" y="617" class="ey" style="fill:#0f8f83">PROJECT OWNED</text>
+<text x="200" y="644" class="h">PySpark transformation</text>
+<text x="200" y="666" class="small">Visible project logic between governed boundaries</text>
 
-<path class="line" d="M188 456 V486"/>
-<path class="line" d="M188 456 H308 V486"/>
-<path class="line" d="M230 519 H398"/>
-<path class="line" d="M374 519 H398"/>
+<path class="line" d="M173 558 V575 H350 V592"/>
+<path class="line" d="M387 558 V575 H350 V592"/>
 
-<rect x="98" y="604" width="112" height="60" rx="8" class="write"/>
-<text x="114" y="628" class="h">Write 1</text>
-<text x="114" y="650" class="b">Overwrite</text>
+<rect x="98" y="742" width="112" height="60" rx="8" class="write"/>
+<text x="114" y="766" class="h">Write 1</text>
+<text x="114" y="788" class="b">Overwrite</text>
 
-<rect x="220" y="604" width="112" height="60" rx="8" class="write"/>
-<text x="236" y="628" class="h">Write 2</text>
-<text x="236" y="650" class="b">Append</text>
+<rect x="220" y="742" width="112" height="60" rx="8" class="write"/>
+<text x="236" y="766" class="h">Write 2</text>
+<text x="236" y="788" class="b">Append</text>
 
-<rect x="342" y="604" width="112" height="60" rx="8" class="write"/>
-<text x="358" y="628" class="h">Write 3</text>
-<text x="358" y="650" class="b">SCD1</text>
+<rect x="342" y="742" width="112" height="60" rx="8" class="write"/>
+<text x="358" y="766" class="h">Write 3</text>
+<text x="358" y="788" class="b">SCD1</text>
 
-<rect x="464" y="604" width="112" height="60" rx="8" class="write"/>
-<text x="480" y="628" class="h">Write 4</text>
-<text x="480" y="650" class="b">SCD2</text>
+<rect x="464" y="742" width="112" height="60" rx="8" class="write"/>
+<text x="480" y="766" class="h">Write 4</text>
+<text x="480" y="788" class="b">SCD2</text>
 
 <path class="line" d="M500 564 V582 H154 V604"/>
 <path class="line" d="M500 564 V582 H276 V604"/>
 <path class="line" d="M500 564 V582 H398 V604"/>
 <path class="line" d="M500 564 V582 H520 V604"/>
 
-<rect x="76" y="708" width="550" height="34" rx="7" fill="#f2fbf8" stroke="#b7e3d8"/>
-<text x="351" y="730" text-anchor="middle" class="small">Development Fabric Store locations</text>
 <path class="line" d="M351 312 V336"/>
 
 <!-- PRODUCTION -->
@@ -130,48 +121,50 @@
 <text x="852" y="419" class="h">Data Contract context</text>
 <text x="852" y="440" class="small">Resolve active contract</text>
 
-<rect x="836" y="486" width="132" height="66" rx="8" class="read"/>
+<rect x="836" y="486" width="150" height="72" rx="8" class="read"/>
 <text x="852" y="511" class="h">Read Table 1</text>
 <text x="852" y="534" class="b">Full</text>
 
-<rect x="980" y="486" width="132" height="66" rx="8" class="read"/>
-<text x="996" y="511" class="h">Read Table 2</text>
-<text x="996" y="534" class="b">Incremental</text>
+<rect x="1050" y="486" width="150" height="72" rx="8" class="read"/>
+<text x="1066" y="511" class="h">Read Table 2</text>
+<text x="1066" y="534" class="b">Incremental</text>
 
-<rect x="1136" y="474" width="204" height="90" rx="9" class="focus"/>
-<text x="1154" y="499" class="ey" style="fill:#0f8f83">PROJECT OWNED</text>
-<text x="1154" y="526" class="h">PySpark transformation</text>
-<text x="1154" y="548" class="small">Same promoted logic</text>
+<rect x="918" y="592" width="340" height="90" rx="9" class="focus"/>
+<text x="938" y="617" class="ey" style="fill:#0f8f83">PROJECT OWNED</text>
+<text x="938" y="644" class="h">PySpark transformation</text>
+<text x="938" y="666" class="small">Same promoted logic</text>
 
-<path class="line" d="M926 456 V486"/>
-<path class="line" d="M926 456 H1046 V486"/>
-<path class="line" d="M968 519 H1136"/>
-<path class="line" d="M1112 519 H1136"/>
+<path class="line" d="M911 558 V575 H1088 V592"/>
+<path class="line" d="M1125 558 V575 H1088 V592"/>
 
-<rect x="836" y="604" width="112" height="60" rx="8" class="write"/>
-<text x="852" y="628" class="h">Write 1</text>
-<text x="852" y="650" class="b">Overwrite</text>
+<rect x="836" y="742" width="112" height="60" rx="8" class="write"/>
+<text x="852" y="766" class="h">Write 1</text>
+<text x="852" y="788" class="b">Overwrite</text>
 
-<rect x="958" y="604" width="112" height="60" rx="8" class="write"/>
-<text x="974" y="628" class="h">Write 2</text>
-<text x="974" y="650" class="b">Append</text>
+<rect x="958" y="742" width="112" height="60" rx="8" class="write"/>
+<text x="974" y="766" class="h">Write 2</text>
+<text x="974" y="788" class="b">Append</text>
 
-<rect x="1080" y="604" width="112" height="60" rx="8" class="write"/>
-<text x="1096" y="628" class="h">Write 3</text>
-<text x="1096" y="650" class="b">SCD1</text>
+<rect x="1080" y="742" width="112" height="60" rx="8" class="write"/>
+<text x="1096" y="766" class="h">Write 3</text>
+<text x="1096" y="788" class="b">SCD1</text>
 
-<rect x="1202" y="604" width="112" height="60" rx="8" class="write"/>
-<text x="1218" y="628" class="h">Write 4</text>
-<text x="1218" y="650" class="b">SCD2</text>
+<rect x="1202" y="742" width="112" height="60" rx="8" class="write"/>
+<text x="1218" y="766" class="h">Write 4</text>
+<text x="1218" y="788" class="b">SCD2</text>
 
 <path class="line" d="M1238 564 V582 H892 V604"/>
 <path class="line" d="M1238 564 V582 H1014 V604"/>
 <path class="line" d="M1238 564 V582 H1136 V604"/>
 <path class="line" d="M1238 564 V582 H1258 V604"/>
 
-<rect x="814" y="708" width="550" height="34" rx="7" fill="#f2f8ff" stroke="#c9ddf5"/>
-<text x="1089" y="730" text-anchor="middle" class="small">Production Fabric Store locations</text>
 <path class="line" d="M1089 312 V336"/>
 
-<text x="720" y="798" text-anchor="middle" class="subtitle">00 Env Config changes by environment. 02 Pipeline is promoted unchanged.</text>
+<!-- connected promotion arrow, anchored to the 02 Pipeline containers -->
+<path class="accent" d="M626 533 H674"/>
+<rect x="674" y="508" width="92" height="32" rx="16" fill="#ffffff" stroke="#b7e3d8"/>
+<text x="720" y="529" text-anchor="middle" class="ey" style="fill:#0f8f83">PROMOTE 1:1</text>
+<path class="accent" d="M766 533 H814"/>
+
+<text x="720" y="842" text-anchor="middle" class="subtitle">00 Env Config changes by environment. 02 Pipeline is promoted unchanged.</text>
 </svg>
