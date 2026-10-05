@@ -22,19 +22,15 @@ A single business requirement can therefore become several atomic, independently
 
 Once reviewed and saved into the Data Contract, the resulting rules are explicit. Runtime enforcement is deterministic and does not depend on AI.
 
-**Natural language requirement → AI assisted translation → Human review → Data Contract → Deterministic enforcement**
-
 ## How it works
 
-FabricOps separates business judgement, AI assisted translation, and deterministic enforcement.
+FabricOps keeps the human in control while AI helps turn business requirements into Data Quality rules.
 
-| Responsibility | What happens |
-| --- | --- |
-| **Human configures and decides** | Describe the business requirement in natural language, optionally constrain it to selected columns, then review, change, or reject the proposed rules before saving them. |
-| **AI supports** | Uses the requirement plus governed metadata and profile evidence to decompose the intent into the smallest supported set of atomic Data Quality rules. |
-| **FabricOps handles deterministically** | Supplies the supported rule grammar, validates the returned rule types, columns, parameters, and expressions, records approved rules in the Data Contract, and evaluates them during governed pipeline execution. |
+- **Human** — describes the business requirement and reviews the suggested rules before saving them.
+- **AI** — translates the requirement into supported Data Quality rules using the available metadata and profile evidence.
+- **FabricOps** — validates the approved rules, stores them in the Data Contract, and enforces them deterministically during pipeline execution.
 
-The AI does not decide whether data passes at runtime. It helps author candidate rule definitions. FabricOps performs the actual checks using the reviewed Data Contract.
+AI helps author the rules. **FabricOps enforces them.**
 
 <details markdown="1">
 <summary><strong>Under the hood: how natural language becomes governed rules</strong></summary>
