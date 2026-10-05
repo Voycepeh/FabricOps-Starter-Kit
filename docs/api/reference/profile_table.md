@@ -35,7 +35,6 @@ profiled without creating an identity or writing metadata.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">99_explore</span>
-<span class="reference-chip">02B_incremental_append_pipeline</span>
 </p>
 
 ## Usage notes
