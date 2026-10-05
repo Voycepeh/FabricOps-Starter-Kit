@@ -34,10 +34,16 @@ flowchart LR
             DEV_READ_FULL["Read Table 1<br/>Full"]
             DEV_READ_INC["Read Table 2<br/>Incremental"]
             DEV_TRANSFORM["Project-specific<br/>PySpark transformation"]
-            DEV_WRITE["orchestrate_write() × N<br/>Overwrite / Append / SCD1 / SCD2"]
+            DEV_WRITE_OVERWRITE["Write Table 1<br/>Overwrite"]
+            DEV_WRITE_APPEND["Write Table 2<br/>Append"]
+            DEV_WRITE_SCD1["Write Table 3<br/>SCD1"]
+            DEV_WRITE_SCD2["Write Table 4<br/>SCD2"]
             DEV_CONTRACT --> DEV_READ_FULL --> DEV_TRANSFORM
             DEV_CONTRACT --> DEV_READ_INC --> DEV_TRANSFORM
-            DEV_TRANSFORM --> DEV_WRITE
+            DEV_TRANSFORM --> DEV_WRITE_OVERWRITE
+            DEV_TRANSFORM --> DEV_WRITE_APPEND
+            DEV_TRANSFORM --> DEV_WRITE_SCD1
+            DEV_TRANSFORM --> DEV_WRITE_SCD2
         end
         DEV_ENV --> DEV_PIPE
         DEV_PIPE --> DEV_RES["Development<br/>Fabric Store locations"]
@@ -52,10 +58,16 @@ flowchart LR
             PROD_READ_FULL["Read Table 1<br/>Full"]
             PROD_READ_INC["Read Table 2<br/>Incremental"]
             PROD_TRANSFORM["Project-specific<br/>PySpark transformation"]
-            PROD_WRITE["orchestrate_write() × N<br/>Overwrite / Append / SCD1 / SCD2"]
+            PROD_WRITE_OVERWRITE["Write Table 1<br/>Overwrite"]
+            PROD_WRITE_APPEND["Write Table 2<br/>Append"]
+            PROD_WRITE_SCD1["Write Table 3<br/>SCD1"]
+            PROD_WRITE_SCD2["Write Table 4<br/>SCD2"]
             PROD_CONTRACT --> PROD_READ_FULL --> PROD_TRANSFORM
             PROD_CONTRACT --> PROD_READ_INC --> PROD_TRANSFORM
-            PROD_TRANSFORM --> PROD_WRITE
+            PROD_TRANSFORM --> PROD_WRITE_OVERWRITE
+            PROD_TRANSFORM --> PROD_WRITE_APPEND
+            PROD_TRANSFORM --> PROD_WRITE_SCD1
+            PROD_TRANSFORM --> PROD_WRITE_SCD2
         end
         PROD_ENV --> PROD_PIPE
         PROD_PIPE --> PROD_RES["Production<br/>Fabric Store locations"]
