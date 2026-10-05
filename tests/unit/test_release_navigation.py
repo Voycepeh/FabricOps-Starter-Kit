@@ -29,12 +29,9 @@ def test_release_navigation_lists_only_live_versions_newest_first(tmp_path: Path
     _write_manifest(manifests, "0.2.0", "live")
     _write_manifest(manifests, "0.11.0", "preparing")
 
+    assert rn.live_release_versions(manifests) == ["0.10.0", "0.2.0", "0.1.0"]
     assert rn.render_release_navigation(manifests) == (
-        "      - Releases (Python package):\n"
-        "          - Overview: releases/index.md\n"
-        "          - 0.10.0: releases/0.10.0/index.md\n"
-        "          - 0.2.0: releases/0.2.0/index.md\n"
-        "          - 0.1.0: releases/0.1.0/index.md\n"
+        "      - Releases (Python package): releases/index.md\n"
     )
 
 
@@ -62,9 +59,7 @@ def test_release_navigation_replaces_only_releases_block(tmp_path: Path) -> None
         "nav:\n"
         "  - Home: index.md\n"
         "  - Download FabricOps:\n"
-        "      - Releases (Python package):\n"
-        "          - Overview: releases/index.md\n"
-        "          - 0.2.0: releases/0.2.0/index.md\n"
+        "      - Releases (Python package): releases/index.md\n"
         "      - Notebook Templates: https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks\n"
         "  - Reference: reference/index.md\n"
     )
