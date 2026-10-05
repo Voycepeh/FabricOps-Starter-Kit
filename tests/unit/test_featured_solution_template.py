@@ -1,3 +1,5 @@
+"""Validate the shared presentation contract for Featured Solution pages."""
+
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -21,6 +23,7 @@ REQUIRED_HEADINGS = (
 
 
 def test_featured_solution_pages_follow_shared_presentation_contract():
+    """Ensure all end-user Featured Solution pages keep the shared visual template."""
     for page in FEATURED_SOLUTION_PAGES:
         text = page.read_text(encoding="utf-8")
 
