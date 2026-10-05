@@ -2,7 +2,7 @@
 
 <span class="fabricops-release-status fabricops-release-status--preview">Preview</span>
 
-![Effective data access scan](../assets/EffectiveAccessScan.png)
+![Effective data access scan](../assets/EffectiveAccessScan.png){ .fabricops-solution-hero }
 
 ## The problem
 
@@ -35,10 +35,10 @@ Groups remain groups where the underlying permission surface returns them. Fabri
 
 ## Under the hood
 
-<details markdown="1">
+<details class="fabricops-solution-details" markdown="1">
 <summary><strong>How the three access scanners are combined</strong></summary>
 
-![How FabricOps scans effective data access](../assets/effective-data-access-implementation.svg)
+![How FabricOps scans effective data access](../assets/effective-data-access-implementation.svg){ .fabricops-solution-diagram }
 
 Each scanner reads only its own permission surface:
 
@@ -56,11 +56,14 @@ The scanners are read-only with respect to permissions: they inventory access bu
 
 ## Example
 
-??? example "Example: one governed table, multiple access paths"
+<details class="fabricops-solution-details" markdown="1">
+<summary><strong>Example: one governed table, multiple access paths</strong></summary>
 
-    ![One governed table can have access through multiple permission paths](../assets/effective-data-access-example.svg)
+![One governed table can have access through multiple permission paths](../assets/effective-data-access-example.svg){ .fabricops-solution-diagram }
 
-    The key distinction is **not visible to FabricOps versus no access**. If the account running the scan can inspect Workspace and SQL permissions but cannot inspect OneLake Security, FabricOps records the visible Workspace and SQL evidence. It does not treat the missing OneLake result as proof that no OneLake access exists.
+The key distinction is **not visible to FabricOps versus no access**. If the account running the scan can inspect Workspace and SQL permissions but cannot inspect OneLake Security, FabricOps records the visible Workspace and SQL evidence. It does not treat the missing OneLake result as proof that no OneLake access exists.
+
+</details>
 
 ## Go deeper
 
