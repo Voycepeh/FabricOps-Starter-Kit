@@ -1572,7 +1572,6 @@ def _lifecycle_header_lines(row: dict[str, Any]) -> list[str]:
         chips.append(_lifecycle_chip(status, f"Live since {row['live_since']}", prominent=True))
     if status == "Discontinued" and row.get("discontinued_in"):
         chips.append(_lifecycle_chip(status, f"Discontinued in {row['discontinued_in']}", prominent=True))
-    chips.append('<span class="reference-chip reference-chip-muted">Public function</span>')
     notices = {
         "Live": "This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.",
         "Preview": "This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.",
@@ -5606,13 +5605,16 @@ def main() -> None:
             used_in_templates = template_usage_by_symbol.get(short_name, [])
             notebook_usage_chips = [
                 f'<span class="reference-chip">{html_escape(template)}</span>' for template in used_in_templates
-            ] or ['<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>']
-            page_chip_lines = [
-                '<p class="reference-catalogue-item-meta reference-catalogue-item-badges">',
-                '<span class="reference-chip">Public Starter Kit function</span>',
-                *notebook_usage_chips,
-                '</p>',
             ]
+            page_chip_lines = (
+                [
+                    '<p class="reference-catalogue-item-meta reference-catalogue-item-badges">',
+                    *notebook_usage_chips,
+                    '</p>',
+                ]
+                if notebook_usage_chips
+                else []
+            )
             usage_notes = _usage_notes_for_public_function(
                 function_name=short_name,
                 source_path=source_path,
@@ -5659,13 +5661,6 @@ def main() -> None:
                 *_source_card_lines(source_path=source_path, source_start_line=source_start_line, source_ref=source_ref, short_name=short_name),
                 "",
                 *page_chip_lines,
-                "",
-                "**Used in notebooks:** "
-                + (
-                    ", ".join(f"`{template}`" for template in used_in_templates)
-                    if used_in_templates
-                    else "Usage detection may exclude indirect or generated references."
-                ),
                 "",
                 *usage_guidance_lines,
                 "",
