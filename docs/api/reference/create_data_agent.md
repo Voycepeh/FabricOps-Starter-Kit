@@ -16,6 +16,7 @@ Create and configure one native Fabric Data Agent from an activated Production t
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agent/create_data_agent.py#L8-L79">View on GitHub</a>
 </div>
 
+
 ## Usage notes
 
 Do not use for multi-table agents, relationship authoring, evaluation, or automatic publication.
