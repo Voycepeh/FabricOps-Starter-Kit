@@ -5203,13 +5203,9 @@ def main() -> None:
             raise RuntimeError(f"Underscore callable cannot be public callable: {symbol.name}")
 
     _validate_template_flow_docs(template_flow_docs, set(symbol_map))
-    core_template_usage_by_symbol, example_template_usage_by_symbol = _derive_template_usage_by_kind(
+    core_template_usage_by_symbol, _ = _derive_template_usage_by_kind(
         template_flow_docs, symbol_map
     )
-    template_usage_by_symbol = {
-        name: [*core_template_usage_by_symbol.get(name, []), *example_template_usage_by_symbol.get(name, [])]
-        for name in symbol_map
-    }
     nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
     node_by_qn = {n["qualified_name"]: n for n in nodes}
     calls_by_qn: dict[str, list[str]] = {}
