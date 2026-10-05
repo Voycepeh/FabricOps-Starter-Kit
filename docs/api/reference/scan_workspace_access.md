@@ -30,6 +30,7 @@ inspect the result without writing metadata.
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_workspace_access.py#L195-L278">View on GitHub</a>
 </div>
 
+
 ## Usage notes
 
 Use for repeatable workspace-role access inventory snapshots.
