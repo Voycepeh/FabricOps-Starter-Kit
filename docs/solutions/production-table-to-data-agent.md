@@ -26,7 +26,7 @@ This means that at **Step 7, the final stage of the FabricOps lifecycle**, the g
 
 The Data Agent still queries the **actual Production data** through Microsoft Fabric. FabricOps does not copy business-table rows into the prompt or replace Fabric permissions. It supplies business context that cannot always be inferred safely from the data alone.
 
-**Current Preview scope:** FabricOps currently provides `create_data_agent()`, which creates and configures a Data Agent from **one governed Production table**. Multi-table support is planned for a future iteration.
+**Current Preview scope:** FabricOps currently provides [`create_data_agent()`](../api/reference/create_data_agent.md), which creates and configures a Data Agent from **one governed Production table**. Multi-table support is planned for a future iteration.
 
 ## How it works
 
@@ -45,7 +45,7 @@ Fabric permissions remain authoritative for access to the Production data and fo
 
 ![FabricOps Production table to Data Agent implementation](../assets/data-agent-bootstrap-implementation.svg){ .fabricops-solution-diagram }
 
-`create_data_agent()` uses the current Fabric notebook caller identity to call the Microsoft Fabric REST API. It creates the Data Agent, attaches the configured Production Lakehouse or Warehouse datasource, selects the governed table, and applies the generated datasource and agent instructions.
+[`create_data_agent()`](../api/reference/create_data_agent.md) uses the current Fabric notebook caller identity to call the Microsoft Fabric REST API. It creates the Data Agent, attaches the configured Production Lakehouse or Warehouse datasource, selects the governed table, and applies the generated datasource and agent instructions.
 
 FabricOps does **not** copy the Production table into an AI prompt. The table remains a Fabric datasource and the caller's Fabric permissions continue to control access.
 
