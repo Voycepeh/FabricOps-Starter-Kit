@@ -77,7 +77,7 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 </details>
 
 <details class="reference-function-group" data-callable-group="pipeline-capabilities" data-default-open="false">
-<summary><span class="reference-function-group-title">Pipeline & Guardrail Capabilities</span><span class="reference-function-group-meta">10 functions · Compose directly when needed</span></summary>
+<summary><span class="reference-function-group-title">Pipeline &amp; Guardrail Capabilities</span><span class="reference-function-group-meta">10 functions · Compose directly when needed</span></summary>
 <p class="reference-function-group-description">Governed reads, writes, profiling, Data Quality, schema, freshness, Sensitive Data, Source Drift, and coverage checks.</p>
 <div class="reference-catalogue-list">
 <article id="pipeline.check_dq-check_dq" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_dq" data-callable-module="pipeline" data-callable-usage-source="02B_incremental_append_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Evaluate current active governed DQ rules and persist linked rule and failed-row evidence.">
@@ -184,7 +184,7 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 </details>
 
 <details class="reference-function-group" data-callable-group="governance-metadata" data-default-open="false">
-<summary><span class="reference-function-group-title">Governance & Metadata</span><span class="reference-function-group-meta">8 functions · Author and inspect governed context</span></summary>
+<summary><span class="reference-function-group-title">Governance &amp; Metadata</span><span class="reference-function-group-meta">8 functions · Author and inspect governed context</span></summary>
 <p class="reference-function-group-description">Notebook setup, metadata initialization, Data Steward and Agreement intake, Data Contract workflows, and catalogue views.</p>
 <div class="reference-catalogue-list">
 <article id="config.setup_metadata_tables-setup_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_metadata_tables" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-starter-kit" data-callable-purpose="Create missing FabricOps metadata tables and check existing table columns and Spark data types.">
@@ -271,7 +271,7 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 </details>
 
 <details class="reference-function-group" data-callable-group="access-consumption" data-default-open="false">
-<summary><span class="reference-function-group-title">Access & Consumption</span><span class="reference-function-group-meta">4 functions · Observe access or publish governed context</span></summary>
+<summary><span class="reference-function-group-title">Access &amp; Consumption</span><span class="reference-function-group-meta">4 functions · Observe access or publish governed context</span></summary>
 <p class="reference-function-group-description">Effective access scanners and the governed Production table to Data Agent handoff.</p>
 <div class="reference-catalogue-list">
 <article id="data_agent.create_data_agent-create_data_agent" class="reference-catalogue-item" data-callable-row="true" data-callable-name="create_data_agent" data-callable-module="consumption.create_data_agent" data-function-type="public-starter-kit" data-callable-purpose="Complete the governed single-table Step 7 handoff without manually composing context or instructions.">
