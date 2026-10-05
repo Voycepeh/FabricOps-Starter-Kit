@@ -20,8 +20,8 @@ FabricOps scans the three supported permission paths and maps the observations b
 
 The result is normalized access evidence in `METADATA_DATA_ACCESS`, so Governance can review the supported access paths together.
 
-!!! important "A scan is only as complete as the execution identity can see"
-    FabricOps uses the credentials available to the notebook or pipeline that runs the scan. If that execution identity cannot inspect a permission surface, FabricOps cannot report permissions hidden behind it. **A missing access row is not proof that no access exists.**
+!!! important "A scan only sees what the account running it can see"
+    FabricOps uses the account that runs the notebook or pipeline. If that account cannot inspect a permission surface, FabricOps cannot report permissions hidden behind it. **A missing access row is not proof that no access exists.**
 
 ## How it works
 
@@ -48,7 +48,7 @@ Each scanner reads only its own permission surface:
 
 FabricOps then resolves the observations to canonical `table_id` values and preserves the permission source, principal, and normalized access level in `METADATA_DATA_ACCESS`.
 
-The scanners use the authentication available to the current Fabric runtime. They do not run with a separate privileged governance identity, so two executions can observe different evidence when their execution identities have different visibility.
+The scanners use the account running the current notebook or pipeline. They do not switch to a separate privileged Governance account, so two runs can observe different evidence if the accounts running them have different permissions.
 
 The scanners are read-only with respect to permissions: they inventory access but do not grant, revoke, or change it.
 
@@ -60,7 +60,7 @@ The scanners are read-only with respect to permissions: they inventory access bu
 
     ![One governed table can have access through multiple permission paths](../assets/effective-data-access-example.svg)
 
-    The key distinction is **unobserved versus no access**. If the execution identity can inspect Workspace and SQL permissions but cannot inspect OneLake Security, FabricOps records the visible Workspace and SQL evidence. It does not treat the missing OneLake observation as proof that no OneLake access exists.
+    The key distinction is **unobserved versus no access**. If the account running the scan can inspect Workspace and SQL permissions but cannot inspect OneLake Security, FabricOps records the visible Workspace and SQL evidence. It does not treat the missing OneLake observation as proof that no OneLake access exists.
 
 ## Go deeper
 
