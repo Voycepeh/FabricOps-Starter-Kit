@@ -24,14 +24,14 @@ Production follows the same visible lifecycle used in Development:
 Read → Transform → Write
 ```
 
-The same source reads, transformations, Guardrail checks, governed write logic, profiling, Lineage, and Source Observation flow run again against Production resources.
+The same source reads, transformations, Guardrail checks, governed write logic, profiling, [Lineage](../reference/metadata/metadata_data_lineage.md), and [Source Observation](../reference/metadata/metadata_source_observation.md) flow run again against Production resources.
 
 The key difference is Data Contract resolution:
 
 * Development can explicitly select an eligible frozen version for validation.
 * Production automatically resolves the single active Data Contract for each governed `table_id`.
 
-The same Guardrail functions therefore enforce the Production-active definition, and `pipeline_write()` uses the active governed Processing configuration for each target.
+The same Guardrail functions therefore enforce the Production-active definition, and [`pipeline_write()`](../api/reference/pipeline_write.md) uses the active governed Processing configuration for each target.
 
 ## 3. Grant direct consumer access
 
