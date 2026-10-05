@@ -44,10 +44,7 @@ nav:
       - "Step 6 - Run Production and Grant Access": guided-demo/06-run-production.md
       - "Step 7 - Governed Consumption": guided-demo/07-consume-production-data.md
   - Download FabricOps:
-      - Releases (Python package):
-          - Overview: releases/index.md
-          - 0.2.0: releases/0.2.0/index.md
-          - 0.1.0: releases/0.1.0/index.md
+      - Releases (Python package): releases/index.md
       - Notebook Templates: https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks
       - Demo Assets: https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData
   - Reference Documentation:
@@ -56,31 +53,8 @@ nav:
       - Read & Write Modes: reference/read-and-load-strategies.md
       - Sensitive Data Treatments: reference/sensitive-data-treatments.md
       - PySpark Transformation: reference/pyspark-transformation.md
-      - Data Quality Rules:
-          - Overview: reference/dq-rules/index.md
-          - Completeness: reference/dq-rules/completeness.md
-          - Uniqueness: reference/dq-rules/uniqueness.md
-          - Whitelist & Blacklist (Value Lists): reference/dq-rules/value-set.md
-          - Range: reference/dq-rules/range.md
-          - Pattern: reference/dq-rules/pattern.md
-          - Column Relationship: reference/dq-rules/column-relationship.md
-          - Conditional Completeness: reference/dq-rules/conditional-completeness.md
-          - Conditional Values: reference/dq-rules/conditional-values.md
-          - Custom Expression: reference/dq-rules/custom-expression.md
-      - Metadata Tables:
-          - Overview: reference/metadata.md
-          - Data Steward: reference/metadata/metadata_data_steward.md
-          - Data Agreement: reference/metadata/metadata_data_agreement.md
-          - Source Observation: reference/metadata/metadata_source_observation.md
-          - Data Catalogue: reference/metadata/metadata_data_catalogue.md
-          - Data Profiled: reference/metadata/metadata_data_profiled.md
-          - Data Profiled Frequency: reference/metadata/metadata_data_profiled_frequency.md
-          - Data Lineage: reference/metadata/metadata_data_lineage.md
-          - Enrichment: reference/metadata/metadata_enrichment.md
-          - Guardrail: reference/metadata/metadata_guardrail.md
-          - Guardrail Results: reference/metadata/metadata_guardrail_results.md
-          - Data Contract: reference/metadata/metadata_data_contract.md
-          - Data Access: reference/metadata/metadata_data_access.md      
+      - Data Quality Rules: reference/dq-rules/index.md
+      - Metadata Tables: reference/metadata.md      
   - Maintainer:
       - Product Definition: maintainer/product-definition.md
       - Release Guide: maintainer/index.md
