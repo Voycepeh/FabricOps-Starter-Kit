@@ -29,7 +29,7 @@ Step 4 validates the complete governed path, so every participating table needs 
 
 Guardrail Coverage then proves that every selected source/target contract has applicable rules and that every applicable rule produced evidence in the current activity.
 
-Open `01_governance`, run the setup cells, select each table above, then run:
+Open `01_governance`, run the setup cells, select each table above, then run [`widget_data_contract()`](../api/reference/widget_data_contract.md):
 
 ```python
 widget_data_contract()
@@ -63,11 +63,11 @@ Open **Columns** and configure these rules for the integration exercise:
 
 | UI | Column | Configuration | Runtime rule |
 | --- | --- | --- | --- |
-| **Completeness** | `customer_id` | Maximum missing = **0%**; treat blank as missing | `completeness` |
-| **Uniqueness** | `order_id` | Minimum unique = **100%** | `uniqueness` |
-| **Value Lists → Whitelist** | `order_status` | `NEW, PROCESSING, SHIPPED, DELIVERED, CANCELLED` | `value_set` / `allow` |
-| **Value Lists → Blacklist** | `shipping_country` | `UNKNOWN` | `value_set` / `block` |
-| **Value Rules** | `quantity` | Lower bound **1**, upper bound **4**, include both bounds | `range` |
+| **Completeness** | `customer_id` | Maximum missing = **0%**; treat blank as missing | [`completeness`](../reference/dq-rules/completeness.md) |
+| **Uniqueness** | `order_id` | Minimum unique = **100%** | [`uniqueness`](../reference/dq-rules/uniqueness.md) |
+| **Value Lists → Whitelist** | `order_status` | `NEW, PROCESSING, SHIPPED, DELIVERED, CANCELLED` | [`value_set`](../reference/dq-rules/value-set.md) / `allow` |
+| **Value Lists → Blacklist** | `shipping_country` | `UNKNOWN` | [`value_set`](../reference/dq-rules/value-set.md) / `block` |
+| **Value Rules** | `quantity` | Lower bound **1**, upper bound **4**, include both bounds | [`range`](../reference/dq-rules/range.md) |
 
 Keep **Block on failure** off for each rule.
 
@@ -79,11 +79,11 @@ Open **DQ Rules** and resolve each requirement below. Review the proposed rule b
 
 | Business requirement to enter | Expected resolved rule | Why the clean target passes |
 | --- | --- | --- |
-| Order ID must start with O followed by exactly four digits. | `pattern` | Canonical IDs use `O0001` through `O0120`. |
-| Modified datetime must be on or after order datetime. | `column_relationship` | Every canonical order is modified after it is created. |
-| When order status is DELIVERED, shipping country is required. | `conditional_completeness` | Delivered baseline rows have a shipping country. |
-| When shipping country is SG, order status must be NEW. | `conditional_values` | The canonical demo data uses NEW for SG rows. |
-| Order net amount must not exceed quantity multiplied by unit price. | `custom_expression` | A non-negative discount makes net amount less than or equal to gross amount. |
+| Order ID must start with O followed by exactly four digits. | [`pattern`](../reference/dq-rules/pattern.md) | Canonical IDs use `O0001` through `O0120`. |
+| Modified datetime must be on or after order datetime. | [`column_relationship`](../reference/dq-rules/column-relationship.md) | Every canonical order is modified after it is created. |
+| When order status is DELIVERED, shipping country is required. | [`conditional_completeness`](../reference/dq-rules/conditional-completeness.md) | Delivered baseline rows have a shipping country. |
+| When shipping country is SG, order status must be NEW. | [`conditional_values`](../reference/dq-rules/conditional-values.md) | The canonical demo data uses NEW for SG rows. |
+| Order net amount must not exceed quantity multiplied by unit price. | [`custom_expression`](../reference/dq-rules/custom-expression.md) | A non-negative discount makes net amount less than or equal to gross amount. |
 
 For each proposal:
 

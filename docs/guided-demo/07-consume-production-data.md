@@ -27,7 +27,7 @@ result = create_data_agent(
 display(result)
 ```
 
-`create_data_agent()` internally derives governed context from the active frozen Data Contract, `METADATA_DATA_CATALOGUE`, Enrichment, Guardrails, and configured Production store. It excludes credentials, tokens, profile samples, and raw sensitive values. The function converts that context into instructions, creates a native Data Agent, adds its staging Lakehouse or Warehouse datasource, selects the governed table, and applies separate agent and datasource instructions.
+[`create_data_agent()`](../api/reference/create_data_agent.md) internally derives governed context from the active frozen [Data Contract](../reference/metadata/metadata_data_contract.md), [`METADATA_DATA_CATALOGUE`](../reference/metadata/metadata_data_catalogue.md), Enrichment, Guardrails, and configured Production store. It excludes credentials, tokens, profile samples, and raw sensitive values. The function converts that context into instructions, creates a native Data Agent, adds its staging Lakehouse or Warehouse datasource, selects the governed table, and applies separate agent and datasource instructions.
 
 The target flow is:
 

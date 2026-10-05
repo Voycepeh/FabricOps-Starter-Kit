@@ -13,7 +13,7 @@ from pyspark.sql.window import Window
 
 ## Inspect and select
 
-Use these operations to understand the DataFrame you received from `orchestrate_read()` and keep only the columns needed by the transformation. `select()` creates a DataFrame with the chosen columns; `drop()` removes columns; `withColumnRenamed()` changes a column name without changing its values.
+Use these operations to understand the DataFrame you received from [`orchestrate_read()`](../api/reference/orchestrate_read.md) and keep only the columns needed by the transformation. `select()` creates a DataFrame with the chosen columns; `drop()` removes columns; `withColumnRenamed()` changes a column name without changing its values.
 
 ```python
 display(df)

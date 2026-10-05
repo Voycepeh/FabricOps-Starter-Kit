@@ -30,7 +30,7 @@ flowchart LR
 
 ## 1. Define the target first
 
-Incremental progress is tracked for a specific source → target relationship. Resolve the target before calling `pipeline_read(..., read_mode="incremental")`.
+Incremental progress is tracked for a specific source → target relationship. Resolve the target with [`resolve_table_id()`](../api/reference/resolve_table_id.md) before calling [`pipeline_read()`](../api/reference/pipeline_read.md) with `read_mode="incremental"`.
 
 ```python
 TARGET_STORE = "Silver"
@@ -66,7 +66,7 @@ On the first run, FabricOps bootstraps from the complete available source when n
 !!! tip "Profiling backend"
     FabricOps profiles the data you give it.
 
-    When `profile_table()` is called with only a governed table identity, FabricOps profiles the complete persisted table using the backend closest to the data:
+    When [`profile_table()`](../api/reference/profile_table.md) is called with only a governed table identity, FabricOps profiles the complete persisted table using the backend closest to the data:
 
     - Lakehouse → PySpark
     - Warehouse → Warehouse SQL pushdown
@@ -141,7 +141,7 @@ check_source_drift(
 )
 ```
 
-Freshness and Source Drift use the complete physical Source Observation captured by `pipeline_read()`; the transformation DataFrame can still be only the incremental scope.
+Freshness and Source Drift use the complete physical [Source Observation](../reference/metadata/metadata_source_observation.md) captured by [`pipeline_read()`](../api/reference/pipeline_read.md); the transformation DataFrame can still be only the incremental scope.
 
 ## 5. Publish only when there is work
 
@@ -165,7 +165,7 @@ else:
     print("No unconsumed Orders data; publication and progress commit skipped.")
 ```
 
-No-new-data is a safe skip. FabricOps does not perform a physical write and does not advance source → target progress when there is nothing to process.
+No-new-data is a safe skip. FabricOps does not perform a physical write through [`pipeline_write()`](../api/reference/pipeline_write.md) and does not advance source → target progress when there is nothing to process.
 
 ## 6. Profile the complete persisted target after the write
 
@@ -183,7 +183,7 @@ target_profile = profile_table(
 
 This intentionally profiles the **complete persisted target**, not just the incremental DataFrame that was written during the current run.
 
-That gives the target Catalogue profile one stable meaning across full and incremental pipelines.
+That gives the target [Catalogue](../reference/metadata/metadata_data_catalogue.md) profile one stable meaning across full and incremental pipelines.
 
 ## 7. Keep this variant to one pattern
 

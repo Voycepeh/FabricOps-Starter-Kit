@@ -22,7 +22,7 @@ Run the normal visible **Read → Transform → Write** sequence without changin
 
 The `curated_orders` Write block evaluates the frozen contract but does not publish the target.
 
-Validate returns `published=False` and `validation_passed=True` when the frozen contract passes. This provides validation evidence before the business target can be written under Enforce. The notebook exits after the successful validation gate, so `pipeline_write()` is never reached and the second Write block is intentionally not reached on this run.
+Validate returns `published=False` and `validation_passed=True` when the frozen contract passes. This provides validation evidence before the business target can be written under Enforce. The notebook exits after the successful validation gate, so [`pipeline_write()`](../api/reference/pipeline_write.md) is never reached and the second Write block is intentionally not reached on this run.
 
 Confirm:
 
@@ -148,7 +148,7 @@ dirty_transformed_df = (
 
 This DataFrame exists only in the notebook session. It does not overwrite Bronze, Silver, or the canonical demo files.
 
-For this validation run, change only the first argument of the `curated_orders` Write block:
+For this validation run, change only the first argument of the `curated_orders` Write block. The boundary is handled by [`orchestrate_write()`](../api/reference/orchestrate_write.md):
 
 ```python
 write_result = orchestrate_write(
@@ -169,16 +169,16 @@ Use the returned DQ result to compare actual behavior with this matrix:
 
 | DQ behavior | Dirty row | Deliberate violation | Expected runtime rule |
 | --- | --- | --- | --- |
-| Completeness | original `O0001` | `customer_id = null` | `completeness` |
-| Uniqueness | original `O0002` | changed to duplicate `order_id = O0001` | `uniqueness` |
-| Whitelist | `O0003` | `order_status = INVALID` | `value_set / allow` |
-| Blacklist | `O0004` | `shipping_country = UNKNOWN` | `value_set / block` |
-| Range | `O0005` | `quantity = 0` | `range` |
-| Pattern | original `O0006` | `order_id = BAD-006` | `pattern` |
-| Column Relationship | `O0007` | `modified_datetime < order_datetime` | `column_relationship` |
-| Conditional Completeness | `O0008` | DELIVERED row with null `shipping_country` | `conditional_completeness` |
-| Conditional Values | `O0009` | SG row with `order_status = SHIPPED` | `conditional_values` |
-| Custom Expression | `O0010` | net amount greater than quantity × unit price | `custom_expression` |
+| Completeness | original `O0001` | `customer_id = null` | [`completeness`](../reference/dq-rules/completeness.md) |
+| Uniqueness | original `O0002` | changed to duplicate `order_id = O0001` | [`uniqueness`](../reference/dq-rules/uniqueness.md) |
+| Whitelist | `O0003` | `order_status = INVALID` | [`value_set`](../reference/dq-rules/value-set.md) / `allow` |
+| Blacklist | `O0004` | `shipping_country = UNKNOWN` | [`value_set`](../reference/dq-rules/value-set.md) / `block` |
+| Range | `O0005` | `quantity = 0` | [`range`](../reference/dq-rules/range.md) |
+| Pattern | original `O0006` | `order_id = BAD-006` | [`pattern`](../reference/dq-rules/pattern.md) |
+| Column Relationship | `O0007` | `modified_datetime < order_datetime` | [`column_relationship`](../reference/dq-rules/column-relationship.md) |
+| Conditional Completeness | `O0008` | DELIVERED row with null `shipping_country` | [`conditional_completeness`](../reference/dq-rules/conditional-completeness.md) |
+| Conditional Values | `O0009` | SG row with `order_status = SHIPPED` | [`conditional_values`](../reference/dq-rules/conditional-values.md) |
+| Custom Expression | `O0010` | net amount greater than quantity × unit price | [`custom_expression`](../reference/dq-rules/custom-expression.md) |
 
 The expected integration result is:
 
@@ -223,7 +223,7 @@ Do not edit a frozen version in place. Refine the draft, freeze a new immutable 
 
 ## 8. Prove Guardrail Coverage
 
-Guardrail Coverage is not another Warn/Block rule. It is the pre-publication readiness gate that verifies every selected participant has an applicable contract and that every applicable Guardrail produced current-activity evidence.
+[Guardrail Coverage](../api/reference/check_guardrail_coverage.md) is not another Warn/Block rule. It is the pre-publication readiness gate that verifies every selected participant has an applicable contract and that every applicable Guardrail produced current-activity evidence.
 
 The normal complete run should return `coverage_result.status == "passed"`.
 
@@ -254,7 +254,7 @@ Data Contract UI
     → Warn / Block behavior
 ```
 
-The exercise now covers both orchestrator boundaries: Read-side Freshness/Schema/DQ evidence, Write-side Schema/Sensitive Data/Source Drift/DQ, and the final Guardrail Coverage readiness gate. Source mutations are restored from the canonical fixture; target mutations remain in-session only.
+The exercise now covers both orchestrator boundaries ([`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md)): Read-side Freshness/Schema/DQ evidence, Write-side Schema/Sensitive Data/Source Drift/DQ, and the final [Guardrail Coverage](../api/reference/check_guardrail_coverage.md) readiness gate. Source mutations are restored from the canonical fixture; target mutations remain in-session only.
 
 ## Expected result
 

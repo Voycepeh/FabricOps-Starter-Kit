@@ -2,7 +2,7 @@
 
 Sensitive Data Guardrails can **prepare the DataFrame before Data Quality checks and before a governed write**.
 
-The treatment is part of the frozen Data Contract for a column. During `orchestrate_write()`, FabricOps applies the configured treatment and passes the prepared DataFrame to the remaining Write-side stages.
+The treatment is part of the frozen Data Contract for a column. During [`orchestrate_write()`](../api/reference/orchestrate_write.md), FabricOps applies the configured treatment and passes the prepared DataFrame to the remaining Write-side stages.
 
 ```text
 Input DataFrame
@@ -128,7 +128,7 @@ Input DataFrame
 
     FabricOps returns the original-to-token relationship as `support_mapping`, but **does not persist it automatically**.
 
-    To keep tokens stable across runs, the project must persist the mapping appropriately and provide it back to `check_sensitive_data()` as `existing_mapping`.
+    To keep tokens stable across runs, the project must persist the mapping appropriately and provide it back to [`check_sensitive_data()`](../api/reference/check_sensitive_data.md) as `existing_mapping`.
 
     Raw original values are excluded from `METADATA_GUARDRAIL_RESULTS`; they exist in the returned support mapping.
 
