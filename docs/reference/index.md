@@ -83,8 +83,7 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 <article id="pipeline.check_guardrail_coverage-check_guardrail_coverage" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_guardrail_coverage" data-callable-module="pipeline.check_guardrail_coverage" data-function-type="public-starter-kit" data-callable-purpose="Verify that every governed pipeline participant and configured Guardrail is ready before publication.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/check_guardrail_coverage/"><code>check_guardrail_coverage</code></a></h3>
   <p class="reference-catalogue-item-purpose">Verify that every governed pipeline participant and configured Guardrail is ready before publication.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">—</span></p>
-
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 <article id="pipeline.check_schema-check_schema" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_schema" data-callable-module="pipeline" data-function-type="public-starter-kit" data-callable-purpose="Check observed table schema against direct or approved schema intent.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/check_schema/"><code>check_schema</code></a></h3>
@@ -141,8 +140,7 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 <article id="widgets.widget_activate_data_contract-widget_activate_data_contract" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_activate_data_contract" data-callable-module="widgets.widget_activate_data_contract" data-function-type="public-starter-kit" data-callable-purpose="Link an exact Data Agreement version and activate one validated frozen Data Contract for Production.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_activate_data_contract/"><code>widget_activate_data_contract</code></a></h3>
   <p class="reference-catalogue-item-purpose">Link an exact Data Agreement version and activate one validated frozen Data Contract for Production.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">—</span></p>
-
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 <article id="widgets.widget_data_contract-widget_data_contract" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_data_contract" data-callable-module="widgets.widget_data_contract" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Create or reopen and author one agreement-free, table-centric Data Contract draft.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_data_contract/"><code>widget_data_contract</code></a></h3>
@@ -179,26 +177,22 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 <article id="data_agent.create_data_agent-create_data_agent" class="reference-catalogue-item" data-callable-row="true" data-callable-name="create_data_agent" data-callable-module="consumption.create_data_agent" data-function-type="public-starter-kit" data-callable-purpose="Complete the governed single-table Step 7 handoff without manually composing context or instructions.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/create_data_agent/"><code>create_data_agent</code></a></h3>
   <p class="reference-catalogue-item-purpose">Complete the governed single-table Step 7 handoff without manually composing context or instructions.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">—</span></p>
-
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 <article id="access_scanner.scan_onelake_access-scan_onelake_access" class="reference-catalogue-item" data-callable-row="true" data-callable-name="scan_onelake_access" data-callable-module="access_scanner.scan_onelake_access" data-function-type="public-starter-kit" data-callable-purpose="Observe table access granted through OneLake Security roles for configured Lakehouses.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/scan_onelake_access/"><code>scan_onelake_access</code></a></h3>
   <p class="reference-catalogue-item-purpose">Observe table access granted through OneLake Security roles for configured Lakehouses.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">—</span></p>
-
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 <article id="access_scanner.scan_sql_access-scan_sql_access" class="reference-catalogue-item" data-callable-row="true" data-callable-name="scan_sql_access" data-callable-module="access_scanner.scan_sql_access" data-function-type="public-starter-kit" data-callable-purpose="Collect direct and explicit role-based SQL permission evidence and resolve it to canonical FabricOps table_id values.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/scan_sql_access/"><code>scan_sql_access</code></a></h3>
   <p class="reference-catalogue-item-purpose">Collect direct and explicit role-based SQL permission evidence and resolve it to canonical FabricOps table_id values.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">—</span></p>
-
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 <article id="access_scanner.scan_workspace_access-scan_workspace_access" class="reference-catalogue-item" data-callable-row="true" data-callable-name="scan_workspace_access" data-callable-module="access_scanner.scan_workspace_access" data-function-type="public-starter-kit" data-callable-purpose="Observe table access inherited from Admin, Member, Contributor, and Viewer workspace roles.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/scan_workspace_access/"><code>scan_workspace_access</code></a></h3>
   <p class="reference-catalogue-item-purpose">Observe table access inherited from Admin, Member, Contributor, and Viewer workspace roles.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">—</span></p>
-
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 </div>
 </details>
@@ -217,11 +211,10 @@ Expand a group to browse its public functions. Standard Orchestration is open by
   <p class="reference-catalogue-item-purpose">Read an Excel file from a configured Fabric-resolved path through pandas.read_excel.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup</span></p>
 </article>
-<article id="io.read_lakehouse_json-read_lakehouse_json" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_json" data-callable-module="io" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Read JSON data from a configured Lakehouse Files path through Spark JSON.">
+<article id="io.read_lakehouse_json-read_lakehouse_json" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_json" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Read JSON data from a configured Lakehouse Files path through Spark JSON.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_json/"><code>read_lakehouse_json</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read JSON data from a configured Lakehouse Files path through Spark JSON.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span><span class="reference-chip">00C_demo_setup</span></p>
-
 </article>
 <article id="io.read_lakehouse_parquet-read_lakehouse_parquet" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_parquet" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Read a Parquet path from a configured Fabric-resolved path through Spark Parquet.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></h3>
@@ -246,7 +239,7 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 <article id="io.write_lakehouse_table-write_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_lakehouse_table" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Write a Spark DataFrame to a configured Fabric lakehouse Delta table.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write a Spark DataFrame to a configured Fabric lakehouse Delta table.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">99_explore, example_pipeline_demo, example_dq_rule_smoke_test</span><span class="reference-chip">00C_demo_setup</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup</span></p>
 </article>
 <article id="io.write_warehouse_table-write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Write a DataFrame to a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_warehouse_table/"><code>write_warehouse_table</code></a></h3>
