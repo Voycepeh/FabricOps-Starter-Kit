@@ -17,10 +17,6 @@ Resolve deterministic target identity before its first Development write.
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/resolve_table_id.py#L7-L45">View on GitHub</a>
 </div>
 
-<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">02B_incremental_append_pipeline</span>
-</p>
-
 ## Usage notes
 
 Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
