@@ -23,14 +23,9 @@ The result is a pipeline pattern that engineers can clone and adapt without rebu
 
 ### The big picture
 
-The same two-notebook pattern moves from Development to Production. The project logic stays visible while environment-specific locations, governed contracts, and evidence are resolved around it.
+![Development to Production FabricOps pipeline promotion](../assets/pipeline-promotion-overview.svg){ .fabricops-solution-diagram }
 
-| Part | What it means |
-| --- | --- |
-| **Environment-aware configuration** | Each environment has its own `00_env_config`, which resolves logical Fabric Stores to the correct Development or Production locations. |
-| **Portable pipeline** | `02_pipeline` keeps the same governed shape: **Read → project-owned PySpark → Write**. Engineers change the project logic, not the surrounding operating pattern. |
-| **Executable governance** | Governance defines the Data Contract and Guardrails. Engineering validates that contract in Development; Production resolves the active contract and enforces it through the same pipeline boundaries. |
-| **Shared evidence layer** | Reads and writes produce the Catalogue, profiles, processing state, Guardrail results, and lineage that connect the physical pipeline back to Governance. |
+The same two-notebook pattern moves from Development to Production. Each environment resolves its own Fabric Store locations through `00_env_config`, while the validated `02_pipeline` keeps the same governed shape: **Data Contract context → Full or Incremental reads → project-owned PySpark → Overwrite, Append, SCD1, or SCD2 writes**.
 
 Once the Development implementation and Data Contract agree, the validated `02_pipeline` is promoted unchanged. Production uses its own environment configuration and the active contract, so the same engineering definition runs against Production Fabric Stores without embedding environment-specific locations in the pipeline.
 
