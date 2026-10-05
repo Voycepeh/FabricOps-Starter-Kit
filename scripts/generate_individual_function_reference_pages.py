@@ -5310,18 +5310,9 @@ def main() -> None:
         "",
         "Use this page to look up public notebook-facing Starter Kit functions used by the template notebooks.",
         "",
-        "**Start with the standard orchestrators. Move down a layer only when you need custom composition or direct physical I/O.**",
+        "**Start with Standard Orchestration for pipeline work. Expand another group only when you need that capability directly.**",
         "",
-        "```mermaid",
-        "flowchart TB",
-        '    OR["Standard Orchestration<br/>orchestrate_read() · orchestrate_write()"]',
-        '    CAP["FabricOps Capabilities<br/>pipeline_read() · checks · profile_table() · pipeline_write()"]',
-        '    IO["Foundational I/O<br/>read_lakehouse_*() · read_warehouse_*() · write_*()"]',
-        "    OR --> CAP",
-        "    CAP --> IO",
-        "```",
-        "",
-        "The curated tree shows the intended dependency direction. Use the [Call Flow Dashboard](../assets/public-function-call-flows-dashboard.html) for the complete implementation-level graph.",
+        "Need the complete implementation-level dependency graph? Use the [Call Flow Dashboard](../assets/public-function-call-flows-dashboard.html).",
         "",
         '<div class="reference-kpi-grid" aria-label="Function reference summary">',
         '  <section class="reference-kpi-card surface-card">',
@@ -5368,12 +5359,89 @@ def main() -> None:
             '',
             "## Function catalogue",
             "",
-            "## Public functions",
+            "Expand a group to browse its public functions. Standard Orchestration is open by default.",
             "",
         ]
     )
-    all_items: list[str] = []
     catalogue_nodes = [node_by_public_function_name[row["function_name"]] for row in dashboard_public_functions if row["function_name"] in node_by_public_function_name]
+    reference_groups = [
+        {
+            "key": "standard-orchestration",
+            "title": "Standard Orchestration",
+            "note": "Recommended",
+            "description": "Complete governed read and write lifecycle for the standard FabricOps pipeline.",
+            "functions": {"orchestrate_read", "orchestrate_write"},
+            "open": True,
+        },
+        {
+            "key": "pipeline-capabilities",
+            "title": "Pipeline & Guardrail Capabilities",
+            "note": "Compose directly when needed",
+            "description": "Governed reads, writes, profiling, Data Quality, schema, freshness, Sensitive Data, Source Drift, and coverage checks.",
+            "functions": {
+                "pipeline_read",
+                "pipeline_write",
+                "profile_table",
+                "check_freshness",
+                "check_schema",
+                "check_dq",
+                "check_sensitive_data",
+                "check_source_drift",
+                "check_guardrail_coverage",
+                "resolve_table_id",
+            },
+            "open": False,
+        },
+        {
+            "key": "governance-metadata",
+            "title": "Governance & Metadata",
+            "note": "Author and inspect governed context",
+            "description": "Notebook setup, metadata initialization, Data Steward and Agreement intake, Data Contract workflows, and catalogue views.",
+            "functions": {
+                "setup_notebook",
+                "setup_metadata_tables",
+                "widget_render_data_steward",
+                "widget_render_data_agreement",
+                "widget_data_contract",
+                "widget_select_data_contract",
+                "widget_activate_data_contract",
+                "widget_view_catalogue",
+            },
+            "open": False,
+        },
+        {
+            "key": "access-consumption",
+            "title": "Access & Consumption",
+            "note": "Observe access or publish governed context",
+            "description": "Effective access scanners and the governed Production table to Data Agent handoff.",
+            "functions": {
+                "scan_workspace_access",
+                "scan_sql_access",
+                "scan_onelake_access",
+                "create_data_agent",
+            },
+            "open": False,
+        },
+        {
+            "key": "foundational-io",
+            "title": "Foundational I/O",
+            "note": "Direct physical reads and writes",
+            "description": "Low-level Lakehouse and Warehouse reads and writes when direct physical I/O is required.",
+            "functions": {
+                "read_lakehouse_csv",
+                "read_lakehouse_excel",
+                "read_lakehouse_json",
+                "read_lakehouse_parquet",
+                "read_lakehouse_table",
+                "read_warehouse_query",
+                "read_warehouse_table",
+                "write_lakehouse_table",
+                "write_warehouse_table",
+            },
+            "open": False,
+        },
+    ]
+    group_items: dict[str, list[str]] = {group["key"]: [] for group in reference_groups}
     for node in catalogue_nodes:
         name = node["callable_name"]
         module_name = node["module_name"]
@@ -5425,8 +5493,7 @@ def main() -> None:
                 + "</details>"
             )
 
-        all_items.extend(
-            [
+        item_lines = [
                 (
                     f'<article id="{_esc(module_name)}-{_esc(name)}" class="reference-catalogue-item" '
                     f'data-callable-row="true" data-callable-name="{_esc(name)}" '
@@ -5457,23 +5524,53 @@ def main() -> None:
                 "  </div>",
                 "</article>",
             ]
+        group_key = next(
+            (group["key"] for group in reference_groups if name in group["functions"]),
+            None,
         )
-    table_lines = [
-        "| Function | Lifecycle | Live since | Summary |",
-        "| --- | --- | --- | --- |",
-    ]
-    for node in catalogue_nodes:
-        name = node["callable_name"]
-        symbol = symbol_map[name]
-        qn = f"{PACKAGE_NAME}.{node['module_name']}.{name}"
-        public_flow = public_flow_by_qn[qn]
-        status = _lifecycle_status(public_flow)
-        purpose = symbol.purpose or symbol.summary or "—"
-        table_lines.append(
-            f"| [`{_esc(name)}`]({public_reference_link(name, docs_metadata, context='reference')}) "
-            f"| {_lifecycle_chip(status)} | {_dash(public_flow.get('live_since'))} | {_esc(purpose)} |"
+        if group_key is None:
+            raise RuntimeError(f"Public function is not assigned to a Function Reference group: {name}")
+        group_items[group_key].extend(item_lines)
+
+    assigned_functions = {
+        function_name
+        for group in reference_groups
+        for function_name in group["functions"]
+    }
+    generated_functions = {node["callable_name"] for node in catalogue_nodes}
+    if assigned_functions != generated_functions:
+        missing = sorted(generated_functions - assigned_functions)
+        stale = sorted(assigned_functions - generated_functions)
+        raise RuntimeError(
+            "Function Reference groups are out of sync with the public callable inventory. "
+            f"Missing assignments: {missing or 'none'}; stale assignments: {stale or 'none'}"
         )
-    ref.extend([*table_lines, "", '<div class="reference-catalogue-list">', *all_items, "</div>"])
+
+    for group in reference_groups:
+        items = group_items[group["key"]]
+        count = len(items)
+        open_attribute = " open" if group["open"] else ""
+        default_open = "true" if group["open"] else "false"
+        ref.extend(
+            [
+                (
+                    f'<details class="reference-function-group" data-callable-group="{_esc(group["key"])}" '
+                    f'data-default-open="{default_open}"{open_attribute}>'
+                ),
+                (
+                    "<summary>"
+                    f'<span class="reference-function-group-title">{_esc(group["title"])}</span>'
+                    f'<span class="reference-function-group-meta">{count} functions · {_esc(group["note"])}</span>'
+                    "</summary>"
+                ),
+                f'<p class="reference-function-group-description">{_esc(group["description"])}</p>',
+                '<div class="reference-catalogue-list">',
+                *items,
+                "</div>",
+                "</details>",
+                "",
+            ]
+        )
 
     ref.append("")
     REFERENCE_PATH.parent.mkdir(parents=True, exist_ok=True)
