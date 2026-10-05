@@ -41,7 +41,7 @@ FabricOps separates the parts that need human judgement from the parts AI can ac
 ## Under the hood
 
 <details class="fabricops-solution-details" markdown="1">
-<summary><strong>Under the hood: how AI suggestions and enforcement work</strong></summary>
+<summary><strong>How AI suggestions and enforcement work</strong></summary>
 
 ### What FabricOps gives the AI
 
@@ -76,7 +76,7 @@ For the canonical persisted schema and treatment behaviour, use [METADATA_DATA_C
 ## Example
 
 <details class="fabricops-solution-details" markdown="1">
-<summary><strong>Example: protecting a sensitive customer column</strong></summary>
+<summary><strong>Protecting a sensitive customer column</strong></summary>
 
 Suppose profiling and metadata show a customer column that contains sensitive identifying information.
 
