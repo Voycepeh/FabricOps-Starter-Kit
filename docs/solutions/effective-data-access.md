@@ -60,7 +60,7 @@ The scanners are read-only with respect to permissions: they inventory access bu
 
     ![One governed table can have access through multiple permission paths](../assets/effective-data-access-example.svg)
 
-    The key distinction is **unobserved versus no access**. If the account running the scan can inspect Workspace and SQL permissions but cannot inspect OneLake Security, FabricOps records the visible Workspace and SQL evidence. It does not treat the missing OneLake observation as proof that no OneLake access exists.
+    The key distinction is **not visible to FabricOps versus no access**. If the account running the scan can inspect Workspace and SQL permissions but cannot inspect OneLake Security, FabricOps records the visible Workspace and SQL evidence. It does not treat the missing OneLake result as proof that no OneLake access exists.
 
 ## Go deeper
 
