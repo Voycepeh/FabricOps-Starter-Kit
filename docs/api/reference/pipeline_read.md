@@ -29,6 +29,7 @@ choose between Lakehouse and Warehouse table readers.
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L51-L377">View on GitHub</a>
 </div>
 
+
 ## Usage notes
 
 Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
