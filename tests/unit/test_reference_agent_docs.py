@@ -201,7 +201,7 @@ def test_every_callable_page_has_curated_public_reference_sections() -> None:
         assert "## Raises / Errors" in text, page
         assert "## Example usage" in text, page
         assert "## See also" in text, page
-        assert "**Used in notebooks:**" in text, page
+        assert "**Used in notebooks:**" not in text, page
         if page.stem in CONFIG_MODEL_SYMBOLS:
             assert "Public config class" in text, page
             assert "Public Starter Kit function" not in text, page
@@ -635,17 +635,15 @@ def test_clickable_call_tree_does_not_link_root_to_nested_self_page() -> None:
         assert f"<code>{slug}(...)</code>" in first_row, page
 
 
-def test_public_callable_description_renders_before_source_and_usage() -> None:
-    """Verify public callable content retains its established order."""
+def test_public_callable_description_renders_before_source() -> None:
+    """Verify public callable content retains its simplified order."""
     text = (API_REFERENCE_DIR / "profile_table.md").read_text(encoding="utf-8")
     title_index = text.index("# `profile_table`")
     description_index = text.index("Profile a Spark DataFrame or complete governed table")
     source_index = text.index('<div class="reference-source-card" markdown="1">')
-    usage_index = text.index(
-        "**Used in notebooks:** `99_explore`, `02B_incremental_append_pipeline`"
-    )
 
-    assert title_index < description_index < source_index < usage_index
+    assert title_index < description_index < source_index
+    assert "**Used in notebooks:**" not in text
 
 
 def test_callable_pages_omit_machine_metadata_from_public_reference() -> None:
@@ -672,7 +670,7 @@ def test_function_catalogue_uses_simplified_callable_flow_chips() -> None:
     assert "Outbound" not in text
     assert "incoming" not in text.lower()
     assert "outgoing" not in text.lower()
-    assert "Used in notebooks:" in text
+    assert "Used in notebooks:" not in text
     assert "Used in 1 notebook" not in text
     assert "Used by 1 public function" not in text
     assert "internal helpers" not in text
