@@ -1,0 +1,50 @@
+/* Shared presentation contract for user-facing Featured Solution pages. */
+
+.md-typeset .fabricops-solution-hero {
+  display: block;
+  width: 100%;
+  max-width: 52rem;
+  height: auto;
+  margin: 1rem auto 1.75rem;
+}
+
+.md-typeset .fabricops-solution-diagram {
+  display: block;
+  width: 100%;
+  max-width: 60rem;
+  height: auto;
+  margin: 1rem auto 1.25rem;
+}
+
+.md-typeset .fabricops-solution-details {
+  margin: 1rem 0 1.35rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 0.2rem solid var(--md-primary-fg-color);
+  border-radius: 0.35rem;
+  background: var(--md-default-bg-color);
+}
+
+.md-typeset .fabricops-solution-details > summary {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  background: var(--md-accent-fg-color--transparent);
+}
+
+.md-typeset .fabricops-solution-details[open] > summary {
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset .fabricops-solution-details > :last-child {
+  margin-bottom: 0;
+}
+
+.md-typeset h2 + table:not([class]) {
+  width: 100%;
+}
+
+@media screen and (max-width: 768px) {
+  .md-typeset .fabricops-solution-hero,
+  .md-typeset .fabricops-solution-diagram {
+    max-width: 100%;
+  }
+}

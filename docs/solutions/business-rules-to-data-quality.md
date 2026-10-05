@@ -2,7 +2,7 @@
 
 <span class="fabricops-release-status fabricops-release-status--preview">Preview</span>
 
-![Business rules converted to enforceable Data Quality rules](../assets/BusinessRuletoDQ.png)
+![Business rules converted to enforceable Data Quality rules](../assets/BusinessRuletoDQ.png){ .fabricops-solution-hero }
 
 ## The problem
 
@@ -24,16 +24,18 @@ Once reviewed and saved into the Data Contract, the resulting rules are explicit
 
 ## How it works
 
-FabricOps keeps the human in control while AI helps turn business requirements into Data Quality rules.
-
-- **Human** — describes the business requirement and reviews the suggested rules before saving them.
-- **AI** — translates the requirement into supported Data Quality rules using the available metadata and profile evidence.
-- **FabricOps** — validates the approved rules, stores them in the Data Contract, and enforces them deterministically during pipeline execution.
+| Responsibility | What happens |
+| --- | --- |
+| **Human configures and decides** | Describes the business requirement and reviews, changes, or rejects the suggested rules before saving them. |
+| **AI supports** | Translates the requirement into the smallest supported set of Data Quality rules using governed metadata and profile evidence. |
+| **FabricOps handles deterministically** | Validates rule types, columns, parameters, and expressions, stores approved rules in the Data Contract, and enforces them during pipeline execution. |
 
 AI helps author the rules. **FabricOps enforces them.**
 
-<details markdown="1">
-<summary><strong>Under the hood: how natural language becomes governed rules</strong></summary>
+## Under the hood
+
+<details class="fabricops-solution-details" markdown="1">
+<summary><strong>How natural language becomes governed rules</strong></summary>
 
 ### What FabricOps gives the AI
 
@@ -50,7 +52,7 @@ Profile evidence is context, not policy. Observed values are not automatically c
 
 ### How Fabric AI Functions are used
 
-![FabricOps AI assisted DQ rule authoring implementation](../assets/business-rule-dq-implementation.svg)
+![FabricOps AI assisted DQ rule authoring implementation](../assets/business-rule-dq-implementation.svg){ .fabricops-solution-diagram }
 
 FabricOps places the complete instruction into a single row temporary pandas DataFrame with a column named `fabricops_prompt`, then invokes Microsoft Fabric AI Functions through:
 
@@ -70,27 +72,30 @@ At runtime, AI is no longer involved. FabricOps evaluates the approved rules det
 
 ## Example
 
-??? example "One business requirement becomes multiple Data Quality rules"
+<details class="fabricops-solution-details" markdown="1">
+<summary><strong>One business requirement becomes multiple Data Quality rules</strong></summary>
 
-    Suppose Governance enters this requirement for the guided demo Orders table:
+Suppose Governance enters this requirement for the guided demo Orders table:
 
-    > Orders must have a customer and product. Quantity and unit price must be greater than zero. Discount must be between 0% and 20%. Order status must be NEW, PROCESSING, SHIPPED, DELIVERED, or CANCELLED. For shipped or delivered orders, the modified timestamp cannot be earlier than the order timestamp.
+> Orders must have a customer and product. Quantity and unit price must be greater than zero. Discount must be between 0% and 20%. Order status must be NEW, PROCESSING, SHIPPED, DELIVERED, or CANCELLED. For shipped or delivered orders, the modified timestamp cannot be earlier than the order timestamp.
 
-    FabricOps can decompose that one requirement into several independently reviewable rules:
+FabricOps can decompose that one requirement into several independently reviewable rules:
 
-    | Requirement | Suggested rule | Deterministic meaning |
-    | --- | --- | --- |
-    | Customer is required | **Completeness** on `customer_id` | `customer_id` must be populated. |
-    | Product is required | **Completeness** on `product_id` | `product_id` must be populated. |
-    | Quantity must be positive | **Range** on `quantity` | Minimum `0`, exclusive. |
-    | Unit price must be positive | **Range** on `unit_price` | Minimum `0`, exclusive. |
-    | Discount must be between 0% and 20% | **Range** on `discount` | `0 <= discount <= 0.20`. |
-    | Only approved statuses are valid | **Whitelist** on `order_status` | Value must be one of `NEW`, `PROCESSING`, `SHIPPED`, `DELIVERED`, or `CANCELLED`. |
-    | Shipped or delivered orders cannot move backwards in time | **Custom Expression** | When status is SHIPPED or DELIVERED, `modified_datetime >= order_datetime`. |
+| Requirement | Suggested rule | Deterministic meaning |
+| --- | --- | --- |
+| Customer is required | **Completeness** on `customer_id` | `customer_id` must be populated. |
+| Product is required | **Completeness** on `product_id` | `product_id` must be populated. |
+| Quantity must be positive | **Range** on `quantity` | Minimum `0`, exclusive. |
+| Unit price must be positive | **Range** on `unit_price` | Minimum `0`, exclusive. |
+| Discount must be between 0% and 20% | **Range** on `discount` | `0 <= discount <= 0.20`. |
+| Only approved statuses are valid | **Whitelist** on `order_status` | Value must be one of `NEW`, `PROCESSING`, `SHIPPED`, `DELIVERED`, or `CANCELLED`. |
+| Shipped or delivered orders cannot move backwards in time | **Custom Expression** | When status is SHIPPED or DELIVERED, `modified_datetime >= order_datetime`. |
 
-    The important part is that FabricOps does not turn the entire sentence into one opaque AI generated check. Each resolved rule remains visible and reviewable before it becomes part of the Data Contract.
+The important part is that FabricOps does not turn the entire sentence into one opaque AI generated check. Each resolved rule remains visible and reviewable before it becomes part of the Data Contract.
 
-    During runtime, the approved rules are evaluated against the pipeline DataFrame. Row level inspection can show which rules failed through `_dq_failed_rules` and `_dq_check_status`, while `METADATA_GUARDRAIL_RESULTS` stores the aggregate execution outcome and continuation decision.
+During runtime, the approved rules are evaluated against the pipeline DataFrame. Row level inspection can show which rules failed through `_dq_failed_rules` and `_dq_check_status`, while `METADATA_GUARDRAIL_RESULTS` stores the aggregate execution outcome and continuation decision.
+
+</details>
 
 ## Go deeper
 

@@ -152,6 +152,7 @@ extra_css:
   - stylesheets/release-pages.css
   - stylesheets/layout-wide.css
   - stylesheets/fabric-theme.css
+  - stylesheets/featured-solutions.css
   - stylesheets/workflow.css
   - stylesheets/table-controls.css
   - stylesheets/image-borders.css

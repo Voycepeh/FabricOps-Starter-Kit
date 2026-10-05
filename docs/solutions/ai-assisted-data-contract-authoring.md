@@ -2,7 +2,7 @@
 
 <span class="fabricops-release-status fabricops-release-status--preview">Preview</span>
 
-![Direct and Indirect PII Discovery and Treatment with Built-in AI Suggestions](../assets/AiDatacontract.png)
+![Direct and Indirect PII Discovery and Treatment with Built-in AI Suggestions](../assets/AiDatacontract.png){ .fabricops-solution-hero }
 
 ## The problem
 
@@ -38,8 +38,10 @@ FabricOps separates the parts that need human judgement from the parts AI can ac
 | **AI supports** | Uses governed metadata and profile evidence to suggest **Direct PII**, **Indirect PII**, or **Not PII** and, for sensitive columns, a supported treatment and parameters. |
 | **FabricOps handles deterministically** | Validates supported values and treatment parameters, records the reviewed decisions in the Data Contract, and applies the approved **Mask, Bucket, Tokenize, or Remove** treatment when the pipeline writes the governed output. |
 
-<details markdown="1">
-<summary><strong>Under the hood: how AI suggestions and enforcement work</strong></summary>
+## Under the hood
+
+<details class="fabricops-solution-details" markdown="1">
+<summary><strong>How AI suggestions and enforcement work</strong></summary>
 
 ### What FabricOps gives the AI
 
@@ -49,7 +51,7 @@ Raw business-table rows are not included in this context.
 
 ### How Fabric AI Functions are used
 
-![FabricOps AI-assisted sensitive data authoring implementation](../assets/sensitive-data-ai-implementation.svg)
+![FabricOps AI-assisted sensitive data authoring implementation](../assets/sensitive-data-ai-implementation.svg){ .fabricops-solution-diagram }
 
 FabricOps places the complete instruction into a single-row temporary pandas DataFrame with one column named `fabricops_prompt`, then invokes Microsoft Fabric AI Functions through:
 
@@ -73,8 +75,8 @@ For the canonical persisted schema and treatment behaviour, use [METADATA_DATA_C
 
 ## Example
 
-<details markdown="1">
-<summary><strong>Example: protecting a sensitive customer column</strong></summary>
+<details class="fabricops-solution-details" markdown="1">
+<summary><strong>Protecting a sensitive customer column</strong></summary>
 
 Suppose profiling and metadata show a customer column that contains sensitive identifying information.
 

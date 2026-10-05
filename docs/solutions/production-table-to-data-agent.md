@@ -2,7 +2,7 @@
 
 <span class="fabricops-release-status fabricops-release-status--preview">Preview</span>
 
-![Production Table to Data Agent](../assets/DataAgentsBootstrap.png)
+![Production Table to Data Agent](../assets/DataAgentsBootstrap.png){ .fabricops-solution-hero }
 
 ## The problem
 
@@ -30,41 +30,20 @@ The Data Agent still queries the **actual Production data** through Microsoft Fa
 
 ## How it works
 
-### What the human governs
-
-The useful meaning is captured during the normal FabricOps lifecycle rather than authored again just for the Data Agent. This can include:
-
-- Table purpose and grain.
-- Business terminology and column descriptions.
-- Approved business rules and known limitations.
-- Classification and sensitivity decisions.
-
-The human remains responsible for the governed meaning. FabricOps does not invent missing business definitions.
-
-### What the Data Agent does
-
-The native Microsoft Fabric Data Agent uses those instructions when interpreting consumer questions and queries the actual Production table through Fabric.
-
-When the governed context makes the intended concept clear, the agent can use it. When multiple plausible concepts remain, the instructions tell the agent to ask rather than guess.
-
-### What FabricOps does deterministically
-
-FabricOps:
-
-- Resolves the activated Production Data Contract and catalogue identity for the selected `table_id`.
-- Selects the governed context useful to a consumer rather than dumping internal metadata or raw business data into instructions.
-- Renders separate agent and datasource instructions.
-- Creates and configures the native Fabric Data Agent through the Fabric REST API.
-- Attaches the governed single Production Lakehouse or Warehouse table as its datasource.
+| Responsibility | What happens |
+| --- | --- |
+| **Human governs** | Captures the table purpose, grain, business terminology, column descriptions, approved business rules, known limitations, classification, and sensitivity during the normal FabricOps lifecycle. |
+| **Data Agent uses** | Uses the supplied governed instructions when interpreting consumer questions and queries the actual Production table through Microsoft Fabric. When meaning is still ambiguous, the instructions tell the agent to ask rather than guess. |
+| **FabricOps handles deterministically** | Resolves the activated Production Data Contract and catalogue identity, selects consumer-useful governed context, renders agent and datasource instructions, creates the native Fabric Data Agent through the Fabric REST API, and attaches the governed Production table as its datasource. |
 
 Fabric permissions remain authoritative for access to the Production data and for creating the Data Agent.
 
 ## Under the hood
 
-<details markdown="1">
+<details class="fabricops-solution-details" markdown="1">
 <summary><strong>How FabricOps prepares and applies the Data Agent instructions</strong></summary>
 
-![FabricOps Production table to Data Agent implementation](../assets/data-agent-bootstrap-implementation.svg)
+![FabricOps Production table to Data Agent implementation](../assets/data-agent-bootstrap-implementation.svg){ .fabricops-solution-diagram }
 
 `create_data_agent()` uses the current Fabric notebook caller identity to call the Microsoft Fabric REST API. It creates the Data Agent, attaches the configured Production Lakehouse or Warehouse datasource, selects the governed table, and applies the generated datasource and agent instructions.
 
@@ -74,30 +53,33 @@ FabricOps does **not** copy the Production table into an AI prompt. The table re
 
 ## Example
 
-??? example "Example Data Agent instructions"
+<details class="fabricops-solution-details" markdown="1">
+<summary><strong>Example Data Agent instructions</strong></summary>
 
-    For a governed Orders table, FabricOps can prepare instructions such as:
+For a governed Orders table, FabricOps can prepare instructions such as:
 
-    **Table context**
+**Table context**
 
-    - Purpose: Governed Production order records.
-    - Grain: One row per order.
-    - `order_date`: Date the order was placed.
-    - `ship_date`: Date the order was shipped.
-    - `payment_date`: Date payment was received.
-    - `gross_amount`: Amount before deductions.
-    - `net_amount`: Amount after deductions.
+- Purpose: Governed Production order records.
+- Grain: One row per order.
+- `order_date`: Date the order was placed.
+- `ship_date`: Date the order was shipped.
+- `payment_date`: Date payment was received.
+- `gross_amount`: Amount before deductions.
+- `net_amount`: Amount after deductions.
 
-    **Data Agent instructions**
+**Data Agent instructions**
 
-    - Use the governed table and column descriptions when interpreting business questions.
-    - Do not invent business meaning that is not provided in the governed context.
-    - Treat `order_date`, `ship_date`, and `payment_date` as distinct business concepts.
-    - Treat `gross_amount` and `net_amount` as distinct measures.
-    - When a question could reasonably refer to multiple governed concepts, ask the user to clarify before choosing one.
-    - For example, if a user asks for "monthly orders", clarify which governed date concept they intend when the question does not make that clear.
+- Use the governed table and column descriptions when interpreting business questions.
+- Do not invent business meaning that is not provided in the governed context.
+- Treat `order_date`, `ship_date`, and `payment_date` as distinct business concepts.
+- Treat `gross_amount` and `net_amount` as distinct measures.
+- When a question could reasonably refer to multiple governed concepts, ask the user to clarify before choosing one.
+- For example, if a user asks for "monthly orders", clarify which governed date concept they intend when the question does not make that clear.
 
-    The exact instructions are generated from the governed context available for the selected Production table rather than maintained as a separate manual description of the same table.
+The exact instructions are generated from the governed context available for the selected Production table rather than maintained as a separate manual description of the same table.
+
+</details>
 
 ## Go deeper
 
