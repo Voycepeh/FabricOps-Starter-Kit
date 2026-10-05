@@ -57,7 +57,7 @@ The scanners are read-only with respect to permissions: they inventory access bu
 ## Example
 
 <details class="fabricops-solution-details" markdown="1">
-<summary><strong>Example: one governed table, multiple access paths</strong></summary>
+<summary><strong>One governed table, multiple access paths</strong></summary>
 
 ![One governed table can have access through multiple permission paths](../assets/effective-data-access-example.svg){ .fabricops-solution-diagram }
 
