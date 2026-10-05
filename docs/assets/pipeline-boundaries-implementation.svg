@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" role="img" aria-labelledby="pipeline-boundaries-title pipeline-boundaries-desc">
+<title id="pipeline-boundaries-title">What happens at the FabricOps Read and Write boundaries</title>
+<desc id="pipeline-boundaries-desc">A governed Data Contract enters the Read boundary, which performs Freshness, Schema, and Data Quality checks before project-owned PySpark. The Write boundary then performs Schema, Sensitive Data, Source Drift, Data Quality, and Guardrail Coverage checks before publishing. Full dataset profiling is recorded around both governed boundaries and lineage is recorded on write.</desc>
+<defs>
+  <marker id="pipeline-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+    <path d="M0,0 L8,4 L0,8 Z" fill="#667085"/>
+  </marker>
+  <marker id="pipeline-arrow-accent" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+    <path d="M0,0 L8,4 L0,8 Z" fill="#0f8f83"/>
+  </marker>
+</defs>
+<rect width="1200" height="520" fill="#ffffff"/>
+<style>
+  .title{font:600 22px Arial,sans-serif;fill:#101828}
+  .eyebrow{font:600 11px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#667085;letter-spacing:.8px}
+  .name{font:600 15px Arial,sans-serif;fill:#101828}
+  .body{font:13px Arial,sans-serif;fill:#344054}
+  .mono{font:12px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#475467}
+  .box{fill:#ffffff;stroke:#d0d5dd;stroke-width:1.4}
+  .soft{fill:#f9fafb;stroke:#98a2b3;stroke-width:1.4}
+  .focus{fill:#effaf8;stroke:#0f8f83;stroke-width:1.8}
+  .line{fill:none;stroke:#667085;stroke-width:1.6;marker-end:url(#pipeline-arrow)}
+  .accent{fill:none;stroke:#0f8f83;stroke-width:1.8;marker-end:url(#pipeline-arrow-accent)}
+  .dash{fill:none;stroke:#98a2b3;stroke-width:1.4;stroke-dasharray:6 5;marker-end:url(#pipeline-arrow)}
+</style>
+
+<text x="48" y="46" class="title">FabricOps pipeline boundaries</text>
+<text x="48" y="70" class="body">Governance stays around the project transformation instead of hiding it.</text>
+
+<!-- Connectors are drawn before nodes. -->
+<path class="line" d="M208 214 H248"/>
+<path class="line" d="M432 214 H472"/>
+<path class="accent" d="M656 214 H696"/>
+<path class="line" d="M880 214 H920"/>
+<path class="dash" d="M340 274 V338 H300"/>
+<path class="dash" d="M788 274 V338 H748"/>
+<path class="dash" d="M1012 274 V338 H972"/>
+
+<g>
+  <rect x="48" y="154" width="160" height="120" rx="6" class="soft"/>
+  <text x="68" y="179" class="eyebrow">GOVERNANCE</text>
+  <text x="68" y="208" class="name">Data Contract</text>
+  <text x="68" y="232" class="body">Selected context</text>
+  <text x="68" y="252" class="body">for governed tables</text>
+</g>
+
+<g>
+  <rect x="248" y="142" width="184" height="144" rx="6" class="box"/>
+  <text x="268" y="168" class="eyebrow">READ BOUNDARY</text>
+  <text x="268" y="197" class="mono">orchestrate_read()</text>
+  <text x="268" y="224" class="body">✓ Freshness</text>
+  <text x="268" y="246" class="body">✓ Schema</text>
+  <text x="268" y="268" class="body">✓ Data Quality</text>
+</g>
+
+<g>
+  <rect x="472" y="142" width="184" height="144" rx="6" class="focus"/>
+  <text x="492" y="168" class="eyebrow">PROJECT OWNED</text>
+  <text x="492" y="204" class="name">Your PySpark</text>
+  <text x="492" y="230" class="body">Visible transformation</text>
+  <text x="492" y="252" class="body">logic stays in the notebook</text>
+</g>
+
+<g>
+  <rect x="696" y="126" width="184" height="176" rx="6" class="box"/>
+  <text x="716" y="152" class="eyebrow">WRITE BOUNDARY</text>
+  <text x="716" y="181" class="mono">orchestrate_write()</text>
+  <text x="716" y="208" class="body">✓ Schema</text>
+  <text x="716" y="230" class="body">✓ Sensitive Data</text>
+  <text x="716" y="252" class="body">✓ Source Drift + DQ</text>
+  <text x="716" y="274" class="body">✓ Guardrail Coverage</text>
+</g>
+
+<g>
+  <rect x="920" y="154" width="184" height="120" rx="6" class="soft"/>
+  <text x="940" y="179" class="eyebrow">PUBLISH</text>
+  <text x="940" y="208" class="name">Governed output</text>
+  <text x="940" y="232" class="body">Write using the selected</text>
+  <text x="940" y="252" class="body">load strategy</text>
+</g>
+
+<g>
+  <rect x="212" y="338" width="176" height="92" rx="6" class="soft"/>
+  <text x="232" y="364" class="eyebrow">PROFILE</text>
+  <text x="232" y="392" class="name">Full dataset</text>
+  <text x="232" y="414" class="body">profiling on full reads</text>
+</g>
+
+<g>
+  <rect x="660" y="338" width="176" height="92" rx="6" class="soft"/>
+  <text x="680" y="364" class="eyebrow">LINEAGE</text>
+  <text x="680" y="392" class="name">Write evidence</text>
+  <text x="680" y="414" class="body">source → target recorded</text>
+</g>
+
+<g>
+  <rect x="884" y="338" width="176" height="92" rx="6" class="soft"/>
+  <text x="904" y="364" class="eyebrow">PROFILE</text>
+  <text x="904" y="392" class="name">Published table</text>
+  <text x="904" y="414" class="body">full dataset profiling</text>
+</g>
+
+<text x="48" y="484" class="body">The transformation is the focal point; FabricOps standardises the governed boundaries around it.</text>
+</svg>
