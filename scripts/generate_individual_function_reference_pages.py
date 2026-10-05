@@ -5463,36 +5463,6 @@ def main() -> None:
             lifecycle_extra_chip = _lifecycle_chip(lifecycle_status, f"Live since {live_since}")
         elif lifecycle_status == "Discontinued" and public_flow.get("discontinued_in"):
             lifecycle_extra_chip = _lifecycle_chip(lifecycle_status, f"Discontinued in {public_flow['discontinued_in']}")
-        downstream_callables = _expanded_downstream_qualified_names(
-            str(public_flow["qualified_name"]),
-            dashboard_inventory_data.get("relationships", []),
-        )
-
-        def _catalogue_relationship_list(items: list[str]) -> str:
-            rows = []
-            for item in items:
-                related_node = node_by_qn.get(item, {})
-                short = related_node.get("callable_name") or item.split(".")[-1]
-                if related_node.get("exported"):
-                    href = public_reference_link(short, docs_metadata, context="reference")
-                    rows.append(f'<li><a href="{_esc(href)}"><code>{_esc(short)}</code></a></li>')
-                else:
-                    rows.append(f'<li><code>{_esc(short)}</code></li>')
-            return "<ul>" + "".join(rows) + "</ul>"
-
-        def _catalogue_count_details(singular_label: str, plural_label: str, items: list[str]) -> str:
-            count = len(items)
-            if count == 0:
-                return ""
-            label = singular_label if count == 1 else plural_label
-            return (
-                '    <details class="reference-count-details"><summary>'
-                f'<span class="reference-chip reference-chip-count">{_esc(label.format(count=count))}</span>'
-                "</summary>"
-                + _catalogue_relationship_list(items)
-                + "</details>"
-            )
-
         item_lines = [
                 (
                     f'<article id="{_esc(module_name)}-{_esc(name)}" class="reference-catalogue-item" '
@@ -5509,19 +5479,13 @@ def main() -> None:
                     '  <p class="reference-catalogue-item-meta reference-catalogue-item-badges">'
                     f'{_lifecycle_chip(lifecycle_status, prominent=True)}'
                     f'{lifecycle_extra_chip}'
-                    f'<span class="reference-chip reference-chip-muted">{_esc("Public function")}</span>'
-                    f'<span class="reference-chip">{_esc(usage_source)}</span>'
-                    "</p>"
+                    + (
+                        f'<span class="reference-chip">{_esc(usage_source)}</span>'
+                        if usage_source != "—"
+                        else ""
+                    )
+                    + "</p>"
                 ),
-                (
-                    f'  <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> {_esc(usage_source)}</p>'
-                    if usage_source != "—"
-                    else ""
-                ),
-                '  <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>',
-                '  <div class="reference-catalogue-item-counts">',
-                _catalogue_count_details("Downstream callables: {count}", "Downstream callables: {count}", downstream_callables),
-                "  </div>",
                 "</article>",
             ]
         group_key = next(
