@@ -18,10 +18,6 @@ in the Lakehouse ``Tables`` area.
 
 </div>
 
-<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">00C_demo_setup</span>
-</p>
-
 <div class="reference-source-card" markdown="1">
 **Source**
 
@@ -29,6 +25,10 @@ in the Lakehouse ``Tables`` area.
 
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_json.py#L10-L71">View on GitHub</a>
 </div>
+
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">00C_demo_setup</span>
+</p>
 
 ## Usage notes
 
