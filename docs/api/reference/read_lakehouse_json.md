@@ -3,7 +3,6 @@
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.2.0</span>
-<span class="reference-chip reference-chip-muted">Public function</span>
 </p>
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
@@ -19,6 +18,10 @@ in the Lakehouse ``Tables`` area.
 
 </div>
 
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">00C_demo_setup</span>
+</p>
+
 <div class="reference-source-card" markdown="1">
 **Source**
 
@@ -26,13 +29,6 @@ in the Lakehouse ``Tables`` area.
 
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_json.py#L10-L71">View on GitHub</a>
 </div>
-
-<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
-</p>
-
-**Used in notebooks:** Usage detection may exclude indirect or generated references.
 
 ## Usage notes
 
