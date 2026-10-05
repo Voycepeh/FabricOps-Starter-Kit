@@ -2,6 +2,8 @@
 
 <span class="fabricops-release-status fabricops-release-status--preview">Preview</span>
 
+![Production Table to Data Agent](../assets/DataAgentsBootstrap.png)
+
 ## The problem
 
 Microsoft Fabric Data Agents can already work well out of the box, particularly with a single, well-structured table.
@@ -23,8 +25,6 @@ This means that at **Step 7, the final stage of the FabricOps lifecycle**, the g
 **Governed Production Table + FabricOps Context → Data Agent Instructions → Fabric API → Data Agent ready for consumption**
 
 The Data Agent still queries the **actual Production data** through Microsoft Fabric. FabricOps does not copy business-table rows into the prompt or replace Fabric permissions. It supplies business context that cannot always be inferred safely from the data alone.
-
-![Production Table to Data Agent](../assets/DataAgentsBootstrap.png)
 
 **Current Preview scope:** FabricOps currently provides `create_data_agent()`, which creates and configures a Data Agent from **one governed Production table**. Multi-table support is planned for a future iteration.
 
