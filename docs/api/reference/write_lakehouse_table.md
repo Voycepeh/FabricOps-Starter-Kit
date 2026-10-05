@@ -42,8 +42,6 @@ make one write faster.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">00C_demo_setup</span>
-<span class="reference-chip">example_pipeline_demo</span>
-<span class="reference-chip">example_dq_rule_smoke_test</span>
 </p>
 
 ## Usage notes
