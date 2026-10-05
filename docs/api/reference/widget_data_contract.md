@@ -2,7 +2,6 @@
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
-<span class="reference-chip reference-chip-muted">Public function</span>
 </p>
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
@@ -18,11 +17,8 @@ Create or reopen and author one agreement-free, table-centric Data Contract draf
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">01_governance</span>
 </p>
-
-**Used in notebooks:** `01_governance`
 
 ## Usage notes
 
