@@ -148,56 +148,82 @@ const IntroScene = () => {
   </AbsoluteFill>;
 };
 
-const SourceBox = ({title, lines, x, y, color, p}: {title: string; lines: string[]; x: number; y: number; color: string; p: number}) => (
-  <Panel x={x} y={y} width={330} height={190} color={color} progress={p}>
-    <div style={{fontSize: 26, fontWeight: 900}}>{title}</div>
-    <div style={{marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8}}>{lines.map((line) => <div key={line} style={{fontSize: 20, color: '#b8c6d6'}}>{line}</div>)}</div>
-  </Panel>
-);
-
 const Step2 = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const sources = enter(frame, fps, 6);
   const read = enter(frame, fps, 28);
-  const write = enter(frame, fps, 62);
-  const meta = enter(frame, fps, 96);
-  const flow = interpolate(frame, [34, 90], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  return <Shell step={2} title="Engineer & catalogue" subtitle="Move data with the two orchestrators while FabricOps captures metadata" color={theme.engineering} duration={stepDurations.step2}>
-    <SourceBox x={90} y={230} title="Sales Lakehouse" lines={['Orders', 'Order Lines']} color={theme.engineering} p={sources} />
-    <SourceBox x={90} y={500} title="Customer Lakehouse" lines={['Customers']} color={theme.engineering} p={sources} />
-    <SourceBox x={90} y={770} title="Product Lakehouse" lines={['Products']} color={theme.engineering} p={sources} />
+  const transform = enter(frame, fps, 48);
+  const write = enter(frame, fps, 68);
+  const targets = enter(frame, fps, 88);
+  const metadata = enter(frame, fps, 112);
 
-    <Panel x={535} y={350} width={330} height={180} color={theme.engineering} progress={read}>
-      <div style={{fontSize: 26, color: '#93c7ff', fontWeight: 800}}>02 Pipeline</div>
-      <div style={{fontSize: 31, marginTop: 18, fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontWeight: 850}}>orchestrate_read()</div>
-    </Panel>
-    <Panel x={535} y={630} width={330} height={180} color="#52d6c6" progress={read}>
-      <div style={{fontSize: 25, color: '#52d6c6', fontWeight: 850}}>Your PySpark</div>
-      <div style={{fontSize: 27, marginTop: 15, fontWeight: 800}}>Join • Clean • Transform</div>
-    </Panel>
-    <Panel x={1010} y={490} width={360} height={190} color={theme.production} progress={write}>
-      <div style={{fontSize: 26, color: '#72e6ad', fontWeight: 800}}>02 Pipeline</div>
-      <div style={{fontSize: 31, marginTop: 18, fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontWeight: 850}}>orchestrate_write()</div>
-    </Panel>
-    <SourceBox x={1490} y={490} title="Warehouse" lines={['CustomerOrders', 'Production-ready target']} color={theme.production} p={write} />
+  const box = (label: string, sublabel: string, color: string) => (
+    <div style={{width: 255, minHeight: 112, border: `2px solid ${color}88`, borderRadius: 18, background: `${color}12`, padding: '20px 22px', boxSizing: 'border-box'}}>
+      <div style={{fontSize: 23, fontWeight: 900, color: '#f7f9fd'}}>{label}</div>
+      <div style={{fontSize: 17, color: '#9fb0c5', marginTop: 8}}>{sublabel}</div>
+    </div>
+  );
 
-    <Arrow x1={420} y1={320} x2={535} y2={420} color={theme.engineering} opacity={flow} />
-    <Arrow x1={420} y1={590} x2={535} y2={440} color={theme.engineering} opacity={flow} />
-    <Arrow x1={420} y1={860} x2={535} y2={460} color={theme.engineering} opacity={flow} />
-    <Arrow x1={865} y1={440} x2={700} y2={630} color="#52d6c6" opacity={flow} />
-    <Arrow x1={865} y1={720} x2={1010} y2={585} color={theme.production} opacity={flow} />
-    <Arrow x1={1370} y1={585} x2={1490} y2={585} color={theme.production} opacity={flow} />
-
-    <Panel x={860} y={210} width={520} height={190} color={theme.consumer} progress={meta}>
-      <div style={{fontSize: 25, color: '#ffbd76', fontWeight: 900}}>Built as the data moves</div>
-      <div style={{display: 'flex', gap: 12, marginTop: 22}}>
-        <Chip text="Profile" color="#52d6c6" />
-        <Chip text="Lineage" color={theme.governance} />
-        <Chip text="Catalogue" color={theme.consumer} />
+  return <Shell step={2} title="Engineer & catalogue" subtitle="Read three sources, transform with PySpark, then write two governed targets" color={theme.engineering} duration={stepDurations.step2}>
+    <div style={{position: 'absolute', left: 80, right: 80, top: 285, height: 520, display: 'grid', gridTemplateColumns: '255px 300px 310px 300px 255px', columnGap: 70, alignItems: 'center'}}>
+      <div style={{display: 'flex', flexDirection: 'column', gap: 28, opacity: sources}}>
+        {box('Orders', 'Sales Lakehouse', theme.engineering)}
+        {box('Products', 'Product Lakehouse', theme.engineering)}
+        {box('Order History', 'Sales Lakehouse', theme.engineering)}
       </div>
-      <div style={{fontSize: 20, color: '#aebed3', marginTop: 22}}>CustomerOrders is now discoverable for governance.</div>
-    </Panel>
+
+      <div style={{opacity: read, display: 'grid', placeItems: 'center'}}>
+        <div style={{width: 300, border: `2px solid ${theme.engineering}99`, borderRadius: 20, padding: '26px 20px', boxSizing: 'border-box', textAlign: 'center', background: '#0d192b'}}>
+          <div style={{fontSize: 18, fontWeight: 850, color: '#93c7ff'}}>READ</div>
+          <div style={{fontSize: 25, marginTop: 10, fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontWeight: 850}}>orchestrate_read()</div>
+        </div>
+      </div>
+
+      <div style={{opacity: transform, display: 'grid', placeItems: 'center'}}>
+        <div style={{width: 310, border: '2px solid #52d6c699', borderRadius: 20, padding: '30px 22px', textAlign: 'center', boxSizing: 'border-box', background: '#0d192b'}}>
+          <div style={{fontSize: 19, fontWeight: 850, color: '#52d6c6'}}>YOUR PYSPARK</div>
+          <div style={{fontSize: 26, marginTop: 12, fontWeight: 900}}>Transform</div>
+          <div style={{fontSize: 18, color: '#9fb0c5', marginTop: 8}}>Join · Clean · Shape</div>
+        </div>
+      </div>
+
+      <div style={{opacity: write, display: 'grid', placeItems: 'center'}}>
+        <div style={{width: 300, border: `2px solid ${theme.production}99`, borderRadius: 20, padding: '26px 20px', boxSizing: 'border-box', textAlign: 'center', background: '#0d192b'}}>
+          <div style={{fontSize: 18, fontWeight: 850, color: '#72e6ad'}}>WRITE</div>
+          <div style={{fontSize: 25, marginTop: 10, fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontWeight: 850}}>orchestrate_write()</div>
+        </div>
+      </div>
+
+      <div style={{display: 'flex', flexDirection: 'column', gap: 34, opacity: targets}}>
+        {box('Curated Orders', 'Warehouse target', theme.production)}
+        {box('Customer Summary', 'Warehouse target', theme.production)}
+      </div>
+    </div>
+
+    <svg width="1920" height="1080" style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
+      <defs>
+        <marker id="step2-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill={theme.engineering} /></marker>
+        <marker id="step2-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill={theme.production} /></marker>
+      </defs>
+      <g fill="none" strokeWidth="4" opacity={read}>
+        <path d="M335 367 H405 Q430 367 430 392 V545 H475" stroke={theme.engineering} markerEnd="url(#step2-blue)" />
+        <path d="M335 507 H475" stroke={theme.engineering} markerEnd="url(#step2-blue)" />
+        <path d="M335 647 H405 Q430 647 430 622 V545 H475" stroke={theme.engineering} markerEnd="url(#step2-blue)" />
+      </g>
+      <path d="M775 545 H845" fill="none" stroke="#52d6c6" strokeWidth="4" opacity={transform} />
+      <path d="M1155 545 H1225" fill="none" stroke={theme.production} strokeWidth="4" opacity={write} markerEnd="url(#step2-green)" />
+      <g fill="none" stroke={theme.production} strokeWidth="4" opacity={targets}>
+        <path d="M1525 545 H1570 Q1595 545 1595 510 V425 H1665" markerEnd="url(#step2-green)" />
+        <path d="M1525 545 H1570 Q1595 545 1595 580 V665 H1665" markerEnd="url(#step2-green)" />
+      </g>
+    </svg>
+
+    <div style={{position: 'absolute', left: 655, right: 655, top: 820, display: 'flex', justifyContent: 'center', gap: 14, opacity: metadata}}>
+      <Chip text="Profile" color="#52d6c6" />
+      <Chip text="Lineage" color={theme.governance} />
+      <Chip text="Catalogue" color={theme.consumer} />
+    </div>
   </Shell>;
 };
 
