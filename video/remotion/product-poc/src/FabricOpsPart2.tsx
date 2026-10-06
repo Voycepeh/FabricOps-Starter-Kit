@@ -1,4 +1,5 @@
 import {AbsoluteFill, Easing, interpolate, Sequence, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {GUIDED_DEMO_DURATION, GuidedDemoJourney} from './GuidedDemoJourney';
 import {font, theme} from './theme';
 
 const seconds = (value: number) => Math.round(value * 30);
@@ -162,11 +163,17 @@ const AudienceScene = () => {
   </AbsoluteFill>;
 };
 
-export const FABRIC_OPS_PART_2_DURATION = seconds(16);
+const CONSUME_DURATION = seconds(8);
+const AUDIENCE_DURATION = seconds(8);
+const GUIDED_DEMO_START = CONSUME_DURATION;
+const AUDIENCE_START = GUIDED_DEMO_START + GUIDED_DEMO_DURATION;
+
+export const FABRIC_OPS_PART_2_DURATION = AUDIENCE_START + AUDIENCE_DURATION;
 
 export const FabricOpsPart2 = () => (
   <AbsoluteFill style={{background: theme.background, color: theme.text, fontFamily: font, overflow: 'hidden'}}>
-    <Sequence from={0} durationInFrames={seconds(8)} premountFor={30}><ConsumeScene /></Sequence>
-    <Sequence from={seconds(8)} durationInFrames={seconds(8)} premountFor={30}><AudienceScene /></Sequence>
+    <Sequence from={0} durationInFrames={CONSUME_DURATION} premountFor={30}><ConsumeScene /></Sequence>
+    <Sequence from={GUIDED_DEMO_START} durationInFrames={GUIDED_DEMO_DURATION} premountFor={30}><GuidedDemoJourney /></Sequence>
+    <Sequence from={AUDIENCE_START} durationInFrames={AUDIENCE_DURATION} premountFor={30}><AudienceScene /></Sequence>
   </AbsoluteFill>
 );
