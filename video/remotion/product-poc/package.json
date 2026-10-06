@@ -4,7 +4,8 @@
   "scripts": {
     "studio": "remotion studio src/index.ts",
     "render": "remotion render src/index.ts FabricOpsHero out/fabricops-product-poc.mp4",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "render:part2": "remotion render src/index.ts FabricOpsPart2 out/fabricops-part2.mp4"
   },
   "dependencies": {
     "@fabric-msft/svg-icons": "6.1.0",
