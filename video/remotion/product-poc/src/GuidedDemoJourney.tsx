@@ -147,11 +147,11 @@ const IntroScene = () => {
   const p = enter(frame, fps);
   return <AbsoluteFill style={{display: 'grid', placeItems: 'center', opacity: fade(frame, stepDurations.intro), background: 'radial-gradient(circle at 50% 45%, #173f55 0%, #0b1830 42%, #060d19 82%)'}}>
     <div style={{textAlign: 'center', transform: `scale(${0.92 + p * 0.08})`, opacity: p}}>
-      <div style={{fontSize: 82, fontWeight: 950, color: '#f7f9fd'}}>Let’s trace one data product</div>
-      <div style={{fontSize: 42, marginTop: 18, color: '#62e4ad', fontWeight: 850}}>through the full 7-step FabricOps flow</div>
-      <div style={{marginTop: 42, display: 'inline-flex', alignItems: 'center', gap: 18, padding: '18px 28px', border: '2px solid #ffad5588', borderRadius: 20, background: '#ffad5512'}}>
-        <div style={{fontSize: 26, color: '#ffad55', fontWeight: 850}}>Example</div>
-        <div style={{fontSize: 34, color: '#f7f9fd', fontWeight: 900}}>CustomerOrders</div>
+      <div style={{fontSize: 86, fontWeight: 950, color: '#f7f9fd'}}>See FabricOps in action</div>
+      <div style={{fontSize: 38, marginTop: 28, color: '#aebed3', fontWeight: 750}}>
+        <span style={{color: '#ffad55', fontWeight: 900}}>CustomerOrders</span>
+        <span style={{margin: '0 18px', color: '#5f748e'}}>·</span>
+        From source data to production
       </div>
     </div>
   </AbsoluteFill>;
