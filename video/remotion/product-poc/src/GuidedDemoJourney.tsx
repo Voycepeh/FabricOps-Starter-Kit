@@ -6,35 +6,26 @@ const s = (value: number) => Math.round(value * FPS);
 
 const stepDurations = {
   intro: s(3),
-  step1: s(9),
   step2: s(12),
   step3: s(14),
   step4: s(20),
   step5: s(10),
-  step6: s(8),
-  step7: s(7),
 } as const;
 
 const starts = {
   intro: 0,
-  step1: stepDurations.intro,
-  step2: stepDurations.intro + stepDurations.step1,
-  step3: stepDurations.intro + stepDurations.step1 + stepDurations.step2,
-  step4: stepDurations.intro + stepDurations.step1 + stepDurations.step2 + stepDurations.step3,
-  step5: stepDurations.intro + stepDurations.step1 + stepDurations.step2 + stepDurations.step3 + stepDurations.step4,
-  step6: stepDurations.intro + stepDurations.step1 + stepDurations.step2 + stepDurations.step3 + stepDurations.step4 + stepDurations.step5,
-  step7: stepDurations.intro + stepDurations.step1 + stepDurations.step2 + stepDurations.step3 + stepDurations.step4 + stepDurations.step5 + stepDurations.step6,
+  step2: stepDurations.intro,
+  step3: stepDurations.intro + stepDurations.step2,
+  step4: stepDurations.intro + stepDurations.step2 + stepDurations.step3,
+  step5: stepDurations.intro + stepDurations.step2 + stepDurations.step3 + stepDurations.step4,
 } as const;
 
 export const GUIDED_DEMO_DURATION =
   stepDurations.intro +
-  stepDurations.step1 +
   stepDurations.step2 +
   stepDurations.step3 +
   stepDurations.step4 +
-  stepDurations.step5 +
-  stepDurations.step6 +
-  stepDurations.step7;
+  stepDurations.step5;
 
 const fade = (frame: number, duration: number) =>
   interpolate(frame, [0, 12, duration - 12, duration], [0, 1, 1, 0], {
@@ -72,9 +63,6 @@ const Shell = ({
         </div>
       </div>
       {children}
-      <div style={{position: 'absolute', left: 86, right: 86, bottom: 32, height: 4, borderRadius: 99, background: '#26384f'}}>
-        <div style={{height: 4, borderRadius: 99, background: color, width: `${interpolate(frame, [0, duration], [0, 100], {extrapolateRight: 'clamp'})}%`}} />
-      </div>
     </AbsoluteFill>
   );
 };
@@ -151,41 +139,10 @@ const IntroScene = () => {
       <div style={{fontSize: 38, marginTop: 28, color: '#aebed3', fontWeight: 750}}>
         <span style={{color: '#ffad55', fontWeight: 900}}>CustomerOrders</span>
         <span style={{margin: '0 18px', color: '#5f748e'}}>·</span>
-        From source data to production
+        From engineering to activation
       </div>
     </div>
   </AbsoluteFill>;
-};
-
-const Step1 = () => {
-  const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
-  const a = enter(frame, fps, 6);
-  const b = enter(frame, fps, 20);
-  const agreement = enter(frame, fps, 46);
-  return <Shell step={1} title="Establish stewardship & agreement" subtitle="Define responsibility before engineering starts" color={theme.governance} duration={stepDurations.step1}>
-    <Panel x={110} y={245} width={510} height={340} color={theme.governance} progress={a}>
-      <div style={{fontSize: 29, fontWeight: 900}}>Create Data Steward</div>
-      <Field label="Data domain" value="Sales Data" />
-      <Field label="Steward" value="Alice Tan" />
-      <Field label="Purpose" value="Order transactions" />
-      <div style={{marginTop: 22}}><Chip text="Saved" color={theme.production} /></div>
-    </Panel>
-    <Panel x={1300} y={245} width={510} height={340} color={theme.governance} progress={b}>
-      <div style={{fontSize: 29, fontWeight: 900}}>Create Data Steward</div>
-      <Field label="Data domain" value="Customer Data" />
-      <Field label="Steward" value="Bob Lim" />
-      <Field label="Purpose" value="Customer master" />
-      <div style={{marginTop: 22}}><Chip text="Saved" color={theme.production} /></div>
-    </Panel>
-    <Arrow x1={620} y1={420} x2={780} y2={520} color={theme.governance} opacity={agreement} />
-    <Arrow x1={1300} y1={420} x2={1140} y2={520} color={theme.governance} opacity={agreement} />
-    <Panel x={735} y={610} width={450} height={250} color={theme.consumer} progress={agreement}>
-      <div style={{fontSize: 28, fontWeight: 900}}>Data Agreement</div>
-      <Field label="Parties" value="Sales ↔ Customer" />
-      <Field label="Purpose" value="Customer Orders analytics" />
-    </Panel>
-  </Shell>;
 };
 
 const SourceBox = ({title, lines, x, y, color, p}: {title: string; lines: string[]; x: number; y: number; color: string; p: number}) => (
@@ -449,86 +406,13 @@ const Step5 = () => {
   </Shell>;
 };
 
-const Step6 = () => {
-  const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
-  const run = enter(frame, fps, 6);
-  const checks = enter(frame, fps, 45);
-  const output = enter(frame, fps, 105);
-  return <Shell step={6} title="Run in Production" subtitle="The same governed 02 Pipeline runs against the Production environment" color={theme.production} duration={stepDurations.step6}>
-    <Panel x={130} y={300} width={480} height={430} color={theme.production} progress={run}>
-      <div style={{fontSize: 24, color: '#72e6ad', fontWeight: 850}}>PRODUCTION</div>
-      <div style={{fontSize: 34, fontWeight: 920, marginTop: 12}}>02 Pipeline</div>
-      <div style={{marginTop: 28, padding: 16, borderRadius: 15, background: '#0a1424', fontFamily: 'ui-monospace, monospace', fontSize: 23}}>orchestrate_read()</div>
-      <div style={{marginTop: 13, textAlign: 'center', color: '#92a4b9', fontSize: 28}}>↓ PySpark ↓</div>
-      <div style={{marginTop: 13, padding: 16, borderRadius: 15, background: '#0a1424', fontFamily: 'ui-monospace, monospace', fontSize: 23}}>orchestrate_write()</div>
-    </Panel>
-
-    <Panel x={720} y={260} width={470} height={510} color={theme.governance} progress={checks}>
-      <div style={{fontSize: 24, color: '#c5a8ff', fontWeight: 850}}>ACTIVE GOVERNANCE</div>
-      <div style={{fontSize: 31, fontWeight: 900, marginTop: 14}}>CustomerOrders Contract v3</div>
-      <div style={{display: 'flex', flexDirection: 'column', gap: 14, marginTop: 28}}>
-        <Chip text="✓ Freshness" color={theme.production} />
-        <Chip text="✓ Schema" color={theme.production} />
-        <Chip text="✓ Sensitive Data" color={theme.production} />
-        <Chip text="✓ Data Quality" color={theme.production} />
-        <Chip text="✓ Guardrail coverage" color={theme.production} />
-      </div>
-    </Panel>
-
-    <Arrow x1={610} y1={515} x2={720} y2={515} color={theme.production} opacity={checks} />
-    <Arrow x1={1190} y1={515} x2={1330} y2={515} color={theme.production} opacity={output} />
-
-    <Panel x={1330} y={330} width={450} height={360} color={theme.production} progress={output}>
-      <div style={{fontSize: 24, color: '#72e6ad', fontWeight: 850}}>PRODUCTION OUTPUT</div>
-      <div style={{fontSize: 34, fontWeight: 930, marginTop: 15}}>CustomerOrders</div>
-      <div style={{fontSize: 21, color: '#aebed3', marginTop: 8}}>Warehouse • governed • ready to consume</div>
-      <div style={{marginTop: 28}}><MiniTable rows={[
-        ['Category', 'Qty', 'NRIC'],
-        ['Home', '2', 'S******7A'],
-        ['Sports', '1', 'S******1B'],
-      ]} /></div>
-    </Panel>
-  </Shell>;
-};
-
-const Step7 = () => {
-  const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
-  const table = enter(frame, fps, 4);
-  const consumers = enter(frame, fps, 42);
-  const items = [
-    ['Power BI', '#f2c811'],
-    ['Data Agent', theme.production],
-    ['ML / Notebooks', theme.governance],
-    ['Fabric / External Apps', theme.engineering],
-  ] as const;
-  return <Shell step={7} title="Consume the Production data" subtitle="The governed table becomes a reusable foundation for the Fabric ecosystem" color={theme.consumer} duration={stepDurations.step7}>
-    <Panel x={685} y={260} width={550} height={330} color={theme.consumer} progress={table}>
-      <div style={{fontSize: 25, color: '#ffbd76', fontWeight: 850}}>GOVERNED PRODUCTION TABLE</div>
-      <div style={{fontSize: 43, fontWeight: 950, marginTop: 13}}>CustomerOrders</div>
-      <div style={{marginTop: 25}}><MiniTable rows={[
-        ['Category', 'Qty', 'NRIC'],
-        ['Home', '2', 'S******7A'],
-        ['Sports', '1', 'S******1B'],
-      ]} /></div>
-    </Panel>
-    <div style={{position: 'absolute', left: 240, right: 240, top: 690, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, opacity: consumers}}>
-      {items.map(([label, color]) => <div key={label} style={{height: 150, border: `2px solid ${color}88`, borderRadius: 24, background: `${color}12`, display: 'grid', placeItems: 'center', color: '#f7f9fd', fontSize: 25, fontWeight: 850, boxShadow: `0 0 28px ${color}18`}}>{label}</div>)}
-    </div>
-    <Arrow x1={960} y1={590} x2={960} y2={690} color={theme.consumer} opacity={consumers} />
-  </Shell>;
-};
 
 export const GuidedDemoJourney = () => (
   <AbsoluteFill>
     <Sequence from={starts.intro} durationInFrames={stepDurations.intro}><IntroScene /></Sequence>
-    <Sequence from={starts.step1} durationInFrames={stepDurations.step1}><Step1 /></Sequence>
     <Sequence from={starts.step2} durationInFrames={stepDurations.step2}><Step2 /></Sequence>
     <Sequence from={starts.step3} durationInFrames={stepDurations.step3}><Step3 /></Sequence>
     <Sequence from={starts.step4} durationInFrames={stepDurations.step4}><Step4 /></Sequence>
     <Sequence from={starts.step5} durationInFrames={stepDurations.step5}><Step5 /></Sequence>
-    <Sequence from={starts.step6} durationInFrames={stepDurations.step6}><Step6 /></Sequence>
-    <Sequence from={starts.step7} durationInFrames={stepDurations.step7}><Step7 /></Sequence>
   </AbsoluteFill>
 );
