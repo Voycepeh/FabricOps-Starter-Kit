@@ -10,6 +10,7 @@ const stepDurations = {
   step3: s(14),
   step4: s(20),
   step5: s(10),
+  step6: s(8),
 } as const;
 
 const starts = {
@@ -18,6 +19,7 @@ const starts = {
   step3: stepDurations.intro + stepDurations.step2,
   step4: stepDurations.intro + stepDurations.step2 + stepDurations.step3,
   step5: stepDurations.intro + stepDurations.step2 + stepDurations.step3 + stepDurations.step4,
+  step6: stepDurations.intro + stepDurations.step2 + stepDurations.step3 + stepDurations.step4 + stepDurations.step5,
 } as const;
 
 export const GUIDED_DEMO_DURATION =
@@ -25,7 +27,8 @@ export const GUIDED_DEMO_DURATION =
   stepDurations.step2 +
   stepDurations.step3 +
   stepDurations.step4 +
-  stepDurations.step5;
+  stepDurations.step5 +
+  stepDurations.step6;
 
 const fade = (frame: number, duration: number) =>
   interpolate(frame, [0, 12, duration - 12, duration], [0, 1, 1, 0], {
@@ -139,7 +142,7 @@ const IntroScene = () => {
       <div style={{fontSize: 38, marginTop: 28, color: '#aebed3', fontWeight: 750}}>
         <span style={{color: '#ffad55', fontWeight: 900}}>CustomerOrders</span>
         <span style={{margin: '0 18px', color: '#5f748e'}}>·</span>
-        From engineering to activation
+        From source data to production
       </div>
     </div>
   </AbsoluteFill>;
@@ -406,6 +409,49 @@ const Step5 = () => {
   </Shell>;
 };
 
+const Step6 = () => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const run = enter(frame, fps, 6);
+  const checks = enter(frame, fps, 45);
+  const output = enter(frame, fps, 105);
+  return <Shell step={6} title="Run in Production" subtitle="The governed pipeline runs against the Production environment" color={theme.production} duration={stepDurations.step6}>
+    <Panel x={130} y={300} width={480} height={430} color={theme.production} progress={run}>
+      <div style={{fontSize: 24, color: '#72e6ad', fontWeight: 850}}>PRODUCTION</div>
+      <div style={{fontSize: 34, fontWeight: 920, marginTop: 12}}>02 Pipeline</div>
+      <div style={{marginTop: 28, padding: 16, borderRadius: 15, background: '#0a1424', fontFamily: 'ui-monospace, monospace', fontSize: 23}}>orchestrate_read()</div>
+      <div style={{marginTop: 13, textAlign: 'center', color: '#92a4b9', fontSize: 28}}>↓ PySpark ↓</div>
+      <div style={{marginTop: 13, padding: 16, borderRadius: 15, background: '#0a1424', fontFamily: 'ui-monospace, monospace', fontSize: 23}}>orchestrate_write()</div>
+    </Panel>
+
+    <Panel x={720} y={260} width={470} height={510} color={theme.governance} progress={checks}>
+      <div style={{fontSize: 24, color: '#c5a8ff', fontWeight: 850}}>ACTIVE GOVERNANCE</div>
+      <div style={{fontSize: 31, fontWeight: 900, marginTop: 14}}>CustomerOrders Contract v3</div>
+      <div style={{display: 'flex', flexDirection: 'column', gap: 14, marginTop: 28}}>
+        <Chip text="✓ Freshness" color={theme.production} />
+        <Chip text="✓ Schema" color={theme.production} />
+        <Chip text="✓ Sensitive Data" color={theme.production} />
+        <Chip text="✓ Data Quality" color={theme.production} />
+        <Chip text="✓ Guardrail coverage" color={theme.production} />
+      </div>
+    </Panel>
+
+    <Arrow x1={610} y1={515} x2={720} y2={515} color={theme.production} opacity={checks} />
+    <Arrow x1={1190} y1={515} x2={1330} y2={515} color={theme.production} opacity={output} />
+
+    <Panel x={1330} y={330} width={450} height={360} color={theme.production} progress={output}>
+      <div style={{fontSize: 24, color: '#72e6ad', fontWeight: 850}}>PRODUCTION OUTPUT</div>
+      <div style={{fontSize: 34, fontWeight: 930, marginTop: 15}}>CustomerOrders</div>
+      <div style={{fontSize: 21, color: '#aebed3', marginTop: 8}}>Warehouse • governed • ready to consume</div>
+      <div style={{marginTop: 28}}><MiniTable rows={[
+        ['Category', 'Qty', 'NRIC'],
+        ['Home', '2', 'S******7A'],
+        ['Sports', '1', 'S******1B'],
+      ]} /></div>
+    </Panel>
+  </Shell>;
+};
+
 
 export const GuidedDemoJourney = () => (
   <AbsoluteFill>
@@ -414,5 +460,6 @@ export const GuidedDemoJourney = () => (
     <Sequence from={starts.step3} durationInFrames={stepDurations.step3}><Step3 /></Sequence>
     <Sequence from={starts.step4} durationInFrames={stepDurations.step4}><Step4 /></Sequence>
     <Sequence from={starts.step5} durationInFrames={stepDurations.step5}><Step5 /></Sequence>
+    <Sequence from={starts.step6} durationInFrames={stepDurations.step6}><Step6 /></Sequence>
   </AbsoluteFill>
 );
