@@ -47,6 +47,10 @@ jobs:
         working-directory: video/remotion/product-poc
         run: npm run render
 
+      - name: Render Part 2 review video
+        working-directory: video/remotion/product-poc
+        run: npm run render:part2
+
       - name: Verify narration is audible
         run: |
           ffmpeg -i video/remotion/product-poc/out/fabricops-product-poc.mp4 -map 0:a:0 -af volumedetect -f null - 2> /tmp/volumedetect.log
@@ -65,6 +69,13 @@ jobs:
         with:
           name: fabricops-product-poc
           path: video/remotion/product-poc/out/fabricops-product-poc.mp4
+          if-no-files-found: error
+
+      - name: Upload Part 2 review video
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabricops-part2
+          path: video/remotion/product-poc/out/fabricops-part2.mp4
           if-no-files-found: error
 
       - name: Sync rendered homepage video
