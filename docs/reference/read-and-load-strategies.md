@@ -13,7 +13,7 @@ They are configured independently per source and target, which lets one `02_pipe
 Source
 → orchestrate_read(... read_mode=...)
 → PySpark transformation
-→ orchestrate_write(... load_strategy=...)
+→ orchestrate_write(... write_mode=...)
 → Target
 ```
 
@@ -77,6 +77,8 @@ The standard choices are:
     | O003 | 2026-09-03 11:00 | Delivered |
 
     All three rows are in scope.
+
+    **Try it:** [Guided Demo — Full Read → Overwrite](../guided-demo/02-build-and-run-etl.md)
 
 ## Incremental
 
@@ -153,6 +155,8 @@ The standard choices are:
     - Warehouse incremental scope is pushed down using FabricOps-owned SQL.
     - Caller-owned Warehouse `query` SQL cannot be combined with Incremental mode because FabricOps owns the incremental predicate.
     - `has_data` / `should_process` indicate whether the resolved scope contains work.
+
+    **Try it:** [Guided Demo — Incremental → Append](../guided-demo/02B-build-and-run-incremental-append-etl.md)
 
 ---
 
@@ -246,7 +250,7 @@ The standard choices are:
 
 ## SCD1
 
-??? example "SCD1 — update and insert example"
+??? example "SCD1 — keep the latest mapping"
 
     ### What it does
 
@@ -259,44 +263,47 @@ The standard choices are:
     ```yaml
     load_strategy: scd1
     key_columns:
-      - customer_id
+      - product_id
     ```
 
     ### When to use it
 
-    Use SCD1 when consumers need the latest state but do not need historical versions.
+    Use SCD1 when a mapping or master table should represent the **latest truth** and historical mappings are not required.
 
     ### Example
 
-    Existing target:
+    Day 1 mapping snapshot:
 
-    | customer_id | tier | country |
-    | --- | --- | --- |
-    | C001 | Basic | SG |
-    | C002 | Premium | MY |
+    | product_id | category |
+    | --- | --- |
+    | P001 | Laptop |
+    | P002 | Monitor |
 
-    Prepared DataFrame:
+    Day 2 mapping snapshot:
 
-    | customer_id | tier | country |
-    | --- | --- | --- |
-    | C001 | Premium | SG |
-    | C003 | Basic | AU |
+    | product_id | category |
+    | --- | --- |
+    | P001 | Computing |
+    | P002 | Monitor |
+    | P003 | Accessories |
 
     After SCD1:
 
-    | customer_id | tier | country | What happened |
-    | --- | --- | --- | --- |
-    | C001 | Premium | SG | Existing C001 updated. |
-    | C002 | Premium | MY | Existing key not present in the batch remains. |
-    | C003 | Basic | AU | New key inserted. |
+    | product_id | category | What happened |
+    | --- | --- | --- |
+    | P001 | Computing | Existing P001 updated. |
+    | P002 | Monitor | Existing value unchanged. |
+    | P003 | Accessories | New product inserted. |
 
-    There is no historical Basic version of C001 after the merge.
+    There is still one row per product. The old `P001 → Laptop` mapping is no longer stored.
+
+    **Try it:** [Guided Demo — SCD Type 1 vs Type 2](../guided-demo/02C-build-and-run-scd-etl.md)
 
 ---
 
 ## SCD2
 
-??? example "SCD2 — history example"
+??? example "SCD2 — preserve mapping history"
 
     ### What it does
 
@@ -307,11 +314,10 @@ The standard choices are:
     ```yaml
     load_strategy: scd2
     key_columns:
-      - customer_id
+      - product_id
     effective_column: modified_datetime
     tracked_columns:
-      - tier
-      - country
+      - category
     ```
 
     `key_columns` and `effective_column` are required. `tracked_columns` is optional.
@@ -324,32 +330,35 @@ The standard choices are:
 
     ### When to use it
 
-    Use SCD2 when consumers need both the current state and the history of changes.
+    Use SCD2 when consumers need the current mapping **and** the mapping that was valid historically.
 
     ### Example
 
-    Existing target:
+    Day 1 mapping snapshot:
 
-    | customer_id | tier | _effective_from | _effective_to | _is_current |
-    | --- | --- | --- | --- | --- |
-    | C001 | Basic | 2026-01-01 | null | true |
-    | C002 | Premium | 2026-01-01 | null | true |
-
-    Prepared DataFrame:
-
-    | customer_id | tier | modified_datetime |
+    | product_id | category | modified_datetime |
     | --- | --- | --- |
-    | C001 | Premium | 2026-09-15 |
-    | C003 | Basic | 2026-09-15 |
+    | P001 | Laptop | 2026-10-06 09:00 |
+    | P002 | Monitor | 2026-10-06 09:00 |
+
+    Day 2 mapping snapshot:
+
+    | product_id | category | modified_datetime |
+    | --- | --- | --- |
+    | P001 | Computing | 2026-10-07 09:00 |
+    | P002 | Monitor | 2026-10-07 09:00 |
+    | P003 | Accessories | 2026-10-07 09:00 |
 
     After SCD2:
 
-    | customer_id | tier | _effective_from | _effective_to | _is_current | What happened |
-    | --- | --- | --- | --- | --- | --- |
-    | C001 | Basic | 2026-01-01 | 2026-09-15 | false | Previous C001 version closed. |
-    | C001 | Premium | 2026-09-15 | null | true | New current C001 version inserted. |
-    | C002 | Premium | 2026-01-01 | null | true | Unchanged existing key remains current. |
-    | C003 | Basic | 2026-09-15 | null | true | New key inserted. |
+    | product_id | category | _effective_to | _is_current | What happened |
+    | --- | --- | --- | --- | --- |
+    | P001 | Laptop | 2026-10-07 09:00 | false | Previous mapping closed. |
+    | P001 | Computing | null | true | New current mapping inserted. |
+    | P002 | Monitor | null | true | Mapping unchanged. |
+    | P003 | Accessories | null | true | New product inserted. |
+
+    **Try it:** [Guided Demo — SCD Type 1 vs Type 2](../guided-demo/02C-build-and-run-scd-etl.md)
 
 ---
 
