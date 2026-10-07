@@ -54,12 +54,12 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
             detail = f" Reason: {reason}" if reason else ""
             raise RuntimeError(f"Stage returned blocking status.{detail}")
     except Exception as exc:
-        duration = time.perf_counter() - started
+        duration = max(0.01, round(time.perf_counter() - started, 2))
         if verbose:
             print(f"[{index}/{total}] {stage} ... ✗ Failed ({duration:.2f}s)")
             print(f"{operation} {name!r} stopped at {stage}. Later stages did not run.")
         raise RuntimeError(f"{operation} {name!r} failed during {stage}.") from exc
-    duration = time.perf_counter() - started
+    duration = max(0.01, round(time.perf_counter() - started, 2))
     if verbose:
         outcomes = {
             "skipped": ("○", "Skipped / not applicable"),

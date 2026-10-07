@@ -98,6 +98,12 @@ def test_coverage_uses_readable_store_schema_table_labels(monkeypatch, capsys):
     )
 
     assert result["status"] == "passed"
+    assert result["target_table_name"] == "Silver.demo.curated_orders"
+    assert result["source_table_names"] == ["Bronze.demo.orders"]
+    assert "target_table_id" not in result
+    assert "source_table_ids" not in result
+    assert all("table_id" not in item for item in result["readiness"])
+    assert all("table_id" not in item for item in result["coverage"])
     output = capsys.readouterr().out
     assert "Bronze.demo.orders" in output
     assert "Silver.demo.curated_orders" in output

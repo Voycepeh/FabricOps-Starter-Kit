@@ -151,8 +151,8 @@ def check_guardrail_coverage(
             "can_continue": True,
             "environment_name": env,
             "activity_id": None,
-            "target_table_id": target_id,
-            "source_table_ids": source_ids,
+            "target_table_name": target_label,
+            "source_table_names": [item["table_name"] for item in participants if item["scope"] == "source"],
             "readiness": [],
             "coverage": [],
             "missing": [],
@@ -173,7 +173,6 @@ def check_guardrail_coverage(
         ready = contract_selected and applicable_count > 0
         readiness.append({
             "scope": item["scope"],
-            "table_id": item["table_id"],
             "table_name": item["table_name"],
             "contract_selected": contract_selected,
             "active_guardrail_count": active_count,
@@ -183,21 +182,18 @@ def check_guardrail_coverage(
         if not contract_selected:
             issues.append({
                 "scope": item["scope"],
-                "table_id": item["table_id"],
                 "table_name": item["table_name"],
                 "reason": "missing_contract",
             })
         elif active_count == 0:
             issues.append({
                 "scope": item["scope"],
-                "table_id": item["table_id"],
                 "table_name": item["table_name"],
                 "reason": "no_active_guardrail",
             })
         elif applicable_count == 0:
             issues.append({
                 "scope": item["scope"],
-                "table_id": item["table_id"],
                 "table_name": item["table_name"],
                 "reason": "no_applicable_guardrail",
             })
@@ -234,9 +230,8 @@ def check_guardrail_coverage(
                 scope = "source_target"
             coverage.append({
                 "scope": scope,
-                "table_id": item["table_id"],
                 "table_name": item["table_name"],
-                "target_table_id": target_id if scope == "source_target" else None,
+                "target_table_name": target_label if scope == "source_target" else None,
                 "guardrail_type": guardrail_type,
                 "guardrail_rule_id": rule_id,
                 "evaluated": bool(matches),
@@ -249,8 +244,8 @@ def check_guardrail_coverage(
         "can_continue": can_continue,
         "environment_name": env,
         "activity_id": activity_id,
-        "target_table_id": target_id,
-        "source_table_ids": source_ids,
+        "target_table_name": target_label,
+        "source_table_names": [item["table_name"] for item in participants if item["scope"] == "source"],
         "readiness": readiness,
         "coverage": coverage,
         "missing": missing,
