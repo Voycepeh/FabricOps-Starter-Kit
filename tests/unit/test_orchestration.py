@@ -266,3 +266,40 @@ def test_validate_guardrail_failure_matches_enforce_and_stops_publication(capsys
     assert "Later stages did not run." in output
     assert raised.value.__cause__ is cause
     write.assert_not_called()
+
+
+def test_orchestration_stage_duration_is_two_decimal_seconds_with_minimum():
+    """Stage inspection reports stable seconds instead of tiny scientific-notation values."""
+    from fabricops_kit.pipeline.shared import _run_orchestration_stage
+
+    with patch(
+        "fabricops_kit.pipeline.shared.time.perf_counter",
+        side_effect=[100.0, 100.000001],
+    ):
+        _result, record = _run_orchestration_stage(
+            operation="READ",
+            name="orders",
+            index=1,
+            total=1,
+            stage="Read",
+            function=lambda: {"status": "passed"},
+            verbose=False,
+        )
+
+    assert record["duration_seconds"] == 0.01
+
+    with patch(
+        "fabricops_kit.pipeline.shared.time.perf_counter",
+        side_effect=[100.0, 101.234],
+    ):
+        _result, record = _run_orchestration_stage(
+            operation="WRITE",
+            name="orders",
+            index=1,
+            total=1,
+            stage="Write",
+            function=lambda: {"status": "passed"},
+            verbose=False,
+        )
+
+    assert record["duration_seconds"] == 1.23
