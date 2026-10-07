@@ -48,16 +48,6 @@ _PROFILE_EXCLUDED_NAMES = {
 _PROFILE_EXCLUDED_PREFIXES = ("_fabricops_", "_dq_")
 _KEY_CANDIDATE_MAX_SIZE = 3
 _KEY_CANDIDATE_MAX_RESULTS = 8
-_KEY_NAME_HINTS = {
-    "id", "key", "code", "no", "num", "number", "seq", "sequence", "line",
-    "version", "ref", "reference", "date", "time", "timestamp",
-}
-_KEY_MEASURE_HINTS = {
-    "amount", "total", "price", "cost", "quantity", "qty", "rate", "percent",
-    "percentage", "pct", "score", "balance", "weight", "volume", "length",
-    "width", "height", "discount", "tax",
-}
-_KEY_BOOLEAN_TYPES = {"bool", "boolean"}
 _WAREHOUSE_NUMERIC_TYPES = {
     "bigint", "decimal", "float", "int", "money", "numeric", "real",
     "smallint", "smallmoney", "tinyint",
@@ -311,58 +301,6 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
 
 
 
-def _key_name_tokens(name: str) -> set[str]:
-    """Return normalized semantic tokens used only to prune composite key search."""
-    normalized = "".join(character if character.isalnum() else " " for character in str(name).lower())
-    return {token for token in normalized.split() if token}
-
-
-def _eligible_key_candidate_rows(statistical_profile: Any) -> list[dict[str, Any]]:
-    """Return null-free, non-technical profile rows ordered by key usefulness."""
-    rows = []
-    for row in statistical_profile.select(
-        "COLUMN_NAME", "DATA_TYPE", "ROW_COUNT", "NULL_COUNT", "DISTINCT_COUNT"
-    ).collect():
-        name = str(row["COLUMN_NAME"])
-        if (
-            name in _PROFILE_EXCLUDED_NAMES
-            or any(name.startswith(prefix) for prefix in _PROFILE_EXCLUDED_PREFIXES)
-        ):
-            continue
-        row_count = int(row["ROW_COUNT"] or 0)
-        null_count = int(row["NULL_COUNT"] or 0)
-        distinct_count = int(row["DISTINCT_COUNT"] or 0)
-        if row_count <= 0 or null_count != 0:
-            continue
-        rows.append({
-            "column_name": name,
-            "data_type": str(row["DATA_TYPE"] or "").lower(),
-            "row_count": row_count,
-            "distinct_count": distinct_count,
-        })
-    rows.sort(key=lambda item: (-int(item["distinct_count"]), str(item["column_name"]).casefold()))
-    return rows
-
-
-def _plausible_composite_key_columns(rows: Sequence[Mapping[str, Any]]) -> list[str]:
-    """Return deterministic identifier-like columns for bounded composite discovery."""
-    plausible = []
-    for row in rows:
-        name = str(row["column_name"])
-        tokens = _key_name_tokens(name)
-        identifier_like = bool(tokens & _KEY_NAME_HINTS) or any(
-            name.lower().endswith(suffix)
-            for suffix in ("_id", "_key", "_code", "_no", "_num", "_number")
-        )
-        measure_like = bool(tokens & _KEY_MEASURE_HINTS)
-        boolean_like = str(row.get("data_type") or "").lower() in _KEY_BOOLEAN_TYPES
-        if boolean_like or (measure_like and not identifier_like):
-            continue
-        if identifier_like:
-            plausible.append(name)
-    return plausible
-
-
 def _key_candidate_evidence(
     candidates: Sequence[Mapping[str, Any]], *, evaluated: bool = True
 ) -> dict[str, Any]:
@@ -390,11 +328,47 @@ def _key_candidate_payload(columns: Sequence[str], *, row_count: int) -> dict[st
 def _spark_profile_key_candidates(
     dataframe: Any, statistical_profile: Any
 ) -> list[dict[str, Any]]:
-    """Discover the smallest null-free unique keys from one complete Spark table."""
-    rows = _eligible_key_candidate_rows(statistical_profile)
-    if not rows:
+    """Discover the smallest null-free unique keys from all scalar Spark columns."""
+    del statistical_profile
+    from pyspark.sql import functions as F
+    from pyspark.sql.types import ArrayType, MapType, StructType
+
+    fields = [
+        field for field in dataframe.schema.fields
+        if not isinstance(field.dataType, ArrayType | MapType | StructType)
+    ]
+    if not fields:
         return []
-    row_count = int(rows[0]["row_count"])
+
+    expressions = [F.count(F.lit(1)).cast("long").alias("__ROW_COUNT")]
+    for index, field in enumerate(fields):
+        column = F.col(f"`{field.name.replace('`', '``')}`")
+        expressions.extend([
+            F.count(column).cast("long").alias(f"C{index}_NON_NULL_COUNT"),
+            F.count_distinct(column).cast("long").alias(f"C{index}_DISTINCT_COUNT"),
+        ])
+    values = dataframe.agg(*expressions).first()
+    if values is None:
+        return []
+    row_count = int(values["__ROW_COUNT"] or 0)
+    if row_count <= 0:
+        return []
+
+    rows = [
+        {
+            "column_name": field.name,
+            "row_count": row_count,
+            "distinct_count": int(values[f"C{index}_DISTINCT_COUNT"] or 0),
+        }
+        for index, field in enumerate(fields)
+        if int(values[f"C{index}_NON_NULL_COUNT"] or 0) == row_count
+    ]
+    rows.sort(
+        key=lambda item: (
+            -int(item["distinct_count"]),
+            str(item["column_name"]).casefold(),
+        )
+    )
     singles = [
         _key_candidate_payload([row["column_name"]], row_count=row_count)
         for row in rows
@@ -403,7 +377,7 @@ def _spark_profile_key_candidates(
     if singles:
         return singles[:_KEY_CANDIDATE_MAX_RESULTS]
 
-    candidate_columns = _plausible_composite_key_columns(rows)
+    candidate_columns = [str(row["column_name"]) for row in rows]
     for size in range(2, min(_KEY_CANDIDATE_MAX_SIZE, len(candidate_columns)) + 1):
         matches = []
         for columns in combinations(candidate_columns, size):
@@ -423,11 +397,65 @@ def _warehouse_profile_key_candidates(
     spark_session: Any,
     context: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    """Discover the smallest null-free unique keys with Warehouse SQL pushdown."""
-    rows = _eligible_key_candidate_rows(statistical_profile)
-    if not rows:
+    """Discover the smallest null-free unique keys from all scalar Warehouse columns."""
+    del statistical_profile
+    all_columns = [
+        column for column in _warehouse_columns(
+            identity,
+            spark_session=spark_session,
+            context={**(context or {}), "_fabricops_suppress_io_log": True},
+        )
+        if column[2] not in _WAREHOUSE_NON_SCALAR_TYPES
+    ]
+    if not all_columns:
         return []
-    row_count = int(rows[0]["row_count"])
+
+    source = (
+        f"{_sql_identifier(str(identity['schema']))}."
+        f"{_sql_identifier(str(identity['table_name']))}"
+    )
+    expressions = ["COUNT_BIG(*) AS ROW_COUNT"]
+    for index, (name, _canonical_type, _sql_type) in enumerate(all_columns):
+        column = _sql_identifier(name)
+        expressions.extend([
+            f"COUNT_BIG({column}) AS C{index}_NON_NULL_COUNT",
+            f"COUNT_BIG(DISTINCT {column}) AS C{index}_DISTINCT_COUNT",
+        ])
+    evidence_query = "SELECT " + ", ".join(expressions) + f" FROM {source}"
+    io_context = {**(context or {}), "_fabricops_suppress_io_log": True}
+    values = read_warehouse_query(
+        evidence_query,
+        store=str(identity["store"]),
+        spark_session=spark_session,
+        context=io_context,
+    ).collect()
+    if not values:
+        return []
+    mapped = (
+        values[0].asDict(recursive=True)
+        if hasattr(values[0], "asDict")
+        else dict(values[0])
+    )
+    normalized = {str(key).upper(): value for key, value in mapped.items()}
+    row_count = int(normalized.get("ROW_COUNT") or 0)
+    if row_count <= 0:
+        return []
+
+    rows = [
+        {
+            "column_name": name,
+            "row_count": row_count,
+            "distinct_count": int(normalized.get(f"C{index}_DISTINCT_COUNT") or 0),
+        }
+        for index, (name, _canonical_type, _sql_type) in enumerate(all_columns)
+        if int(normalized.get(f"C{index}_NON_NULL_COUNT") or 0) == row_count
+    ]
+    rows.sort(
+        key=lambda item: (
+            -int(item["distinct_count"]),
+            str(item["column_name"]).casefold(),
+        )
+    )
     singles = [
         _key_candidate_payload([row["column_name"]], row_count=row_count)
         for row in rows
@@ -436,12 +464,7 @@ def _warehouse_profile_key_candidates(
     if singles:
         return singles[:_KEY_CANDIDATE_MAX_RESULTS]
 
-    source = (
-        f"{_sql_identifier(str(identity['schema']))}."
-        f"{_sql_identifier(str(identity['table_name']))}"
-    )
-    candidate_columns = _plausible_composite_key_columns(rows)
-    io_context = {**(context or {}), "_fabricops_suppress_io_log": True}
+    candidate_columns = [str(row["column_name"]) for row in rows]
     for size in range(2, min(_KEY_CANDIDATE_MAX_SIZE, len(candidate_columns)) + 1):
         matches = []
         for columns in combinations(candidate_columns, size):
@@ -472,7 +495,6 @@ def _warehouse_profile_key_candidates(
         if matches:
             return matches
     return []
-
 
 def _require_non_empty_string(value: Any, name: str) -> str:
     """Return a stripped required string or raise a clear validation error."""
