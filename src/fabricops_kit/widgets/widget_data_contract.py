@@ -1073,6 +1073,8 @@ def widget_data_contract(
                 raw_profile_key_candidates = json.loads(raw_profile_key_candidates or "[]")
             except json.JSONDecodeError:
                 raw_profile_key_candidates = []
+        if isinstance(raw_profile_key_candidates, Mapping):
+            raw_profile_key_candidates = raw_profile_key_candidates.get("candidates", [])
         profile_key_candidates = [
             dict(candidate)
             for candidate in raw_profile_key_candidates
