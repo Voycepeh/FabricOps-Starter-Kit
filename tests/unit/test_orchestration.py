@@ -91,6 +91,57 @@ def test_orchestrate_write_orders_stages_and_profiles_after_write():
     assert write.call_args.args[0] is prepared
 
 
+def test_orchestrate_write_forwards_scd_write_parameters():
+    """SCD parameters are forwarded to pipeline_write without reinterpretation."""
+    from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
+
+    prepared = object()
+    scd2 = {
+        "key_columns": ["product_id"],
+        "effective_column": "modified_datetime",
+        "tracked_columns": ["category"],
+    }
+    with patch(
+        "fabricops_kit.pipeline.orchestrate_write.resolve_table_id",
+        return_value="target-id",
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_schema",
+        return_value={"status": "passed"},
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_sensitive_data",
+        return_value={"status": "passed", "dataframe": prepared},
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_source_drift",
+        return_value={"status": "skipped"},
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_dq",
+        return_value={"status": "passed"},
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_guardrail_coverage",
+        return_value={"status": "passed"},
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.pipeline_write",
+        return_value={"table_id": "target-id"},
+    ) as write, patch(
+        "fabricops_kit.pipeline.orchestrate_write.profile_table",
+        return_value={"profile": object()},
+    ):
+        orchestrate_write(
+            object(),
+            name="product_mapping_scd2",
+            sources=[],
+            store="Silver",
+            schema="demo",
+            table_name="product_mapping_scd2",
+            write_mode="scd2",
+            write_parameters=scd2,
+            verbose=False,
+        )
+
+    assert write.call_args.kwargs["load_strategy"] == "scd2"
+    assert write.call_args.kwargs["load_strategy_parameters"] == scd2
+
+
 def test_orchestrate_write_preserves_guardrail_failure_and_does_not_write():
     """Write failures retain the Guardrail cause and prevent publication."""
     from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
