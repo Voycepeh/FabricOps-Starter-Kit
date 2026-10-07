@@ -86,7 +86,7 @@ def widget_runtime(monkeypatch):
         @Widget.value.setter
         def value(self, value):
             values = self._option_values(self._options)
-            if value not in values:
+            if value is not None and value not in values:
                 raise ValueError("Invalid selection: value not found")
             old = self._value
             self._value = value
