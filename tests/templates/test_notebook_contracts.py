@@ -257,7 +257,6 @@ def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
 
 def test_guided_demo_preserves_default_enforce_flow_and_optional_target_validation():
     """The existing walkthrough remains runnable without changing the selector default."""
-    step_2 = (ROOT / "docs/guided-demo/02-build-and-run-etl.md").read_text(encoding="utf-8")
     step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
 
     assert "leave every source table in **Enforce** mode" in step_4
