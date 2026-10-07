@@ -25,6 +25,12 @@ from fabricops_kit.widgets.enrichment_shared import (
 
 DATA_CONTRACT_MANIFEST: dict[str, Any] | None = None
 DATA_CONTRACT_MANIFEST_JSON: str | None = None
+
+
+def _valid_dropdown_value(options: list[str] | tuple[str, ...], value: Any, *, fallback: Any = None) -> Any:
+    """Return a widget-safe value when persisted metadata no longer matches its options."""
+    candidate = str(value or "")
+    return candidate if candidate in options else fallback
 _TABS = ("Table", "Column", "Business Rules", "Review")
 _COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range")
 _DQ_HELP = {
@@ -1076,7 +1082,12 @@ def widget_data_contract(
             **shared.widget_common(widgets, "Description", textarea=True),
         )
         table_classification = widgets.Dropdown(
-            options=classification_options, value=enrichment_value(enrichments, "table", "Classification"),
+            options=classification_options,
+            value=_valid_dropdown_value(
+                classification_options,
+                enrichment_value(enrichments, "table", "Classification"),
+                fallback="",
+            ),
             disabled=True, **shared.widget_common(widgets, "Classification"),
         )
         table_description.description = ""
@@ -1255,13 +1266,13 @@ def widget_data_contract(
         )
         partition_column_control = widgets.Dropdown(
             options=["", *column_names],
-            value=str(processing.get("partition_column") or ""),
+            value=_valid_dropdown_value(["", *column_names], processing.get("partition_column"), fallback=""),
             disabled=not editable or processing_locked,
             **shared.widget_common(widgets, "Partition column"),
         )
         watermark_column_control = widgets.Dropdown(
             options=["", *column_names],
-            value=str(processing.get("watermark_column") or ""),
+            value=_valid_dropdown_value(["", *column_names], processing.get("watermark_column"), fallback=""),
             disabled=not editable or processing_locked,
             **shared.widget_common(widgets, "Watermark column"),
         )
@@ -1273,7 +1284,7 @@ def widget_data_contract(
         )
         effective_column_control = widgets.Dropdown(
             options=["", *column_names],
-            value=str(processing.get("effective_column") or ""),
+            value=_valid_dropdown_value(["", *column_names], processing.get("effective_column"), fallback=""),
             disabled=not editable or processing_locked,
             **shared.widget_common(widgets, "Effective column"),
         )
@@ -1582,7 +1593,7 @@ def widget_data_contract(
             else:
                 partition_column = widgets.Dropdown(
                     options=column_names,
-                    value=str(existing_parameters.get("partition_column") or "") or None,
+                    value=_valid_dropdown_value(column_names, existing_parameters.get("partition_column")),
                     disabled=not editable,
                     **shared.widget_common(widgets, "Partition column"),
                 )
@@ -1590,7 +1601,7 @@ def widget_data_contract(
                 partition_column.layout = field_layout
                 change_column = widgets.Dropdown(
                     options=column_names,
-                    value=str(existing_parameters.get("change_column") or "") or None,
+                    value=_valid_dropdown_value(column_names, existing_parameters.get("change_column")),
                     disabled=not editable,
                     **shared.widget_common(widgets, "Change tracking column"),
                 )
