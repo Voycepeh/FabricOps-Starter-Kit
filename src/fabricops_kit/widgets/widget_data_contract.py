@@ -31,6 +31,33 @@ def _valid_dropdown_value(options: list[str] | tuple[str, ...], value: Any, *, f
     """Return a widget-safe value when persisted metadata no longer matches its options."""
     candidate = str(value or "")
     return candidate if candidate in options else fallback
+
+
+def _set_selection_value(
+    control: Any,
+    value: Any,
+    *,
+    control_name: str,
+    table_name: str = "",
+    column_name: str = "",
+) -> None:
+    """Assign a selection value and preserve useful context if ipywidgets rejects it."""
+    try:
+        control.value = value
+    except Exception as exc:
+        raw_options = list(getattr(control, "options", ()) or ())
+        valid_options = [
+            item[1] if isinstance(item, tuple) and len(item) > 1 else item
+            for item in raw_options
+        ]
+        location = f"table={table_name!r}"
+        if column_name:
+            location += f", column={column_name!r}"
+        raise ValueError(
+            "Data Contract editor invalid selection: "
+            f"control={control_name!r}, value={value!r}, {location}, "
+            f"valid_options={valid_options!r}"
+        ) from exc
 _TABS = ("Table", "Column", "Business Rules", "Review")
 _COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range")
 _DQ_HELP = {
@@ -2612,7 +2639,13 @@ def widget_data_contract(
                         (f"Keep contract · {contract_type}", contract_type),
                         (f"Accept observed · {observed_type}", observed_type),
                     )
-                    datatype_choice.value = contract_type
+                    _set_selection_value(
+                        datatype_choice,
+                        contract_type,
+                        control_name="datatype_choice",
+                        table_name=str(table.get("table_name") or ""),
+                        column_name=str(selected.get("column_name") or ""),
+                    )
                     datatype_choice.layout.display = ""
                 else:
                     column_context.value = (
@@ -2622,19 +2655,57 @@ def widget_data_contract(
                         f"{html.escape(contract_type or observed_type)}</div></div>"
                     )
                     datatype_choice.options = ((contract_type or observed_type, contract_type or observed_type),)
-                    datatype_choice.value = contract_type or observed_type
+                    _set_selection_value(
+                        datatype_choice,
+                        contract_type or observed_type,
+                        control_name="datatype_choice",
+                        table_name=str(table.get("table_name") or ""),
+                        column_name=str(selected.get("column_name") or ""),
+                    )
                     datatype_choice.layout.display = "none"
                 column_description.value = enrichment_value(live_enrichments, "column", "Description", column_id)
-                column_classification.value = enrichment_value(live_enrichments, "column", "Classification", column_id)
+                _set_selection_value(
+                    column_classification,
+                    _valid_dropdown_value(
+                        classification_options,
+                        enrichment_value(
+                            live_enrichments, "column", "Classification", column_id
+                        ),
+                        fallback="",
+                    ),
+                    control_name="column_classification",
+                    table_name=str(table.get("table_name") or ""),
+                    column_name=str(selected.get("column_name") or ""),
+                )
                 required.value = column_id in required_columns or selected.get("column_name") in required_columns
                 sensitive = next((r for r in live_guardrails if str(r.get("guardrail_type") or "").lower() == "sensitive_data" and str(r.get("column_id") or "") == column_id), {})
                 sensitive_parameters = _parameters(sensitive)
-                pii_type.value = str(sensitive_parameters.get("pii_type") or (
-                    "direct" if sensitive else "none"
-                ))
+                pii_type_options = tuple(PII_LABELS)
+                _set_selection_value(
+                    pii_type,
+                    _valid_dropdown_value(
+                        pii_type_options,
+                        sensitive_parameters.get("pii_type")
+                        or ("direct" if sensitive else "none"),
+                        fallback="none",
+                    ),
+                    control_name="pii_type",
+                    table_name=str(table.get("table_name") or ""),
+                    column_name=str(selected.get("column_name") or ""),
+                )
                 pii_reason.value = str(sensitive_parameters.get("pii_reason") or "")
                 sensitive_enabled.value = bool(sensitive and sensitive.get("is_active", True))
-                sensitive_treatment.value = str(sensitive_parameters.get("treatment") or "tokenize")
+                _set_selection_value(
+                    sensitive_treatment,
+                    _valid_dropdown_value(
+                        ("tokenize", "mask", "bucket", "remove"),
+                        sensitive_parameters.get("treatment") or "tokenize",
+                        fallback="tokenize",
+                    ),
+                    control_name="sensitive_treatment",
+                    table_name=str(table.get("table_name") or ""),
+                    column_name=str(selected.get("column_name") or ""),
+                )
                 sensitive_block.value = str(sensitive.get("action") or "Warn") == "Block"
                 mask_start.value = str(sensitive_parameters.get("preserve_start", 0))
                 mask_end.value = str(sensitive_parameters.get("preserve_end", 0))
@@ -2647,12 +2718,20 @@ def widget_data_contract(
                 pending = unsaved_columns.get(column_id)
                 if pending:
                     column_description.value = pending["description"]
-                    column_classification.value = pending["classification"]
+                    column_classification.value = _valid_dropdown_value(
+                        classification_options, pending["classification"], fallback=""
+                    )
                     required.value = pending["required"]
                     sensitive_enabled.value = pending["sensitive_enabled"]
-                    pii_type.value = pending["pii_type"]
+                    pii_type.value = _valid_dropdown_value(
+                        tuple(PII_LABELS), pending["pii_type"], fallback="none"
+                    )
                     pii_reason.value = pending["pii_reason"]
-                    sensitive_treatment.value = pending["sensitive_treatment"]
+                    sensitive_treatment.value = _valid_dropdown_value(
+                        ("tokenize", "mask", "bucket", "remove"),
+                        pending["sensitive_treatment"],
+                        fallback="tokenize",
+                    )
                     sensitive_block.value = pending["sensitive_block"]
                     mask_start.value = pending["mask_start"]
                     mask_end.value = pending["mask_end"]
@@ -3650,7 +3729,12 @@ def widget_data_contract(
         else:
             render_table_ai()
         if column_options:
-            column_select.value = column_options[0][1]
+            _set_selection_value(
+                column_select,
+                column_options[0][1],
+                control_name="column_select",
+                table_name=str(table.get("table_name") or ""),
+            )
             hydrate_column(str(column_select.value))
             render_column_ai(str(column_select.value))
             if ai_mode == "with_ai":
