@@ -2564,3 +2564,27 @@ def test_review_shows_changes_since_last_save(widget_runtime):
     assert "Changes since last save" in controls["manifest_preview"].value or state["dirty"]
     assert "Restricted" in json.dumps(state["manifest"])
     assert widget_runtime["calls"]["draft"] == []
+
+
+def test_stale_persisted_dropdown_values_do_not_block_widget_open(widget_runtime):
+    """Stale metadata must not trigger ipywidgets 'Invalid selection: value not found'."""
+    widget_runtime["catalogue"][0]["load_strategy"] = "append"
+    widget_runtime["catalogue"][0]["load_strategy_parameters_json"] = json.dumps({
+        "partition_column": "removed_partition",
+        "watermark_column": "removed_watermark",
+    })
+    state = widget_runtime["open"]()
+
+    controls = state["_controls"]
+    assert controls["partition_column"].value == ""
+    assert controls["watermark_column"].value == ""
+
+
+def test_stale_classification_value_falls_back_to_valid_dropdown_option():
+    """A retired classification label is normalized before ipywidgets sees it."""
+    options = ("", "Public", "Restricted", "Confidential", "Highly Sensitive")
+
+    assert module._valid_dropdown_value(
+        options, "Retired Classification", fallback=""
+    ) == ""
+    assert module._valid_dropdown_value(options, "Restricted", fallback="") == "Restricted"
