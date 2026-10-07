@@ -1,62 +1,44 @@
 # Step 2C. SCD Type 1 vs Type 2
 
-This is an **optional processing-mode demo**. It uses tiny inline customer data, so there is nothing extra to upload.
+This is an **optional processing-mode demo** using two tiny inline snapshots. There is nothing extra to upload.
 
 ## Story
 
-Customer C001 changes from **Basic** to **Premium**.
+A source system sends a complete customer snapshot each day.
 
-Run the same change twice:
+On Day 2, customer C001 changes from **Basic** to **Premium**, while C003 appears for the first time.
 
-- **SCD1** keeps only the latest customer state.
-- **SCD2** keeps the previous state as history.
+The same Day 2 snapshot is written using SCD1 and SCD2 so you can see the difference immediately.
 
-Copy `02_pipeline` in Fabric and name the copy something like `02C_scd_demo`. Keep the original notebook unchanged.
-
-## 1. Create the starting data
+## 1. Day 1 system snapshot
 
 ```python
 from datetime import datetime
-from fabricops_kit import pipeline_read, pipeline_write, write_lakehouse_table
+from fabricops_kit import pipeline_write
 
-batch_1 = spark.createDataFrame([
-    ("C001", "Basic", "SG", datetime(2026, 10, 1, 9, 0)),
-    ("C002", "Premium", "MY", datetime(2026, 10, 1, 9, 0)),
+day_1 = spark.createDataFrame([
+    ("C001", "Basic", "SG", datetime(2026, 10, 6, 9, 0)),
+    ("C002", "Premium", "MY", datetime(2026, 10, 6, 9, 0)),
 ], ["customer_id", "membership", "country", "modified_datetime"])
-
-write_lakehouse_table(
-    batch_1,
-    "customers_scd_source",
-    store="Bronze",
-    schema="demo",
-    mode="overwrite",
-)
-
-source = pipeline_read(
-    store="Bronze",
-    schema="demo",
-    table_name="customers_scd_source",
-    read_mode="full",
-    spark_session=spark,
-)
 ```
 
-Publish the same starting state to two separate targets:
+Write the same starting snapshot to two separate targets:
 
 ```python
 pipeline_write(
-    source["dataframe"],
+    day_1,
     store="Silver",
     schema="demo",
     table_name="customers_scd1",
     load_strategy="scd1",
-    load_strategy_parameters={"key_columns": ["customer_id"]},
-    source_table_ids=[source["table_id"]],
+    load_strategy_parameters={
+        "key_columns": ["customer_id"],
+    },
     spark_session=spark,
 )
 
 pipeline_write(
-    source["dataframe"],
+    day_1,
     store="Silver",
     schema="demo",
     table_name="customers_scd2",
@@ -66,41 +48,27 @@ pipeline_write(
         "effective_column": "modified_datetime",
         "tracked_columns": ["membership", "country"],
     },
-    source_table_ids=[source["table_id"]],
     spark_session=spark,
 )
 ```
 
-## 2. Apply one customer change
+## 2. Day 2 system snapshot
 
 ```python
-batch_2 = spark.createDataFrame([
+day_2 = spark.createDataFrame([
     ("C001", "Premium", "SG", datetime(2026, 10, 7, 9, 0)),
+    ("C002", "Premium", "MY", datetime(2026, 10, 7, 9, 0)),
     ("C003", "Basic", "AU", datetime(2026, 10, 7, 9, 0)),
 ], ["customer_id", "membership", "country", "modified_datetime"])
-
-write_lakehouse_table(
-    batch_2,
-    "customers_scd_source",
-    store="Bronze",
-    schema="demo",
-    mode="overwrite",
-)
-
-source = pipeline_read(
-    store="Bronze",
-    schema="demo",
-    table_name="customers_scd_source",
-    read_mode="full",
-    spark_session=spark,
-)
 ```
 
-Run the same two `pipeline_write()` calls again.
+Run the same two writes again, this time using `day_2`.
 
-## Expected result
+## What changes?
 
-**SCD1**
+### SCD1
+
+SCD1 keeps only the latest state.
 
 ```text
 C001  Premium  SG   ← updated
@@ -110,10 +78,25 @@ C003  Basic    AU   ← inserted
 
 There is still one row per customer.
 
-**SCD2**
+### SCD2
 
-C001 now has two versions: the old **Basic** row is closed as history and a new **Premium** row is current. C002 remains current and C003 is inserted.
+SCD2 keeps history.
 
-Inspect `_effective_from`, `_effective_to`, and `_is_current` to see the difference.
+C001 now has two versions:
+
+```text
+C001  Basic    SG   ← historical
+C001  Premium  SG   ← current
+```
+
+C002 remains current and C003 is inserted as a new current row.
+
+Inspect `_effective_from`, `_effective_to`, and `_is_current` to see the history.
+
+## The mental model
+
+**SCD1:** keep the latest version.
+
+**SCD2:** keep the latest version and preserve previous versions.
 
 **Next:** return to [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md).
