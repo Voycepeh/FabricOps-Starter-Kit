@@ -2566,6 +2566,12 @@ def test_manifest_description_is_truncated_and_expandable(widget_runtime):
     assert "Click to expand" in manifest
 
 
+def test_sensitive_data_output_classification_is_labeled(widget_runtime):
+    """Sensitive Data keeps the output classification control visibly labelled."""
+    state = widget_runtime["open"]()
+    assert state["_controls"]["column_classification"].description == "Output classification"
+
+
 def test_review_shows_changes_since_last_save(widget_runtime):
     """Review compares the working contract with the persisted draft baseline."""
     state = widget_runtime["open"]()
@@ -2658,3 +2664,20 @@ def test_selection_diagnostic_names_control_table_column_and_valid_options():
             table_name="curated_orders",
             column_name="customer_id",
         )
+
+
+def test_widget_exception_diagnostic_includes_phase_type_and_source_location():
+    """Render failures expose the widget source location instead of only the trait error."""
+
+    def fail():
+        raise ValueError("Invalid selection: value not found")
+
+    try:
+        fail()
+    except ValueError as exc:
+        message = module._format_widget_exception(exc, phase="editor render")
+
+    assert "Data Contract widget failed during editor render" in message
+    assert "ValueError: Invalid selection: value not found" in message
+    assert "Location:" in message
+    assert "fail() line" in message
