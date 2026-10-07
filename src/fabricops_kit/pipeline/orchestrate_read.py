@@ -69,6 +69,9 @@ def orchestrate_read(*, name: str, store: str, schema: str | None, table_name: s
         stages.append(record)
         return result
     source = run(1, "Read", lambda: pipeline_read(store=store, schema=schema, table_name=table_name, read_mode=read_mode, query=query, target_table_id=target_table_id, spark_session=spark_session, verbose=False))
+    reader_name = source.pop("_reader_name", None)
+    if verbose and reader_name:
+        print(f"      Physical read → {reader_name}")
     dataframe, table_id = source["dataframe"], source["table_id"]
     freshness = run(2, "Freshness", lambda: check_freshness(table_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
     schema_result = run(3, "Schema", lambda: check_schema(dataframe, table_id=table_id, raise_on_failure=True, spark_session=spark_session, verbose=False))

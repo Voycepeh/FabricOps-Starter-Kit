@@ -19,6 +19,41 @@ def test_orchestrate_read_orders_stages_and_preserves_source():
     assert actual["orchestration_stages"][1]["status"] == "skipped"
 
 
+def test_orchestrate_read_reports_selected_physical_reader(capsys):
+    """Read output surfaces the foundational reader selected by pipeline_read."""
+    from fabricops_kit.pipeline.orchestrate_read import orchestrate_read
+
+    source = {
+        "dataframe": object(),
+        "table_id": "source-id",
+        "_reader_name": "read_warehouse_table",
+    }
+    with patch(
+        "fabricops_kit.pipeline.orchestrate_read.pipeline_read", return_value=source
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_read.check_freshness",
+        return_value={"status": "skipped"},
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_read.check_schema",
+        return_value={"status": "skipped"},
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_read.check_dq",
+        return_value={"status": "skipped"},
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_read.profile_table",
+        return_value={"status": "skipped"},
+    ):
+        actual = orchestrate_read(
+            name="history",
+            store="Product",
+            schema="demo",
+            table_name="order_history",
+        )
+
+    assert "_reader_name" not in actual
+    assert "      Physical read → read_warehouse_table" in capsys.readouterr().out
+
+
 def test_orchestrate_read_attributes_failure_and_stops_later_stages():
     """Read failures retain cause and stop later stages."""
     from fabricops_kit.pipeline.orchestrate_read import orchestrate_read
