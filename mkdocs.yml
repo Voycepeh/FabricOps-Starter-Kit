@@ -38,7 +38,7 @@ nav:
       - "Step 2 - Build and Run the ETL":
           - "Full Read Pipeline": guided-demo/02-build-and-run-etl.md
           - "Optional: Incremental → Append": guided-demo/02B-build-and-run-incremental-append-etl.md
-          - "Optional: SCD Type 1 vs Type 2": guided-demo/02C-build-and-run-scd1-etl.md
+          - "Optional: SCD Type 1 vs Type 2": guided-demo/02C-build-and-run-scd-etl.md
       - "Step 3 - Author and Freeze Data Contract": guided-demo/03-author-and-freeze-data-contract.md
       - "Step 4 - Select and Validate Data Contract": guided-demo/04-validate-frozen-data-contract.md
       - "Step 5 - Activate Data Contract and Promote": guided-demo/05-activate-data-contract-and-promote.md
