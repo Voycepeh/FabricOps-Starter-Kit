@@ -28,9 +28,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:1045`
+`fabricops_kit/pipeline/profile_table.py:1073`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1045-L1355">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1073-L1387">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -167,7 +167,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 73 |
+| Live-critical dependencies | 70 |
 
 ### Release history
 
@@ -219,12 +219,9 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._catalogue_dataframe_from_profiled</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._delete_profile_snapshot</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._eligible_key_candidate_rows</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._key_candidate_evidence</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._key_candidate_payload</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._key_name_tokens</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._plausible_composite_key_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._profile_snapshot_id</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._replace_frequency_rows</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._replace_snapshot_rows</code></li>

@@ -27,7 +27,7 @@ the Guardrails appropriate to each table; Schema is a common minimal choice.
 
 `fabricops_kit/pipeline/check_guardrail_coverage.py:86`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_guardrail_coverage.py#L86-L291">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_guardrail_coverage.py#L86-L286">View on GitHub</a>
 </div>
 
 
