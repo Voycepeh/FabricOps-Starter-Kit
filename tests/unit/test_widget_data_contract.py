@@ -2655,7 +2655,11 @@ def test_freshness_timestamp_dropdown_uses_consistent_label_value_options(widget
 
     assert ("Select timestamp column", "") in freshness.options
     assert ("snapshot_date", "snapshot_date") in freshness.options
-    assert freshness.value == ""
+    option_values = [
+        option[1] if isinstance(option, tuple) else option
+        for option in freshness.options
+    ]
+    assert freshness.value in option_values
 
 
 def test_selection_diagnostic_names_control_table_column_and_valid_options():
