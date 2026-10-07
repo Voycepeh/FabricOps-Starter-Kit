@@ -2377,9 +2377,9 @@ def widget_data_contract(
         column_classification = widgets.Dropdown(options=classification_options, disabled=not editable, **shared.widget_common(widgets, "Classification"))
         column_description.description = ""
         column_description.layout = widgets.Layout(width="100%", min_width="0", height="110px")
-        column_classification.description = ""
+        column_classification.description = "Output classification"
         column_classification.layout = widgets.Layout(
-            width="100%", min_width="0", max_width="722px"
+            width="100%", min_width="0", max_width="560px"
         )
         column_description_ai = widgets.HTML()
         accept_column_description = widgets.Button(description="Apply", disabled=not editable)
