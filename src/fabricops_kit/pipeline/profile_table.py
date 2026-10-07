@@ -38,7 +38,7 @@ _PROFILE_EXCLUDED_NAMES = {
     "_pipeline_run_id", "_pipeline_name", "_pipeline_environment", "_source_table",
     "_record_loaded_timestamp", "_notebook_name", "_loaded_by", "_dq_check_status",
     "_dq_failed_rules", "_source_system", "_source_extract_timestamp", "_watermark_value",
-    "_partition_bucket", "_sample_bucket", "_row_ingest_id", "_business_key_hash",
+    "_sample_bucket", "_row_ingest_id", "_business_key_hash",
     "_row_hash", "pipeline_ts", "ingested_at_utc", "notebook_name", "loaded_by",
     "p_bucket", "sample_bucket", "row_ingest_id", "ingest_run_id", "pipeline_run_id",
     "loaded_at", "run_ingest_id", "_fabricops_run_id", "_fabricops_pipeline_name",
@@ -541,7 +541,7 @@ def _processing_definition(
     else:
         parameters = dict(load_strategy_parameters)
     allowed = {
-        "overwrite": {"partition_column", "watermark_column"},
+        "overwrite": {"watermark_column"},
         "append": {"watermark_column"},
         "scd1": {"key_columns", "watermark_column"},
         "scd2": {"key_columns", "effective_column", "tracked_columns", "watermark_column"},
@@ -555,7 +555,7 @@ def _processing_definition(
             if not isinstance(values, (list, tuple)) or not values:
                 raise ValueError(f"{name} must be a non-empty sequence of column names.")
             parameters[name] = [_require_non_empty_string(value, name) for value in values]
-    for name in ("partition_column", "effective_column", "watermark_column"):
+    for name in ("effective_column", "watermark_column"):
         if name in parameters:
             parameters[name] = _require_non_empty_string(parameters[name], name)
     if strategy in {"scd1", "scd2"} and "key_columns" not in parameters:
@@ -572,7 +572,7 @@ def _validate_processing_columns(df: Any, parameters_json: str | None) -> None:
     parameters = json.loads(parameters_json)
     available = {str(field.name) for field in df.schema.fields}
     referenced = []
-    for name in ("partition_column", "effective_column", "watermark_column"):
+    for name in ("effective_column", "watermark_column"):
         if parameters.get(name):
             referenced.append(str(parameters[name]))
     for name in ("key_columns", "tracked_columns"):

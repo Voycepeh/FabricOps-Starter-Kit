@@ -41,23 +41,12 @@ def test_full_overwrite_uses_full_table_overwrite(monkeypatch):
     assert "options" not in calls[0][1]
 
 
-def test_incremental_overwrite_uses_replace_where(monkeypatch):
+def test_lakehouse_processing_rejects_partition_scope(monkeypatch):
     calls = _capture_writes(monkeypatch)
-    shared.execute_lakehouse_processing(
-        type("Frame", (), {"columns": ["_partition_bucket"]})(), table_name="students", store="Silver", schema="dbo",
-        processing={"load_strategy": "overwrite", "partition_column": "business_date"},
-        scope={"type": "partition", "column": "business_date", "values": ["2026-08-21"]},
-    )
-    assert calls[0][1]["mode"] == "overwrite"
-    assert calls[0][1]["options"] == {"replaceWhere": "`_partition_bucket` IN ('2026-08-21')"}
-
-
-def test_incremental_overwrite_rejects_unsafe_partition_configuration(monkeypatch):
-    calls = _capture_writes(monkeypatch)
-    with pytest.raises(ValueError, match="must match the target processing partition_column"):
+    with pytest.raises(ValueError, match="must use full_dataset"):
         shared.execute_lakehouse_processing(
             object(), table_name="students", store="Silver", schema="dbo",
-            processing={"load_strategy": "overwrite", "partition_column": "other_date"},
+            processing={"load_strategy": "overwrite"},
             scope={"type": "partition", "column": "business_date", "values": ["2026-08-21"]},
         )
     assert calls == []
@@ -68,20 +57,9 @@ def test_append_uses_low_level_append_only_after_scope_resolution(monkeypatch):
     shared.execute_lakehouse_processing(
         object(), table_name="students", store="Silver", schema="dbo",
         processing={"load_strategy": "append"},
-        scope={"type": "partition", "column": "business_date", "values": ["2026-08-21"]},
+        scope={"type": "full_dataset"},
     )
     assert calls[0][1]["mode"] == "append"
-
-
-def test_partition_scoped_write_never_accepts_an_empty_scope(monkeypatch):
-    calls = _capture_writes(monkeypatch)
-    with pytest.raises(ValueError, match="at least one partition value"):
-        shared.execute_lakehouse_processing(
-            object(), table_name="students", store="Silver", schema="dbo",
-            processing={"load_strategy": "append"},
-            scope={"type": "partition", "column": "business_date", "values": []},
-        )
-    assert calls == []
 
 
 @pytest.mark.parametrize(("strategy", "mode"), [("overwrite", "overwrite"), ("append", "append")])

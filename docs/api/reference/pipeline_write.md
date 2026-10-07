@@ -23,9 +23,9 @@ Lineage and Source Observation metadata only after publication succeeds.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_write.py:336`
+`fabricops_kit/pipeline/pipeline_write.py:319`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L336-L747">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L319-L680">View on GitHub</a>
 </div>
 
 
@@ -145,8 +145,8 @@ keeps multiple target writes in one activity exact and independent.
 Same-activity retries use the target's persisted ``_activity_id`` audit
 field to detect a row-producing publication and skip its physical mutation.
 Catalogue processing, Lineage, and accepted Source Observation metadata are
-idempotent and replayed on every retry. Empty append, empty overwrite,
-partition-removal-only overwrite, and true SCD no-op operations may leave
+idempotent and replayed on every retry. Empty append, empty overwrite, and
+true SCD no-op operations may leave
 no activity marker; repeating those operations is safe. Changing the
 participating source set represents a different logical publication and
 therefore requires a new activity rather than reuse of the current one.
@@ -167,13 +167,6 @@ complete bootstrap scope. FabricOps permits that bootstrap only for a new
 or empty physical target. A populated target fails before publication so
 missing metadata cannot silently duplicate all source rows. SCD1 and SCD2
 bootstraps continue through their existing keyed, idempotent merge paths.
-
-A removed source partition is actionable incremental work even though its
-input DataFrame contains no rows for that partition. FabricOps permits the
-removal only when governed partition-scoped overwrite can include the
-removed value in ``replaceWhere`` and clear stale target rows. Other target
-strategies, or mismatched source and target partition columns, fail before
-publication and therefore do not commit the removal baseline.
 
 With ``verbose=True``, a simple Lakehouse overwrite reports a line such as
 ``FabricOps Write → Lakehouse table 'unified.demo.curated_orders' → overwrite → write_lakehouse_table``.
@@ -204,7 +197,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 82 |
+| Live-critical dependencies | 79 |
 
 ### Release history
 
@@ -266,9 +259,7 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.write_warehouse_synapsesql</code></li>
-<li><code>fabricops_kit.pipeline.pipeline_write._delta_literal</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._persist_target_processing</code></li>
-<li><code>fabricops_kit.pipeline.pipeline_write._replace_where</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._source_table_ids</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._target_has_activity</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._target_has_rows</code></li>
@@ -279,7 +270,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
 <li><code>fabricops_kit.pipeline.shared._merge_source_observation_records</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
-<li><code>fabricops_kit.pipeline.shared._sql_literal</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.catalogue_authored_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.commit_pipeline_write_success</code></li>

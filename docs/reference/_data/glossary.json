@@ -501,8 +501,8 @@
     "aliases": [],
     "category": "Data Engineering concepts",
     "short_definition": "A saved progress value used to identify data after the last successful incremental boundary.",
-    "long_definition": "A watermark marks incremental progress. Its ordering, uniqueness, and tie-handling depend on the project-owned incremental design.",
-    "preferred_usage": "Use watermark for the incremental boundary persisted on governed target rows.",
+    "long_definition": "A watermark marks target-specific incremental progress. After successful target publication, later FabricOps incremental reads return rows strictly after the committed value.",
+    "preferred_usage": "Use watermark for the governed incremental boundary committed after successful target publication.",
     "avoid_usage": "a second processing strategy outside the target load_strategy"
   },
   {

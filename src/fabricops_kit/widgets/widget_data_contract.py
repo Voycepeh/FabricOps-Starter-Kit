@@ -1310,12 +1310,6 @@ def widget_data_contract(
             + html.escape(processing_source_labels.get(processing_source, "Saved on this Data Contract"))
             + "</span>"
         )
-        partition_column_control = widgets.Dropdown(
-            options=["", *column_names],
-            value=_valid_dropdown_value(["", *column_names], processing.get("partition_column"), fallback=""),
-            disabled=not editable or processing_locked,
-            **shared.widget_common(widgets, "Partition column"),
-        )
         watermark_column_control = widgets.Dropdown(
             options=["", *column_names],
             value=_valid_dropdown_value(["", *column_names], processing.get("watermark_column"), fallback=""),
@@ -1341,13 +1335,12 @@ def widget_data_contract(
             **shared.widget_common(widgets, "Tracked columns"),
         )
         processing_parameter_controls = (
-            partition_column_control, watermark_column_control, key_columns_control,
-            effective_column_control, tracked_columns_control,
+            watermark_column_control, key_columns_control, effective_column_control,
+            tracked_columns_control,
         )
 
         def update_processing_controls(_change: dict[str, Any] | None = None) -> None:
             strategy = str(load_strategy_control.value or "overwrite")
-            partition_column_control.layout.display = "" if strategy == "append" else "none"
             watermark_column_control.layout.display = "" if strategy in {"append", "scd1", "scd2"} else "none"
             key_columns_control.layout.display = "" if strategy in {"scd1", "scd2"} else "none"
             effective_column_control.layout.display = "" if strategy == "scd2" else "none"
@@ -1360,10 +1353,6 @@ def widget_data_contract(
                 watermark = str(watermark_column_control.value or "").strip()
                 if watermark:
                     value["watermark_column"] = watermark
-            if strategy == "append":
-                partition = str(partition_column_control.value or "").strip()
-                if partition:
-                    value["partition_column"] = partition
             if strategy in {"scd1", "scd2"}:
                 value["key_columns"] = [str(item) for item in key_columns_control.value]
             if strategy == "scd2":
@@ -4835,7 +4824,6 @@ def widget_data_contract(
             "load_strategy": load_strategy_control,
             "processing_source": processing_source_hint,
             "processing_parameters": processing_parameter_controls,
-            "partition_column": partition_column_control,
             "watermark_column": watermark_column_control,
             "key_columns": key_columns_control,
             "effective_column": effective_column_control,

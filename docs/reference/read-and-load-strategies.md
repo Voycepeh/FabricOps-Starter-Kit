@@ -92,7 +92,7 @@ The standard choices are:
 
     ### When to use it
 
-    Use Incremental when only rows after the last successfully committed watermark should be processed instead of rereading the complete source every run.
+    Use Incremental when only rows after the last successfully committed watermark should be processed instead of rereading the complete source every run. The governed processing definition must provide `watermark_column`, or `effective_column` where SCD2 processing already uses it as the watermark.
 
     ### Watermark example
 
@@ -373,6 +373,7 @@ Likewise, Full does not automatically mean Overwrite. A Full source can still fe
 ## Safety rules worth remembering
 
 - Incremental requires a target identity because progress is source-to-target specific.
+- Incremental requires a governed `watermark_column`, or the SCD2 `effective_column` fallback.
 - A missing Incremental baseline bootstraps with a Full read.
 - Incremental + whole-table Overwrite is rejected.
 - Incremental + Append bootstrap requires a new/empty target when no accepted baseline exists.
