@@ -2627,3 +2627,34 @@ def test_stale_column_dropdown_metadata_does_not_block_widget_open(widget_runtim
     assert controls["column_classification"].value == ""
     assert controls["pii_type"].value == "none"
     assert controls["sensitive_treatment"].value == "tokenize"
+
+
+def test_selection_diagnostic_names_control_table_column_and_valid_options():
+    """Rejected selection values retain enough context to debug Fabric widget failures."""
+    class Control:
+        options = (("Public", "Public"), ("Restricted", "Restricted"))
+
+        @property
+        def value(self):
+            return None
+
+        @value.setter
+        def value(self, value):
+            if value not in {"Public", "Restricted"}:
+                raise ValueError("Invalid selection: value not found")
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "control='column_classification'.*value='Legacy'.*"
+            "table='curated_orders'.*column='customer_id'.*"
+            "valid_options=\\['Public', 'Restricted'\\]"
+        ),
+    ):
+        module._set_selection_value(
+            Control(),
+            "Legacy",
+            control_name="column_classification",
+            table_name="curated_orders",
+            column_name="customer_id",
+        )
