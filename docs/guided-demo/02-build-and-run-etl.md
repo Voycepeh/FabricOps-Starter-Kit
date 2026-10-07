@@ -205,15 +205,15 @@ writes["curated_orders_lakehouse"] = write_result
 
     **What comes back**
 
-    - `write_result["table_id"]` → canonical FabricOps identity for the target table.
-    - `write_result["schema_result"]` → Schema Guardrail result.
-    - `write_result["sensitive_result"]` → Sensitive Data Guardrail result, including any applied treatment.
-    - `write_result["source_drift_results"]` → Source Drift results for the contributing sources.
-    - `write_result["dq_result"]` → Data Quality Guardrail result.
-    - `write_result["coverage_result"]` → Guardrail Coverage result for the target.
-    - `write_result["orchestration_stages"]` → status and timing of each Write stage.
-    - `write_result["published"]` → whether the target was physically written.
-    - `write_result["profile_result"]` → profile of the persisted target when profiling applies.
+    - `write_result` → `table_id` → canonical FabricOps identity for the target table.
+    - `write_result` → `schema_result` → Schema Guardrail result.
+    - `write_result` → `sensitive_result` → Sensitive Data Guardrail result, including any applied treatment.
+    - `write_result` → `source_drift_results` → Source Drift results for the contributing sources.
+    - `write_result` → `dq_result` → Data Quality Guardrail result.
+    - `write_result` → `coverage_result` → Guardrail Coverage result for the target.
+    - `write_result` → `orchestration_stages` → status and timing of each Write stage.
+    - `write_result` → `published` → whether the target was physically written.
+    - `write_result` → `profile_result` → profile of the persisted target when profiling applies.
 
     These lower-level functions remain public if you need to build a custom flow.
 
