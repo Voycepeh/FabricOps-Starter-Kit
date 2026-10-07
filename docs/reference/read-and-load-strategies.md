@@ -13,7 +13,7 @@ They are configured independently per source and target, which lets one `02_pipe
 Source
 → orchestrate_read(... read_mode=...)
 → PySpark transformation
-→ orchestrate_write(... load_strategy=...)
+→ orchestrate_write(... write_mode=...)
 → Target
 ```
 
@@ -32,7 +32,6 @@ The standard choices are:
 | **Incremental → Append** | Process only new source work and append it. |
 | **Full / Incremental → SCD1** | Maintain the latest state for each business key. |
 | **Full / Incremental → SCD2** | Maintain historical versions for each business key. |
-| **Incremental → partition-scoped Overwrite** | Rebuild only affected Lakehouse partitions. |
 
 ---
 
@@ -79,6 +78,8 @@ The standard choices are:
 
     All three rows are in scope.
 
+    **Try it:** [Guided Demo — Full Read → Overwrite](../guided-demo/02-build-and-run-etl.md)
+
 ## Incremental
 
 ??? example "Incremental — example, bootstrap, and progress"
@@ -91,7 +92,7 @@ The standard choices are:
 
     ### When to use it
 
-    Use Incremental when only new or changed source scope should be processed instead of rereading the complete source every run.
+    Use Incremental when only rows after the last successfully committed watermark should be processed instead of rereading the complete source every run.
 
     ### Watermark example
 
@@ -135,7 +136,7 @@ The standard choices are:
 
     ### Progress is committed after successful publication
 
-    Reading data does **not** advance the accepted watermark/partition baseline.
+    Reading data does **not** advance the accepted watermark.
 
     ```text
     Observe source
@@ -155,6 +156,8 @@ The standard choices are:
     - Caller-owned Warehouse `query` SQL cannot be combined with Incremental mode because FabricOps owns the incremental predicate.
     - `has_data` / `should_process` indicate whether the resolved scope contains work.
 
+    **Try it:** [Guided Demo — Incremental → Append](../guided-demo/02B-build-and-run-incremental-append-etl.md)
+
 ---
 
 # Write Modes
@@ -169,7 +172,7 @@ The standard choices are:
 
     ### When to use it
 
-    Use it when the incoming DataFrame represents the complete authoritative state, or when a governed Lakehouse partition can be safely rebuilt.
+    Use it when the incoming DataFrame represents the complete authoritative state.
 
     ### Example
 
@@ -195,10 +198,6 @@ The standard choices are:
     | O003 | New |
 
     O002 disappears because the prepared DataFrame becomes the complete target state.
-
-    ### Partition-scoped Overwrite
-
-    When a governed `partition_column` is configured for a Lakehouse target, FabricOps can replace only affected partitions instead of the whole table.
 
     A partial Incremental input cannot use whole-table Overwrite. FabricOps rejects that combination because unaffected target rows would otherwise be lost.
 
@@ -251,7 +250,7 @@ The standard choices are:
 
 ## SCD1
 
-??? example "SCD1 — update and insert example"
+??? example "SCD1 — keep the latest mapping"
 
     ### What it does
 
@@ -264,44 +263,47 @@ The standard choices are:
     ```yaml
     load_strategy: scd1
     key_columns:
-      - customer_id
+      - product_id
     ```
 
     ### When to use it
 
-    Use SCD1 when consumers need the latest state but do not need historical versions.
+    Use SCD1 when a mapping or master table should represent the **latest truth** and historical mappings are not required.
 
     ### Example
 
-    Existing target:
+    Day 1 mapping snapshot:
 
-    | customer_id | tier | country |
-    | --- | --- | --- |
-    | C001 | Silver | SG |
-    | C002 | Gold | MY |
+    | product_id | category |
+    | --- | --- |
+    | P001 | Laptop |
+    | P002 | Monitor |
 
-    Prepared DataFrame:
+    Day 2 mapping snapshot:
 
-    | customer_id | tier | country |
-    | --- | --- | --- |
-    | C001 | Gold | SG |
-    | C003 | Silver | AU |
+    | product_id | category |
+    | --- | --- |
+    | P001 | Computing |
+    | P002 | Monitor |
+    | P003 | Accessories |
 
     After SCD1:
 
-    | customer_id | tier | country | What happened |
-    | --- | --- | --- | --- |
-    | C001 | Gold | SG | Existing C001 updated. |
-    | C002 | Gold | MY | Existing key not present in the batch remains. |
-    | C003 | Silver | AU | New key inserted. |
+    | product_id | category | What happened |
+    | --- | --- | --- |
+    | P001 | Computing | Existing P001 updated. |
+    | P002 | Monitor | Existing value unchanged. |
+    | P003 | Accessories | New product inserted. |
 
-    There is no historical Silver version of C001 after the merge.
+    There is still one row per product. The old `P001 → Laptop` mapping is no longer stored.
+
+    **Try it:** [Guided Demo — SCD Type 1 vs Type 2](../guided-demo/02C-build-and-run-scd-etl.md)
 
 ---
 
 ## SCD2
 
-??? example "SCD2 — history example"
+??? example "SCD2 — preserve mapping history"
 
     ### What it does
 
@@ -312,11 +314,10 @@ The standard choices are:
     ```yaml
     load_strategy: scd2
     key_columns:
-      - customer_id
+      - product_id
     effective_column: modified_datetime
     tracked_columns:
-      - tier
-      - country
+      - category
     ```
 
     `key_columns` and `effective_column` are required. `tracked_columns` is optional.
@@ -329,32 +330,35 @@ The standard choices are:
 
     ### When to use it
 
-    Use SCD2 when consumers need both the current state and the history of changes.
+    Use SCD2 when consumers need the current mapping **and** the mapping that was valid historically.
 
     ### Example
 
-    Existing target:
+    Day 1 mapping snapshot:
 
-    | customer_id | tier | _effective_from | _effective_to | _is_current |
-    | --- | --- | --- | --- | --- |
-    | C001 | Silver | 2026-01-01 | null | true |
-    | C002 | Gold | 2026-01-01 | null | true |
-
-    Prepared DataFrame:
-
-    | customer_id | tier | modified_datetime |
+    | product_id | category | modified_datetime |
     | --- | --- | --- |
-    | C001 | Gold | 2026-09-15 |
-    | C003 | Silver | 2026-09-15 |
+    | P001 | Laptop | 2026-10-06 09:00 |
+    | P002 | Monitor | 2026-10-06 09:00 |
+
+    Day 2 mapping snapshot:
+
+    | product_id | category | modified_datetime |
+    | --- | --- | --- |
+    | P001 | Computing | 2026-10-07 09:00 |
+    | P002 | Monitor | 2026-10-07 09:00 |
+    | P003 | Accessories | 2026-10-07 09:00 |
 
     After SCD2:
 
-    | customer_id | tier | _effective_from | _effective_to | _is_current | What happened |
-    | --- | --- | --- | --- | --- | --- |
-    | C001 | Silver | 2026-01-01 | 2026-09-15 | false | Previous C001 version closed. |
-    | C001 | Gold | 2026-09-15 | null | true | New current C001 version inserted. |
-    | C002 | Gold | 2026-01-01 | null | true | Unchanged existing key remains current. |
-    | C003 | Silver | 2026-09-15 | null | true | New key inserted. |
+    | product_id | category | _effective_to | _is_current | What happened |
+    | --- | --- | --- | --- | --- |
+    | P001 | Laptop | 2026-10-07 09:00 | false | Previous mapping closed. |
+    | P001 | Computing | null | true | New current mapping inserted. |
+    | P002 | Monitor | null | true | Mapping unchanged. |
+    | P003 | Accessories | null | true | New product inserted. |
+
+    **Try it:** [Guided Demo — SCD Type 1 vs Type 2](../guided-demo/02C-build-and-run-scd-etl.md)
 
 ---
 
@@ -371,7 +375,6 @@ Likewise, Full does not automatically mean Overwrite. A Full source can still fe
 - Incremental requires a target identity because progress is source-to-target specific.
 - A missing Incremental baseline bootstraps with a Full read.
 - Incremental + whole-table Overwrite is rejected.
-- Incremental + partition-scoped Overwrite requires a compatible governed Lakehouse partition.
 - Incremental + Append bootstrap requires a new/empty target when no accepted baseline exists.
 - SCD1 requires `key_columns`.
 - SCD2 requires `key_columns` and `effective_column`.
@@ -393,4 +396,5 @@ After successful publication, FabricOps persists the resolved target processing 
 - [`pipeline_read()`](../api/reference/pipeline_read.md)
 - [`pipeline_write()`](../api/reference/pipeline_write.md)
 - [Guided Demo: Full Read Pipeline](../guided-demo/02-build-and-run-etl.md)
-- [Guided Demo: Incremental Append Pipeline](../guided-demo/02B-build-and-run-incremental-append-etl.md)
+- [Guided Demo: Incremental → Append](../guided-demo/02B-build-and-run-incremental-append-etl.md)
+- [Guided Demo: SCD Type 1 vs Type 2](../guided-demo/02C-build-and-run-scd-etl.md)

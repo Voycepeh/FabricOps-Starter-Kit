@@ -169,8 +169,8 @@ def pipeline_read(
     This function does not execute Freshness, Source Drift, Schema, DQ, or
     Sensitive Data checks. It also does not profile
     data, transform rows, or write a pipeline target. Those meaningful
-    engineering decisions remain explicit in ``02_pipeline`` and
-    ``02B_incremental_append_pipeline``.
+    engineering decisions remain explicit in ``02_pipeline`` and the
+    optional processing-mode Guided Demo scenarios.
 
     With ``verbose=True``, a Warehouse table read reports a line such as
     ``FabricOps Read → Warehouse table 'product.demo.orders' → read_warehouse_table``.
