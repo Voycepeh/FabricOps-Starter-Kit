@@ -266,6 +266,7 @@ At the end of Step 2 you should have:
 
 ??? info "Inspect the Dictonary that you had read / write"
 
+    ```python
     # Enter the name of the source you created above, then uncomment any result you want to inspect.
     inspect_write = "curated_orders_lakehouse"
 
@@ -279,5 +280,6 @@ At the end of Step 2 you should have:
     # display(writes[inspect_write]["dq_result"])                           # Data Quality guardrail result.
     # display(writes[inspect_write]["coverage_result"])                     # Guardrail Coverage result.
     # display(writes[inspect_write]["orchestration_stages"])                # Ordered orchestrator execution stages.
+    ```
 
 **Next:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
