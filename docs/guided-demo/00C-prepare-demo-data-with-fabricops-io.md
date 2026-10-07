@@ -111,7 +111,7 @@ Read the remaining demo sources and write the managed Lakehouse and Warehouse ta
 
 ??? info "Later scenarios reuse the canonical Orders baseline"
 
-    Later incremental and load-strategy scenarios create their source changes directly in the walkthrough. `modified_datetime` is the watermark column, and a partition date can be derived from `order_datetime` when needed.
+    Later incremental and load-strategy scenarios create their source changes directly in the walkthrough. `modified_datetime` is the watermark column used by the Incremental → Append scenario.
 
     Guardrail validation creates a temporary dirty transformed DataFrame in the notebook session, so the canonical source files and seeded tables remain unchanged.
 
