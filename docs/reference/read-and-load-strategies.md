@@ -32,7 +32,6 @@ The standard choices are:
 | **Incremental → Append** | Process only new source work and append it. |
 | **Full / Incremental → SCD1** | Maintain the latest state for each business key. |
 | **Full / Incremental → SCD2** | Maintain historical versions for each business key. |
-| **Incremental → partition-scoped Overwrite** | Rebuild only affected Lakehouse partitions. |
 
 ---
 
@@ -91,7 +90,7 @@ The standard choices are:
 
     ### When to use it
 
-    Use Incremental when only new or changed source scope should be processed instead of rereading the complete source every run.
+    Use Incremental when only rows after the last successfully committed watermark should be processed instead of rereading the complete source every run.
 
     ### Watermark example
 
@@ -135,7 +134,7 @@ The standard choices are:
 
     ### Progress is committed after successful publication
 
-    Reading data does **not** advance the accepted watermark/partition baseline.
+    Reading data does **not** advance the accepted watermark.
 
     ```text
     Observe source
@@ -169,7 +168,7 @@ The standard choices are:
 
     ### When to use it
 
-    Use it when the incoming DataFrame represents the complete authoritative state, or when a governed Lakehouse partition can be safely rebuilt.
+    Use it when the incoming DataFrame represents the complete authoritative state.
 
     ### Example
 
@@ -195,10 +194,6 @@ The standard choices are:
     | O003 | New |
 
     O002 disappears because the prepared DataFrame becomes the complete target state.
-
-    ### Partition-scoped Overwrite
-
-    When a governed `partition_column` is configured for a Lakehouse target, FabricOps can replace only affected partitions instead of the whole table.
 
     A partial Incremental input cannot use whole-table Overwrite. FabricOps rejects that combination because unaffected target rows would otherwise be lost.
 
@@ -371,7 +366,6 @@ Likewise, Full does not automatically mean Overwrite. A Full source can still fe
 - Incremental requires a target identity because progress is source-to-target specific.
 - A missing Incremental baseline bootstraps with a Full read.
 - Incremental + whole-table Overwrite is rejected.
-- Incremental + partition-scoped Overwrite requires a compatible governed Lakehouse partition.
 - Incremental + Append bootstrap requires a new/empty target when no accepted baseline exists.
 - SCD1 requires `key_columns`.
 - SCD2 requires `key_columns` and `effective_column`.
