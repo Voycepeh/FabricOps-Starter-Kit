@@ -2639,6 +2639,25 @@ def test_stale_column_dropdown_metadata_does_not_block_widget_open(widget_runtim
     assert controls["sensitive_treatment"].value == "tokenize"
 
 
+def test_freshness_timestamp_dropdown_uses_consistent_label_value_options(widget_runtime):
+    """Timestamp dropdown options stay valid when temporal columns are present."""
+    widget_runtime["catalogue"].append({
+        "table_id": widget_runtime["catalogue"][0]["table_id"],
+        "environment_name": widget_runtime["catalogue"][0]["environment_name"],
+        "metadata_level": "column",
+        "column_id": "col-date",
+        "column_name": "snapshot_date",
+        "data_type": "date",
+        "is_active": True,
+    })
+    state = widget_runtime["open"]()
+    freshness = state["_controls"]["table_guardrails"]["freshness"]["parameters"][1]
+
+    assert ("Select timestamp column", "") in freshness.options
+    assert ("snapshot_date", "snapshot_date") in freshness.options
+    assert freshness.value == ""
+
+
 def test_selection_diagnostic_names_control_table_column_and_valid_options():
     """Rejected selection values retain enough context to debug Fabric widget failures."""
     class Control:
