@@ -2604,16 +2604,13 @@ def test_stale_classification_value_falls_back_to_valid_dropdown_option():
 
 def test_stale_column_dropdown_metadata_does_not_block_widget_open(widget_runtime):
     """Column hydration normalizes stale dropdown-backed metadata before assignment."""
-    widget_runtime["enrichment"].append({
-        "enrichment_id": "stale-column-classification",
-        "contract_id": "contract-orders",
-        "contract_version": 1,
-        "environment_name": "dev",
-        "enrichment_level": "column",
-        "column_id": "col-0",
-        "enrichment_type": "Classification",
-        "value": "Retired Classification",
-    })
+    classification = next(
+        row for row in widget_runtime["enrichment"]
+        if row["enrichment_level"] == "column"
+        and row["enrichment_type"] == "Classification"
+        and row["column_id"] == "col-0"
+    )
+    classification["value"] = "Retired Classification"
     sensitive = next(
         row for row in widget_runtime["guardrails"]
         if row["guardrail_type"] == "sensitive_data"
