@@ -2625,16 +2625,27 @@ def widget_data_contract(
                     datatype_choice.value = contract_type or observed_type
                     datatype_choice.layout.display = "none"
                 column_description.value = enrichment_value(live_enrichments, "column", "Description", column_id)
-                column_classification.value = enrichment_value(live_enrichments, "column", "Classification", column_id)
+                column_classification.value = _valid_dropdown_value(
+                    classification_options,
+                    enrichment_value(live_enrichments, "column", "Classification", column_id),
+                    fallback="",
+                )
                 required.value = column_id in required_columns or selected.get("column_name") in required_columns
                 sensitive = next((r for r in live_guardrails if str(r.get("guardrail_type") or "").lower() == "sensitive_data" and str(r.get("column_id") or "") == column_id), {})
                 sensitive_parameters = _parameters(sensitive)
-                pii_type.value = str(sensitive_parameters.get("pii_type") or (
-                    "direct" if sensitive else "none"
-                ))
+                pii_type_options = tuple(PII_LABELS)
+                pii_type.value = _valid_dropdown_value(
+                    pii_type_options,
+                    sensitive_parameters.get("pii_type") or ("direct" if sensitive else "none"),
+                    fallback="none",
+                )
                 pii_reason.value = str(sensitive_parameters.get("pii_reason") or "")
                 sensitive_enabled.value = bool(sensitive and sensitive.get("is_active", True))
-                sensitive_treatment.value = str(sensitive_parameters.get("treatment") or "tokenize")
+                sensitive_treatment.value = _valid_dropdown_value(
+                    ("tokenize", "mask", "bucket", "remove"),
+                    sensitive_parameters.get("treatment") or "tokenize",
+                    fallback="tokenize",
+                )
                 sensitive_block.value = str(sensitive.get("action") or "Warn") == "Block"
                 mask_start.value = str(sensitive_parameters.get("preserve_start", 0))
                 mask_end.value = str(sensitive_parameters.get("preserve_end", 0))
@@ -2647,12 +2658,20 @@ def widget_data_contract(
                 pending = unsaved_columns.get(column_id)
                 if pending:
                     column_description.value = pending["description"]
-                    column_classification.value = pending["classification"]
+                    column_classification.value = _valid_dropdown_value(
+                        classification_options, pending["classification"], fallback=""
+                    )
                     required.value = pending["required"]
                     sensitive_enabled.value = pending["sensitive_enabled"]
-                    pii_type.value = pending["pii_type"]
+                    pii_type.value = _valid_dropdown_value(
+                        tuple(PII_LABELS), pending["pii_type"], fallback="none"
+                    )
                     pii_reason.value = pending["pii_reason"]
-                    sensitive_treatment.value = pending["sensitive_treatment"]
+                    sensitive_treatment.value = _valid_dropdown_value(
+                        ("tokenize", "mask", "bucket", "remove"),
+                        pending["sensitive_treatment"],
+                        fallback="tokenize",
+                    )
                     sensitive_block.value = pending["sensitive_block"]
                     mask_start.value = pending["mask_start"]
                     mask_end.value = pending["mask_end"]
