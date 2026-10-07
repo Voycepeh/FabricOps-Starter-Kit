@@ -33,6 +33,9 @@ orchestrate_write(
     schema="demo",
     table_name="product_mapping_scd1",
     write_mode="scd1",
+    write_parameters={
+        "key_columns": ["product_id"],
+    },
     spark_session=spark,
 )
 
@@ -44,6 +47,11 @@ orchestrate_write(
     schema="demo",
     table_name="product_mapping_scd2",
     write_mode="scd2",
+    write_parameters={
+        "key_columns": ["product_id"],
+        "effective_column": "modified_datetime",
+        "tracked_columns": ["category"],
+    },
     spark_session=spark,
 )
 ```
