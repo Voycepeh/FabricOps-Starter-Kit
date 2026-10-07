@@ -396,15 +396,21 @@ def _warehouse_profile_key_candidates(
     *,
     spark_session: Any,
     context: dict[str, Any],
+    warehouse_columns: Sequence[tuple[str, str, str]] | None = None,
 ) -> list[dict[str, Any]]:
     """Discover the smallest null-free unique keys from all scalar Warehouse columns."""
     del statistical_profile
-    all_columns = [
-        column for column in _warehouse_columns(
+    discovered_columns = (
+        list(warehouse_columns)
+        if warehouse_columns is not None
+        else _warehouse_columns(
             identity,
             spark_session=spark_session,
             context={**(context or {}), "_fabricops_suppress_io_log": True},
         )
+    )
+    all_columns = [
+        column for column in discovered_columns
         if column[2] not in _WAREHOUSE_NON_SCALAR_TYPES
     ]
     if not all_columns:
@@ -1261,7 +1267,11 @@ def profile_table(
         warehouse_fields = [(name, canonical) for name, canonical, _sql_type in warehouse_columns]
         if identity is not None:
             profile_key_candidates = _warehouse_profile_key_candidates(
-                identity, statistical_profile, spark_session=spark_session, context=context
+                identity,
+                statistical_profile,
+                spark_session=spark_session,
+                context=context,
+                warehouse_columns=warehouse_columns,
             )
     else:
         statistical_profile = build_profile_dataframe(dataframe)
