@@ -82,6 +82,18 @@ def widget_runtime(monkeypatch):
         def add_class(self, name):
             self._dom_classes.append(name)
 
+    class Dropdown(Widget):
+        @Widget.value.setter
+        def value(self, value):
+            values = self._option_values(self._options)
+            if value not in values:
+                raise ValueError("Invalid selection: value not found")
+            old = self._value
+            self._value = value
+            if old != value:
+                for callback in list(self._observers):
+                    callback({"old": old, "new": value, "name": "value"})
+
     class Box(Widget):
         def __init__(self, children=(), **kwargs):
             super().__init__(**kwargs)
@@ -106,7 +118,7 @@ def widget_runtime(monkeypatch):
 
     ipywidgets = types.SimpleNamespace(
         Layout=lambda **kwargs: Layout(**kwargs), HTML=Widget, Text=Widget, Textarea=Widget,
-        Dropdown=Widget, Checkbox=Widget, Select=Widget, SelectMultiple=Widget,
+        Dropdown=Dropdown, Checkbox=Widget, Select=Widget, SelectMultiple=Widget,
         ToggleButtons=Widget,
         Button=Button, VBox=Box, HBox=Box, GridBox=Box, Tab=Tab,
     )
@@ -2588,3 +2600,33 @@ def test_stale_classification_value_falls_back_to_valid_dropdown_option():
         options, "Retired Classification", fallback=""
     ) == ""
     assert module._valid_dropdown_value(options, "Restricted", fallback="") == "Restricted"
+
+
+def test_stale_column_dropdown_metadata_does_not_block_widget_open(widget_runtime):
+    """Column hydration normalizes stale dropdown-backed metadata before assignment."""
+    widget_runtime["enrichment"].append({
+        "enrichment_id": "stale-column-classification",
+        "contract_id": "contract-orders",
+        "contract_version": 1,
+        "environment_name": "dev",
+        "enrichment_level": "column",
+        "column_id": "col-0",
+        "enrichment_type": "Classification",
+        "value": "Retired Classification",
+    })
+    sensitive = next(
+        row for row in widget_runtime["guardrails"]
+        if row["guardrail_type"] == "sensitive_data"
+    )
+    sensitive["rule_parameters_json"] = json.dumps({
+        "scope": "column",
+        "pii_type": "legacy_pii",
+        "treatment": "legacy_treatment",
+    })
+
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    assert controls["column_classification"].value == ""
+    assert controls["pii_type"].value == "none"
+    assert controls["sensitive_treatment"].value == "tokenize"
