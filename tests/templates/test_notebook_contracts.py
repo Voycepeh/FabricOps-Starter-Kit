@@ -255,13 +255,14 @@ def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
     assert source.count("widget_select_data_contract(spark_session=spark)") == 1
 
 
-def test_guided_demo_preserves_default_enforce_flow_and_optional_target_validation():
-    """The existing walkthrough remains runnable without changing the selector default."""
+def test_guided_demo_preserves_initial_unselected_flow_and_optional_target_validation():
+    """The walkthrough keeps the first run unselected and later validates only the target."""
     step_2 = (ROOT / "docs/guided-demo/02-build-and-run-etl.md").read_text(encoding="utf-8")
     step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
 
-    assert "defaults every discovered source and target to **Enforce**" in step_2
-    assert "no mode change is required for the initial Guided Demo run" in step_2
+    assert "there is no Data Contract yet" in step_2
+    assert "leave the selection unchanged" in step_2
+    assert "Contract-backed checks will return as skipped" in step_2
     assert "leave every source table in **Enforce** mode" in step_4
     assert "choose **Validate** only for the target" in step_4
     assert "exact same Schema, Sensitive Data, Source Drift, Data Quality" in step_4
