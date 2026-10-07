@@ -394,5 +394,4 @@ After successful publication, FabricOps persists the resolved target processing 
 - [`pipeline_write()`](../api/reference/pipeline_write.md)
 - [Guided Demo: Full Read Pipeline](../guided-demo/02-build-and-run-etl.md)
 - [Guided Demo: Incremental → Append](../guided-demo/02B-build-and-run-incremental-append-etl.md)
-- [Guided Demo: SCD Type 1](../guided-demo/02C-build-and-run-scd1-etl.md)
-- [Guided Demo: SCD Type 2](../guided-demo/02D-build-and-run-scd2-etl.md)
+- [Guided Demo: SCD Type 1 vs Type 2](../guided-demo/02C-build-and-run-scd1-etl.md)
