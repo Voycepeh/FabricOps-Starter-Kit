@@ -66,4 +66,4 @@ if orders["should_process"]:
 
 The original `02_pipeline` and its targets remain untouched.
 
-**Next optional mode:** [Step 2C. SCD Type 1](02C-build-and-run-scd1-etl.md)
+**Next optional mode:** [Step 2C. SCD Type 1 vs Type 2](02C-build-and-run-scd1-etl.md)
