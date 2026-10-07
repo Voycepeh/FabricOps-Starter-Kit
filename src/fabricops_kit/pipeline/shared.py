@@ -106,7 +106,6 @@ _DEFAULT_PROFILE_EXCLUDE_COLUMNS = {
     "_source_system",
     "_source_extract_timestamp",
     "_watermark_value",
-    "_partition_bucket",
     "_sample_bucket",
     "_row_ingest_id",
     "_business_key_hash",
@@ -840,46 +839,36 @@ def resolve_incremental_source_scope(
     if not partition_column or not change_column:
         raise ValueError("Incremental Source Observation is missing its processing columns.")
 
-    current_by = {str(row["partition_value"]): row for row in current}
-    previous_by = {str(row["partition_value"]): row for row in previous}
+    if partition_column != change_column:
+        raise ValueError(
+            "Incremental Source Observation must use one governed watermark column."
+        )
     pending = [dict(row) for row in current]
-    pending.extend(
-        {
-            **current[0],
-            "partition_value": row["partition_value"],
-            "row_count": 0,
-            "min_change_value": None,
-            "max_change_value": None,
-            "content_fingerprint": None,
-            "is_present": False,
-        }
-        for key, row in previous_by.items()
-        if row.get("is_present", True) and key not in current_by
-    )
     key = (env, activity_id, source_table_id, target_table_id)
     _PENDING_SOURCE_OBSERVATIONS[key] = pending
+
+    previous_values = [
+        str(row["max_change_value"])
+        for row in previous
+        if row.get("max_change_value") is not None
+    ]
+    current_values = [
+        str(row["max_change_value"])
+        for row in current
+        if row.get("max_change_value") is not None
+    ]
+    baseline = max(previous_values, key=_progress_key, default=None)
+    current_max = max(current_values, key=_progress_key, default=None)
 
     if not previous:
         scope = {
             "type": "full",
             "first_run": True,
             "has_data": True,
-            "partition_column": partition_column,
-            "change_column": change_column,
+            "column": change_column,
+            "through": current_max,
         }
-    elif partition_column == change_column:
-        previous_values = [
-            str(row["max_change_value"])
-            for row in previous
-            if row.get("max_change_value") is not None
-        ]
-        current_values = [
-            str(row["max_change_value"])
-            for row in current
-            if row.get("max_change_value") is not None
-        ]
-        baseline = max(previous_values, key=_progress_key, default=None)
-        current_max = max(current_values, key=_progress_key, default=None)
+    else:
         scope = {
             "type": "watermark",
             "first_run": False,
@@ -888,31 +877,6 @@ def resolve_incremental_source_scope(
             "column": change_column,
             "after": baseline,
             "through": current_max,
-        }
-    else:
-        changed_values = [
-            row["partition_value"]
-            for value, row in current_by.items()
-            if value not in previous_by
-            or not previous_by[value].get("is_present", True)
-            or any(
-                previous_by[value].get(field) != row.get(field)
-                for field in ("row_count", "min_change_value", "max_change_value", "content_fingerprint")
-            )
-        ]
-        removed_values = [
-            row["partition_value"]
-            for value, row in previous_by.items()
-            if row.get("is_present", True) and value not in current_by
-        ]
-        affected_values = [*changed_values, *removed_values]
-        scope = {
-            "type": "partitions",
-            "first_run": False,
-            "has_data": bool(affected_values),
-            "column": partition_column,
-            "values": affected_values,
-            "removed_values": removed_values,
         }
     _INCREMENTAL_SOURCE_SCOPES[key] = scope
     return scope
@@ -2222,7 +2186,7 @@ def validated_processing(processing: Any) -> dict[str, Any]:
         raise ValueError("Processing definition has an invalid load_strategy.")
     definition = {**processing, "load_strategy": strategy}
     allowed = {
-        "overwrite": {"load_strategy", "partition_column", "watermark_column", "source", "contract_id", "contract_version"},
+        "overwrite": {"load_strategy", "watermark_column", "source", "contract_id", "contract_version"},
         "append": {"load_strategy", "watermark_column", "source", "contract_id", "contract_version"},
         "scd1": {"load_strategy", "key_columns", "watermark_column", "source", "contract_id", "contract_version"},
         "scd2": {
@@ -2244,7 +2208,7 @@ def validated_processing(processing: Any) -> dict[str, Any]:
         definition[name] = [value.strip() for value in values]
     if strategy in {"scd1", "scd2"} and "key_columns" not in definition:
         raise ValueError(f"Processing definition for {strategy} requires key_columns.")
-    for name in ("partition_column", "effective_column", "watermark_column"):
+    for name in ("effective_column", "watermark_column"):
         if name in definition and (not isinstance(definition[name], str) or not definition[name].strip()):
             raise ValueError(f"Processing definition {name} must be a non-empty column name.")
         if name in definition:
@@ -2324,17 +2288,6 @@ def resolve_table_processing_definition(
     }
 
 
-def _sql_literal(value: Any) -> str:
-    """Return a Delta predicate literal for a primitive partition value."""
-    if value is None:
-        return "NULL"
-    if isinstance(value, bool):
-        return "TRUE" if value else "FALSE"
-    if isinstance(value, int | float):
-        return str(value)
-    return "'" + str(value).replace("'", "''") + "'"
-
-
 def resolve_scd2_tracked_columns(columns: list[str], processing: Mapping[str, Any]) -> list[str]:
     """Return explicit or default business columns used to detect SCD2 changes."""
     explicit = processing.get("tracked_columns")
@@ -2402,11 +2355,8 @@ def execute_lakehouse_processing(
     """Apply one already-resolved governed load definition to a Lakehouse target."""
     strategy = validated_processing(dict(processing))["load_strategy"]
     scope_type = str(scope.get("type") or "").strip()
-    if scope_type not in {"full_dataset", "partition"}:
-        raise ValueError("Write processing scope must use full_dataset or partition.")
-    values = list(scope.get("values") or [])
-    if scope_type == "partition" and not values:
-        raise ValueError("Partition-scoped target processing requires at least one partition value.")
+    if scope_type != "full_dataset":
+        raise ValueError("Write processing scope must use full_dataset.")
 
     columns = set(getattr(df, "columns", ()))
     persisted_df = df
@@ -2417,18 +2367,7 @@ def execute_lakehouse_processing(
         write_lakehouse_table(persisted_df, table_name, store=store, schema=schema, mode="append", context=context)
         return
     if strategy == "overwrite":
-        if scope_type == "full_dataset":
-            write_lakehouse_table(persisted_df, table_name, store=store, schema=schema, mode="overwrite", context=context)
-            return
-        if scope.get("column") != processing.get("partition_column"):
-            raise ValueError("Write partition scope must match the target processing partition_column.")
-        if "_partition_bucket" not in columns:
-            raise ValueError("Partition-scoped overwrite requires persisted _partition_bucket target state.")
-        predicate = f"`_partition_bucket` IN ({', '.join(_sql_literal(v) for v in values)})"
-        write_lakehouse_table(
-            persisted_df, table_name, store=store, schema=schema, mode="overwrite", context=context,
-            options={"replaceWhere": predicate},
-        )
+        write_lakehouse_table(persisted_df, table_name, store=store, schema=schema, mode="overwrite", context=context)
         return
 
     from delta.tables import DeltaTable
@@ -2573,19 +2512,16 @@ def resolve_incremental_observation_columns(
         processing = (payload.get("table") or {}).get("processing") or {}
     else:
         processing = catalogue_authored_processing(identity)
-    partition_column = str(processing.get("partition_column") or "").strip()
     watermark_column = str(
         processing.get("watermark_column")
         or processing.get("effective_column")
         or ""
     ).strip()
     if watermark_column:
-        return partition_column or watermark_column, watermark_column
-    if partition_column:
-        return partition_column, partition_column
+        return watermark_column, watermark_column
     raise ValueError(
-        "Incremental processing requires a watermark_column, effective_column, "
-        "or partition_column in the governed processing definition."
+        "Incremental processing requires a watermark_column or effective_column "
+        "in the governed processing definition."
     )
 
 def evaluate_source_drift_guardrail(

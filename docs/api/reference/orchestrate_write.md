@@ -13,7 +13,7 @@ Run the observable standard governed target lifecycle.
 
 `fabricops_kit/pipeline/orchestrate_write.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L15-L111">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L15-L117">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -40,6 +40,7 @@ def orchestrate_write(
     schema: str | None,
     table_name: str,
     write_mode: str,
+    write_parameters: dict[str, Any] | None=None,
     contracts: dict[str, Any] | None=None,
     repartition_by: int | None=None,
     spark_session=None,
@@ -54,6 +55,7 @@ def orchestrate_write(
 <div class="reference-example-usage" markdown="1">
 
 >>> result = orchestrate_write(transformed_df, name="curated_orders", sources=[orders], store="Silver", schema="demo", table_name="curated_orders", write_mode="overwrite", contracts=CONTRACTS)
+>>> result = orchestrate_write(product_mapping_df, name="product_mapping", sources=[], store="Silver", schema="demo", table_name="product_mapping", write_mode="scd1", write_parameters={"key_columns": ["product_id"]})
 
 </div>
 
@@ -68,6 +70,7 @@ def orchestrate_write(
 | `schema` | `str \| None` | Yes | Physical target schema. |
 | `table_name` | `str` | Yes | Physical target table name. |
 | `write_mode` | `str` | Yes | Notebook-facing Write mode forwarded to :func:`pipeline_write` as its governed load strategy. |
+| `write_parameters` | `dict[str, Any] \| None` | No | Parameters for the selected Write mode, forwarded to :func:`pipeline_write` as ``load_strategy_parameters``. For example, SCD1 requires ``key_columns``; SCD2 requires ``key_columns`` and ``effective_column`` and may also define ``tracked_columns``. |
 | `contracts` | `dict[str, Any] \| None` | No | ``widget_select_data_contract`` result used to choose Validate or Enforce publication behaviour. Both modes run the same Guardrails. |
 | `repartition_by` | `int \| None` | No | Spark write partition count. |
 | `spark_session` | `object` | No | Spark session used by every stage. |

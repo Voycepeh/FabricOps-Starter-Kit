@@ -127,6 +127,7 @@ def test_incremental_pipeline_read_uses_processing_without_source_drift(monkeypa
 
     assert captured[0]["incremental_columns"] == ("processed_at", "processed_at")
     assert result["dataframe"] == "empty-frame"
+    assert result["should_process"] is False
 
 
 def test_first_incremental_run_bootstraps_with_complete_scope(monkeypatch):
@@ -175,6 +176,73 @@ def test_incremental_processing_column_can_differ_from_source_drift():
         "processed_at",
         "processed_at",
     )
+
+
+def test_partition_only_incremental_processing_is_rejected():
+    with pytest.raises(ValueError, match="unsupported fields: partition_column"):
+        shared.validated_processing(
+            {"load_strategy": "append", "partition_column": "business_date"}
+        )
+
+
+def test_incremental_observation_requires_governed_watermark():
+    identity = {
+        "load_strategy": "append",
+        "load_strategy_parameters_json": '{"partition_column":"business_date"}',
+    }
+
+    with pytest.raises(ValueError, match="requires a watermark_column or effective_column"):
+        shared.resolve_incremental_observation_columns(identity, None)
+
+
+def test_lakehouse_incremental_filter_is_strictly_after_watermark(spark_session):
+    dataframe = spark_session.createDataFrame([(100,), (120,), (130,)], ["watermark"])
+
+    result = read_module._filter_lakehouse_incremental(
+        dataframe,
+        {
+            "type": "watermark",
+            "first_run": False,
+            "has_data": True,
+            "column": "watermark",
+            "after": "120",
+        },
+    )
+
+    assert [row["watermark"] for row in result.collect()] == [130]
+
+
+def test_warehouse_incremental_query_pushes_strict_watermark_predicate():
+    query = read_module._warehouse_incremental_query(
+        {"schema": "demo", "table_name": "orders"},
+        {
+            "type": "watermark",
+            "first_run": False,
+            "has_data": True,
+            "column": "modified_at",
+            "after": "2026-09-02 10:00:00",
+        },
+    )
+
+    assert query == (
+        "SELECT * FROM [demo].[orders] "
+        "WHERE [modified_at] > '2026-09-02 10:00:00'"
+    )
+
+
+def test_warehouse_incremental_query_short_circuits_no_new_data():
+    query = read_module._warehouse_incremental_query(
+        {"schema": "demo", "table_name": "orders"},
+        {
+            "type": "watermark",
+            "first_run": False,
+            "has_data": False,
+            "column": "modified_at",
+            "after": "2026-09-02 10:00:00",
+        },
+    )
+
+    assert query == "SELECT * FROM [demo].[orders] WHERE 1 = 0"
 
 
 def test_same_source_resolves_isolated_target_watermarks(monkeypatch):
@@ -289,81 +357,3 @@ def test_multiple_incremental_sources_are_staged_independently(monkeypatch):
             source_table_ids=["source-orders", "source-payments", "source-products"],
         ).keys()
     ) == {"source-orders", "source-payments"}
-
-
-def test_partition_scope_selects_only_changed_partitions(monkeypatch):
-    history = [
-        {**_row(target="target-a", maximum="10"), "partition_value": "2026-01-01", "content_fingerprint": "old"},
-        {**_row(target="target-a", maximum="20"), "partition_value": "2026-01-02", "content_fingerprint": "same"},
-    ]
-    _configure_scope(monkeypatch, history)
-    current = Frame([
-        {
-            **history[0],
-            "target_table_id": "",
-            "observation_status": "observed",
-            "content_fingerprint": "new",
-            "partition_column": "business_date",
-            "change_column": "changed_at",
-        },
-        {
-            **history[1],
-            "target_table_id": "",
-            "observation_status": "observed",
-            "partition_column": "business_date",
-            "change_column": "changed_at",
-        },
-    ])
-    result = shared.resolve_incremental_source_scope(
-        source_table_id="source-orders", target_table_id="target-a", observation=current
-    )
-    assert result["type"] == "partitions"
-    assert result["values"] == ["2026-01-01"]
-
-
-def test_partition_scope_includes_removed_partition_as_work(monkeypatch):
-    """A removal-only observation remains actionable incremental work."""
-    history = [
-        {
-            **_row(target="target-a", maximum="18"),
-            "partition_value": "2026-09-18",
-            "content_fingerprint": "removed",
-        },
-        {
-            **_row(target="target-a", maximum="19"),
-            "partition_value": "2026-09-19",
-            "content_fingerprint": "unchanged",
-        },
-    ]
-    _configure_scope(monkeypatch, history)
-    current = Frame([
-        {
-            **history[1],
-            "target_table_id": "",
-            "observation_status": "observed",
-            "partition_column": "business_date",
-            "change_column": "changed_at",
-        }
-    ])
-
-    result = shared.resolve_incremental_source_scope(
-        source_table_id="source-orders",
-        target_table_id="target-a",
-        observation=current,
-    )
-
-    assert result == {
-        "type": "partitions",
-        "first_run": False,
-        "has_data": True,
-        "column": "business_date",
-        "values": ["2026-09-18"],
-        "removed_values": ["2026-09-18"],
-    }
-    pending = shared._PENDING_SOURCE_OBSERVATIONS[
-        ("dev", "run-1", "source-orders", "target-a")
-    ]
-    assert any(
-        row["partition_value"] == "2026-09-18" and row["is_present"] is False
-        for row in pending
-    )

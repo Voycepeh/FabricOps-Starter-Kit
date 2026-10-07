@@ -2592,13 +2592,12 @@ def test_stale_persisted_dropdown_values_do_not_block_widget_open(widget_runtime
     """Stale metadata must not trigger ipywidgets 'Invalid selection: value not found'."""
     widget_runtime["catalogue"][0]["load_strategy"] = "append"
     widget_runtime["catalogue"][0]["load_strategy_parameters_json"] = json.dumps({
-        "partition_column": "removed_partition",
         "watermark_column": "removed_watermark",
     })
     state = widget_runtime["open"]()
 
     controls = state["_controls"]
-    assert controls["partition_column"].value == ""
+    assert "partition_column" not in controls
     assert controls["watermark_column"].value == ""
 
 

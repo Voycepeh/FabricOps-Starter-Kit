@@ -69,7 +69,7 @@ def _persist_target_processing(
         raise RuntimeError("Delta Lake merge support is required to persist target processing metadata.") from exc
 
     parameter_names = {
-        "partition_column",
+        "watermark_column",
         "key_columns",
         "effective_column",
         "tracked_columns",
@@ -163,23 +163,6 @@ def _persist_target_processing(
         .whenNotMatchedInsertAll()
         .execute()
     )
-
-
-def _delta_literal(value: Any) -> str:
-    """Return a safely encoded primitive Delta predicate literal."""
-    if value is None:
-        return "NULL"
-    if isinstance(value, bool):
-        return "TRUE" if value else "FALSE"
-    if isinstance(value, int | float):
-        return str(value)
-    return "'" + str(value).replace("'", "''") + "'"
-
-
-def _replace_where(partition_column: str, values: list[Any]) -> str:
-    """Return a safely quoted Delta partition-replacement predicate."""
-    quoted = str(partition_column).replace("`", "``")
-    return f"`{quoted}` IN ({', '.join(_delta_literal(value) for value in values)})"
 
 
 def _write_scope() -> dict[str, Any]:
@@ -443,8 +426,8 @@ def pipeline_write(
     Same-activity retries use the target's persisted ``_activity_id`` audit
     field to detect a row-producing publication and skip its physical mutation.
     Catalogue processing, Lineage, and accepted Source Observation metadata are
-    idempotent and replayed on every retry. Empty append, empty overwrite,
-    partition-removal-only overwrite, and true SCD no-op operations may leave
+    idempotent and replayed on every retry. Empty append, empty overwrite, and
+    true SCD no-op operations may leave
     no activity marker; repeating those operations is safe. Changing the
     participating source set represents a different logical publication and
     therefore requires a new activity rather than reuse of the current one.
@@ -465,13 +448,6 @@ def pipeline_write(
     or empty physical target. A populated target fails before publication so
     missing metadata cannot silently duplicate all source rows. SCD1 and SCD2
     bootstraps continue through their existing keyed, idempotent merge paths.
-
-    A removed source partition is actionable incremental work even though its
-    input DataFrame contains no rows for that partition. FabricOps permits the
-    removal only when governed partition-scoped overwrite can include the
-    removed value in ``replaceWhere`` and clear stale target rows. Other target
-    strategies, or mismatched source and target partition columns, fail before
-    publication and therefore do not commit the removal baseline.
 
     With ``verbose=True``, a simple Lakehouse overwrite reports a line such as
     ``FabricOps Write → Lakehouse table 'unified.demo.curated_orders' → overwrite → write_lakehouse_table``.
@@ -565,53 +541,10 @@ def pipeline_write(
     target_parts.append(f"Table: {identity['table_name']}")
     io_context = {**context, "_fabricops_suppress_io_log": True}
     physical_options = dict(options or {})
-    partition_column = str(processing.get("partition_column") or "")
-    removed_partition_values = list(
-        dict.fromkeys(
-            value
-            for incremental_scope in incremental_scopes.values()
-            for value in incremental_scope.get("removed_values") or ()
-        )
-    )
-    if removed_partition_values and not (strategy == "overwrite" and partition_column):
-        raise ValueError(
-            "Removed incremental source partitions require governed partition-scoped overwrite; "
-            "the configured target strategy cannot safely remove stale target rows."
-        )
-    for source_table_id, incremental_scope in incremental_scopes.items():
-        if (
-            incremental_scope.get("removed_values")
-            and incremental_scope.get("column") != partition_column
-        ):
-            raise ValueError(
-                f"Removed partitions from source {source_table_id!r} use column "
-                f"{incremental_scope.get('column')!r}, which does not match target partition_column "
-                f"{partition_column!r}."
-            )
-    if strategy == "overwrite" and partition_column:
-        if store_kind != "lakehouse":
-            raise ValueError("Partition-scoped overwrite is supported only for Lakehouse targets.")
-        if partition_column not in df.columns:
-            raise ValueError(f"Target partition column {partition_column!r} is missing from the prepared DataFrame.")
-        from pyspark.sql import functions as F
-
-        dataframe_values = [
-            row[partition_column]
-            for row in df.select(partition_column).distinct().collect()
-        ]
-        values = list(dict.fromkeys([*dataframe_values, *removed_partition_values]))
-        if not values or any(value is None for value in values):
-            raise ValueError("Target partition-scoped overwrite requires non-null partition values.")
-        if "_partition_bucket" in df.columns:
-            raise ValueError("_partition_bucket is a reserved FabricOps technical column and must not be supplied.")
-        df = df.withColumn("_partition_bucket", F.col(partition_column))
-        scope = {"type": "partition", "column": partition_column, "values": values}
-        physical_options["replaceWhere"] = _replace_where("_partition_bucket", values)
-
-    if incremental_scopes and strategy == "overwrite" and not partition_column:
+    if incremental_scopes and strategy == "overwrite":
         raise ValueError(
             "Incremental source data cannot be published with whole-table overwrite. "
-            "Use append, SCD1, SCD2, or governed partition-scoped overwrite."
+            "Use append, SCD1, or SCD2."
         )
     bootstrap_sources = [
         source_table_id

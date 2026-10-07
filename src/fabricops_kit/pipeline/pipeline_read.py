@@ -20,19 +20,13 @@ def _warehouse_incremental_query(identity: dict[str, Any], scope: dict[str, Any]
     """Build framework-owned SQL pushdown for one resolved incremental scope."""
     schema = str(identity["schema"]).replace("]", "]]")
     table = str(identity["table_name"]).replace("]", "]]")
-    scope_type = scope["type"]
-    if scope_type == "full":
+    if scope["type"] == "full":
         return f"SELECT * FROM [{schema}].[{table}]"
     column = str(scope["column"]).replace("]", "]]")
-    if scope_type == "watermark":
-        value = str(scope["after"]).replace("'", "''")
-        return f"SELECT * FROM [{schema}].[{table}] WHERE [{column}] > '{value}'"
-    values = ", ".join(
-        "'" + str(value).replace("'", "''") + "'" for value in scope["values"]
-    )
-    if not values:
+    if not scope["has_data"]:
         return f"SELECT * FROM [{schema}].[{table}] WHERE 1 = 0"
-    return f"SELECT * FROM [{schema}].[{table}] WHERE [{column}] IN ({values})"
+    value = str(scope["after"]).replace("'", "''")
+    return f"SELECT * FROM [{schema}].[{table}] WHERE [{column}] > '{value}'"
 
 
 def _filter_lakehouse_incremental(dataframe: Any, scope: dict[str, Any]) -> Any:
@@ -43,9 +37,7 @@ def _filter_lakehouse_incremental(dataframe: Any, scope: dict[str, Any]) -> Any:
         return dataframe.limit(0)
     from pyspark.sql import functions as F
 
-    if scope["type"] == "watermark":
-        return dataframe.where(F.col(scope["column"]) > F.lit(scope["after"]))
-    return dataframe.where(F.col(scope["column"]).isin(scope["values"]))
+    return dataframe.where(F.col(scope["column"]) > F.lit(scope["after"]))
 
 
 def pipeline_read(
@@ -124,9 +116,8 @@ def pipeline_read(
         - ``read_mode``: the explicit source read mode.
         - ``has_data`` and ``should_process``: whether this read contributes
           unconsumed work. Full reads return ``True`` without triggering a count.
-        - ``scope``: a compact summary of the resolved full, bootstrap,
-          watermark, or partition scope. Partition scope includes removed
-          values that require target reconciliation; no metadata rows are exposed.
+        - ``scope``: a compact summary of the resolved full, bootstrap, or
+          watermark scope; no metadata rows are exposed.
 
     Raises
     ------
@@ -144,9 +135,9 @@ def pipeline_read(
     2. Resolve the configured physical source identity.
     3. Infer whether that configured source is a Lakehouse or Warehouse.
     4. For incremental reads, observe the complete physical source, resolve the
-       last committed state for the exact target, and derive watermark or
-       changed-partition scope. A missing baseline deterministically bootstraps
-       with a complete read.
+       last committed watermark for the exact target, and read rows strictly
+       after it. A missing baseline deterministically bootstraps with a complete
+       read.
     5. Select and call ``read_lakehouse_table``, ``read_warehouse_table``, or
        framework-owned ``read_warehouse_query`` pushdown.
     6. Capture transient current-run Source Observation state without advancing
@@ -371,8 +362,6 @@ def pipeline_read(
                 "column",
                 "after",
                 "through",
-                "values",
-                "removed_values",
             }
         },
     }

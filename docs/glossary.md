@@ -329,7 +329,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="watermark">
 <summary><strong>Watermark</strong> — A saved progress value used to identify data after the last successful incremental boundary.</summary>
-<p>A watermark marks incremental progress. Its ordering, uniqueness, and tie-handling depend on the project-owned incremental design.</p>
+<p>A watermark marks target-specific incremental progress. After successful target publication, later FabricOps incremental reads return rows strictly after the committed value.</p>
 </details>
 
 <details id="parallel-processing">

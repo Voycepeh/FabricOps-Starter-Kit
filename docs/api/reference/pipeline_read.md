@@ -24,9 +24,9 @@ choose between Lakehouse and Warehouse table readers.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_read.py:51`
+`fabricops_kit/pipeline/pipeline_read.py:43`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L51-L378">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L43-L367">View on GitHub</a>
 </div>
 
 
@@ -139,9 +139,9 @@ The governed orchestration performs these mechanical steps:
 2. Resolve the configured physical source identity.
 3. Infer whether that configured source is a Lakehouse or Warehouse.
 4. For incremental reads, observe the complete physical source, resolve the
-   last committed state for the exact target, and derive watermark or
-   changed-partition scope. A missing baseline deterministically bootstraps
-   with a complete read.
+   last committed watermark for the exact target, and read rows strictly
+   after it. A missing baseline deterministically bootstraps with a complete
+   read.
 5. Select and call ``read_lakehouse_table``, ``read_warehouse_table``, or
    framework-owned ``read_warehouse_query`` pushdown.
 6. Capture transient current-run Source Observation state without advancing
@@ -164,8 +164,8 @@ incremental scope answers only what this target has not consumed.
 This function does not execute Freshness, Source Drift, Schema, DQ, or
 Sensitive Data checks. It also does not profile
 data, transform rows, or write a pipeline target. Those meaningful
-engineering decisions remain explicit in ``02_pipeline`` and
-``02B_incremental_append_pipeline``.
+engineering decisions remain explicit in ``02_pipeline`` and the
+optional processing-mode Guided Demo scenarios.
 
 With ``verbose=True``, a Warehouse table read reports a line such as
 ``FabricOps Read → Warehouse table 'product.demo.orders' → read_warehouse_table``.
