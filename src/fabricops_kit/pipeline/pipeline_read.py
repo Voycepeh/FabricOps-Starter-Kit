@@ -353,6 +353,7 @@ def pipeline_read(
 
     return {
         "dataframe": dataframe,
+        "_reader_name": reader_name,
         "table_id": str(identity["table_id"]),
         "is_query": query is not None,
         "has_contract": has_contract,
