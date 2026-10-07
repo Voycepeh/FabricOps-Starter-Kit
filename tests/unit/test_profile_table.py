@@ -237,21 +237,26 @@ def test_profile_key_candidates_find_smallest_composite_key(spark_session):
     }]
 
 
-def test_profile_key_candidates_ignore_fabricops_operational_metadata(spark_session):
-    """Do not let unique FabricOps audit fields become business-grain candidates."""
+def test_profile_key_candidates_allow_snapshot_metadata_in_composite_key(spark_session):
+    """Allow technical snapshot columns when the data proves they form the row grain."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_table")
     shared = importlib.import_module("fabricops_kit.pipeline.shared")
     source = spark_session.createDataFrame(
-        [(1, "A", "activity-1"), (1, "B", "activity-2"), (2, "A", "activity-3"), (2, "B", "activity-4")],
-        ["order_id", "product_id", "_activity_id"],
+        [
+            (1, "2026-10-01", "batch"),
+            (1, "2026-10-02", "batch"),
+            (2, "2026-10-01", "batch"),
+            (2, "2026-10-02", "batch"),
+        ],
+        ["product_id", "_committed_at", "_activity_id"],
     )
 
     candidates = module._spark_profile_key_candidates(
         source, shared.build_profile_dataframe(source)
     )
 
-    assert candidates[0]["columns"] == ["order_id", "product_id"]
-    assert all("_activity_id" not in candidate["columns"] for candidate in candidates)
+    assert candidates[0]["columns"] == ["_committed_at", "product_id"]
+    assert candidates[0]["uniqueness_percent"] == 100.0
 
 
 
@@ -281,26 +286,32 @@ def test_profile_key_candidates_do_not_use_an_arbitrary_top_eight_shortlist(spar
     assert set(candidates[0]["columns"]) == {"order_id", "line_number"}
 
 
-def test_profile_key_candidates_exclude_measure_columns_from_composite_search(spark_session):
-    """Do not use obvious measures as composite-key building blocks."""
+def test_profile_key_candidates_use_data_not_column_name_heuristics(spark_session):
+    """Test arbitrary null-free columns instead of requiring identifier-like names."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_table")
     shared = importlib.import_module("fabricops_kit.pipeline.shared")
     source = spark_session.createDataFrame(
         [
-            (1, 10.0, 1),
-            (1, 20.0, 2),
-            (2, 10.0, 1),
-            (2, 20.0, 2),
+            ("A", "X"),
+            ("A", "Y"),
+            ("B", "X"),
+            ("B", "Y"),
         ],
-        ["order_id", "amount", "line_number"],
+        ["product_category", "product_name"],
     )
 
     candidates = module._spark_profile_key_candidates(
         source, shared.build_profile_dataframe(source)
     )
 
-    assert set(candidates[0]["columns"]) == {"order_id", "line_number"}
-    assert all("amount" not in candidate["columns"] for candidate in candidates)
+    assert candidates == [{
+        "columns": ["product_category", "product_name"],
+        "column_count": 2,
+        "row_count": 4,
+        "distinct_count": 4,
+        "uniqueness_percent": 100.0,
+        "null_count": 0,
+    }]
 
 
 def test_key_candidate_evidence_distinguishes_resolved_and_unresolved():
