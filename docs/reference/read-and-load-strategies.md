@@ -277,25 +277,25 @@ The standard choices are:
 
     | customer_id | tier | country |
     | --- | --- | --- |
-    | C001 | Silver | SG |
-    | C002 | Gold | MY |
+    | C001 | Basic | SG |
+    | C002 | Premium | MY |
 
     Prepared DataFrame:
 
     | customer_id | tier | country |
     | --- | --- | --- |
-    | C001 | Gold | SG |
-    | C003 | Silver | AU |
+    | C001 | Premium | SG |
+    | C003 | Basic | AU |
 
     After SCD1:
 
     | customer_id | tier | country | What happened |
     | --- | --- | --- | --- |
-    | C001 | Gold | SG | Existing C001 updated. |
-    | C002 | Gold | MY | Existing key not present in the batch remains. |
-    | C003 | Silver | AU | New key inserted. |
+    | C001 | Premium | SG | Existing C001 updated. |
+    | C002 | Premium | MY | Existing key not present in the batch remains. |
+    | C003 | Basic | AU | New key inserted. |
 
-    There is no historical Silver version of C001 after the merge.
+    There is no historical Basic version of C001 after the merge.
 
 ---
 
@@ -337,24 +337,24 @@ The standard choices are:
 
     | customer_id | tier | _effective_from | _effective_to | _is_current |
     | --- | --- | --- | --- | --- |
-    | C001 | Silver | 2026-01-01 | null | true |
-    | C002 | Gold | 2026-01-01 | null | true |
+    | C001 | Basic | 2026-01-01 | null | true |
+    | C002 | Premium | 2026-01-01 | null | true |
 
     Prepared DataFrame:
 
     | customer_id | tier | modified_datetime |
     | --- | --- | --- |
-    | C001 | Gold | 2026-09-15 |
-    | C003 | Silver | 2026-09-15 |
+    | C001 | Premium | 2026-09-15 |
+    | C003 | Basic | 2026-09-15 |
 
     After SCD2:
 
     | customer_id | tier | _effective_from | _effective_to | _is_current | What happened |
     | --- | --- | --- | --- | --- | --- |
-    | C001 | Silver | 2026-01-01 | 2026-09-15 | false | Previous C001 version closed. |
-    | C001 | Gold | 2026-09-15 | null | true | New current C001 version inserted. |
-    | C002 | Gold | 2026-01-01 | null | true | Unchanged existing key remains current. |
-    | C003 | Silver | 2026-09-15 | null | true | New key inserted. |
+    | C001 | Basic | 2026-01-01 | 2026-09-15 | false | Previous C001 version closed. |
+    | C001 | Premium | 2026-09-15 | null | true | New current C001 version inserted. |
+    | C002 | Premium | 2026-01-01 | null | true | Unchanged existing key remains current. |
+    | C003 | Basic | 2026-09-15 | null | true | New key inserted. |
 
 ---
 
@@ -393,4 +393,6 @@ After successful publication, FabricOps persists the resolved target processing 
 - [`pipeline_read()`](../api/reference/pipeline_read.md)
 - [`pipeline_write()`](../api/reference/pipeline_write.md)
 - [Guided Demo: Full Read Pipeline](../guided-demo/02-build-and-run-etl.md)
-- [Guided Demo: Incremental Append Pipeline](../guided-demo/02B-build-and-run-incremental-append-etl.md)
+- [Guided Demo: Incremental → Append](../guided-demo/02B-build-and-run-incremental-append-etl.md)
+- [Guided Demo: SCD Type 1](../guided-demo/02C-build-and-run-scd1-etl.md)
+- [Guided Demo: SCD Type 2](../guided-demo/02D-build-and-run-scd2-etl.md)
