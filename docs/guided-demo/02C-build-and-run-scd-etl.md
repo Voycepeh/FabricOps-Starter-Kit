@@ -14,7 +14,7 @@ The same Day 2 snapshot is written using SCD1 and SCD2 so you can see the differ
 
 ```python
 from datetime import datetime
-from fabricops_kit import pipeline_write
+from fabricops_kit import orchestrate_write
 
 day_1 = spark.createDataFrame([
     ("C001", "Basic", "SG", datetime(2026, 10, 6, 9, 0)),
@@ -25,29 +25,25 @@ day_1 = spark.createDataFrame([
 Write the same starting snapshot to two separate targets:
 
 ```python
-pipeline_write(
+orchestrate_write(
     day_1,
+    name="customers_scd1",
+    sources=[],
     store="Silver",
     schema="demo",
     table_name="customers_scd1",
-    load_strategy="scd1",
-    load_strategy_parameters={
-        "key_columns": ["customer_id"],
-    },
+    write_mode="scd1",
     spark_session=spark,
 )
 
-pipeline_write(
+orchestrate_write(
     day_1,
+    name="customers_scd2",
+    sources=[],
     store="Silver",
     schema="demo",
     table_name="customers_scd2",
-    load_strategy="scd2",
-    load_strategy_parameters={
-        "key_columns": ["customer_id"],
-        "effective_column": "modified_datetime",
-        "tracked_columns": ["membership", "country"],
-    },
+    write_mode="scd2",
     spark_session=spark,
 )
 ```
@@ -62,7 +58,7 @@ day_2 = spark.createDataFrame([
 ], ["customer_id", "membership", "country", "modified_datetime"])
 ```
 
-Run the same two writes again, this time using `day_2`.
+Run the same two `orchestrate_write()` calls again, this time using `day_2`.
 
 ## What changes?
 
