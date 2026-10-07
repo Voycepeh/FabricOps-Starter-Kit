@@ -70,6 +70,15 @@ Run the same two `orchestrate_write()` calls again, this time using `day_2`.
 
 ## What changes?
 
+The comparison is simple:
+
+1. Match the incoming row to the existing row by `product_id`.
+2. Compare the tracked business columns, here `category` and `product_owner`.
+3. If none of those values changed, keep the existing current record.
+4. If any tracked value changed, apply the selected SCD behavior.
+
+So this is **not limited to one column**. FabricOps can track multiple attributes for the same business key.
+
 ### SCD1
 
 SCD1 keeps the mapping table as the latest truth.
