@@ -381,6 +381,16 @@ def test_02_pipeline_optional_display_stays_outside_orchestration():
     assert 'display(source[' not in inspection
     assert source.count('# display(sources[inspect_source]["dataframe"])') == 1
 
+
+def test_02_pipeline_write_inspection_uses_named_write_collection():
+    """Optional write inspection uses the named write collection instead of transient write state."""
+    source = _notebook_source("02_pipeline.ipynb")
+    inspection = _cell_by_id("02_pipeline.ipynb", "write-inspection").source
+    assert 'inspect_write = "curated_orders_lakehouse"' in inspection
+    assert '# display(writes[inspect_write]["schema_result"])' in inspection
+    assert 'display(write_result[' not in inspection
+    assert source.count('# display(writes[inspect_write]["schema_result"])') == 1
+
 def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
     """Every required workflow cell contains active parseable code."""
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
