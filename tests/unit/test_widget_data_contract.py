@@ -2566,6 +2566,12 @@ def test_manifest_description_is_truncated_and_expandable(widget_runtime):
     assert "Click to expand" in manifest
 
 
+def test_sensitive_data_output_classification_is_labeled(widget_runtime):
+    """Sensitive Data keeps the output classification control visibly labelled."""
+    state = widget_runtime["open"]()
+    assert state["_controls"]["column_classification"].description == "Output classification"
+
+
 def test_review_shows_changes_since_last_save(widget_runtime):
     """Review compares the working contract with the persisted draft baseline."""
     state = widget_runtime["open"]()
