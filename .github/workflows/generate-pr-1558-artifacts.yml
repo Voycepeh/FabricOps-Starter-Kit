@@ -1,0 +1,62 @@
+name: Generate PR 1558 artifacts
+
+on:
+  push:
+    branches:
+      - fix/coverage-result-readable-table-names
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v5
+        with:
+          ref: fix/coverage-result-readable-table-names
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+
+      - name: Generate affected artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > /tmp/first.diff
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > /tmp/second.diff
+          diff -u /tmp/first.diff /tmp/second.diff
+
+      - name: Commit generated artifacts and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/generate-pr-1558-artifacts.yml
+          git add \
+            .github/workflows/generate-pr-1558-artifacts.yml \
+            docs/reference/_data/public-function-call-flows.json \
+            docs/reference/_data/generated-artifacts.json \
+            docs/api/reference/check_guardrail_coverage.md \
+            docs/api/reference/orchestrate_read.md \
+            docs/api/reference/pipeline_read.md \
+            docs/api/reference/profile_table.md \
+            docs/api/reference/widget_data_contract.md
+          git commit -m "Regenerate affected reference artifacts"
+          git push origin HEAD:fix/coverage-result-readable-table-names
