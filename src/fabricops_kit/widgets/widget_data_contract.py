@@ -1478,15 +1478,24 @@ def widget_data_contract(
                 configured_freshness_column = str(
                     existing_parameters.get("freshness_column") or ""
                 )
+                freshness_column_options = [
+                    ("Select timestamp column", ""),
+                    *((name, name) for name in temporal_column_names),
+                ]
                 freshness_column = widgets.Dropdown(
-                    options=[("Select timestamp column", ""), *temporal_column_names],
-                    value=(
+                    options=freshness_column_options,
+                    disabled=not editable or not temporal_column_names,
+                    **shared.widget_common(widgets, "Timestamp column"),
+                )
+                _set_selection_value(
+                    freshness_column,
+                    (
                         configured_freshness_column
                         if configured_freshness_column in temporal_column_names
                         else ""
                     ),
-                    disabled=not editable or not temporal_column_names,
-                    **shared.widget_common(widgets, "Timestamp column"),
+                    control_name="freshness_column",
+                    table_name=str(table.get("table_name") or ""),
                 )
                 freshness_column.description = ""
                 freshness_column.layout = field_layout
