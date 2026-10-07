@@ -261,6 +261,7 @@ class _FakeWidgets:
 
     Text = _FakeWidget
     Select = _FakeWidget
+    Combobox = _FakeWidget
     HTML = _FakeWidget
     Button = _FakeWidget
     Output = _FakeWidget
@@ -356,8 +357,9 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     ):
         assert panel.layout.kwargs["width"] == "49%"
         search_selector_summary = panel.children[1]
-        assert len(search_selector_summary.children) == 3
-        assert search_selector_summary.children[1] is selector
+        assert len(search_selector_summary.children) == 2
+        assert search_selector_summary.children[0].placeholder == "Search active stewards..."
+        assert selector not in search_selector_summary.children
     assert len(agreement_controls["supporting_documents"]) == 1
     document_container = agreement_controls["supporting_documents"][0]["container"]
     assert [child.value for child in document_container.children if isinstance(child.value, str) and "Document" in child.value] == [
