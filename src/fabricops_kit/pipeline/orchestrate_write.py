@@ -12,7 +12,7 @@ from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 from fabricops_kit.pipeline.shared import _run_orchestration_stage
 
 
-def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, spark_session=None, verbose: bool = True) -> dict[str, Any]:
+def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, spark_session=None, verbose: bool = True) -> dict[str, Any]:
     """Execute the standard FabricOps governed Write lifecycle.
 
     Parameters
@@ -31,6 +31,11 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
         Physical target table name.
     write_mode : str
         Notebook-facing Write mode forwarded to :func:`pipeline_write` as its governed load strategy.
+    write_parameters : dict, optional
+        Parameters for the selected Write mode, forwarded to :func:`pipeline_write`
+        as ``load_strategy_parameters``. For example, SCD1 requires
+        ``key_columns``; SCD2 requires ``key_columns`` and ``effective_column``
+        and may also define ``tracked_columns``.
     contracts : dict, optional
         ``widget_select_data_contract`` result used to choose Validate or
         Enforce publication behaviour. Both modes run the same Guardrails.
@@ -64,6 +69,7 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
     Examples
     --------
     >>> result = orchestrate_write(transformed_df, name="curated_orders", sources=[orders], store="Silver", schema="demo", table_name="curated_orders", write_mode="overwrite", contracts=CONTRACTS)
+    >>> result = orchestrate_write(product_mapping_df, name="product_mapping", sources=[], store="Silver", schema="demo", table_name="product_mapping", write_mode="scd1", write_parameters={"key_columns": ["product_id"]})
 
     See Also
     --------
@@ -106,6 +112,6 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
             "published": False,
             "validation_passed": True,
         }
-    write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=write_mode, source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False))
+    write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=write_mode, load_strategy_parameters=write_parameters, source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False))
     profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], spark_session=spark_session))
     return {**common_results, **write_result, "published": True, "profile_result": profile}
