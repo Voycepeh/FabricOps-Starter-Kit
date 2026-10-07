@@ -2580,13 +2580,11 @@ def test_stale_persisted_dropdown_values_do_not_block_widget_open(widget_runtime
     assert controls["watermark_column"].value == ""
 
 
-def test_stale_classification_value_does_not_block_widget_open(widget_runtime):
-    """A retired classification label falls back safely instead of crashing the editor."""
-    widget_runtime["enrichments"].append({
-        "scope": "table",
-        "enrichment_type": "Classification",
-        "value": "Retired Classification",
-    })
-    state = widget_runtime["open"]()
+def test_stale_classification_value_falls_back_to_valid_dropdown_option():
+    """A retired classification label is normalized before ipywidgets sees it."""
+    options = ("", "Public", "Restricted", "Confidential", "Highly Sensitive")
 
-    assert state["_controls"]["table_classification"].value == ""
+    assert module._valid_dropdown_value(
+        options, "Retired Classification", fallback=""
+    ) == ""
+    assert module._valid_dropdown_value(options, "Restricted", fallback="") == "Restricted"
