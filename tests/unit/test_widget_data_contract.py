@@ -2658,3 +2658,20 @@ def test_selection_diagnostic_names_control_table_column_and_valid_options():
             table_name="curated_orders",
             column_name="customer_id",
         )
+
+
+def test_widget_exception_diagnostic_includes_phase_type_and_source_location():
+    """Render failures expose the widget source location instead of only the trait error."""
+
+    def fail():
+        raise ValueError("Invalid selection: value not found")
+
+    try:
+        fail()
+    except ValueError as exc:
+        message = module._format_widget_exception(exc, phase="editor render")
+
+    assert "Data Contract widget failed during editor render" in message
+    assert "ValueError: Invalid selection: value not found" in message
+    assert "Location:" in message
+    assert "fail() line" in message
