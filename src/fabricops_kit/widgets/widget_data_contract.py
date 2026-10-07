@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+import traceback
 import json
 import uuid
 from datetime import datetime, timedelta
@@ -69,6 +70,22 @@ _DQ_HELP = {
     "column_relationship": "Compare two columns row by row with a controlled operator.",
     "custom_expression": "Evaluate a constrained project-authored PySpark boolean Column expression.",
 }
+
+
+def _format_widget_exception(exc: Exception, *, phase: str) -> str:
+    """Return a compact source-aware diagnostic for widget construction failures."""
+    frames = traceback.extract_tb(exc.__traceback__)
+    own_frames = [frame for frame in frames if frame.filename.endswith("widget_data_contract.py")]
+    frame = own_frames[-1] if own_frames else (frames[-1] if frames else None)
+    location = (
+        f"{frame.name}() line {frame.lineno}: {frame.line or '<source unavailable>'}"
+        if frame is not None
+        else "<traceback unavailable>"
+    )
+    return (
+        f"Data Contract widget failed during {phase}: {type(exc).__name__}: {exc}. "
+        f"Location: {location}"
+    )
 
 
 def _expose_manifest(payload: dict[str, Any]) -> str:
@@ -5077,7 +5094,7 @@ def widget_data_contract(
             )
         except Exception as exc:
             open_progress.value = ""
-            set_status(str(exc), error=True)
+            set_status(_format_widget_exception(exc, phase="editor render"), error=True)
         finally:
             state["_opening_with_ai"] = False
             open_with_ai_button.disabled = not bool(ai_enrichment.get("enabled"))
