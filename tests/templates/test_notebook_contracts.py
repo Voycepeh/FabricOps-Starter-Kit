@@ -373,9 +373,13 @@ def test_02_pipeline_keeps_standard_orchestration_at_public_boundaries():
     assert "write_result = pipeline_write(" not in source
 
 def test_02_pipeline_optional_display_stays_outside_orchestration():
-    """Optional inspection remains explicit notebook code."""
+    """Optional inspection uses the named source collection instead of transient read state."""
     source = _notebook_source("02_pipeline.ipynb")
-    assert source.count('# display(source["dataframe"])') == 3
+    inspection = _cell_by_id("02_pipeline.ipynb", "read-inspection").source
+    assert 'inspect_source = "orders"' in inspection
+    assert '# display(sources[inspect_source]["dataframe"])' in inspection
+    assert 'display(source[' not in inspection
+    assert source.count('# display(sources[inspect_source]["dataframe"])') == 1
 
 def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
     """Every required workflow cell contains active parseable code."""
