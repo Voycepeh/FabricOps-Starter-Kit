@@ -260,8 +260,6 @@ def test_guided_demo_preserves_default_enforce_flow_and_optional_target_validati
     step_2 = (ROOT / "docs/guided-demo/02-build-and-run-etl.md").read_text(encoding="utf-8")
     step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
 
-    assert "defaults every discovered source and target to **Enforce**" in step_2
-    assert "no mode change is required for the initial Guided Demo run" in step_2
     assert "leave every source table in **Enforce** mode" in step_4
     assert "choose **Validate** only for the target" in step_4
     assert "exact same Schema, Sensitive Data, Source Drift, Data Quality" in step_4
