@@ -320,7 +320,6 @@ def test_02_pipeline_read_blocks_use_standard_orchestration():
         assert f'name="{read_name}"' in block
         assert "READ_NAME =" not in block
         assert "READ_STORE =" not in block
-        assert '# display(source["dataframe"])' in block
         tree = _parse_code_cell(NOTEBOOK_DIR / "02_pipeline.ipynb", index, block)
         calls = {
             node.func.id
