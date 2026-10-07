@@ -30,7 +30,7 @@
 | Step | Notebook | What you do |
 | --- | --- | --- |
 | [1. Establish Governance context](guided-demo/01-establish-governance-context.md) | `01_governance` | Create Data Stewards and a Data Agreement. |
-| [2. Build and run the ETL](guided-demo/02-build-and-run-etl.md) | `02_pipeline` | Run the canonical Full → Overwrite pipeline. Optional short scenarios cover [Incremental → Append](guided-demo/02B-build-and-run-incremental-append-etl.md), [SCD1 vs SCD2](guided-demo/02C-build-and-run-scd1-etl.md) without changing the main Step 2 notebook. |
+| [2. Build and run the ETL](guided-demo/02-build-and-run-etl.md) | `02_pipeline` | Run the canonical Full → Overwrite pipeline. Optional short scenarios cover [Incremental → Append](guided-demo/02B-build-and-run-incremental-append-etl.md), [SCD1 vs SCD2](guided-demo/02C-build-and-run-scd-etl.md) without changing the main Step 2 notebook. |
 | [3. Author and freeze the Data Contract](guided-demo/03-author-and-freeze-data-contract.md) | `01_governance` | Select the real `table_id`, author Enrichment, Guardrails, and Processing, then freeze the contract version. |
 | [4. Validate the frozen Data Contract](guided-demo/04-validate-frozen-data-contract.md) | `02_pipeline` | Put the governed target in Validate mode, evaluate the exact frozen candidate, record aggregate evidence, and leave the business target unchanged. |
 | [5. Activate the Data Contract and promote](guided-demo/05-activate-data-contract-and-promote.md) | `01_governance` + Fabric Deployment Pipeline | Link the tested contract version to the Data Agreement, activate it for Production, then deploy the validated engineering artifact from Development to Production. |
