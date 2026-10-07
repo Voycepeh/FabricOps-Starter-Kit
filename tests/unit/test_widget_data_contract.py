@@ -1274,14 +1274,18 @@ def test_missing_profiled_key_candidate_shows_no_suggestion_without_profile_fall
 
 def test_profiled_key_candidate_preselects_row_key_and_feeds_grain_ai(widget_runtime, monkeypatch):
     """Consume Engineering key evidence without asking AI to choose the key."""
-    widget_runtime["catalogue"][0]["profile_key_candidates_json"] = json.dumps([{
-        "columns": ["column_0", "column_1"],
-        "column_count": 2,
-        "row_count": 120,
-        "distinct_count": 120,
-        "uniqueness_percent": 100.0,
-        "null_count": 0,
-    }])
+    widget_runtime["catalogue"][0]["profile_key_candidates_json"] = json.dumps({
+        "status": "resolved",
+        "max_combination_width": 3,
+        "candidates": [{
+            "columns": ["column_0", "column_1"],
+            "column_count": 2,
+            "row_count": 120,
+            "distinct_count": 120,
+            "uniqueness_percent": 100.0,
+            "null_count": 0,
+        }],
+    })
     state, captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
