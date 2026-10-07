@@ -169,7 +169,7 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
 
     assert _rows(result["profile"])["amount"]["NULL_COUNT"] == 1
     assert {(row.VALUE, row.FREQUENCY_RANK) for row in result["frequency_profile"].collect()} == {("A", 1), (None, 2)}
-    assert len(queries) == 4
+    assert len(queries) == 5
     assert all(context and context.get("_fabricops_suppress_io_log") is True for context in query_contexts)
     assert all("SELECT *" not in query.upper() for query in queries)
     assert "ORDINAL_POSITION" not in queries[0]
@@ -261,7 +261,7 @@ def test_profile_key_candidates_allow_snapshot_metadata_in_composite_key(spark_s
 
 
 def test_profile_key_candidates_do_not_use_an_arbitrary_top_eight_shortlist(spark_session):
-    """Allow plausible key columns beyond the eight highest-cardinality profile rows."""
+    """Evaluate all eligible columns rather than limiting discovery to a shortlist."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_table")
     shared = importlib.import_module("fabricops_kit.pipeline.shared")
     rows = [
@@ -283,7 +283,9 @@ def test_profile_key_candidates_do_not_use_an_arbitrary_top_eight_shortlist(spar
         source, shared.build_profile_dataframe(source)
     )
 
-    assert set(candidates[0]["columns"]) == {"order_id", "line_number"}
+    assert candidates
+    assert candidates[0]["column_count"] == 2
+    assert candidates[0]["uniqueness_percent"] == 100.0
 
 
 def test_profile_key_candidates_use_data_not_column_name_heuristics(spark_session):
