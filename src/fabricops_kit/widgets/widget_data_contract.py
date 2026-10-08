@@ -2404,6 +2404,10 @@ def widget_data_contract(
             disabled=not editable, **shared.widget_common(widgets, "Reason", textarea=True)
         )
         sensitive_treatment = widgets.Dropdown(options=("tokenize", "mask", "bucket", "remove"), disabled=not editable, **shared.widget_common(widgets, "Treatment"))
+        for sensitive_field in (pii_type, sensitive_treatment, pii_reason):
+            sensitive_field.layout.width = "100%"
+            sensitive_field.layout.min_width = "0"
+            sensitive_field.layout.max_width = "722px"
         sensitive_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
         sensitive_rule_preview = widgets.HTML()
         mask_start = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve start"))
@@ -2929,15 +2933,26 @@ def widget_data_contract(
             value = suggestion.get("value")
             if label == "Sensitive Data":
                 value = (
-                    f"<b>{html.escape(str(suggestion.get('pii_label') or ''))}</b><br>"
-                    f"{html.escape(str(suggestion.get('reason') or ''))}<br>"
+                    "<div style='font-weight:600;margin-bottom:6px;'>"
+                    f"{html.escape(str(suggestion.get('pii_label') or ''))}</div>"
+                    "<div style='margin-bottom:8px;'>"
+                    f"{html.escape(str(suggestion.get('reason') or ''))}</div>"
+                    "<div style='color:#475467;'>"
                     f"Treatment: {html.escape(str(suggestion.get('treatment') or 'None'))} · "
-                    f"Action: {html.escape(str(suggestion.get('action') or 'None'))}"
+                    f"Action: {html.escape(str(suggestion.get('action') or 'None'))}</div>"
                 )
             else:
                 value = html.escape(str(value or ""))
-            stale_text = stale if show_heading else ("<b>Needs refresh</b><br>" if stale else "")
-            return f"<p>{heading}{stale_text}{value}</p>"
+            stale_text = (
+                "<div style='margin:6px 0;color:#8a6d1d;font-weight:600;'>Needs refresh</div>"
+                if stale else ""
+            )
+            return (
+                "<div style='line-height:1.55;overflow-wrap:anywhere;'>"
+                f"{heading}{stale_text}"
+                f"<div style='margin-top:8px;'>{value}</div>"
+                "</div>"
+            )
 
         def _column_editable_values(column_id: str) -> tuple[str, str]:
             if str(column_select.value or "") == column_id:
