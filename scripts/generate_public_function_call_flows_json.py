@@ -26,17 +26,11 @@ for _name in dir(_analysis):
 
 
 def _empty_relationship(caller: str, callee: str) -> dict[str, Any]:
-    """Return a canonical direct relationship record."""
+    """Return direct edge identity; omit empty optional evidence arrays."""
     return {
         "caller_qualified_name": caller,
         "callee_qualified_name": callee,
         "call_count": 1,
-        "architecture_violations": [],
-        "architecture_signals": [],
-        "architecture_signal_types": [],
-        "architecture_signal_details": [],
-        "violation_types": [],
-        "violation_details": [],
     }
 
 
