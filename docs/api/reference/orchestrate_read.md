@@ -13,7 +13,7 @@ Run the observable standard governed source lifecycle.
 
 `fabricops_kit/pipeline/orchestrate_read.py:12`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L12-L80">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L12-L83">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -39,6 +39,7 @@ def orchestrate_read(
     table_name: str,
     read_mode: str='full',
     query: str | None=None,
+    read_parameters: dict[str, Any] | None=None,
     target_table_id: str | None=None,
     spark_session=None,
     verbose: bool=True,
@@ -66,6 +67,7 @@ def orchestrate_read(
 | `table_name` | `str` | Yes | Physical source table name. |
 | `read_mode` | `str` | No | Source read behaviour forwarded to :func:`pipeline_read`. |
 | `query` | `str \| None` | No | Read-only Warehouse query forwarded to :func:`pipeline_read`. |
+| `read_parameters` | `dict[str, Any] \| None` | No | Incremental configuration, for example {"watermark_column": "modified_datetime"}. A selected Data Contract must agree with the supplied watermark. |
 | `target_table_id` | `str \| None` | No | Governed target identity required for incremental reads. |
 | `spark_session` | `object` | No | Spark session used by every stage. |
 | `verbose` | `bool` | No | Print stage start, outcome, duration, and failure attribution. |
