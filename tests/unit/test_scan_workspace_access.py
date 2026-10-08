@@ -16,7 +16,7 @@ def test_scan_workspace_access_is_exposed_from_access_scanner_package():
 
 def test_workspace_observations_normalize_roles_and_principals():
     """Preserve the workspace role while normalizing its data capability."""
-    module = importlib.import_module("fabricops_kit.access_scanner.scan_workspace_access")
+    module = importlib.import_module("fabricops_kit.access_scanner.shared")
     assignments = [
         {
             "id": "assignment-1",
@@ -40,7 +40,7 @@ def test_workspace_observations_normalize_roles_and_principals():
         },
     ]
 
-    rows = module._workspace_observations(workspace_id="workspace-id", assignments=assignments)
+    rows = module.workspace_role_observations(workspace_id="workspace-id", assignments=assignments)
 
     assert rows == [
         {

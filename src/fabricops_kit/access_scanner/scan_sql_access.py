@@ -22,6 +22,10 @@ from fabricops_kit.access_scanner.shared import (
 SQL_ACCESS_QUERY = r"""
 WITH direct_permissions AS (
     SELECT
+        CASE
+            WHEN DATALENGTH(u.sid) = 16 THEN CONVERT(VARCHAR(36), CONVERT(UNIQUEIDENTIFIER, u.sid))
+            ELSE CONVERT(VARCHAR(128), u.sid, 2)
+        END AS principal_id,
         u.name AS user_name,
         u.type_desc AS user_type,
         CAST(NULL AS VARCHAR(256)) AS role_name,
@@ -37,6 +41,10 @@ WITH direct_permissions AS (
         CASE
             WHEN dp.class_desc = 'OBJECT_OR_COLUMN' THEN o.name
         END AS object_name,
+        CASE
+            WHEN dp.class_desc = 'OBJECT_OR_COLUMN' AND dp.minor_id > 0
+                THEN COL_NAME(dp.major_id, dp.minor_id)
+        END AS column_name,
         CASE
             WHEN dp.class_desc = 'OBJECT_OR_COLUMN' THEN o.type_desc
         END AS object_type
@@ -55,6 +63,10 @@ WITH direct_permissions AS (
 ),
 role_permissions AS (
     SELECT
+        CASE
+            WHEN DATALENGTH(u.sid) = 16 THEN CONVERT(VARCHAR(36), CONVERT(UNIQUEIDENTIFIER, u.sid))
+            ELSE CONVERT(VARCHAR(128), u.sid, 2)
+        END AS principal_id,
         u.name AS user_name,
         u.type_desc AS user_type,
         r.name AS role_name,
@@ -70,6 +82,10 @@ role_permissions AS (
         CASE
             WHEN dp.class_desc = 'OBJECT_OR_COLUMN' THEN o.name
         END AS object_name,
+        CASE
+            WHEN dp.class_desc = 'OBJECT_OR_COLUMN' AND dp.minor_id > 0
+                THEN COL_NAME(dp.major_id, dp.minor_id)
+        END AS column_name,
         CASE
             WHEN dp.class_desc = 'OBJECT_OR_COLUMN' THEN o.type_desc
         END AS object_type

@@ -5410,6 +5410,7 @@ def main() -> None:
             "note": "Observe access or publish governed context",
             "description": "Effective access scanners and the governed Production table to Data Agent handoff.",
             "functions": {
+                "scan_effective_access",
                 "scan_workspace_access",
                 "scan_sql_access",
                 "scan_onelake_access",

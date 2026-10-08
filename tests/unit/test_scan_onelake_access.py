@@ -18,7 +18,7 @@ def test_scan_onelake_access_is_exposed_from_access_scanner_package():
 
 def test_role_observations_preserve_entra_and_default_reader_membership():
     """Keep explicit principals separate from automatic item-access selectors."""
-    module = importlib.import_module("fabricops_kit.access_scanner.scan_onelake_access")
+    module = importlib.import_module("fabricops_kit.access_scanner.shared")
     roles = [
         {
             "id": "role-1",
@@ -46,7 +46,7 @@ def test_role_observations_preserve_entra_and_default_reader_membership():
         }
     ]
 
-    rows = module._role_observations(
+    rows = module.onelake_role_observations(
         target="Silver",
         workspace_id="workspace-id",
         item_id="item-id",
@@ -72,9 +72,20 @@ def test_role_observations_preserve_entra_and_default_reader_membership():
 
 def test_entra_members_use_exposed_principal_identity_and_preserve_types():
     """Prefer an exposed UPN while retaining group and service identities honestly."""
-    module = importlib.import_module("fabricops_kit.access_scanner.scan_onelake_access")
-    rows = module._member_rows(
-        {
+    module = importlib.import_module("fabricops_kit.access_scanner.shared")
+    rows = module.onelake_role_observations(
+        target="Silver",
+        workspace_id="workspace-id",
+        item_id="item-id",
+        roles=[{
+            "name": "Readers",
+            "decisionRules": [{
+                "effect": "Permit",
+                "permission": [
+                    {"attributeName": "Path", "attributeValueIncludedIn": ["Tables/orders"]},
+                    {"attributeName": "Action", "attributeValueIncludedIn": ["Read"]},
+                ],
+            }],
             "members": {
                 "microsoftEntraMembers": [
                     {
@@ -90,8 +101,8 @@ def test_entra_members_use_exposed_principal_identity_and_preserve_types():
                     {"objectId": "group-id-only", "objectType": "Group"},
                     {"objectId": "service-id", "objectType": "ServicePrincipal"},
                 ]
-            }
-        }
+            },
+        }],
     )
 
     assert [(row["user_principal"], row["user_type"]) for row in rows] == [
