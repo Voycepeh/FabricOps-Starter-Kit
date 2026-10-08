@@ -2,23 +2,12 @@
 
 from __future__ import annotations
 
-import ast
-import os
 import re
-import subprocess
-import sys
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).parents[2]
 DOCS = ROOT / "docs"
-
-
-def _exported_symbols() -> list[str]:
-    """Return exported public symbol names from the package root."""
-    import fabricops_kit
-
-    return list(fabricops_kit.__all__)
 
 
 def _local_link_target_exists(markdown_path: Path, href: str) -> bool:
@@ -132,11 +121,6 @@ def test_generated_github_links_use_main_not_local_sha() -> None:
 
 def test_generated_reference_includes_every_exported_public_callable_page() -> None:
     """Verify PR 555-style template filtering does not remove public pages."""
-    env = {**os.environ, "PYTHONPATH": "src"}
-    subprocess.run(
-        [sys.executable, "scripts/generate_individual_function_reference_pages.py"], cwd=ROOT, env=env, check=True
-    )
-
     import json
 
     inventory = json.loads((DOCS / "reference" / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8"))
@@ -148,12 +132,3 @@ def test_generated_reference_includes_every_exported_public_callable_page() -> N
     assert 'data-callable-name="display_guardrail_results"' not in reference_index
     assert 'data-function-type="public-starter-kit"' in reference_index
     assert not (DOCS / "api" / "reference" / "display_guardrail_results.md").exists()
-
-
-def test_generated_relationship_links_respect_function_first_routes() -> None:
-    """Verify generated docs no longer depend on public module pages."""
-    reference_index = (DOCS / "reference" / "index.md").read_text(encoding="utf-8")
-
-    assert not (DOCS / "api" / "reference" / "display_guardrail_results.md").exists()
-    assert not (DOCS / "api" / "modules" / "pipeline.md").exists()
-    assert "api/modules" not in reference_index

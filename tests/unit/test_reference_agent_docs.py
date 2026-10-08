@@ -138,41 +138,6 @@ def test_helper_area_mismatch_signal_requires_three_way_mismatch() -> None:
     assert three_way_signal == ("Metadata loading", "Validation", "Rule evaluation")
 
 
-def test_callable_flow_page_and_json_cover_public_surface() -> None:
-    """Verify the standalone guide and v2 JSON contract cover the public surface."""
-    flow_page = ROOT / "docs" / "function-call-graph.md"
-    redirect_page = REFERENCE_DIR / "function-call-graph.md"
-    flow_data_path = REFERENCE_DIR / "_data" / "public-function-call-flows.json"
-
-    assert flow_page.exists()
-    assert redirect_page.exists()
-    assert flow_data_path.exists()
-
-    flow_text = flow_page.read_text(encoding="utf-8")
-    assert "# Function Call Graph" in flow_text
-    assert "## 1. Repository Code" in flow_text
-    assert "## 2. Agent reads context" in flow_text
-    assert "## 3. Edit function source" in flow_text
-    assert "## 4. Regenerate call flow" in flow_text
-    assert "## 5. Dashboard & review" in flow_text
-    assert 'href="assets/public-function-call-flows-dashboard.html"' in flow_text
-    assert 'href="reference/_data/public-function-call-flows.json"' in flow_text
-
-    redirect_text = redirect_page.read_text(encoding="utf-8")
-    assert "../../function-call-graph/" in redirect_text
-
-    data = json.loads(flow_data_path.read_text(encoding="utf-8"))
-    assert data["public_functions"]
-    assert data["defined_functions"]
-    assert "defined_but_not_used" in data
-
-    generator_path = ROOT / "scripts/generate_individual_function_reference_pages.py"
-    generator_source = generator_path.read_text(encoding="utf-8")
-    assert "FUNCTION_CALL_GRAPH_PAGE_PATH" not in generator_source
-    assert "def _render_callable_flow_page" not in generator_source
-    assert "docs/reference/function-call-graph.md" not in generator_source
-
-
 def test_fabricops_specialized_skill_files_exist() -> None:
     """Verify FabricOps uses focused skills without a generic catch-all."""
     skills_dir = ROOT / ".agents" / "skills"
@@ -850,48 +815,6 @@ def test_internalized_enforce_profile_behavior_preserves_no_page_contract() -> N
     assert not (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()
 
 
-def test_reference_nav_preserves_existing_user_facing_entries() -> None:
-    """Verify generated reference pages remain in the existing sidebar locations."""
-    mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
-
-    assert "  - Reference:" not in mkdocs_text
-    assert (
-        "      - Notebook Templates: "
-        "https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks"
-        in mkdocs_text
-    )
-    assert "      - Overview: reference/metadata.md" in mkdocs_text
-    assert "  - List of Functions: reference/index.md" in mkdocs_text
-    assert "  - List of DQ Rules:" in mkdocs_text
-    assert "      - Overview: reference/dq-rules/index.md" in mkdocs_text
-    assert not re.search(r"^  - Glossary: reference/glossary\.md$", mkdocs_text, re.MULTILINE)
-    assert not re.search(r"^  - Function & DQ Rules Reference:$", mkdocs_text, re.MULTILINE)
-    assert "api/reference/" not in mkdocs_text
-
-    public_functions = [
-        str(row["function_name"])
-        for row in json.loads((REFERENCE_DIR / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8"))["public_functions"]
-    ]
-    missing = [name for name in public_functions if not (API_REFERENCE_DIR / f"{name}.md").exists()]
-    assert missing == []
-
-
-def test_maintainer_nav_parks_internal_reference_helpers() -> None:
-    """Verify maintainer-facing helper docs are parked under maintainer references."""
-    mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
-
-    assert "Functions by Modules" not in mkdocs_text
-    assert "  - Maintainer References:" in mkdocs_text
-    assert "reference/maintainer-guide.md" not in mkdocs_text
-    assert "reference/glossary.md" not in mkdocs_text
-    assert "      - Function Call Graph: reference/function-call-graph.md" in mkdocs_text
-    assert "      - Implementation Appendix:" in mkdocs_text
-    assert "      # AUTO-GENERATED-MODULES-END" in mkdocs_text
-    assert "api/modules/config.md" not in mkdocs_text
-    assert "api/modules/" not in mkdocs_text
-    assert "api/reference/" not in mkdocs_text
-
-
 def test_callable_layer_dependency_rule_matrix() -> None:
     """Verify callable layer dependency rules match the architecture matrix."""
     from scripts.generate_individual_function_reference_pages import (
@@ -1474,28 +1397,6 @@ def test_public_api_surface_records_owner_file_and_private_helper_items() -> Non
     assert {row["violation_type"] for row in flow["transitive_callees"]} == {"Same-file private dependency"}
 
 
-def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
-    """Verify item type filter keys match generated function-level inventory records."""
-    pytest.skip("callable graph JSON is no longer owned by the individual function page generator")
-    flow_data = json.loads(
-        (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
-    )
-    inventory = flow_data["function_inventory"]
-
-    expected_counts = {
-        "public": flow_data["summary_counts"]["layer"]["public"],
-        "internal": flow_data["summary_counts"]["layer"]["internal"],
-        "private_helper": flow_data["summary_counts"]["callable_inventory_metrics"]["hidden_private_helpers"],
-    }
-    actual_counts = {key: sum(1 for row in inventory if row["layer"] == key) for key in expected_counts}
-
-    assert actual_counts == expected_counts
-    assert any(row.get("reachability") == "unreachable_runtime_asset" for row in inventory)
-    assert all(row.get("source_path", "").startswith("src/fabricops_kit/") for row in inventory)
-    assert "supporting_object" not in {row["layer"] for row in inventory}
-    assert all(row["function_type"] != "Non functions" for row in inventory)
-
-
 def test_table_controls_are_opt_in_and_safe_for_dynamic_rows() -> None:
     """Verify table controls stay scoped and refresh existing controls without duplicates."""
     script = (ROOT / "docs" / "javascripts" / "table-controls.js").read_text(encoding="utf-8")
@@ -1951,36 +1852,6 @@ def test_split_pipeline_public_callables_keep_ast_definition_owner_files() -> No
             assert generator._callable_flow_source_path(qn, module_data) != wrong_profile_owner
 
 
-def test_generated_inventory_split_pipeline_public_callables_have_owner_files() -> None:
-    """Verify generated inventory rows preserve split pipeline public callable owner files."""
-    pytest.skip("callable graph JSON is no longer owned by the individual function page generator")
-    flow_data = json.loads(
-        (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
-    )
-    rows_by_name = {
-        row["function_name"]: row
-        for row in flow_data["function_inventory"]
-        if row.get("module", "").startswith("pipeline") and row.get("layer") == "public"
-    }
-    expected_paths = {
-        "profile_table": "src/fabricops_kit/pipeline/profile_table.py",
-        "write_pipeline_run_summary": "src/fabricops_kit/pipeline/write_pipeline_run_summary.py",
-    }
-
-    for function_name, expected_path in expected_paths.items():
-        row = rows_by_name[function_name]
-        assert row["source_path"] == expected_path
-        assert row["owner_file"] == expected_path
-
-    wrong_profile_owner = "src/fabricops_kit/pipeline/profile_table.py"
-    wrongly_owned = [
-        name
-        for name, row in rows_by_name.items()
-        if name != "profile_table" and row["source_path"] == wrong_profile_owner
-    ]
-    assert wrongly_owned == []
-
-
 def test_generated_dashboard_split_pipeline_scopes_are_not_sibling_grouped() -> None:
     """Verify dashboard public flows scope split pipeline callables independently."""
     pytest.skip("dashboard/callable graph JSON is no longer owned by the individual function page generator")
@@ -2012,46 +1883,6 @@ def test_generated_dashboard_split_pipeline_scopes_are_not_sibling_grouped() -> 
     }
     assert flows_by_name["display_guardrail_results"]["qualified_name"] not in profile_assets
     assert flows_by_name["run_table_guardrails"]["qualified_name"] not in profile_assets
-
-
-def test_generated_public_callable_scope_counts_match_exact_flow_assets() -> None:
-    """Verify selected public callable helper data matches exact public flow assets."""
-    pytest.skip("callable graph JSON is no longer owned by the individual function page generator")
-    flow_data = json.loads(
-        (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
-    )
-    flows_by_qn = {flow["qualified_name"]: flow for flow in flow_data["public_entrypoint_flow"]}
-    expected_counts = {
-        "fabricops_kit.pipeline.display_guardrail_results": 15,
-        "fabricops_kit.pipeline.profile_table.profile_table": 11,
-        "fabricops_kit.pipeline.run_table_guardrails": 120,
-        "fabricops_kit.io.read_warehouse_query.read_warehouse_query": 13,
-        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table": 17,
-    }
-    for qn, expected_count in expected_counts.items():
-        flow = flows_by_qn[qn]
-        flow_assets = {flow["qualified_name"], *(row["qualified_name"] for row in flow["transitive_callees"])}
-        assert flow["scope"] == expected_count
-        assert len(flow_assets) == flow["scope"]
-
-    forbidden = {
-        "fabricops_kit.pipeline.display_guardrail_results": {
-            "fabricops_kit.pipeline.profile_table",
-            "fabricops_kit.pipeline.run_table_guardrails",
-            "fabricops_kit.pipeline.profile_table",
-            "fabricops_kit.pipeline.write_pipeline_run_summary",
-        },
-        "fabricops_kit.pipeline.profile_table.profile_table": {
-            "fabricops_kit.pipeline.display_guardrail_results",
-            "fabricops_kit.pipeline.run_table_guardrails",
-            "fabricops_kit.pipeline.profile_table",
-            "fabricops_kit.pipeline.write_pipeline_run_summary",
-        },
-    }
-    for qn, siblings in forbidden.items():
-        flow = flows_by_qn[qn]
-        flow_assets = {flow["qualified_name"], *(row["qualified_name"] for row in flow["transitive_callees"])}
-        assert flow_assets.isdisjoint(siblings)
 
 
 def test_shared_call_graph_renderer_includes_source_type_and_architecture_flags() -> None:

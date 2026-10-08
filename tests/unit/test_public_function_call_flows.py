@@ -15,6 +15,12 @@ from scripts import generate_public_function_call_flows_dashboard as dashboard
 from scripts import generate_public_function_call_flows_json as flows
 
 
+@pytest.fixture(scope="module")
+def repository_call_flow_payload():
+    """Parse the unchanged repository call graph once for read-only assertions."""
+    return flows.build_payload()
+
+
 def write_project(tmp_path: Path) -> tuple[Path, Path, Path]:
     """Create a tiny package fixture for call-flow tests."""
     root = tmp_path
@@ -226,9 +232,9 @@ def test_import_call_resolution_patterns_and_re_exports(tmp_path: Path) -> None:
     }
 
 
-def test_repository_imported_helpers_are_not_false_unused_candidates() -> None:
+def test_repository_imported_helpers_are_not_false_unused_candidates(repository_call_flow_payload) -> None:
     """Keep known production imports distinct from call and reachability signals."""
-    payload = flows.build_payload()
+    payload = repository_call_flow_payload
     unused = {row["qualified_name"] for row in payload["defined_but_not_used"]}
     records = {row["qualified_name"]: row for row in payload["defined_functions"]}
     expected_references = {
@@ -380,9 +386,9 @@ def test_release_manifests_use_semantic_version_order(tmp_path: Path) -> None:
     ]
 
 
-def test_repository_manifest_lifecycle_authority() -> None:
+def test_repository_manifest_lifecycle_authority(repository_call_flow_payload) -> None:
     """Validate repository release manifest lifecycle fields drive real output."""
-    payload = flows.build_payload()
+    payload = repository_call_flow_payload
 
     excel = next(item for item in payload["public_functions"] if item["function_name"] == "read_lakehouse_excel")
     assert excel["lifecycle_status"] == "live"
@@ -457,9 +463,9 @@ def test_any_package_callable_can_use_foundational_io_without_a_violation() -> N
         ) == {"type": "Type 0", "detail": "Calls foundational Fabric I/O."}
 
 
-def test_foundational_io_classification_and_lifecycle_history() -> None:
+def test_foundational_io_classification_and_lifecycle_history(repository_call_flow_payload) -> None:
     """Classify every boundary member without changing release-manifest history."""
-    payload = flows.build_payload()
+    payload = repository_call_flow_payload
     public_by_name = {row["function_name"]: row for row in payload["public_functions"]}
 
     assert set(flows.FOUNDATIONAL_IO_FUNCTION_NAMES) <= set(public_by_name)
@@ -473,9 +479,9 @@ def test_foundational_io_classification_and_lifecycle_history() -> None:
     assert json_reader["release_history"] == [{"version": "0.2.0", "status": "live"}]
 
 
-def test_repository_type_zero_edges_never_contribute_architecture_violations() -> None:
+def test_repository_type_zero_edges_never_contribute_architecture_violations(repository_call_flow_payload) -> None:
     """Keep every foundational I/O edge green and out of violation counts."""
-    payload = flows.build_payload()
+    payload = repository_call_flow_payload
     type_zero_rows = [
         row
         for public_function in payload["public_functions"]
@@ -1218,39 +1224,13 @@ def test_json_output_is_deterministic_across_consecutive_writes(tmp_path: Path) 
     assert first == second
 
 
-def test_committed_json_matches_generator_output() -> None:
+def test_committed_json_matches_generator_output(repository_call_flow_payload) -> None:
     """Validate committed call-flow JSON matches the generator payload."""
-    expected = json.dumps(flows.normalize_payload(flows.build_payload()), indent=2, sort_keys=True) + "\n"
+    expected = json.dumps(flows.normalize_payload(repository_call_flow_payload), indent=2, sort_keys=True) + "\n"
     actual = flows.DATA_PATH.read_text(encoding="utf-8")
 
     assert actual == expected
     assert "schema v1" not in actual.lower()
-
-
-def test_callable_flow_docs_page_uses_deterministic_signal_rules() -> None:
-    """Validate callable flow docs describe the deterministic V2 signal model."""
-    docs = Path("docs/function-call-graph.md").read_text(encoding="utf-8")
-
-    assert "#### Public-flow signals" in docs
-    assert "Large width/depth | Width > 10 or Depth > 5" in docs
-    assert "Architecture violation | Any Type 1 to Type 5 violation" in docs
-    assert "#### Architecture violation types" in docs
-    for violation_type in ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5"]:
-        assert violation_type in docs
-    assert "Type 6" not in docs
-    assert "Private implementation helpers may call shared reusable functions directly." in docs
-    assert "#### Inventory suggestions" in docs
-    assert "Inline candidate | Called by exactly one parent" in docs
-    assert "Promote to shared | Private function called by more than one distinct caller" in docs
-    assert "#### Metric definitions" in docs
-    assert "Width | Direct package-local calls from the selected public function." in docs
-    assert "Depth | Deepest nested call path." in docs
-    assert "Scope | Total downstream functions reached by the selected public function flow." in docs
-    assert "Broken rule | An architecture rule is broken" not in docs
-    assert "Too many steps" not in docs
-    assert "Too many helpers" not in docs
-    assert "Shared helper | The helper is used by more than one public function" not in docs
-    assert "Maybe combine" not in docs
 
 
 def test_generated_artifact_metadata_preserves_entries_and_formats_sgt(tmp_path: Path) -> None:

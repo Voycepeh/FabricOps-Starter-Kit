@@ -177,14 +177,6 @@ def spark_session():
     spark.stop()
 
 
-STALE_REFERENCE_TESTS = {
-    "test_callable_inventory_non_functions_filter_works_outside_selected_focus",
-    "test_callable_flow_page_and_json_cover_public_surface",
-    "test_callable_flow_docs_page_uses_deterministic_signal_rules",
-    "test_maintainer_nav_parks_internal_reference_helpers",
-    "test_reference_nav_preserves_existing_user_facing_entries",
-}
-
 LIVE_CURRENT_RELEASE_TESTS = {
     "test_release_contract_pages_render_live_manifest_snapshot",
     "test_release_generates_frozen_detail_pages_for_live_manifest",
@@ -205,16 +197,11 @@ def _current_release_is_preparing() -> bool:
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     """Skip assertions that do not apply to the current repository state."""
-    skip_stale_reference_expectation = pytest.mark.skip(
-        reason="Reference assertion predates the current documentation structure."
-    )
     skip_live_release_expectation = pytest.mark.skip(
         reason="Current package release is preparing, so frozen Live release pages are intentionally absent."
     )
     release_is_preparing = _current_release_is_preparing()
 
     for item in items:
-        if item.name in STALE_REFERENCE_TESTS:
-            item.add_marker(skip_stale_reference_expectation)
         if release_is_preparing and item.name in LIVE_CURRENT_RELEASE_TESTS:
             item.add_marker(skip_live_release_expectation)

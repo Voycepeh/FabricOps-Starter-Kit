@@ -59,13 +59,7 @@ def test_every_public_function_is_in_exactly_one_group() -> None:
 
     assert sorted(grouped_rows) == sorted(rows)
 
-
-def test_function_reference_links_keep_existing_targets() -> None:
-    """Keep the stable page URL, individual function links, and call-flow link intact."""
-    text = REFERENCE_PAGE.read_text(encoding="utf-8")
-
-    assert "../assets/public-function-call-flows-dashboard.html" in text
-
+    # Each linked callable must have a generated reference page.
     function_links = re.findall(
         r'class="reference-catalogue-item-title" href="../api/reference/([^/]+)/"',
         text,

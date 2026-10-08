@@ -10,22 +10,6 @@ from scripts import sync_maintainer_release_guide
 ROOT = Path(__file__).parents[2]
 SKILL = ROOT / ".agents" / "skills" / "fabricops-release" / "SKILL.md"
 GUIDE = ROOT / "docs" / "maintainer" / "index.md"
-ARCHITECTURE = ROOT / "docs" / "maintainer" / "public-api-architecture.md"
-MKDOCS = ROOT / "mkdocs.yml"
-README = ROOT / "README.md"
-LLMS = ROOT / "docs" / "llms.txt"
-
-REMOVED_MAINTAINER_PATHS = (
-    "docs/maintainer/overview.md",
-    "docs/maintainer/release-workflow.md",
-    "docs/maintainer/generators.md",
-    "maintainer/overview",
-    "maintainer/release-workflow",
-    "maintainer/generators",
-    "docs/maintainer/product-narrative.md",
-    "maintainer/product-narrative",
-)
-
 REQUIRED_GENERATOR_PATHS = (
     "scripts/generate_public_function_call_flows_json.py",
     "scripts/generate_individual_function_reference_pages.py",
