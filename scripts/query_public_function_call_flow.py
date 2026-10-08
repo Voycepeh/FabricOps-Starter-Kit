@@ -60,6 +60,7 @@ def lookup(data: dict, name: str, *, depth: int = 1, include_callers: bool = Fal
 
 
 def main() -> None:
+    """Parse CLI arguments and print the selected callable graph neighborhood."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("callable", help="Qualified name or unambiguous simple function name")
     parser.add_argument("--depth", type=int, default=1, help="Maximum edge distance, default: 1")
