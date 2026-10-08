@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import ast
 import os
 import re
 import subprocess
@@ -12,13 +11,6 @@ from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).parents[2]
 DOCS = ROOT / "docs"
-
-
-def _exported_symbols() -> list[str]:
-    """Return exported public symbol names from the package root."""
-    import fabricops_kit
-
-    return list(fabricops_kit.__all__)
 
 
 def _local_link_target_exists(markdown_path: Path, href: str) -> bool:
