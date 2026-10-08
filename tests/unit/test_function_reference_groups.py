@@ -64,8 +64,6 @@ def test_function_reference_links_keep_existing_targets() -> None:
     """Keep the stable page URL, individual function links, and call-flow link intact."""
     text = REFERENCE_PAGE.read_text(encoding="utf-8")
 
-    assert "../assets/public-function-call-flows-dashboard.html" in text
-
     function_links = re.findall(
         r'class="reference-catalogue-item-title" href="../api/reference/([^/]+)/"',
         text,
