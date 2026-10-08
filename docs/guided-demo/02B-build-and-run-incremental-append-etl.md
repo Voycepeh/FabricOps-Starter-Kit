@@ -18,30 +18,13 @@ The Orders source was created in [Step 00C](00C-prepare-demo-data-with-fabricops
 2. Make a copy named `02B_incremental_append_demo`.
 3. Use the copy for **all** the edits below. Keep the same attached Fabric Environment and the `00_env_config` notebook from Step 2.
 
-## 2. Check the governed watermark prerequisite
+## 2. Configure the incremental watermark in the Read
 
-Incremental processing needs a **governed source processing definition** for Bronze `demo.orders` containing `watermark_column = modified_datetime`. The column already exists in the Orders sample; this processing setting **does not come from the notebook argument** and is not inferred just because the column exists.
+The sample Bronze Orders source already contains `modified_datetime`. Specify that column in the copied notebook's `orchestrate_read()` call using `read_parameters`; you do **not** need to edit the Data Catalogue manually.
 
-FabricOps obtains this definition from the source's selected Data Contract, or, when no contract is selected, from the source Data Catalogue's authored processing metadata (`load_strategy_parameters_json`). Make sure the **source**, not merely the new Silver target, is configured before you run READ 1.
+FabricOps manages the accepted watermark for each source-to-target relationship, only committing progress after a successful target publication. If a selected or active Data Contract sets a different watermark, FabricOps rejects the mismatch rather than silently overriding it.
 
-For a source definition with Append processing, the relevant processing values are:
-
-```json
-{
-  "load_strategy": "append",
-  "watermark_column": "modified_datetime"
-}
-```
-
-This describes the governed processing definition; it is **not** a notebook function call. In a Data Contract, it belongs under the table's `processing` definition. Without a selected contract, the Catalogue must have `load_strategy = append` and `load_strategy_parameters_json` containing `{"watermark_column": "modified_datetime"}`. If you have not authored this metadata yet, complete that prerequisite before attempting the incremental read. Do not edit a frozen contract JSON by hand.
-
-If the definition is missing, the expected failure is:
-
-```text
-Incremental processing requires a watermark_column or effective_column in the governed processing definition.
-```
-
-See [Read and Load Strategies](../reference/read-and-load-strategies.md) for the source-to-target watermark lifecycle.
+See [Read and Load Strategies](../reference/read-and-load-strategies.md) for the state lifecycle.
 
 ## 3. Keep the Environment and Data Contract cells
 
@@ -91,6 +74,7 @@ source = orchestrate_read(
     schema="demo",
     table_name="orders",
     read_mode="incremental",
+    read_parameters={"watermark_column": "modified_datetime"},
     target_table_id=target_table_id,
     spark_session=spark,
 )
@@ -103,7 +87,7 @@ display(source["dataframe"])
 
 **Why resolve the target first?** Incremental progress belongs to one exact **source → target** relationship. Another target consuming Bronze Orders may have a different last-processed watermark.
 
-**Important:** Do not provide custom SQL in `query` for an incremental read; FabricOps builds its own filtering predicate. Leave `query` omitted (or as `None`).
+**Important:** Do not provide custom SQL in `query` for an incremental read; FabricOps builds its own filtering predicate. Leave `query` omitted.
 
 Delete or skip **READ 2 — Products** and **READ 3 — Order History**. Leave the optional Read inspection cell commented out; incremental reads intentionally skip full-table profiling.
 
