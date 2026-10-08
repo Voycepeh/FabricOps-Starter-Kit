@@ -2790,6 +2790,7 @@ def widget_data_contract(
                 mask_character.value = str(sensitive_parameters.get("mask_character") or "*")
                 bucket_bins.value = ", ".join(map(str, sensitive_parameters.get("bins", [])))
                 bucket_labels.value = ", ".join(map(str, sensitive_parameters.get("labels", [])))
+                refresh_dq_type_visibility(str(datatype_choice.value or contract_type or observed_type))
                 for kind in _COLUMN_DQ_TYPES:
                     hydrate_dq_family(column_id, kind)
                 hydrated_column_snapshots[column_id] = column_editor_snapshot()
@@ -3680,6 +3681,50 @@ def widget_data_contract(
                 ),
             )
 
+        value_list_section = dq_family_section(
+            "Value Lists", "value_set",
+            "Use a whitelist for accepted values and a blacklist for rejected values. "
+            "Each non-empty list is stored as its own deterministic rule.",
+        )
+        value_range_section = dq_family_section(
+            "Value Rules", "range",
+            "Set deterministic lower and upper bounds for numeric or date values.",
+        )
+
+        def refresh_dq_type_visibility(data_type: str) -> None:
+            """Show only DQ families applicable to the active column's datatype."""
+            normalized = str(data_type or "").strip().lower()
+            base_type = normalized.split("(", 1)[0].strip()
+            numeric = base_type in {
+                "byte", "tinyint", "short", "smallint", "int", "integer", "long",
+                "bigint", "float", "double", "decimal", "numeric",
+            }
+            temporal = base_type in {"date", "timestamp", "timestamp_ntz"}
+            boolean = base_type in {"bool", "boolean"}
+            scalar = base_type in {"string", "varchar", "char"} or numeric or temporal or boolean
+            value_list_section.layout.display = "" if scalar else "none"
+            value_range_section.layout.display = "" if numeric or temporal else "none"
+            if boolean:
+                dq_whitelist_values.placeholder = "Example: true, false"
+                dq_blacklist_values.placeholder = "Example: false"
+            elif temporal:
+                example = "2026-01-01" if base_type == "date" else "2026-01-01 09:00:00"
+                dq_whitelist_values.placeholder = f"Example: {example}"
+                dq_blacklist_values.placeholder = f"Example: {example}"
+            elif numeric:
+                dq_whitelist_values.placeholder = "Example: 10, 20, 30"
+                dq_blacklist_values.placeholder = "Example: -1, 0"
+            else:
+                dq_whitelist_values.placeholder = "Example: Active, Inactive"
+                dq_blacklist_values.placeholder = "Example: Unknown, N/A"
+            example_bound = (
+                "2026-01-01" if base_type == "date"
+                else "2026-01-01 09:00:00" if temporal
+                else "0" if numeric else ""
+            )
+            dq_minimum.placeholder = example_bound
+            dq_maximum.placeholder = example_bound
+
         dq_primary = widgets.VBox(
             [
                 dq_family_section(
@@ -3690,15 +3735,8 @@ def widget_data_contract(
                     "Uniqueness", "uniqueness",
                     "Require this column to meet a minimum percentage of unique values. Use 100% for strict uniqueness.",
                 ),
-                dq_family_section(
-                    "Value Lists", "value_set",
-                    "Use a whitelist for accepted values and a blacklist for rejected values. "
-                    "Each non-empty list is stored as its own deterministic rule.",
-                ),
-                dq_family_section(
-                    "Value Rules", "range",
-                    "Set deterministic lower and upper bounds for numeric or date values.",
-                ),
+                value_list_section,
+                value_range_section,
             ],
             layout=widgets.Layout(width="100%", min_width="0", gap="0"),
         )
