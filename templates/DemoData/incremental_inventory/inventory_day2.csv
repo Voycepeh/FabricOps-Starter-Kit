@@ -1,0 +1,5 @@
+movement_id,product_id,movement_type,quantity_change,modified_datetime
+M009,P001,SALE,-5,2026-10-07T10:00:00
+M010,P002,SALE,-3,2026-10-07T10:10:00
+M011,P001,REPLENISHMENT,50,2026-10-07T10:20:00
+M012,P005,SALE,-2,2026-10-07T10:30:00
