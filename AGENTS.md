@@ -137,16 +137,17 @@ For Fabric IO, public owner files live under `src/fabricops_kit/io/`, and reusab
 
 ## Public call-flow architecture contract
 
-`docs/reference/_data/public-function-call-flows.json` is the committed normalized public callable architecture contract and compact lookup index for agents. It stores each callable once in `defined_functions`, public-root metrics and lifecycle in `public_functions`, and each resolved direct caller-to-callee edge once in `relationships`.
+`docs/reference/_data/public-function-call-flows.json` is the committed normalized public callable architecture contract. It is a machine-readable data source, not mandatory full-file agent context. It stores each callable once in `defined_functions`, public-root metrics and lifecycle in `public_functions`, and each resolved direct caller-to-callee edge once in `relationships`.
 
-Before function-level source changes:
+Before function-level source changes, retrieve only the relevant callable slice:
 
-- find the callable by `qualified_name` in `defined_functions` for owner file, source location, classification, inbound callers, source references, and cleanup signals
-- inspect `public_functions` when public-root width, scope, depth, files touched, lifecycle, or Live impact matters
-- inspect `relationships` where `caller_qualified_name` matches the current callable for direct callees
-- follow those relationships recursively only when transitive helper reachability is needed
-- keep `inbound_callers` and `inbound_source_references` distinct; a package import or loaded-symbol reference is not a call edge
-- use the dashboard when a fully expanded interactive call tree is useful; the dashboard reconstructs that view from the same normalized relationships at runtime
+```bash
+python scripts/query_public_function_call_flow.py orchestrate_read
+python scripts/query_public_function_call_flow.py orchestrate_read --depth 2 --callers
+```
+
+Use the fully qualified name if the simple name is ambiguous. Default lookup includes the target record, public-root metrics when applicable, and direct callees. Request deeper dependencies or inbound callers only when the change requires them. The query reads `defined_functions`, `public_functions`, and `relationships` without displaying the complete JSON. Do not load or paste the full 1.5 MB contract into an agent prompt. Distinguish inbound calls from source references.
+
 
 Source code, exports, reference metadata, and generators remain authoritative. Do not manually edit the JSON as a fix, and do not require agents to parse the generated dashboard HTML to understand the graph.
 
