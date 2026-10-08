@@ -855,6 +855,38 @@ def widget_data_contract(
         prepare_save = state.get("_prepare_data_contract_save")
         if callable(prepare_save):
             prepare_save()
+        schema_required = {
+            str(column_id)
+            for rule in current.get("guardrails", [])
+            if str(rule.get("guardrail_type") or "").lower() == "schema"
+            and bool(rule.get("is_active", True))
+            for column_id in _parameters(rule).get("required_columns", [])
+        }
+        removed_column_ids = {
+            str(rule.get("column_id") or "")
+            for rule in current.get("guardrails", [])
+            if str(rule.get("guardrail_type") or "").lower() == "sensitive_data"
+            and bool(rule.get("is_active", True))
+            and str(_parameters(rule).get("treatment") or rule.get("rule_type") or "").lower() == "remove"
+        }
+        contract_columns = json.loads(
+            str(current["contract"].get("contract_payload_json") or "{}")
+        ).get("table", {}).get("columns", [])
+        conflicting_columns = sorted({
+            str(column.get("column_name") or column.get("column_id") or "")
+            for column in contract_columns
+            if str(column.get("column_id") or "") in removed_column_ids
+            and (
+                str(column.get("column_id") or "") in schema_required
+                or str(column.get("column_name") or "") in schema_required
+            )
+        })
+        if conflicting_columns:
+            raise ValueError(
+                "Removed output columns cannot be Required: "
+                + ", ".join(conflicting_columns)
+                + ". Clear Required before saving."
+            )
         payload = refresh_manifest()
         if payload is None:
             raise ValueError("Data Contract draft has no payload to save.")
@@ -2427,8 +2459,9 @@ def widget_data_contract(
         rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
         required = widgets.Checkbox(description="Required", disabled=not editable, layout=widgets.Layout(width="auto", min_width="0", margin="0"))
         required.add_class("fabricops-column-required")
+        required_hint = widgets.HTML()
         column_header = widgets.VBox(
-            [column_context, required],
+            [column_context, required, required_hint],
             layout=widgets.Layout(width="100%", min_width="0", gap="4px", align_items="flex-start"),
         )
         datatype_choice = widgets.Dropdown(
@@ -2833,6 +2866,15 @@ def widget_data_contract(
                 control.layout.display = "" if treatment == "mask" else "none"
             for control in (bucket_bins, bucket_labels):
                 control.layout.display = "" if treatment == "bucket" else "none"
+            removing = bool(sensitive_enabled.value) and treatment == "remove"
+            required.disabled = (not editable) or removing
+            required_hint.value = (
+                "<span style='color:#667085;font-size:12px;'>"
+                "Removed columns cannot be required in the written output.</span>"
+                if removing else ""
+            )
+            if removing and required.value and not hydrating["active"] and editable:
+                required.value = False
             column_classification.disabled = (not editable) or treatment == "remove"
             column_classification.layout.width = "100%"
             column_classification.layout.min_width = "0"
@@ -2898,6 +2940,7 @@ def widget_data_contract(
             sensitive_control.observe(refresh_sensitive_rule_preview, names="value")
 
         sensitive_treatment.observe(update_sensitive_fields, names="value")
+        sensitive_enabled.observe(update_sensitive_fields, names="value")
         column_classification.observe(refresh_sensitive_rule_preview, names="value")
 
         def working_sensitive_changed(change: dict[str, Any]) -> None:
