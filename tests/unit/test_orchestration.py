@@ -354,3 +354,64 @@ def test_orchestration_stage_duration_is_two_decimal_seconds_with_minimum():
         )
 
     assert record["duration_seconds"] == 1.23
+
+
+def test_orchestrate_write_skips_when_all_incremental_sources_have_no_new_rows(capsys):
+    """A no-change incremental batch should not validate, write, or profile."""
+    from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
+
+    with patch(
+        "fabricops_kit.pipeline.orchestrate_write.resolve_table_id",
+        return_value="target-id",
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_schema"
+    ) as schema, patch(
+        "fabricops_kit.pipeline.orchestrate_write.pipeline_write"
+    ) as write, patch(
+        "fabricops_kit.pipeline.orchestrate_write.profile_table"
+    ) as profile:
+        result = orchestrate_write(
+            object(),
+            name="orders_incremental",
+            sources=[{"table_id": "source-id", "should_process": False}],
+            store="Silver",
+            schema="demo",
+            table_name="orders_incremental",
+            write_mode="append",
+        )
+
+    assert result["published"] is False
+    assert result["skip_reason"] == "no_new_source_records"
+    assert result["table_id"] == "target-id"
+    assert "Skipped (no new source records)" in capsys.readouterr().out
+    schema.assert_not_called()
+    write.assert_not_called()
+    profile.assert_not_called()
+
+
+def test_orchestrate_write_does_not_skip_for_mixed_source_processing_flags():
+    """A target with any processing source continues its normal validation."""
+    from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
+
+    with patch(
+        "fabricops_kit.pipeline.orchestrate_write.resolve_table_id",
+        return_value="target-id",
+    ), patch(
+        "fabricops_kit.pipeline.orchestrate_write.check_schema",
+        side_effect=RuntimeError("validation executed"),
+    ) as schema:
+        with pytest.raises(RuntimeError, match="validation executed"):
+            orchestrate_write(
+                object(),
+                name="target",
+                sources=[
+                    {"table_id": "source-a", "should_process": False},
+                    {"table_id": "source-b", "should_process": True},
+                ],
+                store="Silver",
+                schema="demo",
+                table_name="target",
+                write_mode="append",
+                verbose=False,
+            )
+    schema.assert_called_once()
