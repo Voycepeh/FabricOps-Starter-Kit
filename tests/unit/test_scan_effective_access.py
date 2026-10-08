@@ -324,15 +324,16 @@ def test_unavailable_sql_access_mode_remains_unverified():
 
 
 def test_sql_access_mode_detection_uses_only_supported_evidence():
-    """Confirm Warehouse delegated mode and OLS-synchronized user mode only."""
+    """OLS role names and SQL rows are not authoritative Lakehouse mode evidence."""
     module = _module()
     assert module._sql_access_mode({"type": "Warehouse"}, []) == "DELEGATED_IDENTITY"
-    assert module._sql_access_mode(
-        {"type": "Lakehouse"}, [{"sql_access_mode": "USER_IDENTITY"}]
-    ) == "USER_IDENTITY"
-    assert module._sql_access_mode(
-        {"type": "Lakehouse"}, [{"sql_access_mode": "UNVERIFIED"}]
-    ) == "UNVERIFIED"
+    for observed in (
+        {"sql_access_mode": "USER_IDENTITY"},
+        {"sql_access_mode": "DELEGATED_IDENTITY"},
+        {"role_name": "OLS_Reader"},
+        {"sql_access_mode": "UNVERIFIED"},
+    ):
+        assert module._sql_access_mode({"type": "Lakehouse"}, [observed]) == "UNVERIFIED"
 
 
 def test_sql_deny_overrides_the_corresponding_sql_grant():
@@ -412,8 +413,6 @@ def test_discovery_uses_caller_visible_fabric_and_sql_evidence(monkeypatch):
                     )
                 ]
             )
-        if query == module.SQL_ACCESS_MODE_QUERY:
-            return Frame([Row(sql_access_mode="USER_IDENTITY")])
         raise AssertionError(query)
 
     monkeypatch.setattr(module, "fabric_access_token", lambda: "token")
@@ -435,7 +434,8 @@ def test_discovery_uses_caller_visible_fabric_and_sql_evidence(monkeypatch):
     monkeypatch.setattr(module, "read_discovered_sql_endpoint_query", sql_query)
 
     grants, item_access, modes, complete, coverage = module._discover_access_evidence(object())
-    assert modes == {"item-a": "USER_IDENTITY"}
+    assert modes == {"item-a": "UNVERIFIED"}
+    assert "SQL_ACCESS_MODE_UNVERIFIED" in {row["reason_code"] for row in coverage}
     assert complete is False
     assert item_access[0]["item_access_permissions"] == ["READ", "READALL"]
     assert {grant["access_surface"] for grant in grants} == {"WORKSPACE", "ONELAKE", "SQL"}
