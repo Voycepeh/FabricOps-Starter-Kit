@@ -18,7 +18,7 @@ def test_scan_onelake_access_is_exposed_from_access_scanner_package():
 
 def test_role_observations_preserve_entra_and_default_reader_membership():
     """Keep explicit principals separate from automatic item-access selectors."""
-    module = importlib.import_module("fabricops_kit.access_scanner.scan_onelake_access")
+    module = importlib.import_module("fabricops_kit.access_scanner.shared")
     roles = [
         {
             "id": "role-1",
@@ -40,13 +40,13 @@ def test_role_observations_preserve_entra_and_default_reader_membership():
                     {"objectId": "user-object-id", "objectType": "User", "tenantId": "tenant-id"}
                 ],
                 "fabricItemMembers": [
-                    {"itemAccess": ["ReadAll"], "sourcePath": "workspace-id/item-id"}
+                    {"itemAccess": ["ReadAll", "Read"], "sourcePath": "workspace-id/item-id"}
                 ],
             },
         }
     ]
 
-    rows = module._role_observations(
+    rows = module.onelake_role_observations(
         target="Silver",
         workspace_id="workspace-id",
         item_id="item-id",
@@ -56,7 +56,7 @@ def test_role_observations_preserve_entra_and_default_reader_membership():
     assert len(rows) == 4
     assert {row["user_principal"] for row in rows} == {
         "user-object-id",
-        "fabric-item:workspace-id/item-id:ReadAll",
+        "fabric-item:workspace-id/item-id:Read+ReadAll",
     }
     assert {row["access_value"] for row in rows} == {"Read", "ReadWrite"}
     assert {row["permission_source"] for row in rows} == {
@@ -65,16 +65,50 @@ def test_role_observations_preserve_entra_and_default_reader_membership():
     }
     assert {(row["user_principal"], row["user_type"]) for row in rows} == {
         ("user-object-id", "USER"),
-        ("fabric-item:workspace-id/item-id:ReadAll", "FABRIC_ITEM_MEMBERS"),
+        ("fabric-item:workspace-id/item-id:Read+ReadAll", "FABRIC_ITEM_MEMBERS"),
     }
     assert all('"rows"' in row["constraints_json"] for row in rows)
 
 
+def test_catalog_search_discovers_supported_items_across_pages(monkeypatch):
+    """Use caller-scoped Catalog Search without requiring workspace enumeration."""
+    module = importlib.import_module("fabricops_kit.access_scanner.shared")
+    bodies = []
+
+    def request(url, **kwargs):
+        bodies.append(kwargs["body"])
+        if len(bodies) == 1:
+            return {"value": [{"id": "lakehouse-a"}], "continuationToken": "next"}
+        return {"value": [{"id": "warehouse-a"}]}
+
+    monkeypatch.setattr(module, "request_fabric_json", request)
+    rows = module.search_fabric_catalog(access_token="token")
+
+    assert [row["id"] for row in rows] == ["lakehouse-a", "warehouse-a"]
+    assert bodies[0] == {
+        "search": "*",
+        "filter": "Type eq 'Lakehouse' or Type eq 'Warehouse'",
+        "pageSize": 1000,
+    }
+    assert bodies[1] == {"continuationToken": "next"}
+
+
 def test_entra_members_use_exposed_principal_identity_and_preserve_types():
     """Prefer an exposed UPN while retaining group and service identities honestly."""
-    module = importlib.import_module("fabricops_kit.access_scanner.scan_onelake_access")
-    rows = module._member_rows(
-        {
+    module = importlib.import_module("fabricops_kit.access_scanner.shared")
+    rows = module.onelake_role_observations(
+        target="Silver",
+        workspace_id="workspace-id",
+        item_id="item-id",
+        roles=[{
+            "name": "Readers",
+            "decisionRules": [{
+                "effect": "Permit",
+                "permission": [
+                    {"attributeName": "Path", "attributeValueIncludedIn": ["Tables/orders"]},
+                    {"attributeName": "Action", "attributeValueIncludedIn": ["Read"]},
+                ],
+            }],
             "members": {
                 "microsoftEntraMembers": [
                     {
@@ -90,8 +124,8 @@ def test_entra_members_use_exposed_principal_identity_and_preserve_types():
                     {"objectId": "group-id-only", "objectType": "Group"},
                     {"objectId": "service-id", "objectType": "ServicePrincipal"},
                 ]
-            }
-        }
+            },
+        }],
     )
 
     assert [(row["user_principal"], row["user_type"]) for row in rows] == [

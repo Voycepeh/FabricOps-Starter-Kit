@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any
 from uuid import uuid4
 
@@ -14,6 +13,7 @@ from fabricops_kit.access_scanner.shared import (
     list_fabric_pages,
     normalise_principal_type,
     normalise_targets,
+    onelake_role_observations,
     persist_access_rows,
     target_store_kinds,
 )
@@ -28,107 +28,6 @@ def _list_data_access_roles(*, workspace_id: str, item_id: str, access_token: st
         f"{FABRIC_API_ROOT}/workspaces/{workspace_id}/items/{item_id}/dataAccessRoles",
         access_token=access_token,
     )
-
-
-def _member_rows(role: dict[str, Any]) -> list[dict[str, str]]:
-    """Flatten explicit Entra members and Fabric item-access selectors."""
-    members = role.get("members") or {}
-    rows: list[dict[str, str]] = []
-    for member in members.get("microsoftEntraMembers") or []:
-        if not isinstance(member, dict):
-            continue
-        user_type = normalise_principal_type(member.get("objectType"))
-        identity_fields = (
-            ("userPrincipalName", "principalName", "displayName", "objectId")
-            if user_type == "USER"
-            else ("displayName", "principalName", "objectId")
-        )
-        user_principal = next(
-            (str(member.get(field) or "").strip() for field in identity_fields if str(member.get(field) or "").strip()),
-            "",
-        )
-        if not user_principal:
-            continue
-        rows.append(
-            {
-                "user_principal": user_principal,
-                "user_type": user_type,
-                "permission_source": "ONELAKE_ROLE",
-                "membership_detail": str(member.get("tenantId") or ""),
-            }
-        )
-    for member in members.get("fabricItemMembers") or []:
-        if not isinstance(member, dict):
-            continue
-        source_path = str(member.get("sourcePath") or "").strip()
-        for item_access in member.get("itemAccess") or []:
-            access = str(item_access or "").strip()
-            if source_path and access:
-                rows.append(
-                    {
-                        "user_principal": f"fabric-item:{source_path}:{access}",
-                        "user_type": "FABRIC_ITEM_MEMBERS",
-                        "permission_source": "ONELAKE_ITEM_ACCESS_SELECTOR",
-                        "membership_detail": access,
-                    }
-                )
-    return rows
-
-
-def _role_observations(
-    *,
-    target: str,
-    workspace_id: str,
-    item_id: str,
-    roles: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
-    """Flatten OneLake role definitions to principal-path-action observations."""
-    observations: list[dict[str, Any]] = []
-    for role in roles:
-        role_name = str(role.get("name") or "").strip()
-        members = _member_rows(role)
-        for rule in role.get("decisionRules") or []:
-            if not isinstance(rule, dict):
-                continue
-            paths: list[str] = []
-            actions: list[str] = []
-            for scope in rule.get("permission") or []:
-                if not isinstance(scope, dict):
-                    continue
-                attribute = str(scope.get("attributeName") or "").strip().lower()
-                values = [
-                    str(value).strip()
-                    for value in (scope.get("attributeValueIncludedIn") or [])
-                    if str(value).strip()
-                ]
-                if attribute == "path":
-                    paths.extend(values)
-                elif attribute == "action":
-                    actions.extend(values)
-            constraints_json = json.dumps(rule.get("constraints") or {}, sort_keys=True, separators=(",", ":"))
-            for member in members:
-                for path in paths or ["*"]:
-                    for action in actions or ["UNKNOWN"]:
-                        observations.append(
-                            {
-                                "_target": target,
-                                "workspace_id": workspace_id,
-                                "item_id": item_id,
-                                "role_id": str(role.get("id") or ""),
-                                "role_name": role_name,
-                                "role_kind": str(role.get("kind") or ""),
-                                "role_etag": str(role.get("eTag") or ""),
-                                "user_principal": member["user_principal"],
-                                "user_type": member["user_type"],
-                                "permission_source": member["permission_source"],
-                                "membership_detail": member["membership_detail"],
-                                "access_state": str(rule.get("effect") or "Permit"),
-                                "access_value": action,
-                                "path": path,
-                                "constraints_json": constraints_json,
-                            }
-                        )
-    return observations
 
 
 def _observations_df(spark, rows: list[dict[str, Any]]):
@@ -300,7 +199,7 @@ def scan_onelake_access(
             access_token=token,
         )
         rows.extend(
-            _role_observations(
+            onelake_role_observations(
                 target=target,
                 workspace_id=store.workspace_id,
                 item_id=store.item_id,

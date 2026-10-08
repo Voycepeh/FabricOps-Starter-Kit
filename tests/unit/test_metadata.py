@@ -186,6 +186,7 @@ def test_deleted_metadata_helpers_are_not_referenced_by_active_modules():
 def test_public_callable_list_uses_compact_contract_authoring_surface():
     """Verify public callable list includes guardrail authoring helpers."""
     expected_public_callables = [
+        'scan_effective_access',
         'scan_workspace_access',
         'scan_onelake_access',
         'scan_sql_access',

@@ -1,6 +1,6 @@
 """Public entrypoints for independent Fabric access scanners."""
 
-__all__ = ["scan_workspace_access", "scan_onelake_access", "scan_sql_access"]
+__all__ = ["scan_effective_access", "scan_workspace_access", "scan_onelake_access", "scan_sql_access"]
 
 _SCANNER_MODULES = {name: f"fabricops_kit.access_scanner.{name}" for name in __all__}
 

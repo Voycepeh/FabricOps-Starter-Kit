@@ -15,6 +15,7 @@ from fabricops_kit.access_scanner.shared import (
     normalise_targets,
     persist_access_rows,
     target_store_kinds,
+    workspace_role_observations,
 )
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
@@ -27,58 +28,6 @@ def _list_workspace_role_assignments(*, workspace_id: str, access_token: str) ->
         f"{FABRIC_API_ROOT}/workspaces/{workspace_id}/roleAssignments",
         access_token=access_token,
     )
-
-
-def _principal_name(principal: dict[str, Any]) -> str:
-    """Return the most useful stable principal label exposed by the workspace API."""
-    user_details = principal.get("userDetails") or {}
-    identity_fields = (
-        (user_details.get("userPrincipalName"), principal.get("displayName"), principal.get("id"))
-        if normalise_principal_type(principal.get("type")) == "USER"
-        else (principal.get("displayName"), principal.get("id"))
-    )
-    return next((str(value).strip() for value in identity_fields if str(value or "").strip()), "")
-
-
-def _role_access_value(role: str) -> str:
-    """Normalize a workspace role to the table-data capability it implies."""
-    normalized = str(role or "").strip().lower()
-    if normalized == "viewer":
-        return "READ"
-    if normalized in {"admin", "member", "contributor"}:
-        return "READWRITE"
-    return str(role or "UNKNOWN").strip().upper() or "UNKNOWN"
-
-
-def _workspace_observations(
-    *,
-    workspace_id: str,
-    assignments: list[dict[str, Any]],
-) -> list[dict[str, str]]:
-    """Flatten workspace role assignments to normalized access observations."""
-    rows: list[dict[str, str]] = []
-    for assignment in assignments:
-        principal = assignment.get("principal") or {}
-        if not isinstance(principal, dict):
-            continue
-        principal_id = str(principal.get("id") or "").strip()
-        role = str(assignment.get("role") or "").strip()
-        if not principal_id or not role:
-            continue
-        rows.append(
-            {
-                "workspace_id": workspace_id,
-                "role_assignment_id": str(assignment.get("id") or ""),
-                "principal_id": principal_id,
-                "user_principal": _principal_name(principal) or principal_id,
-                "user_type": normalise_principal_type(principal.get("type")),
-                "role_name": role,
-                "access_value": _role_access_value(role),
-                "access_state": "GRANT",
-                "permission_source": "WORKSPACE_ROLE",
-            }
-        )
-    return rows
 
 
 def _observations_df(spark, rows: list[dict[str, str]]):
@@ -229,7 +178,7 @@ def scan_workspace_access(
     rows: list[dict[str, str]] = []
     for workspace_id in unique_workspace_ids:
         rows.extend(
-            _workspace_observations(
+            workspace_role_observations(
                 workspace_id=workspace_id,
                 assignments=_list_workspace_role_assignments(
                     workspace_id=workspace_id,

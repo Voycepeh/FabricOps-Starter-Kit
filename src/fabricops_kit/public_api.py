@@ -30,6 +30,7 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
     "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
     "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
+    "fabricops_kit.access_scanner.scan_effective_access.scan_effective_access",
     "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
     "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
     "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",

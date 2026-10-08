@@ -705,8 +705,8 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "The resolved access people have to Fabric data after combining supported access paths.",
-    "long_definition": "FabricOps combines Workspace roles, SQL endpoint grants, and OneLake security roles, then resolves principals to people where possible while retaining whether access came through an individual or group.",
-    "preferred_usage": "Use effective data access for the combined resolved view of supported Fabric access paths.",
+    "long_definition": "FabricOps combines applicable item-level access with Workspace, SQL endpoint, or OneLake Security data permissions, then resolves principals to people while preserving verification state, restrictions, and inheritance paths.",
+    "preferred_usage": "Use effective data access for the combined resolved view of supported Fabric access paths, and distinguish confirmed, unverified, and not-effective outcomes.",
     "avoid_usage": "workspace access when multiple access paths are included",
     "tooltip_labels": [
       "Effective Data Access",
