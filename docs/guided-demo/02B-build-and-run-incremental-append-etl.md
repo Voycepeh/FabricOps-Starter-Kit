@@ -103,7 +103,7 @@ display(source["dataframe"])
 
 **Why resolve the target first?** Incremental progress belongs to one exact **source → target** relationship. Another target consuming Bronze Orders may have a different last-processed watermark.
 
-**Important:** Unlike a full read, an incremental read must **not pass `query`**, even as `query=None`; FabricOps builds its own filtering predicate.
+**Important:** Do not provide custom SQL in `query` for an incremental read; FabricOps builds its own filtering predicate. Leave `query` omitted (or as `None`).
 
 Delete or skip **READ 2 — Products** and **READ 3 — Order History**. Leave the optional Read inspection cell commented out; incremental reads intentionally skip full-table profiling.
 
