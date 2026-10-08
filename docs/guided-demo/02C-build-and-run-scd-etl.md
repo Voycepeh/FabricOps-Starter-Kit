@@ -1,306 +1,89 @@
-# Step 2C. SCD Type 1 vs Type 2
+# Step 2C. Run the SCD1 and SCD2 Demo
 
-This optional Guided Demo reuses the **02 Pipeline** notebook from Step 2. You will change a copy, not the original full-refresh notebook.
+**Send three complete Product Master snapshots through one governed Full Read and compare current-state SCD1 with historical SCD2.**
 
-**Goal:** Send the same three product snapshots to two separate Silver targets so you can see the difference between SCD1 and SCD2.
+## Before you begin
 
-| | SCD1 target | SCD2 target |
-| --- | --- | --- |
-| Store | `Silver` Lakehouse | `Silver` Lakehouse |
-| Table | `demo.product_mapping_scd1` | `demo.product_mapping_scd2` |
-| Business key | `product_id` | `product_id` |
-| Change tracking | Keep latest row | Preserve history when `category` or `price` changes |
-| Effective time | Not required | `modified_datetime` |
+Download and import these assets:
 
-There is nothing extra to upload. The demo creates three tiny product snapshots directly in the copied notebook.
+- [`02C_scd_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02C_scd_demo.ipynb)
+- [`products_day1.csv`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/scd_product_master/products_day1.csv)
+- [`products_day2.csv`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/scd_product_master/products_day2.csv)
+- [`products_day3.csv`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/scd_product_master/products_day3.csv)
 
-## 1. Duplicate the notebook in Fabric
+Attach the same Fabric Environment used in Steps 00B and 2A. Keep `00_env_config` beside the notebook, and keep the CSV files under `Files/Demo/scd_product_master` in the Bronze Lakehouse.
 
-1. Open `02_pipeline` in your **Engineering Development** workspace.
-2. Make a copy named `02C_scd_demo`.
-3. Use the copy for all the edits below.
-4. Keep the same attached Fabric Environment and the `00_env_config` notebook from Step 2.
+The notebook uses one governed source and two governed targets throughout all three runs:
 
-The original `02_pipeline`, `demo.curated_orders`, and `demo.customer_summary` remain unchanged.
+| Role | Store | Table | Processing |
+| --- | --- | --- | --- |
+| Source | `Bronze` | `demo.product_master_updates` | Full Read |
+| SCD1 target | `Silver` | `demo.product_master_scd1` | Key: `product_id` |
+| SCD2 target | `Silver` | `demo.product_master_scd2` | Effective: `modified_datetime`; tracked: `product_category`, `list_price` |
 
-## 2. Keep the Environment and Data Contract cells
+## What to do
 
-Keep this setup cell:
+### 1. Run Day 1
 
-```python
-%run 00_env_config
-```
-
-Replace the import cell with:
+Leave the day cell unchanged:
 
 ```python
-from datetime import datetime
-
-from fabricops_kit import (
-    orchestrate_write,
-    read_lakehouse_table,
-    widget_select_data_contract,
-)
+DEMO_DAY = 1
 ```
 
-Keep the Data Contract selector:
+Run every cell from top to bottom. The notebook:
+
+1. runs `%run 00_env_config` and imports public FabricOps APIs;
+2. reads the complete Day 1 CSV snapshot;
+3. overwrites Bronze `demo.product_master_updates`;
+4. runs the Data Contract selector;
+5. calls `orchestrate_read()` in `full` mode;
+6. normalizes Product Master types with PySpark;
+7. calls `orchestrate_write()` once with `scd1` and once with `scd2`, passing the same governed Read result to both for lineage;
+8. displays current SCD1 rows and current/historical SCD2 versions.
+
+Expect **8 SCD1 rows** and **8 SCD2 versions**.
+
+### 2. Run Day 2
+
+Change only the day value and rerun every cell:
 
 ```python
-CONTRACTS = widget_select_data_contract(spark_session=spark)
+DEMO_DAY = 2
 ```
 
-For this optional processing-mode demo, leave both new targets without a selected contract unless you have intentionally authored contracts for them. If a target is selected in **Validate** mode, FabricOps validates but does not publish it; use **Enforce** when you want the SCD write to occur.
+The Bronze source is replaced by the complete Day 2 snapshot. Product `P002` changes `list_price`, so SCD1 updates its single current row and SCD2 closes the old version and inserts a new current version. Unchanged products do not gain history solely because their snapshot timestamp is later.
 
-## 3. Replace the Read and Transform sections with Day 1
+Expect **8 SCD1 rows** and **9 SCD2 versions**.
 
-Delete or skip the three original Read blocks and the Step 2 transformation. This demo uses a tiny inline product snapshot so the SCD behavior is easy to inspect.
+### 3. Run Day 3
 
-In the **Transform** section, create Day 1:
+Change only the day value and rerun every cell:
 
 ```python
-day_1 = spark.createDataFrame([
-    ("P001", "Snack", 2.50, datetime(2026, 10, 6, 9, 0)),
-    ("P002", "Drink", 1.80, datetime(2026, 10, 6, 9, 0)),
-    ("P003", "Fruit", 1.20, datetime(2026, 10, 6, 9, 0)),
-], ["product_id", "category", "price", "modified_datetime"])
-
-display(day_1)
+DEMO_DAY = 3
 ```
 
-This is the starting business state for both targets.
+Product `P001` changes `product_category`. SCD1 keeps one latest row for the product; SCD2 retains the former category as historical and creates a new current version.
 
-## 4. Replace WRITE 1 with the SCD1 target
+Expect **8 SCD1 rows** and **10 SCD2 versions**.
 
-Keep `writes = {}` once.
+!!! warning "Keep the days in order"
 
-Replace **WRITE 1** with:
+    Run Day 1 → Day 2 → Day 3. The notebook verifies the expected prior SCD2 version count before Days 2 and 3 and stops if a day was skipped or the targets contain an unexpected state. Replaying the current day is safe because unchanged tracked values do not create another SCD2 version.
 
-```python
-scd1_result = orchestrate_write(
-    day_1,
-    name="product_mapping_scd1",
-    sources=[],
-    store="Silver",
-    schema="demo",
-    table_name="product_mapping_scd1",
-    write_mode="scd1",
-    write_parameters={
-        "key_columns": ["product_id"],
-    },
-    contracts=CONTRACTS,
-    repartition_by=None,
-    spark_session=spark,
-)
+## Expected result
 
-writes["product_mapping_scd1"] = scd1_result
-```
+| Day | Business change | SCD1 rows | SCD2 versions |
+| --- | --- | ---: | ---: |
+| 1 | Initial eight products | 8 | 8 |
+| 2 | `P002.list_price` changes | 8 | 9 |
+| 3 | `P001.product_category` changes | 8 | 10 |
 
-For SCD1, `product_id` identifies the business row. When that product arrives again, the target keeps the latest row for that key.
+The final inspection orders SCD2 by `product_id` and `_effective_from` and shows `_effective_to` and `_is_current`, making current and historical records explicit.
 
-## 5. Replace WRITE 2 with the SCD2 target
+### Reset the demo
 
-Replace **WRITE 2** with:
+Remove Bronze `demo.product_master_updates` and both Silver demo targets, then set `DEMO_DAY = 1` and rerun from the top. If you authored Data Contracts or other Governance metadata specifically for these identities, reset them only through the normal FabricOps Governance workflow or use a fresh Guided Demo environment. Never restart Day 1 against retained SCD targets.
 
-```python
-scd2_result = orchestrate_write(
-    day_1,
-    name="product_mapping_scd2",
-    sources=[],
-    store="Silver",
-    schema="demo",
-    table_name="product_mapping_scd2",
-    write_mode="scd2",
-    write_parameters={
-        "key_columns": ["product_id"],
-        "effective_column": "modified_datetime",
-        "tracked_columns": ["category", "price"],
-    },
-    contracts=CONTRACTS,
-    repartition_by=None,
-    spark_session=spark,
-)
-
-writes["product_mapping_scd2"] = scd2_result
-```
-
-For SCD2:
-
-* `product_id` identifies the business entity.
-* `category` and `price` are the tracked business attributes.
-* `modified_datetime` tells FabricOps when a new version becomes effective.
-* FabricOps maintains `_effective_from`, `_effective_to`, and `_is_current`.
-
-A newer `modified_datetime` by itself does **not** create history when the tracked business values are unchanged.
-
-## 6. First run: create both targets
-
-Run the copied notebook from the top through both Write cells.
-
-Verify the targets:
-
-```python
-scd1 = read_lakehouse_table(
-    "product_mapping_scd1",
-    store="Silver",
-    schema="demo",
-    spark_session=spark,
-)
-
-scd2 = read_lakehouse_table(
-    "product_mapping_scd2",
-    store="Silver",
-    schema="demo",
-    spark_session=spark,
-)
-
-print("SCD1 rows:", scd1.count())
-print("SCD2 rows:", scd2.count())
-
-display(scd1.orderBy("product_id"))
-display(scd2.orderBy("product_id", "_effective_from"))
-```
-
-Expected row counts after Day 1:
-
-| Target | Rows | Meaning |
-| --- | ---: | --- |
-| SCD1 | 3 | One current row per product |
-| SCD2 | 3 | One current version per product |
-
-## 7. Second run: one change and one new product
-
-Replace only the `day_1` DataFrame cell with:
-
-```python
-day_2 = spark.createDataFrame([
-    ("P001", "Snack", 2.50, datetime(2026, 10, 7, 9, 0)),
-    ("P002", "Drink", 2.00, datetime(2026, 10, 7, 9, 0)),
-    ("P003", "Fruit", 1.20, datetime(2026, 10, 7, 9, 0)),
-    ("P004", "Snack", 3.20, datetime(2026, 10, 7, 9, 0)),
-], ["product_id", "category", "price", "modified_datetime"])
-
-display(day_2)
-```
-
-Then change the first argument of both `orchestrate_write()` calls from `day_1` to `day_2` and run the two Write cells again.
-
-Day 2 contains three cases:
-
-* `P001` is unchanged.
-* `P002` changes price from `1.80` to `2.00`.
-* `P004` is new.
-
-Expected result:
-
-| Product | SCD1 | SCD2 |
-| --- | --- | --- |
-| P001 | Still one current row | Still one version; no tracked value changed |
-| P002 | Existing row updated to price `2.00` | Old version closed and new current version inserted |
-| P004 | New row inserted | New current version inserted |
-
-Expected total rows:
-
-| Target | Rows after Day 2 |
-| --- | ---: |
-| SCD1 | 4 |
-| SCD2 | 5 |
-
-Re-run the verification cell from Step 6 to inspect the physical targets.
-
-## 8. Third run: change another tracked column
-
-Replace the snapshot cell with:
-
-```python
-day_3 = spark.createDataFrame([
-    ("P001", "Healthy Snack", 2.50, datetime(2026, 10, 8, 9, 0)),
-    ("P002", "Drink", 2.00, datetime(2026, 10, 8, 9, 0)),
-    ("P003", "Fruit", 1.20, datetime(2026, 10, 8, 9, 0)),
-    ("P004", "Snack", 3.20, datetime(2026, 10, 8, 9, 0)),
-], ["product_id", "category", "price", "modified_datetime"])
-
-display(day_3)
-```
-
-Change the first argument of both Write calls to `day_3`, then run them again.
-
-Now `P001` changes `category` from **Snack** to **Healthy Snack**.
-
-Expected SCD1 state for P001:
-
-```text
-P001  Healthy Snack  2.50
-```
-
-The previous `P001 | Snack | 2.50` row is replaced.
-
-Expected SCD2 history for P001:
-
-```text
-P001  Snack          2.50  historical
-P001  Healthy Snack  2.50  current
-```
-
-Day 2 did not create another P001 history row because neither `category` nor `price` changed.
-
-Expected total rows after Day 3:
-
-| Target | Rows |
-| --- | ---: |
-| SCD1 | 4 |
-| SCD2 | 6 |
-
-## 9. Inspect the exact SCD2 history
-
-Run:
-
-```python
-scd2 = read_lakehouse_table(
-    "product_mapping_scd2",
-    store="Silver",
-    schema="demo",
-    spark_session=spark,
-)
-
-display(
-    scd2.select(
-        "product_id",
-        "category",
-        "price",
-        "modified_datetime",
-        "_effective_from",
-        "_effective_to",
-        "_is_current",
-    ).orderBy("product_id", "_effective_from")
-)
-```
-
-You should see:
-
-* one current row for every product,
-* an additional historical P002 row because its price changed on Day 2,
-* an additional historical P001 row because its category changed on Day 3.
-
-## The comparison is simple
-
-For every incoming row:
-
-1. Match it to the current target row using `product_id`.
-2. Compare the governed business values.
-3. If the values did not change, keep the same business state.
-4. If a value changed:
-   * **SCD1** replaces the existing row.
-   * **SCD2** closes the current version and inserts a new current version.
-
-So SCD tracking is not limited to one column. In this demo, either `category` **or** `price` can cause a new SCD2 version.
-
-!!! note "Repeated snapshots are not duplicate business keys"
-    P001 appearing on Day 1, Day 2, and Day 3 is the same business key arriving in separate snapshots. Two P001 rows inside the **same** incoming snapshot are a different data-quality problem and should normally be rejected or resolved before the SCD write.
-
-## The mental model
-
-**SCD1:** “What is true now?”
-
-**SCD2:** “What was true, when was it true, and what is true now?”
-
-**Next:** return to [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md).
+**Next:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)

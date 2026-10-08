@@ -132,5 +132,5 @@ The frozen version is immutable and becomes the exact candidate Engineering sele
 
 You now have frozen contracts for the complete demo pipeline. `curated_orders` represents all nine DQ rule types, `orders` supplies the source-side Freshness and Source Drift expectations, Schema is represented across the pipeline, and Sensitive Data treatment is configured on the governed target. Step 4 can now exercise every Guardrail stage that the orchestrators actually run.
 
-**Previous:** [Step 2. Run the Development pipeline](02-build-and-run-etl.md)  
+**Previous:** [Step 2A. Run the Full Refresh Demo](02A-full-refresh-demo.md)
 **Next:** [Step 4. Select and validate the Data Contract](04-validate-frozen-data-contract.md)
