@@ -30,17 +30,6 @@ INNER JOIN sys.schemas AS s ON s.schema_id = o.schema_id
 WHERE o.type IN ('U', 'V')
 """.strip()
 
-SQL_ACCESS_MODE_QUERY = """
-SELECT CASE
-    WHEN EXISTS (
-        SELECT 1
-        FROM sys.database_principals
-        WHERE type = 'R' AND name LIKE 'OLS[_]%'
-    ) THEN 'USER_IDENTITY'
-    ELSE 'UNVERIFIED'
-END AS sql_access_mode
-""".strip()
-
 IDENTITY_COLUMNS = {
     "object_id",
     "display_name",
@@ -460,12 +449,10 @@ def _default_reader_status(
 
 
 def _sql_access_mode(item: dict[str, Any], rows: list[dict[str, Any]]) -> str:
-    """Classify a supported SQL authorization mode without guessing."""
+    """Only confirm modes established by an authoritative configuration signal."""
     if _text(item.get("type")).upper() == "WAREHOUSE":
         return SQL_MODE_DELEGATED
-    values = {_text(row.get("sql_access_mode")).upper() for row in rows}
-    if SQL_MODE_USER in values:
-        return SQL_MODE_USER
+    # OLS database role names do not prove which Lakehouse SQL mode is active.
     return SQL_MODE_UNVERIFIED
 
 
@@ -943,35 +930,8 @@ def _discover_access_evidence(
                     )
                 )
 
-            if item_type == "WAREHOUSE":
-                sql_modes[item_id] = SQL_MODE_DELEGATED
-            else:
-                try:
-                    mode_frame = read_discovered_sql_endpoint_query(
-                        spark,
-                        workspace_id=workspace_id,
-                        item_id=item_id,
-                        item_kind=item_type.lower(),
-                        database_name=item_name,
-                        query=SQL_ACCESS_MODE_QUERY,
-                    )
-                    sql_modes[item_id] = _sql_access_mode(item, _sql_endpoint_rows(mode_frame))
-                except Exception as exc:
-                    sql_modes[item_id] = SQL_MODE_UNVERIFIED
-                    coverage.append(
-                        _coverage(
-                            "SQL_ACCESS_MODE_SCAN_FAILED",
-                            str(exc),
-                            status="ERROR",
-                            scope_type="ITEM",
-                            access_surface="SQL",
-                            workspace_id=workspace_id,
-                            workspace_name=workspace_name,
-                            item_id=item_id,
-                            item_name=item_name,
-                        )
-                    )
-                if sql_modes[item_id] == SQL_MODE_UNVERIFIED:
+            sql_modes[item_id] = _sql_access_mode(item, [])
+            if item_type == "LAKEHOUSE":
                     coverage.append(
                         _coverage(
                             "SQL_ACCESS_MODE_UNVERIFIED",
