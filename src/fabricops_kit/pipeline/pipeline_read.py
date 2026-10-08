@@ -40,6 +40,26 @@ def _filter_lakehouse_incremental(dataframe: Any, scope: dict[str, Any]) -> Any:
     return dataframe.where(F.col(scope["column"]) > F.lit(scope["after"]))
 
 
+
+def _resolve_requested_incremental_columns(
+    identity: dict[str, Any],
+    contract: dict[str, Any] | None,
+    read_parameters: dict[str, Any] | None,
+) -> tuple[str, str]:
+    """Use notebook authoring in Development, with the selected contract authoritative."""
+    if not read_parameters:
+        return resolve_incremental_observation_columns(identity, contract)
+    requested = read_parameters["watermark_column"].strip()
+    if contract is not None:
+        governed, _ = resolve_incremental_observation_columns(identity, contract)
+        if requested != governed:
+            raise ValueError(
+                f"Incremental watermark {requested!r} conflicts with selected "
+                f"Data Contract watermark {governed!r}."
+            )
+    return requested, requested
+
+
 def pipeline_read(
     *,
     store: str | None = None,
@@ -48,6 +68,7 @@ def pipeline_read(
     table_id: str | None = None,
     query: str | None = None,
     read_mode: str = "full",
+    read_parameters: dict[str, Any] | None = None,
     target_table_id: str | None = None,
     spark_session=None,
     verbose: bool = True,
@@ -89,6 +110,9 @@ def pipeline_read(
         Explicit source read behaviour. ``full`` preserves the complete-source
         read. ``incremental`` resolves unconsumed work from the last Source
         Observation committed for this exact source-to-target relationship.
+    read_parameters : dict, optional
+        Incremental read configuration. Supports only watermark_column. If a
+        Data Contract is selected, its watermark must match the requested one.
     target_table_id : str, optional
         Canonical governed target being prepared. It is accepted for both read
         modes so target flows can use one consistent call shape, and is required
@@ -214,6 +238,17 @@ def pipeline_read(
     profile_table
 
     """
+    if read_parameters is not None:
+        if not isinstance(read_parameters, dict):
+            raise ValueError("read_parameters must be a dictionary.")
+        if read_mode != "incremental":
+            raise ValueError("read_parameters is supported only for incremental reads.")
+        unexpected = set(read_parameters) - {"watermark_column"}
+        if unexpected:
+            raise ValueError(f"Unsupported read_parameters: {', '.join(sorted(unexpected))}.")
+        value = read_parameters.get("watermark_column")
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("read_parameters.watermark_column must be a non-empty string.")
     coordinates = (store, schema, table_name)
     read_mode = str(read_mode or "").strip().lower()
     if read_mode not in {"full", "incremental"}:
@@ -253,7 +288,9 @@ def pipeline_read(
     )
     has_contract = contract is not None
     incremental_columns = (
-        resolve_incremental_observation_columns(identity, contract)
+        (
+            _resolve_requested_incremental_columns(identity, contract, read_parameters)
+        )
         if read_mode == "incremental"
         else None
     )
