@@ -67,12 +67,6 @@ def test_normalize_payload_stores_functions_and_relationships_once():
             "caller_qualified_name": "fabricops_kit.example.public_a",
             "callee_qualified_name": "fabricops_kit.example.helper",
             "call_count": 2,
-            "architecture_violations": [],
-            "architecture_signals": [],
-            "architecture_signal_types": [],
-            "architecture_signal_details": [],
-            "violation_types": [],
-            "violation_details": [],
         }
     ]
     assert normalized["summary"]["relationship_count"] == 1
@@ -99,7 +93,7 @@ def test_normalize_payload_keeps_resolved_edges_outside_public_reachability():
 
 
 def test_dashboard_hydrates_expanded_flows_from_normalized_relationships():
-    """Keep the interactive dashboard wired to the normalized relationship graph."""
+    """Hydrate normalized edges and default omitted optional evidence to empty arrays."""
     html = dashboard.render_dashboard(payload=flows.normalize_payload(_payload()), embed_json=True)
 
     assert "hydrateNormalizedFlows" in html
@@ -107,3 +101,31 @@ def test_dashboard_hydrates_expanded_flows_from_normalized_relationships():
     assert "children.get(qn)" in html
     assert "const next=new Set(stack)" in html
     assert "qn!==rootQn&&fn.architecture_classification==='foundational_io'" in html
+    for field in (
+        "architecture_violations",
+        "architecture_signals",
+        "architecture_signal_types",
+        "architecture_signal_details",
+        "violation_types",
+        "violation_details",
+    ):
+        assert f"relationship?.{field}||[]" in html
+
+
+def test_normalize_payload_keeps_nonempty_architecture_evidence():
+    """Omit empty edge evidence while retaining nonempty violations and signals."""
+    payload = _payload()
+    edge = payload["public_functions"][0]["flow"][1]
+    expected = {
+        "architecture_violations": [{"type": "Type 1"}],
+        "architecture_signals": [{"type": "Type 0"}],
+        "architecture_signal_types": ["Type 0"],
+        "architecture_signal_details": ["Calls foundational Fabric I/O."],
+        "violation_types": ["Type 1"],
+        "violation_details": ["Public function calls public function."],
+    }
+    edge.update(expected)
+    result = flows.normalize_payload(payload)["relationships"][0]
+
+    for field, value in expected.items():
+        assert result[field] == value
