@@ -855,6 +855,38 @@ def widget_data_contract(
         prepare_save = state.get("_prepare_data_contract_save")
         if callable(prepare_save):
             prepare_save()
+        schema_required = {
+            str(column_id)
+            for rule in current.get("guardrails", [])
+            if str(rule.get("guardrail_type") or "").lower() == "schema"
+            and bool(rule.get("is_active", True))
+            for column_id in _parameters(rule).get("required_columns", [])
+        }
+        removed_column_ids = {
+            str(rule.get("column_id") or "")
+            for rule in current.get("guardrails", [])
+            if str(rule.get("guardrail_type") or "").lower() == "sensitive_data"
+            and bool(rule.get("is_active", True))
+            and str(_parameters(rule).get("treatment") or rule.get("rule_type") or "").lower() == "remove"
+        }
+        contract_columns = json.loads(
+            str(current["contract"].get("contract_payload_json") or "{}")
+        ).get("table", {}).get("columns", [])
+        conflicting_columns = sorted({
+            str(column.get("column_name") or column.get("column_id") or "")
+            for column in contract_columns
+            if str(column.get("column_id") or "") in removed_column_ids
+            and (
+                str(column.get("column_id") or "") in schema_required
+                or str(column.get("column_name") or "") in schema_required
+            )
+        })
+        if conflicting_columns:
+            raise ValueError(
+                "Removed output columns cannot be Required: "
+                + ", ".join(conflicting_columns)
+                + ". Clear Required before saving."
+            )
         payload = refresh_manifest()
         if payload is None:
             raise ValueError("Data Contract draft has no payload to save.")
@@ -2443,8 +2475,9 @@ def widget_data_contract(
         rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
         required = widgets.Checkbox(description="Required", disabled=not editable, layout=widgets.Layout(width="auto", min_width="0", margin="0"))
         required.add_class("fabricops-column-required")
+        required_hint = widgets.HTML()
         column_header = widgets.VBox(
-            [column_context, required],
+            [column_context, required, required_hint],
             layout=widgets.Layout(width="100%", min_width="0", gap="4px", align_items="flex-start"),
         )
         datatype_choice = widgets.Dropdown(
@@ -2844,12 +2877,46 @@ def widget_data_contract(
         state["_load_selected_profile"] = load_selected_profile
 
 
+        removal_confirmation = widgets.HTML()
+        confirm_removal = widgets.Button(description="Remove and uncheck Required", button_style="warning")
+        cancel_removal = widgets.Button(description="Cancel")
+        removal_confirmation_box = widgets.VBox(
+            [removal_confirmation, widgets.HBox([confirm_removal, cancel_removal])],
+            layout=widgets.Layout(width="100%", gap="6px", display="none"),
+        )
+        removal_state = {"pending": False, "previous_treatment": "tokenize", "previous_enabled": False}
+
         def update_sensitive_fields(change: dict[str, Any] | None = None) -> None:
             treatment = str(sensitive_treatment.value or "")
             for control in (mask_start, mask_end, mask_character):
                 control.layout.display = "" if treatment == "mask" else "none"
             for control in (bucket_bins, bucket_labels):
                 control.layout.display = "" if treatment == "bucket" else "none"
+            removing = bool(sensitive_enabled.value) and treatment == "remove"
+            if removing and required.value and editable and not hydrating["active"] and not removal_state["pending"]:
+                removal_state["pending"] = True
+                if change and change.get("owner") is sensitive_treatment:
+                    removal_state["previous_treatment"] = str(change.get("old") or "tokenize")
+                    removal_state["previous_enabled"] = bool(sensitive_enabled.value)
+                else:
+                    removal_state["previous_treatment"] = treatment
+                    removal_state["previous_enabled"] = False
+            if removal_state["pending"] and (not removing or not required.value):
+                removal_state["pending"] = False
+            removal_confirmation_box.layout.display = "" if removal_state["pending"] else "none"
+            removal_confirmation.value = (
+                "<div style='background:#fff7e6;border-left:3px solid #b76e00;"
+                "padding:9px 12px;font-size:12px;line-height:1.5;'>"
+                "<b>Remove this column?</b> It is currently marked Required. "
+                "Continuing will uncheck Required and exclude the column from the written output."
+                "</div>"
+            ) if removal_state["pending"] else ""
+            required.disabled = (not editable) or (removing and not removal_state["pending"])
+            required_hint.value = (
+                "<span style='color:#667085;font-size:12px;'>"
+                "Removed columns cannot be required in the written output.</span>"
+                if removing and not removal_state["pending"] else ""
+            )
             column_classification.disabled = (not editable) or treatment == "remove"
             column_classification.layout.width = "100%"
             column_classification.layout.min_width = "0"
@@ -2914,7 +2981,28 @@ def widget_data_contract(
         ):
             sensitive_control.observe(refresh_sensitive_rule_preview, names="value")
 
+        def confirm_column_removal(_button: Any) -> None:
+            if not removal_state["pending"]:
+                return
+            removal_state["pending"] = False
+            required.value = False
+            update_sensitive_fields()
+            sync_sensitive()
+
+        def cancel_column_removal(_button: Any) -> None:
+            if not removal_state["pending"]:
+                return
+            removal_state["pending"] = False
+            if str(sensitive_treatment.value or "") != removal_state["previous_treatment"]:
+                sensitive_treatment.value = removal_state["previous_treatment"]
+            else:
+                sensitive_enabled.value = removal_state["previous_enabled"]
+            update_sensitive_fields()
+
+        confirm_removal.on_click(confirm_column_removal)
+        cancel_removal.on_click(cancel_column_removal)
         sensitive_treatment.observe(update_sensitive_fields, names="value")
+        sensitive_enabled.observe(update_sensitive_fields, names="value")
         column_classification.observe(refresh_sensitive_rule_preview, names="value")
 
         def working_sensitive_changed(change: dict[str, Any]) -> None:
@@ -3395,7 +3483,7 @@ def widget_data_contract(
             )
 
         def sync_sensitive(_change: dict[str, Any] | None = None) -> None:
-            if hydrating["active"] or not editable:
+            if hydrating["active"] or not editable or removal_state["pending"]:
                 return
             cid = str(column_select.value or "")
             if not cid:
@@ -3794,6 +3882,7 @@ def widget_data_contract(
             [
                 pii_type,
                 sensitive_treatment,
+                removal_confirmation_box,
                 column_classification,
                 mask_start,
                 mask_end,
