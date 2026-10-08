@@ -242,6 +242,7 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
     assert calls[0][0].lstrip().upper().startswith("WITH")
     assert "DECLARE" not in calls[0][0].upper()
     assert "SP_EXECUTESQL" not in calls[0][0].upper()
+    assert "COLLATE" not in calls[0][0].upper()
 
 
 def test_scan_sql_access_scans_each_unique_target(monkeypatch, spark_session):

@@ -22,24 +22,24 @@ from fabricops_kit.access_scanner.shared import (
 SQL_ACCESS_QUERY = r"""
 WITH direct_permissions AS (
     SELECT
-        u.name COLLATE Latin1_General_100_BIN2_UTF8 AS user_name,
-        u.type_desc COLLATE Latin1_General_100_BIN2_UTF8 AS user_type,
-        CAST(NULL AS VARCHAR(256)) COLLATE Latin1_General_100_BIN2_UTF8 AS role_name,
-        'Direct Permission' COLLATE Latin1_General_100_BIN2_UTF8 AS permission_source,
-        dp.state_desc COLLATE Latin1_General_100_BIN2_UTF8 AS state_desc,
-        dp.permission_name COLLATE Latin1_General_100_BIN2_UTF8 AS permission_name,
-        dp.class_desc COLLATE Latin1_General_100_BIN2_UTF8 AS class_desc,
-        DB_NAME() COLLATE Latin1_General_100_BIN2_UTF8 AS database_name,
+        u.name AS user_name,
+        u.type_desc AS user_type,
+        CAST(NULL AS VARCHAR(256)) AS role_name,
+        'Direct Permission' AS permission_source,
+        dp.state_desc AS state_desc,
+        dp.permission_name AS permission_name,
+        dp.class_desc AS class_desc,
+        DB_NAME() AS database_name,
         CASE
             WHEN dp.class_desc = 'SCHEMA' THEN permission_schema.name
             WHEN dp.class_desc = 'OBJECT_OR_COLUMN' THEN object_schema.name
-        END COLLATE Latin1_General_100_BIN2_UTF8 AS schema_name,
+        END AS schema_name,
         CASE
             WHEN dp.class_desc = 'OBJECT_OR_COLUMN' THEN o.name
-        END COLLATE Latin1_General_100_BIN2_UTF8 AS object_name,
+        END AS object_name,
         CASE
             WHEN dp.class_desc = 'OBJECT_OR_COLUMN' THEN o.type_desc
-        END COLLATE Latin1_General_100_BIN2_UTF8 AS object_type
+        END AS object_type
     FROM sys.database_principals u
     INNER JOIN sys.database_permissions dp
         ON dp.grantee_principal_id = u.principal_id
@@ -55,24 +55,24 @@ WITH direct_permissions AS (
 ),
 role_permissions AS (
     SELECT
-        u.name COLLATE Latin1_General_100_BIN2_UTF8 AS user_name,
-        u.type_desc COLLATE Latin1_General_100_BIN2_UTF8 AS user_type,
-        r.name COLLATE Latin1_General_100_BIN2_UTF8 AS role_name,
-        'Via Role' COLLATE Latin1_General_100_BIN2_UTF8 AS permission_source,
-        dp.state_desc COLLATE Latin1_General_100_BIN2_UTF8 AS state_desc,
-        dp.permission_name COLLATE Latin1_General_100_BIN2_UTF8 AS permission_name,
-        dp.class_desc COLLATE Latin1_General_100_BIN2_UTF8 AS class_desc,
-        DB_NAME() COLLATE Latin1_General_100_BIN2_UTF8 AS database_name,
+        u.name AS user_name,
+        u.type_desc AS user_type,
+        r.name AS role_name,
+        'Via Role' AS permission_source,
+        dp.state_desc AS state_desc,
+        dp.permission_name AS permission_name,
+        dp.class_desc AS class_desc,
+        DB_NAME() AS database_name,
         CASE
             WHEN dp.class_desc = 'SCHEMA' THEN permission_schema.name
             WHEN dp.class_desc = 'OBJECT_OR_COLUMN' THEN object_schema.name
-        END COLLATE Latin1_General_100_BIN2_UTF8 AS schema_name,
+        END AS schema_name,
         CASE
             WHEN dp.class_desc = 'OBJECT_OR_COLUMN' THEN o.name
-        END COLLATE Latin1_General_100_BIN2_UTF8 AS object_name,
+        END AS object_name,
         CASE
             WHEN dp.class_desc = 'OBJECT_OR_COLUMN' THEN o.type_desc
-        END COLLATE Latin1_General_100_BIN2_UTF8 AS object_type
+        END AS object_type
     FROM sys.database_role_members rm
     INNER JOIN sys.database_principals u
         ON u.principal_id = rm.member_principal_id
