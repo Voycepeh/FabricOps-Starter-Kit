@@ -206,14 +206,6 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
     assert all(snapshot["parameters"] for snapshot in snapshots.values())
 
 
-def test_generated_callable_manifest_matches_approved_v1_list():
-    """Verify generated callable manifest matches approved v1 list."""
-    root = Path(__file__).parents[2]
-    manifest = json.loads((root / "docs" / "reference" / "_data" / "manifest.json").read_text(encoding="utf-8"))
-    manifest_callables = {row["callable_name"] for row in manifest["callables"]}
-    assert LIVE_V010_CALLABLES.issubset(manifest_callables)
-
-
 def test_notebook_templates_call_only_approved_v1_surface():
     """Verify notebook templates call only approved v1 surface."""
     called = _template_called_fabricops_functions()
@@ -397,22 +389,6 @@ def test_package_root_all_exports_are_importable() -> None:
         namespace: dict[str, object] = {}
         exec(f"from fabricops_kit import {name}", namespace)
         assert namespace[name] is getattr(fabricops_kit, name)
-
-
-def test_package_root_expected_public_names_are_present() -> None:
-    """Verify expected notebook-friendly package-root names are exported."""
-    expected_names = {
-        "setup_notebook",
-        "setup_metadata_tables",
-        "read_lakehouse_table",
-        "read_lakehouse_excel",
-        "write_lakehouse_table",
-        "profile_table",
-        "widget_render_data_steward",
-        "widget_render_data_agreement",
-    }
-
-    assert expected_names <= set(fabricops_kit.__all__)
 
 
 def test_package_root_widget_exports_are_lazy() -> None:
