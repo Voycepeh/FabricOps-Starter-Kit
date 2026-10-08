@@ -22,6 +22,8 @@ The Orders source was created in [Step 00C](00C-prepare-demo-data-with-fabricops
 
 The sample Bronze Orders source already contains `modified_datetime`. Specify that column in the copied notebook's `orchestrate_read()` call using `read_parameters`; you do **not** need to edit the Data Catalogue manually.
 
+This requires a FabricOps package version containing the `read_parameters` incremental-read API. If Fabric reports `unexpected keyword argument 'read_parameters'`, update the attached Fabric Environment to a build containing that API before continuing; editing the Catalogue will not make the older function signature accept it.
+
 FabricOps manages the accepted watermark for each source-to-target relationship, only committing progress after a successful target publication. If a selected or active Data Contract sets a different watermark, FabricOps rejects the mismatch rather than silently overriding it.
 
 See [Read and Load Strategies](../reference/read-and-load-strategies.md) for the state lifecycle.
@@ -164,7 +166,7 @@ display(silver_rows)
 
 ## 8. Insert two new Orders into Bronze
 
-After a successful first publication, run the following **one-time test cell** in the same notebook. It takes two sample Orders, gives them new IDs, and ensures their `modified_datetime` is later than the current source maximum.
+After a successful first publication, create a **separate one-time test cell**, preferably at the very bottom of the notebook beneath the optional inspection cells. Run it manually **exactly once**, after the first pipeline execution. Do not include it in subsequent **Run all** executions; either remove the cell after insertion or skip it explicitly. It takes two sample Orders, gives them new IDs, and ensures their `modified_datetime` is later than the current source maximum.
 
 ```python
 bronze_orders = read_lakehouse_table(
@@ -212,7 +214,7 @@ This directly changes the **demo Bronze source**, not the Silver target. Only ru
 
 ## 9. Second run: append only new rows
 
-Run the modified pipeline again **from the top**, but **do not execute the one-time test insertion cell again**.
+Run the modified pipeline again from the Environment cell through WRITE 1. Do **not** execute the one-time insertion cell again. If you use **Run all**, first remove that insertion cell.
 
 Check that:
 
@@ -225,7 +227,7 @@ The scope uses `modified_datetime > last committed watermark`, not `>=`.
 
 ## 10. Third run: no new data
 
-Run the pipeline a third time **without inserting any more Bronze rows**.
+Run the same pipeline cells a third time **without inserting any more Bronze rows**. Keep the one-time insertion cell removed or skipped.
 
 The expected result is:
 
