@@ -25,6 +25,8 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -70,10 +72,9 @@ jobs:
           set -euo pipefail
           wheel_path="$(find dist -maxdepth 1 -name '*.whl' -print -quit)"
           test -n "${wheel_path}"
-          python -m venv "${RUNNER_TEMP}/fabricops-wheel-smoke"
+          uv venv "${RUNNER_TEMP}/fabricops-wheel-smoke"
+          uv pip install --python "${RUNNER_TEMP}/fabricops-wheel-smoke/bin/python" "pyspark>=4.1.1" "${wheel_path}"
           source "${RUNNER_TEMP}/fabricops-wheel-smoke/bin/activate"
-          python -m pip install --upgrade pip
-          python -m pip install "pyspark>=4.1.1" "${wheel_path}"
           python - <<'PY'
           from importlib.metadata import version
           import fabricops_kit as kit
