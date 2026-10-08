@@ -51,12 +51,16 @@ def normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
             edge["call_count"] = max(edge["call_count"], int(row.get("call_count_from_parent") or 1))
             if row.get("architecture_violations"):
                 edge["architecture_violations"] = copy.deepcopy(row["architecture_violations"])
-                edge["violation_types"] = list(row.get("violation_types", []))
-                edge["violation_details"] = list(row.get("violation_details", []))
+                if row.get("violation_types"):
+                    edge["violation_types"] = list(row["violation_types"])
+                if row.get("violation_details"):
+                    edge["violation_details"] = list(row["violation_details"])
             if row.get("architecture_signals"):
                 edge["architecture_signals"] = copy.deepcopy(row["architecture_signals"])
-                edge["architecture_signal_types"] = list(row.get("architecture_signal_types", []))
-                edge["architecture_signal_details"] = list(row.get("architecture_signal_details", []))
+                if row.get("architecture_signal_types"):
+                    edge["architecture_signal_types"] = list(row["architecture_signal_types"])
+                if row.get("architecture_signal_details"):
+                    edge["architecture_signal_details"] = list(row["architecture_signal_details"])
 
     # Include resolved calls outside public-root reachability as well. These edges are
     # already represented by each function's canonical inbound_callers list.
