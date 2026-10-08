@@ -1,32 +1,82 @@
 # Step 2C. SCD Type 1 vs Type 2
 
-This is an **optional processing-mode demo** using three tiny inline snapshots of a simple food product table. There is nothing extra to upload.
+This optional Guided Demo reuses the **02 Pipeline** notebook from Step 2. You will change a copy, not the original full-refresh notebook.
 
-## Story
+**Goal:** Send the same three product snapshots to two separate Silver targets so you can see the difference between SCD1 and SCD2.
 
-A source system sends the current **food product table of truth** each day.
+| | SCD1 target | SCD2 target |
+| --- | --- | --- |
+| Store | `Silver` Lakehouse | `Silver` Lakehouse |
+| Table | `demo.product_mapping_scd1` | `demo.product_mapping_scd2` |
+| Business key | `product_id` | `product_id` |
+| Change tracking | Keep latest row | Preserve history when `category` or `price` changes |
+| Effective time | Not required | `modified_datetime` |
 
-The question is simple: for the same `product_id`, did any tracked value such as `category` or `price` change?
+There is nothing extra to upload. The demo creates three tiny product snapshots directly in the copied notebook.
 
-If nothing changed, both SCD1 and SCD2 keep the same business state. If something changed, SCD1 replaces the old state while SCD2 preserves the old version and starts a new one.
+## 1. Duplicate the notebook in Fabric
 
-## 1. Day 1 product snapshot
+1. Open `02_pipeline` in your **Engineering Development** workspace.
+2. Make a copy named `02C_scd_demo`.
+3. Use the copy for all the edits below.
+4. Keep the same attached Fabric Environment and the `00_env_config` notebook from Step 2.
+
+The original `02_pipeline`, `demo.curated_orders`, and `demo.customer_summary` remain unchanged.
+
+## 2. Keep the Environment and Data Contract cells
+
+Keep this setup cell:
+
+```python
+%run 00_env_config
+```
+
+Replace the import cell with:
 
 ```python
 from datetime import datetime
-from fabricops_kit import orchestrate_write
 
+from fabricops_kit import (
+    orchestrate_write,
+    read_lakehouse_table,
+    widget_select_data_contract,
+)
+```
+
+Keep the Data Contract selector:
+
+```python
+CONTRACTS = widget_select_data_contract(spark_session=spark)
+```
+
+For this optional processing-mode demo, leave both new targets without a selected contract unless you have intentionally authored contracts for them. If a target is selected in **Validate** mode, FabricOps validates but does not publish it; use **Enforce** when you want the SCD write to occur.
+
+## 3. Replace the Read and Transform sections with Day 1
+
+Delete or skip the three original Read blocks and the Step 2 transformation. This demo uses a tiny inline product snapshot so the SCD behavior is easy to inspect.
+
+In the **Transform** section, create Day 1:
+
+```python
 day_1 = spark.createDataFrame([
     ("P001", "Snack", 2.50, datetime(2026, 10, 6, 9, 0)),
     ("P002", "Drink", 1.80, datetime(2026, 10, 6, 9, 0)),
     ("P003", "Fruit", 1.20, datetime(2026, 10, 6, 9, 0)),
 ], ["product_id", "category", "price", "modified_datetime"])
+
+display(day_1)
 ```
 
-Write the same starting snapshot to two separate targets:
+This is the starting business state for both targets.
+
+## 4. Replace WRITE 1 with the SCD1 target
+
+Keep `writes = {}` once.
+
+Replace **WRITE 1** with:
 
 ```python
-orchestrate_write(
+scd1_result = orchestrate_write(
     day_1,
     name="product_mapping_scd1",
     sources=[],
@@ -37,10 +87,22 @@ orchestrate_write(
     write_parameters={
         "key_columns": ["product_id"],
     },
+    contracts=CONTRACTS,
+    repartition_by=None,
     spark_session=spark,
 )
 
-orchestrate_write(
+writes["product_mapping_scd1"] = scd1_result
+```
+
+For SCD1, `product_id` identifies the business row. When that product arrives again, the target keeps the latest row for that key.
+
+## 5. Replace WRITE 2 with the SCD2 target
+
+Replace **WRITE 2** with:
+
+```python
+scd2_result = orchestrate_write(
     day_1,
     name="product_mapping_scd2",
     sources=[],
@@ -53,13 +115,61 @@ orchestrate_write(
         "effective_column": "modified_datetime",
         "tracked_columns": ["category", "price"],
     },
+    contracts=CONTRACTS,
+    repartition_by=None,
     spark_session=spark,
 )
+
+writes["product_mapping_scd2"] = scd2_result
 ```
 
-## 2. Day 2 product snapshot
+For SCD2:
 
-On Day 2, P001 is unchanged, P002 changes price, and P004 is new.
+* `product_id` identifies the business entity.
+* `category` and `price` are the tracked business attributes.
+* `modified_datetime` tells FabricOps when a new version becomes effective.
+* FabricOps maintains `_effective_from`, `_effective_to`, and `_is_current`.
+
+A newer `modified_datetime` by itself does **not** create history when the tracked business values are unchanged.
+
+## 6. First run: create both targets
+
+Run the copied notebook from the top through both Write cells.
+
+Verify the targets:
+
+```python
+scd1 = read_lakehouse_table(
+    "product_mapping_scd1",
+    store="Silver",
+    schema="demo",
+    spark_session=spark,
+)
+
+scd2 = read_lakehouse_table(
+    "product_mapping_scd2",
+    store="Silver",
+    schema="demo",
+    spark_session=spark,
+)
+
+print("SCD1 rows:", scd1.count())
+print("SCD2 rows:", scd2.count())
+
+display(scd1.orderBy("product_id"))
+display(scd2.orderBy("product_id", "_effective_from"))
+```
+
+Expected row counts after Day 1:
+
+| Target | Rows | Meaning |
+| --- | ---: | --- |
+| SCD1 | 3 | One current row per product |
+| SCD2 | 3 | One current version per product |
+
+## 7. Second run: one change and one new product
+
+Replace only the `day_1` DataFrame cell with:
 
 ```python
 day_2 = spark.createDataFrame([
@@ -68,39 +178,38 @@ day_2 = spark.createDataFrame([
     ("P003", "Fruit", 1.20, datetime(2026, 10, 7, 9, 0)),
     ("P004", "Snack", 3.20, datetime(2026, 10, 7, 9, 0)),
 ], ["product_id", "category", "price", "modified_datetime"])
+
+display(day_2)
 ```
 
-Run the same two `orchestrate_write()` calls again using `day_2`.
+Then change the first argument of both `orchestrate_write()` calls from `day_1` to `day_2` and run the two Write cells again.
 
-### What happens to P001?
+Day 2 contains three cases:
 
-Day 1 and Day 2 both contain:
+* `P001` is unchanged.
+* `P002` changes price from `1.80` to `2.00`.
+* `P004` is new.
 
-```text
-P001  Snack  2.50
-```
+Expected result:
 
-Nothing tracked changed.
+| Product | SCD1 | SCD2 |
+| --- | --- | --- |
+| P001 | Still one current row | Still one version; no tracked value changed |
+| P002 | Existing row updated to price `2.00` | Old version closed and new current version inserted |
+| P004 | New row inserted | New current version inserted |
 
-**SCD1** still has one row:
+Expected total rows:
 
-```text
-P001  Snack  2.50
-```
+| Target | Rows after Day 2 |
+| --- | ---: |
+| SCD1 | 4 |
+| SCD2 | 5 |
 
-**SCD2** also still has one version:
+Re-run the verification cell from Step 6 to inspect the physical targets.
 
-```text
-P001  Snack  2.50  Day 1 → current
-```
+## 8. Third run: change another tracked column
 
-It does **not** create another history row just because another daily snapshot arrived. The newer `modified_datetime` is not a tracked business attribute; only `category` and `price` are compared for SCD2 change detection.
-
-P002 is different: its price changed from 1.80 to 2.00, so SCD1 updates the row and SCD2 creates a new version. P004 is inserted as a new product in both targets.
-
-## 3. Day 3 product snapshot
-
-Now P001 changes category from **Snack** to **Healthy Snack**.
+Replace the snapshot cell with:
 
 ```python
 day_3 = spark.createDataFrame([
@@ -109,43 +218,84 @@ day_3 = spark.createDataFrame([
     ("P003", "Fruit", 1.20, datetime(2026, 10, 8, 9, 0)),
     ("P004", "Snack", 3.20, datetime(2026, 10, 8, 9, 0)),
 ], ["product_id", "category", "price", "modified_datetime"])
+
+display(day_3)
 ```
 
-Run the same two `orchestrate_write()` calls again using `day_3`.
+Change the first argument of both Write calls to `day_3`, then run them again.
 
-### SCD1 after Day 3
+Now `P001` changes `category` from **Snack** to **Healthy Snack**.
 
-SCD1 keeps only the latest truth:
+Expected SCD1 state for P001:
 
 ```text
 P001  Healthy Snack  2.50
 ```
 
-The old `P001 | Snack | 2.50` state is replaced.
+The previous `P001 | Snack | 2.50` row is replaced.
 
-### SCD2 after Day 3
-
-SCD2 preserves both versions:
+Expected SCD2 history for P001:
 
 ```text
-P001  Snack          2.50  Day 1 → Day 3  historical
-P001  Healthy Snack  2.50  Day 3 → current
+P001  Snack          2.50  historical
+P001  Healthy Snack  2.50  current
 ```
 
-Day 2 did not create another P001 version because nothing tracked changed that day.
+Day 2 did not create another P001 history row because neither `category` nor `price` changed.
+
+Expected total rows after Day 3:
+
+| Target | Rows |
+| --- | ---: |
+| SCD1 | 4 |
+| SCD2 | 6 |
+
+## 9. Inspect the exact SCD2 history
+
+Run:
+
+```python
+scd2 = read_lakehouse_table(
+    "product_mapping_scd2",
+    store="Silver",
+    schema="demo",
+    spark_session=spark,
+)
+
+display(
+    scd2.select(
+        "product_id",
+        "category",
+        "price",
+        "modified_datetime",
+        "_effective_from",
+        "_effective_to",
+        "_is_current",
+    ).orderBy("product_id", "_effective_from")
+)
+```
+
+You should see:
+
+* one current row for every product,
+* an additional historical P002 row because its price changed on Day 2,
+* an additional historical P001 row because its category changed on Day 3.
 
 ## The comparison is simple
 
-1. Match the incoming row to the current row by `product_id`.
-2. Compare the tracked columns, here `category` and `price`.
-3. If none of those values changed, keep the current business state.
-4. If any tracked value changed:
-   - **SCD1** replaces the existing row.
-   - **SCD2** closes the existing version and inserts a new current version.
+For every incoming row:
 
-So SCD tracking is **not limited to one column**. Any configured tracked column can trigger a change.
+1. Match it to the current target row using `product_id`.
+2. Compare the governed business values.
+3. If the values did not change, keep the same business state.
+4. If a value changed:
+   * **SCD1** replaces the existing row.
+   * **SCD2** closes the current version and inserts a new current version.
 
-> **Note:** seeing P001 unchanged on Day 1 and Day 2 is not a duplicate-key problem. It is the same business key arriving again in a later snapshot. Two P001 rows inside the **same** snapshot would be a different issue and should normally be rejected or resolved before the SCD write.
+So SCD tracking is not limited to one column. In this demo, either `category` **or** `price` can cause a new SCD2 version.
+
+!!! note "Repeated snapshots are not duplicate business keys"
+    P001 appearing on Day 1, Day 2, and Day 3 is the same business key arriving in separate snapshots. Two P001 rows inside the **same** incoming snapshot are a different data-quality problem and should normally be rejected or resolved before the SCD write.
 
 ## The mental model
 
