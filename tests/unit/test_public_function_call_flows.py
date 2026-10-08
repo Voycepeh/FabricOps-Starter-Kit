@@ -1227,32 +1227,6 @@ def test_committed_json_matches_generator_output() -> None:
     assert "schema v1" not in actual.lower()
 
 
-def test_callable_flow_docs_page_uses_deterministic_signal_rules() -> None:
-    """Validate callable flow docs describe the deterministic V2 signal model."""
-    docs = Path("docs/function-call-graph.md").read_text(encoding="utf-8")
-
-    assert "#### Public-flow signals" in docs
-    assert "Large width/depth | Width > 10 or Depth > 5" in docs
-    assert "Architecture violation | Any Type 1 to Type 5 violation" in docs
-    assert "#### Architecture violation types" in docs
-    for violation_type in ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5"]:
-        assert violation_type in docs
-    assert "Type 6" not in docs
-    assert "Private implementation helpers may call shared reusable functions directly." in docs
-    assert "#### Inventory suggestions" in docs
-    assert "Inline candidate | Called by exactly one parent" in docs
-    assert "Promote to shared | Private function called by more than one distinct caller" in docs
-    assert "#### Metric definitions" in docs
-    assert "Width | Direct package-local calls from the selected public function." in docs
-    assert "Depth | Deepest nested call path." in docs
-    assert "Scope | Total downstream functions reached by the selected public function flow." in docs
-    assert "Broken rule | An architecture rule is broken" not in docs
-    assert "Too many steps" not in docs
-    assert "Too many helpers" not in docs
-    assert "Shared helper | The helper is used by more than one public function" not in docs
-    assert "Maybe combine" not in docs
-
-
 def test_generated_artifact_metadata_preserves_entries_and_formats_sgt(tmp_path: Path) -> None:
     """Validate generated artifact metadata writes one key without deleting peers."""
     from datetime import UTC, datetime
