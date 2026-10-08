@@ -1,0 +1,36 @@
+name: Generate PR 1575 Artifacts
+on:
+  push:
+    branches: [feat/incremental-read-watermark-parameters]
+    paths: [.github/workflows/generate-pr1575-artifacts.yml]
+permissions:
+  contents: write
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: true
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - run: uv sync --frozen --extra docs --extra dev
+      - name: Generate authoritative source artifacts
+        run: |
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff --stat
+          git add docs/reference/_data/public-function-call-flows.json
+          git add docs/reference/_data/generated-artifacts.json
+          git add docs/api/reference/orchestrate_read.md docs/api/reference/pipeline_read.md
+          git add docs/reference/index.md docs/reference/function-call-graph.md
+          git diff --cached --stat
+          if ! git diff --cached --quiet; then
+            git config user.name github-actions[bot]
+            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git commit -m "docs: regenerate directly affected public API artifacts"
+            git push
+          fi
