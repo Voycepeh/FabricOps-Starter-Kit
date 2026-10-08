@@ -61,7 +61,7 @@ The repository is authoritative. When generated output disagrees with the implem
 Before changing a public function or helper, the agent reads:
 
 * `AGENTS.md`
-* `docs/reference/_data/public-function-call-flows.json`
+* a scoped lookup through `python scripts/query_public_function_call_flow.py <qualified_name>`
 
 This gives the agent the current:
 
@@ -70,7 +70,7 @@ This gives the agent the current:
 * source locations
 * architecture signals
 
-The purpose of this step is to understand the existing function boundary and downstream impact before editing code.
+Use `--depth 2` or `--callers` only when needed. The command reads the generated contract but prints just the selected function and its requested graph neighborhood, avoiding full-file model context. The source remains authoritative.
 
 ### 3. Edit function source
 

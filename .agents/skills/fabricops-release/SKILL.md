@@ -554,14 +554,3 @@ GitHub Releases and tags are immutable release evidence. Prefer deprecating a ba
 | `00` / `02` release template snapshots | Deterministic release provenance | Copy exactly from the release tag into `templates/releases/vX.Y.Z/`; never modernize the frozen copies. |
 | `00_env_config.ipynb` / `02_pipeline.ipynb` GitHub Release assets | Tag workflow | Publish the exact frozen notebooks individually; no ZIP bundle is required. |
 | Tag creation | Human-approved automation | AI pauses before creating or pushing tags. |
-
-## 19. Exact source-code links
-
-- Package configuration: [`pyproject.toml`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/pyproject.toml)
-- Package root and exports: [`src/fabricops_kit/__init__.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/__init__.py)
-- Public API registry: [`src/fabricops_kit/public_api.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/public_api.py)
-- Metadata schema registry: [`src/fabricops_kit/config/metadata_schemas.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py)
-- Release manifests: [`docs/releases/manifests/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/docs/releases/manifests/)
-- Release workflow automation: [`.github/workflows/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/.github/workflows/)
-- Release inventory entry point: [`scripts/generate_release_inventory.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_release_inventory.py)
-- Release inventory implementation: [`scripts/release_inventory.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/release_inventory.py)

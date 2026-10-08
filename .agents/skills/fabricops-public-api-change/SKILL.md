@@ -15,24 +15,20 @@ Do not use this skill for docs-only wording, release-only presentation, or noteb
 
 ## Context to inspect
 
-Inspect only the sources relevant to the task:
+Start with `AGENTS.md`, the owner source file, and targeted tests. Retrieve callable context without reading the entire generated contract:
 
-- `AGENTS.md`
-- the target function record in `docs/reference/_data/public-function-call-flows.json`
-- the target's direct caller/callee relationships in the same JSON when call structure matters
-- `src/fabricops_kit/public_api.py`
-- the callable owner file and package `shared.py`
-- package exports
-- relevant tests
-- `scripts/reference_docs_metadata.py` only when reference categorisation, usage notes, or examples change
+```bash
+python scripts/query_public_function_call_flow.py <qualified_name>
+python scripts/query_public_function_call_flow.py <qualified_name> --depth 2 --callers
+```
 
-The current call-flow JSON is normalized rather than storing a duplicated expanded tree under every public callable. Use `public_functions` for public-root metrics and lifecycle, `defined_functions` for one record per callable, and `relationships` for direct caller-to-callee edges. Follow `relationships` recursively only when transitive helper reachability is needed.
+Add `src/fabricops_kit/public_api.py`, exports, shared helpers, and `scripts/reference_docs_metadata.py` only when the requested change affects those boundaries. Use deeper graph traversal only when necessary. Source and exports, not generated JSON, determine actual behavior.
 
 ## Workflow
 
 1. Classify the callable as Live, Preview, Discontinued, Internal, or Private before deciding compatibility requirements. For Live callables, identify the existing observable contract before editing. For Preview, Internal, or Private callables, do not preserve obsolete structure merely for backwards compatibility.
 2. Identify the smallest valid owner-file seam and reuse existing shared helpers.
-3. Inspect the observable contract and current call flow. Find the callable by `qualified_name`, then inspect direct relationships and recurse only when the downstream scope is relevant. Check whether a physical read/write is genuinely reusable/user-facing or only workflow-specific.
+3. Inspect the observable contract and current call flow. Use the targeted callable lookup and expand its depth only when the downstream scope is relevant. Check whether a physical read/write is genuinely reusable/user-facing or only workflow-specific.
 4. Implement only the required source change. Route genuinely reusable physical reads/writes through foundational I/O owner functions; keep niche workflow-specific I/O and domain-specific mutations with their owning domain when that is the clearer implementation.
 5. Update exports, docstrings, reference metadata, and tests only when affected.
 6. For a new or modified Live callable, compare the docstring with the implementation and cover behaviour, side effects, return interpretation, failure behaviour, runtime assumptions, and a valid example. Preview callable documentation may remain lighter unless the callable is being promoted.
@@ -61,26 +57,8 @@ Affected generated individual reference artifacts are normal outputs of the sour
 
 ## Verification
 
-Use checks proportional to the change:
-
-- Run targeted tests for the changed callable or domain first.
-- Run broader tests only when shared behaviour or architecture requires them.
-- Run Ruff on affected files or the relevant scope when practical.
-- Run `compileall`, an import check, or another focused syntax check.
-- Regenerate `public-function-call-flows.json` only when its architecture contract changes.
-- Regenerate individual reference artifacts when a source, docstring, export, call-flow, reference-metadata, or generator change affects their generated content.
-- When individual reference artifacts are regenerated, run `PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py` a second time and confirm that it produces no diff.
-- For docstring-only changes, use the smallest syntax or import check, do not regenerate architecture unless its contract changes, and regenerate individual reference artifacts when the docstring affects their content.
-
-Review the final diff before completion.
+Run targeted tests, Ruff and an appropriate syntax check. Regenerate only artifacts affected by the source change as directed by `AGENTS.md`, and run the individual reference generator twice whenever those pages change. Review the diff before opening the PR.
 
 ## Completion report
 
-State:
-
-- lifecycle and public contract impact
-- files changed
-- whether affected individual reference artifacts were regenerated and committed, or were not affected
-- whether call-flow JSON was regenerated
-- whether the timestamp manifest was committed alongside an intentional contract refresh, restored as timestamp-only noise, or refreshed by explicit request
-- verification commands and results
+Report the lifecycle and public-contract impact, changed source and generated files, validation results, and whether the architecture JSON and matching timestamp changed.

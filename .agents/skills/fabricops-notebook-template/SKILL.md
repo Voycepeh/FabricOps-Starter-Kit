@@ -19,7 +19,7 @@ Do not use this skill for package implementation changes unless the notebook tas
 
 ## Context to inspect
 
-- `AGENTS.md`, especially "Notebook template change", "Metadata lakehouse routing", "Public safety and positioning", and generated-artifact rules.
+- `AGENTS.md`, especially metadata routing, public safety, and generated-artifact rules.
 - Existing notebooks in `templates/notebooks/`.
 - User-facing template guidance in `templates/notebooks/README.md` and relevant guided demo pages in `docs/guided-demo/`.
 - Public API reference pages under `docs/api/reference/` before using a FabricOps callable in a template.
@@ -28,9 +28,8 @@ Do not use this skill for package implementation changes unless the notebook tas
 
 ## Implementation workflow
 
-1. Define Context, Task, Constraints, Expected output, and Verification.
+1. Identify the affected notebook cells, supported public APIs, and relevant template tests.
 2. Treat all notebooks under `templates/notebooks/` as evolving latest templates. Preserve each notebook's existing responsibility: `00_env_config` for environment/runtime configuration, `01_governance` for governance authoring and review, `02_pipeline` for governed pipeline execution, and `99_explore` for consumer exploration. Do not assume that release snapshot eligibility defines notebook-template ownership.
-3. At each FabricOps release, the release skill freezes only `00_env_config.ipynb` and `02_pipeline.ipynb` under `templates/releases/vX.Y.Z/` unless the release snapshot contract is explicitly changed.
 4. Use public FabricOps APIs only; avoid internal package imports, private helpers, generated metadata internals, or test-only helpers. For ordinary Fabric table/file reads and writes, use the public foundational I/O functions instead of raw Spark/connector/path persistence when FabricOps provides the operation.
 5. Keep notebooks executable block by block in Microsoft Fabric and understandable for junior engineers.
 6. Reuse canonical defaults and public helpers from `src/fabricops_kit/` instead of duplicating constants or metadata-routing logic inline.
@@ -95,6 +94,3 @@ Run broader `compileall`, repository-wide pytest, or Ruff only when shared packa
 
 When Fabric runtime validation is required, report the Fabric workspace execution as a manual or maintainer-confirmed step with version, date, tester, notebook name, and outcome. Do not fabricate this record.
 
-## Completion report
-
-Report changed notebooks, public APIs used, validation type achieved, FabricOps version compatibility statement, whether actual Fabric runtime testing occurred, and exact commands or manual Fabric evidence used.

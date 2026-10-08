@@ -5,16 +5,6 @@ description: Use when cleaning up, reorganizing, or updating FabricOps documenta
 
 # FabricOps Documentation Maintenance Skill
 
-## Purpose
-
-Guide documentation cleanup and restructuring so FabricOps keeps one canonical home for each topic, avoids duplicated content, and stays easy to scan on desktop and mobile.
-
-## When to use this skill
-
-Use this skill for docs-only edits under `README.md`, `docs/`, and related MkDocs configuration when the task is cleanup, consolidation, restructuring, readability improvement, or user/maintainer guidance.
-
-Do not use this skill to manually maintain generated callable reference pages, release contract pages, or dashboard output. Use the source metadata or generator that owns those artifacts instead.
-
 ## Content classification
 
 Classify the requested content before creating or moving files:
