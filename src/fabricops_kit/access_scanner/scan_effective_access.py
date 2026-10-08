@@ -932,18 +932,18 @@ def _discover_access_evidence(
 
             sql_modes[item_id] = _sql_access_mode(item, [])
             if item_type == "LAKEHOUSE":
-                    coverage.append(
-                        _coverage(
-                            "SQL_ACCESS_MODE_UNVERIFIED",
-                            "No supported read-only metadata established whether this Lakehouse SQL endpoint uses delegated identity or user identity mode; table SQL access remains unverified.",
-                            scope_type="ITEM",
-                            access_surface="SQL",
-                            workspace_id=workspace_id,
-                            workspace_name=workspace_name,
-                            item_id=item_id,
-                            item_name=item_name,
-                        )
+                coverage.append(
+                    _coverage(
+                        "SQL_ACCESS_MODE_UNVERIFIED",
+                        "No supported read-only metadata established whether this Lakehouse SQL endpoint uses delegated identity or user identity mode; table SQL access remains unverified.",
+                        scope_type="ITEM",
+                        access_surface="SQL",
+                        workspace_id=workspace_id,
+                        workspace_name=workspace_name,
+                        item_id=item_id,
+                        item_name=item_name,
                     )
+                )
 
             if item_type == "LAKEHOUSE":
                 try:
