@@ -67,12 +67,6 @@ def test_normalize_payload_stores_functions_and_relationships_once():
             "caller_qualified_name": "fabricops_kit.example.public_a",
             "callee_qualified_name": "fabricops_kit.example.helper",
             "call_count": 2,
-            "architecture_violations": [],
-            "architecture_signals": [],
-            "architecture_signal_types": [],
-            "architecture_signal_details": [],
-            "violation_types": [],
-            "violation_details": [],
         }
     ]
     assert normalized["summary"]["relationship_count"] == 1
@@ -107,3 +101,20 @@ def test_dashboard_hydrates_expanded_flows_from_normalized_relationships():
     assert "children.get(qn)" in html
     assert "const next=new Set(stack)" in html
     assert "qn!==rootQn&&fn.architecture_classification==='foundational_io'" in html
+
+
+def test_normalize_payload_keeps_nonempty_architecture_evidence():
+    """Omit empty edge evidence while retaining nonempty violations and signals."""
+    payload = _payload()
+    edge = payload["public_functions"][0]["flow"][1]
+    edge["architecture_violations"] = [{"type": "Type 1"}]
+    edge["violation_types"] = ["Type 1"]
+    edge["architecture_signals"] = [{"type": "shared"}]
+    edge["architecture_signal_types"] = ["shared"]
+    result = flows.normalize_payload(payload)["relationships"][0]
+    assert result["architecture_violations"] == [{"type": "Type 1"}]
+    assert result["violation_types"] == ["Type 1"]
+    assert result["architecture_signals"] == [{"type": "shared"}]
+    assert result["architecture_signal_types"] == ["shared"]
+    assert "violation_details" not in result
+    assert "architecture_signal_details" not in result
