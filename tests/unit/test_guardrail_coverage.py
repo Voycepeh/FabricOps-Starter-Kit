@@ -123,6 +123,53 @@ def test_development_baseline_skips_when_no_contracts_are_selected(monkeypatch):
     assert result["reason"] == "No Data Contracts selected; Development baseline run."
 
 
+def test_target_only_development_baseline_skips_without_contract(monkeypatch):
+    _patch_runtime(monkeypatch, contracts={}, rules={})
+
+    result = coverage_module.check_guardrail_coverage(
+        target_table_id="target",
+        source_table_ids=[],
+        verbose=False,
+    )
+
+    assert result["status"] == "skipped"
+    assert result["source_table_names"] == []
+
+
+def test_target_only_selected_contract_requires_evidence(monkeypatch):
+    _patch_runtime(
+        monkeypatch,
+        contracts={"target": {"contract_id": "target-contract"}},
+        rules={"target": [_rule("target-schema", "schema")]},
+        evidence=[{"guardrail_rule_id": "target-schema"}],
+    )
+
+    result = coverage_module.check_guardrail_coverage(
+        target_table_id="target",
+        source_table_ids=[],
+        verbose=False,
+    )
+
+    assert result["status"] == "passed"
+    assert len(result["readiness"]) == 1
+    assert result["readiness"][0]["scope"] == "target"
+
+
+def test_target_only_missing_guardrail_evidence_is_blocked(monkeypatch):
+    _patch_runtime(
+        monkeypatch,
+        contracts={"target": {"contract_id": "target-contract"}},
+        rules={"target": [_rule("target-schema", "schema")]},
+    )
+
+    with pytest.raises(RuntimeError, match="target / Schema not evaluated"):
+        coverage_module.check_guardrail_coverage(
+            target_table_id="target",
+            source_table_ids=[],
+            verbose=False,
+        )
+
+
 def test_selected_contracts_need_only_one_applicable_guardrail_each(monkeypatch):
     rules = {
         "source": [_rule("source-schema", "schema")],

@@ -106,8 +106,8 @@ def check_guardrail_coverage(
     source_ids = list(dict.fromkeys(str(value or "").strip() for value in source_table_ids or ()))
     if not target_id:
         raise ValueError("target_table_id must be a non-empty canonical table_id.")
-    if not source_ids or any(not value for value in source_ids):
-        raise ValueError("source_table_ids must contain at least one non-empty canonical table_id.")
+    if any(not value for value in source_ids):
+        raise ValueError("source_table_ids must contain only non-empty canonical table_id values.")
 
     config, env, context = resolve_fabric_context()
     spark = get_spark_session() if spark_session is None else spark_session
