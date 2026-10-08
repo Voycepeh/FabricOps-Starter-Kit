@@ -208,7 +208,7 @@ def test_steward_form_uses_simplified_visible_layout(monkeypatch):
 
     for label in (
         "Data Steward", "Create or update data stewards", "Steward selection",
-        "Steward details", "Additional information", "Search data stewards",
+        "Steward details", "Additional information",
         "Select or create steward", "Save steward",
     ):
         assert label in text
@@ -220,6 +220,7 @@ def test_steward_form_uses_simplified_visible_layout(monkeypatch):
     ):
         assert removed not in text
     assert "Optional" not in text
+    assert controls["existing_record_search"].placeholder == "Search stewards..."
     assert controls["save_button"].description == "Save steward"
     assert controls["save_button"].click_callbacks
     assert controls["container"].layout.kwargs["height"] == "720px"
@@ -271,7 +272,7 @@ def test_steward_selector_search_population_and_save_paths_remain_unchanged(monk
     analytics_label = "Analytics Steward | Governance Reviewer | analytics@example.com"
     assert search.options == [
         "Create new steward",
-        "Taizan | Data Steward | TZ@abc.com",
+        "Configured Steward | Data Steward | steward@example.com",
         analytics_label,
     ]
     search.value = analytics_label

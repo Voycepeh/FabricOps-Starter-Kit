@@ -2726,6 +2726,9 @@ def widget_data_contract(
             controls["enabled"].value = bool(rule.get("is_active", True))
             controls["block"].value = str(rule.get("action") or "Warn") == "Block"
 
+        # Column selection can run before the DQ sections have been built.
+        dq_visibility = {"refresh": None}
+
         def hydrate_column(column_id: str) -> None:
             hydrating["active"] = True
             try:
@@ -2823,7 +2826,8 @@ def widget_data_contract(
                 mask_character.value = str(sensitive_parameters.get("mask_character") or "*")
                 bucket_bins.value = ", ".join(map(str, sensitive_parameters.get("bins", [])))
                 bucket_labels.value = ", ".join(map(str, sensitive_parameters.get("labels", [])))
-                refresh_dq_type_visibility(str(datatype_choice.value or contract_type or observed_type))
+                if dq_visibility["refresh"] is not None:
+                    dq_visibility["refresh"](str(datatype_choice.value or contract_type or observed_type))
                 for kind in _COLUMN_DQ_TYPES:
                     hydrate_dq_family(column_id, kind)
                 hydrated_column_snapshots[column_id] = column_editor_snapshot()
@@ -3812,6 +3816,8 @@ def widget_data_contract(
             )
             dq_minimum.placeholder = example_bound
             dq_maximum.placeholder = example_bound
+
+        dq_visibility["refresh"] = refresh_dq_type_visibility
 
         dq_primary = widgets.VBox(
             [

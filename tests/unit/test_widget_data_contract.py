@@ -42,6 +42,7 @@ def widget_runtime(monkeypatch):
             self._observers = []
             self._dom_classes = []
             self.description = description
+            self.placeholder = kwargs.get("placeholder", "")
             self.disabled = disabled
             self.layout = layout or Layout()
             self.style = kwargs.get("style", {})
@@ -443,7 +444,7 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     controls["open"].click()
     assert state["current"]["table_id"] == "orders"
     assert state["table_id"] == "orders"
-    assert controls["selector_panel"].layout.display == "none"
+    assert controls["selector_panel"].layout.display == "none", state["message"]
     assert controls["editor_shell"].layout.display == ""
 
     controls["table_description"].value = "Unsaved edit"
