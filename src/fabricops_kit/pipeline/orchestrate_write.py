@@ -22,7 +22,7 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
     name : str
         Notebook-facing target name used in orchestration output.
     sources : iterable of dict
-        Governed source results containing ``table_id``.
+        Governed source results containing ``table_id``. When every source\n        explicitly reports ``should_process=False``, publication is skipped.
     store : str
         Configured destination store key.
     schema : str, optional
@@ -50,7 +50,7 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
     -------
     dict
         Write identity and capability results. ``published`` is false when a
-        Validate-mode contract passes without publication.
+        Validate-mode contract passes or all sources have no new records.
 
     Raises
     ------
@@ -77,8 +77,19 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
     check_dq, check_guardrail_coverage, profile_table
 
     """
+    sources = list(sources)
     source_ids = [source["table_id"] for source in sources]
     target_id = resolve_table_id(store=store, schema=schema, table_name=table_name)
+    if sources and all(source.get("should_process") is False for source in sources):
+        if verbose:
+            print(f"FabricOps WRITE · {name} · Skipped (no new source records)")
+        return {
+            "table_id": target_id,
+            "published": False,
+            "validation_passed": None,
+            "skip_reason": "no_new_source_records",
+            "orchestration_stages": [],
+        }
     contract = (contracts or {}).get("tables", {}).get(target_id) or {}
     contract_mode = str(contract.get("mode") or "enforce").strip().lower()
     names = ["Schema", "Sensitive Data", "Source Drift", "Data Quality", "Guardrail Coverage"]
