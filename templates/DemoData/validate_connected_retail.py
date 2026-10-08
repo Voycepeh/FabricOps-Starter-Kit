@@ -10,11 +10,13 @@ ROOT = Path(__file__).resolve().parent
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
+    """Read a demo CSV fixture into dictionaries."""
     with path.open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
 
 
 def validate() -> None:
+    """Check shared product IDs, inventory events, and SCD snapshots."""
     products = read_csv(ROOT / "products.csv")
     ids = {row["product_id"] for row in products}
     assert len(ids) == len(products) == 8, "Canonical products must have eight unique IDs."
