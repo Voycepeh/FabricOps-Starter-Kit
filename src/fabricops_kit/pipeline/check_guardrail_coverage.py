@@ -99,9 +99,6 @@ def check_guardrail_coverage(
     Guardrail that applies to its pipeline role. Every applicable configured
     Guardrail must also have current-activity evidence before publication.
 
-    A target-only write may have no governed sources; target Guardrail readiness
-    is still checked when a contract is selected.
-
     FabricOps does not require a fixed Guardrail bundle. Governance can choose
     the Guardrails appropriate to each table; Schema is a common minimal choice.
     """
