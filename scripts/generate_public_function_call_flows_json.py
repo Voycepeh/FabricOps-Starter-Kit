@@ -25,6 +25,16 @@ for _name in dir(_analysis):
         globals()[_name] = getattr(_analysis, _name)
 
 
+_RELATIONSHIP_EVIDENCE_FIELDS = (
+    "architecture_violations",
+    "architecture_signals",
+    "architecture_signal_types",
+    "architecture_signal_details",
+    "violation_types",
+    "violation_details",
+)
+
+
 def _empty_relationship(caller: str, callee: str) -> dict[str, Any]:
     """Return direct edge identity; omit empty optional evidence arrays."""
     return {
@@ -49,18 +59,9 @@ def normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
             key = (str(caller), str(callee))
             edge = relationship_by_key.setdefault(key, _empty_relationship(*key))
             edge["call_count"] = max(edge["call_count"], int(row.get("call_count_from_parent") or 1))
-            if row.get("architecture_violations"):
-                edge["architecture_violations"] = copy.deepcopy(row["architecture_violations"])
-                if row.get("violation_types"):
-                    edge["violation_types"] = list(row["violation_types"])
-                if row.get("violation_details"):
-                    edge["violation_details"] = list(row["violation_details"])
-            if row.get("architecture_signals"):
-                edge["architecture_signals"] = copy.deepcopy(row["architecture_signals"])
-                if row.get("architecture_signal_types"):
-                    edge["architecture_signal_types"] = list(row["architecture_signal_types"])
-                if row.get("architecture_signal_details"):
-                    edge["architecture_signal_details"] = list(row["architecture_signal_details"])
+            for field in _RELATIONSHIP_EVIDENCE_FIELDS:
+                if row.get(field):
+                    edge[field] = copy.deepcopy(row[field])
 
     # Include resolved calls outside public-root reachability as well. These edges are
     # already represented by each function's canonical inbound_callers list.
