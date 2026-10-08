@@ -10,12 +10,12 @@ Discover visible Fabric data items and resolve effective table access to individ
 
 <div class="reference-docstring-intro" markdown="1">
 
-The scan discovers every workspace visible to the caller, then inventories
-supported Lakehouse and Warehouse tables and the Workspace, SQL, and
-OneLake permission surfaces that the caller can inspect. It uses the
-current Fabric notebook identity and does not require FabricOps metadata,
-persistence, Microsoft Graph, a separately supplied token, or Fabric Admin
-APIs.
+The scan uses caller-scoped Workspace and Catalog Search APIs to discover
+visible and directly shared Lakehouse and Warehouse items, then inventories
+tables and the Workspace, SQL, and OneLake permission surfaces that the
+caller can inspect. It uses the current Fabric notebook identity and does
+not require FabricOps metadata, persistence, Microsoft Graph, a separately
+supplied token, or Fabric Admin APIs.
 
 ``identity_map_df`` must contain ``object_id``, ``display_name``,
 ``user_principal_name``, ``principal_type``, and ``group_type``.
@@ -24,18 +24,41 @@ APIs.
 security group are recursively expanded. Cycles are stopped, duplicate
 edges are ignored, and every distinct inheritance path is retained.
 
-Returns a dictionary containing ``access`` and ``coverage`` Spark
-DataFrames. ``access`` has one row per person, table, and permission
-surface, with all contributing grants serialized in
-``contributing_grants_json``. ``coverage`` records inaccessible scopes,
-unresolved identities, incomplete group expansion, unsupported permission
-shapes, applied denies, restrictions, and scan errors. A missing access row
-is therefore not evidence that access does not exist; inspect ``coverage``
-with every result.
+Effective table access requires both applicable item-level access and an
+applicable data permission. ``access`` therefore labels each person,
+table, and permission surface as ``CONFIRMED``, ``UNVERIFIED``, or
+``NOT_EFFECTIVE`` in ``access_verification_status``. Only confirmed
+permissions appear in ``effective_permissions``; visible permissions that
+still lack a verified prerequisite remain in ``observed_permissions`` and
+provenance instead of being presented as effective.
 
-The function only reads permission metadata. It does not grant access or
-persist results. SQL and OneLake permissions remain separate access
-surfaces. OneLake row and column constraints are retained and flagged as
+Workspace roles establish item access and can also establish data access.
+For Lakehouse Viewers, the scan preserves Fabric's normal DefaultReader
+assumption: an unmodified DefaultReader role maps item ``ReadAll`` to
+OneLake ``Read``. An observed conflicting configuration is reported in
+``coverage`` and is not claimed as confirmed unrestricted access. The scan
+never modifies DefaultReader.
+
+SQL table permissions are effective only when item ``Read`` is established
+and the SQL analytics endpoint is in delegated identity mode. In user
+identity mode, OneLake Security governs table access and SQL table grants
+are retained as ``NOT_EFFECTIVE`` evidence. If a supported read-only
+mechanism cannot establish the mode, the SQL result remains
+``UNVERIFIED``. SQL and OneLake permissions remain separate surfaces.
+
+``contributing_grants_json`` retains all contributing item and data grants,
+modes, restrictions, and inheritance paths. ``channel_permissions_json``
+keeps SQL and OneLake capabilities distinct when one Workspace path
+contributes to both channels. ``coverage`` records
+inaccessible scopes, unresolved identities, incomplete group expansion,
+unsupported permission shapes, applied denies, restrictions, scan errors,
+and item-permission visibility gaps. A missing access row is therefore not
+evidence that access does not exist; inspect ``coverage`` with every
+result.
+
+The function only reads permission metadata. It does not grant access,
+modify DefaultReader, or persist results. OneLake row and column
+constraints and SQL column restrictions are retained and flagged as
 restricted instead of being presented as unrestricted table access.
 
 </div>
@@ -43,9 +66,9 @@ restricted instead of being presented as unrestricted table access.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access_scanner/scan_effective_access.py:1090`
+`fabricops_kit/access_scanner/scan_effective_access.py:1682`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_effective_access.py#L1090-L1171">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_effective_access.py#L1682-L1792">View on GitHub</a>
 </div>
 
 
@@ -53,9 +76,9 @@ restricted instead of being presented as unrestricted table access.
 
 Use for an auditable, non-persisted effective data access review based on the scopes visible to the caller.
 
-Do not treat an empty access result as proof of no access; always inspect coverage for caller visibility and unsupported restrictions.
+Do not treat UNVERIFIED observations or an empty access result as proof of effective access or denial; always inspect coverage.
 
-Discovers accessible workspaces, Lakehouses, Warehouses, and tables; resolves Workspace roles, SQL grants and database roles, and OneLake roles; recursively expands security groups; applies denies conservatively; and preserves every contributing grant and inheritance path.
+Uses caller-scoped Workspace and Catalog Search APIs to discover visible and directly shared Lakehouses, Warehouses, and tables; combines item access with Workspace, SQL, and OneLake data permissions; distinguishes SQL authorization modes; recursively expands security groups; applies denies conservatively; and preserves every contributing path.
 
 
 ## Signature
@@ -90,11 +113,11 @@ def scan_effective_access(*, identity_map_df, group_membership_df) -> dict[str, 
 
 ## Returns
 
-Dictionary with consolidated person/table/surface access and explicit coverage limitations.
+Dictionary with person/table/surface observations labelled CONFIRMED, UNVERIFIED, or NOT_EFFECTIVE, plus explicit coverage limitations.
 
 ### Return interpretation
 
-Use result["access"] for person/table/surface outcomes and result["coverage"] for inaccessible scopes, unresolved identities, incomplete group expansion, unsupported permissions, restrictions, and errors.
+Filter result["access"] to access_verification_status == "CONFIRMED" for established effective permissions; review UNVERIFIED and NOT_EFFECTIVE observations with result["coverage"].
 
 ## Raises / Errors
 
@@ -103,8 +126,9 @@ Raises ValueError for invalid mapping DataFrame schemas or mismatched Spark sess
 ### Common failure causes
 
 - The caller cannot list workspace role assignments or OneLake roles.
+- Direct item assignments or the SQL endpoint access mode cannot be established through supported read-only interfaces.
 - The identity or membership mapping is incomplete.
-- An item or SQL permission shape is unsupported or restricted.
+- DefaultReader differs from its assumed baseline or a permission is restricted.
 
 ## See also
 

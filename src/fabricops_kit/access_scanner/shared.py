@@ -71,15 +71,26 @@ def fabric_access_token(access_token: str | None = None) -> str:
     return str(token)
 
 
-def request_fabric_json(url: str, *, access_token: str) -> dict[str, Any]:
-    """GET one Fabric REST resource and return its JSON object."""
+def request_fabric_json(
+    url: str,
+    *,
+    access_token: str,
+    method: str = "GET",
+    body: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Request one Fabric REST resource and return its JSON object."""
     parsed = urlparse(url)
     if parsed.scheme != "https" or parsed.netloc.lower() != "api.fabric.microsoft.com":
         raise RuntimeError("Refusing to send a Fabric bearer token to an unexpected host.")
+    encoded_body = json.dumps(body).encode("utf-8") if body is not None else None
+    headers = {"Authorization": f"Bearer {access_token}", "Accept": "application/json"}
+    if encoded_body is not None:
+        headers["Content-Type"] = "application/json"
     request = Request(
         url,
-        headers={"Authorization": f"Bearer {access_token}", "Accept": "application/json"},
-        method="GET",
+        data=encoded_body,
+        headers=headers,
+        method=method.upper(),
     )
     try:
         with urlopen(request, timeout=60) as response:
@@ -93,6 +104,36 @@ def request_fabric_json(url: str, *, access_token: str) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise RuntimeError("Fabric REST response was not a JSON object.")
     return data
+
+
+def search_fabric_catalog(*, access_token: str) -> list[dict[str, Any]]:
+    """Return caller-visible Lakehouse and Warehouse catalog entries."""
+    url = f"{FABRIC_API_ROOT}/catalog/search"
+    body: dict[str, Any] = {
+        "search": "*",
+        "filter": "Type eq 'Lakehouse' or Type eq 'Warehouse'",
+        "pageSize": 1000,
+    }
+    rows: list[dict[str, Any]] = []
+    seen_tokens: set[str] = set()
+    while True:
+        payload = request_fabric_json(
+            url,
+            access_token=access_token,
+            method="POST",
+            body=body,
+        )
+        values = payload.get("value") or []
+        if not isinstance(values, list):
+            raise RuntimeError("Fabric catalog response contains a non-list value.")
+        rows.extend(value for value in values if isinstance(value, dict))
+        continuation_token = str(payload.get("continuationToken") or "").strip()
+        if not continuation_token:
+            return rows
+        if continuation_token in seen_tokens:
+            raise RuntimeError("Fabric catalog pagination returned a repeated continuation token.")
+        seen_tokens.add(continuation_token)
+        body = {"continuationToken": continuation_token}
 
 
 def list_fabric_pages(
@@ -213,19 +254,25 @@ def onelake_role_observations(
             if not isinstance(member, dict):
                 continue
             source_path = str(member.get("sourcePath") or "").strip()
-            for item_access in member.get("itemAccess") or []:
-                permission = str(item_access or "").strip()
-                if source_path and permission:
-                    selector = f"fabric-item:{source_path}:{permission}"
-                    member_result.append(
-                        {
-                            "principal_id": selector,
-                            "user_principal": selector,
-                            "user_type": "FABRIC_ITEM_MEMBERS",
-                            "permission_source": "ONELAKE_ITEM_ACCESS_SELECTOR",
-                            "membership_detail": permission,
-                        }
-                    )
+            item_access = sorted(
+                {
+                    str(value or "").strip()
+                    for value in member.get("itemAccess") or []
+                    if str(value or "").strip()
+                }
+            )
+            if source_path and item_access:
+                permission_set = "+".join(item_access)
+                selector = f"fabric-item:{source_path}:{permission_set}"
+                member_result.append(
+                    {
+                        "principal_id": selector,
+                        "user_principal": selector,
+                        "user_type": "FABRIC_ITEM_MEMBERS",
+                        "permission_source": "ONELAKE_ITEM_ACCESS_SELECTOR",
+                        "membership_detail": permission_set,
+                    }
+                )
         return member_result
 
     observations: list[dict[str, Any]] = []

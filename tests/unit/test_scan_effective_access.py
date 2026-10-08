@@ -4,44 +4,126 @@ from __future__ import annotations
 
 import importlib
 
-
-def _identity_map(spark):
-    return spark.createDataFrame(
-        [
-            ("user-a", "Alice", "alice@example.com", "User", ""),
-            ("user-b", "Bob", "bob@example.com", "User", ""),
-            ("group-a", "Data Readers", "", "Group", "SecurityGroup"),
-            ("group-b", "Nested Readers", "", "Group", "SecurityGroup"),
-            ("group-dl", "Announcements", "", "Group", "DistributionList"),
-        ],
-        ["object_id", "display_name", "user_principal_name", "principal_type", "group_type"],
-    )
+import pytest
 
 
-def _memberships(spark):
-    return spark.createDataFrame(
-        [
-            ("group-a", "user-a"),
-            ("group-a", "group-b"),
-            ("group-b", "user-b"),
-            ("group-b", "group-a"),
-        ],
-        ["group_object_id", "member_object_id"],
-    )
+def _module():
+    return importlib.import_module("fabricops_kit.access_scanner.scan_effective_access")
 
 
-def _table(item_id="item-a", table_name="orders"):
+def _table(item_id="item-a", table_name="orders", item_type="LAKEHOUSE"):
     return {
         "table_id": f"workspace-a/{item_id}/sales/{table_name}",
         "workspace_id": "workspace-a",
         "workspace_name": "Analytics",
         "item_id": item_id,
         "item_name": "Curated",
-        "item_type": "LAKEHOUSE",
+        "item_type": item_type,
         "schema_name": "sales",
         "table_name": table_name,
         "table_path": f"Tables/sales/{table_name}",
         "object_type": "TABLE",
+    }
+
+
+def _identities():
+    return {
+        "user-a": {"object_id": "user-a", "display_name": "Alice", "user_principal_name": "alice@example.com", "principal_type": "USER", "group_type": ""},
+        "user-b": {"object_id": "user-b", "display_name": "Bob", "user_principal_name": "bob@example.com", "principal_type": "USER", "group_type": ""},
+        "group-a": {"object_id": "group-a", "display_name": "Readers", "user_principal_name": "", "principal_type": "GROUP", "group_type": "SECURITY_GROUP"},
+        "group-b": {"object_id": "group-b", "display_name": "Nested readers", "user_principal_name": "", "principal_type": "GROUP", "group_type": "SECURITY_GROUP"},
+        "group-dl": {"object_id": "group-dl", "display_name": "Announcements", "user_principal_name": "", "principal_type": "GROUP", "group_type": "DISTRIBUTION_LIST"},
+    }
+
+
+def _memberships():
+    return {"group-a": ["user-a", "group-b"], "group-b": ["user-b", "group-a"]}
+
+
+def _item_access(
+    principal_id="user-a",
+    *,
+    permissions=("READ",),
+    source="DIRECT_ITEM_SHARE",
+    role_name="",
+    principal_type="User",
+    item_id="item-a",
+):
+    return {
+        "workspace_id": "workspace-a",
+        "item_id": item_id,
+        "item_type": "LAKEHOUSE",
+        "principal_object_id": principal_id,
+        "principal_type": principal_type,
+        "principal_name": principal_id,
+        "item_access_permissions": list(permissions),
+        "item_access_source": source,
+        "role_name": role_name,
+        "access_verification_status": "CONFIRMED",
+    }
+
+
+def _grant(
+    *,
+    principal_id="user-a",
+    principal_type="User",
+    surface="SQL",
+    state="GRANT",
+    value="SELECT",
+    restriction="{}",
+    item_id="item-a",
+):
+    module = _module()
+    return module._grant(
+        _table(item_id=item_id),
+        principal_id=principal_id,
+        principal_type=principal_type,
+        principal_name=principal_id,
+        access_surface=surface,
+        access_value=value,
+        access_state=state,
+        permission_source="DIRECT_PERMISSION" if surface == "SQL" else "ONELAKE_ROLE",
+        restrictions_json=restriction,
+    )
+
+
+def _resolve(
+    grants,
+    *,
+    item_access=(),
+    mode="DELEGATED_IDENTITY",
+    complete=True,
+    identities=None,
+    memberships=None,
+):
+    module = _module()
+    coverage = []
+    resolved = module._resolve_grants(
+        list(grants),
+        item_access=list(item_access),
+        sql_modes={"item-a": mode},
+        item_visibility_complete=complete,
+        identities=identities or _identities(),
+        memberships=_memberships() if memberships is None else memberships,
+        coverage=coverage,
+    )
+    return module._consolidate(resolved, coverage), coverage
+
+
+def _default_reader_role(*, item_access=("ReadAll",), constraints=None):
+    return {
+        "name": "DefaultReader",
+        "members": {"fabricItemMembers": [{"sourcePath": "workspace-a/item-a", "itemAccess": list(item_access)}]},
+        "decisionRules": [
+            {
+                "effect": "Permit",
+                "permission": [
+                    {"attributeName": "Path", "attributeValueIncludedIn": ["Tables/*"]},
+                    {"attributeName": "Action", "attributeValueIncludedIn": ["Read"]},
+                ],
+                "constraints": constraints or {},
+            }
+        ],
     }
 
 
@@ -54,328 +136,344 @@ def test_scan_effective_access_is_exposed_from_package_root():
     assert scan_effective_access.__module__ == "fabricops_kit.access_scanner.scan_effective_access"
 
 
-def test_effective_scan_expands_nested_groups_and_consolidates_all_surfaces(monkeypatch, spark_session):
-    """Resolve people while preserving overlapping Workspace, SQL, and OneLake grants."""
-    module = importlib.import_module("fabricops_kit.access_scanner.scan_effective_access")
-    table = _table()
+def test_workspace_viewer_uses_normal_default_reader_inheritance():
+    """Confirm Viewer table access only when the DefaultReader baseline is intact."""
+    module = _module()
+    coverage = []
+    status = module._default_reader_status(
+        workspace_id="workspace-a", item_id="item-a", item_name="Curated",
+        roles=[_default_reader_role()], coverage=coverage,
+    )
+    observations = [{"workspace_id": "workspace-a", "principal_id": "user-a", "user_type": "User", "user_principal": "Alice", "role_name": "Viewer"}]
+    grants = module._workspace_grants(
+        [_table()], observations, default_reader_status={"item-a": status},
+        sql_modes={"item-a": "USER_IDENTITY"},
+    )
+    rows, _ = _resolve(
+        grants, item_access=module._workspace_item_access([_table()], observations),
+        mode="USER_IDENTITY",
+    )
+    assert rows[0]["access_verification_status"] == "CONFIRMED"
+    assert rows[0]["effective_permissions"] == ["READ"]
+    assert rows[0]["data_access_source"] == "ONELAKE_DEFAULT_READER"
+    assert rows[0]["access_channels"] == ["ONELAKE", "SQL"]
+    assert coverage == []
+
+
+@pytest.mark.parametrize("role", ["Admin", "Member", "Contributor"])
+def test_elevated_workspace_roles_retain_confirmed_access(role):
+    """Keep elevated Workspace-derived item and data access confirmed."""
+    module = _module()
+    observations = [{"workspace_id": "workspace-a", "principal_id": "user-a", "user_type": "User", "user_principal": "Alice", "role_name": role}]
+    grants = module._workspace_grants([_table()], observations)
+    rows, _ = _resolve(grants, item_access=module._workspace_item_access([_table()], observations))
+    assert rows[0]["access_verification_status"] == "CONFIRMED"
+    assert rows[0]["effective_permissions"] == ["READ", "WRITE"]
+    assert rows[0]["item_access_permissions"] == ["READ", "READALL", "READDATA", "WRITE"]
+    assert rows[0]["channel_permissions_json"] == '{"ONELAKE":["READ","WRITE"],"SQL":["READ"]}'
+
+
+def test_workspace_viewer_with_applicable_sql_permission_is_confirmed():
+    """Combine Viewer item access with SQL data permission in delegated mode."""
+    rows, _ = _resolve([_grant()], item_access=[_item_access(source="WORKSPACE_ROLE")])
+    assert rows[0]["access_verification_status"] == "CONFIRMED"
+    assert rows[0]["effective_permissions"] == ["READ"]
+
+
+def test_direct_item_read_without_data_permission_is_not_effective():
+    """Do not turn item Read alone into table-level access."""
+    rows, coverage = _resolve([], item_access=[_item_access()])
+    assert rows == []
+    assert "ITEM_ACCESS_WITHOUT_DATA_PERMISSION" in {row["reason_code"] for row in coverage}
+
+
+def test_direct_item_read_with_sql_select_is_confirmed():
+    """Confirm SQL access when both item Read and SELECT are established."""
+    rows, _ = _resolve([_grant()], item_access=[_item_access()])
+    assert rows[0]["access_verification_status"] == "CONFIRMED"
+    assert rows[0]["item_access_source"] == "DIRECT_ITEM_SHARE"
+
+
+def test_item_readdata_supplies_broad_sql_data_permission():
+    """Recognize Read plus ReadData as inherited SQL table access."""
+    module = _module()
+    access = _item_access(permissions=("READ", "READDATA"))
+    grants = module._item_permission_grants(
+        [_table()], [access], {"item-a": "DELEGATED_IDENTITY"}
+    )
+    rows, _ = _resolve(grants, item_access=[access])
+    assert rows[0]["access_verification_status"] == "CONFIRMED"
+    assert rows[0]["data_access_source"] == "ITEM_READDATA"
+
+
+def test_sql_select_with_unverified_item_access_is_not_confirmed():
+    """Preserve a visible SQL grant as unverified when item access is not enumerable."""
+    rows, coverage = _resolve([_grant()], complete=False)
+    assert rows[0]["access_verification_status"] == "UNVERIFIED"
+    assert rows[0]["effective_permissions"] == []
+    assert rows[0]["observed_permissions"] == ["READ"]
+    assert "ITEM_ACCESS_UNVERIFIED" in {row["reason_code"] for row in coverage}
+
+
+def test_sql_select_with_known_missing_item_access_is_not_effective():
+    """Reject a SQL grant when complete evidence proves item Read is absent."""
+    rows, coverage = _resolve([_grant()], complete=True)
+    assert rows[0]["access_verification_status"] == "NOT_EFFECTIVE"
+    assert rows[0]["effective_permissions"] == []
+    assert "DATA_PERMISSION_NOT_EFFECTIVE" in {row["reason_code"] for row in coverage}
+
+
+def test_direct_item_sharing_through_security_group_resolves_people():
+    """Apply group-carried item access to group-carried SQL permission."""
+    rows, _ = _resolve(
+        [_grant(principal_id="group-a", principal_type="Group")],
+        item_access=[_item_access("group-a", principal_type="Group")],
+    )
+    assert {row["person_object_id"] for row in rows} == {"user-a", "user-b"}
+    assert {row["access_verification_status"] for row in rows} == {"CONFIRMED"}
+
+
+def test_multiple_grants_remain_separate_in_provenance():
+    """Consolidate the outcome without collapsing contributing grant paths."""
+    rows, _ = _resolve(
+        [_grant(), _grant(principal_id="group-a", principal_type="Group")],
+        item_access=[_item_access(), _item_access("group-a", principal_type="Group")],
+    )
+    alice = next(row for row in rows if row["person_object_id"] == "user-a")
+    assert alice["contributing_grant_count"] >= 2
+    assert "group-a -> user-a" in alice["inheritance_paths"]
+
+
+def test_nested_group_inheritance_preserves_each_path():
+    """Preserve nested group paths while stopping cycles."""
+    rows, coverage = _resolve(
+        [_grant(principal_id="group-a", principal_type="Group")],
+        item_access=[_item_access("group-a", principal_type="Group")],
+    )
+    bob = next(row for row in rows if row["person_object_id"] == "user-b")
+    assert "group-a -> group-b -> user-b" in bob["inheritance_paths"]
+    assert "group-a -> group-b -> user-b" in bob["item_inheritance_paths"]
+    assert "GROUP_MEMBERSHIP_CYCLE" in {row["reason_code"] for row in coverage}
+
+
+def test_distribution_lists_and_unresolved_principals_are_not_people():
+    """Do not expand distribution lists or invent unresolved identities."""
     grants = [
-        module._grant(
-            table,
-            principal_id="group-a",
-            principal_type="Group",
-            principal_name="Data Readers",
-            access_surface="WORKSPACE",
-            access_value="READWRITE",
-            access_state="GRANT",
-            permission_source="WORKSPACE_ROLE",
-            role_name="Contributor",
-            scope_type="WORKSPACE",
-            scope_value="workspace-a",
-        ),
-        module._grant(
-            table,
-            principal_id="group-a",
-            principal_type="Group",
-            principal_name="Data Readers",
-            access_surface="SQL",
-            access_value="SELECT",
-            access_state="GRANT",
-            permission_source="VIA_ROLE",
-            role_name="report_reader",
-            scope_type="SCHEMA",
-            scope_value="sales",
-        ),
-        module._grant(
-            table,
-            principal_id="user-a",
-            principal_type="User",
-            principal_name="Alice",
-            access_surface="SQL",
-            access_value="SELECT",
-            access_state="GRANT",
-            permission_source="DIRECT_PERMISSION",
-            scope_type="OBJECT_OR_COLUMN",
-            scope_value="sales.orders",
-        ),
-        module._grant(
-            table,
-            principal_id="user-b",
-            principal_type="User",
-            principal_name="Bob",
-            access_surface="ONELAKE",
-            access_value="Read",
-            access_state="Permit",
-            permission_source="ONELAKE_ROLE",
-            role_name="RestrictedReaders",
-            scope_type="PATH",
-            scope_value="Tables/sales/orders",
-            restrictions_json='{"rows":["region = SG"]}',
-        ),
+        _grant(principal_id="group-dl", principal_type="Group"),
+        _grant(principal_id="missing-user"),
     ]
+    rows, coverage = _resolve(
+        grants,
+        item_access=[_item_access("group-dl", principal_type="Group")],
+    )
+    assert rows == []
+    assert {row["reason_code"] for row in coverage}.issuperset(
+        {"GROUP_TYPE_NOT_EXPANDED", "UNRESOLVED_IDENTITY"}
+    )
+
+
+def test_onelake_explicit_role_requires_item_read():
+    """Confirm explicit OneLake membership only with applicable item access."""
+    rows, _ = _resolve(
+        [_grant(surface="ONELAKE", state="Permit", value="Read")],
+        item_access=[_item_access()],
+    )
+    assert rows[0]["access_verification_status"] == "CONFIRMED"
+    assert rows[0]["access_surface"] == "ONELAKE"
+
+
+def test_onelake_virtual_membership_honors_source_and_permission_combination():
+    """Do not equate Read with a selector requiring both Read and ReadAll."""
+    selector = _grant(
+        principal_id="fabric-item:workspace-a/item-a:Read+ReadAll",
+        principal_type="FABRIC_ITEM_MEMBERS", surface="ONELAKE", state="Permit", value="Read",
+    )
+    rows, coverage = _resolve([selector], item_access=[_item_access(permissions=("READ",))])
+    assert rows == []
+    assert "ITEM_PERMISSION_SELECTOR_UNRESOLVED" in {row["reason_code"] for row in coverage}
+    rows, _ = _resolve([selector], item_access=[_item_access(permissions=("READ", "READALL"))])
+    assert rows[0]["access_verification_status"] == "CONFIRMED"
+
+
+def test_sql_delegated_identity_mode_uses_sql_permissions():
+    """Use SQL grants for table access in delegated identity mode."""
+    rows, _ = _resolve([_grant()], item_access=[_item_access()], mode="DELEGATED_IDENTITY")
+    assert rows[0]["sql_access_mode"] == "DELEGATED_IDENTITY"
+    assert rows[0]["effective_permissions"] == ["READ"]
+
+
+def test_sql_user_identity_mode_uses_onelake_not_sql_table_grants():
+    """Keep SQL table grants non-effective when OneLake governs the endpoint."""
+    sql_rows, _ = _resolve([_grant()], item_access=[_item_access()], mode="USER_IDENTITY")
+    assert sql_rows[0]["access_verification_status"] == "NOT_EFFECTIVE"
+    assert sql_rows[0]["effective_permissions"] == []
+    onelake_rows, _ = _resolve(
+        [_grant(surface="ONELAKE", state="Permit", value="Read")],
+        item_access=[_item_access()], mode="USER_IDENTITY",
+    )
+    assert onelake_rows[0]["access_verification_status"] == "CONFIRMED"
+    assert onelake_rows[0]["access_channels"] == ["ONELAKE", "SQL"]
+
+
+def test_unavailable_sql_access_mode_remains_unverified():
+    """Do not guess delegated mode when supported metadata is inconclusive."""
+    rows, coverage = _resolve([_grant()], item_access=[_item_access()], mode="UNVERIFIED")
+    assert rows[0]["access_verification_status"] == "UNVERIFIED"
+    assert rows[0]["effective_permissions"] == []
+    assert "ITEM_ACCESS_UNVERIFIED" in {row["reason_code"] for row in coverage}
+
+
+def test_sql_access_mode_detection_uses_only_supported_evidence():
+    """Confirm Warehouse delegated mode and OLS-synchronized user mode only."""
+    module = _module()
+    assert module._sql_access_mode({"type": "Warehouse"}, []) == "DELEGATED_IDENTITY"
+    assert module._sql_access_mode(
+        {"type": "Lakehouse"}, [{"sql_access_mode": "USER_IDENTITY"}]
+    ) == "USER_IDENTITY"
+    assert module._sql_access_mode(
+        {"type": "Lakehouse"}, [{"sql_access_mode": "UNVERIFIED"}]
+    ) == "UNVERIFIED"
+
+
+def test_sql_deny_overrides_the_corresponding_sql_grant():
+    """Apply a table-level SQL DENY to the corresponding grant."""
+    rows, coverage = _resolve([_grant(), _grant(state="DENY")], item_access=[_item_access()])
+    assert rows[0]["access_verification_status"] == "NOT_EFFECTIVE"
+    assert rows[0]["effective_permissions"] == []
+    assert "PERMISSION_DENY_APPLIED" in {row["reason_code"] for row in coverage}
+
+
+def test_onelake_and_sql_column_restrictions_remain_auditable():
+    """Retain row and column restrictions without presenting unrestricted access."""
+    grants = [
+        _grant(surface="ONELAKE", state="Permit", value="Read", restriction='{"rows":["region = SG"],"columns":["amount"]}'),
+        _grant(restriction='{"column":"amount"}'),
+    ]
+    rows, _ = _resolve(grants, item_access=[_item_access()])
+    assert {row["access_surface"] for row in rows} == {"ONELAKE", "SQL"}
+    assert all(row["is_restricted"] for row in rows)
+    assert all("restrictions" in row["contributing_grants_json"] for row in rows)
+
+
+def test_default_reader_contradiction_is_reported_and_not_confirmed():
+    """Downgrade Viewer access when observed DefaultReader differs from baseline."""
+    module = _module()
+    coverage = []
+    status = module._default_reader_status(
+        workspace_id="workspace-a", item_id="item-a", item_name="Curated",
+        roles=[_default_reader_role(item_access=("Read",))], coverage=coverage,
+    )
+    assert status == "NOT_EFFECTIVE"
+    assert "DEFAULT_READER_BASELINE_CONTRADICTION" in {row["reason_code"] for row in coverage}
+
+
+def test_discovery_uses_caller_visible_fabric_and_sql_evidence(monkeypatch):
+    """Mock supported APIs while preserving direct-item visibility limitations."""
+    module = _module()
+
+    class Row:
+        def __init__(self, **values):
+            self.values = values
+
+        def asDict(self, recursive=True):
+            return dict(self.values)
+
+    class Frame:
+        def __init__(self, rows):
+            self.rows = rows
+
+        def toLocalIterator(self):
+            return iter(self.rows)
+
+    def pages(url, **kwargs):
+        if url.endswith("/workspaces"):
+            return [{"id": "workspace-a", "displayName": "Analytics"}]
+        if url.endswith("/roleAssignments"):
+            return [{"principal": {"id": "user-a", "type": "User"}, "role": "Viewer"}]
+        if url.endswith("/items"):
+            return [{"id": "item-a", "displayName": "Curated", "type": "Lakehouse"}]
+        if url.endswith("/tables"):
+            return [{"name": "orders", "location": "/Tables/sales/orders", "type": "Managed"}]
+        if url.endswith("/dataAccessRoles"):
+            return [_default_reader_role()]
+        raise AssertionError(url)
+
+    def sql_query(spark, **kwargs):
+        query = kwargs["query"]
+        if query == module.SQL_ACCESS_QUERY:
+            return Frame(
+                [
+                    Row(
+                        principal_id="user-a", user_name="Alice", user_type="User",
+                        role_name="", permission_source="Direct Permission",
+                        state_desc="GRANT", permission_name="SELECT",
+                        class_desc="OBJECT_OR_COLUMN", schema_name="sales",
+                        object_name="orders", column_name="",
+                    )
+                ]
+            )
+        if query == module.SQL_ACCESS_MODE_QUERY:
+            return Frame([Row(sql_access_mode="USER_IDENTITY")])
+        raise AssertionError(query)
+
+    monkeypatch.setattr(module, "fabric_access_token", lambda: "token")
+    monkeypatch.setattr(module, "list_fabric_pages", pages)
+    monkeypatch.setattr(
+        module,
+        "search_fabric_catalog",
+        lambda **kwargs: [
+            {
+                "id": "item-a",
+                "displayName": "Curated",
+                "type": "Lakehouse",
+                "hierarchy": {
+                    "workspace": {"id": "workspace-a", "displayName": "Analytics"}
+                },
+            }
+        ],
+    )
+    monkeypatch.setattr(module, "read_discovered_sql_endpoint_query", sql_query)
+
+    grants, item_access, modes, complete, coverage = module._discover_access_evidence(object())
+    assert modes == {"item-a": "USER_IDENTITY"}
+    assert complete is False
+    assert item_access[0]["item_access_permissions"] == ["READ", "READALL"]
+    assert {grant["access_surface"] for grant in grants} == {"WORKSPACE", "ONELAKE", "SQL"}
+    assert "ITEM_PERMISSION_ENUMERATION_UNAVAILABLE" in {
+        row["reason_code"] for row in coverage
+    }
+
+
+def _identity_map(spark):
+    return spark.createDataFrame(
+        [("user-a", "Alice", "alice@example.com", "User", "")],
+        ["object_id", "display_name", "user_principal_name", "principal_type", "group_type"],
+    )
+
+
+def _membership_map(spark):
+    return spark.createDataFrame(
+        [("unused-group", "user-a")], ["group_object_id", "member_object_id"]
+    )
+
+
+def test_public_result_exposes_verification_and_partial_visibility(monkeypatch, spark_session):
+    """Keep incomplete API visibility explicit in both public result DataFrames."""
+    module = _module()
+    coverage = [module._coverage("ITEM_PERMISSION_ENUMERATION_UNAVAILABLE", "not enumerable", scope_type="ITEM")]
     monkeypatch.setattr(
         module,
         "_discover_access_evidence",
-        lambda spark: (
-            grants,
-            [module._coverage("WORKSPACE_ROLE_SCAN_FAILED", "not visible", status="ERROR")],
-        ),
+        lambda spark: ([_grant()], [], {"item-a": "DELEGATED_IDENTITY"}, False, coverage),
     )
-
     result = module.scan_effective_access(
         identity_map_df=_identity_map(spark_session),
-        group_membership_df=_memberships(spark_session),
+        group_membership_df=_membership_map(spark_session),
     )
-
-    rows = {
-        (row.person_object_id, row.access_surface): row.asDict(recursive=True)
-        for row in result["access"].collect()
+    access = result["access"].collect()[0].asDict(recursive=True)
+    assert access["access_verification_status"] == "UNVERIFIED"
+    assert access["effective_permissions"] == []
+    assert access["observed_permissions"] == ["READ"]
+    assert "ITEM_PERMISSION_ENUMERATION_UNAVAILABLE" in {
+        row.reason_code for row in result["coverage"].collect()
     }
-    assert rows[("user-a", "WORKSPACE")]["effective_permissions"] == ["READ", "WRITE"]
-    assert rows[("user-b", "WORKSPACE")]["inheritance_paths"] == [
-        "group-a -> group-b -> user-b"
-    ]
-    assert rows[("user-a", "SQL")]["contributing_grant_count"] == 2
-    assert rows[("user-b", "SQL")]["effective_permissions"] == ["READ"]
-    assert rows[("user-b", "ONELAKE")]["is_restricted"] is True
-    coverage_codes = {row.reason_code for row in result["coverage"].collect()}
-    assert "GROUP_MEMBERSHIP_CYCLE" in coverage_codes
-    assert "WORKSPACE_ROLE_SCAN_FAILED" in coverage_codes
-
-
-def test_effective_scan_reports_unresolved_distribution_and_denied_access(monkeypatch, spark_session):
-    """Keep unsupported principals and permission restrictions out of effective access."""
-    module = importlib.import_module("fabricops_kit.access_scanner.scan_effective_access")
-    table = _table(item_id="warehouse-a", table_name="finance")
-    grants = [
-        module._grant(
-            table,
-            principal_id="missing-user",
-            principal_type="User",
-            principal_name="Unknown",
-            access_surface="SQL",
-            access_value="SELECT",
-            access_state="GRANT",
-            permission_source="DIRECT_PERMISSION",
-        ),
-        module._grant(
-            table,
-            principal_id="group-dl",
-            principal_type="Group",
-            principal_name="Announcements",
-            access_surface="ONELAKE",
-            access_value="Read",
-            access_state="Permit",
-            permission_source="ONELAKE_ROLE",
-        ),
-        module._grant(
-            table,
-            principal_id="user-a",
-            principal_type="User",
-            principal_name="Alice",
-            access_surface="SQL",
-            access_value="SELECT",
-            access_state="GRANT",
-            permission_source="DIRECT_PERMISSION",
-        ),
-        module._grant(
-            table,
-            principal_id="user-a",
-            principal_type="User",
-            principal_name="Alice",
-            access_surface="SQL",
-            access_value="SELECT",
-            access_state="DENY",
-            permission_source="DIRECT_PERMISSION",
-        ),
-    ]
-    monkeypatch.setattr(module, "_discover_access_evidence", lambda spark: (grants, []))
-
-    result = module.scan_effective_access(
-        identity_map_df=_identity_map(spark_session),
-        group_membership_df=_memberships(spark_session),
-    )
-
-    assert result["access"].count() == 0
-    coverage_codes = {row.reason_code for row in result["coverage"].collect()}
-    assert {
-        "UNRESOLVED_IDENTITY",
-        "GROUP_TYPE_NOT_EXPANDED",
-        "PERMISSION_DENY_APPLIED",
-    }.issubset(coverage_codes)
-
-
-def test_workspace_semantics_keep_lakehouse_viewer_sql_access_separate():
-    """Keep Viewer SQL access distinct from OneLake file access."""
-    module = importlib.import_module("fabricops_kit.access_scanner.scan_effective_access")
-    observations = [
-        {
-            "workspace_id": "workspace-a",
-            "principal_id": "user-a",
-            "user_type": "USER",
-            "user_principal": "alice@example.com",
-            "role_name": "Viewer",
-            "access_value": "READ",
-        }
-    ]
-
-    lakehouse_grants = module._workspace_grants([_table()], observations)
-    assert len(lakehouse_grants) == 1
-    assert lakehouse_grants[0]["access_channels"] == ["SQL"]
-    warehouse = {**_table(), "item_type": "WAREHOUSE"}
-    warehouse_grants = module._workspace_grants([warehouse], observations)
-    assert warehouse_grants[0]["access_channels"] == ["SQL"]
-
-
-def test_pure_resolution_covers_nested_groups_multiple_grants_and_restrictions():
-    """Exercise effective resolution without requiring a local Spark runtime."""
-    module = importlib.import_module("fabricops_kit.access_scanner.scan_effective_access")
-    identities = {
-        row[0]: {
-            "object_id": row[0],
-            "display_name": row[1],
-            "user_principal_name": row[2],
-            "principal_type": row[3].upper(),
-            "group_type": row[4].upper(),
-        }
-        for row in [
-            ("user-a", "Alice", "alice@example.com", "USER", ""),
-            ("user-b", "Bob", "bob@example.com", "USER", ""),
-            ("group-a", "Readers", "", "GROUP", "SECURITY_GROUP"),
-            ("group-b", "Nested", "", "GROUP", "SECURITY_GROUP"),
-            ("group-dl", "Mail", "", "GROUP", "DISTRIBUTION_LIST"),
-        ]
-    }
-    memberships = {
-        "group-a": ["user-a", "group-b"],
-        "group-b": ["user-b", "group-a"],
-    }
-    table = _table()
-    grants = [
-        module._grant(
-            table,
-            principal_id="group-a",
-            principal_type="Group",
-            principal_name="Readers",
-            access_surface="SQL",
-            access_value="SELECT",
-            access_state="GRANT",
-            permission_source="VIA_ROLE",
-            role_name="reader",
-        ),
-        module._grant(
-            table,
-            principal_id="user-a",
-            principal_type="User",
-            principal_name="Alice",
-            access_surface="SQL",
-            access_value="SELECT",
-            access_state="GRANT",
-            permission_source="DIRECT_PERMISSION",
-        ),
-        module._grant(
-            table,
-            principal_id="user-b",
-            principal_type="User",
-            principal_name="Bob",
-            access_surface="ONELAKE",
-            access_value="Read",
-            access_state="Permit",
-            permission_source="ONELAKE_ROLE",
-            restrictions_json='{"columns":["region"]}',
-        ),
-        module._grant(
-            table,
-            principal_id="missing",
-            principal_type="User",
-            principal_name="Unknown",
-            access_surface="WORKSPACE",
-            access_value="READ",
-            access_state="GRANT",
-            permission_source="WORKSPACE_ROLE",
-        ),
-        module._grant(
-            table,
-            principal_id="group-dl",
-            principal_type="Group",
-            principal_name="Mail",
-            access_surface="ONELAKE",
-            access_value="Read",
-            access_state="Permit",
-            permission_source="ONELAKE_ROLE",
-        ),
-    ]
-    coverage = []
-
-    resolved = module._resolve_grants(
-        grants,
-        identities=identities,
-        memberships=memberships,
-        coverage=coverage,
-    )
-    rows = {
-        (row["person_object_id"], row["access_surface"]): row
-        for row in module._consolidate(resolved, coverage)
-    }
-
-    assert rows[("user-a", "SQL")]["contributing_grant_count"] == 2
-    assert rows[("user-b", "SQL")]["inheritance_paths"] == [
-        "group-a -> group-b -> user-b"
-    ]
-    assert rows[("user-b", "ONELAKE")]["is_restricted"] is True
-    assert {row["reason_code"] for row in coverage}.issuperset(
-        {"GROUP_MEMBERSHIP_CYCLE", "UNRESOLVED_IDENTITY", "GROUP_TYPE_NOT_EXPANDED"}
-    )
-
-
-def test_pure_resolution_reports_incomplete_groups_and_applies_sql_denies():
-    """Do not infer people from incomplete groups or permissions removed by deny."""
-    module = importlib.import_module("fabricops_kit.access_scanner.scan_effective_access")
-    identities = {
-        "user-a": {
-            "object_id": "user-a",
-            "display_name": "Alice",
-            "user_principal_name": "alice@example.com",
-            "principal_type": "USER",
-            "group_type": "",
-        },
-        "group-a": {
-            "object_id": "group-a",
-            "display_name": "Readers",
-            "user_principal_name": "",
-            "principal_type": "GROUP",
-            "group_type": "SECURITY_GROUP",
-        },
-    }
-    coverage = []
-    assert module._expand_principal(
-        "group-a",
-        identities=identities,
-        memberships={},
-        coverage=coverage,
-    ) == []
-
-    table = _table()
-    grants = [
-        module._grant(
-            table,
-            principal_id="user-a",
-            principal_type="User",
-            principal_name="Alice",
-            access_surface="SQL",
-            access_value="SELECT",
-            access_state=state,
-            permission_source="DIRECT_PERMISSION",
-        )
-        for state in ("GRANT", "DENY")
-    ]
-    resolved = module._resolve_grants(
-        grants,
-        identities=identities,
-        memberships={},
-        coverage=coverage,
-    )
-
-    assert module._consolidate(resolved, coverage) == []
-    assert {row["reason_code"] for row in coverage}.issuperset(
-        {"GROUP_MEMBERSHIP_INCOMPLETE", "PERMISSION_DENY_APPLIED"}
-    )

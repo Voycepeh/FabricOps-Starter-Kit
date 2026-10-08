@@ -20,20 +20,27 @@ FabricOps provides one read-only scan that discovers the Fabric scopes visible t
 2. **OneLake Security roles** — access granted through OneLake data access roles for Lakehouses.
 3. **SQL endpoint grants** — direct SQL permissions and permissions inherited through explicit database roles.
 
-The caller supplies identity and group-membership mappings as Spark DataFrames. The result keeps SQL and OneLake as separate access surfaces, consolidates overlapping grants by person and table, and preserves every contributing grant and inheritance path. No FabricOps metadata initialization or persistence target is required.
+The caller supplies identity and group-membership mappings as Spark DataFrames. FabricOps confirms table access only when it can establish both the required item-level access and the applicable data permission. The result keeps SQL and OneLake as separate access surfaces, consolidates overlapping grants by person and table, and preserves every contributing grant and inheritance path. No FabricOps metadata initialization or persistence target is required.
 
 !!! important "A scan only sees what the account running it can see"
-    FabricOps uses the account that runs the notebook. If that account cannot inspect a permission surface, FabricOps records the limitation in `coverage`. **A missing access row is not proof that no access exists.**
+    FabricOps uses the account that runs the notebook. If that account cannot inspect a permission surface, FabricOps records the limitation in `coverage`. **`UNVERIFIED` is not confirmed access, and a missing access row is not proof that no access exists.**
 
 ## How it works
 
 | Permission path | FabricOps observes | Result |
 | --- | --- | --- |
-| **Workspace roles** | Fabric Workspace role assignments | Workspace grants retain their origin and list the applicable data channels: SQL for Viewer, and SQL plus OneLake for elevated Lakehouse roles. |
-| **OneLake Security roles** | `dataAccessRoles` for discovered Lakehouses | Explicit users and security groups resolve to people; supported table and schema paths remain a distinct OneLake surface. |
-| **SQL endpoint grants** | SQL permission catalogue views | Direct grants and database-role grants expand across their database, schema, table, or column scope without becoming OneLake file access. |
+| **Workspace roles** | Fabric Workspace role assignments | Admin, Member, and Contributor roles supply inherited item and data access. A Lakehouse Viewer receives normal OneLake read access through an intact `DefaultReader` role. |
+| **Direct item sharing** | Supported caller-visible item evidence | Item `Read` permits connection or item discovery, but does not by itself grant table data access. When direct assignments cannot be enumerated, FabricOps reports that limitation rather than assuming denial. |
+| **OneLake Security roles** | `dataAccessRoles` for discovered Lakehouses | Explicit users and security groups resolve to people. Virtual members match only item assignments with the selector's source item and required permission set. |
+| **SQL endpoint grants** | SQL permission catalogue views and access-mode evidence | In delegated identity mode, SQL grants require item `Read`. In user identity mode, OneLake Security governs tables and SQL table grants are not effective. |
 
 Security groups expand recursively from `group_membership_df`. FabricOps detects cycles, removes duplicate edges, preserves distinct inheritance paths, and does not treat distribution-list membership as access-bearing. `identity_map_df` supplies the Object ID, display name, UPN, principal type, and group type needed for readable results without Microsoft Graph.
+
+`access_verification_status` makes the result explicit:
+
+- `CONFIRMED` means both applicable item access and data permission are established.
+- `UNVERIFIED` means a relevant permission is visible, but a prerequisite or SQL endpoint mode cannot be established through supported read-only interfaces.
+- `NOT_EFFECTIVE` means a required prerequisite is known to be absent or the observed grant does not govern that access path.
 
 ## Under the hood
 
@@ -44,12 +51,14 @@ Security groups expand recursively from `group_membership_df`. FabricOps detects
 
 `scan_effective_access()` reuses the lower-level Workspace, SQL endpoint, and OneLake scanning foundations while owning discovery, identity resolution, group expansion, and consolidation:
 
-- Fabric REST discovers workspaces, supported items, Workspace roles, Lakehouse tables, and OneLake `dataAccessRoles` visible to the caller.
+- Fabric REST Workspace and Catalog Search APIs discover caller-visible and directly shared supported items; item APIs then discover Lakehouse tables, Workspace roles, and OneLake `dataAccessRoles` where the caller has permission.
 - The existing read-only SQL endpoint connector discovers Warehouse or schema-enabled Lakehouse tables and reads SQL grants and explicit database-role permissions.
 - Caller-supplied mappings resolve principal Object IDs and recursively expand security groups to individual users.
-- FabricOps consolidates one row per person, table, and access surface while retaining grant provenance and inheritance paths.
+- FabricOps combines item-access evidence with data permissions, respects the endpoint security mode, and consolidates one row per person, table, and access surface while retaining grant provenance and inheritance paths.
 
-The returned `coverage` DataFrame records inaccessible scopes, unresolved identities, incomplete group expansion, unsupported permissions, restrictions, applied denies, and scan errors. Automatic OneLake item-permission selectors are never reported as people; when non-admin APIs cannot enumerate direct item shares, that limitation remains explicit in `coverage`.
+The scanner assumes the original Lakehouse `DefaultReader` behavior remains intact: users with item `ReadAll` receive OneLake `Read`. It never creates, deletes, or changes that role. If a successfully observed role contradicts the baseline, normal inherited Viewer access is marked `NOT_EFFECTIVE` and the discrepancy is recorded in `coverage`; if the role cannot be inspected, it remains `UNVERIFIED`.
+
+The returned `coverage` DataFrame records inaccessible scopes, unresolved identities, incomplete group expansion, unsupported permissions, restrictions, applied denies, indeterminate SQL modes, direct-item visibility gaps, and scan errors. Automatic OneLake item-permission selectors are never reported as people.
 
 The scan is read-only with respect to permissions and results: it does not grant, revoke, change, or persist anything.
 
@@ -76,7 +85,9 @@ display(result["coverage"])
 
 `identity_map_df` contains `object_id`, `display_name`, `user_principal_name`, `principal_type`, and `group_type`. `group_membership_df` contains `group_object_id` and `member_object_id`.
 
-If the caller can inspect Workspace and SQL permissions but cannot inspect OneLake Security, FabricOps returns the visible Workspace and SQL results and records the OneLake failure in `coverage`.
+Filter `access_verification_status == "CONFIRMED"` for established effective access. Review `UNVERIFIED` and `coverage` together before drawing conclusions about a principal or table.
+
+If the caller can inspect Workspace and SQL permissions but cannot establish direct item assignments or the SQL endpoint access mode, FabricOps preserves the observed permission as unverified and records the limitation in `coverage`.
 
 </details>
 

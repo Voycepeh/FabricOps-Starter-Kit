@@ -40,7 +40,7 @@ def test_role_observations_preserve_entra_and_default_reader_membership():
                     {"objectId": "user-object-id", "objectType": "User", "tenantId": "tenant-id"}
                 ],
                 "fabricItemMembers": [
-                    {"itemAccess": ["ReadAll"], "sourcePath": "workspace-id/item-id"}
+                    {"itemAccess": ["ReadAll", "Read"], "sourcePath": "workspace-id/item-id"}
                 ],
             },
         }
@@ -56,7 +56,7 @@ def test_role_observations_preserve_entra_and_default_reader_membership():
     assert len(rows) == 4
     assert {row["user_principal"] for row in rows} == {
         "user-object-id",
-        "fabric-item:workspace-id/item-id:ReadAll",
+        "fabric-item:workspace-id/item-id:Read+ReadAll",
     }
     assert {row["access_value"] for row in rows} == {"Read", "ReadWrite"}
     assert {row["permission_source"] for row in rows} == {
@@ -65,9 +65,32 @@ def test_role_observations_preserve_entra_and_default_reader_membership():
     }
     assert {(row["user_principal"], row["user_type"]) for row in rows} == {
         ("user-object-id", "USER"),
-        ("fabric-item:workspace-id/item-id:ReadAll", "FABRIC_ITEM_MEMBERS"),
+        ("fabric-item:workspace-id/item-id:Read+ReadAll", "FABRIC_ITEM_MEMBERS"),
     }
     assert all('"rows"' in row["constraints_json"] for row in rows)
+
+
+def test_catalog_search_discovers_supported_items_across_pages(monkeypatch):
+    """Use caller-scoped Catalog Search without requiring workspace enumeration."""
+    module = importlib.import_module("fabricops_kit.access_scanner.shared")
+    bodies = []
+
+    def request(url, **kwargs):
+        bodies.append(kwargs["body"])
+        if len(bodies) == 1:
+            return {"value": [{"id": "lakehouse-a"}], "continuationToken": "next"}
+        return {"value": [{"id": "warehouse-a"}]}
+
+    monkeypatch.setattr(module, "request_fabric_json", request)
+    rows = module.search_fabric_catalog(access_token="token")
+
+    assert [row["id"] for row in rows] == ["lakehouse-a", "warehouse-a"]
+    assert bodies[0] == {
+        "search": "*",
+        "filter": "Type eq 'Lakehouse' or Type eq 'Warehouse'",
+        "pageSize": 1000,
+    }
+    assert bodies[1] == {"continuationToken": "next"}
 
 
 def test_entra_members_use_exposed_principal_identity_and_preserve_types():
