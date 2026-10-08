@@ -234,7 +234,7 @@ def test_import_call_resolution_patterns_and_re_exports(tmp_path: Path) -> None:
 
 def test_repository_imported_helpers_are_not_false_unused_candidates(repository_call_flow_payload) -> None:
     """Keep known production imports distinct from call and reachability signals."""
-    payload = flows.build_payload()
+    payload = repository_call_flow_payload
     unused = {row["qualified_name"] for row in payload["defined_but_not_used"]}
     records = {row["qualified_name"]: row for row in payload["defined_functions"]}
     expected_references = {
@@ -388,7 +388,7 @@ def test_release_manifests_use_semantic_version_order(tmp_path: Path) -> None:
 
 def test_repository_manifest_lifecycle_authority(repository_call_flow_payload) -> None:
     """Validate repository release manifest lifecycle fields drive real output."""
-    payload = flows.build_payload()
+    payload = repository_call_flow_payload
 
     excel = next(item for item in payload["public_functions"] if item["function_name"] == "read_lakehouse_excel")
     assert excel["lifecycle_status"] == "live"
@@ -465,7 +465,7 @@ def test_any_package_callable_can_use_foundational_io_without_a_violation() -> N
 
 def test_foundational_io_classification_and_lifecycle_history(repository_call_flow_payload) -> None:
     """Classify every boundary member without changing release-manifest history."""
-    payload = flows.build_payload()
+    payload = repository_call_flow_payload
     public_by_name = {row["function_name"]: row for row in payload["public_functions"]}
 
     assert set(flows.FOUNDATIONAL_IO_FUNCTION_NAMES) <= set(public_by_name)
@@ -481,7 +481,7 @@ def test_foundational_io_classification_and_lifecycle_history(repository_call_fl
 
 def test_repository_type_zero_edges_never_contribute_architecture_violations(repository_call_flow_payload) -> None:
     """Keep every foundational I/O edge green and out of violation counts."""
-    payload = flows.build_payload()
+    payload = repository_call_flow_payload
     type_zero_rows = [
         row
         for public_function in payload["public_functions"]
@@ -1226,7 +1226,7 @@ def test_json_output_is_deterministic_across_consecutive_writes(tmp_path: Path) 
 
 def test_committed_json_matches_generator_output(repository_call_flow_payload) -> None:
     """Validate committed call-flow JSON matches the generator payload."""
-    expected = json.dumps(flows.normalize_payload(flows.build_payload()), indent=2, sort_keys=True) + "\n"
+    expected = json.dumps(flows.normalize_payload(repository_call_flow_payload), indent=2, sort_keys=True) + "\n"
     actual = flows.DATA_PATH.read_text(encoding="utf-8")
 
     assert actual == expected
