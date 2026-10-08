@@ -1777,10 +1777,50 @@ def widget_data_contract(
             ]
             return max(values, key=rank.get) if values else ""
 
+        table_classification_sources = widgets.HTML()
+
         def refresh_table_classification() -> None:
             derived = derive_table_classification()
             if str(table_classification.value or "") != derived:
                 table_classification.value = derived
+            if not derived:
+                table_classification_sources.value = (
+                    "<span style='color:#667085;font-size:12px;'>"
+                    "No classified columns determine the table level yet.</span>"
+                )
+                return
+            column_labels = {
+                str(column.get("column_id") or ""): str(column.get("column_name") or "")
+                for column in columns
+            }
+            removed = {
+                str(rule.get("column_id") or "")
+                for rule in session_guardrails()
+                if str(rule.get("guardrail_type") or "").lower() == "sensitive_data"
+                and bool(rule.get("is_active", True))
+                and str(_parameters(rule).get("treatment") or rule.get("rule_type") or "").lower() == "remove"
+            }
+            latest_classifications = {
+                str(row.get("column_id") or ""): str(row.get("value") or "")
+                for row in list((state.get("current") or {}).get("enrichment", []))
+                if str(row.get("enrichment_level") or "").lower() == "column"
+                and str(row.get("enrichment_type") or "").lower() == "classification"
+            }
+            matches = [
+                column_labels[column_id]
+                for column_id, level in latest_classifications.items()
+                if column_id in column_labels and column_id not in removed and level == derived
+            ]
+            count = len(matches)
+            examples = ", ".join(html.escape(name) for name in matches[:3])
+            extra = f" +{count - 3} more" if count > 3 else ""
+            noun = "column" if count == 1 else "columns"
+            table_classification_sources.value = (
+                "<span style='color:#667085;font-size:12px;line-height:1.5;'>"
+                f"Determined by {count} {noun} at this level"
+                + (f": {examples}{extra}" if examples else ".")
+                + "</span>"
+            )
 
         refresh_table_classification()
 
@@ -2201,6 +2241,7 @@ def widget_data_contract(
             [
                 widgets.HTML("<b>Classification</b>"),
                 table_classification,
+                table_classification_sources,
                 widgets.HTML("<b>Description</b>"),
                 table_description,
             ],
