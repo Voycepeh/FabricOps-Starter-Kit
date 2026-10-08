@@ -81,17 +81,13 @@ source = orchestrate_read(
     spark_session=spark,
 )
 sources["orders"] = source
-
-print("Scope:", source["scope"])
-print("Should process:", source["should_process"])
-display(source["dataframe"])
 ```
 
 **Why resolve the target first?** Incremental progress belongs to one exact **source → target** relationship. Another target consuming Bronze Orders may have a different last-processed watermark.
 
 **Important:** Do not provide custom SQL in `query` for an incremental read; FabricOps builds its own filtering predicate. Leave `query` omitted.
 
-Delete or skip **READ 2 — Products** and **READ 3 — Order History**. Leave the optional Read inspection cell commented out; incremental reads intentionally skip full-table profiling.
+Delete or skip **READ 2 — Products** and **READ 3 — Order History**. Use the existing optional Read Inspection cell to inspect `sources["orders"]["scope"]`, `sources["orders"]["should_process"]`, and `sources["orders"]["dataframe"]`. Incremental reads intentionally skip full-table profiling.
 
 ## 5. Replace the Transform cell
 
@@ -110,27 +106,23 @@ This deliberately performs no transformation, so you can inspect the exact rows 
 Keep `writes = {}` once. Replace **WRITE 1** with:
 
 ```python
-if sources["orders"]["should_process"]:
-    write_result = orchestrate_write(
-        transformed_df,
-        name="orders_incremental",
-        sources=[sources["orders"]],
-        store="Silver",
-        schema="demo",
-        table_name="orders_incremental",
-        write_mode="append",
-        contracts=CONTRACTS,
-        repartition_by=None,
-        spark_session=spark,
-    )
+write_result = orchestrate_write(
+    transformed_df,
+    name="orders_incremental",
+    sources=[sources["orders"]],
+    store="Silver",
+    schema="demo",
+    table_name="orders_incremental",
+    write_mode="append",
+    contracts=CONTRACTS,
+    repartition_by=None,
+    spark_session=spark,
+)
 
-    writes["orders_incremental"] = write_result
-    print("Published:", write_result["published"])
-else:
-    print("No new Orders to process; skipping append.")
+writes["orders_incremental"] = write_result
 ```
 
-Use the same high-level `orchestrate_write()` you used in Step 2, not a separate `pipeline_write()` bypass. The successful write commits the source-to-target incremental progress.
+Use the same high-level `orchestrate_write()` you used in Step 2, not a separate `pipeline_write()` bypass. Call it even when the incremental read has no new rows; the empty Append does not add target records. The write lifecycle still runs its applicable guardrails, including Source Drift.
 
 Delete or skip **WRITE 2 — Warehouse Customer Summary**. In the optional Write inspection cell, change `inspect_write` to `"orders_incremental"`, or leave that inspection cell commented out.
 
@@ -142,7 +134,7 @@ Run your modified notebook **from the top**. For a target with no accepted incre
 * The Read returns all existing Bronze Orders.
 * `orchestrate_write()` publishes that batch to `Silver.demo.orders_incremental`.
 
-The output from READ 1 should resemble:
+If you uncomment the `scope` and `should_process` inspections, the first run should resemble:
 
 ```text
 Scope: {'type': 'full', 'first_run': True, ...}
@@ -229,20 +221,15 @@ The scope uses `modified_datetime > last committed watermark`, not `>=`.
 
 Run the same pipeline cells a third time **without inserting any more Bronze rows**. Keep the one-time insertion cell removed or skipped.
 
-The expected result is:
+The Read Inspection cell should show `should_process = False` and an empty DataFrame. **WRITE 1 still calls `orchestrate_write()`**, including its guardrails and Append write; there is no notebook-side skip.
 
-```text
-Should process: False
-No new Orders to process; skipping append.
-```
-
-The Silver row count should remain unchanged. This verifies that the target-specific watermark advanced after successful publication and that the no-change run does not append duplicates.
+The Silver row count should remain unchanged because the empty Append adds no rows. This verifies that the target-specific watermark advanced after successful publication and that the no-change run does not append duplicates.
 
 | Run | Bronze source state | Incremental read | Silver write |
 | --- | --- | --- | --- |
 | 1 | Original Orders | Bootstrap: all original rows | Append first batch |
 | 2 | Original Orders + two test Orders | Only the two new rows | Append two rows |
-| 3 | No further changes | No rows to process | Skip write |
+| 3 | No further changes | No rows to process | Empty append; zero rows added |
 
 !!! warning "Append does not reconcile old Orders"
     If an existing order is updated with a later `modified_datetime`, an Append target adds another version instead of replacing the earlier row. For updates to existing business keys, use SCD1 or SCD2 instead. This optional demo only appends **new orders**.
