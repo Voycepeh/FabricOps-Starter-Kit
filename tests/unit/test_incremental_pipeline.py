@@ -357,3 +357,58 @@ def test_multiple_incremental_sources_are_staged_independently(monkeypatch):
             source_table_ids=["source-orders", "source-payments", "source-products"],
         ).keys()
     ) == {"source-orders", "source-payments"}
+
+
+def test_incremental_read_parameters_override_missing_catalogue_watermark(monkeypatch):
+    identity = {
+        "table_id": "source-orders",
+        "store_type": "lakehouse",
+        "store": "Bronze",
+        "schema": "demo",
+        "table_name": "orders",
+        "load_strategy": "append",
+        "load_strategy_parameters_json": "{}",
+    }
+    captured = []
+    monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(read_module, "resolve_catalogue_table_identity", lambda *a, **k: identity)
+    monkeypatch.setattr(read_module, "resolve_pipeline_data_contract", lambda *a, **k: None)
+    monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **k: "frame")
+    monkeypatch.setattr(read_module, "capture_source_observation",
+                        lambda **kwargs: captured.append(kwargs) or "observation")
+    monkeypatch.setattr(read_module, "resolve_incremental_source_scope",
+                        lambda **kwargs: {"type": "full", "first_run": True, "has_data": True})
+    result = read_module.pipeline_read(
+        table_id="source-orders",
+        read_mode="incremental",
+        read_parameters={"watermark_column": "modified_datetime"},
+        target_table_id="target-orders",
+        verbose=False,
+    )
+    assert captured[0]["incremental_columns"] == ("modified_datetime", "modified_datetime")
+    assert result["should_process"] is True
+
+
+def test_incremental_parameters_reject_selected_contract_conflict():
+    contract = {"contract_payload": {"table": {"processing": {
+        "load_strategy": "append", "watermark_column": "governed_date"
+    }}}}
+    with pytest.raises(ValueError, match="conflicts with selected Data Contract"):
+        read_module._resolve_requested_incremental_columns(
+            {}, contract, {"watermark_column": "another_date"}
+        )
+
+
+@pytest.mark.parametrize("parameters", [
+    {"watermark_column": ""},
+    {"watermark_column": 12},
+    {"partition_column": "day"},
+])
+def test_incremental_parameters_reject_invalid_shape_before_runtime(monkeypatch, parameters):
+    monkeypatch.setattr(read_module, "resolve_fabric_context",
+                        lambda: pytest.fail("must reject before context resolution"))
+    with pytest.raises(ValueError):
+        read_module.pipeline_read(
+            table_id="source-orders", target_table_id="target-orders",
+            read_mode="incremental", read_parameters=parameters,
+        )

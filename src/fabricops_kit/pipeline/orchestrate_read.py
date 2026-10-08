@@ -9,7 +9,7 @@ from fabricops_kit.pipeline.profile_table import profile_table
 from fabricops_kit.pipeline.shared import _run_orchestration_stage
 
 
-def orchestrate_read(*, name: str, store: str, schema: str | None, table_name: str, read_mode: str = "full", query: str | None = None, target_table_id: str | None = None, spark_session=None, verbose: bool = True) -> dict[str, Any]:
+def orchestrate_read(*, name: str, store: str, schema: str | None, table_name: str, read_mode: str = "full", query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session=None, verbose: bool = True) -> dict[str, Any]:
     """Execute the standard FabricOps governed Read lifecycle.
 
     Parameters
@@ -26,6 +26,9 @@ def orchestrate_read(*, name: str, store: str, schema: str | None, table_name: s
         Source read behaviour forwarded to :func:`pipeline_read`.
     query : str, optional
         Read-only Warehouse query forwarded to :func:`pipeline_read`.
+    read_parameters : dict, optional
+        Incremental configuration, for example {"watermark_column": "modified_datetime"}.
+        A selected Data Contract must agree with the supplied watermark.
     target_table_id : str, optional
         Governed target identity required for incremental reads.
     spark_session : object, optional
@@ -68,7 +71,7 @@ def orchestrate_read(*, name: str, store: str, schema: str | None, table_name: s
         result, record = _run_orchestration_stage(operation="READ", name=name, index=index, total=5, stage=stage, function=function, verbose=verbose)
         stages.append(record)
         return result
-    source = run(1, "Read", lambda: pipeline_read(store=store, schema=schema, table_name=table_name, read_mode=read_mode, query=query, target_table_id=target_table_id, spark_session=spark_session, verbose=False))
+    source = run(1, "Read", lambda: pipeline_read(store=store, schema=schema, table_name=table_name, read_mode=read_mode, query=query, read_parameters=read_parameters, target_table_id=target_table_id, spark_session=spark_session, verbose=False))
     reader_name = source.pop("_reader_name", None)
     if verbose and reader_name:
         print(f"      Physical read → {reader_name}")

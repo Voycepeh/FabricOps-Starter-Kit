@@ -24,9 +24,9 @@ choose between Lakehouse and Warehouse table readers.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_read.py:43`
+`fabricops_kit/pipeline/pipeline_read.py:63`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L43-L367">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L63-L404">View on GitHub</a>
 </div>
 
 
@@ -49,6 +49,7 @@ def pipeline_read(
     table_id: str | None=None,
     query: str | None=None,
     read_mode: str='full',
+    read_parameters: dict[str, Any] | None=None,
     target_table_id: str | None=None,
     spark_session=None,
     verbose: bool=True,
@@ -113,6 +114,7 @@ complete physical ``demo.order_history`` source table.
 | `table_id` | `str \| None` | No | Canonical registered source identity. This is the alternative identity form and is mutually exclusive with ``store``, ``schema``, and ``table_name``. |
 | `query` | `str \| None` | No | Read-only SQL for a configured Warehouse source. The supplied source identity remains the governed source participant even when the result is a projection, filter, join, or aggregation. FabricOps does not infer arbitrary source identity by parsing SQL. A query may accompany either physical coordinates or ``table_id`` when the resolved store is a Warehouse. |
 | `read_mode` | `str` | No | Explicit source read behaviour. ``full`` preserves the complete-source read. ``incremental`` resolves unconsumed work from the last Source Observation committed for this exact source-to-target relationship. |
+| `read_parameters` | `dict[str, Any] \| None` | No | Incremental read configuration. Supports only watermark_column. If a Data Contract is selected, its watermark must match the requested one. |
 | `target_table_id` | `str \| None` | No | Canonical governed target being prepared. It is accepted for both read modes so target flows can use one consistent call shape, and is required when ``read_mode="incremental"``. |
 | `spark_session` | `object` | No | Spark session forwarded to the selected foundational reader instead of relying on notebook-global ``spark``. |
 | `verbose` | `bool` | No | Whether to print one concise orchestration message showing the resolved Fabric store type, physical table identity, and selected foundational reader. This makes the hidden routing understandable without exposing workspace IDs, SQL text, contract payloads, or runtime plumbing. |
@@ -189,7 +191,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 73 |
+| Live-critical dependencies | 74 |
 
 ### Release history
 
@@ -237,6 +239,7 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._filter_lakehouse_incremental</code></li>
+<li><code>fabricops_kit.pipeline.pipeline_read._resolve_requested_incremental_columns</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._warehouse_incremental_query</code></li>
 <li><code>fabricops_kit.pipeline.shared._catalogue_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._compact_rows</code></li>
