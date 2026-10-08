@@ -90,8 +90,8 @@ def test_shared_form_viewport_is_bounded_while_sections_expand_naturally():
     assert grid.layout.kwargs["grid_gap"] == "16px 24px"
 
 
-def test_long_search_results_are_bounded_without_scrolling_the_form():
-    """Bound selector results without adding scrollbars to its container."""
+def test_long_search_results_use_one_compact_combobox_without_scrolling_the_form():
+    """Keep long dynamic lists searchable without rendering a permanent list box."""
     selector = shared.render_searchable_selector(
         widgets=_FakeWidgets,
         label="Steward",
@@ -100,7 +100,9 @@ def test_long_search_results_are_bounded_without_scrolling_the_form():
         value_fn=lambda row: row["id"],
     )
 
-    assert len(selector["selector"].options) == 25
+    assert len(selector["search"].options) == 50
+    assert selector["container"].children == [selector["search"]]
+    assert selector["search"].placeholder == "Search..."
     assert selector["container"].layout.kwargs["height"] == "auto"
     assert selector["container"].layout.kwargs["overflow"] == "visible"
 
@@ -114,8 +116,6 @@ def test_agreement_form_has_meaningful_groups_and_fabric_safe_status(monkeypatch
         "Approved usages",
         "Provider Data Steward",
         "Recipient Data Steward",
-        "Search provider data stewards",
-        "Search recipient data stewards",
         "Document name",
         "Document link",
         "Custom columns",
@@ -268,17 +268,16 @@ def test_steward_selector_search_population_and_save_paths_remain_unchanged(monk
     controls = _render_steward(monkeypatch, stewards=rows)
 
     search = controls["existing_record_search"]
-    search.value = "Analytics"
-    search.callbacks[0]({"name": "value"})
-    assert controls["existing_record"].options == [
-        ("Create new steward", ""),
-        (
-            "Analytics Steward | Governance Reviewer | analytics@example.com",
-            "22222222-2222-4222-8222-222222222222",
-        ),
+    analytics_label = "Analytics Steward | Governance Reviewer | analytics@example.com"
+    assert search.options == [
+        "Create new steward",
+        "Taizan | Data Steward | TZ@abc.com",
+        analytics_label,
     ]
+    search.value = analytics_label
+    search.callbacks[0]({"name": "value", "new": analytics_label})
+    assert controls["existing_record"].value == "22222222-2222-4222-8222-222222222222"
 
-    controls["existing_record"].value = "22222222-2222-4222-8222-222222222222"
     controls["existing_record"].callbacks[0]({
         "name": "value",
         "new": "22222222-2222-4222-8222-222222222222",

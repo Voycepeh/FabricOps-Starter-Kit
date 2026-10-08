@@ -118,7 +118,7 @@ def widget_runtime(monkeypatch):
 
     ipywidgets = types.SimpleNamespace(
         Layout=lambda **kwargs: Layout(**kwargs), HTML=Widget, Text=Widget, Textarea=Widget,
-        Dropdown=Dropdown, Checkbox=Widget, Select=Widget, SelectMultiple=Widget,
+        Dropdown=Dropdown, Combobox=Widget, Checkbox=Widget, Select=Widget, SelectMultiple=Widget,
         ToggleButtons=Widget,
         Button=Button, VBox=Box, HBox=Box, GridBox=Box, Tab=Tab,
     )
@@ -423,6 +423,12 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert controls["schema"].value == "sales"
     assert controls["table"].value == "orders"
     assert controls["contract"].value == "1"
+    assert controls["schema_search"].placeholder == "Search schemas..."
+    assert controls["schema_search"].options == ["sales"]
+    assert controls["table_search"].placeholder == "Search governed tables..."
+    assert controls["table_search"].options == ["Select governed table", "orders"]
+    assert controls["contract_search"].placeholder == "Search contract versions..."
+    assert controls["contract_search"].options == ["v1 · Draft", "New draft"]
     selector = controls["selector_panel"].children[0]
     assert [field.children[0].value for field in selector.children] == [
         "<b>Fabric store</b>",

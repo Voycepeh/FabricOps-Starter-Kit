@@ -378,31 +378,23 @@ def render_searchable_selector(
     selected_value: str | None = None,
     search_label: str | None = None,
 ) -> dict[str, Any]:
-    """Render a table-backed selector with search and stable-value tracking."""
-    search = widgets.Text(
-        value="", placeholder=placeholder, **widget_common(widgets, search_label or f"Search {label}")
+    """Render a compact searchable combobox backed by stable row values."""
+    del max_results, search_fields, search_label
+
+    combobox = widgets.Combobox(
+        value="",
+        options=[],
+        placeholder=placeholder,
+        ensure_option=True,
+        **widget_common(widgets, label),
     )
-    selector = widgets.Select(options=[], **widget_common(widgets, label))
+    selector = widgets.Select(options=[])
     context = widgets.HTML(value="")
     lookup: dict[str, dict[str, Any]] = {}
+    labels_by_value: dict[str, str] = {}
+    values_by_label: dict[str, str] = {}
     indexed_rows: list[dict[str, Any]] = []
-
-    def _set_rows(new_rows: list[dict[str, Any]]) -> None:
-        lookup.clear()
-        indexed_rows.clear()
-        for row in new_rows:
-            value = str(value_fn(row) or "")
-            if not value:
-                continue
-            lookup[value] = row
-            indexed_rows.append(row)
-
-    def _matches(row: dict[str, Any], query: str) -> bool:
-        if not query:
-            return True
-        fields = search_fields or list(row)
-        haystack = " ".join(str(row.get(field, "")) for field in fields).lower()
-        return query.lower() in haystack
+    syncing = False
 
     def _context_html(row: dict[str, Any] | None) -> str:
         if not row or not context_fields:
@@ -413,21 +405,70 @@ def render_searchable_selector(
         ]
         return "<br>".join(parts)
 
-    def _refresh_options(*_: Any) -> None:
-        current = str(selector.value or selected_value or "")
-        query = str(search.value or "").strip()
-        filtered = [row for row in indexed_rows if _matches(row, query)][:max_results]
-        options = [(label_fn(row), str(value_fn(row) or "")) for row in filtered]
+    def _unique_label(base_label: str, value: str) -> str:
+        candidate = base_label
+        if candidate not in values_by_label:
+            return candidate
+        if values_by_label[candidate] == value:
+            return candidate
+        return f"{base_label} · {value}"
+
+    def _set_rows(new_rows: list[dict[str, Any]]) -> None:
+        lookup.clear()
+        labels_by_value.clear()
+        values_by_label.clear()
+        indexed_rows.clear()
         if empty_label is not None:
-            options = [(empty_label, ""), *options]
-        selector.options = options
+            labels_by_value[""] = empty_label
+            values_by_label[empty_label] = ""
+        for row in new_rows:
+            value = str(value_fn(row) or "")
+            if not value:
+                continue
+            base_label = str(label_fn(row) or value)
+            display_label = _unique_label(base_label, value)
+            lookup[value] = row
+            labels_by_value[value] = display_label
+            values_by_label[display_label] = value
+            indexed_rows.append(row)
+
+    def _sync_visible_value() -> None:
+        nonlocal syncing
+        value = str(selector.value or "")
+        label_value = labels_by_value.get(value, "")
+        syncing = True
+        try:
+            combobox.value = label_value
+            context.value = _context_html(lookup.get(value))
+        finally:
+            syncing = False
+
+    def _refresh_options(*_: Any) -> None:
+        candidate = selected_value if selected_value is not None else str(selector.value or "")
+        options = [(labels_by_value[value], value) for value in labels_by_value]
         values = [value for _, value in options]
-        selector.value = current if current in values else (values[0] if values else None)
+        selector.options = options
+        combobox.options = [label_value for label_value, _ in options]
+        selector.value = candidate if candidate in values else (values[0] if values else None)
+        _sync_visible_value()
+
+    def _on_combobox(change: dict[str, Any]) -> None:
+        nonlocal syncing
+        if syncing or change.get("name") != "value":
+            return
+        label_value = str(change.get("new") or "")
+        if label_value not in values_by_label:
+            return
+        syncing = True
+        try:
+            selector.value = values_by_label[label_value]
+        finally:
+            syncing = False
         context.value = _context_html(lookup.get(str(selector.value or "")))
 
     def _on_select(change: dict[str, Any]) -> None:
-        if change.get("name") == "value":
-            context.value = _context_html(lookup.get(str(change.get("new") or "")))
+        if change.get("name") == "value" and not syncing:
+            _sync_visible_value()
 
     def _refresh_rows(new_rows: list[dict[str, Any]], selected: str | None = None) -> None:
         nonlocal selected_value
@@ -435,16 +476,25 @@ def render_searchable_selector(
         _set_rows(new_rows)
         _refresh_options()
 
-    search.observe(lambda change: _refresh_options() if change.get("name") == "value" else None, names="value")
+    combobox.observe(_on_combobox, names="value")
     selector.observe(_on_select, names="value")
     _set_rows(rows)
     _refresh_options()
     selector.refresh_rows = _refresh_rows
+    children = [combobox]
+    if context_fields:
+        children.append(context)
     container = widgets.VBox(
-        [search, selector, context], layout=widgets.Layout(width="100%", height="auto", overflow="visible", gap="6px")
+        children,
+        layout=widgets.Layout(width="100%", height="auto", overflow="visible", gap="6px"),
     )
-    return {"container": container, "search": search, "selector": selector, "context": context, "rows_by_value": lookup}
-
+    return {
+        "container": container,
+        "search": combobox,
+        "selector": selector,
+        "context": context,
+        "rows_by_value": lookup,
+    }
 
 def render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, values: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render organization-specific custom fields from normalized config."""

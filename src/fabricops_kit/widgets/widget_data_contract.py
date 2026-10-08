@@ -956,11 +956,27 @@ def widget_data_contract(
         width="100%", min_width="0", max_width="100%",
     )
     store_control = widgets.Dropdown(options=store_options, layout=selector_dropdown_layout)
-    schema_control = widgets.Dropdown(options=[], layout=selector_dropdown_layout)
-    table_control = widgets.Dropdown(
-        options=[("Select governed table", "")], layout=selector_dropdown_layout,
+
+    def dynamic_selector(*, placeholder: str, empty_label: str | None = None) -> dict[str, Any]:
+        return shared.render_searchable_selector(
+            widgets=widgets,
+            label="",
+            rows=[],
+            label_fn=lambda row: str(row.get("label") or row.get("value") or ""),
+            value_fn=lambda row: str(row.get("value") or ""),
+            placeholder=placeholder,
+            empty_label=empty_label,
+        )
+
+    schema_selector = dynamic_selector(placeholder="Search schemas...")
+    table_selector = dynamic_selector(
+        placeholder="Search governed tables...",
+        empty_label="Select governed table",
     )
-    contract_control = widgets.Dropdown(layout=selector_dropdown_layout)
+    contract_selector = dynamic_selector(placeholder="Search contract versions...")
+    schema_control = schema_selector["selector"]
+    table_control = table_selector["selector"]
+    contract_control = contract_selector["selector"]
 
     def selector_field(label: str, control: Any) -> Any:
         return widgets.VBox(
@@ -976,9 +992,9 @@ def widget_data_contract(
     selector = widgets.GridBox(
         [
             selector_field("Fabric store", store_control),
-            selector_field("Schema", schema_control),
-            selector_field("Table", table_control),
-            selector_field("Contract", contract_control),
+            selector_field("Schema", schema_selector["container"]),
+            selector_field("Table", table_selector["container"]),
+            selector_field("Contract", contract_selector["container"]),
         ],
         layout=widgets.Layout(
             width="100%",
@@ -5040,19 +5056,20 @@ def widget_data_contract(
             and str(row.get("schema_name") or "") == selected_schema
         ]
         pending = str(state.get("pending_table_id") or "")
-        options = [
-            ("Select governed table", ""),
-            *[
-                (str(row.get("table_name") or row.get("table_id")), str(row["table_id"]))
-                for row in rows
-            ],
+        selector_rows = [
+            {
+                "label": str(row.get("table_name") or row.get("table_id")),
+                "value": str(row["table_id"]),
+            }
+            for row in rows
         ]
-        values = [item[1] if isinstance(item, tuple) else item for item in options]
+        values = [str(row["value"]) for row in selector_rows]
         state["_selector_refreshing"] = True
         try:
-            table_control.value = None
-            table_control.options = options
-            table_control.value = pending if pending in values else ""
+            table_control.refresh_rows(
+                selector_rows,
+                pending if pending in values else "",
+            )
         finally:
             state["_selector_refreshing"] = False
         table_changed({"new": table_control.value})
@@ -5071,11 +5088,13 @@ def widget_data_contract(
             None,
         )
         preferred = str((pending_row or {}).get("schema_name") or "")
+        selected_schema = preferred if preferred in schemas else (schemas[0] if schemas else None)
         state["_selector_refreshing"] = True
         try:
-            schema_control.value = None
-            schema_control.options = schemas
-            schema_control.value = preferred if preferred in schemas else (schemas[0] if schemas else None)
+            schema_control.refresh_rows(
+                [{"label": schema_name, "value": schema_name} for schema_name in schemas],
+                selected_schema,
+            )
         finally:
             state["_selector_refreshing"] = False
         refresh_table_options()
@@ -5086,23 +5105,26 @@ def widget_data_contract(
         selected = str(change.get("new") or "")
         state["pending_table_id"] = selected or None
         matches = [row for row in state["contracts"] if str(row.get("table_id") or "") == selected]
-        options = [
-            *[(f"v{row['contract_version']} · {str(row.get('status') or '').title()}", str(row["contract_version"])) for row in matches],
-            ("New draft", "new"),
+        contract_rows = [
+            {
+                "label": f"v{row['contract_version']} · {str(row.get('status') or '').title()}",
+                "value": str(row["contract_version"]),
+            }
+            for row in matches
         ]
+        contract_rows.append({"label": "New draft", "value": "new"})
         preferred = state.get("pending_contract_version")
         preferred_value = str(preferred) if preferred is not None else None
         available = [str(row["contract_version"]) for row in matches]
+        if preferred_value in available:
+            selected_contract = preferred_value
+        elif matches:
+            selected_contract = str(matches[0]["contract_version"])
+        else:
+            selected_contract = "new"
         state["_selector_refreshing"] = True
         try:
-            contract_control.value = None
-            contract_control.options = options
-            if preferred_value in available:
-                contract_control.value = preferred_value
-            elif matches:
-                contract_control.value = str(matches[0]["contract_version"])
-            else:
-                contract_control.value = "new"
+            contract_control.refresh_rows(contract_rows, selected_contract)
         finally:
             state["_selector_refreshing"] = False
         contract_changed({"new": contract_control.value})
@@ -5214,7 +5236,9 @@ def widget_data_contract(
     state["_controls"].update({
         "page": page, "selector_panel": selector_panel, "editor_shell": editor_shell,
         "store": store_control, "schema": schema_control,
-        "table": table_control, "contract": contract_control,
+        "schema_search": schema_selector["search"],
+        "table": table_control, "table_search": table_selector["search"],
+        "contract": contract_control, "contract_search": contract_selector["search"],
         "open_with_ai": open_with_ai_button, "open_without_ai": open_without_ai_button,
         "open": open_without_ai_button, "open_progress": open_progress,
         "change_table": change_table_button,
