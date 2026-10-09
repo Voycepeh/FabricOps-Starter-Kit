@@ -1022,7 +1022,7 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
     import json
 
     flow_data = json.loads(Path("docs/reference/_data/public-function-call-flows.json").read_text(encoding="utf-8"))
-    rows = {row["qualified_name"]: row for row in flow_data["defined_functions"]}
+    rows = {row["qualified_name"]: row for row in flow_data["functions"]}
     assert "fabricops_kit.widgets.shared.render_maintenance_widget_shared_workflow" not in rows
     assert (
         "fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow" not in rows
