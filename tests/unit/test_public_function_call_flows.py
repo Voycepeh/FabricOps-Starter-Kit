@@ -772,7 +772,9 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "DATA.public_functions.filter(f=>hasPublicSignal(f,'architecture_violation')).length" in html
     assert "DATA.public_functions.filter(f=>hasPublicSignal(f,'large_width_or_depth')).length" in html
     assert "function publicSignalsForFunction(f)" in html
-    assert "function normalizePublicFunction(f)" in html
+    assert "function normalizeDashboardData(data)" in html
+    assert "Object.defineProperty(record,'flow'" in html
+    assert "children=new Map()" in html
     assert "function derivePublicMetrics(f)" in html
     assert "function deriveFlowEdges(flow)" in html
     assert "function deriveArchitectureViolations(flow)" in html

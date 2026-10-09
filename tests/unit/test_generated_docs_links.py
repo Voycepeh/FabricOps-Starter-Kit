@@ -124,7 +124,8 @@ def test_generated_reference_includes_every_exported_public_callable_page() -> N
     import json
 
     inventory = json.loads((DOCS / "reference" / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8"))
-    public_functions = [str(row["function_name"]) for row in inventory["public_functions"]]
+    public_qns = {str(row["qualified_name"]) for row in inventory["public_analysis"]}
+    public_functions = [str(row["function_name"]) for row in inventory["functions"] if str(row["qualified_name"]) in public_qns]
     missing = [name for name in public_functions if not (DOCS / "api" / "reference" / f"{name}.md").exists()]
     assert missing == []
 

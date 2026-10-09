@@ -137,7 +137,7 @@ For Fabric IO, public owner files live under `src/fabricops_kit/io/`, and reusab
 
 ## Public call-flow architecture contract
 
-`docs/reference/_data/public-function-call-flows.json` is the committed normalized public callable architecture contract. It is a machine-readable data source, not mandatory full-file agent context. It stores each callable once in `defined_functions`, public-root metrics and lifecycle in `public_functions`, and each resolved direct caller-to-callee edge once in `relationships`.
+`docs/reference/_data/public-function-call-flows.json` is the committed normalized public callable architecture contract. It is a machine-readable data source, not mandatory full-file agent context. Its v4 schema stores each callable once in `functions`, each resolved direct caller-to-callee edge once in `relationships`, and public-root-only metrics and refactor analysis in `public_analysis`.
 
 Before function-level source changes, retrieve only the relevant callable slice:
 
@@ -146,7 +146,7 @@ python scripts/query_public_function_call_flow.py orchestrate_read
 python scripts/query_public_function_call_flow.py orchestrate_read --depth 2 --callers
 ```
 
-Use the fully qualified name if the simple name is ambiguous. Default lookup includes the target record, public-root metrics when applicable, and direct callees. Request deeper dependencies or inbound callers only when the change requires them. The query reads `defined_functions`, `public_functions`, and `relationships` without displaying the complete JSON. Do not load or paste the full 1.5 MB contract into an agent prompt. Distinguish inbound calls from source references.
+Use the fully qualified name if the simple name is ambiguous. Default lookup includes the canonical function record, public-root analysis when applicable, and direct callees. Request deeper dependencies or inbound callers only when the change requires them. The query reads `functions`, `public_analysis`, and `relationships` without displaying the complete JSON. Do not load or paste the complete contract into an agent prompt. Distinguish inbound calls from source references.
 
 
 Source code, exports, reference metadata, and generators remain authoritative. Do not manually edit the JSON as a fix, and do not require agents to parse the generated dashboard HTML to understand the graph.

@@ -170,10 +170,15 @@ def test_supported_public_api_matches_generated_call_flow_contract():
     )
     dashboard_path = root / "docs" / "assets" / "public-function-call-flows-dashboard.html"
 
-    flow_public = {row["function_name"] for row in callable_flow["public_functions"]}
+    public_qns = {row["qualified_name"] for row in callable_flow["public_analysis"]}
+    flow_public = {
+        row["function_name"]
+        for row in callable_flow["functions"]
+        if row["qualified_name"] in public_qns
+    }
 
     assert dashboard_path.exists()
-    assert callable_flow["metadata"]["schema"] == "fabricops_public_function_call_flows_v3"
+    assert callable_flow["metadata"]["schema"] == "fabricops_public_function_call_flows_v4"
     assert {name.rsplit(".", maxsplit=1)[-1] for name in APPROVED_V1_QUALIFIED_FUNCTIONS}.issubset(flow_public)
 
 
@@ -184,7 +189,7 @@ def test_setup_notebook_lifecycle_metadata_is_live_since_v010():
         (root / "docs" / "reference" / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8")
     )
 
-    setup_row = next(row for row in callable_flow["public_functions"] if row["function_name"] == "setup_notebook")
+    setup_row = next(row for row in callable_flow["functions"] if row["function_name"] == "setup_notebook")
 
     assert setup_row["lifecycle_status"] == "live"
     assert setup_row["live_since"] == "0.1.0"

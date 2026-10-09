@@ -15,7 +15,7 @@ Do not use this skill for docs-only wording, release-only presentation, or noteb
 
 ## Context to inspect
 
-Start with `AGENTS.md`, the owner source file, and targeted tests. Retrieve callable context without reading the entire generated contract:
+Start with `AGENTS.md`, the owner source file, and targeted tests. Retrieve v4 callable context from `functions`, `relationships`, and `public_analysis` without reading the entire generated contract:
 
 ```bash
 python scripts/query_public_function_call_flow.py <qualified_name>

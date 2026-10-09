@@ -15,8 +15,8 @@ DEFAULT_CONTRACT = ROOT / "docs/reference/_data/public-function-call-flows.json"
 
 def lookup(data: dict, name: str, *, depth: int = 1, include_callers: bool = False) -> dict:
     """Return one callable and the requested bounded neighborhood."""
-    functions = {row["qualified_name"]: row for row in data.get("defined_functions", [])}
-    public = {row["qualified_name"]: row for row in data.get("public_functions", [])}
+    functions = {row["qualified_name"]: row for row in data.get("functions", [])}
+    public = {row["qualified_name"]: row for row in data.get("public_analysis", [])}
     matches = [qn for qn in functions if qn == name or qn.rsplit(".", 1)[-1] == name]
     if not matches:
         raise ValueError(f"Unknown callable: {name}")
@@ -52,7 +52,7 @@ def lookup(data: dict, name: str, *, depth: int = 1, include_callers: bool = Fal
     details = {qn: functions[qn] for qn in sorted(downstream_nodes | upstream_nodes) if qn in functions and qn != root}
     return {
         "callable": functions[root],
-        "public_root": public.get(root),
+        "public_analysis": public.get(root),
         "direct_and_transitive_callees": callees,
         "callers": callers if include_callers else None,
         "related_functions": details,
