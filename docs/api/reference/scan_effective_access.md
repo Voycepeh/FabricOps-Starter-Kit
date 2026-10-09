@@ -66,9 +66,9 @@ restricted instead of being presented as unrestricted table access.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access_scanner/scan_effective_access.py:1682`
+`fabricops_kit/access_scanner/scan_effective_access.py:1642`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_effective_access.py#L1682-L1792">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_effective_access.py#L1642-L1752">View on GitHub</a>
 </div>
 
 
