@@ -1,297 +1,184 @@
 # Step 2A. Run the Full Refresh Demo
 
-**Run the completed retail example: Full Read → PySpark transformation → Overwrite.**
+**Run the completed retail pipeline in Microsoft Fabric: three Full Reads, one PySpark transformation, and two Overwrite targets.**
 
-This is the main hands-on exercise before Data Contract authoring. It preserves the original three Reads, two Writes, screenshots, and validation flow in a dedicated notebook.
-
-This step builds on [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md) and expects the demo data to already be loaded into the respective Lakehouse and Warehouse tables.
+This is the recommended first demo after learning the reusable pipeline structure in [Step 2. Build a Pipeline](02-build-and-run-etl.md). Follow the notebook from top to bottom and compare each result with this page.
 
 ## Before you begin
 
-1. Download [`02A_full_refresh_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02A_full_refresh_demo.ipynb) and import it into the Engineering Development workspace.
-2. Attach the same Fabric Environment configured in [Step 00B](00B-configure-environment-and-load-assets.md).
-3. Keep `00_env_config` beside it and confirm the Step 00C source tables exist.
-4. Run every notebook cell from top to bottom. Do not change `DEMO_DAY`; this demo is a single full-refresh run.
+1. Complete [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md).
+2. Download [`02A_full_refresh_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02A_full_refresh_demo.ipynb) and import it into the Engineering Development workspace.
+3. Keep `00_env_config.ipynb` beside the demo notebook.
+4. Attach the same Fabric Environment configured in [Step 00B](00B-configure-environment-and-load-assets.md).
+5. Confirm these source tables exist:
 
-## What to do
+| Source | Location |
+| --- | --- |
+| Orders | Bronze Lakehouse · `demo.orders` |
+| Products | Bronze Lakehouse · `demo.products` |
+| Order History | Gold Warehouse · `demo.order_history` |
 
-1. Read three source tables.
-2. Transform them with normal PySpark.
-3. Write two target tables.
+## What you will do
 
-Along the way, FabricOps will skip contract-backed Guardrails before a Data Contract exists, profile the governed tables, record pipeline lineage, and build the Data Catalogue that Governance uses in Step 3.
+1. Load the shared environment.
+2. Run the Data Contract selector.
+3. Read Orders, Products, and Order History.
+4. Build detailed orders and a customer summary with PySpark.
+5. Overwrite a Silver Lakehouse table and a Gold Warehouse table.
+6. Inspect the saved data and FabricOps metadata.
 
-The completed **full refresh** pipeline shape is:
+## Run the demo in Fabric
 
-```mermaid
-flowchart LR
-    ENV["00_env_config"] --> CONTRACT["Data Contract Per Table ID"]
+### 1. Run the Environment block
 
-    CONTRACT --> R1["READ 1<br/>Orders Table"]
-    CONTRACT --> R2["READ 2<br/>Products Table"]
-    CONTRACT --> R3["READ 3<br/>Order History Table"]
-
-    R1 --> TRANSFORM["PySpark Transform"]
-    R2 --> TRANSFORM
-    R3 --> TRANSFORM
-
-    TRANSFORM --> W1["WRITE 1<br/>Curated Orders Table"]
-    TRANSFORM --> W2["WRITE 2<br/>Customer Summary Table"]
-```
-
-## 1. Load the shared environment and pipeline functions
-
-Run the shared environment notebook from Step 00B and import the pipeline functions used by this demo.
-
-??? example "Show notebook setup screenshot"
-    ![02 Pipeline setup](../assets/02/Setup.png)
-
-## 2. Run the Data Contract selection
-
-For the first Guided Demo run, there is no Data Contract yet. Run the cell and leave the selection unchanged. Contract-backed checks will return as skipped when no Data Contract is selected.
-
-??? example "Expand to see how it looks"
-
-    ```python
-    CONTRACTS = widget_select_data_contract(spark_session=spark)
-    ```
-    There is no enforceable Data Contract yet because Governance has not authored and activated one, so it should be empty.
-
-    ![No Data Contract selected](../assets/02/Data%20_Contract_None.png)
-
-
-## 3. Read
-
-The notebook reads three tables into this pipeline.
-
-| Read | Store | Schema | Table |
-| --- | --- | --- | --- |
-| Orders | `Bronze` Lakehouse | `demo` | `orders` |
-| Products | `Bronze` Lakehouse | `demo` | `products` |
-| Order History | `Gold` Warehouse | `demo` | `order_history` |
-
-The demo reads three sources through [`orchestrate_read()`](../api/reference/orchestrate_read.md).
+Run the two cells under **0. Environment**:
 
 ```python
-source = orchestrate_read(
-    name="orders",
-    store="Bronze",
-    schema="demo",
-    table_name="orders",
-    read_mode="full",
-    query=None,
-    spark_session=spark,
-)
-
-sources["orders"] = source
+%run 00_env_config
 ```
-`orchestrate_read()` returns a dictionary containing the source DataFrame, governed table_id, guardrail results, profiling results, and orchestration metadata. The full dictionary is kept in sources so its DataFrame can be used for transformation and its governed metadata can later be passed to orchestrate_write() for lineage.
 
-??? info "Understand orchestrate_read()"
-    **Parameters**
+Then run the import cell immediately below it.
 
-    - `name` → readable name for the source inside the notebook.
-    - `store` → logical FabricOps store defined in `00_env_config`.
-    - `schema` → source schema.
-    - `table_name` → source table.
-    - `read_mode` → how the source is read, such as `"full"` or `"incremental"`.
-    - `query` → optional T-SQL pushed down to a Warehouse instead of reading the complete table.
-    - `target_table_id` → optional governed target context for target-aware incremental reads.
-    - `spark_session` → Spark session used by the Read lifecycle.
+You should see the shared FabricOps configuration load without an error. The notebook now has the configured Bronze, Silver, Gold, and Metadata stores and the public functions used by the demo.
 
-    **What happens under the hood**
+![The 02A notebook after loading the shared environment](../assets/02/Setup.png)
 
-    [`orchestrate_read()`](../api/reference/orchestrate_read.md) uses [`pipeline_read()`](../api/reference/pipeline_read.md) to select the appropriate Lakehouse or Warehouse read path. For Warehouse sources, it can push down a T-SQL query when one is provided.
+### 2. Run the Data Contract block
 
-    It resolves the canonical `table_id` and runs the applicable source Guardrails defined by the Data Contract through:
-
-    - [`check_freshness()`](../api/reference/check_freshness.md)
-    - [`check_schema()`](../api/reference/check_schema.md)
-    - [`check_dq()`](../api/reference/check_dq.md)
-
-    Lastly, it calls [`profile_table()`](../api/reference/profile_table.md) when profiling applies.
-
-    The returned source result is carried forward so later Write blocks can use its `table_id` for source-to-target lineage.
-
-    **What comes back**
-
-    - `source["dataframe"]` → Spark DataFrame returned by the Read.
-    - `source["table_id"]` → canonical FabricOps identity for the source table.
-    - `source["freshness_result"]` → Freshness Guardrail result.
-    - `source["schema_result"]` → Schema Guardrail result.
-    - `source["dq_result"]` → Data Quality Guardrail result.
-    - `source["profile_result"]` → profiling result when profiling applies.
-    - `source["orchestration_stages"]` → status and timing of each Read stage.
-
-    These lower-level functions remain public if you need to build a custom flow.
-
-??? example "Show Read orchestration output"
-    ![Read 1](../assets/02/Read_Block_Output.png)
-    ![Read 2](../assets/02/Read_Block_Output_2.png)
-    ![Read 3](../assets/02/Read_Block_Output_3.png)
-
-## 4. Transformation
-
-Use normal PySpark for the project-specific transformation logic, such as:
-
-- joining DataFrames,
-- filtering rows,
-- aggregating data,
-- deriving new columns,
-- reshaping or selecting the final output structure.
-
-Transformation remains ordinary project-owned PySpark between the governed Read and Write boundaries. Use the [PySpark Transformation Reference](../reference/pyspark-transformation.md) for common joins, filters, derivations, aggregations, windows, reshaping, and Spark optimization patterns.
-
-If avaliable to you utilze Copilot, ChatGPT, Claude, or other AI coding tools to help draft the PySpark transformation. Always validate the generated logic and resulting DataFrame against your actual data by 'display(dataframe)' before proceeding to write.
-
-![Copilot](../assets/02/Copilot.png)
-
-
-## 5. Write
-
-The demo writes two targets through this pipeline.
-
-| Write | Store | Schema | Table | Load strategy |
-| --- | --- | --- | --- | --- |
-| Curated Orders | `Silver` | `demo` | `curated_orders` | `overwrite` |
-| Customer Summary | `Gold` | `demo` | `customer_summary` | `overwrite` |
-
-The demo writes both targets through [`orchestrate_write()`](../api/reference/orchestrate_write.md).
+Run the cell under **1. Data Contract**:
 
 ```python
-write_result = orchestrate_write(
-    transformed_df,
-    name="curated_orders_lakehouse",
-    sources=[sources["orders"], sources["products"], sources["history"]],
-    store="Silver",
-    schema="demo",
-    table_name="curated_orders",
-    write_mode="overwrite",
-    contracts=CONTRACTS,
-    repartition_by=None,
-    spark_session=spark,
-)
-
-if not write_result["published"]:
-    notebookutils.notebook.exit("Data Contract validation passed for curated_orders_lakehouse; target not published.")
-
-writes["curated_orders_lakehouse"] = write_result
+CONTRACTS = widget_select_data_contract(spark_session=spark)
 ```
-`orchestrate_write()` returns a dictionary containing the target table_id, guardrail results, publication status, profiling results, and orchestration metadata. The result is first checked to confirm whether the target was published, then the full dictionary is kept in writes for inspection and downstream reference.
 
-??? info "Understand orchestrate_write()"
-    **Parameters**
+For the first Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped, and the targets can publish in Engineering Development.
 
-    - `dataframe` → transformed Spark DataFrame to publish.
-    - `name` → readable name for the target inside the notebook.
-    - `sources` → Read results that contributed to the target, used for source-to-target lineage.
-    - `store` → logical destination store defined in `00_env_config`.
-    - `schema` → target schema.
-    - `table_name` → target table.
-    - `write_mode` → how the target is written, such as `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`.
-    - `contracts` → Data Contract selections used for governed validation and enforcement.
-    - `repartition_by` → optional Spark partitioning control before the write.
-    - `spark_session` → Spark session used by the Write lifecycle.
+![The Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
-    **What happens under the hood**
+### 3. Run READ 1 — Orders
 
-    [`orchestrate_write()`](../api/reference/orchestrate_write.md) first resolves the target `table_id` and the `table_id` of each contributing source.
+Run the `sources = {}` cell, then run **READ 1 — Orders**.
 
-    It then runs the applicable Guardrails defined by the Data Contract through:
+The block reads the complete Bronze `demo.orders` table and saves the result as `sources["orders"]`.
 
-    - [`check_schema()`](../api/reference/check_schema.md)
-    - [`check_sensitive_data()`](../api/reference/check_sensitive_data.md)
-    - [`check_source_drift()`](../api/reference/check_source_drift.md)
-    - [`check_dq()`](../api/reference/check_dq.md)
-    - [`check_guardrail_coverage()`](../api/reference/check_guardrail_coverage.md)
+You should see the five Read stages complete. With no selected Data Contract, contract-backed checks show as `SKIPPED`; the Full Read still returns the Orders DataFrame and profiles it.
 
-    Sensitive Data treatment is applied before the remaining Data Quality checks and publication. See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for Mask, Bucket, Tokenize, and Remove behavior and examples.
+![Orders Full Read output](../assets/02/Read_Block_Output.png)
 
-    If the Guardrails pass, [`pipeline_write()`](../api/reference/pipeline_write.md) writes to the appropriate Lakehouse or Warehouse destination and records the associated publication metadata and source-to-target lineage.
+### 4. Run READ 2 — Products
 
-    Lastly, [`profile_table()`](../api/reference/profile_table.md) profiles the persisted target.
+Run **READ 2 — Products**.
 
-    **What comes back**
+The block reads the complete Bronze `demo.products` table and saves the result as `sources["products"]`.
 
-    - `write_result` → `table_id` → canonical FabricOps identity for the target table.
-    - `write_result` → `schema_result` → Schema Guardrail result.
-    - `write_result` → `sensitive_result` → Sensitive Data Guardrail result, including any applied treatment.
-    - `write_result` → `source_drift_results` → Source Drift results for the contributing sources.
-    - `write_result` → `dq_result` → Data Quality Guardrail result.
-    - `write_result` → `coverage_result` → Guardrail Coverage result for the target.
-    - `write_result` → `orchestration_stages` → status and timing of each Write stage.
-    - `write_result` → `published` → whether the target was physically written.
-    - `write_result` → `profile_result` → profile of the persisted target when profiling applies.
+You should see the same Read-stage summary for Products.
 
-    These lower-level functions remain public if you need to build a custom flow.
+![Products Full Read output](../assets/02/Read_Block_Output_2.png)
 
-!!! warning "Multiple Write blocks are not atomic"
-    Each `orchestrate_write()` publishes independently this means that,
-    WRITE 1 can successfully publish `curated_orders` but WRITE 2 fails.
+### 5. Run READ 3 — Order History
 
-    For this demo we use Overwrite, so re-running the whole pipeline replaces the entire output.
+Run **READ 3 — Order History**.
 
-    However if we use Append, a retry can duplicate data.
+This block pushes its `SELECT` query to the Gold Warehouse, returns the selected `demo.order_history` columns, and saves the result as `sources["history"]`.
 
-    If partial publication or duplicate writes are unacceptable, use separate pipeline executions for each governed target.
+You should see the Warehouse Read complete and the governed Read-stage summary appear.
 
-!!! warning "Warehouse schema prerequisite"
-    Before writing to a Fabric Warehouse, the target schema must already exist.
+![Order History Full Read output](../assets/02/Read_Block_Output_3.png)
 
-    FabricOps can create or overwrite the target table, but it does not create the Warehouse schema automatically.
+### 6. Run the Transform block
 
-    For example, before writing `demo.customer_summary`, create the `demo` schema in the target Warehouse:
+Run the cell under **3. Transform**.
 
-    ```sql
-    CREATE SCHEMA demo;
-    ```
+The PySpark code:
 
-    You only need to create each Warehouse schema once. The Guided Demo creates the `demo` schema earlier in [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md).
+1. summarizes historical orders by `customer_id`;
+2. joins Orders, Products, and the history summary;
+3. calculates `order_net_amount`;
+4. creates `transformed_df` at order level; and
+5. creates `customer_summary_df` at customer level.
 
-??? example "Show Write orchestration output"
-    ![Write 1](../assets/02/Write_Block_Output.png)
-    ![Write 2](../assets/02/Write_Block_Output_2.png)
+Uncomment these lines if you want to inspect both DataFrames before publishing:
 
-??? example "Show publication results"
+```python
+display(transformed_df)
+display(customer_summary_df)
+```
 
-    **Silver Lakehouse target**
-    ![Curated Orders written to Silver Lakehouse](../assets/02/Silver_Table_LH.png)
+You should see one detailed row per current order in `transformed_df` and one aggregated row per customer in `customer_summary_df`.
 
-    **Gold Warehouse target**
-    ![Customer Summary written to Gold Warehouse](../assets/02/Gold_Table_WH.png)
+*Image coming soon: transformed orders and customer summary DataFrames in Fabric.*
 
-    **FabricOps metadata captured**
-    ![Metadata captured](../assets/02/Metadat_Captured.png)
+### 7. Run WRITE 1 — Lakehouse Curated Orders
+
+Run the `writes = {}` cell, then run **WRITE 1 — Lakehouse Curated Orders**.
+
+The block overwrites Silver Lakehouse `demo.curated_orders` with `transformed_df` and saves the result as `writes["curated_orders_lakehouse"]`.
+
+You should see the Write stages complete and `published=True`. If you selected **Validate**, the notebook exits after successful validation because Validate deliberately does not publish.
+
+![Curated Orders Write output](../assets/02/Write_Block_Output.png)
+
+### 8. Run WRITE 2 — Warehouse Customer Summary
+
+Run **WRITE 2 — Warehouse Customer Summary**.
+
+The block overwrites Gold Warehouse `demo.customer_summary` with `customer_summary_df` and saves the result as `writes["customer_summary_warehouse"]`.
+
+You should see the Write stages complete and `published=True`.
+
+![Customer Summary Write output](../assets/02/Write_Block_Output_2.png)
+
+!!! note "The two Writes publish independently"
+
+    WRITE 1 and WRITE 2 are not one atomic transaction. If WRITE 1 succeeds and WRITE 2 fails, `demo.curated_orders` remains published. Fix the error and rerun the notebook; both targets use Overwrite, so a successful rerun replaces their contents.
+
+### 9. Inspect the saved results
+
+Open the target tables in Fabric or use the notebook's optional inspection cell.
+
+**Silver Lakehouse**
+
+`demo.curated_orders` contains the detailed joined order data.
+
+![Curated Orders saved in the Silver Lakehouse](../assets/02/Silver_Table_LH.png)
+
+**Gold Warehouse**
+
+`demo.customer_summary` contains the customer-level aggregation.
+
+![Customer Summary saved in the Gold Warehouse](../assets/02/Gold_Table_WH.png)
 
 ## Expected result
 
-At the end of Step 2 you should have:
+### Data saved by the demo
 
-- three source tables read through FabricOps into Spark DataFrames,
-- `demo.curated_orders` fully overwritten in the Silver Lakehouse and `demo.customer_summary` fully overwritten in the Gold Warehouse,
-- [Catalogue](../reference/metadata/metadata_data_catalogue.md), [profile](../reference/metadata/metadata_data_profiled.md), [lineage](../reference/metadata/metadata_data_lineage.md), and [source observation](../reference/metadata/metadata_source_observation.md) metadata recorded for the pipeline,
-- contract-backed checks shown as `SKIPPED` in Development because no Data Contract has been selected yet.
+| Store | Table | What was saved |
+| --- | --- | --- |
+| Bronze Lakehouse | `demo.orders` | Existing source prepared in Step 00C; unchanged by this notebook. |
+| Bronze Lakehouse | `demo.products` | Existing source prepared in Step 00C; unchanged by this notebook. |
+| Gold Warehouse | `demo.order_history` | Existing source prepared in Step 00C; unchanged by this notebook. |
+| Silver Lakehouse | `demo.curated_orders` | Detailed order-level result, fully replaced by WRITE 1. |
+| Gold Warehouse | `demo.customer_summary` | Customer-level result, fully replaced by WRITE 2. |
 
-??? info "Inspect the Dictonary that you had read / write"
+### Metadata saved by FabricOps
 
-    ```python
-    # Enter the name of the source you created above, then uncomment any result you want to inspect.
-    inspect_write = "curated_orders_lakehouse"
+All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 
-    # Uncomment only what you want to inspect.
-    # display(writes[inspect_write]["sensitive_result"]["dataframe"])       # DataFrame after Sensitive Data treatment.
-    # display(writes[inspect_write]["profile_result"]["profile"])           # Column-level profile metrics.
-    # display(writes[inspect_write]["profile_result"]["frequency_profile"]) # Value-frequency profile.
-    # display(writes[inspect_write]["schema_result"])                       # Schema guardrail result.
-    # display(writes[inspect_write]["sensitive_result"])                    # Sensitive Data guardrail result.
-    # display(writes[inspect_write]["source_drift_results"])                # Source Drift results.
-    # display(writes[inspect_write]["dq_result"])                           # Data Quality guardrail result.
-    # display(writes[inspect_write]["coverage_result"])                     # Guardrail Coverage result.
-    # display(writes[inspect_write]["orchestration_stages"])                # Ordered orchestrator execution stages.
-    ```
+| Metadata table | What this run records |
+| --- | --- |
+| `METADATA_DATA_CATALOGUE` | Canonical table and column identities for the governed sources and targets. |
+| `METADATA_DATA_PROFILED` | Profile snapshots for the three Full Read sources and both published targets. |
+| `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to those profile snapshots where applicable. |
+| `METADATA_DATA_LINEAGE` | Source and target participation for this notebook pipeline. |
+| `METADATA_SOURCE_OBSERVATION` | Source-state observations associated with successful target publication where applicable. |
+| `METADATA_GUARDRAIL_RESULTS` | Guardrail evaluation results when a selected Data Contract supplies executable Guardrails. |
+
+![FabricOps metadata captured for the Full Refresh pipeline](../assets/02/Metadat_Captured.png)
 
 ### Reset the demo
 
-Re-run the complete notebook. Both governed targets use `overwrite`, so a successful rerun replaces their full contents without duplicating rows. To restart the wider Guided Demo, repeat Step 00C first, then run this notebook from the top.
+Rerun the complete notebook. Both targets use Overwrite, so a successful rerun replaces their full contents instead of adding duplicate rows. To rebuild the source data as well, repeat Step 00C first.
 
-**Next:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
+**Next optional processing mode:** [Step 2B. Run the Incremental Append Demo](02B-build-and-run-incremental-append-etl.md)
+
+**Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
