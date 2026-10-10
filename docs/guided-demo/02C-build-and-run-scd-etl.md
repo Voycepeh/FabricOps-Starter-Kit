@@ -256,6 +256,20 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 
 ### Reset the demo
 
-Remove Bronze `demo.product_master_updates` and both Silver demo targets, then set `DEMO_DAY = 1`. If Data Contracts or other Governance metadata were authored specifically for these identities, reset them only through the normal FabricOps Governance workflow or use a fresh Guided Demo environment. Never restart Day 1 against retained SCD targets.
+Do not restart at Day 1 while either SCD target still contains later-day state. Reset the source and both targets together:
+
+1. In the Bronze Lakehouse, delete `demo.product_master_updates` from the table explorer.
+2. In the Silver Lakehouse, delete both targets:
+    - `demo.product_master_scd1`
+    - `demo.product_master_scd2`
+3. Set `DEMO_DAY = 1`.
+4. Run the notebook from the top. The Day 1 CSV recreates the eight-row Bronze snapshot, WRITE 1 recreates the eight-row SCD1 target, and WRITE 2 recreates the eight initial SCD2 versions.
+5. Continue with Day 2 and Day 3 in order.
+
+Deleting only the Bronze source is not enough: retained SCD targets still contain the previous current state and history. Conversely, deleting only the targets leaves the Bronze table on its later snapshot until the Day 1 staging cells run.
+
+!!! note "Governance and metadata history"
+
+    The steps above reset the business data. Existing Catalogue, profile, and lineage records remain as FabricOps run history. If Data Contracts or other Governance metadata were authored specifically for these demo identities and you need a completely new governance lifecycle, use a fresh Guided Demo environment or reset those records only through the normal FabricOps Governance workflow.
 
 **Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)

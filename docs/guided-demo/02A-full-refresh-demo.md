@@ -191,9 +191,31 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 
 ![FabricOps metadata captured for the Full Refresh pipeline](../assets/02/Metadat_Captured.png)
 
-### Reset the demo
+### What happens if I click Run all?
 
-Rerun the complete notebook. Both targets use Overwrite, so a successful rerun replaces their full contents instead of adding duplicate rows. To rebuild the source data as well, repeat Step 00C first.
+The notebook runs again from the top. Both targets use Overwrite, so a successful rerun replaces their full contents instead of adding duplicate rows. This is a replay, not a clean reset: the target tables and previously captured FabricOps metadata still exist before the run begins.
+
+### Reset the demo to a clean data state
+
+Use these steps when you want the next run to behave like the first Full Refresh run:
+
+1. In the Silver Lakehouse, delete `demo.curated_orders` from the table explorer.
+2. In the Gold Warehouse query editor, drop the other demo target:
+
+    ```sql
+    DROP TABLE IF EXISTS demo.customer_summary;
+    ```
+
+3. Check the three source tables:
+    - Bronze Lakehouse · `demo.orders`
+    - Bronze Lakehouse · `demo.products`
+    - Gold Warehouse · `demo.order_history`
+4. This notebook does not change those sources. If they still contain the Step 00C data, leave them in place. If they were changed, rerun [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md) from the top; its Overwrite cells restore all three sources from the canonical demo files.
+5. Return to this notebook and run it from the top. WRITE 1 recreates `demo.curated_orders`, and WRITE 2 recreates `demo.customer_summary`.
+
+!!! note "Business data reset versus full environment reset"
+
+    These steps reset the business tables. FabricOps metadata remains as run history, which is useful when continuing to Step 3. If you need the entire Guided Demo—including Catalogue, profile, lineage, Source Observation, Guardrail, and Data Contract history—to look completely new, use a fresh Guided Demo environment or an approved, precisely scoped metadata-maintenance process. Do not delete complete `METADATA_*` tables to reset one demo.
 
 **Next optional processing mode:** [Step 2B. Run the Incremental Append Demo](02B-build-and-run-incremental-append-etl.md)
 

@@ -237,7 +237,19 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 
 ### Reset the demo
 
-Deleting only one business table is not a complete reset. For a clean restart, use a fresh Guided Demo environment, or remove both demo business tables and the scoped `METADATA_SOURCE_OBSERVATION` history for `inventory_movements` → `inventory_movements_incremental` through an approved metadata-maintenance process. Then set `DEMO_DAY = 1` and rerun from the top.
+An Incremental demo cannot be reset by rerunning Day 1 or deleting only the Silver target. FabricOps remembers successful progress for the exact Bronze-to-Silver relationship.
+
+The safest clean reset is to run the demo in a fresh Guided Demo environment. To reset the same environment through an approved maintenance process:
+
+1. In the Bronze Lakehouse, delete `demo.inventory_movements` from the table explorer.
+2. In the Silver Lakehouse, delete `demo.inventory_movements_incremental` from the table explorer. This removes the appended business data and the successful watermark progress stored with the governed target.
+3. Remove only the `METADATA_SOURCE_OBSERVATION` rows for the `inventory_movements` → `inventory_movements_incremental` relationship and the current environment. Do not clear observations for other pipelines.
+4. Set `DEMO_DAY = 1`.
+5. Run the notebook from the top. The Day 1 CSV recreates Bronze with eight rows, the Incremental Read bootstraps again, and the Append Write recreates the eight-row Silver target.
+
+!!! warning "Keep incremental state aligned"
+
+    The Bronze source, Silver target, scoped Source Observation history, and governed target watermark belong to one incremental state. Reset all four together. If you cannot perform the scoped metadata cleanup safely, use a fresh Guided Demo environment instead.
 
 **Next optional processing mode:** [Step 2C. Run the SCD1 and SCD2 Demo](02C-build-and-run-scd-etl.md)
 
