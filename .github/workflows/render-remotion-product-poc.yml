@@ -6,12 +6,59 @@ on:
       - "video/remotion/product-poc/**"
       - ".github/workflows/render-remotion-product-poc.yml"
   workflow_dispatch:
+    inputs:
+      composition:
+        description: "Composition to render"
+        required: true
+        default: "hero"
+        type: choice
+        options:
+          - hero
+          - part2
 
 permissions:
   contents: write
 
 jobs:
-  render:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      hero: ${{ steps.filter.outputs.hero }}
+      part2: ${{ steps.filter.outputs.part2 }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Detect affected composition
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            hero:
+              - 'video/remotion/product-poc/src/FabricOpsHero.tsx'
+              - 'video/remotion/product-poc/src/OpeningPlatform.tsx'
+              - 'video/remotion/product-poc/src/FabricOpsReveal.tsx'
+              - 'video/remotion/product-poc/src/NotebookJourney.tsx'
+              - 'video/remotion/product-poc/src/LifecycleScene.tsx'
+              - 'video/remotion/product-poc/src/videoConfig.ts'
+              - 'video/remotion/product-poc/src/videoTuning.ts'
+              - 'video/remotion/product-poc/FabricOps_narration_master_numbered.m4a'
+              - 'video/remotion/product-poc/package.json'
+              - 'video/remotion/product-poc/package-lock.json'
+              - '.github/workflows/render-remotion-product-poc.yml'
+            part2:
+              - 'video/remotion/product-poc/src/FabricOpsPart2.tsx'
+              - 'video/remotion/product-poc/src/GuidedDemoJourney.tsx'
+              - 'video/remotion/product-poc/package.json'
+              - 'video/remotion/product-poc/package-lock.json'
+              - '.github/workflows/render-remotion-product-poc.yml'
+
+  render-hero:
+    needs: changes
+    if: |
+      (github.event_name == 'pull_request' && needs.changes.outputs.hero == 'true') ||
+      (github.event_name == 'workflow_dispatch' && inputs.composition == 'hero')
     runs-on: ubuntu-latest
 
     steps:
@@ -80,3 +127,40 @@ jobs:
           git add docs/assets/FabricOps_Overview_Video_web.mp4
           git commit -m "video: update homepage overview render"
           git push origin "HEAD:${GITHUB_HEAD_REF}"
+
+  render-part2:
+    needs: changes
+    if: |
+      (github.event_name == 'pull_request' && needs.changes.outputs.part2 == 'true') ||
+      (github.event_name == 'workflow_dispatch' && inputs.composition == 'part2')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: video/remotion/product-poc
+        run: npm install
+
+      - name: Type-check composition
+        working-directory: video/remotion/product-poc
+        run: npm run typecheck
+
+      - name: Render Part 2 review video
+        working-directory: video/remotion/product-poc
+        run: npm run render:part2
+
+      - name: Upload Part 2 review video
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabricops-part2
+          path: video/remotion/product-poc/out/fabricops-part2.mp4
+          if-no-files-found: error
