@@ -22,7 +22,7 @@
 | --- | --- | --- |
 | [0A. Prepare Fabric artifacts](guided-demo/00A-prepare-fabric-artifacts.md) | Create the workspaces, stores, and Fabric Environments, then install the FabricOps wheel. | The physical Fabric foundation exists. |
 | [0B. Load and configure the Guided Demo assets](guided-demo/00B-configure-environment-and-load-assets.md) | Import the core notebooks, attach their Fabric Environments, configure `00_env_config`, create the metadata tables, and upload the packaged demo files to Bronze `Files/Demo`. | Every notebook can resolve the configured Fabric stores and the raw demo assets are in place. |
-| [0C. Prepare the demo data with FabricOps I/O](guided-demo/00C-prepare-demo-data-with-fabricops-io.md) | Run `00C_demo_setup` in Engineering Development to demonstrate file, Lakehouse, and Warehouse I/O and seed the managed source tables. | `02_pipeline` starts from real managed tables prepared through the public FabricOps I/O helpers. |
+| [0C. Prepare the demo data with FabricOps I/O](guided-demo/00C-prepare-demo-data-with-fabricops-io.md) | Run `00C_demo_setup` in Engineering Development to demonstrate file, Lakehouse, and Warehouse I/O and seed the original managed source tables. | The Full Refresh demo starts from real managed tables prepared through the public FabricOps I/O helpers. |
 
 ## The seven-step FabricOps workflow
 
@@ -30,9 +30,12 @@
 | Step | Notebook | What you do |
 | --- | --- | --- |
 | [1. Establish Governance context](guided-demo/01-establish-governance-context.md) | `01_governance` | Create Data Stewards and a Data Agreement. |
-| [2. Build and run the ETL](guided-demo/02-build-and-run-etl.md) | `02_pipeline` | Run the canonical Full → Overwrite pipeline. Optional short scenarios cover [Incremental → Append](guided-demo/02B-build-and-run-incremental-append-etl.md), [SCD1 vs SCD2](guided-demo/02C-build-and-run-scd-etl.md) without changing the main Step 2 notebook. |
+| [2. Understand the Pipeline Template](guided-demo/02-build-and-run-etl.md) | `02_pipeline` | Learn the reusable Environment → Data Contract → Read → Transform → Write scaffold. |
+| [2A. Run the Full Refresh Demo](guided-demo/02A-full-refresh-demo.md) | `02A_full_refresh_demo` | Run the completed Orders, Products, and Order History Full → Overwrite example. |
+| [2B. Run the Incremental Append Demo](guided-demo/02B-build-and-run-incremental-append-etl.md) | `02B_incremental_append_demo` | Run inventory Day 1, Day 2, and no-change Day 3 through Incremental → Append. |
+| [2C. Run the SCD1 and SCD2 Demo](guided-demo/02C-build-and-run-scd-etl.md) | `02C_scd_demo` | Run three complete Product Master snapshots and compare current state with retained history. |
 | [3. Author and freeze the Data Contract](guided-demo/03-author-and-freeze-data-contract.md) | `01_governance` | Select the real `table_id`, author Enrichment, Guardrails, and Processing, then freeze the contract version. |
-| [4. Validate the frozen Data Contract](guided-demo/04-validate-frozen-data-contract.md) | `02_pipeline` | Put the governed target in Validate mode, evaluate the exact frozen candidate, record aggregate evidence, and leave the business target unchanged. |
+| [4. Validate the frozen Data Contract](guided-demo/04-validate-frozen-data-contract.md) | `02A_full_refresh_demo` | Put the governed target in Validate mode, evaluate the exact frozen candidate, record aggregate evidence, and leave the business target unchanged. |
 | [5. Activate the Data Contract and promote](guided-demo/05-activate-data-contract-and-promote.md) | `01_governance` + Fabric Deployment Pipeline | Link the tested contract version to the Data Agreement, activate it for Production, then deploy the validated engineering artifact from Development to Production. |
-| [6. Run the pipeline in Production and grant access](guided-demo/06-run-production.md) | `02_pipeline` + native Fabric access | Run the validated Production workflow, publish governed outputs, then grant approved consumers direct access through native Fabric permissions. |
+| [6. Run the pipeline in Production and grant access](guided-demo/06-run-production.md) | Tested 02A pipeline + native Fabric access | Run the validated Production workflow, publish governed outputs, then grant approved consumers direct access through native Fabric permissions. |
 | [7. Consume and productize governed data](guided-demo/07-consume-production-data.md) | `99_explore` | Review the governed consumer context, discover reusable consumption products, and use a consumption accelerator such as one-shot Data Agent publishing. |

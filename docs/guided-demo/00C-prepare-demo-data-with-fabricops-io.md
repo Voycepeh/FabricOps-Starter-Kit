@@ -1,6 +1,6 @@
 # 0C. Prepare the demo data with FabricOps I/O
 
-**Run a notebook that demonstrates the FabricOps I/O helpers and prepares the tables required by the `02_pipeline` demo flow.**
+**Run a notebook that demonstrates the FabricOps I/O helpers and prepares the original retail tables required by the Step 2A Full Refresh demo.**
 
 ## 1. Import the setup notebook
 
@@ -109,15 +109,13 @@ Read the remaining demo sources and write the managed Lakehouse and Warehouse ta
     Use SQL pushdown when it materially reduces Warehouse data before Spark. For repeated heavy PySpark engineering, prefer landing the required data into Lakehouse Delta rather than repeatedly crossing the Warehouse-to-Spark boundary.
 
 
-??? info "Later scenarios reuse the canonical Orders baseline"
+??? info "This setup remains focused on the original retail sources"
 
-    Later incremental and load-strategy scenarios create their source changes directly in the walkthrough. `modified_datetime` is the watermark column used by the Incremental → Append scenario.
-
-    Guardrail validation creates a temporary dirty transformed DataFrame in the notebook session, so the canonical source files and seeded tables remain unchanged.
+    Step 00C seeds only Orders, Products, and Order History and introduces the public FabricOps file and table I/O helpers. The separate Step 2B and 2C notebooks own their inventory and Product Master fixtures. Guardrail validation creates temporary notebook-session mutations, so these canonical files remain unchanged.
 
 ## Expected result
 
-After the notebook finishes, Engineering Development should contain the managed sources required by `02_pipeline`:
+After the notebook finishes, Engineering Development should contain the managed sources required by `02A_full_refresh_demo`:
 
 ```text
 bronze Lakehouse

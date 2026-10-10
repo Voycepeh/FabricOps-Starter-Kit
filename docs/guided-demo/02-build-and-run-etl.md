@@ -1,285 +1,273 @@
-# Step 2. Build and run the ETL
-The current walkthrough intentionally demonstrates one pattern: **full read → transform → full overwrite**.
+# Step 2. Build a Pipeline
 
-Run the `02_pipeline` template in the Engineering Development Workspace.
+**Learn the reusable `02_pipeline` notebook from top to bottom, then adapt it to your own governed pipeline.**
 
-This step builds on [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md) and expects the demo data to already be loaded into the respective Lakehouse and Warehouse tables.
+`02_pipeline` is the standard starting point for governed data engineering in FabricOps. You configure the sources and targets and write the PySpark transformation; FabricOps runs the governance lifecycle around that project-owned logic.
 
-## What you will do
+1. Environment
+2. Data Contract
+3. Read
+4. Transform
+5. Write
 
-1. Read three source tables.
-2. Transform them with normal PySpark.
-3. Write two target tables.
+The same pattern supports Full and Incremental reads and the Overwrite, Append, SCD1, and SCD2 load strategies. The later demos apply it to each processing style.
 
-Along the way, FabricOps will skip contract-backed Guardrails before a Data Contract exists, profile the governed tables, record pipeline lineage, and build the Data Catalogue that Governance uses in Step 3.
+![FabricOps places governed Read and Write boundaries around project-owned PySpark](../assets/pipeline-boundaries-implementation.svg)
 
-The standard **full refresh** pipeline shape is:
+## Before you begin
 
-```mermaid
-flowchart LR
-    ENV["00_env_config"] --> CONTRACT["Data Contract Per Table ID"]
+1. Complete [Step 00B. Configure the Environment and load assets](00B-configure-environment-and-load-assets.md).
+2. Download [`02_pipeline.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/notebooks/02_pipeline.ipynb) and import it into the Engineering Development workspace.
+3. Import `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
 
-    CONTRACT --> R1["READ 1<br/>Orders Table"]
-    CONTRACT --> R2["READ 2<br/>Products Table"]
-    CONTRACT --> R3["READ 3<br/>Order History Table"]
+The template deliberately contains placeholder table names. Read this walkthrough first, then replace them before running the Read or Write cells.
 
-    R1 --> TRANSFORM["PySpark Transform"]
-    R2 --> TRANSFORM
-    R3 --> TRANSFORM
+## What to do
 
-    TRANSFORM --> W1["WRITE 1<br/>Curated Orders Table"]
-    TRANSFORM --> W2["WRITE 2<br/>Customer Summary Table"]
-```
+### 1. Get familiar with the notebook
 
-## 1. Load the shared environment and pipeline functions
+**Start by understanding the shape of the notebook before changing its code.**
 
-Run the shared environment notebook from Step 00B and import the pipeline functions used by this template.
+The notebook follows one visible lifecycle:
 
-??? example "Show notebook setup screenshot"
-    ![02 Pipeline setup](../assets/02/Setup.png)
+| Notebook section | What happens |
+| --- | --- |
+| Environment | Loads the shared Fabric configuration and imports the three public functions used by the pipeline. |
+| Data Contract | Lets you choose whether each governed target should **Enforce** an active contract or **Validate** a frozen candidate. |
+| Governed Read | Reads each configured source and runs the applicable source checks. |
+| PySpark Transform | Contains the joins, filters, derived columns, aggregations, or selections owned by your project. |
+| Governed Write | Checks and, when allowed, publishes each target using its configured load strategy. |
+| Optional inspection | Exposes selected Read and Write results while you develop or troubleshoot. |
 
-## 2. Run the Data Contract selection
+The template starts with one Read, one transformation, and one Write. Add more Read or Write blocks only when your pipeline needs them.
 
-For the first Guided Demo run, there is no Data Contract yet. Run the cell and leave the selection unchanged. Contract-backed checks will return as skipped when no Data Contract is selected.
+### 2. Load the Environment
 
-??? example "Expand to see how it looks"
-
-    ```python
-    CONTRACTS = widget_select_data_contract(spark_session=spark)
-    ```
-    There is no enforceable Data Contract yet because Governance has not authored and activated one, so it should be empty.
-
-    ![No Data Contract selected](../assets/02/Data%20_Contract_None.png)
-
-    
-## 3. Read
-
-For this walkthrough we will read 3 tables into this pipeline.
-
-| Read | Store | Schema | Table |
-| --- | --- | --- | --- |
-| Orders | `Bronze` Lakehouse | `demo` | `orders` |
-| Products | `Bronze` Lakehouse | `demo` | `products` |
-| Order History | `Gold` Warehouse | `demo` | `order_history` |
-
-The template reads three sources through [`orchestrate_read()`](../api/reference/orchestrate_read.md). 
+**Run the shared environment first; you will normally leave these cells unchanged.**
 
 ```python
+%run 00_env_config
+```
+
+`00_env_config` establishes the configured Fabric stores, environment, notebook identity, Spark session, and metadata routing used by the rest of the notebook. The next cell imports only the public APIs needed by this scaffold:
+
+```python
+from fabricops_kit import orchestrate_read, orchestrate_write, widget_select_data_contract
+```
+
+Change these cells only when your project has intentionally changed its shared environment notebook or needs additional public FabricOps functions.
+
+### 3. Select the Data Contract mode
+
+**Run the selector once and keep its result in `CONTRACTS`.**
+
+```python
+CONTRACTS = widget_select_data_contract(spark_session=spark)
+```
+
+The widget discovers the tables linked to this notebook through `METADATA_DATA_LINEAGE`. Sources remain in **Enforce** mode; in Engineering Development, each target can independently use **Enforce** or **Validate**.
+
+| Mode | When to use it | Publication behavior |
+| --- | --- | --- |
+| **Enforce** | Run with the active Data Contract for the current environment. A new Development target can remain unselected until Governance authors one. | The Write can publish after the required checks pass. |
+| **Validate** | Test one exact frozen candidate before Governance activates it. | The same pre-publication checks run, but the target is not written. |
+
+You generally do not edit the selector code. Use the displayed controls to choose the mode and candidate for each target.
+
+??? example "See the selector before a Data Contract exists"
+
+    During the first Guided Demo run, Governance has not authored a Data Contract yet. The selector can therefore show no enforceable contract for the target.
+
+    ![Data Contract selector with no contract selected](../assets/02/Data%20_Contract_None.png)
+
+??? info "Under the hood"
+
+    The selector resolves the notebook's source and target identities from `METADATA_DATA_LINEAGE`, then resolves the available Data Contract state for each table.
+
+    In Engineering Development, **Validate** is available only for targets and requires an exact frozen Data Contract version. It does not activate that version. In Production, FabricOps requires the active version and uses **Enforce**.
+
+    The returned `CONTRACTS` object carries the table-level mode and contract identity into `orchestrate_write()`. See [`widget_select_data_contract()`](../api/reference/widget_select_data_contract.md) for the exact return contract.
+
+### 4. Configure the Governed Read
+
+**Replace the source identity in the existing Read block and keep the complete result in `sources`.**
+
+```python
+# Keep each complete Read result for transformation, checks, and lineage.
+sources = {}
+
 source = orchestrate_read(
-    name="orders",
+    name="source",
     store="Bronze",
     schema="demo",
-    table_name="orders",
+    table_name="source_table",  # Replace with the governed source table.
     read_mode="full",
     query=None,
     spark_session=spark,
 )
-
-sources["orders"] = source
+sources["source"] = source
 ```
-`orchestrate_read()` returns a dictionary containing the source DataFrame, governed table_id, guardrail results, profiling results, and orchestration metadata. The full dictionary is kept in sources so its DataFrame can be used for transformation and its governed metadata can later be passed to orchestrate_write() for lineage.
 
-??? info "Understand orchestrate_read()"
-    **Parameters**
+The template values show exactly where to customize the Read:
 
-    - `name` → readable name for the source inside the notebook.
-    - `store` → logical FabricOps store defined in `00_env_config`.
-    - `schema` → source schema.
-    - `table_name` → source table.
-    - `read_mode` → how the source is read, such as `"full"` or `"incremental"`.
-    - `query` → optional T-SQL pushed down to a Warehouse instead of reading the complete table.
-    - `target_table_id` → optional governed target context for target-aware incremental reads.
-    - `spark_session` → Spark session used by the Read lifecycle.
+| Parameter | What you normally change |
+| --- | --- |
+| `name` | A short notebook-facing name for this source. Use the same key in `sources`. |
+| `store` | The configured source store, such as `Bronze`. |
+| `schema` | The physical source schema. |
+| `table_name` | The physical source table. Replace `source_table`. |
+| `read_mode` | Use `"full"` or `"incremental"`. |
+| `query` | Optionally provide a read-only Warehouse query; otherwise leave it as `None`. |
+| `read_parameters` | Add mode-specific options such as the watermark column for an Incremental read. |
+| `target_table_id` | Add the governed target identity required by an Incremental read. |
 
-    **What happens under the hood**
-
-    [`orchestrate_read()`](../api/reference/orchestrate_read.md) uses [`pipeline_read()`](../api/reference/pipeline_read.md) to select the appropriate Lakehouse or Warehouse read path. For Warehouse sources, it can push down a T-SQL query when one is provided.
-
-    It resolves the canonical `table_id` and runs the applicable source Guardrails defined by the Data Contract through:
-
-    - [`check_freshness()`](../api/reference/check_freshness.md)
-    - [`check_schema()`](../api/reference/check_schema.md)
-    - [`check_dq()`](../api/reference/check_dq.md)
-
-    Lastly, it calls [`profile_table()`](../api/reference/profile_table.md) when profiling applies.
-
-    The returned source result is carried forward so later Write blocks can use its `table_id` for source-to-target lineage.
-
-    **What comes back**
-
-    - `source["dataframe"]` → Spark DataFrame returned by the Read.
-    - `source["table_id"]` → canonical FabricOps identity for the source table.
-    - `source["freshness_result"]` → Freshness Guardrail result.
-    - `source["schema_result"]` → Schema Guardrail result.
-    - `source["dq_result"]` → Data Quality Guardrail result.
-    - `source["profile_result"]` → profiling result when profiling applies.
-    - `source["orchestration_stages"]` → status and timing of each Read stage.
-
-    These lower-level functions remain public if you need to build a custom flow.
-
-??? example "Show Read orchestration output"
-    ![Read 1](../assets/02/Read_Block_Output.png)
-    ![Read 2](../assets/02/Read_Block_Output_2.png)
-    ![Read 3](../assets/02/Read_Block_Output_3.png)
-
-## 4. Transformation
-
-Use normal PySpark for the project-specific transformation logic, such as:
-
-- joining DataFrames,
-- filtering rows,
-- aggregating data,
-- deriving new columns,
-- reshaping or selecting the final output structure.
-
-Transformation remains ordinary project-owned PySpark between the governed Read and Write boundaries. Use the [PySpark Transformation Reference](../reference/pyspark-transformation.md) for common joins, filters, derivations, aggregations, windows, reshaping, and Spark optimization patterns.
-
-If avaliable to you utilze Copilot, ChatGPT, Claude, or other AI coding tools to help draft the PySpark transformation. Always validate the generated logic and resulting DataFrame against your actual data by 'display(dataframe)' before proceeding to write.
-
-![Copilot](../assets/02/Copilot.png)
-
-
-## 5. Write
-
-For this walkthrough we will write 2 tables via this pipeline.
-
-| Write | Store | Schema | Table | Load strategy |
-| --- | --- | --- | --- | --- |
-| Curated Orders | `Silver` | `demo` | `curated_orders` | `overwrite` |
-| Customer Summary | `Gold` | `demo` | `customer_summary` | `overwrite` |
-
-The template writes two target two targets through [`orchestrate_write()`](../api/reference/orchestrate_write.md). 
+The result is a dictionary, not only a DataFrame. Use its DataFrame for transformation while retaining the complete result for checks and lineage:
 
 ```python
-write_result = orchestrate_write(
+source_df = sources["source"]["dataframe"]
+display(source_df)
+```
+
+If a transformation needs another governed source, duplicate the complete **READ 1 — Example source** block, give the Read and its dictionary key a unique name, and configure the second table. Remove a Read block when it does not contribute to the pipeline. Every source that contributes to a target should later appear in that target's `sources` list.
+
+For Incremental reads, add `read_parameters` and `target_table_id` rather than implementing watermark filtering in the transformation. See [Read and Load Strategies](../reference/read-and-load-strategies.md) and the [Step 2B demo](02B-build-and-run-incremental-append-etl.md).
+
+??? info "Under the hood"
+
+    [`orchestrate_read()`](../api/reference/orchestrate_read.md) runs the standard lifecycle:
+
+    1. **Read** the configured source.
+    2. Evaluate the **Freshness** Guardrail when one applies.
+    3. Check the **Schema** when a governed expectation applies.
+    4. Evaluate **Data Quality** Guardrails when defined.
+    5. **Profile** the full source and store the snapshot in `METADATA_DATA_PROFILED` and, where applicable, `METADATA_DATA_PROFILED_FREQUENCY`.
+
+    Checks without an applicable Data Contract or Guardrail return a skipped result rather than inventing an expectation. Incremental batches are not profiled; FabricOps instead returns the eligible scope and uses `METADATA_SOURCE_OBSERVATION` plus the governed target's successful watermark progress to manage incremental execution.
+
+### 5. Write your PySpark Transform
+
+**Replace this entire cell with the business transformation your project needs.**
+
+The template begins with a valid identity transformation:
+
+```python
+transformed_df = sources["source"]["dataframe"].select("*")
+
+# Optional development inspection.
+# display(transformed_df)
+```
+
+Leaving the identity selection in place is fine when the source already has the target shape. Otherwise, this is where normal PySpark belongs: join DataFrames from multiple `sources` entries, filter rows, derive columns, aggregate records, or select the final schema.
+
+FabricOps does not prescribe the transformation style. Keep project-owned PySpark in this section and keep the governed orchestration calls in their Read and Write sections.
+
+### 6. Configure the Governed Write
+
+**Pass the transformed DataFrame and every contributing governed Read result into the target's Write block.**
+
+```python
+# Keep complete Write results for optional inspection.
+writes = {}
+
+writes["target"] = orchestrate_write(
     transformed_df,
-    name="curated_orders_lakehouse",
-    sources=[sources["orders"], sources["products"], sources["history"]],
-    store="Unified",
+    name="target",
+    sources=[sources["source"]],
+    store="Silver",
     schema="demo",
-    table_name="curated_orders",
+    table_name="target_table",  # Replace with the governed target table.
     write_mode="overwrite",
     contracts=CONTRACTS,
     repartition_by=None,
     spark_session=spark,
 )
-
-if not write_result["published"]:
-    notebookutils.notebook.exit("Data Contract validation passed for curated_orders_lakehouse; target not published.")
-
-writes["curated_orders_lakehouse"] = write_result
 ```
-`orchestrate_write()` returns a dictionary containing the target table_id, guardrail results, publication status, profiling results, and orchestration metadata. The result is first checked to confirm whether the target was published, then the full dictionary is kept in writes for inspection and downstream reference.
 
-??? info "Understand orchestrate_write()"
-    **Parameters**
+| Parameter | What you normally change |
+| --- | --- |
+| `transformed_df` | The DataFrame produced by your transformation section. |
+| `name` | A short notebook-facing name for the target. Use the same key in `writes`. |
+| `sources` | Every complete Read result that contributed to this target. |
+| `store`, `schema`, `table_name` | The configured target store and physical target identity. Replace `target_table`. |
+| `write_mode` | The load strategy: `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`. |
+| `write_parameters` | Add parameters required by the selected strategy, such as SCD keys and tracked columns. |
+| `contracts` | Leave as `CONTRACTS` so the target follows the widget selection. |
+| `repartition_by` | Optionally control the Spark partition count before writing; otherwise leave it as `None`. |
 
-    - `dataframe` → transformed Spark DataFrame to publish.
-    - `name` → readable name for the target inside the notebook.
-    - `sources` → Read results that contributed to the target, used for source-to-target lineage.
-    - `store` → logical destination store defined in `00_env_config`.
-    - `schema` → target schema.
-    - `table_name` → target table.
-    - `write_mode` → how the target is written, such as `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`.
-    - `contracts` → Data Contract selections used for governed validation and enforcement.
-    - `repartition_by` → optional Spark partitioning control before the write.
-    - `spark_session` → Spark session used by the Write lifecycle.
+The `sources` list is part of the governed hand-off. FabricOps uses those canonical source identities to evaluate source-aware Guardrails and record source-to-target participation in `METADATA_DATA_LINEAGE`.
 
-    **What happens under the hood**
+You can add multiple independent Write blocks and give each result a unique key in `writes`. They do not form an atomic multi-target transaction: an earlier target can publish successfully even if a later Write fails.
 
-    [`orchestrate_write()`](../api/reference/orchestrate_write.md) first resolves the target `table_id` and the `table_id` of each contributing source.
+??? info "Under the hood"
 
-    It then runs the applicable Guardrails defined by the Data Contract through:
+    [`orchestrate_write()`](../api/reference/orchestrate_write.md) runs the standard pre-publication checks in this order:
 
-    - [`check_schema()`](../api/reference/check_schema.md)
-    - [`check_sensitive_data()`](../api/reference/check_sensitive_data.md)
-    - [`check_source_drift()`](../api/reference/check_source_drift.md)
-    - [`check_dq()`](../api/reference/check_dq.md)
-    - [`check_guardrail_coverage()`](../api/reference/check_guardrail_coverage.md)
+    1. **Schema**
+    2. **Sensitive Data**
+    3. **Source Drift**
+    4. **Data Quality**
+    5. **Guardrail Coverage**
 
-    Sensitive Data treatment is applied before the remaining Data Quality checks and publication. See [Sensitive Data Treatments](../reference/sensitive-data-treatments.md) for Mask, Bucket, Tokenize, and Remove behavior and examples.
+    With **Validate**, FabricOps returns after those checks with `published=False`; the target is not written. With **Enforce**, passing the required checks allows FabricOps to continue through **Write** and then **Profile** the persisted target in `METADATA_DATA_PROFILED` and, where applicable, `METADATA_DATA_PROFILED_FREQUENCY`.
 
-    If the Guardrails pass, [`pipeline_write()`](../api/reference/pipeline_write.md) writes to the appropriate Lakehouse or Warehouse destination and records the associated publication metadata and source-to-target lineage.
+    A successful Write also records the source and target pipeline participation in `METADATA_DATA_LINEAGE`. Source Observation history used by Source Drift and incremental execution is committed only through the successful write path.
 
-    Lastly, [`profile_table()`](../api/reference/profile_table.md) profiles the persisted target.
+### 7. Inspect selected results
 
-    **What comes back**
+**Uncomment only the displays that help you understand or troubleshoot the current run.**
 
-    - `write_result` → `table_id` → canonical FabricOps identity for the target table.
-    - `write_result` → `schema_result` → Schema Guardrail result.
-    - `write_result` → `sensitive_result` → Sensitive Data Guardrail result, including any applied treatment.
-    - `write_result` → `source_drift_results` → Source Drift results for the contributing sources.
-    - `write_result` → `dq_result` → Data Quality Guardrail result.
-    - `write_result` → `coverage_result` → Guardrail Coverage result for the target.
-    - `write_result` → `orchestration_stages` → status and timing of each Write stage.
-    - `write_result` → `published` → whether the target was physically written.
-    - `write_result` → `profile_result` → profile of the persisted target when profiling applies.
+The template keeps inspection outside the orchestration calls so the standard lifecycle remains easy to see.
 
-    These lower-level functions remain public if you need to build a custom flow.
+```python
+# Read DataFrame and ordered Read stages.
+# display(sources["source"]["dataframe"])
+# display(sources["source"]["orchestration_stages"])
 
-!!! warning "Multiple Write blocks are not atomic"
-    Each `orchestrate_write()` publishes independently this means that,
-    WRITE 1 can successfully publish `curated_orders` but WRITE 2 fails.
+# Ordered Write stages and Data Quality results.
+# display(writes["target"]["orchestration_stages"])
+# display(writes["target"]["dq_result"])
 
-    For this demo we use Overwrite, so re-running the whole pipeline replaces the entire output anyways so. 
-    
-    However if we use Append, a retry can duplicate data.
+# Column-level profile metrics after publication.
+# display(writes["target"].get("profile_result", {}).get("profile"))
+```
 
-    If partial publication or duplicate writes are unacceptable, use separate pipeline executions for each governed target.
+The guarded `.get()` call is useful because a Validate-mode Write does not publish or return a persisted-target profile.
 
-!!! warning "Warehouse schema prerequisite"
-    Before writing to a Fabric Warehouse, the target schema must already exist.
+??? info "More useful inspection keys"
 
-    FabricOps can create or overwrite the target table, but it does not create the Warehouse schema automatically.
+    The notebook also includes these focused options:
 
-    For example, before writing `demo.customer_summary`, create the `demo` schema in the target Warehouse:
+    ```python
+    # Incremental Read scope.
+    # display(sources["source"]["scope"])
 
-    ```sql
-    CREATE SCHEMA demo;
+    # Write-side Schema and Source Drift results.
+    # display(writes["target"]["schema_result"])
+    # display(writes["target"]["source_drift_results"])
     ```
 
-    You only need to create each Warehouse schema once. The Guided Demo creates the `demo` schema earlier in [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md).
+    The complete result contracts are documented on the [`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md) reference pages.
 
-??? example "Show Write orchestration output"
-    ![Write 1](../assets/02/Write_Block_Output.png)
-    ![Write 2](../assets/02/Write_Block_Output_2.png)
+### 8. Put the pattern together
 
-??? example "Show publication results"  
+**The reusable core is `Governed Read → Your PySpark Transform → Governed Write`.**
 
-    **Silver Lakehouse target**
-    ![Curated Orders written to Silver Lakehouse](../assets/02/Silver_Table_LH.png)
+You configure the governed source and target identities and own the business transformation. FabricOps executes the standard checks, applies the selected Data Contract mode, publishes when allowed, and writes the applicable records to `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_DATA_LINEAGE`, `METADATA_GUARDRAIL_RESULTS`, and `METADATA_SOURCE_OBSERVATION`.
 
-    **Gold Warehouse target**
-    ![Customer Summary written to Gold Warehouse](../assets/02/Gold_Table_WH.png)
+### 9. Explore the guided demos
 
-    **FabricOps metadata captured**
-    ![Metadata captured](../assets/02/Metadat_Captured.png)
+**Start with Full Refresh, then use the other demos to explore stateful processing patterns.**
+
+| Demo | What you will learn |
+| --- | --- |
+| [**Step 2A. Full Refresh**](02A-full-refresh-demo.md) | The recommended starting point. Read three retail sources, transform them with PySpark, and publish two targets using Full reads and Overwrite. |
+| [**Step 2B. Incremental Append**](02B-build-and-run-incremental-append-etl.md) | Use a watermark and governed source-to-target identity to process only newly eligible inventory movements. Its three runs show the initial load, new source data, and a no-change run. |
+| [**Step 2C. SCD1 and SCD2**](02C-build-and-run-scd-etl.md) | Send three complete Product Master snapshots through Full reads. Compare SCD1, which replaces changed values in the current record, with SCD2, which preserves prior versions as history. |
 
 ## Expected result
 
-At the end of Step 2 you should have:
+You can now identify every section of `02_pipeline`, know which cells to customize, and understand what FabricOps handles at the governed Read and Write boundaries. You are ready to apply the same scaffold in a working example.
 
-- three source tables read through FabricOps into Spark DataFrames,
-- `demo.curated_orders` fully overwritten in the Silver Lakehouse and `demo.customer_summary` fully overwritten in the Gold Warehouse,
-- [Catalogue](../reference/metadata/metadata_data_catalogue.md), [profile](../reference/metadata/metadata_data_profiled.md), [lineage](../reference/metadata/metadata_data_lineage.md), and [source observation](../reference/metadata/metadata_source_observation.md) metadata recorded for the pipeline,
-- contract-backed checks shown as `SKIPPED` in Development because no Data Contract has been selected yet.
+**Next (recommended):** [Step 2A. Run the Full Refresh Demo](02A-full-refresh-demo.md)
 
-??? info "Inspect the Dictonary that you had read / write"
-
-    ```python
-    # Enter the name of the source you created above, then uncomment any result you want to inspect.
-    inspect_write = "curated_orders_lakehouse"
-
-    # Uncomment only what you want to inspect.
-    # display(writes[inspect_write]["sensitive_result"]["dataframe"])       # DataFrame after Sensitive Data treatment.
-    # display(writes[inspect_write]["profile_result"]["profile"])           # Column-level profile metrics.
-    # display(writes[inspect_write]["profile_result"]["frequency_profile"]) # Value-frequency profile.
-    # display(writes[inspect_write]["schema_result"])                       # Schema guardrail result.
-    # display(writes[inspect_write]["sensitive_result"])                    # Sensitive Data guardrail result.
-    # display(writes[inspect_write]["source_drift_results"])                # Source Drift results.
-    # display(writes[inspect_write]["dq_result"])                           # Data Quality guardrail result.
-    # display(writes[inspect_write]["coverage_result"])                     # Guardrail Coverage result.
-    # display(writes[inspect_write]["orchestration_stages"])                # Ordered orchestrator execution stages.
-    ```
-
-**Next:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
+**Other processing modes:** [Step 2B. Incremental Append](02B-build-and-run-incremental-append-etl.md) · [Step 2C. SCD1 and SCD2](02C-build-and-run-scd-etl.md)
