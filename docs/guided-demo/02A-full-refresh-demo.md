@@ -55,9 +55,15 @@ For the first Guided Demo run, there is no Data Contract yet, so leave the selec
 
 ![The Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
-### 3. Run READ 1 — Orders
+**Run the source results dictionary cell:**
 
-Run the `sources = {}` cell, then run **READ 1 — Orders**.
+```python
+sources = {}
+```
+
+This creates an empty dictionary for the three governed Read results. Keeping each complete result by name lets the Transform block use the source DataFrames and lets the Write blocks pass their governed source identities into lineage and source-aware checks.
+
+### 3. Run READ 1 — Orders
 
 The block reads the complete Bronze `demo.orders` table and saves the result as `sources["orders"]`.
 
@@ -110,7 +116,15 @@ You should see one detailed row per current order in `transformed_df` and one ag
 
 ### 7. Run WRITE 1 — Lakehouse Curated Orders
 
-Run the `writes = {}` cell, then run **WRITE 1 — Lakehouse Curated Orders**.
+**Run the write results dictionary cell:**
+
+```python
+writes = {}
+```
+
+This creates an empty dictionary for the governed Write results. Keeping each complete result by target name makes the publication status, orchestration stages, Guardrail results, and, when published, target profile available for inspection after the Write.
+
+Then run **WRITE 1 — Lakehouse Curated Orders**.
 
 The block overwrites Silver Lakehouse `demo.curated_orders` with `transformed_df` and saves the result as `writes["curated_orders_lakehouse"]`.
 

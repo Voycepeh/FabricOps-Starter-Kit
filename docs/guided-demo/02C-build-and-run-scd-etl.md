@@ -76,7 +76,15 @@ To publish both targets, leave them unselected in Engineering Development or cho
 
 ### 5. Run the Governed Full Read
 
-Run the cells under **4. Governed Full Read**.
+First, run the source results dictionary cell:
+
+```python
+sources = {}
+```
+
+This creates an empty dictionary for the governed Read result. Keeping the complete result by name gives the Transform block access to its DataFrame and lets both Write blocks pass the same governed source identity into lineage and source-aware checks.
+
+Then run the remaining cell under **4. Governed Full Read**.
 
 The block reads all eight rows from Bronze `demo.product_master_updates` and saves the result as `sources["product_master"]`.
 
@@ -100,7 +108,15 @@ Nothing is checked on Day 1 because no earlier SCD2 state is required. The cell 
 
 ### 8. Run WRITE 1 — SCD1 current state
 
-Run the `writes = {}` cell, then run **WRITE 1 — SCD1 current state**.
+First, run the write results dictionary cell:
+
+```python
+writes = {}
+```
+
+This creates an empty dictionary for both governed Write results. Keeping each complete result by target name makes the publication status, orchestration stages, Guardrail results, and, when published, target profiles available for inspection.
+
+Then run **WRITE 1 — SCD1 current state**.
 
 The block publishes the eight products to Silver `demo.product_master_scd1`, keyed by `product_id`.
 

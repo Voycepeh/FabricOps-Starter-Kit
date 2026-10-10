@@ -93,10 +93,17 @@ You generally do not edit the selector code. Use the displayed controls to choos
 
 **Replace the source identity in the existing Read block and keep the complete result in `sources`.**
 
-```python
-# Keep each complete Read result for transformation, checks, and lineage.
-sources = {}
+First, run the source results dictionary cell:
 
+```python
+sources = {}
+```
+
+This creates an empty dictionary for the governed Read results. Each Read is stored by name so the Transform can use its DataFrame and the Write can reuse its governed source identity for lineage and source-aware checks.
+
+Then run the configured Read cell:
+
+```python
 source = orchestrate_read(
     name="source",
     store="Bronze",
@@ -166,10 +173,17 @@ FabricOps does not prescribe the transformation style. Keep project-owned PySpar
 
 **Pass the transformed DataFrame and every contributing governed Read result into the target's Write block.**
 
-```python
-# Keep complete Write results for optional inspection.
-writes = {}
+First, run the write results dictionary cell:
 
+```python
+writes = {}
+```
+
+This creates an empty dictionary for the governed Write results. Each Write is stored by target name so its publication status, orchestration stages, Guardrail results, and, when published, target profile remain available for inspection.
+
+Then run the configured Write cell:
+
+```python
 writes["target"] = orchestrate_write(
     transformed_df,
     name="target",

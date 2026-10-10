@@ -78,7 +78,15 @@ To publish the target, leave it unselected in Engineering Development or choose 
 
 ### 5. Run the Governed Incremental Read
 
-Run the cells under **4. Governed Incremental Read**.
+First, run the source results dictionary cell:
+
+```python
+sources = {}
+```
+
+This creates an empty dictionary for the governed Read result. Keeping the complete result by name gives the Transform block access to its DataFrame and gives the Write block the governed source identity needed for lineage, source-aware checks, and incremental processing.
+
+Then run the remaining cell under **4. Governed Incremental Read**.
 
 The notebook resolves the Silver target identity, reads Bronze `demo.inventory_movements` with `modified_datetime` as the watermark, and saves the result as `sources["inventory_movements"]`.
 
@@ -96,7 +104,15 @@ The block creates `movement_date`, `quantity_in`, and `quantity_out` for the eig
 
 ### 7. Run the Governed Append Write
 
-Run both cells under **6. Governed Append Write**.
+First, run the write results dictionary cell:
+
+```python
+writes = {}
+```
+
+This creates an empty dictionary for the governed Write result. Keeping the complete result by target name makes its publication status, orchestration stages, Guardrail results, and, when published, target profile available for inspection.
+
+Then run the remaining cell under **6. Governed Append Write**.
 
 The block appends the eight transformed rows to Silver `demo.inventory_movements_incremental` and saves the Write result as `writes["inventory_movements_incremental"]`.
 
