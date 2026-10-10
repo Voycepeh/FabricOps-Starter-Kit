@@ -52,7 +52,8 @@ The template starts with one Read, one transformation, and one Write. Add more R
 `00_env_config` establishes the configured Fabric stores, environment, notebook identity, Spark session, and metadata routing used by the rest of the notebook. The next cell imports only the public APIs needed by this scaffold:
 
 ```python
-from fabricops_kit import orchestrate_read, orchestrate_write, widget_select_data_contract
+from fabricops_kit import 
+orchestrate_read, orchestrate_write, widget_select_data_contract
 ```
 
 Change these cells only when your project has intentionally changed its shared environment notebook or needs additional public FabricOps functions.
@@ -260,14 +261,17 @@ You configure the governed source and target identities and own the business tra
 
 | Demo | What you will learn |
 | --- | --- |
-| [**Step 2A. Full Refresh**](02A-full-refresh-demo.md) | The recommended starting point. Read three retail sources, transform them with PySpark, and publish two targets using Full reads and Overwrite. |
-| [**Step 2B. Incremental Append**](02B-build-and-run-incremental-append-etl.md) | Use a watermark and governed source-to-target identity to process only newly eligible inventory movements. Its three runs show the initial load, new source data, and a no-change run. |
-| [**Step 2C. SCD1 and SCD2**](02C-build-and-run-scd-etl.md) | Send three complete Product Master snapshots through Full reads. Compare SCD1, which replaces changed values in the current record, with SCD2, which preserves prior versions as history. |
+| [Step 2A. Full Refresh](02A-full-refresh-demo.md) | The recommended starting point. Read three retail sources, transform them with PySpark, and publish two targets using Full reads and Overwrite. |
+| [Step 2B. Incremental Append](02B-build-and-run-incremental-append-etl.md) | Use a watermark and governed source-to-target identity to process only newly eligible inventory movements. Its three runs show the initial load, new source data, and a no-change run. |
+| [Step 2C. SCD1 and SCD2](02C-build-and-run-scd-etl.md) | Send three complete Product Master snapshots through Full reads. Compare SCD1, which replaces changed values in the current record, with SCD2, which preserves prior versions as history. |
 
 ## Expected result
 
 You can now identify every section of `02_pipeline`, know which cells to customize, and understand what FabricOps handles at the governed Read and Write boundaries. You are ready to apply the same scaffold in a working example.
 
-**Next (recommended):** [Step 2A. Run the Full Refresh Demo](02A-full-refresh-demo.md)
+**Next (recommended):** 
+[Step 2A. Run the Full Refresh Demo](02A-full-refresh-demo.md)
 
-**Other processing modes:** [Step 2B. Incremental Append](02B-build-and-run-incremental-append-etl.md) · [Step 2C. SCD1 and SCD2](02C-build-and-run-scd-etl.md)
+**Other processing modes:** [
+    Step 2B. Incremental Append](02B-build-and-run-incremental-append-etl.md) 
+[Step 2C. SCD1 and SCD2](02C-build-and-run-scd-etl.md)
