@@ -38,9 +38,17 @@ The notebook uses these governed tables throughout:
 
 ### 1. Run the Environment block
 
-Run the cells under **0. Environment**. The shared configuration and imports should complete without an error.
+Run the two cells under **0. Environment**:
 
-*Image coming soon: 02C Environment block completed in Fabric.*
+```python
+%run 00_env_config
+```
+
+Then run the import cell immediately below it. The import cell provides the public APIs used by that notebook, so its exact list can vary by demo.
+
+`00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
+
+![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
 
 ### 2. Choose Day 1
 
@@ -64,15 +72,17 @@ The cell should complete without an error. Bronze now contains the complete Day 
 
 ### 4. Run the Data Contract block
 
-Run the cell under **3. Data Contract**:
+Run the Data Contract cell:
 
 ```python
 CONTRACTS = widget_select_data_contract(spark_session=spark)
 ```
 
-To publish both targets, leave them unselected in Engineering Development or choose **Enforce** when enforceable contracts exist. Do not choose **Validate** for this run because Validate stops before publication.
+For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped, and the targets can publish in Engineering Development.
 
-*Image coming soon: 02C Data Contract selector in Fabric.*
+If you revisit the notebook after Data Contracts exist, choose **Enforce** to allow publication after the required checks pass. Choose **Validate** to evaluate a frozen candidate without publishing the target.
+
+![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
 ### 5. Run the Governed Full Read
 

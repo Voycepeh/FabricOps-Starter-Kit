@@ -41,30 +41,33 @@ The notebook follows one visible lifecycle:
 
 The template starts with one Read, one transformation, and one Write. Add more Read or Write blocks only when your pipeline needs them.
 
-### 2. Load the Environment
+### 2. Run the Environment block
 
-**Run the shared environment first; you will normally leave these cells unchanged.**
+Run the two cells under **0. Environment**:
 
 ```python
 %run 00_env_config
 ```
 
-`00_env_config` establishes the configured Fabric stores, environment, notebook identity, Spark session, and metadata routing used by the rest of the notebook. The next cell imports only the public APIs needed by this scaffold:
+Then run the import cell immediately below it. The import cell provides the public APIs used by that notebook, so its exact list can vary by demo.
 
-```python
-from fabricops_kit import 
-orchestrate_read, orchestrate_write, widget_select_data_contract
-```
+`00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
 
-Change these cells only when your project has intentionally changed its shared environment notebook or needs additional public FabricOps functions.
+![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
 
-### 3. Select the Data Contract mode
+### 3. Run the Data Contract block
 
-**Run the selector once and keep its result in `CONTRACTS`.**
+Run the Data Contract cell:
 
 ```python
 CONTRACTS = widget_select_data_contract(spark_session=spark)
 ```
+
+For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped, and the targets can publish in Engineering Development.
+
+If you revisit the notebook after Data Contracts exist, choose **Enforce** to allow publication after the required checks pass. Choose **Validate** to evaluate a frozen candidate without publishing the target.
+
+![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
 The widget discovers the tables linked to this notebook through `METADATA_DATA_LINEAGE`. Sources remain in **Enforce** mode; in Engineering Development, each target can independently use **Enforce** or **Validate**.
 
@@ -74,12 +77,6 @@ The widget discovers the tables linked to this notebook through `METADATA_DATA_L
 | **Validate** | Test one exact frozen candidate before Governance activates it. | The same pre-publication checks run, but the target is not written. |
 
 You generally do not edit the selector code. Use the displayed controls to choose the mode and candidate for each target.
-
-??? example "See the selector before a Data Contract exists"
-
-    During the first Guided Demo run, Governance has not authored a Data Contract yet. The selector can therefore show no enforceable contract for the target.
-
-    ![Data Contract selector with no contract selected](../assets/02/Data%20_Contract_None.png)
 
 ??? info "Under the hood"
 

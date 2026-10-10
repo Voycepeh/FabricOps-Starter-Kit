@@ -37,23 +37,25 @@ Run the two cells under **0. Environment**:
 %run 00_env_config
 ```
 
-Then run the import cell immediately below it.
+Then run the import cell immediately below it. The import cell provides the public APIs used by that notebook, so its exact list can vary by demo.
 
-You should see the shared FabricOps configuration load without an error. The notebook now has the configured Bronze, Silver, Gold, and Metadata stores and the public functions used by the demo.
+`00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
 
-![The 02A notebook after loading the shared environment](../assets/02/Setup.png)
+![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
 
 ### 2. Run the Data Contract block
 
-Run the cell under **1. Data Contract**:
+Run the Data Contract cell:
 
 ```python
 CONTRACTS = widget_select_data_contract(spark_session=spark)
 ```
 
-For the first Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped, and the targets can publish in Engineering Development.
+For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped, and the targets can publish in Engineering Development.
 
-![The Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
+If you revisit the notebook after Data Contracts exist, choose **Enforce** to allow publication after the required checks pass. Choose **Validate** to evaluate a frozen candidate without publishing the target.
+
+![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
 **Run the source results dictionary cell:**
 
