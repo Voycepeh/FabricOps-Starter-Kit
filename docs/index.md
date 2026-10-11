@@ -302,7 +302,7 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
 <div class="fabricops-home-primary">
   <a class="fabricops-home-action" href="how-fabricops-works/">
     <span class="fabricops-home-action__icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><path d="M6 3.5h8l4 4v13H6z"></path><path d="M14 3.5v4h4M9 12h6M9 15.5h6"></path></svg>
+      <img src="assets/robot-writing.png" alt="" style="width:2.5rem;height:2.5rem;object-fit:contain">
     </span>
     <span class="fabricops-home-action__copy">
       <span class="fabricops-home-action__label">How FabricOps works</span>

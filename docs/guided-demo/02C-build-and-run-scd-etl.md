@@ -18,6 +18,11 @@ Each notebook run replaces the Bronze source with one complete eight-row snapsho
 
 ## What you will do
 
+<div class="fabricops-mascot-callout">
+  <img src="../../assets/robot-scanning.png" alt="" loading="lazy">
+  <p>Compare SCD1 current state with SCD2 history after each Product Master snapshot.</p>
+</div>
+
 | Run | Business change | Expected SCD1 rows | Expected SCD2 versions |
 | --- | --- | ---: | ---: |
 | Day 1 | Load the initial eight products. | 8 | 8 |

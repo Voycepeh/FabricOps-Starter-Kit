@@ -86,6 +86,11 @@ The expected output confirms that all four file formats resolve to equivalent da
 
 ## 3. Read and write the demo data
 
+<div class="fabricops-mascot-callout">
+  <img src="../../assets/robot-carrying.png" alt="" loading="lazy">
+  <p>Prepare the demo tables before trying the governed pipeline examples.</p>
+</div>
+
 Read the remaining demo sources and write the managed Lakehouse and Warehouse tables used by the later pipeline walkthrough.
 
 ### Orders (we will write the dataframe we ingested earlier into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)

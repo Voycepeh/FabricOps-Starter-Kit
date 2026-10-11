@@ -18,6 +18,11 @@
 
 ## What you will do
 
+<div class="fabricops-mascot-callout">
+  <img src="../../assets/robot-carrying.png" alt="" loading="lazy">
+  <p>This full refresh reads three sources and publishes two targets through the governed pipeline.</p>
+</div>
+
 1. Load the shared environment.
 2. Run the Data Contract selector.
 3. Read Orders, Products, and Order History.

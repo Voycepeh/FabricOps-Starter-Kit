@@ -61,6 +61,11 @@ Use the same FabricOps wheel version across the workspace-specific Environments 
 
 ## 3. Configure `00_env_config`
 
+<div class="fabricops-mascot-callout">
+  <img src="../../assets/robot-writing.png" alt="" loading="lazy">
+  <p>Configure the logical Fabric Stores once, then let each environment resolve its own Fabric locations.</p>
+</div>
+
 Open `00_env_config` and replace the example Fabric IDs with the IDs for the Fabric items you created in 0A.
 
 The easiest way to get them is directly from the Fabric URL in your browser.

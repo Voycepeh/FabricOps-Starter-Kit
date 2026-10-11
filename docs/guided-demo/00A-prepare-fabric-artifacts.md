@@ -12,6 +12,11 @@ You need access to Microsoft Fabric capacity to complete the walkthrough. If you
 
 ## 2. Create the workspaces
 
+<div class="fabricops-mascot-callout">
+  <img src="../../assets/robot-pointing.png" alt="" loading="lazy">
+  <p>Set up Governance and Engineering Development first; add Production and Consumer workspaces when you reach those steps.</p>
+</div>
+
 Create these workspaces for the walkthrough:
 
 | Workspace | Required? | Used for |
