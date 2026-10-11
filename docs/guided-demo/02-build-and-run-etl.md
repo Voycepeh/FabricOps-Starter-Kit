@@ -2,11 +2,6 @@
 
 **Learn the reusable `02_pipeline` notebook from top to bottom, then adapt it to your own governed pipeline.**
 
-<div class="fabricops-mascot-callout">
-  <img src="../assets/robot-carrying.png" alt="" loading="lazy">
-  <p>FabricOps runs governed reads and writes around your own PySpark transformation.</p>
-</div>
-
 `02_pipeline` is the standard starting point for governed data engineering in FabricOps. You configure the sources and targets and write the PySpark transformation; FabricOps runs the governance lifecycle around that project-owned logic.
 
 1. Environment
@@ -27,7 +22,7 @@ The same pattern supports Full and Incremental reads and the Overwrite, Append, 
 
 The template deliberately contains placeholder table names. Read this walkthrough first, then replace them before running the Read or Write cells.
 
-## What to do
+## What to do <img class="fabricops-step-mascot" src="../../assets/robot-carrying.png" alt="" loading="lazy">
 
 ### 1. Get familiar with the notebook
 

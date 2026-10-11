@@ -2,11 +2,6 @@
 
 **Return to `01_governance`, author the source and target contracts used by the real pipeline, then freeze the exact versions Engineering will exercise in Step 4.**
 
-<div class="fabricops-mascot-callout">
-  <img src="../assets/robot-writing.png" alt="" loading="lazy">
-  <p>Define and review the Data Contract before freezing a candidate for validation.</p>
-</div>
-
 Freezing creates an **immutable Data Contract** candidate for validation. It does not activate the contract for Production.
 
 !!! warning "Enable Fabric AI Functions for the full DQ integration exercise"
@@ -21,7 +16,7 @@ Freezing creates an **immutable Data Contract** candidate for validation. It doe
 
     See Microsoft's [workspace roles](https://learn.microsoft.com/en-us/fabric/fundamentals/roles-workspaces) and [List Item Schedules API](https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/list-item-schedules) for the underlying access requirements.
 
-## 1. Cover the whole pipeline, not only the target
+## 1. Cover the whole pipeline, not only the target <img class="fabricops-step-mascot" src="../../assets/robot-writing.png" alt="" loading="lazy">
 
 Step 4 validates the complete governed path, so every participating table needs a frozen contract:
 

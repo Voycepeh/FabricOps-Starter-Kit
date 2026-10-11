@@ -16,12 +16,7 @@
 | Products | Bronze Lakehouse · `demo.products` |
 | Order History | Gold Warehouse · `demo.order_history` |
 
-## What you will do
-
-<div class="fabricops-mascot-callout">
-  <img src="../../assets/robot-carrying.png" alt="" loading="lazy">
-  <p>This full refresh reads three sources and publishes two targets through the governed pipeline.</p>
-</div>
+## What you will do <img class="fabricops-step-mascot" src="../../../assets/robot-carrying.png" alt="" loading="lazy">
 
 1. Load the shared environment.
 2. Run the Data Contract selector.

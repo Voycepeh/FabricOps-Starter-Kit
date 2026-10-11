@@ -2,11 +2,6 @@
 
 **Approve the tested Data Contract in Governance, then deploy the validated engineering artifact from Development to Production.**
 
-<div class="fabricops-mascot-callout">
-  <img src="../assets/robot-dev.png" alt="" loading="lazy">
-  <p>Promote the validated pipeline from Development to Production.</p>
-</div>
-
 Step 5 closes the Development loop. Governance makes the validated contract the active Production definition, and Engineering promotes the same tested pipeline through the Fabric Deployment Pipeline.
 
 ## 1. Select the tested Data Contract version
@@ -41,7 +36,7 @@ Review the selected `table_id`, tested Data Contract version, and linked Data Ag
 
 Activation tells FabricOps which immutable contract version Production must resolve for that governed table.
 
-## 4. Promote the validated pipeline
+## 4. Promote the validated pipeline <img class="fabricops-step-mascot" src="../../assets/robot-dev.png" alt="" loading="lazy">
 
 `00_env_config` owns the environment-specific resolution. Your tested `02A_full_refresh_demo` copy owns this demo pipeline definition.
 

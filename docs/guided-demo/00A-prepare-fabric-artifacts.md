@@ -10,12 +10,7 @@ Open [Microsoft Fabric](https://app.fabric.microsoft.com/) and sign in with your
 
 You need access to Microsoft Fabric capacity to complete the walkthrough. If you do not already have access through your organisation, you can use a Fabric trial where available.
 
-## 2. Create the workspaces
-
-<div class="fabricops-mascot-callout">
-  <img src="../../assets/robot-pointing.png" alt="" loading="lazy">
-  <p>Set up Governance and Engineering Development first; add Production and Consumer workspaces when you reach those steps.</p>
-</div>
+## 2. Create the workspaces <img class="fabricops-step-mascot" src="../../../assets/robot-pointing.png" alt="" loading="lazy">
 
 Create these workspaces for the walkthrough:
 
