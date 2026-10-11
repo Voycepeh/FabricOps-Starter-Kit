@@ -1,6 +1,8 @@
 import {AbsoluteFill, Easing, interpolate, Sequence, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {GUIDED_DEMO_DURATION, GuidedDemoJourney} from './GuidedDemoJourney';
 import {font, theme} from './theme';
+import {LifecycleScene} from './scenes/LifecycleScene';
+import {SCENE_STARTS} from './videoConfig';
 
 const seconds = (value: number) => Math.round(value * 30);
 
@@ -173,16 +175,22 @@ const AudienceScene = () => {
   </AbsoluteFill>;
 };
 
+// Start from the exact Part 1 lifecycle frame at 02:55, using its original scene and timing.
+const PART_1_HANDOFF_FRAME = seconds(175);
+const LIFECYCLE_LOCAL_FRAME = PART_1_HANDOFF_FRAME - SCENE_STARTS.workflow;
+const LIFECYCLE_CONTINUATION_DURATION = seconds(7);
 const CONSUME_DURATION = seconds(8);
 const AUDIENCE_DURATION = seconds(8);
-const GUIDED_DEMO_START = CONSUME_DURATION;
+const CONSUME_START = LIFECYCLE_CONTINUATION_DURATION;
+const GUIDED_DEMO_START = CONSUME_START + CONSUME_DURATION;
 const AUDIENCE_START = GUIDED_DEMO_START + GUIDED_DEMO_DURATION;
 
 export const FABRIC_OPS_PART_2_DURATION = AUDIENCE_START + AUDIENCE_DURATION;
 
 export const FabricOpsPart2 = () => (
   <AbsoluteFill style={{background: theme.background, color: theme.text, fontFamily: font, overflow: 'hidden'}}>
-    <Sequence from={0} durationInFrames={CONSUME_DURATION} premountFor={30}><ConsumeScene /></Sequence>
+    <Sequence from={-LIFECYCLE_LOCAL_FRAME} durationInFrames={LIFECYCLE_LOCAL_FRAME + LIFECYCLE_CONTINUATION_DURATION}><LifecycleScene /></Sequence>
+    <Sequence from={CONSUME_START} durationInFrames={CONSUME_DURATION} premountFor={30}><ConsumeScene /></Sequence>
     <Sequence from={GUIDED_DEMO_START} durationInFrames={GUIDED_DEMO_DURATION} premountFor={30}><GuidedDemoJourney /></Sequence>
     <Sequence from={AUDIENCE_START} durationInFrames={AUDIENCE_DURATION} premountFor={30}><AudienceScene /></Sequence>
   </AbsoluteFill>
