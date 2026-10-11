@@ -316,6 +316,22 @@ def _validate_target_writer_ownership(*, table_id: str, processing: dict[str, An
         )
 
 
+def _physical_processing_definition(processing: dict[str, Any]) -> dict[str, Any]:
+    """Return executable parameters without the resolver's governance metadata.
+
+    The resolver has already validated the engineering proposal and enforced
+    equality with the selected Data Contract. Physical SCD executors perform
+    their own strict validation, so pass the approved definition rather than
+    the enriched provenance envelope.
+    """
+    from fabricops_kit.pipeline.shared import validated_processing
+
+    definition = processing.get("governed_processing") or processing.get("authored_processing")
+    if definition is None:
+        raise ValueError("Resolved processing is missing its validated executable definition.")
+    return validated_processing(dict(definition))
+
+
 def pipeline_write(
     df,
     *,
@@ -602,6 +618,12 @@ def pipeline_write(
         print("4. Audit + ownership → runtime audit fields applied; writer ownership validated")
         print(f"5. Physical publication → {publication_path}")
 
+    physical_processing = (
+        _physical_processing_definition(processing)
+        if strategy in {"scd1", "scd2"}
+        else None
+    )
+
     if physical_already_applied:
         if verbose:
             print("5. Physical publication → already succeeded; resuming metadata finalization")
@@ -624,7 +646,7 @@ def pipeline_write(
                 table_name=str(identity["table_name"]),
                 store=str(identity["store"]),
                 schema=identity.get("schema"),
-                processing=processing,
+                processing=physical_processing,
                 scope=scope,
                 context=context,
             )
@@ -648,7 +670,7 @@ def pipeline_write(
                 schema=str(identity["schema"]),
                 table_name=str(identity["table_name"]),
                 store=str(identity["store"]),
-                processing=processing,
+                processing=physical_processing,
                 context=context,
                 options=physical_options,
             )
