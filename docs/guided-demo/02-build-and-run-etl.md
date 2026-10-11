@@ -22,7 +22,16 @@ The same pattern supports Full and Incremental reads and the Overwrite, Append, 
 
 The template deliberately contains placeholder table names. Read this walkthrough first, then replace them before running the Read or Write cells.
 
-## What to do <img class="fabricops-step-mascot" src="../../assets/robot-carrying.png" alt="" loading="lazy">
+## What to do
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-carrying.png" alt="" loading="lazy">
+  <div markdown="1">
+
+Start by understanding the shape of the notebook before changing its code.
+
+  </div>
+</div>
 
 ### 1. Get familiar with the notebook
 
