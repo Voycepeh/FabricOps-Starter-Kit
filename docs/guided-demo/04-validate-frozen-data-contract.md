@@ -4,6 +4,10 @@
 
 The selector defaults every table to **Enforce**. For this step, put only `curated_orders` into **Validate** mode and select the exact frozen version from Step 3.
 
+## Before you begin
+
+Complete [Step 3](03-author-and-freeze-data-contract.md) and select the frozen contract versions.
+
 ## 1. Select Validate for `curated_orders`
 
 <div class="fabricops-mascot-callout" markdown="1">
