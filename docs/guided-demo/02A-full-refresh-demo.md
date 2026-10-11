@@ -73,7 +73,7 @@ For the initial Guided Demo run, there is no Data Contract yet, so leave the sel
 
 ![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
-### **Run the source results dictionary cell:**
+### Initialize the source results dictionary
 
 ```python
 sources = {}
@@ -140,7 +140,7 @@ You should see:
 
   ![Customer-level aggregated output](../assets/02/Transform_Output_2.png)
 
-### **Run the write results dictionary cell:**
+### Initialize the write results dictionary
 
 ```python
 writes = {}
