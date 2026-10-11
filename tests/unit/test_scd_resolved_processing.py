@@ -59,3 +59,18 @@ def test_physical_scd_processing_requires_prevalidated_definition():
             "load_strategy": "scd1",
             "key_columns": ["product_id"],
         })
+
+
+@pytest.mark.parametrize(
+    "definition",
+    [
+        {"load_strategy": "scd1", "key_columns": ["product_id"]},
+        {
+            "load_strategy": "scd2",
+            "key_columns": ["product_id"],
+            "effective_column": "modified_datetime",
+        },
+    ],
+)
+def test_physical_scd_processing_accepts_plain_validated_definition(definition):
+    assert write_module._physical_processing_definition(definition) == definition
