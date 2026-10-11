@@ -61,7 +61,7 @@ Test and consume
 
     The single-table API is Preview. Multi-table agents, relationship authoring, product registration and overlap detection, evaluation, and automatic publication remain deliberately out of scope.
 
-## Prerequisites
+## Before you begin
 
 - Run on a [Fabric capacity that supports Data Agents](https://learn.microsoft.com/fabric/data-science/data-agent-concept).
 - Give the caller access to the governed Production Lakehouse or Warehouse and permission to create and configure items in the target workspace.
@@ -86,3 +86,7 @@ Consumers can continue using notebooks, SQL, Lakehouses, Warehouses, and other n
 The maintainer-facing product direction is recorded in the [FabricOps product definition](../maintainer/product-definition.md).
 
 **Complete:** return to the [Guided Demo overview](../guided-demo.md).
+
+## Expected result
+
+Approved Production data can be consumed through the documented Fabric interfaces, with FabricOps governance context available for downstream use.
