@@ -16,6 +16,10 @@ Freezing creates an **immutable Data Contract** candidate for validation. It doe
 
     See Microsoft's [workspace roles](https://learn.microsoft.com/en-us/fabric/fundamentals/roles-workspaces) and [List Item Schedules API](https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/list-item-schedules) for the underlying access requirements.
 
+## Before you begin
+
+Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the contracts.
+
 ## 1. Cover the whole pipeline, not only the target
 
 <div class="fabricops-mascot-callout" markdown="1">
