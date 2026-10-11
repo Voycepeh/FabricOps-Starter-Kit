@@ -87,7 +87,7 @@ Repeat the same Environment setup in every workspace that will run FabricOps not
 | Workspace | Environment needed? | Why |
 | --- | --- | --- |
 | **Governance** | Yes | Runs `01_governance` and Governance metadata operations. |
-| **Engineering Development** | Yes | Runs `00_env_config` and `02_pipeline` during Development. |
+| **Engineering Development** | Yes | Runs `00_env_config`, the reusable `02_pipeline`, and the Guided Demo pipeline notebooks. |
 | **Engineering Production** | Yes when you reach Step 6 | Runs the Production copy of the validated pipeline. |
 | **Consumer** | Yes when you reach Step 7 | Runs `99_explore` using the FabricOps package. |
 

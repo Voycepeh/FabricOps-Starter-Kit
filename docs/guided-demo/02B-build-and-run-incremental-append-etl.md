@@ -1,237 +1,256 @@
-# Step 2B. Incremental → Append
+# Step 2B. Run the Incremental Append Demo
 
-This optional Guided Demo reuses the **02 Pipeline** notebook from Step 2. You will change a copy, not the original full-refresh notebook.
+**Run the inventory pipeline three times in Microsoft Fabric to see an initial load, a new incremental batch, and a no-change run.**
 
-**Goal:** Read only unconsumed Orders from the Bronze Lakehouse, then append them to a separate Silver Lakehouse target. Run the notebook three times to see the bootstrap, new-row, and no-change cases.
+This demo uses a watermark on `modified_datetime` and an Append target. Run the days in order and compare the visible row counts after each complete notebook run.
 
-| | Source | Target |
+## Before you begin
+
+1. Download [`02B_incremental_append_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02B_incremental_append_demo.ipynb) and import it into the Engineering Development workspace.
+2. Keep `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
+3. Upload these files to the Bronze Lakehouse:
+
+| File | Bronze Lakehouse path |
+| --- | --- |
+| [`inventory_day1.csv`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/incremental_inventory/inventory_day1.csv) | `Files/Demo/incremental_inventory/inventory_day1.csv` |
+| [`inventory_day2.csv`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/incremental_inventory/inventory_day2.csv) | `Files/Demo/incremental_inventory/inventory_day2.csv` |
+
+4. Use a fresh demo state and run Day 1, then Day 2, then Day 3.
+
+## What you will do
+
+| Run | What changes | Expected Silver rows |
+| --- | --- | ---: |
+| Day 1 | Stage eight movements and bootstrap the Incremental Read. | 8 |
+| Day 2 | Add four movements and append only the newly eligible rows. | 12 |
+| Day 3 | Add no source rows and observe an empty incremental scope. | 12 |
+
+The notebook uses these governed tables throughout:
+
+| Role | Location | Processing |
 | --- | --- | --- |
-| Store | `Bronze` Lakehouse | `Silver` Lakehouse |
-| Table | `demo.orders` | `demo.orders_incremental` |
-| Processing | Incremental on `modified_datetime` | Append |
+| Source | Bronze Lakehouse · `demo.inventory_movements` | Incremental on `modified_datetime` |
+| Target | Silver Lakehouse · `demo.inventory_movements_incremental` | Append |
 
-The Orders source was created in [Step 00C](00C-prepare-demo-data-with-fabricops-io.md); no new file upload is needed. Keep the original `02_pipeline`, `demo.curated_orders`, and `demo.customer_summary` unchanged.
+## Run Day 1 in Fabric
 
-## 1. Duplicate the notebook in Fabric
+### 1. Run the Environment block
 
-1. Open `02_pipeline` in your **Engineering Development** workspace.
-2. Make a copy named `02B_incremental_append_demo`.
-3. Use the copy for **all** the edits below. Keep the same attached Fabric Environment and the `00_env_config` notebook from Step 2.
-
-## 2. Configure the incremental watermark in the Read
-
-The sample Bronze Orders source already contains `modified_datetime`. Specify that column in the copied notebook's `orchestrate_read()` call using `read_parameters`; you do **not** need to edit the Data Catalogue manually.
-
-This requires a FabricOps package version containing the `read_parameters` incremental-read API. If Fabric reports `unexpected keyword argument 'read_parameters'`, update the attached Fabric Environment to a build containing that API before continuing; editing the Catalogue will not make the older function signature accept it.
-
-FabricOps manages the accepted watermark for each source-to-target relationship, only committing progress after a successful target publication. If a selected or active Data Contract sets a different watermark, FabricOps rejects the mismatch rather than silently overriding it.
-
-See [Read and Load Strategies](../reference/read-and-load-strategies.md) for the state lifecycle.
-
-## 3. Keep the Environment and Data Contract cells
-
-Keep this setup cell:
+Run the two cells under **0. Environment**:
 
 ```python
 %run 00_env_config
 ```
 
-Replace the **import** cell with:
+Then run the import cell immediately below it. The import cell provides the public APIs used by that notebook, so its exact list can vary by demo.
+
+`00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
+
+![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
+
+### 2. Choose Day 1
+
+Leave the value under **1. Choose the demo day** as:
 
 ```python
-from pyspark.sql import functions as F
-
-from fabricops_kit import (
-    orchestrate_read,
-    orchestrate_write,
-    resolve_table_id,
-    widget_select_data_contract,
-    read_lakehouse_table,
-    write_lakehouse_table,
-)
+DEMO_DAY = 1
 ```
 
-Keep the Data Contract selector cell:
+Run the cell. It validates that the selected day is supported.
+
+### 3. Stage the Day 1 source
+
+Run both cells under **2. Read the CSV batch and stage Bronze**.
+
+The notebook reads `inventory_day1.csv`, removes duplicate `movement_id` values, and overwrites Bronze `demo.inventory_movements`.
+
+You should see:
+
+```text
+Bronze inventory rows after Day 1: 8
+```
+
+*Image coming soon: Day 1 Bronze staging output showing 8 rows.*
+
+### 4. Run the Data Contract block
+
+Run the Data Contract cell:
 
 ```python
 CONTRACTS = widget_select_data_contract(spark_session=spark)
 ```
 
-In Development, you can leave the target without a selected contract. If you select **Validate** for the target, it will not publish; use **Enforce** to exercise the Append write.
+For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped, and the targets can publish in Engineering Development.
 
-## 4. Replace READ 1 — Orders
+If you revisit the notebook after Data Contracts exist, choose **Enforce** to allow publication after the required checks pass. Choose **Validate** to evaluate a frozen candidate without publishing the target.
 
-Keep the existing `sources = {}` initialization once. Replace the **READ 1 — Orders** cell with:
+![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
-```python
-target_table_id = resolve_table_id(
-    store="Silver",
-    schema="demo",
-    table_name="orders_incremental",
-)
+### 5. Run the Governed Incremental Read
 
-source = orchestrate_read(
-    name="orders",
-    store="Bronze",
-    schema="demo",
-    table_name="orders",
-    read_mode="incremental",
-    read_parameters={"watermark_column": "modified_datetime"},
-    target_table_id=target_table_id,
-    spark_session=spark,
-)
-sources["orders"] = source
-```
-
-**Why resolve the target first?** Incremental progress belongs to one exact **source → target** relationship. Another target consuming Bronze Orders may have a different last-processed watermark.
-
-**Important:** Do not provide custom SQL in `query` for an incremental read; FabricOps builds its own filtering predicate. Leave `query` omitted.
-
-Delete or skip **READ 2 — Products** and **READ 3 — Order History**. Use the existing optional Read Inspection cell to inspect `sources["orders"]["scope"]`, `sources["orders"]["should_process"]`, and `sources["orders"]["dataframe"]`. Incremental reads intentionally skip full-table profiling.
-
-## 5. Replace the Transform cell
-
-Replace the existing joins and customer summary aggregation under **3. Transform** with:
+First, run the source results dictionary cell:
 
 ```python
-# Preserve the Orders schema and its modified_datetime watermark.
-transformed_df = sources["orders"]["dataframe"]
-display(transformed_df)
+sources = {}
 ```
 
-This deliberately performs no transformation, so you can inspect the exact rows that will be appended.
+This creates an empty dictionary for the governed Read result. Keeping the complete result by name gives the Transform block access to its DataFrame and gives the Write block the governed source identity needed for lineage, source-aware checks, and incremental processing.
 
-## 6. Replace WRITE 1 — Lakehouse Curated Orders
+Then run the remaining cell under **4. Governed Incremental Read**.
 
-Keep `writes = {}` once. Replace **WRITE 1** with:
+The notebook resolves the Silver target identity, reads Bronze `demo.inventory_movements` with `modified_datetime` as the watermark, and saves the result as `sources["inventory_movements"]`.
+
+On Day 1, there is no earlier successful watermark for this source-to-target relationship. The incremental scope therefore bootstraps with all eight source rows.
+
+*Image coming soon: Day 1 Incremental Read output and bootstrap scope.*
+
+### 6. Run the PySpark Transform
+
+Run the cell under **5. PySpark Transform**.
+
+The block creates `movement_date`, `quantity_in`, and `quantity_out` for the eight eligible movement rows. It stores the result in `transformed_df`.
+
+*Image coming soon: transformed Day 1 inventory movements.*
+
+### 7. Run the Governed Append Write
+
+First, run the write results dictionary cell:
 
 ```python
-write_result = orchestrate_write(
-    transformed_df,
-    name="orders_incremental",
-    sources=[sources["orders"]],
-    store="Silver",
-    schema="demo",
-    table_name="orders_incremental",
-    write_mode="append",
-    contracts=CONTRACTS,
-    repartition_by=None,
-    spark_session=spark,
-)
-
-writes["orders_incremental"] = write_result
+writes = {}
 ```
 
-Use the same high-level `orchestrate_write()` you used in Step 2, not a separate `pipeline_write()` bypass. Call it even when the incremental read has no new rows; the empty Append does not add target records. The write lifecycle still runs its applicable guardrails, including Source Drift.
+This creates an empty dictionary for the governed Write result. Keeping the complete result by target name makes its publication status, orchestration stages, Guardrail results, and, when published, target profile available for inspection.
 
-Delete or skip **WRITE 2 — Warehouse Customer Summary**. In the optional Write inspection cell, change `inspect_write` to `"orders_incremental"`, or leave that inspection cell commented out.
+Then run the remaining cell under **6. Governed Append Write**.
 
-## 7. First run: bootstrap
+The block appends the eight transformed rows to Silver `demo.inventory_movements_incremental` and saves the Write result as `writes["inventory_movements_incremental"]`.
 
-Run your modified notebook **from the top**. For a target with no accepted incremental history:
+You should see the Write stages complete and the target publish successfully.
 
-* `source["scope"]["first_run"]` is `True` and the scope type is `full`.
-* The Read returns all existing Bronze Orders.
-* `orchestrate_write()` publishes that batch to `Silver.demo.orders_incremental`.
+*Image coming soon: Day 1 Append Write output.*
 
-If you uncomment the `scope` and `should_process` inspections, the first run should resemble:
+### 8. Inspect the Day 1 result
+
+Run the cell under **7. Inspect results**.
+
+You should see:
+
+- an incremental scope covering the initial eight rows;
+- `Silver rows: 8`;
+- eight movement records ordered by `modified_datetime` and `movement_id`; and
+- an inventory balance summarized by `product_id`.
+
+*Image coming soon: Day 1 Silver rows and inventory balances.*
+
+## Run Day 2 in Fabric
+
+### 1. Change only the demo day
+
+Return to the day cell and change it to:
+
+```python
+DEMO_DAY = 2
+```
+
+### 2. Rerun the complete notebook
+
+Use **Run all** or run every block again from **0. Environment** through **7. Inspect results**.
+
+The Bronze staging block adds the four Day 2 movements and keeps the eight existing movements by `movement_id`. You should see:
 
 ```text
-Scope: {'type': 'full', 'first_run': True, ...}
-Should process: True
+Bronze inventory rows after Day 2: 12
 ```
 
-Verify the target using Fabric's Silver Lakehouse table explorer or this helper in a new code cell:
+The Incremental Read returns only the four rows after the successful Day 1 watermark. The Append Write adds those rows to the Silver target.
+
+### 3. Check the Day 2 output
+
+The final inspection should show:
+
+- four newly eligible rows in the incremental scope;
+- `Silver rows: 12`;
+- all twelve movements in the target; and
+- updated inventory balances.
+
+*Image coming soon: Day 2 incremental scope, 12 Silver rows, and updated balances.*
+
+## Run Day 3 in Fabric
+
+### 1. Change only the demo day
+
+Return to the day cell and change it to:
 
 ```python
-silver_rows = read_lakehouse_table(
-    "orders_incremental",
-    store="Silver",
-    schema="demo",
-    spark_session=spark,
-)
-print("Silver row count:", silver_rows.count())
-display(silver_rows)
+DEMO_DAY = 3
 ```
 
-**Do not re-run Step 00C** between the three tests; it resets the demonstration source baseline.
+Day 3 intentionally has no CSV file and adds no source records.
 
-## 8. Insert two new Orders into Bronze
+### 2. Rerun the complete notebook
 
-After a successful first publication, create a **separate one-time test cell**, preferably at the very bottom of the notebook beneath the optional inspection cells. Run it manually **exactly once**, after the first pipeline execution. Do not include it in subsequent **Run all** executions; either remove the cell after insertion or skip it explicitly. It takes two sample Orders, gives them new IDs, and ensures their `modified_datetime` is later than the current source maximum.
+Run every block again. The notebook still calls the Read and Write orchestrators; do not skip those blocks.
 
-```python
-bronze_orders = read_lakehouse_table(
-    "orders",
-    store="Bronze",
-    schema="demo",
-    spark_session=spark,
-)
+You should see:
 
-# Use deterministic demo IDs; check before inserting to avoid duplicate tests.
-test_ids = ["DEMO-INC-001", "DEMO-INC-002"]
-assert bronze_orders.where(F.col("order_id").isin(test_ids)).limit(1).count() == 0, (
-    "Incremental test Orders already exist. Do not insert them twice."
-)
-
-latest_modified = bronze_orders.agg(F.max("modified_datetime").alias("latest")).first()["latest"]
-assert latest_modified is not None, "Orders has no modified_datetime baseline."
-
-from datetime import timedelta
-
-demo_rows = bronze_orders.orderBy("order_id").limit(2).collect()
-assert len(demo_rows) == 2, "At least two source Orders are required."
-
-new_records = []
-for index, row in enumerate(demo_rows, start=1):
-    record = row.asDict()
-    record["order_id"] = test_ids[index - 1]
-    record["modified_datetime"] = latest_modified + timedelta(minutes=index)
-    new_records.append(record)
-
-new_orders = spark.createDataFrame(new_records, schema=bronze_orders.schema)
-
-write_lakehouse_table(
-    new_orders,
-    "orders",
-    store="Bronze",
-    schema="demo",
-    mode="append",
-)
-print("Inserted two new Bronze Orders.")
-display(new_orders)
+```text
+Bronze inventory rows after Day 3: 12
 ```
 
-This directly changes the **demo Bronze source**, not the Silver target. Only run it once. Use a dedicated demo environment, not a production Orders table. Since Append records new rows rather than reconciling updates to existing orders, the test uses new `order_id` values.
+The Incremental Read returns an empty scope. The Append target remains unchanged.
 
-## 9. Second run: append only new rows
+### 3. Check the Day 3 output
 
-Run the modified pipeline again from the Environment cell through WRITE 1. Do **not** execute the one-time insertion cell again. If you use **Run all**, first remove that insertion cell.
+The final inspection should show:
 
-Check that:
+- an empty/no-change incremental scope;
+- `Silver rows: 12`; and
+- the same twelve target rows and inventory balances as Day 2.
 
-1. READ 1 reports `first_run = False` and `type = watermark`.
-2. The returned DataFrame contains only `DEMO-INC-001` and `DEMO-INC-002`, assuming no other rows were added.
-3. WRITE 1 reports `published = True`.
-4. The Silver target now has two additional rows.
+*Image coming soon: Day 3 empty scope and unchanged 12-row Silver target.*
 
-The scope uses `modified_datetime > last committed watermark`, not `>=`.
+## Expected result
 
-## 10. Third run: no new data
+### Data saved by the demo
 
-Run the same pipeline cells a third time **without inserting any more Bronze rows**. Keep the one-time insertion cell removed or skipped.
+| Location | Table | Final state after Day 3 |
+| --- | --- | --- |
+| Bronze Lakehouse | `demo.inventory_movements` | 12 unique source movements from Days 1 and 2. |
+| Silver Lakehouse | `demo.inventory_movements_incremental` | 12 transformed movements appended across the successful incremental runs. |
 
-The Read Inspection cell should show `should_process = False` and an empty DataFrame. **WRITE 1 still calls `orchestrate_write()`**, including its guardrails and Append write; there is no notebook-side skip.
+### Metadata saved by FabricOps
 
-The Silver row count should remain unchanged because the empty Append adds no rows. This verifies that the target-specific watermark advanced after successful publication and that the no-change run does not append duplicates.
+All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 
-| Run | Bronze source state | Incremental read | Silver write |
-| --- | --- | --- | --- |
-| 1 | Original Orders | Bootstrap: all original rows | Append first batch |
-| 2 | Original Orders + two test Orders | Only the two new rows | Append two rows |
-| 3 | No further changes | No rows to process | Empty append; zero rows added |
+| Metadata table or governed record | What this demo records |
+| --- | --- |
+| `METADATA_DATA_CATALOGUE` | Canonical source and target table and column identities. |
+| `METADATA_DATA_PROFILED` | Profile snapshots of the published Silver target. Incremental Read batches themselves are not profiled. |
+| `METADATA_DATA_PROFILED_FREQUENCY` | Target frequency rows linked to profile snapshots where applicable. |
+| `METADATA_DATA_LINEAGE` | The Bronze source and Silver target participation for this notebook pipeline. |
+| `METADATA_SOURCE_OBSERVATION` | Source-state observations and history used by Incremental execution. |
+| Governed target watermark | Successful watermark progress for the exact Bronze-to-Silver relationship. |
+| `METADATA_GUARDRAIL_RESULTS` | Guardrail evaluation results when a selected Data Contract supplies executable Guardrails. |
 
-!!! warning "Append does not reconcile old Orders"
-    If an existing order is updated with a later `modified_datetime`, an Append target adds another version instead of replacing the earlier row. For updates to existing business keys, use SCD1 or SCD2 instead. This optional demo only appends **new orders**.
+*Image coming soon: Metadata Lakehouse records after the three Incremental Append runs.*
 
-**Next optional mode:** [Step 2C. SCD Type 1 vs Type 2](02C-build-and-run-scd-etl.md)
+### Reset the demo
+
+An Incremental demo cannot be reset by rerunning Day 1 or deleting only the Silver target. FabricOps remembers successful progress for the exact Bronze-to-Silver relationship.
+
+The safest clean reset is to run the demo in a fresh Guided Demo environment. To reset the same environment through an approved maintenance process:
+
+1. In the Bronze Lakehouse, delete `demo.inventory_movements` from the table explorer.
+2. In the Silver Lakehouse, delete `demo.inventory_movements_incremental` from the table explorer. This removes the appended business data and the successful watermark progress stored with the governed target.
+3. Remove only the `METADATA_SOURCE_OBSERVATION` rows for the `inventory_movements` → `inventory_movements_incremental` relationship and the current environment. Do not clear observations for other pipelines.
+4. Set `DEMO_DAY = 1`.
+5. Run the notebook from the top. The Day 1 CSV recreates Bronze with eight rows, the Incremental Read bootstraps again, and the Append Write recreates the eight-row Silver target.
+
+!!! warning "Keep incremental state aligned"
+
+    The Bronze source, Silver target, scoped Source Observation history, and governed target watermark belong to one incremental state. Reset all four together. If you cannot perform the scoped metadata cleanup safely, use a fresh Guided Demo environment instead.
+
+**Next optional processing mode:** [Step 2C. Run the SCD1 and SCD2 Demo](02C-build-and-run-scd-etl.md)
+
+**Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)

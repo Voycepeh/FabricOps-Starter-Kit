@@ -4,13 +4,13 @@
 
 This is the final setup step before the executable demo-data preparation in 0C.
 
-## 1. Download and import the notebook templates
+## 1. Download and import the notebooks
 
 Download the current notebook templates from the FabricOps repository:
 
 [FabricOps notebook templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
-You need these four notebooks:
+Import the four reusable notebooks:
 
 | Notebook | Where it goes now |
 | --- | --- |
@@ -18,6 +18,14 @@ You need these four notebooks:
 | `01_governance.ipynb` | Governance workspace |
 | `02_pipeline.ipynb` | Engineering Development workspace |
 | `99_explore.ipynb` | Consumer workspace |
+
+Also download the ready-to-run pipeline demos from [FabricOps DemoData](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData):
+
+| Demo notebook | Where it goes now |
+| --- | --- |
+| `02A_full_refresh_demo.ipynb` | Engineering Development workspace |
+| `02B_incremental_append_demo.ipynb` | Engineering Development workspace |
+| `02C_scd_demo.ipynb` | Engineering Development workspace |
 
 In Fabric, open the target workspace, choose **Import notebook**, and upload the downloaded `.ipynb` file.
 
@@ -27,7 +35,7 @@ The Governance workspace contains the `metadata` Lakehouse, its Fabric Environme
 
 ![Governance workspace assets](../assets/00B/Governance_Assets.png)
 
-The Engineering Development workspace contains `bronze`, `silver`, `gold`, its Fabric Environment, `00_env_config`, and `02_pipeline`.
+The Engineering Development workspace contains `bronze`, `silver`, `gold`, its Fabric Environment, `00_env_config`, the reusable `02_pipeline`, and the three demo notebooks.
 
 ![Engineering Development workspace assets](../assets/00B/Engineering_Assets.png)
 
@@ -108,6 +116,8 @@ Download the **entire DemoData folder**. Every retained file has an explicit Gui
 | `orders.csv`, `orders.json`, `orders.parquet`, `orders.xlsx` | 0C uses these equivalent 120-row files to demonstrate the FabricOps file readers. |
 | `products.csv` | 0C seeds `bronze.demo.products`. |
 | `order_history.csv` | 0C seeds `gold.demo.order_history` and demonstrates Warehouse reads. |
+| `incremental_inventory/inventory_day1.csv`, `inventory_day2.csv` | Step 2B stages the inventory batches; Day 3 intentionally has no file. |
+| `scd_product_master/products_day1.csv`, `products_day2.csv`, `products_day3.csv` | Step 2C overwrites Bronze with each complete Product Master snapshot. |
 
 ## 6. Upload the demo data
 
@@ -120,6 +130,6 @@ Download the **entire DemoData folder**. Every retained file has an explicit Gui
 
 At this point, stop. Do not create the managed source tables manually in 0B.
 
-The next setup notebook demonstrates the FabricOps I/O helpers and prepares the exact managed tables that `02_pipeline` will use.
+The next setup notebook demonstrates the FabricOps I/O helpers and prepares the original managed tables used by the Step 2A Full Refresh demo. Steps 2B and 2C stage their own source tables from the uploaded files.
 
 **Next:** [0C. Prepare the demo data with FabricOps I/O](00C-prepare-demo-data-with-fabricops-io.md)

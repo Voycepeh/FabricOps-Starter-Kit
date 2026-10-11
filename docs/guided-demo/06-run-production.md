@@ -16,7 +16,7 @@ The same logical store names now resolve to the Production Lakehouses, Warehouse
 
 ## 2. Run the promoted pipeline
 
-Run the promoted `02_pipeline` from start to finish.
+Run the promoted `02A_full_refresh_demo` pipeline from start to finish.
 
 Production follows the same visible lifecycle used in Development:
 

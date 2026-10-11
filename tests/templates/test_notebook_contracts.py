@@ -20,7 +20,9 @@ pytestmark = pytest.mark.contract
 
 ROOT = Path(__file__).parents[2]
 NOTEBOOK_DIR = ROOT / "templates" / "notebooks"
+DEMO_NOTEBOOK_DIR = ROOT / "templates" / "DemoData"
 NOTEBOOKS = tuple(sorted(NOTEBOOK_DIR.glob("*.ipynb")))
+DEMO_NOTEBOOKS = tuple(sorted(DEMO_NOTEBOOK_DIR.glob("02*.ipynb")))
 
 
 def _load_notebook(path: Path) -> nbformat.NotebookNode:
@@ -206,7 +208,7 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
 
     assert "# step 4. validate the frozen data contract" in normalized["step_4"]
     assert "select the exact frozen candidate version" in normalized["step_4"]
-    assert "same `02_pipeline`" in step_4
+    assert "same `02A_full_refresh_demo` notebook" in step_4
     assert "do not edit a frozen version in place" in normalized["step_4"]
     assert "defaults every table to **enforce**" in normalized["step_4"]
     assert "pipeline_write()" in normalized["step_4"]
@@ -233,189 +235,63 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert lifecycle_positions == sorted(lifecycle_positions)
 
 
-def test_02_pipeline_has_simple_top_level_sequence():
-    """The template stays Read -> Transform -> Write without splitting one write across sections."""
+def _demo_source(notebook_name: str) -> str:
+    notebook = _load_notebook(DEMO_NOTEBOOK_DIR / notebook_name)
+    return "\n".join(cell.source for cell in notebook.cells)
+
+
+def _demo_cell(notebook_name: str, cell_id: str) -> nbformat.NotebookNode:
+    notebook = _load_notebook(DEMO_NOTEBOOK_DIR / notebook_name)
+    return next(cell for cell in notebook.cells if cell.get("id") == cell_id)
+
+
+@pytest.mark.parametrize("notebook_path", DEMO_NOTEBOOKS, ids=lambda path: path.name)
+def test_demo_notebooks_are_valid_and_use_public_fabricops_apis(notebook_path: Path):
+    """Demo notebooks are valid JSON, compile locally, and import supported public names."""
+    import fabricops_kit
+
+    notebook = _load_notebook(notebook_path)
+    nbformat.validate(notebook)
+    missing: list[str] = []
+    for cell_index, source in _code_cells(notebook_path):
+        tree = _parse_code_cell(notebook_path, cell_index, source)
+        if tree is None:
+            continue
+        compile(tree, filename=f"{notebook_path}:{cell_index}", mode="exec")
+        references = _fabricops_imported_names(tree) | _fabricops_attribute_references(tree)
+        missing.extend(
+            f"cell {cell_index}: {name}"
+            for name in sorted(references)
+            if not hasattr(fabricops_kit, name)
+        )
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module:
+                assert not node.module.startswith("fabricops_kit."), (
+                    f"{notebook_path.name} cell {cell_index} imports FabricOps internals: {node.module}"
+                )
+    assert not missing, f"Missing public references in {notebook_path.name}: {missing}"
+
+
+def test_02_pipeline_is_a_small_reusable_scaffold():
+    """The living template keeps one clear Environment -> Contract -> Read -> Transform -> Write path."""
     source = _notebook_source("02_pipeline.ipynb")
-    headings = ("# 0. Environment", "# 1. Data Contract", "# 2. Full Read", "# 3. Transform", "# 4. Write")
+    headings = (
+        "# 0. Environment",
+        "# 1. Data Contract",
+        "# 2. Governed Read",
+        "# 3. PySpark Transform",
+        "# 4. Governed Write",
+    )
     assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
-    for removed in ("# 4. Target", "# 5. Write Preparation / Guardrails", "# 6. Write", "# 7. Persisted Target Profile"):
-        assert removed not in source
-
-
-def test_02_pipeline_initializes_data_contracts_once_in_plain_language():
-    """The contract configuration separates execution mode from environment."""
-    source = _notebook_source("02_pipeline.ipynb")
-    contracts = _cell_by_id("02_pipeline.ipynb", "contracts-heading").source
-    assert "Enforce" in contracts
-    assert "Validate" in contracts
-    assert "exact frozen candidate picker" in contracts
-    assert "CONTRACT_MODE" not in source
-    assert "VALIDATE_CONTRACTS" not in source
     assert source.count("widget_select_data_contract(spark_session=spark)") == 1
+    code_source = "\n".join(source for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
+    assert code_source.count("orchestrate_read(") == 1
+    assert code_source.count("orchestrate_write(") == 1
+    assert all(name not in source for name in ("orders", "products", "order_history", "customer_summary"))
 
 
-def test_guided_demo_preserves_initial_unselected_flow_and_optional_target_validation():
-    """The walkthrough keeps the first run unselected and later validates only the target."""
-    step_2 = (ROOT / "docs/guided-demo/02-build-and-run-etl.md").read_text(encoding="utf-8")
-    step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
-
-    assert "there is no Data Contract yet" in step_2
-    assert "leave the selection unchanged" in step_2
-    assert "Contract-backed checks will return as skipped" in step_2
-    assert "leave every source table in **Enforce** mode" in step_4
-    assert "choose **Validate** only for the target" in step_4
-    assert "exact same Schema, Sensitive Data, Source Drift, Data Quality" in step_4
-    assert "Validate returns `published=False` and `validation_passed=True`" in step_4
-    assert "business target can be written" in step_4
-
-
-def test_02_pipeline_target_validate_mode_exits_before_business_write():
-    """The orchestrator owns validation and the notebook exits on validation-only success."""
-    for index in (1, 2):
-        block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
-        assert "contracts=CONTRACTS" in block
-        assert 'if not write_result["published"]:' in block
-        assert "notebookutils.notebook.exit" in block
-        assert block.index("orchestrate_write(") < block.index("notebookutils.notebook.exit")
-        assert 'CONTRACTS["validate"]' not in block
-
-def test_02_pipeline_is_full_read_and_full_profile_by_design():
-    """The standard orchestrator receives full mode for complete-source profiling."""
-    source = _notebook_source("02_pipeline.ipynb")
-    code = "\n".join(source for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
-    assert "full refresh pipeline template" in source.lower()
-    assert "full read → transform → full overwrite" in source
-    assert code.count('read_mode="full"') == 3
-    assert "READ_MODE =" not in code
-    assert source.count("source = orchestrate_read(") == 3
-    assert "profile_table(" not in source
-
-def test_02_pipeline_warehouse_example_uses_projection_without_incremental_filter():
-    """Order History demonstrates Warehouse SQL projection while keeping a full row scope."""
-    block = _cell_by_id("02_pipeline.ipynb", "read-3").source
-    assert 'store="Gold"' in block
-    assert 'table_name="order_history"' in block
-    assert "SELECT" in block
-    assert "historical_order_id" in block
-    assert "customer_id" in block
-    assert "order_datetime" in block
-    assert "net_amount" in block
-    assert "FROM demo.order_history" in block
-    assert "WHERE" not in block
-    assert 'query="""' in block
-
-
-def test_02_pipeline_source_dictionary_is_explained():
-    """The notebook tells engineers exactly what the multi-source dictionary contains."""
-    setup = _cell_by_id("02_pipeline.ipynb", "read-setup").source
-    assert "Dictionary used to keep source results" in setup
-    assert "source results for transformation and lineage" in setup
-    assert "sources = {}" in setup
-
-
-def test_02_pipeline_read_blocks_use_standard_orchestration():
-    """Every source exposes decisions before one standard orchestrator call."""
-    for index, read_name in ((1, "orders"), (2, "products"), (3, "history")):
-        block = _cell_by_id("02_pipeline.ipynb", f"read-{index}").source
-        assert f'name="{read_name}"' in block
-        assert "READ_NAME =" not in block
-        assert "READ_STORE =" not in block
-        tree = _parse_code_cell(NOTEBOOK_DIR / "02_pipeline.ipynb", index, block)
-        calls = {
-            node.func.id
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-        }
-        for expanded in ("pipeline_read", "check_freshness", "check_schema", "check_dq", "profile_table"):
-            assert expanded not in calls
-
-def test_02_pipeline_transform_is_plain_pyspark():
-    """Project transformation remains ordinary readable PySpark and produces two target DataFrames."""
-    transform = _cell_by_id("02_pipeline.ipynb", "transform").source
-    assert transform.count(".join(") == 2
-    assert ".withColumn(" in transform
-    assert "transformed_df = (" in transform
-    assert "customer_summary_df = (" in transform
-    assert "pipeline_transform" not in transform
-
-
-def test_02_pipeline_demonstrates_full_refresh_writes_and_parallel_warehouse_write():
-    """The full pipeline demo uses overwrite for both outputs and one parallel Warehouse write."""
-    write_1 = _cell_by_id("02_pipeline.ipynb", "write-1").source
-    write_2 = _cell_by_id("02_pipeline.ipynb", "write-2").source
-
-    assert 'write_mode="overwrite"' in write_1
-    assert "repartition_by=None" in write_1
-    assert 'write_mode="overwrite"' in write_2
-    assert "repartition_by=4" in write_2
-
-
-def test_02_pipeline_write_dictionary_and_two_cloneable_writes():
-    """Write blocks expose decisions before one standard orchestrator call."""
-    setup = _cell_by_id("02_pipeline.ipynb", "write-setup").source
-    assert "writes = {}" in setup
-    for index in (1, 2):
-        block = _cell_by_id("02_pipeline.ipynb", f"write-{index}").source
-        assert "orchestrate_write(" in block
-        assert "contracts=CONTRACTS" in block
-        assert "WRITE_NAME =" not in block
-        assert "WRITE_STORE =" not in block
-        for expanded in ("resolve_table_id(", "check_schema(", "check_sensitive_data(", "check_source_drift(", "check_dq(", "check_guardrail_coverage(", "pipeline_write(", "profile_table("):
-            assert expanded not in block
-
-def test_02_pipeline_keeps_standard_orchestration_at_public_boundaries():
-    """Canonical 02 calls orchestrators without reconstructing their stages."""
-    source = _notebook_source("02_pipeline.ipynb")
-    assert source.count("source = orchestrate_read(") == 3
-    assert source.count("write_result = orchestrate_write(") == 2
-    assert "source = pipeline_read(" not in source
-    assert "write_result = pipeline_write(" not in source
-
-def test_02_pipeline_optional_display_stays_outside_orchestration():
-    """Optional inspection uses the named source collection instead of transient read state."""
-    source = _notebook_source("02_pipeline.ipynb")
-    inspection = _cell_by_id("02_pipeline.ipynb", "read-inspection").source
-    assert 'inspect_source = "orders"' in inspection
-    assert '# display(sources[inspect_source]["dataframe"])' in inspection
-    assert 'display(source[' not in inspection
-    assert source.count('# display(sources[inspect_source]["dataframe"])') == 1
-
-
-def test_02_pipeline_write_inspection_uses_named_write_collection():
-    """Optional write inspection uses the named write collection instead of transient write state."""
-    source = _notebook_source("02_pipeline.ipynb")
-    inspection = _cell_by_id("02_pipeline.ipynb", "write-inspection").source
-    assert 'inspect_write = "curated_orders_lakehouse"' in inspection
-    assert '# display(writes[inspect_write]["schema_result"])' in inspection
-    assert 'display(write_result[' not in inspection
-    assert source.count('# display(writes[inspect_write]["schema_result"])') == 1
-
-def test_02_pipeline_main_path_is_runnable_not_disabled_preview():
-    """Every required workflow cell contains active parseable code."""
-    notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
-    required = {
-        "contracts",
-        "read-setup",
-        "read-1",
-        "read-2",
-        "read-3",
-        "transform",
-        "write-setup",
-        "write-1",
-        "write-2",
-    }
-    by_id = {cell.get("id"): cell for cell in notebook.cells}
-    for cell_id in required:
-        cell = by_id[cell_id]
-        assert cell.cell_type == "code"
-        assert cell.execution_count is None
-        assert not cell.outputs
-        ast.parse(cell.source)
-
-
-# Standard 02 migration surfaces: these protect transplantability without snapshotting the notebook.
-def test_02_pipeline_preserves_migration_surfaces():
-    """Keep configuration and project transformation easy to transplant into a newer template."""
+def test_02_pipeline_preserves_migration_surfaces_and_lineage_handoff():
+    """The standard template keeps stable cells and passes the Read result into the Write."""
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
     cell_ids = [cell.get("id") for cell in notebook.cells]
     required_order = [
@@ -423,33 +299,39 @@ def test_02_pipeline_preserves_migration_surfaces():
         "contracts",
         "read-setup",
         "read-1",
-        "read-2",
-        "read-3",
+        "read-inspection",
         "transform",
         "write-setup",
         "write-1",
-        "write-2",
+        "write-inspection",
     ]
     positions = [cell_ids.index(cell_id) for cell_id in required_order]
     assert positions == sorted(positions)
 
+    read = _cell_by_id("02_pipeline.ipynb", "read-1").source
     transform = _cell_by_id("02_pipeline.ipynb", "transform").source
-    assert "pipeline_read(" not in transform
-    assert "pipeline_write(" not in transform
+    write = _cell_by_id("02_pipeline.ipynb", "write-1").source
+    assert 'sources["source"] = source' in read
+    assert 'sources["source"]["dataframe"]' in transform
+    assert 'sources=[sources["source"]]' in write
+    assert "orchestrate_read(" not in transform
+    assert "orchestrate_write(" not in transform
+    assert "READ_STORE =" not in read
+    assert "WRITE_STORE =" not in write
 
-    for cell_id in ("read-1", "read-2", "read-3"):
-        block = _cell_by_id("02_pipeline.ipynb", cell_id).source
-        assert "orchestrate_read(" in block
-        assert "READ_NAME =" not in block
 
-    for cell_id in ("write-1", "write-2"):
-        block = _cell_by_id("02_pipeline.ipynb", cell_id).source
-        assert "orchestrate_write(" in block
-        assert "WRITE_NAME =" not in block
+def test_02_pipeline_optional_inspection_stays_outside_orchestration():
+    """Optional displays remain commented and separate from Read and Write calls."""
+    read_inspection = _cell_by_id("02_pipeline.ipynb", "read-inspection").source
+    write_inspection = _cell_by_id("02_pipeline.ipynb", "write-inspection").source
+    assert '# display(sources["source"]["dataframe"])' in read_inspection
+    assert '# display(writes["target"]["schema_result"])' in write_inspection
+    assert "display(" not in _cell_by_id("02_pipeline.ipynb", "read-1").source
+    assert "display(" not in _cell_by_id("02_pipeline.ipynb", "write-1").source
 
 
 def test_02_pipeline_scaffold_uses_public_fabricops_boundary():
-    """Prevent the standard pipeline from depending on private FabricOps implementation modules."""
+    """The standard scaffold does not depend on private FabricOps modules."""
     for cell_index, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"):
         tree = _parse_code_cell(NOTEBOOK_DIR / "02_pipeline.ipynb", cell_index, source)
         if tree is None:
@@ -459,3 +341,122 @@ def test_02_pipeline_scaffold_uses_public_fabricops_boundary():
                 assert not node.module.startswith("fabricops_kit."), (
                     f"02_pipeline.ipynb cell {cell_index} imports FabricOps internals: {node.module}"
                 )
+
+
+def test_02a_preserves_the_full_refresh_pipeline():
+    """02A retains the former retail reads, transformation, writes, and inspections."""
+    source = _demo_source("02A_full_refresh_demo.ipynb")
+    assert "# 02A Full Refresh Demo" in source
+    code_source = "\n".join(
+        source for _, source in _code_cells(DEMO_NOTEBOOK_DIR / "02A_full_refresh_demo.ipynb")
+    )
+    assert code_source.count("orchestrate_read(") == 3
+    assert code_source.count('read_mode="full"') == 3
+    assert code_source.count("write_result = orchestrate_write(") == 2
+    assert code_source.count('write_mode="overwrite"') == 2
+    assert 'sources=[sources["orders"], sources["products"], sources["history"]]' in source
+    assert "FROM demo.order_history" in source
+    assert "customer_summary_df" in source
+    assert 'display(writes[inspect_write]["schema_result"])' in source
+
+
+def test_02b_has_ordered_repeat_safe_incremental_append_flow():
+    """02B stages unique movements and always calls both orchestrators in notebook order."""
+    notebook = _load_notebook(DEMO_NOTEBOOK_DIR / "02B_incremental_append_demo.ipynb")
+    source = _demo_source("02B_incremental_append_demo.ipynb")
+    ids = [cell.get("id") for cell in notebook.cells]
+    ordered = [
+        "environment",
+        "imports",
+        "demo-day",
+        "read-csv",
+        "write-bronze",
+        "contracts",
+        "read-1",
+        "transform",
+        "write-1",
+        "inspect",
+    ]
+    assert [ids.index(cell_id) for cell_id in ordered] == sorted(ids.index(cell_id) for cell_id in ordered)
+    assert "DEMO_DAY = 1" in _demo_cell("02B_incremental_append_demo.ipynb", "demo-day").source
+    assert "inventory_day1.csv" in source and "inventory_day2.csv" in source
+    assert '.dropDuplicates(["movement_id"])' in source
+    assert 'table_name="inventory_movements"' in source
+    assert 'mode="overwrite"' in _demo_cell("02B_incremental_append_demo.ipynb", "write-bronze").source
+    assert 'read_mode="incremental"' in source
+    assert 'read_parameters={"watermark_column": "modified_datetime"}' in source
+    assert 'table_name="inventory_movements_incremental"' in source
+    assert 'write_mode="append"' in source
+    assert 'sources=[sources["inventory_movements"]]' in source
+    assert "should_process" not in source
+
+
+def test_02c_has_ordered_full_read_and_two_scd_writes():
+    """02C overwrites one Bronze snapshot and sends one governed Read to SCD1 and SCD2."""
+    notebook = _load_notebook(DEMO_NOTEBOOK_DIR / "02C_scd_demo.ipynb")
+    source = _demo_source("02C_scd_demo.ipynb")
+    ids = [cell.get("id") for cell in notebook.cells]
+    ordered = [
+        "environment",
+        "imports",
+        "demo-day",
+        "read-csv",
+        "write-bronze",
+        "contracts",
+        "read-1",
+        "transform",
+        "sequence-check",
+        "write-1",
+        "write-2",
+        "inspect",
+    ]
+    assert [ids.index(cell_id) for cell_id in ordered] == sorted(ids.index(cell_id) for cell_id in ordered)
+    assert "DEMO_DAY = 1" in source
+    assert "products_day{DEMO_DAY}.csv" in source
+    assert 'table_name="product_master_updates"' in source
+    assert 'mode="overwrite"' in _demo_cell("02C_scd_demo.ipynb", "write-bronze").source
+    assert source.count("orchestrate_read(") == 1
+    assert 'read_mode="full"' in source
+    assert 'write_mode="scd1"' in source
+    assert 'write_mode="scd2"' in source
+    assert source.count('sources=[sources["product_master"]]') == 2
+    assert '"key_columns": ["product_id"]' in source
+    assert '"effective_column": "modified_datetime"' in source
+    assert '"tracked_columns": ["product_category", "list_price"]' in source
+    assert "allowed_existing_versions = {2: {8, 9}, 3: {9, 10}}[DEMO_DAY]" in source
+    assert "| 1 | 8 | 8 |" in source
+    assert "| 2 | 8 | 9 |" in source
+    assert "| 3 | 8 | 10 |" in source
+
+
+def test_guided_demo_pages_match_the_notebook_split():
+    """Step 2 is reusable guidance and Steps 2A-2C point to ready-to-run assets."""
+    step_2 = (ROOT / "docs/guided-demo/02-build-and-run-etl.md").read_text(encoding="utf-8")
+    step_2a = (ROOT / "docs/guided-demo/02A-full-refresh-demo.md").read_text(encoding="utf-8")
+    step_2b = (ROOT / "docs/guided-demo/02B-build-and-run-incremental-append-etl.md").read_text(encoding="utf-8")
+    step_2c = (ROOT / "docs/guided-demo/02C-build-and-run-scd-etl.md").read_text(encoding="utf-8")
+    step_3 = (ROOT / "docs/guided-demo/03-author-and-freeze-data-contract.md").read_text(encoding="utf-8")
+
+    assert "# Step 2. Build a Pipeline" in step_2
+    assert "02_pipeline.ipynb" in step_2
+    assert "orders" not in step_2.casefold()
+    assert "# Step 2A. Run the Full Refresh Demo" in step_2a
+    assert "02A_full_refresh_demo.ipynb" in step_2a
+    assert "02B_incremental_append_demo.ipynb" in step_2b
+    assert "inventory_day1.csv" in step_2b and "inventory_day2.csv" in step_2b
+    assert "02C_scd_demo.ipynb" in step_2c
+    assert all(f"products_day{day}.csv" in step_2c for day in (1, 2, 3))
+    assert "02A-full-refresh-demo.md" in step_3
+
+
+def test_guided_demo_preserves_initial_unselected_flow_and_optional_target_validation():
+    """The executable 02A walkthrough keeps the initial unselected run and later target validation."""
+    step_2a = (ROOT / "docs/guided-demo/02A-full-refresh-demo.md").read_text(encoding="utf-8")
+    step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
+
+    assert "there is no Data Contract yet" in step_2a
+    assert "leave the selection unchanged" in step_2a
+    assert "Contract-backed checks will return as skipped" in step_2a
+    assert "leave every source table in **Enforce** mode" in step_4
+    assert "choose **Validate** only for the target" in step_4
+    assert "Validate returns `published=False` and `validation_passed=True`" in step_4

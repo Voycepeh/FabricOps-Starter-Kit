@@ -6,6 +6,10 @@ These fixtures support one connected retail story across setup, Engineering, pro
 
 | File | Purpose |
 | --- | --- |
+| `02A_full_refresh_demo.ipynb` | Ready-to-run Full → Overwrite pipeline using the canonical retail sources. |
+| `02B_incremental_append_demo.ipynb` | Three-run Incremental → Append inventory demonstration. |
+| `02C_scd_demo.ipynb` | Three-run Product Master SCD1 and SCD2 demonstration. |
+| `00C_demo_setup.ipynb` | Demonstrates FabricOps file I/O and seeds the original managed sources. |
 | `orders.csv` | Canonical valid Orders baseline used by 0C to seed `bronze.demo.orders` and by the main Guided Demo. |
 | `products.csv` | Product reference data used by 0C to seed `bronze.demo.products`. |
 | `order_history.csv` | Historical transactions used by 0C to seed `gold.demo.order_history` and demonstrate Warehouse reads. |
@@ -58,7 +62,7 @@ The normal baseline remains valid so the first Engineering and contract-validati
 Every retained fixture has an explicit Guided Demo owner:
 
 - 0C owns the canonical file-format reads plus the initial Lakehouse/Warehouse seed tables.
-- 2B will own incremental inventory ingestion and 2C will own full-snapshot SCD ingestion using the new connected fixtures.
+- 2A owns the Full → Overwrite retail walkthrough, 2B owns incremental inventory ingestion, and 2C owns full-snapshot SCD ingestion.
 - later Guardrail validation creates a temporary dirty transformed DataFrame in the notebook session and never modifies the canonical fixture.
 
 Add new fixtures only when their owning demo/test scenario is documented alongside them.

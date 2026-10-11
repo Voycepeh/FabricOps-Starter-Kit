@@ -38,9 +38,9 @@ Activation tells FabricOps which immutable contract version Production must reso
 
 ## 4. Promote the validated pipeline
 
-`00_env_config` owns the environment-specific resolution. `02_pipeline` owns the pipeline definition.
+`00_env_config` owns the environment-specific resolution. Your tested `02A_full_refresh_demo` copy owns this demo pipeline definition.
 
-That separation means Engineering promotes the same `02_pipeline` from Development to Production while `00_env_config` maps logical Fabric Stores such as Bronze, Silver, Gold, and Metadata to their environment-specific Fabric locations.
+That separation means Engineering promotes the same tested 02A demo notebook from Development to Production while `00_env_config` maps logical Fabric Stores such as Bronze, Silver, Gold, and Metadata to their environment-specific Fabric locations.
 
 ```mermaid
 flowchart LR
@@ -52,9 +52,9 @@ flowchart LR
 
 In the Fabric Deployment Pipeline, select the tested notebook or engineering artifact from Development and deploy it to the Production stage.
 
-FabricOps does not require one specific deployment mechanism. The important part is that the same validated `02_pipeline` reaches the next environment unchanged. You can do that manually, including downloading and importing the notebook, or through your organisation's normal CI/CD process.
+FabricOps does not require one specific deployment mechanism. The important part is that the same validated 02A demo pipeline reaches the next environment unchanged. You can do that manually, including downloading and importing the notebook, or through your organisation's normal CI/CD process.
 
-A Fabric-native option is **Deployment pipelines**. Set up a deployment pipeline, assign the Development and Production workspaces to its stages, then use it to promote `02_pipeline` between them. See [Microsoft Learn: Get started with deployment pipelines](https://learn.microsoft.com/en-us/fabric/cicd/deployment-pipelines/get-started-with-deployment-pipelines) for the current setup instructions.
+A Fabric-native option is **Deployment pipelines**. Set up a deployment pipeline, assign the Development and Production workspaces to its stages, then use it to promote the tested 02A demo pipeline between them. See [Microsoft Learn: Get started with deployment pipelines](https://learn.microsoft.com/en-us/fabric/cicd/deployment-pipelines/get-started-with-deployment-pipelines) for the current setup instructions.
 
 ![Select the pipeline artifact for Production](../assets/05/DeploymentPipeline.png)
 

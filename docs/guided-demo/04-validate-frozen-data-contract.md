@@ -1,12 +1,12 @@
 # Step 4. Validate the frozen Data Contract
 
-**Use the same `02_pipeline` to prove the complete governed path: first every Guardrail passes, then controlled source and target mutations exercise Freshness, Schema, Source Drift, Sensitive Data, every DQ behavior, and Guardrail Coverage without publishing a validation target.**
+**Use the same `02A_full_refresh_demo` notebook to prove the complete governed path: first every Guardrail passes, then controlled source and target mutations exercise Freshness, Schema, Source Drift, Sensitive Data, every DQ behavior, and Guardrail Coverage without publishing a validation target.**
 
 The selector defaults every table to **Enforce**. For this step, put only `curated_orders` into **Validate** mode and select the exact frozen version from Step 3.
 
 ## 1. Select Validate for `curated_orders`
 
-In the Data Contract selector at the top of `02_pipeline`:
+In the Data Contract selector at the top of `02A_full_refresh_demo`:
 
 1. leave every source table in **Enforce** mode and select its exact frozen Step 3 contract,
 2. choose **Validate** only for the target, `curated_orders`,
@@ -157,7 +157,7 @@ write_result = orchestrate_write(
 )
 ```
 
-Do not change the reusable `02_pipeline` template itself.
+Do not change the reusable `02_pipeline` template itself; make validation mutations only in your imported 02A demo copy.
 
 ## 5. Run the dirty target with every DQ rule on Warn
 
