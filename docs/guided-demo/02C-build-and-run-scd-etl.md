@@ -2,7 +2,7 @@
 
 **Run three Product Master snapshots in Microsoft Fabric and compare a current-state SCD1 target with a history-preserving SCD2 target.**
 
-Each notebook run replaces the Bronze source with one complete eight-row snapshot, then publishes that snapshot to both Silver targets. Run the days in order so you can watch the two load strategies respond to the same business changes.
+00C stages the Day 1 Bronze snapshot. Days 2 and 3 replace the Bronze source with a new eight-row snapshot, then the unchanged orchestrated pipeline publishes to both Silver targets. Run the days in order so you can watch the two load strategies respond to the same business changes.
 
 ## Before you begin
 
@@ -10,7 +10,7 @@ Each notebook run replaces the Bronze source with one complete eight-row snapsho
 2. Keep `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
 3. Make sure you have already uploaded the demo files required for this demo in the previous step [Step 00B](00B-configure-environment-and-load-assets.md).
 
- The notebook reads `Demo/products_day1.csv`, `Demo/products_day2.csv`, and `Demo/products_day3.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `scd_product_master` subfolder.
+ Run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) first for Day 1. For Days 2 and 3, the notebook reads `Demo/products_day2.csv` and `Demo/products_day3.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `scd_product_master` subfolder.
 ![File upload](../assets/2c/File%20Upload.png)
 
 
@@ -60,9 +60,9 @@ Run the cell. It validates that the selected day is supported.
 
 ### 3. Stage the Day 1 snapshot
 
-Run both cells under **2. Read the selected snapshot and overwrite Bronze**.
+Run the short cell under **2. Advance the Bronze product snapshot**.
 
-The notebook reads `products_day1.csv`, checks that it contains exactly eight rows, and overwrites Bronze `demo.product_master_updates`.
+00C has already loaded Day 1 into Bronze `demo.product_master_updates`. The scenario cell does nothing on Day 1; for Days 2 and 3 it overwrites Bronze with the selected eight-row snapshot.
 
 The cell should complete without an error. Bronze now contains the complete Day 1 Product Master snapshot.
 

@@ -10,14 +10,14 @@ This demo uses a watermark on `modified_datetime` and an Append target. Run the 
 2. Keep `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
 3. Make sure you have already uploaded the demo files required for this demo in the previous step [Step 00B](00B-configure-environment-and-load-assets.md).
 
- The notebook reads `Demo/inventory_day1.csv` and `Demo/inventory_day2.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `incremental_inventory` subfolder.
+ Run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) first to stage Day 1. For Day 2, the notebook reads `Demo/inventory_day2.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `incremental_inventory` subfolder.
 ![File upload](../assets/2b/File%20Upload.png)
 
 ## What you will do <img class="fabricops-step-mascot" src="../../assets/robot-scanning.png" alt="" loading="lazy">
 
 | Run | What changes | Expected Silver rows |
 | --- | --- | ---: |
-| Day 1 | Stage eight movements and bootstrap the Incremental Read. | 8 |
+| Day 1 | Use the eight movements staged by 00C and bootstrap the Incremental Read. | 8 |
 | Day 2 | Add four movements and append only the newly eligible rows. | 12 |
 | Day 3 | Add no source rows and observe an empty incremental scope. | 12 |
 
@@ -39,7 +39,6 @@ Run the two cells under **0. Environment**:
 Then run the import cell immediately below it. 
 
 ```python
-from pyspark.errors import AnalysisException
 from pyspark.sql import functions as F
 
 from fabricops_kit import (
@@ -70,9 +69,9 @@ Run the cell. It validates that the selected day is supported.
 
 ### 3. Stage the Day 1 source
 
-Run both cells under **2. Read the CSV batch and stage Bronze**.
+Run the short cell under **2. Advance the Bronze source (Day 2 only)**. Day 1 needs no additional staging.
 
-The notebook reads `inventory_day1.csv`, removes duplicate `movement_id` values, and overwrites Bronze `demo.inventory_movements`.
+00C has already loaded the Day 1 Bronze `demo.inventory_movements` table. The scenario cell does nothing on Day 1. On Day 2, it adds the new inventory movements to Bronze without duplicating existing `movement_id` values.
 
 You should see:
 

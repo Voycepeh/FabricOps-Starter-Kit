@@ -1,5 +1,7 @@
 # 0C. Prepare the demo data with FabricOps I/O
 
+**Demo setup:** After 00B, run this notebook to prepare the Day 1 Bronze sources for 02B (`demo.inventory_movements`) and 02C (`demo.product_master_updates`), in addition to the existing 02A sources. Day 2 and Day 3 changes are introduced by the respective demo notebooks. Do not rerun 00C after advancing either scenario; it overwrites the Day 1 Bronze sources but does not reset Silver targets or governed incremental metadata.
+
 **Run a notebook that demonstrates the FabricOps I/O helpers and prepares the original retail tables required by the Step 2A Full Refresh demo.**
 
 ## 1. Import the setup notebook
