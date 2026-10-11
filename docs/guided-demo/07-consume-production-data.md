@@ -6,9 +6,17 @@ Step 6 already completed the engineering handoff: the Production pipeline ran, g
 
 Step 7 adds a consumer and analytics-engineering interface over that foundation.
 
-## Review the governed context <img class="fabricops-step-mascot" src="../../assets/robot-pointing.png" alt="" loading="lazy">
+## Review the governed context
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-pointing.png" alt="" loading="lazy">
+  <div markdown="1">
 
 The consumer should be able to select approved Production table(s) and see the useful context FabricOps already captured: purpose, grain/key evidence, column meaning, business rules, Data Quality expectations, sensitivity/classification decisions, lineage, freshness, access information, and known limitations.
+
+  </div>
+</div>
+
 
 This is derived from authoritative FabricOps metadata rather than maintained again in the consumption notebook.
 
