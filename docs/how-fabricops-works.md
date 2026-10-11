@@ -275,8 +275,6 @@ Warehouse and Lakehouse SQL analytics endpoints expose [Query Insights](https://
 
     Direct Spark access to Lakehouse Delta tables bypasses the Warehouse SQL endpoint. Power BI Direct Lake and other non-SQL access paths may also bypass Warehouse query history. Therefore, routing consumers through a Warehouse improves the opportunity for SQL activity monitoring **only when alternative access paths are appropriately restricted**.
 
-**Current capability versus future observability:** FabricOps can govern the table and scan effective permissions today. Collecting Query Insights, resolving query references to FabricOps `table_id`, and reporting per-table access frequency would be a separate future capability, not an existing FabricOps audit feature.
-
 </div>
 
 <div class="fabricops-section-block" markdown="1">
