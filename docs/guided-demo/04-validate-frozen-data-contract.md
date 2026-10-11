@@ -8,7 +8,7 @@ The selector defaults every table to **Enforce**. For this step, put only `curat
 
 Complete [Step 3](03-author-and-freeze-data-contract.md) and select the frozen contract versions.
 
-## 1. Select Validate for `curated_orders`
+## Select Validate for `curated_orders`
 
 <div class="fabricops-mascot-callout" markdown="1">
   <img src="../../assets/robot-masking.png" alt="" loading="lazy">
@@ -28,7 +28,7 @@ All participating tables need selected contracts because Guardrail Coverage chec
 
 The frozen-version picker appears only for a target in Validate mode. There is no separate contract dictionary to edit.
 
-## 2. Prove the happy path first
+## Prove the happy path first
 
 Run the normal visible **Read → Transform → Write** sequence without changing `transformed_df`.
 
@@ -47,7 +47,7 @@ Confirm:
 
 This proves the contract describes the canonical target before we deliberately break it.
 
-## 3. Exercise the source-side Guardrails
+## Exercise the source-side Guardrails
 
 Source Guardrails are evaluated from the real source read and Source Observation metadata, so changing only `transformed_df` cannot test them. Use a controlled mutation of the Development `orders` table, then restore it from the canonical fixture.
 
@@ -90,7 +90,7 @@ Keep these rules on Warn for this run so the pipeline can reach the later target
 
 After restoration, rerun the Orders Read block so the notebook is again holding the canonical source DataFrame.
 
-## 4. Build a deterministic dirty target
+## Build a deterministic dirty target
 
 Rerun the notebook through the normal Transform cell. Immediately after that cell, add this temporary validation cell:
 
@@ -171,7 +171,7 @@ write_result = orchestrate_write(
 
 Do not change the reusable `02_pipeline` template itself; make validation mutations only in your imported 02A demo copy.
 
-## 5. Run the dirty target with every DQ rule on Warn
+## Run the dirty target with every DQ rule on Warn
 
 Run the `curated_orders` Write block again.
 
@@ -208,7 +208,7 @@ Dirty target + Warn
 
 Inspect the rule-level checks rather than relying only on the aggregate DQ status. Each row in the matrix should have a corresponding failed/warning rule result.
 
-## 6. Prove Sensitive Data treatment
+## Prove Sensitive Data treatment
 
 Inspect `write_result["sensitive_result"]` from the target validation. Confirm the configured `customer_id` treatment was evaluated and that the prepared DataFrame contains the treated representation.
 
@@ -216,7 +216,7 @@ Sensitive Data is intentionally different from a validation rule: valid sensitiv
 
 Also confirm the dirty target's `unexpected_target_column` produces target **Schema** warning evidence. This is separate from the source Schema exercise above and proves the Write boundary validates the DataFrame before publication.
 
-## 7. Try Block on failure
+## Try Block on failure
 
 The walkthrough uses Warn first because a blocking rule can stop orchestration before later stages are visible.
 
@@ -233,7 +233,7 @@ The selected violation should now stop the orchestration at that Guardrail stage
 
 Do not edit a frozen version in place. Refine the draft, freeze a new immutable version, and select that version for validation.
 
-## 8. Prove Guardrail Coverage
+## Prove Guardrail Coverage
 
 [Guardrail Coverage](../api/reference/check_guardrail_coverage.md) is not another Warn/Block rule. It is the pre-publication readiness gate that verifies every selected participant has an applicable contract and that every applicable Guardrail produced current-activity evidence.
 
@@ -243,7 +243,7 @@ For the negative exercise, temporarily deselect one participating source contrac
 
 This gate intentionally blocks rather than warns: publishing without the required Guardrail evidence would defeat the coverage check.
 
-## 9. Restore the happy path before activation
+## Restore the happy path before activation
 
 Remove the temporary dirty-target cell or switch the Write block back to `transformed_df`, then rerun the normal target validation using the contract version you intend to activate.
 
