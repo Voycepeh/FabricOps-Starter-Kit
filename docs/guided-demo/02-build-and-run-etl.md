@@ -35,7 +35,6 @@ Start by understanding the shape of the notebook before changing its code.
 
 ### 1. Get familiar with the notebook
 
-**Start by understanding the shape of the notebook before changing its code.**
 
 The notebook follows one visible lifecycle:
 
