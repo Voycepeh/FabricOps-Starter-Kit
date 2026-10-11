@@ -6,9 +6,28 @@ Step 6 already completed the engineering handoff: the Production pipeline ran, g
 
 Step 7 adds a consumer and analytics-engineering interface over that foundation.
 
-## Review the governed context <img class="fabricops-step-mascot" src="../../assets/robot-pointing.png" alt="" loading="lazy">
+## Before you begin
+
+- Run on a [Fabric capacity that supports Data Agents](https://learn.microsoft.com/fabric/data-science/data-agent-concept).
+- Give the caller access to the governed Production Lakehouse or Warehouse and permission to create and configure items in the target workspace.
+- Configure both physical source identifiers through `00_env_config`; the flow does not infer a default Lakehouse.
+- Activate one frozen Production Data Contract linked to an exact Data Agreement version.
+- Use the current [Fabric Data Agent REST APIs](https://learn.microsoft.com/rest/api/fabric/data-agent/items) for item creation and the documented staging datasource and instruction resources. These APIs may remain Preview; review Microsoft's current limitations before production adoption.
+
+FabricOps acquires the Fabric API token from `notebookutils`; do not paste or persist bearer tokens. Permission failures retain the underlying Fabric HTTP status and response details.
+
+
+## Review the governed context
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-pointing.png" alt="" loading="lazy">
+  <div markdown="1">
 
 The consumer should be able to select approved Production table(s) and see the useful context FabricOps already captured: purpose, grain/key evidence, column meaning, business rules, Data Quality expectations, sensitivity/classification decisions, lineage, freshness, access information, and known limitations.
+
+  </div>
+</div>
+
 
 This is derived from authoritative FabricOps metadata rather than maintained again in the consumption notebook.
 
@@ -53,16 +72,6 @@ Test and consume
 
     The single-table API is Preview. Multi-table agents, relationship authoring, product registration and overlap detection, evaluation, and automatic publication remain deliberately out of scope.
 
-## Prerequisites
-
-- Run on a [Fabric capacity that supports Data Agents](https://learn.microsoft.com/fabric/data-science/data-agent-concept).
-- Give the caller access to the governed Production Lakehouse or Warehouse and permission to create and configure items in the target workspace.
-- Configure both physical source identifiers through `00_env_config`; the flow does not infer a default Lakehouse.
-- Activate one frozen Production Data Contract linked to an exact Data Agreement version.
-- Use the current [Fabric Data Agent REST APIs](https://learn.microsoft.com/rest/api/fabric/data-agent/items) for item creation and the documented staging datasource and instruction resources. These APIs may remain Preview; review Microsoft's current limitations before production adoption.
-
-FabricOps acquires the Fabric API token from `notebookutils`; do not paste or persist bearer tokens. Permission failures retain the underlying Fabric HTTP status and response details.
-
 ## Multi-table extension
 
 The same handoff later supports multiple governed tables. An analytics engineer selects tables, confirms explicit relationships using deterministic evidence from FabricOps, and reuses those relationships as consumption context.
@@ -76,5 +85,9 @@ A Data Agent is the first automated consumption accelerator, not the definition 
 Consumers can continue using notebooks, SQL, Lakehouses, Warehouses, and other native Fabric interfaces through the access established in Step 6. Power BI, reporting, and future consumption products can reuse the same governed context as parallel paths.
 
 The maintainer-facing product direction is recorded in the [FabricOps product definition](../maintainer/product-definition.md).
+
+## Expected result
+
+Approved Production data can be consumed through the documented Fabric interfaces, with FabricOps governance context available for downstream use.
 
 **Complete:** return to the [Guided Demo overview](../guided-demo.md).

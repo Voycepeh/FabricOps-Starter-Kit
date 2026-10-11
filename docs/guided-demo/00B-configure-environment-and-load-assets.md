@@ -4,7 +4,11 @@
 
 This is the final setup step before the executable demo-data preparation in 0C.
 
-## 1. Download and import the notebooks
+## Before you begin
+
+Complete [Step 0A](00A-prepare-fabric-artifacts.md) before importing and configuring the demo assets.
+
+## Download and import the notebooks
 
 Download the current notebook templates from the FabricOps repository:
 
@@ -41,7 +45,7 @@ The Engineering Development workspace contains `bronze`, `silver`, `gold`, its F
 
 The Consumer workspace should contain `00_env_config` and `99_explore`. It does not need its own Fabric store for this Guided Demo.
 
-## 2. Open all the notebooks and set the Fabric Environment
+## Open all the notebooks and set the Fabric Environment
 
 Open each imported notebook and make sure it uses the Fabric Environment created in 0A that contains the FabricOps custom library.
 
@@ -59,9 +63,17 @@ If you are a member of several Fabric workspaces, the Environment picker may sho
 
 Use the same FabricOps wheel version across the workspace-specific Environments so the notebooks run against a consistent package version.
 
-## 3. Configure `00_env_config` <img class="fabricops-step-mascot" src="../../assets/robot-writing.png" alt="" loading="lazy">
+## Configure `00_env_config`
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-writing.png" alt="" loading="lazy">
+  <div markdown="1">
 
 Open `00_env_config` and replace the example Fabric IDs with the IDs for the Fabric items you created in 0A.
+
+  </div>
+</div>
+
 
 The easiest way to get them is directly from the Fabric URL in your browser.
 
@@ -95,7 +107,7 @@ You can rename the objects to whatever make sense, also for each environment you
 
 ![Path config](../assets/00B/00_config_paths.png)
 
-## 4. Setup the metadata tables
+## Setup the metadata tables
 
 In the Governance workspace, run the metadata setup block in `00_env_config`.
 
@@ -105,7 +117,7 @@ This prepares the metadata Lakehouse before `01_governance` starts creating Data
 
 ![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
 
-## 5. Download the demo data
+## Download the demo data
 
 Download the supplied demo files from: [FabricOps DemoData](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData)
 
@@ -119,7 +131,7 @@ Download the **entire DemoData folder**. Every retained file has an explicit Gui
 | `inventory_day1.csv`, `inventory_day2.csv` | Step 2B stages the inventory batches; Day 3 intentionally has no file. |
 | `products_day1.csv`, `products_day2.csv`, `products_day3.csv` | Step 2C overwrites Bronze with each complete Product Master snapshot. |
 
-## 6. Upload the demo data
+## Upload the demo data
 
 1. Open the **Engineering Development** workspace.
 2. Open the `bronze` Lakehouse created in 0A.
@@ -131,5 +143,9 @@ Download the **entire DemoData folder**. Every retained file has an explicit Gui
 At this point, stop. Do not create the managed source tables manually in 0B.
 
 The next setup notebook demonstrates the FabricOps I/O helpers and prepares the original managed tables used by the Step 2A Full Refresh demo. Steps 2B and 2C stage their own source tables from the uploaded files.
+
+## Expected result
+
+The demo notebooks, Fabric Environment configuration, metadata tables, and demo files are ready for the next preparation step.
 
 **Next:** [0C. Prepare the demo data with FabricOps I/O](00C-prepare-demo-data-with-fabricops-io.md)

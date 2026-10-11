@@ -18,7 +18,16 @@ Day 1 source preparation is handled by [Step 00C](00C-prepare-demo-data-with-fab
 | Products | Bronze Lakehouse · `demo.products` |
 | Order History | Gold Warehouse · `demo.order_history` |
 
-## What you will do <img class="fabricops-step-mascot" src="../../assets/robot-carrying.png" alt="" loading="lazy">
+## What you will do
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-carrying.png" alt="" loading="lazy">
+  <div markdown="1">
+
+Load the shared environment, read the three sources, transform the data, and publish two targets.
+
+  </div>
+</div>
 
 1. Load the shared environment.
 2. Run the Data Contract selector.
@@ -29,7 +38,7 @@ Day 1 source preparation is handled by [Step 00C](00C-prepare-demo-data-with-fab
 
 ## Run the demo in Fabric
 
-### 1. Run the Environment block
+### Run the Environment block
 
 Run the two cells under **0. Environment**:
 
@@ -52,7 +61,7 @@ widget_select_data_contract
 
 ![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
 
-### 2. Run the Data Contract block
+### Run the Data Contract block
 
 Run the Data Contract cell:
 
@@ -64,7 +73,7 @@ For the initial Guided Demo run, there is no Data Contract yet, so leave the sel
 
 ![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
-### **Run the source results dictionary cell:**
+### Initialize the source results dictionary
 
 ```python
 sources = {}
@@ -72,7 +81,7 @@ sources = {}
 
 This creates an empty dictionary for the three governed Read results. Keeping each complete result by name lets the Transform block use the source DataFrames and lets the Write blocks pass their governed source identities into lineage and source-aware checks.
 
-### 3. Run READ 1 — Orders
+### Run READ 1 — Orders
 
 The block reads the complete Bronze `demo.orders` table and saves the result as `sources["orders"]`.
 
@@ -80,7 +89,7 @@ You should see the five Read stages complete. With no selected Data Contract, co
 
 ![Orders Full Read output](../assets/02/Read_Block_Output.png)
 
-### 4. Run READ 2 — Products
+### Run READ 2 — Products
 
 Run **READ 2 — Products**.
 
@@ -90,7 +99,7 @@ You should see the same Read-stage summary for Products.
 
 ![Products Full Read output](../assets/02/Read_Block_Output_2.png)
 
-### 5. Run READ 3 — Order History
+### Run READ 3 — Order History
 
 Run **READ 3 — Order History**.
 
@@ -100,7 +109,7 @@ You should see the Warehouse Read complete and the governed Read-stage summary a
 
 ![Order History Full Read output](../assets/02/Read_Block_Output_3.png)
 
-### 6. Run the Transform block
+### Run the Transform block
 
 Run the cell under **3. Transform**.
 
@@ -131,7 +140,7 @@ You should see:
 
   ![Customer-level aggregated output](../assets/02/Transform_Output_2.png)
 
-### **Run the write results dictionary cell:**
+### Initialize the write results dictionary
 
 ```python
 writes = {}
@@ -139,7 +148,7 @@ writes = {}
 
 This creates an empty dictionary for the governed Write results. Keeping each complete result by target name makes the publication status, orchestration stages, Guardrail results, and, when published, target profile available for inspection after the Write.
 
-### 7. Run WRITE 1 — Lakehouse Curated Orders
+### Run WRITE 1 — Lakehouse Curated Orders
 
 The block overwrites Silver Lakehouse `demo.curated_orders` with `transformed_df` and saves the result as `writes["curated_orders_lakehouse"]`.
 
@@ -147,7 +156,7 @@ You should see the Write stages complete and `published=True`.
 
 ![Curated Orders Write output](../assets/02/Write_Block_Output.png)
 
-### 8. Run WRITE 2 — Warehouse Customer Summary
+### Run WRITE 2 — Warehouse Customer Summary
 
 Run **WRITE 2 — Warehouse Customer Summary**.
 
@@ -161,7 +170,7 @@ You should see the Write stages complete and `published=True`.
 
     WRITE 1 and WRITE 2 are not one atomic transaction. If WRITE 1 succeeds and WRITE 2 fails, `demo.curated_orders` remains published. Fix the error and rerun the notebook; both targets use Overwrite, so a successful rerun replaces their contents.
 
-### 9. Inspect the saved results
+### Inspect the saved results
 
 Open the target tables in Fabric or use the notebook's optional inspection cell.
 

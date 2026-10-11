@@ -4,7 +4,11 @@
 
 **Run a notebook that demonstrates the FabricOps I/O helpers and prepares the original retail tables required by the Step 2A Full Refresh demo.**
 
-## 1. Import the setup notebook
+## Before you begin
+
+Complete [Step 0B](00B-configure-environment-and-load-assets.md) before preparing the demo data.
+
+## Import the setup notebook
 
 1. Download [`00C_demo_setup.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/DemoData/00C_demo_setup.ipynb) and import it into Fabric Engineering Workspace (Dev).
 
@@ -16,7 +20,7 @@
 4. Run the first two steps in the notebook.
 ![Demo setup](../assets/00C/Demo%20Set%20Up.png)
 
-## 2. Read the same Orders dataset from four file formats
+## Read the same Orders dataset from four file formats
 
 Read the same canonical Orders dataset using CSV, JSON, Parquet, and Excel.
 
@@ -86,23 +90,31 @@ The expected output confirms that all four file formats resolve to equivalent da
 ✓ 1:1:1:1 data match
 ```
 
-## 3. Read and write the demo data <img class="fabricops-step-mascot" src="../../assets/robot-carrying.png" alt="" loading="lazy">
+## Read and write the demo data
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-carrying.png" alt="" loading="lazy">
+  <div markdown="1">
 
 Read the remaining demo sources and write the managed Lakehouse and Warehouse tables used by the later pipeline walkthrough.
 
-### Orders (we will write the dataframe we ingested earlier into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
+  </div>
+</div>
+
+
+### Orders
 
 ![Orders demo](../assets/00C/Orders_Demo.png)
 
-### Products (we will ingest the product data and write into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
+### Products
 
 ![Products demo](../assets/00C/Products_Demo.png)
 
-### Create the Warehouse schema (for warehouses you will need to create schema via sql prior to writing to it)
+### Create the Warehouse schema
 
 ![Create Warehouse schema](../assets/00C/Create_Schema_Warehouse.png)
 
-### Order history (we will ingest the order history data and write into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
+### Order history
 ![Orders history demo](../assets/00C/Orders_History_Demo.png)
 
 !!! tip "FabricOps provides two Warehouse read helpers"

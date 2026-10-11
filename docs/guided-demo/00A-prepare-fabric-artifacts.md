@@ -4,15 +4,27 @@
 
 This is foundation setup, not one of the seven FabricOps lifecycle steps.
 
-## 1. Open Microsoft Fabric
+## Before you begin
+
+You need access to Microsoft Fabric capacity to complete this walkthrough.
+
+## Open Microsoft Fabric
 
 Open [Microsoft Fabric](https://app.fabric.microsoft.com/) and sign in with your Microsoft account.
 
 You need access to Microsoft Fabric capacity to complete the walkthrough. If you do not already have access through your organisation, you can use a Fabric trial where available.
 
-## 2. Create the workspaces <img class="fabricops-step-mascot" src="../../assets/robot-pointing.png" alt="" loading="lazy">
+## Create the workspaces
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-pointing.png" alt="" loading="lazy">
+  <div markdown="1">
 
 Create these workspaces for the walkthrough:
+
+  </div>
+</div>
+
 
 | Workspace | Required? | Used for |
 | --- | --- | --- |
@@ -25,7 +37,7 @@ For Steps 1–5, only **Governance** and **Engineering Development** are require
 
 ![Fabric workspaces for the Guided Demo](../assets/00A/Workspace.png)
 
-## 3. Create the Governance metadata Lakehouse
+## Create the Governance metadata Lakehouse
 
 Open the **Governance** workspace and create a Lakehouse named:
 
@@ -37,7 +49,7 @@ Use this exact name and casing for the Guided Demo. FabricOps uses this Lakehous
 
 ![Create the Governance metadata Lakehouse](../assets/00A/Create_Lakehouse.png)
 
-## 4. Create the Engineering stores
+## Create the Engineering stores
 
 Open **Engineering Development** and create:
 
@@ -53,7 +65,7 @@ If you created **Engineering Production**, repeat the same setup there. Producti
 
 The **Consumer** workspace does not need its own Fabric store for this Guided Demo. It will consume approved Production data in Step 7.
 
-## 5. Get FabricOps
+## Get FabricOps
 
 The easiest option is to download the packaged FabricOps wheel from the [FabricOps Releases page](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases).
 
@@ -67,7 +79,7 @@ uv build
 
 The built wheel will be available under `dist/`.
 
-## 6. Create Fabric Environments and install FabricOps
+## Create Fabric Environments and install FabricOps
 
 A Fabric Environment belongs to a **workspace**. An Environment created in Governance is not automatically available in Engineering Development, Engineering Production, or Consumer.
 

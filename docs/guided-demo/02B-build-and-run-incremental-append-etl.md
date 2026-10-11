@@ -13,7 +13,16 @@ This demo uses a watermark on `modified_datetime` and an Append target. Run the 
  Run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) first to stage Day 1. For Day 2, the notebook reads `Demo/inventory_day2.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `incremental_inventory` subfolder.
 ![File upload](../assets/2b/File%20Upload.png)
 
-## What you will do <img class="fabricops-step-mascot" src="../../assets/robot-scanning.png" alt="" loading="lazy">
+## What you will do
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-scanning.png" alt="" loading="lazy">
+  <div markdown="1">
+
+Compare the Day 1 baseline with the incremental changes in subsequent runs.
+
+  </div>
+</div>
 
 | Run | What changes | Expected Silver rows |
 | --- | --- | ---: |
@@ -29,7 +38,7 @@ The notebook uses these governed tables throughout:
 | Target | Silver Lakehouse · `demo.inventory_movements_incremental` | Append |
 
 
-### 1. Run the Environment block
+### Run the Environment block
 
 Run the two cells under **0. Environment**:
 
@@ -67,7 +76,7 @@ DEMO_DAY = 1
 
 Run the cell. It validates that the selected day is supported.
 
-### 3. Stage the Day 1 source
+### Stage the Day 1 source
 
 Run the short cell under **2. Advance the Bronze source (Day 2 only)**. Day 1 needs no additional staging.
 
@@ -77,7 +86,7 @@ You should see:
 
 ![Day 1 Bronze staging output showing 8 rows](../assets/2b/Day%201%20Bronze%20staging%20output%20showing%208%20rows.png)
 
-### 4. Run the Data Contract block
+### Run the Data Contract block
 
 Run the Data Contract cell:
 
@@ -91,7 +100,7 @@ For the initial Guided Demo run, there is no Data Contract yet, so leave the sel
 
 ![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
-### 5. Run the Governed Incremental Read
+### Run the Governed Incremental Read
 
 First, run the source results dictionary cell:
 
@@ -109,7 +118,7 @@ On Day 1, there is no earlier successful watermark for this source-to-target rel
 
 *Image coming soon: Day 1 Incremental Read output and bootstrap scope.*
 
-### 6. Run the PySpark Transform
+### Run the PySpark Transform
 
 Run the cell under **5. PySpark Transform**.
 
@@ -117,7 +126,7 @@ The block creates `movement_date`, `quantity_in`, and `quantity_out` for the eig
 
 *Image coming soon: transformed Day 1 inventory movements.*
 
-### 7. Run the Governed Append Write
+### Run the Governed Append Write
 
 First, run the write results dictionary cell:
 
@@ -135,7 +144,7 @@ You should see the Write stages complete and the target publish successfully.
 
 *Image coming soon: Day 1 Append Write output.*
 
-### 8. Inspect the Day 1 result
+### Inspect the Day 1 result
 
 Run the cell under **7. Inspect results**.
 
@@ -150,7 +159,7 @@ You should see:
 
 ## Run Day 2 in Fabric
 
-### 1. Change only the demo day
+### Change only the demo day
 
 Return to the day cell and change it to:
 
@@ -160,7 +169,7 @@ DEMO_DAY = 2
 
 ![Day 2](../assets/2b/Day 2.png)
 
-### 2. Rerun the complete notebook
+### Rerun the complete notebook
 
 Use **Run all** or run every block again from **0. Environment** through **7. Inspect results**.
 
@@ -172,7 +181,7 @@ Bronze inventory rows after Day 2: 12
 
 The Incremental Read returns only the four rows after the successful Day 1 watermark. The Append Write adds those rows to the Silver target.
 
-### 3. Check the Day 2 output
+### Check the Day 2 output
 
 The final inspection should show:
 
@@ -185,7 +194,7 @@ The final inspection should show:
 
 ## Run Day 3 in Fabric
 
-### 1. Change only the demo day
+### Change only the demo day
 
 Return to the day cell and change it to:
 
@@ -196,7 +205,7 @@ DEMO_DAY = 3
 
 Day 3 intentionally has no CSV file and adds no source records.
 
-### 2. Rerun the complete notebook
+### Rerun the complete notebook
 
 Run every block again. The notebook still calls the Read and Write orchestrators; do not skip those blocks.
 
@@ -208,7 +217,7 @@ Bronze inventory rows after Day 3: 12
 
 The Incremental Read returns an empty scope. The Append target remains unchanged.
 
-### 3. Check the Day 3 output
+### Check the Day 3 output
 
 The final inspection should show:
 
