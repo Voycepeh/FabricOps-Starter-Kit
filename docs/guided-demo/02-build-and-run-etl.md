@@ -3,7 +3,7 @@
 **Learn the reusable `02_pipeline` notebook from top to bottom, then adapt it to your own governed pipeline.**
 
 <div class="fabricops-mascot-callout">
-  <img src="../assets/robot-carrying.png" alt="" loading="lazy">
+  <img src="../../assets/robot-carrying.png" alt="" loading="lazy">
   <p>FabricOps runs governed reads and writes around your own PySpark transformation.</p>
 </div>
 

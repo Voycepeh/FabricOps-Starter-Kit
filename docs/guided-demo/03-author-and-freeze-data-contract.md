@@ -3,7 +3,7 @@
 **Return to `01_governance`, author the source and target contracts used by the real pipeline, then freeze the exact versions Engineering will exercise in Step 4.**
 
 <div class="fabricops-mascot-callout">
-  <img src="../assets/robot-writing.png" alt="" loading="lazy">
+  <img src="../../assets/robot-writing.png" alt="" loading="lazy">
   <p>Define and review the Data Contract before freezing a candidate for validation.</p>
 </div>
 

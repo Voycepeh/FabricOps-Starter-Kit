@@ -3,7 +3,7 @@
 **Run the promoted engineering workflow in Engineering Production, publish the governed Production output, then hand direct data access to consumers through native Microsoft Fabric permissions and interfaces.**
 
 <div class="fabricops-mascot-callout">
-  <img src="../assets/robot-prod.png" alt="" loading="lazy">
+  <img src="../../assets/robot-prod.png" alt="" loading="lazy">
   <p>Run the same engineering pattern with Production configuration and active contracts.</p>
 </div>
 
