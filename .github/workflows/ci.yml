@@ -60,6 +60,15 @@ jobs:
           FABRICOPS_GIT_SHA: ${{ github.sha }}
         run: uv run mkdocs build --strict
 
+      - name: Upload PR documentation preview
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mkdocs-pr-preview
+          path: site/
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Build distributions
         run: uv build
 

@@ -79,3 +79,13 @@
   .md-typeset .fabricops-mascot-callout { gap: 0.6rem; padding: 0.4rem 0.6rem; }
   .md-typeset .fabricops-mascot-callout img { flex-basis: 3rem; width: 3rem; height: 3rem; }
 }
+
+/* A small decorative mascot beside the existing Featured Solution heading. */
+.md-typeset h2 .fabricops-solution-mascot {
+  display: inline-block;
+  width: 2.4rem;
+  height: 2.4rem;
+  object-fit: contain;
+  vertical-align: middle;
+  margin: -0.4rem 0 0 0.35rem;
+}

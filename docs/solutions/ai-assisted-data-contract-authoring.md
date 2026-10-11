@@ -10,12 +10,7 @@ Identifying sensitive data is only the first step. The more important governance
 
 Governance users still need to decide how Direct or Indirect PII should be treated and understand what its classification becomes after that treatment is applied.
 
-## The solution
-
-<div class="fabricops-mascot-callout">
-  <img src="../assets/robot-masking.png" alt="" loading="lazy">
-  <p>AI suggests sensitivity and treatment; Governance reviews and decides.</p>
-</div>
+## The solution <img class="fabricops-solution-mascot" src="../assets/robot-masking.png" alt="" loading="lazy">
 
 FabricOps turns sensitive-data governance into a three-step workflow:
 

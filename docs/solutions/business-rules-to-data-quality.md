@@ -12,12 +12,7 @@ Real business requirements are often more nuanced. One sentence can combine seve
 
 That creates friction between the person who knows what clean data means and the person who has to turn that meaning into code.
 
-## The solution
-
-<div class="fabricops-mascot-callout">
-  <img src="../assets/robot-writing.png" alt="" loading="lazy">
-  <p>Translate business requirements into reviewable rules, then enforce them deterministically.</p>
-</div>
+## The solution <img class="fabricops-solution-mascot" src="../assets/robot-writing.png" alt="" loading="lazy">
 
 FabricOps lets Governance describe what clean data means in natural language.
 
