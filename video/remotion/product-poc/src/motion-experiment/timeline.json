@@ -1,0 +1,16 @@
+{
+  "fps": 30,
+  "durationSeconds": 29.5,
+  "sourceSegmentStartSeconds": 153.5,
+  "beats": {
+    "step5": 0,
+    "contractActivated": 1.1,
+    "promotionBegins": 7.5,
+    "productionArrives": 14.5,
+    "pipelineChecks": [16.2, 18.15, 20.1],
+    "productionApproved": 22.1,
+    "consumerHandoff": 25.2,
+    "consumerSettled": 27.0,
+    "exit": 29.1
+  }
+}

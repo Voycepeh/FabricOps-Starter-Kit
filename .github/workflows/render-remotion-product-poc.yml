@@ -67,6 +67,21 @@ jobs:
           path: video/remotion/product-poc/out/fabricops-product-poc.mp4
           if-no-files-found: error
 
+      - name: Render Part 1 motion experiment
+        working-directory: video/remotion/product-poc
+        run: |
+          npm run motion:render
+          npm run motion:sheets
+
+      - name: Upload Part 1 motion experiment
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabricops-part1-motion-experiment
+          path: |
+            video/remotion/product-poc/out/motion-experiment/*.mp4
+            video/remotion/product-poc/out/motion-experiment/contact-sheets/**/*.png
+          if-no-files-found: error
+
       - name: Sync rendered homepage video
         if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]' && github.event.pull_request.head.repo.full_name == github.repository
         run: |

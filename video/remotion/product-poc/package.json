@@ -4,6 +4,9 @@
   "scripts": {
     "studio": "remotion studio src/index.ts",
     "render": "remotion render src/index.ts FabricOpsHero out/fabricops-product-poc.mp4",
+    "motion:sfx": "node scripts/generate-motion-experiment-sfx.mjs",
+    "motion:render": "node scripts/render-motion-experiment.mjs",
+    "motion:sheets": "node scripts/create-motion-contact-sheets.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -17,6 +20,7 @@
   "devDependencies": {
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "ffmpeg-static": "5.2.0",
     "typescript": "5.9.3"
   }
 }

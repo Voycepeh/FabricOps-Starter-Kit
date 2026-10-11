@@ -1,2 +1,6 @@
 node_modules/
 .remotion/
+generated/
+out/
+public/audio/
+public/generated/
