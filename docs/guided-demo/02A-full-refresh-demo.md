@@ -2,8 +2,6 @@
 
 **Run the completed retail pipeline in Microsoft Fabric: three Full Reads, one PySpark transformation, and two Overwrite targets.**
 
-This is the recommended first demo after learning the reusable pipeline structure in [Step 2. Build a Pipeline](02-build-and-run-etl.md). Follow the notebook from top to bottom and compare each result with this page.
-
 ## Before you begin
 
 1. Complete [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md).
@@ -37,7 +35,16 @@ Run the two cells under **0. Environment**:
 %run 00_env_config
 ```
 
-Then run the import cell immediately below it. The import cell provides the public APIs used by that notebook, so its exact list can vary by demo.
+Then run the import cell immediately below it.
+
+```python
+from pyspark.sql import functions as F
+
+from fabricops_kit import 
+orchestrate_read, 
+orchestrate_write, 
+widget_select_data_contract
+```
 
 `00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
 
@@ -53,11 +60,9 @@ CONTRACTS = widget_select_data_contract(spark_session=spark)
 
 For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped, and the targets can publish in Engineering Development.
 
-If you revisit the notebook after Data Contracts exist, choose **Enforce** to allow publication after the required checks pass. Choose **Validate** to evaluate a frozen candidate without publishing the target.
-
 ![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
-**Run the source results dictionary cell:**
+### **Run the source results dictionary cell:**
 
 ```python
 sources = {}
@@ -108,17 +113,23 @@ The PySpark code:
 Uncomment these lines if you want to inspect both DataFrames before publishing:
 
 ```python
+# Detailed order-level transformed output that will feed WRITE 1.
 display(transformed_df)
+# Customer-level aggregated output that will feed WRITE 2.
 display(customer_summary_df)
 ```
 
-You should see one detailed row per current order in `transformed_df` and one aggregated row per customer in `customer_summary_df`.
+You should see:
 
-*Image coming soon: transformed orders and customer summary DataFrames in Fabric.*
+- one detailed row per current order in `transformed_df`:
 
-### 7. Run WRITE 1 — Lakehouse Curated Orders
+  ![Detailed order-level transformed output](../assets/02/Transform_Output.png)
 
-**Run the write results dictionary cell:**
+- one aggregated row per customer in `customer_summary_df`:
+
+  ![Customer-level aggregated output](../assets/02/Transform_Output_2.png)
+
+### **Run the write results dictionary cell:**
 
 ```python
 writes = {}
@@ -126,11 +137,11 @@ writes = {}
 
 This creates an empty dictionary for the governed Write results. Keeping each complete result by target name makes the publication status, orchestration stages, Guardrail results, and, when published, target profile available for inspection after the Write.
 
-Then run **WRITE 1 — Lakehouse Curated Orders**.
+### 7. Run WRITE 1 — Lakehouse Curated Orders
 
 The block overwrites Silver Lakehouse `demo.curated_orders` with `transformed_df` and saves the result as `writes["curated_orders_lakehouse"]`.
 
-You should see the Write stages complete and `published=True`. If you selected **Validate**, the notebook exits after successful validation because Validate deliberately does not publish.
+You should see the Write stages complete and `published=True`. 
 
 ![Curated Orders Write output](../assets/02/Write_Block_Output.png)
 
@@ -178,6 +189,8 @@ Open the target tables in Fabric or use the notebook's optional inspection cell.
 
 ### Metadata saved by FabricOps
 
+![FabricOps metadata captured for the Full Refresh pipeline](../assets/02/Metadat_Captured.png)
+
 All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 
 | Metadata table | What this run records |
@@ -189,33 +202,21 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 | `METADATA_SOURCE_OBSERVATION` | Source-state observations associated with successful target publication where applicable. |
 | `METADATA_GUARDRAIL_RESULTS` | Guardrail evaluation results when a selected Data Contract supplies executable Guardrails. |
 
-![FabricOps metadata captured for the Full Refresh pipeline](../assets/02/Metadat_Captured.png)
+!!!note Reset the demo to a clean data state
 
-### What happens if I click Run all?
+    Use these steps when you want the next run to behave like the first Full Refresh run:
 
-The notebook runs again from the top. Both targets use Overwrite, so a successful rerun replaces their full contents instead of adding duplicate rows. This is a replay, not a clean reset: the target tables and previously captured FabricOps metadata still exist before the run begins.
+    1. In the Silver Lakehouse, delete `demo.curated_orders` from the table explorer.
+    2. In the Gold Warehouse query editor, drop the other demo target:
 
-### Reset the demo to a clean data state
+        ```sql
+        DROP TABLE IF EXISTS demo.customer_summary;
+        ```
 
-Use these steps when you want the next run to behave like the first Full Refresh run:
-
-1. In the Silver Lakehouse, delete `demo.curated_orders` from the table explorer.
-2. In the Gold Warehouse query editor, drop the other demo target:
-
-    ```sql
-    DROP TABLE IF EXISTS demo.customer_summary;
-    ```
-
-3. Check the three source tables:
-    - Bronze Lakehouse · `demo.orders`
-    - Bronze Lakehouse · `demo.products`
-    - Gold Warehouse · `demo.order_history`
-4. This notebook does not change those sources. If they still contain the Step 00C data, leave them in place. If they were changed, rerun [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md) from the top; its Overwrite cells restore all three sources from the canonical demo files.
-5. Return to this notebook and run it from the top. WRITE 1 recreates `demo.curated_orders`, and WRITE 2 recreates `demo.customer_summary`.
-
-!!! note "Business data reset versus full environment reset"
-
-    These steps reset the business tables. FabricOps metadata remains as run history, which is useful when continuing to Step 3. If you need the entire Guided Demo—including Catalogue, profile, lineage, Source Observation, Guardrail, and Data Contract history—to look completely new, use a fresh Guided Demo environment or an approved, precisely scoped metadata-maintenance process. Do not delete complete `METADATA_*` tables to reset one demo.
+    3. This notebook does not change our sources, however if they were changed somehow, rerun [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md)
+        - Bronze Lakehouse · `demo.orders`
+        - Bronze Lakehouse · `demo.products`
+        - Gold Warehouse · `demo.order_history`
 
 **Next optional processing mode:** [Step 2B. Run the Incremental Append Demo](02B-build-and-run-incremental-append-etl.md)
 

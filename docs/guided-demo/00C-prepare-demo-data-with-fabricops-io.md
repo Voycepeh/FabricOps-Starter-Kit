@@ -5,9 +5,13 @@
 ## 1. Import the setup notebook
 
 1. Download [`00C_demo_setup.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/DemoData/00C_demo_setup.ipynb) and import it into Fabric Engineering Workspace (Dev).
-2. Attach the same Fabric Environment used by the other notebooks.
-3. Run the first two steps in the notebook.
 
+2. Attach the same Fabric Environment used by the other notebooks.
+
+3. Make sure you have already uploaded the demo files required for this demo in the previous step [Step 00B](00B-configure-environment-and-load-assets.md).
+![File upload](../assets/00C/File%20Upload.png)
+
+4. Run the first two steps in the notebook.
 ![Demo setup](../assets/00C/Demo%20Set%20Up.png)
 
 ## 2. Read the same Orders dataset from four file formats

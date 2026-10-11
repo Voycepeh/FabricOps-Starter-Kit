@@ -8,14 +8,8 @@ This demo uses a watermark on `modified_datetime` and an Append target. Run the 
 
 1. Download [`02B_incremental_append_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02B_incremental_append_demo.ipynb) and import it into the Engineering Development workspace.
 2. Keep `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
-3. Upload these files to the Bronze Lakehouse:
-
-| File | Bronze Lakehouse path |
-| --- | --- |
-| [`inventory_day1.csv`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/incremental_inventory/inventory_day1.csv) | `Files/Demo/incremental_inventory/inventory_day1.csv` |
-| [`inventory_day2.csv`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/incremental_inventory/inventory_day2.csv) | `Files/Demo/incremental_inventory/inventory_day2.csv` |
-
-4. Use a fresh demo state and run Day 1, then Day 2, then Day 3.
+3. Make sure you have already uploaded the demo files required for this demo in the previous step [Step 00B](00B-configure-environment-and-load-assets.md).
+![File upload](../assets/2b/File%20Upload.png)
 
 ## What you will do
 
@@ -32,7 +26,6 @@ The notebook uses these governed tables throughout:
 | Source | Bronze Lakehouse · `demo.inventory_movements` | Incremental on `modified_datetime` |
 | Target | Silver Lakehouse · `demo.inventory_movements_incremental` | Append |
 
-## Run Day 1 in Fabric
 
 ### 1. Run the Environment block
 
@@ -41,20 +34,35 @@ Run the two cells under **0. Environment**:
 ```python
 %run 00_env_config
 ```
+Then run the import cell immediately below it. 
 
-Then run the import cell immediately below it. The import cell provides the public APIs used by that notebook, so its exact list can vary by demo.
+```python
+from pyspark.errors import AnalysisException
+from pyspark.sql import functions as F
+
+from fabricops_kit import (
+    orchestrate_read,
+    orchestrate_write,
+    read_lakehouse_csv,
+    read_lakehouse_table,
+    resolve_table_id,
+    widget_select_data_contract,
+    write_lakehouse_table,
+)
+```
 
 `00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
 
 ![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
 
-### 2. Choose Day 1
+## Run Day 1 in Fabric
 
 Leave the value under **1. Choose the demo day** as:
 
 ```python
 DEMO_DAY = 1
 ```
+![Day 1 demo day selection](../assets/2b/Day%201.png)
 
 Run the cell. It validates that the selected day is supported.
 
@@ -66,11 +74,7 @@ The notebook reads `inventory_day1.csv`, removes duplicate `movement_id` values,
 
 You should see:
 
-```text
-Bronze inventory rows after Day 1: 8
-```
-
-*Image coming soon: Day 1 Bronze staging output showing 8 rows.*
+![Day 1 Bronze staging output showing 8 rows](../assets/2b/Day%201%20Bronze%20staging%20output%20showing%208%20rows.png)
 
 ### 4. Run the Data Contract block
 
@@ -82,7 +86,7 @@ CONTRACTS = widget_select_data_contract(spark_session=spark)
 
 For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped, and the targets can publish in Engineering Development.
 
-If you revisit the notebook after Data Contracts exist, choose **Enforce** to allow publication after the required checks pass. Choose **Validate** to evaluate a frozen candidate without publishing the target.
+
 
 ![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
@@ -153,6 +157,8 @@ Return to the day cell and change it to:
 DEMO_DAY = 2
 ```
 
+![Day 2](../assets/2b/Day 2.png)
+
 ### 2. Rerun the complete notebook
 
 Use **Run all** or run every block again from **0. Environment** through **7. Inspect results**.
@@ -185,6 +191,7 @@ Return to the day cell and change it to:
 ```python
 DEMO_DAY = 3
 ```
+![Day 3 demo run](../assets/2b/Day%203.png)
 
 Day 3 intentionally has no CSV file and adds no source records.
 

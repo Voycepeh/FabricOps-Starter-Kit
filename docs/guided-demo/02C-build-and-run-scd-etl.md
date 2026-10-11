@@ -8,13 +8,9 @@ Each notebook run replaces the Bronze source with one complete eight-row snapsho
 
 1. Download [`02C_scd_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02C_scd_demo.ipynb) and import it into the Engineering Development workspace.
 2. Keep `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
-3. Upload these files to `Files/Demo/scd_product_master` in the Bronze Lakehouse:
+3. Make sure you have already uploaded the demo files required for this demo in the previous step [Step 00B](00B-configure-environment-and-load-assets.md).
+![File upload](../assets/2c/File%20Upload.png)
 
-| File |
-| --- |
-| [`products_day1.csv`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/scd_product_master/products_day1.csv) |
-| [`products_day2.csv`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/scd_product_master/products_day2.csv) |
-| [`products_day3.csv`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/scd_product_master/products_day3.csv) |
 
 4. Use a fresh demo state and run Day 1, then Day 2, then Day 3.
 

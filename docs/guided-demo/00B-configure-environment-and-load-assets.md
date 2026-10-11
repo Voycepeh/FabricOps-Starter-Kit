@@ -116,8 +116,8 @@ Download the **entire DemoData folder**. Every retained file has an explicit Gui
 | `orders.csv`, `orders.json`, `orders.parquet`, `orders.xlsx` | 0C uses these equivalent 120-row files to demonstrate the FabricOps file readers. |
 | `products.csv` | 0C seeds `bronze.demo.products`. |
 | `order_history.csv` | 0C seeds `gold.demo.order_history` and demonstrates Warehouse reads. |
-| `incremental_inventory/inventory_day1.csv`, `inventory_day2.csv` | Step 2B stages the inventory batches; Day 3 intentionally has no file. |
-| `scd_product_master/products_day1.csv`, `products_day2.csv`, `products_day3.csv` | Step 2C overwrites Bronze with each complete Product Master snapshot. |
+| `inventory_day1.csv`, `inventory_day2.csv` | Step 2B stages the inventory batches; Day 3 intentionally has no file. |
+| `products_day1.csv`, `products_day2.csv`, `products_day3.csv` | Step 2C overwrites Bronze with each complete Product Master snapshot. |
 
 ## 6. Upload the demo data
 
