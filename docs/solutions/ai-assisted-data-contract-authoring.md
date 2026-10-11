@@ -12,6 +12,11 @@ Governance users still need to decide how Direct or Indirect PII should be treat
 
 ## The solution
 
+<div class="fabricops-mascot-callout">
+  <img src="../assets/robot-masking.png" alt="" loading="lazy">
+  <p>AI suggests sensitivity and treatment; Governance reviews and decides.</p>
+</div>
+
 FabricOps turns sensitive-data governance into a three-step workflow:
 
 1. **Identify sensitivity** — tag each governed column as **Direct PII**, **Indirect PII**, or **Not PII**.

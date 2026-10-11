@@ -14,6 +14,11 @@ FabricOps abstracts the repeatable plumbing behind a small, readable notebook in
 
 ## The solution
 
+<div class="fabricops-mascot-callout">
+  <img src="../assets/robot-carrying.png" alt="" loading="lazy">
+  <p>Keep the pipeline portable; FabricOps handles the repeatable governed Read and Write lifecycle.</p>
+</div>
+
 FabricOps provides a **clonable two-notebook engineering stack**:
 
 - [`00_env_config.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) maps logical Fabric Stores to the correct environment-specific Fabric locations.

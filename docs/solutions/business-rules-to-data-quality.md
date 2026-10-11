@@ -14,6 +14,11 @@ That creates friction between the person who knows what clean data means and the
 
 ## The solution
 
+<div class="fabricops-mascot-callout">
+  <img src="../assets/robot-writing.png" alt="" loading="lazy">
+  <p>Translate business requirements into reviewable rules, then enforce them deterministically.</p>
+</div>
+
 FabricOps lets Governance describe what clean data means in natural language.
 
 Built in AI suggestions combine that requirement with governed table metadata, profile evidence, and the supported Data Quality rule vocabulary. FabricOps then proposes the smallest set of explicit rules that preserves the requirement.

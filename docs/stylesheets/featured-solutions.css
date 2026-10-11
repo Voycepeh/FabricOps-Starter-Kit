@@ -48,3 +48,34 @@
     max-width: 100%;
   }
 }
+
+/* Small mascot notes: consistent with existing documentation callout styling. */
+.md-typeset .fabricops-mascot-callout {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 4.5rem;
+  margin: 0.8rem 0 1.2rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 0.2rem solid var(--md-primary-fg-color);
+  border-radius: 0.4rem;
+  background: var(--md-accent-fg-color--transparent);
+}
+.md-typeset .fabricops-mascot-callout img {
+  flex: 0 0 4rem;
+  width: 4rem;
+  height: 4rem;
+  object-fit: contain;
+  margin: 0;
+}
+.md-typeset .fabricops-mascot-callout p {
+  flex: 1;
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+@media screen and (max-width: 520px) {
+  .md-typeset .fabricops-mascot-callout { gap: 0.6rem; padding: 0.4rem 0.6rem; }
+  .md-typeset .fabricops-mascot-callout img { flex-basis: 3rem; width: 3rem; height: 3rem; }
+}

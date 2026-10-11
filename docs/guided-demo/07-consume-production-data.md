@@ -2,6 +2,11 @@
 
 **Use the governed consumer handoff to turn approved Production data and its FabricOps context into useful analytics and AI consumption products.**
 
+<div class="fabricops-mascot-callout">
+  <img src="../assets/robot-pointing.png" alt="" loading="lazy">
+  <p>Approved Production data is ready for governed downstream consumption.</p>
+</div>
+
 ![FabricOps mascot introducing governed downstream consumption](../assets/robot-pointing.png){ width="165" }
 
 Step 6 already completed the engineering handoff: the Production pipeline ran, governed outputs exist, and approved consumers can access them through native Fabric permissions and interfaces.

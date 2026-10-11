@@ -14,6 +14,11 @@ Looking at only one surface can therefore give Governance an incomplete picture 
 
 ## The solution
 
+<div class="fabricops-mascot-callout">
+  <img src="../assets/robot-scanning.png" alt="" loading="lazy">
+  <p>Inspect supported access paths and report what can actually be verified.</p>
+</div>
+
 FabricOps provides one read-only scan that discovers the Fabric scopes visible to the caller and resolves three supported permission paths to actual people and tables:
 
 1. **Workspace roles** — access inherited from Fabric Workspace roles.

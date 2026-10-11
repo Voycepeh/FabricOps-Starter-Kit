@@ -2,7 +2,10 @@
 
 **Approve the tested Data Contract in Governance, then deploy the validated engineering artifact from Development to Production.**
 
-![Development FabricOps mascot](../assets/robot-dev.png){ width="135" } ![Production FabricOps mascot](../assets/robot-prod.png){ width="135" }
+<div class="fabricops-mascot-callout">
+  <img src="../assets/robot-dev.png" alt="" loading="lazy">
+  <p>Promote the validated pipeline from Development to Production.</p>
+</div>
 
 Step 5 closes the Development loop. Governance makes the validated contract the active Production definition, and Engineering promotes the same tested pipeline through the Fabric Deployment Pipeline.
 
