@@ -16,9 +16,17 @@ Freezing creates an **immutable Data Contract** candidate for validation. It doe
 
     See Microsoft's [workspace roles](https://learn.microsoft.com/en-us/fabric/fundamentals/roles-workspaces) and [List Item Schedules API](https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/list-item-schedules) for the underlying access requirements.
 
-## 1. Cover the whole pipeline, not only the target <img class="fabricops-step-mascot" src="../../assets/robot-writing.png" alt="" loading="lazy">
+## 1. Cover the whole pipeline, not only the target
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-writing.png" alt="" loading="lazy">
+  <div markdown="1">
 
 Step 4 validates the complete governed path, so every participating table needs a frozen contract:
+
+  </div>
+</div>
+
 
 | Pipeline role | Table | Guardrails exercised |
 | --- | --- | --- |
