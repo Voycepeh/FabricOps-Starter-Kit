@@ -43,7 +43,7 @@ The notebook uses these governed tables throughout:
 
 ## Run Day 1 in Fabric
 
-### 1. Run the Environment block
+### Run the Environment block
 
 Run the two cells under **0. Environment**:
 
@@ -57,7 +57,7 @@ Then run the import cell immediately below it. The import cell provides the publ
 
 ![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
 
-### 2. Choose Day 1
+### Choose Day 1
 
 Leave the value under **1. Choose the demo day** as:
 
@@ -67,7 +67,7 @@ DEMO_DAY = 1
 
 Run the cell. It validates that the selected day is supported.
 
-### 3. Stage the Day 1 snapshot
+### Stage the Day 1 snapshot
 
 Run the short cell under **2. Advance the Bronze product snapshot**.
 
@@ -77,7 +77,7 @@ The cell should complete without an error. Bronze now contains the complete Day 
 
 *Image coming soon: Day 1 Product Master snapshot saved in Bronze.*
 
-### 4. Run the Data Contract block
+### Run the Data Contract block
 
 Run the Data Contract cell:
 
@@ -91,7 +91,7 @@ If you revisit the notebook after Data Contracts exist, choose **Enforce** to al
 
 ![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
-### 5. Run the Governed Full Read
+### Run the Governed Full Read
 
 First, run the source results dictionary cell:
 
@@ -109,7 +109,7 @@ You should see the Read stages complete and the Full Read profile the source sna
 
 *Image coming soon: Day 1 Product Master Full Read output.*
 
-### 6. Run the PySpark Transform
+### Run the PySpark Transform
 
 Run the cell under **5. PySpark Transform**.
 
@@ -117,13 +117,13 @@ The block selects the Product Master columns and casts `list_price` to double an
 
 *Image coming soon: transformed Day 1 Product Master DataFrame.*
 
-### 7. Run the Sequence safety block
+### Run the Sequence safety block
 
 Run the cell under **Sequence safety**.
 
 Nothing is checked on Day 1 because no earlier SCD2 state is required. The cell should complete without output.
 
-### 8. Run WRITE 1 — SCD1 current state
+### Run WRITE 1 — SCD1 current state
 
 First, run the write results dictionary cell:
 
@@ -141,7 +141,7 @@ You should see the Write stages complete successfully.
 
 *Image coming soon: Day 1 SCD1 Write output.*
 
-### 9. Run WRITE 2 — SCD2 history
+### Run WRITE 2 — SCD2 history
 
 Run **WRITE 2 — SCD2 history**.
 
@@ -151,7 +151,7 @@ You should see the Write stages complete successfully.
 
 *Image coming soon: Day 1 SCD2 Write output.*
 
-### 10. Inspect the Day 1 result
+### Inspect the Day 1 result
 
 Run the cell under **7. Inspect current and historical results**.
 
@@ -168,7 +168,7 @@ The first display shows one current SCD1 row per product. The second shows one c
 
 ## Run Day 2 in Fabric
 
-### 1. Change only the demo day
+### Change only the demo day
 
 Return to the day cell and change it to:
 
@@ -176,7 +176,7 @@ Return to the day cell and change it to:
 DEMO_DAY = 2
 ```
 
-### 2. Rerun the complete notebook
+### Rerun the complete notebook
 
 Use **Run all** or run every block again from **0. Environment** through **7. Inspect current and historical results**.
 
@@ -187,7 +187,7 @@ Product `P002` has a new `list_price`:
 - SCD1 updates the value on `P002`'s existing row and keeps eight rows.
 - SCD2 closes the earlier `P002` version and inserts a new current version.
 
-### 3. Check the Day 2 output
+### Check the Day 2 output
 
 You should see:
 
@@ -202,7 +202,7 @@ In the SCD2 display, `P002` now has one historical version and one current versi
 
 ## Run Day 3 in Fabric
 
-### 1. Change only the demo day
+### Change only the demo day
 
 Return to the day cell and change it to:
 
@@ -210,7 +210,7 @@ Return to the day cell and change it to:
 DEMO_DAY = 3
 ```
 
-### 2. Rerun the complete notebook
+### Rerun the complete notebook
 
 Run every block again. The notebook replaces Bronze with the complete Day 3 snapshot and verifies the prior SCD2 state.
 
@@ -219,7 +219,7 @@ Product `P001` has a new `product_category`:
 - SCD1 replaces the category on `P001`'s current row and keeps eight rows.
 - SCD2 closes the earlier `P001` version and inserts a new current version.
 
-### 3. Check the Day 3 output
+### Check the Day 3 output
 
 You should see:
 
