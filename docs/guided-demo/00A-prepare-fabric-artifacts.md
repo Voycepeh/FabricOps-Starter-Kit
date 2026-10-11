@@ -10,7 +10,7 @@ Open [Microsoft Fabric](https://app.fabric.microsoft.com/) and sign in with your
 
 You need access to Microsoft Fabric capacity to complete the walkthrough. If you do not already have access through your organisation, you can use a Fabric trial where available.
 
-## 2. Create the workspaces <img class="fabricops-step-mascot" src="../../../assets/robot-pointing.png" alt="" loading="lazy">
+## 2. Create the workspaces <img class="fabricops-step-mascot" src="../../assets/robot-pointing.png" alt="" loading="lazy">
 
 Create these workspaces for the walkthrough:
 

@@ -16,7 +16,7 @@
 | Products | Bronze Lakehouse · `demo.products` |
 | Order History | Gold Warehouse · `demo.order_history` |
 
-## What you will do <img class="fabricops-step-mascot" src="../../../assets/robot-carrying.png" alt="" loading="lazy">
+## What you will do <img class="fabricops-step-mascot" src="../../assets/robot-carrying.png" alt="" loading="lazy">
 
 1. Load the shared environment.
 2. Run the Data Contract selector.

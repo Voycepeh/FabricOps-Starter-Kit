@@ -20,7 +20,7 @@ from fabricops_kit import (
 )
 ```
 
-## 3. Create the Data Stewards <img class="fabricops-step-mascot" src="../../../assets/robot-writing.png" alt="" loading="lazy">
+## 3. Create the Data Stewards <img class="fabricops-step-mascot" src="../../assets/robot-writing.png" alt="" loading="lazy">
 
 - Use the widget to create the data producer and consumer stewards.
 - The dropdown lists are configurable and come from the `00_env_config` notebook.
