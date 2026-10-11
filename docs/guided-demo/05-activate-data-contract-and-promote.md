@@ -4,6 +4,10 @@
 
 Step 5 closes the Development loop. Governance makes the validated contract the active Production definition, and Engineering promotes the same tested pipeline through the Fabric Deployment Pipeline.
 
+## Before you begin
+
+Complete [Step 4](04-validate-frozen-data-contract.md) and use the validated frozen contract versions.
+
 ## 1. Select the tested Data Contract version
 
 Return to `01_governance` and select the exact frozen Data Contract version that passed Step 4.
