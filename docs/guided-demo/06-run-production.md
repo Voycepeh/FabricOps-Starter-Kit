@@ -14,9 +14,17 @@ Run the Production copy of `00_env_config`:
 
 The same logical store names now resolve to the Production Lakehouses, Warehouses, schemas, paths, and SQL endpoints.
 
-## 2. Run the promoted pipeline <img class="fabricops-step-mascot" src="../../assets/robot-prod.png" alt="" loading="lazy">
+## 2. Run the promoted pipeline
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-prod.png" alt="" loading="lazy">
+  <div markdown="1">
 
 Run the promoted `02A_full_refresh_demo` pipeline from start to finish.
+
+  </div>
+</div>
+
 
 Production follows the same visible lifecycle used in Development:
 
