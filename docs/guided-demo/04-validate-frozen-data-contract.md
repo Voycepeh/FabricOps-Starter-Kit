@@ -7,8 +7,6 @@
   <p>Validate the selected frozen contract before publishing governed targets.</p>
 </div>
 
-![FabricOps mascot reviewing passing and failing data checks](../assets/robot-masking.png){ width="160" }
-
 The selector defaults every table to **Enforce**. For this step, put only `curated_orders` into **Validate** mode and select the exact frozen version from Step 3.
 
 ## 1. Select Validate for `curated_orders`

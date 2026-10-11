@@ -7,8 +7,6 @@
   <p>Define and review the Data Contract before freezing a candidate for validation.</p>
 </div>
 
-![FabricOps mascot writing Data Contract rules](../assets/robot-writing.png){ width="160" }
-
 Freezing creates an **immutable Data Contract** candidate for validation. It does not activate the contract for Production.
 
 !!! warning "Enable Fabric AI Functions for the full DQ integration exercise"

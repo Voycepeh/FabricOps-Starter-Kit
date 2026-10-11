@@ -7,8 +7,6 @@
   <p>Run the same engineering pattern with Production configuration and active contracts.</p>
 </div>
 
-![Production FabricOps mascot](../assets/robot-prod.png){ width="165" }
-
 There is no new engineering pattern in this step. The point is to execute the same tested workflow in the Production environment.
 
 ## 1. Load the Production configuration
