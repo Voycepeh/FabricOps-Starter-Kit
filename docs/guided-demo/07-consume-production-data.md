@@ -85,8 +85,8 @@ Consumers can continue using notebooks, SQL, Lakehouses, Warehouses, and other n
 
 The maintainer-facing product direction is recorded in the [FabricOps product definition](../maintainer/product-definition.md).
 
-**Complete:** return to the [Guided Demo overview](../guided-demo.md).
-
 ## Expected result
 
 Approved Production data can be consumed through the documented Fabric interfaces, with FabricOps governance context available for downstream use.
+
+**Complete:** return to the [Guided Demo overview](../guided-demo.md).
