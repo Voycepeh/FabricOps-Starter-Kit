@@ -86,9 +86,17 @@ The expected output confirms that all four file formats resolve to equivalent da
 ✓ 1:1:1:1 data match
 ```
 
-## 3. Read and write the demo data <img class="fabricops-step-mascot" src="../../assets/robot-carrying.png" alt="" loading="lazy">
+## 3. Read and write the demo data
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-carrying.png" alt="" loading="lazy">
+  <div markdown="1">
 
 Read the remaining demo sources and write the managed Lakehouse and Warehouse tables used by the later pipeline walkthrough.
+
+  </div>
+</div>
+
 
 ### Orders (we will write the dataframe we ingested earlier into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
 
