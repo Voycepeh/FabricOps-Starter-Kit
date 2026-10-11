@@ -10,6 +10,8 @@
 4. Transform
 5. Write
 
+![FabricOps mascot carrying governed data through a pipeline](../assets/robot-carrying.png){ width="180" }
+
 The same pattern supports Full and Incremental reads and the Overwrite, Append, SCD1, and SCD2 load strategies. The later demos apply it to each processing style.
 
 ![FabricOps places governed Read and Write boundaries around project-owned PySpark](../assets/pipeline-boundaries-implementation.svg)

@@ -2,6 +2,8 @@
 
 **Return to `01_governance`, author the source and target contracts used by the real pipeline, then freeze the exact versions Engineering will exercise in Step 4.**
 
+![FabricOps mascot writing Data Contract rules](../assets/robot-writing.png){ width="160" }
+
 Freezing creates an **immutable Data Contract** candidate for validation. It does not activate the contract for Production.
 
 !!! warning "Enable Fabric AI Functions for the full DQ integration exercise"
