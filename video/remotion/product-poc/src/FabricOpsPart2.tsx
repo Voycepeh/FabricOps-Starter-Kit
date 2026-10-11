@@ -182,7 +182,7 @@ const ClosingScene = () => {
       <div style={{fontSize: 75, fontWeight: 950, marginTop: 35}}>Plug-and-Play Pipelines.</div>
       <div style={{fontSize: 75, fontWeight: 950, color: '#c5a8ff'}}>Governance-as-Code.</div>
       <div style={{fontSize: 32, color: '#b9c8d9', marginTop: 44}}>Start with 00_env_config and the 02A Full Refresh demo.</div>
-      <div style={{fontSize: 40, color: '#72e6ad', fontWeight: 850, marginTop: 48}}>Try the FabricOps Guided Demo</div>
+      <div style={{fontSize: 40, color: '#72e6ad', fontWeight: 850, marginTop: 48}}>See How FabricOps Works · Guided Demo</div>
       <div style={{fontSize: 27, color: '#aebed3', marginTop: 20}}>voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/</div>
     </div>
   </AbsoluteFill>;
