@@ -91,10 +91,12 @@
 }
 
 /* Small decorative markers for Guided Demo section headings. */
-.md-typeset h2 .fabricops-step-mascot {
+.md-typeset img.fabricops-step-mascot {
   display: inline-block;
   width: 2.35rem;
+  max-width: 2.35rem;
   height: 2.35rem;
+  max-height: 2.35rem;
   object-fit: contain;
   vertical-align: middle;
   margin: -0.35rem 0 0 0.35rem;
