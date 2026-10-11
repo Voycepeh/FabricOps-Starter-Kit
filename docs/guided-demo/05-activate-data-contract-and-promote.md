@@ -36,9 +36,17 @@ Review the selected `table_id`, tested Data Contract version, and linked Data Ag
 
 Activation tells FabricOps which immutable contract version Production must resolve for that governed table.
 
-## 4. Promote the validated pipeline <img class="fabricops-step-mascot" src="../../assets/robot-dev.png" alt="" loading="lazy">
+## 4. Promote the validated pipeline
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-dev.png" alt="" loading="lazy">
+  <div markdown="1">
 
 `00_env_config` owns the environment-specific resolution. Your tested `02A_full_refresh_demo` copy owns this demo pipeline definition.
+
+  </div>
+</div>
+
 
 That separation means Engineering promotes the same tested 02A demo notebook from Development to Production while `00_env_config` maps logical Fabric Stores such as Bronze, Silver, Gold, and Metadata to their environment-specific Fabric locations.
 
