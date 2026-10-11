@@ -4,6 +4,10 @@
 
 This is the final setup step before the executable demo-data preparation in 0C.
 
+## Before you begin
+
+Complete [Step 0A](00A-prepare-fabric-artifacts.md) before importing and configuring the demo assets.
+
 ## 1. Download and import the notebooks
 
 Download the current notebook templates from the FabricOps repository:
@@ -141,3 +145,7 @@ At this point, stop. Do not create the managed source tables manually in 0B.
 The next setup notebook demonstrates the FabricOps I/O helpers and prepares the original managed tables used by the Step 2A Full Refresh demo. Steps 2B and 2C stage their own source tables from the uploaded files.
 
 **Next:** [0C. Prepare the demo data with FabricOps I/O](00C-prepare-demo-data-with-fabricops-io.md)
+
+## Expected result
+
+The demo notebooks, Fabric Environment configuration, metadata tables, and demo files are ready for the next preparation step.
