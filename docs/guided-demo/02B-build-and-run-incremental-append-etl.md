@@ -9,6 +9,8 @@ This demo uses a watermark on `modified_datetime` and an Append target. Run the 
 1. Download [`02B_incremental_append_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02B_incremental_append_demo.ipynb) and import it into the Engineering Development workspace.
 2. Keep `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
 3. Make sure you have already uploaded the demo files required for this demo in the previous step [Step 00B](00B-configure-environment-and-load-assets.md).
+
+ The notebook reads `Demo/inventory_day1.csv` and `Demo/inventory_day2.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `incremental_inventory` subfolder.
 ![File upload](../assets/2b/File%20Upload.png)
 
 ## What you will do
