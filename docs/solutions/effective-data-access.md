@@ -12,7 +12,7 @@ Access to governed data in Microsoft Fabric is not represented by one permission
 
 Looking at only one surface can therefore give Governance an incomplete picture of who can reach a table.
 
-## The solution
+## The solution <img class="fabricops-solution-mascot" src="../assets/robot-scanning.png" alt="" loading="lazy">
 
 FabricOps provides one read-only scan that discovers the Fabric scopes visible to the caller and resolves three supported permission paths to actual people and tables:
 

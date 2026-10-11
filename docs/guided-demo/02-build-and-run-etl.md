@@ -2,6 +2,11 @@
 
 **Learn the reusable `02_pipeline` notebook from top to bottom, then adapt it to your own governed pipeline.**
 
+<div class="fabricops-mascot-callout">
+  <img src="../assets/robot-carrying.png" alt="" loading="lazy">
+  <p>FabricOps runs governed reads and writes around your own PySpark transformation.</p>
+</div>
+
 `02_pipeline` is the standard starting point for governed data engineering in FabricOps. You configure the sources and targets and write the PySpark transformation; FabricOps runs the governance lifecycle around that project-owned logic.
 
 1. Environment

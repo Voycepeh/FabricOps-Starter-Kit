@@ -313,7 +313,7 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
 
   <a class="fabricops-home-action" href="guided-demo/">
     <span class="fabricops-home-action__icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2"></circle><circle cx="12" cy="11" r="2"></circle><circle cx="19" cy="5" r="2"></circle><path d="M6.5 16.7 10.5 12.5M13.5 9.7 17.5 6.3"></path></svg>
+      <img src="assets/robot-pointing.png" alt="" style="width:2.5rem;height:2.5rem;object-fit:contain">
     </span>
     <span class="fabricops-home-action__copy">
       <span class="fabricops-home-action__label">Step-by-step Guided Demo</span>
