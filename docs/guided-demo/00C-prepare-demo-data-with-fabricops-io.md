@@ -84,7 +84,7 @@ The expected output confirms that all four file formats resolve to equivalent da
 ✓ 1:1:1:1 data match
 ```
 
-## 3. Read and write the demo data
+## 3. Read and write the demo data <img class="fabricops-step-mascot" src="../../assets/robot-carrying.png" alt="" loading="lazy">
 
 Read the remaining demo sources and write the managed Lakehouse and Warehouse tables used by the later pipeline walkthrough.
 

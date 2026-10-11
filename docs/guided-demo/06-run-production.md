@@ -2,11 +2,6 @@
 
 **Run the promoted engineering workflow in Engineering Production, publish the governed Production output, then hand direct data access to consumers through native Microsoft Fabric permissions and interfaces.**
 
-<div class="fabricops-mascot-callout">
-  <img src="../../assets/robot-prod.png" alt="" loading="lazy">
-  <p>Run the same engineering pattern with Production configuration and active contracts.</p>
-</div>
-
 There is no new engineering pattern in this step. The point is to execute the same tested workflow in the Production environment.
 
 ## 1. Load the Production configuration
@@ -19,7 +14,7 @@ Run the Production copy of `00_env_config`:
 
 The same logical store names now resolve to the Production Lakehouses, Warehouses, schemas, paths, and SQL endpoints.
 
-## 2. Run the promoted pipeline
+## 2. Run the promoted pipeline <img class="fabricops-step-mascot" src="../../assets/robot-prod.png" alt="" loading="lazy">
 
 Run the promoted `02A_full_refresh_demo` pipeline from start to finish.
 

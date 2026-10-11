@@ -59,7 +59,7 @@ If you are a member of several Fabric workspaces, the Environment picker may sho
 
 Use the same FabricOps wheel version across the workspace-specific Environments so the notebooks run against a consistent package version.
 
-## 3. Configure `00_env_config`
+## 3. Configure `00_env_config` <img class="fabricops-step-mascot" src="../../assets/robot-writing.png" alt="" loading="lazy">
 
 Open `00_env_config` and replace the example Fabric IDs with the IDs for the Fabric items you created in 0A.
 

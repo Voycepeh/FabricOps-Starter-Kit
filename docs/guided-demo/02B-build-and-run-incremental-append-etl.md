@@ -13,7 +13,7 @@ This demo uses a watermark on `modified_datetime` and an Append target. Run the 
  The notebook reads `Demo/inventory_day1.csv` and `Demo/inventory_day2.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `incremental_inventory` subfolder.
 ![File upload](../assets/2b/File%20Upload.png)
 
-## What you will do
+## What you will do <img class="fabricops-step-mascot" src="../../assets/robot-scanning.png" alt="" loading="lazy">
 
 | Run | What changes | Expected Silver rows |
 | --- | --- | ---: |
