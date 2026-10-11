@@ -1,27 +1,36 @@
 import {AbsoluteFill, Easing, interpolate, Sequence, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {font, theme} from './theme';
-import {LifecycleScene} from './scenes/LifecycleScene';
+import {LifecycleScene, STEP_7_LABEL, StepCard} from './scenes/LifecycleScene';
 import {SCENE_STARTS} from './videoConfig';
 
 const seconds = (value: number) => Math.round(value * 30);
 
-const destinations = [
-  {title: 'Power BI Dashboard', color: '#f2c811', x: 135, y: 185, icon: 'bars'},
-  {title: 'Fabric Data Agents', color: '#38d991', x: 1325, y: 185, icon: 'hex'},
-  {title: 'Machine Learning Models', color: '#a879ff', x: 135, y: 665, icon: 'nodes'},
-  {title: 'Fabric Apps', color: '#52d6c6', x: 730, y: 785, icon: 'ribbon'},
-  {title: 'External Apps', color: '#4ea1ff', x: 1325, y: 665, icon: 'grid'},
+const consumers = [
+  {title: 'Dashboards', color: '#f2c811', left: 180, icon: 'bars'},
+  {title: 'Data Agents', color: '#38d991', left: 600, icon: 'hex'},
+  {title: 'Applications', color: '#52d6c6', left: 1020, icon: 'app'},
+  {title: 'ML Models', color: '#a879ff', left: 1440, icon: 'nodes'},
 ] as const;
+
+// Part 2 starts at the exact Part 1 lifecycle frame at 02:55.
+const PART_1_HANDOFF_FRAME = seconds(175);
+const LIFECYCLE_LOCAL_FRAME = PART_1_HANDOFF_FRAME - SCENE_STARTS.workflow;
+const STEP_7_REVEAL = seconds(178.7) - PART_1_HANDOFF_FRAME;
+const STEP_7_FOCUS_START = seconds(4.5);
+const STEP_7_FOCUS_END = seconds(6.9);
+const FOUNDATION_TRANSFORMATION_START = seconds(7);
+const FOUNDATION_TRANSFORMATION_END = seconds(9.2);
+const CONSUMER_REVEAL_START = seconds(9.8);
+const CONSUMER_STAGGER_INTERVAL = seconds(0.35);
+const CONSUMER_REVEAL_DURATION = seconds(0.55);
+const CONSUMPTION_SCENE_HOLD = seconds(12);
+const CONSUMPTION_SCENE_FADE_START = seconds(23.1);
+const CONSUMPTION_SCENE_END = seconds(24);
 
 const CardIcon = ({kind, color}: {kind: string; color: string}) => {
   if (kind === 'bars') {
     return <div style={{display: 'flex', alignItems: 'end', gap: 8, height: 64}}>
       {[34, 50, 64].map((height) => <div key={height} style={{width: 22, height, borderRadius: 7, background: color}} />)}
-    </div>;
-  }
-  if (kind === 'grid') {
-    return <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 26px)', gap: 8}}>
-      {[0, 1, 2, 3].map((i) => <div key={i} style={{width: 26, height: 26, borderRadius: 6, border: `3px solid ${color}`, background: i === 0 || i === 3 ? color : 'transparent'}} />)}
     </div>;
   }
   if (kind === 'hex') {
@@ -38,67 +47,97 @@ const CardIcon = ({kind, color}: {kind: string; color: string}) => {
       <div style={{position: 'absolute', left: 26, top: 20, width: 4, height: 32, background: color}} />
     </div>;
   }
-  return <div style={{width: 60, height: 60, borderRadius: 18, background: `linear-gradient(135deg, ${color}, #0b1830)`, transform: 'skewX(-16deg) rotate(-8deg)', boxShadow: `0 0 24px ${color}66`}} />;
+  return <div style={{width: 72, height: 58, borderRadius: 12, border: `4px solid ${color}`, overflow: 'hidden'}}>
+    <div style={{height: 12, background: color}} />
+    <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 18px)', gap: 7, padding: '8px 11px'}}>
+      {[0, 1, 2, 3].map((i) => <div key={i} style={{height: 8, borderRadius: 4, background: i === 0 ? color : `${color}88`}} />)}
+    </div>
+  </div>;
 };
 
-const DestinationCard = ({title, color, icon, progress}: {title: string; color: string; icon: string; progress: number}) => (
+const ConsumerCard = ({title, color, icon, progress}: {title: string; color: string; icon: string; progress: number}) => (
   <div style={{
-    width: 460,
-    height: 210,
-    borderRadius: 30,
-    border: `3px solid ${color}aa`,
-    background: `linear-gradient(145deg, ${color}18, #0d192b 74%)`,
-    boxShadow: `0 20px 60px #0007, 0 0 38px ${color}22`,
+    width: 300,
+    height: 230,
+    borderRadius: 24,
+    border: `2px solid ${color}99`,
+    background: 'linear-gradient(145deg, #14263d, #0d192b 76%)',
+    boxShadow: '0 18px 38px #0007',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
-    gap: 30,
-    padding: '0 38px',
+    justifyContent: 'center',
+    gap: 22,
+    padding: '24px 28px',
     boxSizing: 'border-box',
     opacity: progress,
-    transform: `translateY(${(1 - progress) * 34}px) scale(${0.92 + progress * 0.08})`,
+    translate: `0 ${(1 - progress) * 18}px`,
   }}>
-    <div style={{width: 90, display: 'grid', placeItems: 'center'}}><CardIcon kind={icon} color={color} /></div>
-    <div>
-      <div style={{fontSize: 38, fontWeight: 850, color: '#f7f9fd', lineHeight: 1.08}}>{title}</div>
-    </div>
+    <div style={{height: 72, display: 'grid', placeItems: 'center'}}><CardIcon kind={icon} color={color} /></div>
+    <div style={{fontSize: 29, fontWeight: 820, color: '#f7f9fd', lineHeight: 1.12, textAlign: 'center'}}>{title}</div>
   </div>
 );
 
-const ConsumptionGift = ({open}: {open: number}) => (
-  <div style={{position: 'relative', width: 400, height: 250, perspective: 900}}>
-    <div style={{position: 'absolute', left: 25, top: 74, width: 350, height: 170, borderRadius: 28, border: `3px solid ${theme.consumer}`, background: `linear-gradient(145deg, ${theme.consumer}2e, #0d192b 72%)`, boxShadow: `0 25px 70px #0008, 0 0 48px ${theme.consumer}55`, display: 'grid', placeItems: 'center'}}>
-      <div style={{fontSize: 40, fontWeight: 900, color: '#f7f9fd'}}>7</div>
-      <div style={{fontSize: 22, fontWeight: 750, color: '#f7f9fd', marginTop: -42}}>Production Data</div>
-    </div>
-    <div style={{position: 'absolute', left: 12, top: 48, width: 376, height: 74, borderRadius: 22, border: `3px solid ${theme.consumer}`, background: `linear-gradient(160deg, ${theme.consumer}, #bc7533)`, boxShadow: `0 0 ${20 + open * 34}px ${theme.consumer}88`, transformOrigin: '50% 15%', transform: `translateY(${-open * 100}px) rotateX(${-open * 56}deg) rotateZ(${-open * 7}deg)`}} />
-  </div>
-);
-
-const ConsumeScene = () => {
+const LifecycleConsumptionScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const open = spring({frame: frame - seconds(0.5), fps, config: {damping: 15, stiffness: 90}});
-  const destinationsEnter = destinations.map((_, index) =>
-    spring({frame: frame - seconds(1.15) - index * 10, fps, config: {damping: 16, stiffness: 85}}),
-  );
-  const titleEnter = interpolate(frame, [seconds(1.2), seconds(2.1)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  return <AbsoluteFill>
-    <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 46%, #18365d 0%, #0b1830 36%, #060d19 78%)'}} />
-    <div style={{position: 'absolute', left: 760, top: 425, transform: 'scale(1)', zIndex: 2}}>
-      <ConsumptionGift open={open} />
-    </div>
-    {destinations.map((item, index) => {
-      const p = Math.max(0, Math.min(1, destinationsEnter[index]));
-      const startX = 960 - 230;
-      const startY = 510 - 105;
-      const x = interpolate(p, [0, 1], [startX, item.x]);
-      const y = interpolate(p, [0, 1], [startY, item.y]);
-      const arc = Math.sin(p * Math.PI) * (190 + index * 18);
-      return <div key={item.title} style={{position: 'absolute', left: x, top: y - arc, zIndex: 3, pointerEvents: 'none'}}>
-        <DestinationCard {...item} progress={p} />
+  const stepEnter = spring({frame: frame - STEP_7_REVEAL, fps, durationInFrames: 18, config: {damping: 19, stiffness: 92}});
+  const focus = interpolate(frame, [STEP_7_FOCUS_START, STEP_7_FOCUS_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const foundation = interpolate(frame, [FOUNDATION_TRANSFORMATION_START, FOUNDATION_TRANSFORMATION_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.bezier(0.16, 1, 0.3, 1)});
+  const pipelineOpacity = interpolate(frame, [FOUNDATION_TRANSFORMATION_START, FOUNDATION_TRANSFORMATION_START + seconds(0.6)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const holdLabelOpacity = interpolate(frame, [CONSUMPTION_SCENE_HOLD, CONSUMPTION_SCENE_HOLD + seconds(0.6)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+  const sceneOpacity = interpolate(frame, [CONSUMPTION_SCENE_FADE_START, CONSUMPTION_SCENE_END], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const cardScale = frame < FOUNDATION_TRANSFORMATION_START ? interpolate(focus, [0, 1], [1, 3.1]) : interpolate(foundation, [0, 1], [3.1, 1]);
+  const cardCenterX = frame < FOUNDATION_TRANSFORMATION_START ? interpolate(focus, [0, 1], [1615, 960]) : 960;
+  const cardCenterY = frame < FOUNDATION_TRANSFORMATION_START ? interpolate(focus, [0, 1], [840, 540]) : interpolate(foundation, [0, 1], [540, 865]);
+  const visualCardWidth = frame < FOUNDATION_TRANSFORMATION_START ? 340 * cardScale : interpolate(foundation, [0, 1], [1054, 1640]);
+  const visualCardHeight = frame < FOUNDATION_TRANSFORMATION_START ? 150 * cardScale : interpolate(foundation, [0, 1], [465, 180]);
+  const cardWidth = visualCardWidth / cardScale;
+  const cardHeight = visualCardHeight / cardScale;
+  const visualCircleSize = frame < FOUNDATION_TRANSFORMATION_START ? 62 * cardScale : interpolate(foundation, [0, 1], [192, 78]);
+  const visualFontSize = frame < FOUNDATION_TRANSFORMATION_START ? 24 * cardScale : interpolate(foundation, [0, 1], [32, 42]);
+  const lifecycleZoomScale = interpolate(focus, [0, 1], [1, 3.1]);
+
+  return <AbsoluteFill style={{opacity: sceneOpacity}}>
+    <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 38%, #18365d 0%, #0b1830 40%, #060d19 82%)'}} />
+    <AbsoluteFill style={{opacity: pipelineOpacity, transform: `translate(${(960 - 1615) * focus}px, ${(540 - 840) * focus}px) scale(${lifecycleZoomScale})`, transformOrigin: '1615px 840px'}}>
+      <Sequence from={-LIFECYCLE_LOCAL_FRAME} durationInFrames={LIFECYCLE_LOCAL_FRAME + CONSUMPTION_SCENE_END} premountFor={fps}>
+        <LifecycleScene hideStep7 />
+      </Sequence>
+    </AbsoluteFill>
+
+    {frame >= STEP_7_REVEAL ? <div style={{position: 'absolute', left: cardCenterX - cardWidth / 2, top: cardCenterY - cardHeight / 2, width: cardWidth, height: cardHeight, scale: cardScale, transformOrigin: '50% 50%', zIndex: 4}}>
+      <StepCard
+        number={7}
+        label={STEP_7_LABEL}
+        subtitle="Governed · Reliable · Fit for downstream use"
+        subtitleFontSize={22 / cardScale}
+        subtitleGap={9 / cardScale}
+        subtitleOpacity={holdLabelOpacity}
+        singleLineLabel={frame >= FOUNDATION_TRANSFORMATION_START}
+        color={theme.consumer}
+        enter={stepEnter}
+        active
+        width={cardWidth}
+        height={cardHeight}
+        borderRadius={interpolate(foundation, [0, 1], [28, 24])}
+        circleSize={visualCircleSize / cardScale}
+        fontSize={visualFontSize / cardScale}
+        gap={interpolate(foundation, [0, 1], [22, 32]) / cardScale}
+        horizontalPadding={interpolate(foundation, [0, 1], [25, 44]) / cardScale}
+      />
+      <div style={{position: 'absolute', left: 34, right: 34, bottom: -18, height: 18, borderRadius: '0 0 12px 12px', background: '#9a5c28', opacity: foundation}} />
+    </div> : null}
+
+    {consumers.map((consumer, index) => {
+      const progress = interpolate(frame, [CONSUMER_REVEAL_START + index * CONSUMER_STAGGER_INTERVAL, CONSUMER_REVEAL_START + index * CONSUMER_STAGGER_INTERVAL + CONSUMER_REVEAL_DURATION], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.bezier(0.16, 1, 0.3, 1)});
+      return <div key={consumer.title} style={{position: 'absolute', left: consumer.left, top: 250, zIndex: 2}}>
+        <ConsumerCard {...consumer} progress={progress} />
+        <div style={{position: 'absolute', left: 148, top: 230, width: 4, height: 295, borderRadius: 4, background: `linear-gradient(${consumer.color}99, ${theme.consumer})`, opacity: progress * 0.72}} />
+        <div style={{position: 'absolute', left: 140, top: 516, width: 20, height: 20, borderRadius: 4, border: `3px solid ${theme.consumer}`, background: '#0d192b', opacity: progress}} />
       </div>;
     })}
-    <div style={{position: 'absolute', left: 0, right: 0, top: 56, textAlign: 'center', fontSize: 50, fontWeight: 850, color: '#f7f9fd', opacity: titleEnter}}>One governed table. Many ways to consume.</div>
+
   </AbsoluteFill>;
 };
 
@@ -117,39 +156,6 @@ const Tile = ({x, w, color, title, children}: {x: number; w: number; color: stri
     {children}
   </div>
 );
-const FoundationBridge = () => {
-  const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
-  const arrive = (delay: number) => spring({frame: frame - seconds(delay), fps, config: {damping: 18, stiffness: 90}});
-  const pivot = interpolate(frame, [seconds(3.5), seconds(5.5)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const apps = [
-    {name: 'Dashboards', color: '#f2c811', x: 225},
-    {name: 'Fabric Apps', color: '#52d6c6', x: 735},
-    {name: 'AI Agents', color: '#a879ff', x: 1245},
-  ];
-  return <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 42%, #17345a, #0b1830 44%, #060d19 82%)'}}>
-    <div style={{position: 'absolute', left: 110, right: 110, top: 85, textAlign: 'center', fontSize: 60, fontWeight: 950}}>
-      Building on data is getting faster.
-    </div>
-    <div style={{position: 'absolute', top: 195, left: 0, right: 0, textAlign: 'center', fontSize: 29, color: '#aebed3'}}>Dashboards · Apps · AI agents</div>
-    {apps.map((app, i) => <div key={app.name} style={{position: 'absolute', left: app.x, top: 335, width: 450, height: 165, display: 'grid', placeItems: 'center', borderRadius: 26, border: `2px solid ${app.color}aa`, background: `linear-gradient(145deg, ${app.color}22, #101c30)`, boxShadow: `0 0 35px ${app.color}25`, opacity: arrive(i * 0.5) * (1 - pivot * 0.35), transform: `translateY(${-pivot * 50}px)`}}>
-      <div style={{fontSize: 36, fontWeight: 850, color: app.color}}>{app.name}</div>
-    </div>)}
-    <svg width="1920" height="1080" style={{position: 'absolute', inset: 0, opacity: arrive(1.7)}}>
-      {apps.map(app => <path key={app.name} d={`M${app.x + 225} 500 Q${app.x + 225} 635 960 680`} stroke="#8da0b8" strokeWidth="4" opacity="0.65" fill="none" />)}
-    </svg>
-    <div style={{position: 'absolute', left: 405, top: 655, width: 1110, height: 185, borderRadius: 30, border: `3px solid ${theme.production}`, background: 'linear-gradient(145deg, #153e3b, #0d192b)', display: 'grid', placeItems: 'center', boxShadow: '0 0 55px #38d99133', opacity: arrive(2.3), transform: `scale(${1 + pivot * 0.045})`}}>
-      <div style={{textAlign: 'center'}}>
-        <div style={{fontSize: 43, fontWeight: 900}}>The production data foundation</div>
-        <div style={{fontSize: 26, color: '#b5d8d0', marginTop: 14}}>Engineering · Data Quality · Sensitive Data · Governance</div>
-      </div>
-    </div>
-    <div style={{position: 'absolute', left: 140, right: 140, bottom: 65, textAlign: 'center', fontSize: 40, fontWeight: 900, color: '#72e6ad', opacity: pivot}}>
-      The data foundation needs to keep up — fast and consistently.
-    </div>
-  </AbsoluteFill>;
-};
-
 const EngineeringTeaser = () => {
   const frame = useCurrentFrame();
   const appear = (sec: number) => spring({frame: frame - seconds(sec), fps: 30, config: {damping: 18, stiffness: 85}});
@@ -220,40 +226,17 @@ const ClosingScene = () => {
     </div>
   </AbsoluteFill>;
 };
-// Start from the exact Part 1 lifecycle frame at 02:55, using its original scene and timing.
-const PART_1_HANDOFF_FRAME = seconds(175);
-const LIFECYCLE_LOCAL_FRAME = PART_1_HANDOFF_FRAME - SCENE_STARTS.workflow;
-const LIFECYCLE_CONTINUATION_DURATION = seconds(7);
-const CONSUME_DURATION = seconds(8);
-const FOUNDATION_DURATION = seconds(9);
 const ENGINEERING_DURATION = seconds(12);
 const GOVERNANCE_DURATION = seconds(18);
 const CLOSING_DURATION = seconds(6);
-const CONSUME_START = LIFECYCLE_CONTINUATION_DURATION;
-const FOUNDATION_START = CONSUME_START + CONSUME_DURATION;
-const ENGINEERING_START = FOUNDATION_START + FOUNDATION_DURATION;
+const ENGINEERING_START = CONSUMPTION_SCENE_END;
 const GOVERNANCE_START = ENGINEERING_START + ENGINEERING_DURATION;
 const CLOSING_START = GOVERNANCE_START + GOVERNANCE_DURATION;
 export const FABRIC_OPS_PART_2_DURATION = CLOSING_START + CLOSING_DURATION;
 
-const LifecycleZoom = () => {
-  const frame = useCurrentFrame();
-  const zoom = interpolate(frame, [seconds(4.5), seconds(6.9)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const scale = interpolate(zoom, [0, 1], [1, 3.1]);
-  // Step 7 is centered at x=1615, y=840 in the original 1920x1080 lifecycle.
-  // Keep its original geometry and styling throughout the camera move.
-  return <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 35%, #18365d 0%, #0b1830 34%, #060d19 74%)'}}>
-    <AbsoluteFill style={{transform: `translate(${(960 - 1615) * zoom}px, ${(540 - 840) * zoom}px) scale(${scale})`, transformOrigin: '1615px 840px'}}>
-      <Sequence from={-LIFECYCLE_LOCAL_FRAME} durationInFrames={LIFECYCLE_LOCAL_FRAME + LIFECYCLE_CONTINUATION_DURATION}><LifecycleScene /></Sequence>
-    </AbsoluteFill>
-  </AbsoluteFill>;
-};
-
 export const FabricOpsPart2 = () => (
   <AbsoluteFill style={{background: theme.background, color: theme.text, fontFamily: font, overflow: 'hidden'}}>
-    <Sequence from={0} durationInFrames={LIFECYCLE_CONTINUATION_DURATION}><LifecycleZoom /></Sequence>
-    <Sequence from={CONSUME_START} durationInFrames={CONSUME_DURATION} premountFor={30}><ConsumeScene /></Sequence>
-    <Sequence from={FOUNDATION_START} durationInFrames={FOUNDATION_DURATION} premountFor={30}><FoundationBridge /></Sequence>
+    <Sequence from={0} durationInFrames={CONSUMPTION_SCENE_END} premountFor={30}><LifecycleConsumptionScene /></Sequence>
     <Sequence from={ENGINEERING_START} durationInFrames={ENGINEERING_DURATION} premountFor={30}><EngineeringTeaser /></Sequence>
     <Sequence from={GOVERNANCE_START} durationInFrames={GOVERNANCE_DURATION} premountFor={30}><GovernanceTeaser /></Sequence>
     <Sequence from={CLOSING_START} durationInFrames={CLOSING_DURATION} premountFor={30}><ClosingScene /></Sequence>

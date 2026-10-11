@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "studio": "remotion studio src/index.ts",
-    "render": "remotion render src/index.ts FabricOpsHero out/fabricops-product-poc.mp4",
+    "render": "remotion render src/index.ts FabricOpsFullVideo out/fabricops-full-video.mp4",
+    "render:part1": "remotion render src/index.ts FabricOpsPart1 out/fabricops-part1.mp4",
     "typecheck": "tsc --noEmit",
     "render:part2": "remotion render src/index.ts FabricOpsPart2 out/fabricops-part2.mp4"
   },

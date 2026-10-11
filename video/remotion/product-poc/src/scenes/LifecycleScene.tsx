@@ -10,6 +10,8 @@ const workspaces = [
   {name: 'Consumer', color: theme.consumer, x: 1420},
 ];
 
+export const STEP_7_LABEL = 'Consume approved\nProduction data';
+
 const steps = [
   {number: 1, label: 'Data Stewards &\nData Agreement', color: theme.governance, x: 80, y: 205},
   {number: 2, label: 'ETL, Profile &\nCatalogue', color: theme.engineering, x: 535, y: 205},
@@ -17,7 +19,7 @@ const steps = [
   {number: 4, label: 'ETL with Contract\nGuardrails', color: theme.engineering, x: 535, y: 485},
   {number: 5, label: 'Activate &\nPromote', color: theme.governance, x: 80, y: 765},
   {number: 6, label: 'Run Production\nPipeline', color: theme.production, x: 990, y: 765},
-  {number: 7, label: 'Consume approved\nProduction data', color: theme.consumer, x: 1445, y: 765},
+  {number: 7, label: STEP_7_LABEL, color: theme.consumer, x: 1445, y: 765},
 ];
 
 const connectors = [
@@ -29,15 +31,63 @@ const connectors = [
   {d: 'M1330 840 H1445', destination: 6},
 ];
 
-const StepCard = ({number, label, color, enter, active}: {number: number; label: string; color: string; enter: number; active: boolean}) => {
+type StepCardProps = {
+  number: number;
+  label: string;
+  color: string;
+  enter: number;
+  active: boolean;
+  width?: number;
+  height?: number;
+  borderRadius?: number;
+  circleSize?: number;
+  fontSize?: number;
+  gap?: number;
+  horizontalPadding?: number;
+  previousLabel?: string;
+  labelProgress?: number;
+  subtitle?: string;
+  subtitleFontSize?: number;
+  subtitleGap?: number;
+  subtitleOpacity?: number;
+  singleLineLabel?: boolean;
+};
+
+export const StepCard = ({
+  number,
+  label,
+  color,
+  enter,
+  active,
+  width,
+  height,
+  borderRadius = 28,
+  circleSize = 62,
+  fontSize,
+  gap = 22,
+  horizontalPadding = 25,
+  previousLabel,
+  labelProgress = 1,
+  subtitle,
+  subtitleFontSize,
+  subtitleGap = 8,
+  subtitleOpacity = 1,
+  singleLineLabel = false,
+}: StepCardProps) => {
   const {sizes, text} = VIDEO_CONFIG;
-  return <div style={{width: sizes.workflowCardWidth, height: sizes.workflowCardHeight, borderRadius: 28, display: 'flex', alignItems: 'center', gap: 22, padding: '0 25px', boxSizing: 'border-box', background: `linear-gradient(145deg, ${color}2e, #0d192b 72%)`, border: `3px solid ${active ? color : `${color}88`}`, boxShadow: active ? `0 0 48px ${color}55` : '0 18px 40px #0007', opacity: enter * (active ? 1 : 0.62), transform: `scale(${0.86 + enter * 0.14})`}}>
-    <div style={{width: 62, height: 62, flex: '0 0 auto', borderRadius: 99, display: 'grid', placeItems: 'center', background: color, color: '#07101f', fontSize: 34, fontWeight: 900}}>{number}</div>
-    <div style={{whiteSpace: 'pre-line', color: '#f7f9fd', fontSize: text.workflow, lineHeight: 1.15, fontWeight: 720}}>{label}</div>
+  return <div style={{width: width ?? sizes.workflowCardWidth, height: height ?? sizes.workflowCardHeight, borderRadius, display: 'flex', alignItems: 'center', gap, padding: `0 ${horizontalPadding}px`, boxSizing: 'border-box', background: `linear-gradient(145deg, ${color}2e, #0d192b 72%)`, border: `3px solid ${active ? color : `${color}88`}`, boxShadow: active ? `0 0 48px ${color}55` : '0 18px 40px #0007', opacity: enter * (active ? 1 : 0.62), scale: 0.86 + enter * 0.14}}>
+    <div style={{width: circleSize, height: circleSize, flex: '0 0 auto', borderRadius: 99, display: 'grid', placeItems: 'center', background: color, color: '#07101f', fontSize: circleSize * 0.55, fontWeight: 900}}>{number}</div>
+    {subtitle ? <div style={{flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center'}}>
+      <div style={{whiteSpace: singleLineLabel ? 'nowrap' : 'pre-line', color: '#f7f9fd', fontSize: fontSize ?? text.workflow, lineHeight: 1.08, fontWeight: 720}}>{label}</div>
+      <div style={{marginTop: subtitleGap, color: '#94a3b8', fontSize: subtitleFontSize ?? (fontSize ?? text.workflow) * 0.52, lineHeight: 1.2, fontWeight: 600, letterSpacing: 0.4, opacity: subtitleOpacity}}>{subtitle}</div>
+    </div> : <div style={{position: 'relative', flex: 1, height: (fontSize ?? text.workflow) * 2.3}}>
+      {previousLabel ? <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', whiteSpace: 'pre-line', color: '#f7f9fd', fontSize: fontSize ?? text.workflow, lineHeight: 1.15, fontWeight: 720, opacity: interpolate(labelProgress, [0, 0.46], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}}>{previousLabel}</div> : null}
+      <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', whiteSpace: 'pre-line', color: '#f7f9fd', fontSize: fontSize ?? text.workflow, lineHeight: 1.15, fontWeight: 720, opacity: previousLabel ? interpolate(labelProgress, [0.54, 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : labelProgress}}>{label}</div>
+    </div>}
   </div>;
 };
 
-export const LifecycleScene = () => {
+export const LifecycleScene = ({hideStep7 = false}: {hideStep7?: boolean}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const {scenes, timing} = VIDEO_CONFIG;
@@ -73,6 +123,7 @@ export const LifecycleScene = () => {
     </svg>
     {steps.map((step, index) => {
       if (frame < stepTimes[index]) return null;
+      if (hideStep7 && step.number === 7) return null;
       const enter = spring({frame: frame - stepTimes[index], fps, durationInFrames: timing.workflowStepEnter, config: {damping: 19, stiffness: 92}});
       return <div key={step.number} style={{position: 'absolute', left: step.x, top: step.y}}><StepCard {...step} enter={enter} active={activeIndex === index} /></div>;
     })}
