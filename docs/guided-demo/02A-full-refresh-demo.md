@@ -1,5 +1,7 @@
 # Step 2A. Run the Full Refresh Demo
 
+Day 1 source preparation is handled by [Step 00C](00C-prepare-demo-data-with-fabricops-io.md). This full-refresh notebook focuses on the governed read, transformation, and overwrite writes.
+
 **Run the completed retail pipeline in Microsoft Fabric: three Full Reads, one PySpark transformation, and two Overwrite targets.**
 
 ## Before you begin
