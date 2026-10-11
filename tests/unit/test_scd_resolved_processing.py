@@ -53,11 +53,12 @@ def test_physical_scd_processing_rejects_unsupported_user_parameter():
         write_module._physical_processing_definition(resolved)
 
 
-def test_physical_scd_processing_requires_prevalidated_definition():
+def test_physical_scd_processing_rejects_missing_executable_definition():
     with pytest.raises(ValueError, match="missing its validated executable definition"):
         write_module._physical_processing_definition({
             "load_strategy": "scd1",
-            "key_columns": ["product_id"],
+            "authored_processing": None,
+            "governed_processing": None,
         })
 
 
