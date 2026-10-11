@@ -12,7 +12,7 @@ A new engineer should not need to understand or rebuild all of that governance a
 
 FabricOps abstracts the repeatable plumbing behind a small, readable notebook interface: **choose how each source is read, write the project transformation in normal PySpark, choose how each target is written, and let FabricOps apply the governed lifecycle around it.**
 
-## The solution <img class="fabricops-solution-mascot" src="../assets/robot-carrying.png" alt="" loading="lazy">
+## The solution <img class="fabricops-solution-mascot" src="../../assets/robot-carrying.png" alt="" loading="lazy">
 
 FabricOps provides a **clonable two-notebook engineering stack**:
 
