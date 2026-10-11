@@ -1,5 +1,7 @@
 # FabricOps Part 1 motion upgrade
 
+> **Redesign checkpoint:** Further animation work is paused pending approval of [PART1_REDESIGN_STORYBOARD.md](PART1_REDESIGN_STORYBOARD.md). That proposal preserves approved FabricOps facts and messaging while replacing the current scene structure, layouts, density and motion patterns where clearer visual storytelling is possible.
+
 This composition is a full-length, motion-enhanced treatment of FabricOps Part 1. The original `FabricOpsHero` remains available and unchanged as the content authority. `FabricOpsPart1Motion` preserves its 202.9-second narration, five-scene structure, terminology, seven-step lifecycle and hand-off to Part 2 while adding restrained camera direction, lighting, depth and sound cues.
 
 ## Timing model
