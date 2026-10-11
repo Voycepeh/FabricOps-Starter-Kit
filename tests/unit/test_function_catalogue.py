@@ -73,7 +73,8 @@ def test_removed_schema_helpers_are_not_public_catalogue_entries() -> None:
 def _public_inventory_function_names() -> set[str]:
     """Return dashboard public function names used by generated references."""
     data = json.loads((ROOT / "docs" / "reference" / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8"))
-    return {str(row["function_name"]) for row in data["public_functions"]}
+    public_qns = {str(row["qualified_name"]) for row in data["public_analysis"]}
+    return {str(row["function_name"]) for row in data["functions"] if str(row["qualified_name"]) in public_qns}
 
 
 def _catalogue_row_names() -> set[str]:
@@ -176,7 +177,8 @@ def test_guardrail_coverage_preview_lifecycle_matches_generated_contract() -> No
             encoding="utf-8"
         )
     )
-    public_by_name = {row["function_name"]: row for row in data["public_functions"]}
+    public_qns = {str(row["qualified_name"]) for row in data["public_analysis"]}
+    public_by_name = {row["function_name"]: row for row in data["functions"] if row["qualified_name"] in public_qns}
 
     assert public_by_name["check_guardrail_coverage"]["lifecycle_status"] == "preview"
     assert "stop_if_failed" not in public_by_name

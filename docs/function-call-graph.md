@@ -17,6 +17,8 @@ As the public API grows, reviewing functions one file at a time makes it harder 
 
 A deterministic generator scans the repository into a versioned call-flow JSON contract, and the interactive dashboard turns that contract into a focused review surface. Use it to inspect a public callable, understand its dependencies and architecture signals, and export focused cleanup context before changing the implementation.
 
+The v4 contract stores callable facts once in `functions`, direct edges once in `relationships`, and public-root-only metrics in `public_analysis`. The dashboard indexes those collections once and expands only the selected public graph, with cycle protection and deterministic edge ordering.
+
 > **First make it exist. Then make it good.**
 
 ## Maintainer workflow

@@ -46,6 +46,14 @@ Architecture review should confirm that changes do not introduce:
 
 `docs/reference/_data/public-function-call-flows.json` is the committed callable architecture contract.
 
+The v4 contract has three principal collections:
+
+- `functions` contains one canonical identity, source, lifecycle, contract, usage, and documentation record per callable
+- `relationships` contains one record per resolved direct caller-to-callee edge, with edge-specific evidence only
+- `public_analysis` contains complexity metrics, refactor signals, and other analysis that exists only for a public entry point
+
+Inbound callers, usage groups, unused-function rows, simple counts, and display labels are derived by consumers instead of being stored as duplicate records.
+
 Use it to inspect:
 
 - public callable scope and owner file
