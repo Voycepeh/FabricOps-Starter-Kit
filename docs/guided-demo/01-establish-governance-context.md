@@ -31,7 +31,6 @@ Use the widget to create the data producer and consumer stewards.
   </div>
 </div>
 
-- Use the widget to create the data producer and consumer stewards.
 - The dropdown lists are configurable and come from the `00_env_config` notebook.
 - To update a record, edit the data and press save again.
 - The widget writes to the underlying metadata table. In the example below, I created myself as a Data Owner and later updated the record to Data Custodian.
