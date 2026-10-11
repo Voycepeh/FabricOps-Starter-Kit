@@ -22,11 +22,11 @@ All new files reuse exactly the eight canonical product IDs (`P001` through `P00
 
 | File | Role | Expected behavior |
 | --- | --- | --- |
-| `incremental_inventory/inventory_day1.csv` | Opening stock receipt events | First Incremental → Append bootstrap, 8 movements |
-| `incremental_inventory/inventory_day2.csv` | Later sale and replenishment movements | Append 4 additional events, then no-change rerun |
-| `scd_product_master/products_day1.csv` | Full product master snapshot | Initial 8 SCD1 rows and 8 SCD2 versions |
-| `scd_product_master/products_day2.csv` | Full product master snapshot | P002 list price changes, SCD2 grows to 9 versions |
-| `scd_product_master/products_day3.csv` | Full product master snapshot | P001 category changes, SCD2 grows to 10 versions |
+| `inventory_day1.csv` | Opening stock receipt events | First Incremental → Append bootstrap, 8 movements |
+| `inventory_day2.csv` | Later sale and replenishment movements | Append 4 additional events, then no-change rerun |
+| `products_day1.csv` | Full product master snapshot | Initial 8 SCD1 rows and 8 SCD2 versions |
+| `products_day2.csv` | Full product master snapshot | P002 list price changes, SCD2 grows to 9 versions |
+| `products_day3.csv` | Full product master snapshot | P001 category changes, SCD2 grows to 10 versions |
 
 Proposed Bronze sources: `demo.inventory_movements` and `demo.product_master_updates`. Proposed Silver targets: `demo.inventory_movements_incremental`, `demo.product_master_scd1`, and `demo.product_master_scd2`.
 
