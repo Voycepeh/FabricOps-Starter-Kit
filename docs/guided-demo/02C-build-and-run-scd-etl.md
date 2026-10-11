@@ -16,7 +16,16 @@
 
 4. Use a fresh demo state and run Day 1, then Day 2, then Day 3.
 
-## What you will do <img class="fabricops-step-mascot" src="../../assets/robot-scanning.png" alt="" loading="lazy">
+## What you will do
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-scanning.png" alt="" loading="lazy">
+  <div markdown="1">
+
+Compare how SCD1 and SCD2 record the same product changes.
+
+  </div>
+</div>
 
 | Run | Business change | Expected SCD1 rows | Expected SCD2 versions |
 | --- | --- | ---: | ---: |
