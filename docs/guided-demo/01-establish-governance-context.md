@@ -6,13 +6,13 @@
 
 Complete [Step 0C](00C-prepare-demo-data-with-fabricops-io.md) and open `01_governance`.
 
-## 1. Load the shared environment
+## Load the shared environment
 
 ```python
 %run 00_env_config
 ```
 
-## 2. Import required widget functions
+## Import required widget functions
 
 - We created widgets with ipywidgets to provide users with a simple UI to record and capture the required data.
 - Feel free to swap this out for an actual frontend, or capture the data directly into the underlying metadata tables if you prefer.
@@ -24,7 +24,7 @@ from fabricops_kit import (
 )
 ```
 
-## 3. Create the Data Stewards
+## Create the Data Stewards
 
 <div class="fabricops-mascot-callout" markdown="1">
   <img src="../../assets/robot-writing.png" alt="" loading="lazy">
@@ -43,7 +43,7 @@ Use the widget to create the data producer and consumer stewards.
 ![Steward2](../assets/01/Widget_Update.png)
 ![Steward3](../assets/01/Recorded_Steward.png)
 
-## 4. Create the Data Agreement
+## Create the Data Agreement
 
 - Use the Data Agreement widget to create the relationship between the accountable producer and consumer stewards.
 - Capture the purpose, scope, permitted use, validity, supporting information, and other governance context required by your organisation.
