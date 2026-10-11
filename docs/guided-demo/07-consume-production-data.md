@@ -3,7 +3,7 @@
 **Use the governed consumer handoff to turn approved Production data and its FabricOps context into useful analytics and AI consumption products.**
 
 <div class="fabricops-mascot-callout">
-  <img src="../assets/robot-pointing.png" alt="" loading="lazy">
+  <img src="../../assets/robot-pointing.png" alt="" loading="lazy">
   <p>Approved Production data is ready for governed downstream consumption.</p>
 </div>
 

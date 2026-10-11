@@ -3,7 +3,7 @@
 **Approve the tested Data Contract in Governance, then deploy the validated engineering artifact from Development to Production.**
 
 <div class="fabricops-mascot-callout">
-  <img src="../assets/robot-dev.png" alt="" loading="lazy">
+  <img src="../../assets/robot-dev.png" alt="" loading="lazy">
   <p>Promote the validated pipeline from Development to Production.</p>
 </div>
 
