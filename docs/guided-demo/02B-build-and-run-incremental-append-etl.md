@@ -13,7 +13,16 @@ This demo uses a watermark on `modified_datetime` and an Append target. Run the 
  Run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) first to stage Day 1. For Day 2, the notebook reads `Demo/inventory_day2.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `incremental_inventory` subfolder.
 ![File upload](../assets/2b/File%20Upload.png)
 
-## What you will do <img class="fabricops-step-mascot" src="../../assets/robot-scanning.png" alt="" loading="lazy">
+## What you will do
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-scanning.png" alt="" loading="lazy">
+  <div markdown="1">
+
+Compare the Day 1 baseline with the incremental changes in subsequent runs.
+
+  </div>
+</div>
 
 | Run | What changes | Expected Silver rows |
 | --- | --- | ---: |
