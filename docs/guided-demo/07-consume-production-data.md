@@ -6,6 +6,17 @@ Step 6 already completed the engineering handoff: the Production pipeline ran, g
 
 Step 7 adds a consumer and analytics-engineering interface over that foundation.
 
+## Before you begin
+
+- Run on a [Fabric capacity that supports Data Agents](https://learn.microsoft.com/fabric/data-science/data-agent-concept).
+- Give the caller access to the governed Production Lakehouse or Warehouse and permission to create and configure items in the target workspace.
+- Configure both physical source identifiers through `00_env_config`; the flow does not infer a default Lakehouse.
+- Activate one frozen Production Data Contract linked to an exact Data Agreement version.
+- Use the current [Fabric Data Agent REST APIs](https://learn.microsoft.com/rest/api/fabric/data-agent/items) for item creation and the documented staging datasource and instruction resources. These APIs may remain Preview; review Microsoft's current limitations before production adoption.
+
+FabricOps acquires the Fabric API token from `notebookutils`; do not paste or persist bearer tokens. Permission failures retain the underlying Fabric HTTP status and response details.
+
+
 ## Review the governed context
 
 <div class="fabricops-mascot-callout" markdown="1">
@@ -60,16 +71,6 @@ Test and consume
 !!! note "Feature implementation status"
 
     The single-table API is Preview. Multi-table agents, relationship authoring, product registration and overlap detection, evaluation, and automatic publication remain deliberately out of scope.
-
-## Before you begin
-
-- Run on a [Fabric capacity that supports Data Agents](https://learn.microsoft.com/fabric/data-science/data-agent-concept).
-- Give the caller access to the governed Production Lakehouse or Warehouse and permission to create and configure items in the target workspace.
-- Configure both physical source identifiers through `00_env_config`; the flow does not infer a default Lakehouse.
-- Activate one frozen Production Data Contract linked to an exact Data Agreement version.
-- Use the current [Fabric Data Agent REST APIs](https://learn.microsoft.com/rest/api/fabric/data-agent/items) for item creation and the documented staging datasource and instruction resources. These APIs may remain Preview; review Microsoft's current limitations before production adoption.
-
-FabricOps acquires the Fabric API token from `notebookutils`; do not paste or persist bearer tokens. Permission failures retain the underlying Fabric HTTP status and response details.
 
 ## Multi-table extension
 
