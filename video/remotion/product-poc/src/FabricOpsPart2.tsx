@@ -2,6 +2,18 @@ import {AbsoluteFill, Easing, Img, interpolate, Sequence, spring, staticFile, us
 import {font, theme} from './theme';
 import {LifecycleScene, STEP_7_LABEL, StepCard} from './scenes/LifecycleScene';
 import {SCENE_STARTS} from './videoConfig';
+import {
+  ACTIVATION_DURATION,
+  ActivationScene,
+  CLOSING_DURATION as REDESIGNED_CLOSING_DURATION,
+  ClosingScene as RedesignedClosingScene,
+  ENGINEERING_DURATION as REDESIGNED_ENGINEERING_DURATION,
+  EngineeringScene,
+  GOVERNANCE_DURATION as REDESIGNED_GOVERNANCE_DURATION,
+  GovernanceScene,
+  VALIDATION_DURATION,
+  ValidationScene,
+} from './FabricOpsPart2Redesign';
 
 const seconds = (value: number) => Math.round(value * 30);
 
@@ -157,106 +169,20 @@ const LifecycleConsumptionScene = () => {
 };
 
 
-const Teaser = ({heading, subheading, children}: {heading: string; subheading: string; children: React.ReactNode}) => (
-  <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 42%, #17345a, #0b1830 43%, #060d19 82%)'}}>
-    <div style={{position: 'absolute', top: 68, left: 110, fontSize: 23, fontWeight: 850, letterSpacing: 2, color: theme.governance}}>FABRICOPS · GUIDED DEMO</div>
-    <div style={{position: 'absolute', top: 120, left: 110, fontSize: 69, fontWeight: 950}}>{heading}</div>
-    <div style={{position: 'absolute', top: 220, left: 110, fontSize: 29, color: '#aebed3'}}>{subheading}</div>
-    {children}
-  </AbsoluteFill>
-);
-const Tile = ({x, w, color, title, children}: {x: number; w: number; color: string; title: string; children: React.ReactNode}) => (
-  <div style={{position: 'absolute', left: x, top: 340, width: w, height: 465, boxSizing: 'border-box', padding: 32, borderRadius: 28, border: `2px solid ${color}88`, background: 'linear-gradient(145deg, #142943, #0b1729)', boxShadow: `0 20px 60px #0007, 0 0 30px ${color}18`}}>
-    <div style={{fontSize: 24, fontWeight: 850, color}}>{title}</div>
-    {children}
-  </div>
-);
-const EngineeringTeaser = () => {
-  const frame = useCurrentFrame();
-  const appear = (sec: number) => spring({frame: frame - seconds(sec), fps: 30, config: {damping: 18, stiffness: 85}});
-  return <Teaser heading="Plug-and-Play Data Pipelines" subheading="02A Full Refresh · configure your sources, transform with PySpark, publish governed targets">
-    <Tile x={90} w={465} color={theme.engineering} title="THREE GOVERNED READS">
-      {['Bronze · orders', 'Bronze · products', 'Gold · order_history'].map((t, i) => <div key={t} style={{opacity: appear(i * 0.65), fontSize: 29, padding: '24px 10px', marginTop: 15, borderBottom: '1px solid #34465f'}}>{t}</div>)}
-    </Tile>
-    <Tile x={615} w={690} color="#52d6c6" title="02_pipeline · READ → TRANSFORM → WRITE">
-      <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 29, lineHeight: 2.2, marginTop: 34}}>
-        <div style={{opacity: appear(2), color: '#93c7ff'}}>orchestrate_read(...)</div>
-        <div style={{opacity: appear(3), color: '#f7f9fd'}}># Your PySpark transformation</div>
-        <div style={{opacity: appear(4), color: '#72e6ad'}}>orchestrate_write(...)</div>
-      </div>
-      <div style={{fontSize: 25, color: '#aebed3', marginTop: 25}}>Profiles · Lineage · Guardrail stages</div>
-    </Tile>
-    <Tile x={1365} w={465} color={theme.production} title="TWO GOVERNED WRITES">
-      {['Silver · curated_orders', 'Gold · customer_summary'].map((t, i) => <div key={t} style={{opacity: appear(5 + i), fontSize: 27, padding: '25px 6px', marginTop: 27, borderBottom: '1px solid #34465f'}}>{t}</div>)}
-    </Tile>
-<Mascot pose="carrying" x={1540} y={90} size={230} delay={seconds(2)} />
-    <div style={{position: 'absolute', bottom: 125, left: 120, right: 120, display: 'flex', justifyContent: 'space-between', opacity: appear(7)}}>
-      {['02A · Full Refresh / Overwrite', '02B · Incremental Append', '02C · SCD1 / SCD2'].map(t => <div key={t} style={{fontSize: 25, fontWeight: 800, padding: '18px 30px', borderRadius: 18, background: '#173354', color: '#c7e2ff'}}>{t}</div>)}
-    </div>
-  </Teaser>;
-};
-const GovernanceTeaser = () => {
-  const frame = useCurrentFrame();
-  const later = frame >= seconds(9);
-  const enter = spring({frame: frame - seconds(2), fps: 30, config: {damping: 18, stiffness: 90}});
-  return <Teaser heading="Governance-as-Code" subheading="01_governance · AI-assisted authoring, human-reviewed decisions, executable guardrails">
-    <Mascot pose={later ? "scanning" : "writing"} x={1580} y={65} size={190} delay={seconds(1)} />
-    {!later ? <>
-      <Tile x={110} w={810} color={theme.consumer} title="SENSITIVE DATA · curated_orders">
-        <div style={{fontSize: 43, fontWeight: 850, marginTop: 48}}>customer_id</div>
-        <div style={{fontSize: 31, color: '#c5d2e3', marginTop: 30}}>Discover → Classify → Review</div>
-        <div style={{fontSize: 36, fontWeight: 850, marginTop: 44, color: '#ffbd76', opacity: enter}}>Treatment: Mask</div>
-        <div style={{fontSize: 25, marginTop: 20, color: '#aebed3'}}>Treatment applied before DQ and publication</div>
-      </Tile>
-      <Tile x={1000} w={810} color={theme.governance} title="BUSINESS LANGUAGE → EXECUTABLE RULE">
-        <div style={{fontSize: 33, lineHeight: 1.4, marginTop: 45}}>"Modified datetime must be on or after order datetime."</div>
-        <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 30, marginTop: 42, color: '#c5a8ff', opacity: enter}}>column_relationship</div>
-        <div style={{fontSize: 29, marginTop: 22, color: '#cbd5e1', opacity: enter}}>modified_datetime ≥ order_datetime</div>
-      </Tile>
-      <div style={{position: 'absolute', bottom: 110, left: 0, right: 0, textAlign: 'center', fontSize: 30, fontWeight: 800, color: '#c5a8ff'}}>Review and freeze the Data Contract</div>
-    </> : <>
-      <Tile x={110} w={810} color={theme.governance} title="STEP 4 · VALIDATE FROZEN CONTRACT">
-        <div style={{fontSize: 36, marginTop: 58}}>Dirty row: modified_datetime earlier than order_datetime</div>
-        <div style={{fontSize: 34, marginTop: 42, color: '#ff9c8c', fontWeight: 850}}>Rule violation detected</div>
-      </Tile>
-      <Tile x={1000} w={810} color={theme.production} title="INTEGRATED INTO ENGINEERING">
-        <div style={{fontSize: 33, marginTop: 54}}>orchestrate_write()</div>
-        <div style={{fontSize: 29, color: '#c5d2e3', marginTop: 30}}>Validate without publishing</div>
-        <div style={{fontSize: 28, color: '#aebed3', marginTop: 28}}>Warn / Block policies</div>
-        <div style={{fontSize: 29, color: '#72e6ad', marginTop: 28, fontWeight: 850}}>Corrected row → PASS</div>
-      </Tile>
-      <div style={{position: 'absolute', bottom: 110, left: 0, right: 0, textAlign: 'center', fontSize: 32, fontWeight: 800, color: '#c5a8ff'}}>Governance executes inside the pipeline.</div>
-    </>}
-  </Teaser>;
-};
-const ClosingScene = () => {
-  const frame = useCurrentFrame();
-  const p = spring({frame, fps: 30, config: {damping: 18, stiffness: 85}});
-  return <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 44%, #15334d, #07101f 72%)', display: 'grid', placeItems: 'center'}}>
-    <Mascot pose="pointing" x={1470} y={650} size={300} delay={seconds(1)} />
-    <div style={{textAlign: 'center', opacity: p, transform: `translateY(${(1 - p) * 40}px)`}}>
-      <div style={{fontSize: 26, fontWeight: 850, color: '#72e6ad', letterSpacing: 2}}>FABRICOPS STARTER KIT</div>
-      <div style={{fontSize: 75, fontWeight: 950, marginTop: 35}}>Plug-and-Play Pipelines.</div>
-      <div style={{fontSize: 75, fontWeight: 950, color: '#c5a8ff'}}>Governance-as-Code.</div>
-      <div style={{fontSize: 32, color: '#b9c8d9', marginTop: 44}}>A faster, more consistent data foundation for the age of AI.</div>
-      <div style={{fontSize: 40, color: '#72e6ad', fontWeight: 850, marginTop: 48}}>See How FabricOps Works · Guided Demo</div>
-      <div style={{fontSize: 27, color: '#aebed3', marginTop: 20}}>voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/</div>
-    </div>
-  </AbsoluteFill>;
-};
-const ENGINEERING_DURATION = seconds(12);
-const GOVERNANCE_DURATION = seconds(18);
-const CLOSING_DURATION = seconds(6);
 const ENGINEERING_START = CONSUMPTION_SCENE_END;
-const GOVERNANCE_START = ENGINEERING_START + ENGINEERING_DURATION;
-const CLOSING_START = GOVERNANCE_START + GOVERNANCE_DURATION;
-export const FABRIC_OPS_PART_2_DURATION = CLOSING_START + CLOSING_DURATION;
+const GOVERNANCE_START = ENGINEERING_START + REDESIGNED_ENGINEERING_DURATION;
+const VALIDATION_START = GOVERNANCE_START + REDESIGNED_GOVERNANCE_DURATION;
+const ACTIVATION_START = VALIDATION_START + VALIDATION_DURATION;
+const CLOSING_START = ACTIVATION_START + ACTIVATION_DURATION;
+export const FABRIC_OPS_PART_2_DURATION = CLOSING_START + REDESIGNED_CLOSING_DURATION;
 
 export const FabricOpsPart2 = () => (
   <AbsoluteFill style={{background: theme.background, color: theme.text, fontFamily: font, overflow: 'hidden'}}>
     <Sequence from={0} durationInFrames={CONSUMPTION_SCENE_END} premountFor={30}><LifecycleConsumptionScene /></Sequence>
-    <Sequence from={ENGINEERING_START} durationInFrames={ENGINEERING_DURATION} premountFor={30}><EngineeringTeaser /></Sequence>
-    <Sequence from={GOVERNANCE_START} durationInFrames={GOVERNANCE_DURATION} premountFor={30}><GovernanceTeaser /></Sequence>
-    <Sequence from={CLOSING_START} durationInFrames={CLOSING_DURATION} premountFor={30}><ClosingScene /></Sequence>
+    <Sequence from={ENGINEERING_START} durationInFrames={REDESIGNED_ENGINEERING_DURATION} premountFor={30}><EngineeringScene /></Sequence>
+    <Sequence from={GOVERNANCE_START} durationInFrames={REDESIGNED_GOVERNANCE_DURATION} premountFor={30}><GovernanceScene /></Sequence>
+    <Sequence from={VALIDATION_START} durationInFrames={VALIDATION_DURATION} premountFor={30}><ValidationScene /></Sequence>
+    <Sequence from={ACTIVATION_START} durationInFrames={ACTIVATION_DURATION} premountFor={30}><ActivationScene /></Sequence>
+    <Sequence from={CLOSING_START} durationInFrames={REDESIGNED_CLOSING_DURATION} premountFor={30}><RedesignedClosingScene /></Sequence>
   </AbsoluteFill>
 );

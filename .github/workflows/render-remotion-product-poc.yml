@@ -49,7 +49,7 @@ jobs:
               - '.github/workflows/render-remotion-product-poc.yml'
             part2:
               - 'video/remotion/product-poc/src/FabricOpsPart2.tsx'
-              - 'video/remotion/product-poc/src/GuidedDemoJourney.tsx'
+              - 'video/remotion/product-poc/src/FabricOpsPart2Redesign.tsx'
               - 'video/remotion/product-poc/package.json'
               - 'video/remotion/product-poc/package-lock.json'
               - '.github/workflows/render-remotion-product-poc.yml'
@@ -79,7 +79,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: video/remotion/product-poc
-        run: npm install
+        run: npm ci
 
       - name: Install FFmpeg
         run: |
@@ -148,7 +148,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: video/remotion/product-poc
-        run: npm install
+        run: npm ci
 
       - name: Type-check composition
         working-directory: video/remotion/product-poc
