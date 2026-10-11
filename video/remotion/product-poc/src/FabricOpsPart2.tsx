@@ -117,6 +117,39 @@ const Tile = ({x, w, color, title, children}: {x: number; w: number; color: stri
     {children}
   </div>
 );
+const FoundationBridge = () => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const arrive = (delay: number) => spring({frame: frame - seconds(delay), fps, config: {damping: 18, stiffness: 90}});
+  const pivot = interpolate(frame, [seconds(3.5), seconds(5.5)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const apps = [
+    {name: 'Dashboards', color: '#f2c811', x: 225},
+    {name: 'Fabric Apps', color: '#52d6c6', x: 735},
+    {name: 'AI Agents', color: '#a879ff', x: 1245},
+  ];
+  return <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 42%, #17345a, #0b1830 44%, #060d19 82%)'}}>
+    <div style={{position: 'absolute', left: 110, right: 110, top: 85, textAlign: 'center', fontSize: 60, fontWeight: 950}}>
+      Building on data is getting faster.
+    </div>
+    <div style={{position: 'absolute', top: 195, left: 0, right: 0, textAlign: 'center', fontSize: 29, color: '#aebed3'}}>Dashboards · Apps · AI agents</div>
+    {apps.map((app, i) => <div key={app.name} style={{position: 'absolute', left: app.x, top: 335, width: 450, height: 165, display: 'grid', placeItems: 'center', borderRadius: 26, border: `2px solid ${app.color}aa`, background: `linear-gradient(145deg, ${app.color}22, #101c30)`, boxShadow: `0 0 35px ${app.color}25`, opacity: arrive(i * 0.5) * (1 - pivot * 0.35), transform: `translateY(${-pivot * 50}px)`}}>
+      <div style={{fontSize: 36, fontWeight: 850, color: app.color}}>{app.name}</div>
+    </div>)}
+    <svg width="1920" height="1080" style={{position: 'absolute', inset: 0, opacity: arrive(1.7)}}>
+      {apps.map(app => <path key={app.name} d={`M${app.x + 225} 500 Q${app.x + 225} 635 960 680`} stroke="#8da0b8" strokeWidth="4" opacity="0.65" fill="none" />)}
+    </svg>
+    <div style={{position: 'absolute', left: 405, top: 655, width: 1110, height: 185, borderRadius: 30, border: `3px solid ${theme.production}`, background: 'linear-gradient(145deg, #153e3b, #0d192b)', display: 'grid', placeItems: 'center', boxShadow: '0 0 55px #38d99133', opacity: arrive(2.3), transform: `scale(${1 + pivot * 0.045})`}}>
+      <div style={{textAlign: 'center'}}>
+        <div style={{fontSize: 43, fontWeight: 900}}>The production data foundation</div>
+        <div style={{fontSize: 26, color: '#b5d8d0', marginTop: 14}}>Engineering · Data Quality · Sensitive Data · Governance</div>
+      </div>
+    </div>
+    <div style={{position: 'absolute', left: 140, right: 140, bottom: 65, textAlign: 'center', fontSize: 40, fontWeight: 900, color: '#72e6ad', opacity: pivot}}>
+      The data foundation needs to keep up — fast and consistently.
+    </div>
+  </AbsoluteFill>;
+};
+
 const EngineeringTeaser = () => {
   const frame = useCurrentFrame();
   const appear = (sec: number) => spring({frame: frame - seconds(sec), fps: 30, config: {damping: 18, stiffness: 85}});
@@ -181,7 +214,7 @@ const ClosingScene = () => {
       <div style={{fontSize: 26, fontWeight: 850, color: '#72e6ad', letterSpacing: 2}}>FABRICOPS STARTER KIT</div>
       <div style={{fontSize: 75, fontWeight: 950, marginTop: 35}}>Plug-and-Play Pipelines.</div>
       <div style={{fontSize: 75, fontWeight: 950, color: '#c5a8ff'}}>Governance-as-Code.</div>
-      <div style={{fontSize: 32, color: '#b9c8d9', marginTop: 44}}>Start with 00_env_config and the 02A Full Refresh demo.</div>
+      <div style={{fontSize: 32, color: '#b9c8d9', marginTop: 44}}>A faster, more consistent data foundation for the age of AI.</div>
       <div style={{fontSize: 40, color: '#72e6ad', fontWeight: 850, marginTop: 48}}>See How FabricOps Works · Guided Demo</div>
       <div style={{fontSize: 27, color: '#aebed3', marginTop: 20}}>voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/</div>
     </div>
@@ -192,11 +225,13 @@ const PART_1_HANDOFF_FRAME = seconds(175);
 const LIFECYCLE_LOCAL_FRAME = PART_1_HANDOFF_FRAME - SCENE_STARTS.workflow;
 const LIFECYCLE_CONTINUATION_DURATION = seconds(7);
 const CONSUME_DURATION = seconds(8);
+const FOUNDATION_DURATION = seconds(9);
 const ENGINEERING_DURATION = seconds(12);
 const GOVERNANCE_DURATION = seconds(18);
 const CLOSING_DURATION = seconds(6);
 const CONSUME_START = LIFECYCLE_CONTINUATION_DURATION;
-const ENGINEERING_START = CONSUME_START + CONSUME_DURATION;
+const FOUNDATION_START = CONSUME_START + CONSUME_DURATION;
+const ENGINEERING_START = FOUNDATION_START + FOUNDATION_DURATION;
 const GOVERNANCE_START = ENGINEERING_START + ENGINEERING_DURATION;
 const CLOSING_START = GOVERNANCE_START + GOVERNANCE_DURATION;
 export const FABRIC_OPS_PART_2_DURATION = CLOSING_START + CLOSING_DURATION;
@@ -218,6 +253,7 @@ export const FabricOpsPart2 = () => (
   <AbsoluteFill style={{background: theme.background, color: theme.text, fontFamily: font, overflow: 'hidden'}}>
     <Sequence from={0} durationInFrames={LIFECYCLE_CONTINUATION_DURATION}><LifecycleZoom /></Sequence>
     <Sequence from={CONSUME_START} durationInFrames={CONSUME_DURATION} premountFor={30}><ConsumeScene /></Sequence>
+    <Sequence from={FOUNDATION_START} durationInFrames={FOUNDATION_DURATION} premountFor={30}><FoundationBridge /></Sequence>
     <Sequence from={ENGINEERING_START} durationInFrames={ENGINEERING_DURATION} premountFor={30}><EngineeringTeaser /></Sequence>
     <Sequence from={GOVERNANCE_START} durationInFrames={GOVERNANCE_DURATION} premountFor={30}><GovernanceTeaser /></Sequence>
     <Sequence from={CLOSING_START} durationInFrames={CLOSING_DURATION} premountFor={30}><ClosingScene /></Sequence>
