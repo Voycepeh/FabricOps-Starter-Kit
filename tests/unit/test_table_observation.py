@@ -84,7 +84,7 @@ def test_incremental_observation_allows_new_source_without_catalogue_or_contract
         "table_name": "inventory_movements",
         "store_kind": "lakehouse",
     }
-    monkeypatch.setitem(shared._CURRENT_TABLE_IDENTITIES, identity["table_id"], identity)
+    monkeypatch.setattr(shared, "resolve_physical_table_identity", lambda *args, **kwargs: identity)
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(shared, "get_spark_session", Spark)
     monkeypatch.setattr(
@@ -108,7 +108,23 @@ def test_incremental_observation_allows_new_source_without_catalogue_or_contract
         table_id="new-bronze-source",
         dataframe=frame,
         incremental_columns=("modified_datetime", "modified_datetime"),
+        source_identity=identity,
     )
     assert len(result) == 1
     assert result[0]["source_table_id"] == "new-bronze-source"
     assert result[0]["change_column"] == "modified_datetime"
+
+
+def test_observation_rejects_identity_mismatch_across_environments(monkeypatch) -> None:
+    """Never silently use a source identity from another environment."""
+    monkeypatch.setattr(shared, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(shared, "get_spark_session", lambda: object())
+    monkeypatch.setattr(
+        shared, "resolve_physical_table_identity",
+        lambda *args, **kwargs: {"table_id": "different-environment-table"},
+    )
+    with pytest.raises(ValueError, match="does not match environment"):
+        shared.capture_source_observation(
+            table_id="source-id",
+            source_identity={"store": "Bronze", "schema": "demo", "table_name": "orders"},
+        )
