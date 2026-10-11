@@ -4,9 +4,17 @@
 
 The selector defaults every table to **Enforce**. For this step, put only `curated_orders` into **Validate** mode and select the exact frozen version from Step 3.
 
-## 1. Select Validate for `curated_orders` <img class="fabricops-step-mascot" src="../../assets/robot-masking.png" alt="" loading="lazy">
+## 1. Select Validate for `curated_orders`
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="../../assets/robot-masking.png" alt="" loading="lazy">
+  <div markdown="1">
 
 In the Data Contract selector at the top of `02A_full_refresh_demo`:
+
+  </div>
+</div>
+
 
 1. leave every source table in **Enforce** mode and select its exact frozen Step 3 contract,
 2. choose **Validate** only for the target, `curated_orders`,
