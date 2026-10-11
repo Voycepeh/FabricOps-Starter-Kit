@@ -4,6 +4,10 @@
 
 This is foundation setup, not one of the seven FabricOps lifecycle steps.
 
+## Before you begin
+
+You need access to Microsoft Fabric capacity to complete this walkthrough.
+
 ## 1. Open Microsoft Fabric
 
 Open [Microsoft Fabric](https://app.fabric.microsoft.com/) and sign in with your Microsoft account.
