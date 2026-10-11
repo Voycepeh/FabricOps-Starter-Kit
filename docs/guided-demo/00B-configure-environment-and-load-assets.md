@@ -144,8 +144,8 @@ At this point, stop. Do not create the managed source tables manually in 0B.
 
 The next setup notebook demonstrates the FabricOps I/O helpers and prepares the original managed tables used by the Step 2A Full Refresh demo. Steps 2B and 2C stage their own source tables from the uploaded files.
 
-**Next:** [0C. Prepare the demo data with FabricOps I/O](00C-prepare-demo-data-with-fabricops-io.md)
-
 ## Expected result
 
 The demo notebooks, Fabric Environment configuration, metadata tables, and demo files are ready for the next preparation step.
+
+**Next:** [0C. Prepare the demo data with FabricOps I/O](00C-prepare-demo-data-with-fabricops-io.md)
