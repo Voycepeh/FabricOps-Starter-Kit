@@ -72,62 +72,41 @@ const DestinationCard = ({title, color, icon, progress}: {title: string; color: 
   </div>
 );
 
-const ProductionTable = ({progress}: {progress: number}) => (
-  <div style={{marginTop: 30, width: 330, height: 190, borderRadius: 24, border: '3px solid #ffad5599', background: '#111e31', overflow: 'hidden', boxShadow: '0 0 36px #ffad5533', transform: `scale(${0.9 + 0.1 * progress})`}}>
-    <div style={{height: 38, background: '#ffad55'}} />
-    <div style={{display: 'grid', gridTemplateColumns: '1fr 1.4fr 1fr', gap: 10, padding: 18}}>
-      {Array.from({length: 9}).map((_, i) => <div key={i} style={{height: 26, borderRadius: 7, background: i % 3 === 1 ? '#36506f' : '#28405e'}} />)}
+const ConsumptionGift = ({open}: {open: number}) => (
+  <div style={{position: 'relative', width: 400, height: 250, perspective: 900}}>
+    <div style={{position: 'absolute', left: 25, top: 74, width: 350, height: 170, borderRadius: 28, border: `3px solid ${theme.consumer}`, background: 'linear-gradient(145deg, #1d776e, #0b2432)', boxShadow: `0 25px 70px #0008, 0 0 48px ${theme.consumer}55`, display: 'grid', placeItems: 'center'}}>
+      <div style={{fontSize: 40, fontWeight: 900, color: '#f7f9fd'}}>7</div>
+      <div style={{fontSize: 22, fontWeight: 750, color: '#e5fff6', marginTop: -42}}>Production Data</div>
     </div>
+    <div style={{position: 'absolute', left: 12, top: 48, width: 376, height: 74, borderRadius: 22, border: '3px solid #85f0d3', background: 'linear-gradient(160deg, #55ddbd, #168c83)', boxShadow: `0 0 ${20 + open * 34}px ${theme.consumer}88`, transformOrigin: '50% 15%', transform: `translateY(${-open * 100}px) rotateX(${-open * 56}deg) rotateZ(${-open * 7}deg)`}} />
   </div>
 );
 
 const ConsumeScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const tableEnter = spring({frame, fps, config: {damping: 18, stiffness: 92}});
-  const open = spring({frame: frame - seconds(1.0), fps, config: {damping: 13, stiffness: 105}});
+  const open = spring({frame: frame - seconds(0.5), fps, config: {damping: 15, stiffness: 90}});
   const destinationsEnter = destinations.map((_, index) =>
-    spring({frame: frame - seconds(1.8) - index * 14, fps, config: {damping: 15, stiffness: 105}}),
+    spring({frame: frame - seconds(1.15) - index * 10, fps, config: {damping: 16, stiffness: 85}}),
   );
-
+  const titleEnter = interpolate(frame, [seconds(1.2), seconds(2.1)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   return <AbsoluteFill>
     <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 46%, #18365d 0%, #0b1830 36%, #060d19 78%)'}} />
-
-    <div style={{position: 'absolute', left: 960, top: 480, transform: 'translate(-50%, -50%)', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-      <div style={{display: 'flex', alignItems: 'center', gap: 18, opacity: tableEnter}}>
-        <div style={{width: 62, height: 62, borderRadius: 99, display: 'grid', placeItems: 'center', background: theme.consumer, color: '#07101f', fontSize: 36, fontWeight: 950}}>7</div>
-        <div style={{fontSize: 48, fontWeight: 900, color: '#f7f9fd'}}>Consume the Production data</div>
-      </div>
-      <div style={{position: 'relative', transform: `translateY(${open * 12}px) scale(${0.96 + open * 0.04})`}}>
-        <ProductionTable progress={tableEnter} />
-        <div style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          top: 30,
-          height: 38,
-          borderRadius: '24px 24px 5px 5px',
-          background: theme.consumer,
-          transformOrigin: '50% 100%',
-          transform: `translateY(${-open * 28}px) rotateX(${open * 58}deg)`,
-          boxShadow: `0 0 ${18 + open * 34}px ${theme.consumer}66`,
-        }} />
-      </div>
+    <div style={{position: 'absolute', left: 760, top: 425, transform: 'scale(1)', zIndex: 2}}>
+      <ConsumptionGift open={open} />
     </div>
-
     {destinations.map((item, index) => {
-      const p = destinationsEnter[index];
-      const centerX = 960;
-      const centerY = 545;
-      const targetX = item.x;
-      const targetY = item.y;
-      const x = interpolate(p, [0, 1], [centerX - 230, targetX]);
-      const y = interpolate(p, [0, 1], [centerY - 105, targetY]);
-      const lift = Math.sin(Math.min(1, p) * Math.PI) * 90;
-      return <div key={item.title} style={{position: 'absolute', left: x, top: y - lift}}>
+      const p = Math.max(0, Math.min(1, destinationsEnter[index]));
+      const startX = 960 - 230;
+      const startY = 510 - 105;
+      const x = interpolate(p, [0, 1], [startX, item.x]);
+      const y = interpolate(p, [0, 1], [startY, item.y]);
+      const arc = Math.sin(p * Math.PI) * (190 + index * 18);
+      return <div key={item.title} style={{position: 'absolute', left: x, top: y - arc, zIndex: 3, pointerEvents: 'none'}}>
         <DestinationCard {...item} progress={p} />
       </div>;
     })}
+    <div style={{position: 'absolute', left: 0, right: 0, top: 56, textAlign: 'center', fontSize: 50, fontWeight: 850, color: '#f7f9fd', opacity: titleEnter}}>One governed table. Many ways to consume.</div>
   </AbsoluteFill>;
 };
 
@@ -187,9 +166,22 @@ const AUDIENCE_START = GUIDED_DEMO_START + GUIDED_DEMO_DURATION;
 
 export const FABRIC_OPS_PART_2_DURATION = AUDIENCE_START + AUDIENCE_DURATION;
 
+const LifecycleZoom = () => {
+  const frame = useCurrentFrame();
+  const zoom = interpolate(frame, [seconds(4.5), seconds(6.9)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const scale = interpolate(zoom, [0, 1], [1, 3.1]);
+  // Step 7 is centered at x=1615, y=840 in the original 1920x1080 lifecycle.
+  // Keep its original geometry and styling throughout the camera move.
+  return <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 35%, #18365d 0%, #0b1830 34%, #060d19 74%)'}}>
+    <AbsoluteFill style={{transform: `translate(${(960 - 1615) * zoom}px, ${(540 - 840) * zoom}px) scale(${scale})`, transformOrigin: '1615px 840px'}}>
+      <Sequence from={-LIFECYCLE_LOCAL_FRAME} durationInFrames={LIFECYCLE_LOCAL_FRAME + LIFECYCLE_CONTINUATION_DURATION}><LifecycleScene /></Sequence>
+    </AbsoluteFill>
+  </AbsoluteFill>;
+};
+
 export const FabricOpsPart2 = () => (
   <AbsoluteFill style={{background: theme.background, color: theme.text, fontFamily: font, overflow: 'hidden'}}>
-    <Sequence from={-LIFECYCLE_LOCAL_FRAME} durationInFrames={LIFECYCLE_LOCAL_FRAME + LIFECYCLE_CONTINUATION_DURATION}><LifecycleScene /></Sequence>
+    <Sequence from={0} durationInFrames={LIFECYCLE_CONTINUATION_DURATION}><LifecycleZoom /></Sequence>
     <Sequence from={CONSUME_START} durationInFrames={CONSUME_DURATION} premountFor={30}><ConsumeScene /></Sequence>
     <Sequence from={GUIDED_DEMO_START} durationInFrames={GUIDED_DEMO_DURATION} premountFor={30}><GuidedDemoJourney /></Sequence>
     <Sequence from={AUDIENCE_START} durationInFrames={AUDIENCE_DURATION} premountFor={30}><AudienceScene /></Sequence>
