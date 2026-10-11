@@ -83,35 +83,37 @@ export const EngineeringScene = () => {
   const write = enterProgress(frame, fps, seconds(3.2));
   const firstLink = interpolate(frame, [seconds(2), seconds(3.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const secondLink = interpolate(frame, [seconds(3), seconds(4.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const packet = interpolate(frame, [seconds(4.6), seconds(8.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const packetOpacity = interpolate(frame, [seconds(4.5), seconds(4.8), seconds(8), seconds(8.4)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  return <SceneShell duration={ENGINEERING_DURATION} eyebrow="ENGINEERING · STEP 2" heading="One reusable pipeline pattern" subheading="FabricOps handles the governed boundaries. Engineers focus on the PySpark transformation." accent={theme.engineering}>
+  const ferry = interpolate(frame, [seconds(4.4), seconds(8.1)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const ferryOpacity = interpolate(frame, [seconds(4.2), seconds(4.6), seconds(8), seconds(8.4)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  return <SceneShell duration={ENGINEERING_DURATION} eyebrow="ENGINEERING · STEP 2" heading="One reusable pipeline pattern" subheading="Governed boundaries. Your PySpark." accent={theme.engineering}>
     <div style={{position: 'absolute', left: 145, top: 352, display: 'flex', alignItems: 'center', gap: 115}}>
-      <Surface accent="#69b7ff" style={{width: 430, height: 310, padding: '34px 36px', opacity: read, translate: `0 ${(1 - read) * 24}px`}}>
+      <Surface accent="#69b7ff" style={{width: 430, height: 280, padding: '34px 36px', opacity: read, translate: `0 ${(1 - read) * 24}px`}}>
         <div style={{fontSize: 20, color: '#8fc9ff', letterSpacing: 1.8, fontWeight: 850}}>GOVERNED READ</div>
         <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 34, color: '#d8ecff', fontWeight: 800, marginTop: 46}}>orchestrate_read()</div>
-        <div style={{fontSize: 24, lineHeight: 1.45, color: '#aebed3', marginTop: 38}}>Resolve source · check Guardrails<br />profile · capture observation</div>
+        <div style={{fontSize: 24, color: '#aebed3', marginTop: 38}}>Governed source</div>
       </Surface>
-      <Surface accent="#52d6c6" style={{width: 430, height: 310, padding: '34px 36px', opacity: transform, translate: `0 ${(1 - transform) * 24}px`}}>
+      <Surface accent="#52d6c6" style={{width: 430, height: 280, padding: '34px 36px', opacity: transform, translate: `0 ${(1 - transform) * 24}px`}}>
         <div style={{fontSize: 20, color: '#7ae4d8', letterSpacing: 1.8, fontWeight: 850}}>YOUR LOGIC</div>
         <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 39, color: '#f6fbff', fontWeight: 850, marginTop: 43}}>PySpark</div>
-        <div style={{fontSize: 24, lineHeight: 1.45, color: '#aebed3', marginTop: 34}}>Select · join · aggregate<br />apply business transformation</div>
+        <div style={{fontSize: 24, color: '#aebed3', marginTop: 34}}>Your transformation</div>
       </Surface>
-      <Surface accent="#72e6ad" style={{width: 430, height: 310, padding: '34px 36px', opacity: write, translate: `0 ${(1 - write) * 24}px`}}>
+      <Surface accent="#72e6ad" style={{width: 430, height: 280, padding: '34px 36px', opacity: write, translate: `0 ${(1 - write) * 24}px`}}>
         <div style={{fontSize: 20, color: '#72e6ad', letterSpacing: 1.8, fontWeight: 850}}>GOVERNED WRITE</div>
         <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 32, color: '#dcffec', fontWeight: 800, marginTop: 46}}>orchestrate_write()</div>
-        <div style={{fontSize: 24, lineHeight: 1.45, color: '#aebed3', marginTop: 38}}>Treat sensitive data · run DQ<br />publish · record lineage</div>
+        <div style={{fontSize: 24, color: '#aebed3', marginTop: 38}}>Governed target</div>
       </Surface>
     </div>
-    <StageArrow left={575} top={505} width={112} progress={firstLink} color="#52d6c6" />
-    <StageArrow left={1120} top={505} width={112} progress={secondLink} color="#72e6ad" />
-    <div style={{position: 'absolute', left: 365 + packet * 1190, top: 720, width: 38, height: 38, borderRadius: 10, rotate: '45deg', background: '#52d6c6', boxShadow: '0 0 26px #52d6c6', opacity: packetOpacity}} />
-    <Mascot pose="carrying" x={1660} y={300} size={205} delay={seconds(4.6)} />
+    <StageArrow left={575} top={490} width={112} progress={firstLink} color="#52d6c6" />
+    <StageArrow left={1120} top={490} width={112} progress={secondLink} color="#72e6ad" />
+    <Img src={staticFile('mascots/robot-carrying.png')} style={{
+      position: 'absolute', left: 205 + ferry * 1375, top: 605, width: 220, height: 220,
+      objectFit: 'contain', opacity: ferryOpacity, filter: 'drop-shadow(0 16px 26px #0008)',
+    }} />
     <Reveal at={seconds(8.2)} y={16}>
-      <div style={{position: 'absolute', left: 210, right: 210, top: 805, display: 'flex', justifyContent: 'center', gap: 28}}>
+      <div style={{position: 'absolute', left: 210, right: 210, top: 810, display: 'flex', justifyContent: 'center', gap: 28}}>
         {['02A · Full Refresh', '02B · Incremental', '02C · SCD'].map((label) => <div key={label} style={{padding: '17px 31px', borderRadius: 16, background: '#122d49', border: '1px solid #4d759c', fontSize: 24, fontWeight: 820, color: '#d5e9ff'}}>{label}</div>)}
       </div>
-      <div style={{position: 'absolute', left: 0, right: 0, top: 892, textAlign: 'center', fontSize: 22, color: '#91a8c0'}}>Choose the pattern that fits the workload — the demos run independently.</div>
+      <div style={{position: 'absolute', left: 0, right: 0, top: 897, textAlign: 'center', fontSize: 22, color: '#91a8c0'}}>Choose one pattern per workload.</div>
     </Reveal>
   </SceneShell>;
 };
@@ -123,16 +125,16 @@ export const GovernanceScene = () => {
   const treatment = enterProgress(frame, fps, seconds(3.1));
   const rule = enterProgress(frame, fps, seconds(5.2));
   const runtime = enterProgress(frame, fps, seconds(7.2));
-  return <SceneShell duration={GOVERNANCE_DURATION} eyebrow="GOVERNANCE · STEP 3" heading="Governance becomes executable" subheading="AI can accelerate authoring. Humans review every decision; the frozen Data Contract records it." accent={theme.governance}>
+  return <SceneShell duration={GOVERNANCE_DURATION} eyebrow="GOVERNANCE · STEP 3" heading="Governance becomes executable" subheading="AI suggests. Humans decide. Pipelines enforce." accent={theme.governance}>
     <Surface accent="#ffae66" style={{position: 'absolute', left: 104, top: 340, width: 790, height: 526, padding: '30px 34px'}}>
       <div style={{fontSize: 21, fontWeight: 850, color: '#ffbd76', letterSpacing: 1.6}}>SENSITIVE DATA</div>
       <div style={{display: 'grid', gridTemplateColumns: '1fr 70px 1fr', alignItems: 'center', gap: 16, marginTop: 34}}>
-        <div style={{opacity: scan}}><div style={{fontSize: 22, color: '#9fb1c6'}}>Discovered column</div><div style={{fontSize: 35, fontWeight: 880, marginTop: 12}}>customer_id</div><div style={{fontSize: 22, color: '#ffbd76', marginTop: 20}}>Suggested: Direct PII</div></div>
+        <div style={{opacity: scan}}><div style={{fontSize: 22, color: '#9fb1c6'}}>DISCOVER</div><div style={{fontSize: 35, fontWeight: 880, marginTop: 12}}>customer_id</div><div style={{fontSize: 22, color: '#ffbd76', marginTop: 20}}>Direct PII</div></div>
         <div style={{fontSize: 46, color: '#607d9b', textAlign: 'center'}}>→</div>
-        <div style={{opacity: treatment}}><div style={{fontSize: 22, color: '#9fb1c6'}}>Human-approved treatment</div><div style={{fontSize: 35, fontWeight: 880, marginTop: 12, color: '#ffbd76'}}>Mask</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 24, color: '#f5d8bd', marginTop: 20}}>C001 → C•••</div></div>
+        <div style={{opacity: treatment}}><div style={{fontSize: 22, color: '#9fb1c6'}}>TREAT</div><div style={{fontSize: 35, fontWeight: 880, marginTop: 12, color: '#ffbd76'}}>Mask</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 24, color: '#f5d8bd', marginTop: 20}}>C001 → C•••</div></div>
       </div>
       <div style={{height: 1, background: '#39506a', marginTop: 38}} />
-      <div style={{display: 'flex', alignItems: 'center', gap: 18, marginTop: 28, opacity: treatment}}><div style={{padding: '12px 18px', borderRadius: 12, background: '#5d351f', color: '#ffd5ad', fontWeight: 850, fontSize: 20}}>Data Contract</div><div style={{color: '#9eb0c5', fontSize: 22}}>→ treatment before DQ and publication</div></div>
+      <div style={{display: 'flex', alignItems: 'center', gap: 18, marginTop: 28, opacity: treatment}}><div style={{padding: '12px 18px', borderRadius: 12, background: '#5d351f', color: '#ffd5ad', fontWeight: 850, fontSize: 20}}>Data Contract</div><div style={{color: '#9eb0c5', fontSize: 22}}>reviewed treatment</div></div>
     </Surface>
     <Surface accent="#b487ff" style={{position: 'absolute', left: 956, top: 340, width: 860, height: 526, padding: '30px 34px'}}>
       <div style={{fontSize: 21, fontWeight: 850, color: '#c5a8ff', letterSpacing: 1.6}}>BUSINESS RULE → DATA QUALITY</div>
@@ -141,12 +143,11 @@ export const GovernanceScene = () => {
         <div style={{display: 'flex', alignItems: 'center', gap: 18, marginTop: 30}}><div style={{fontSize: 34, color: '#7790aa'}}>↓</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 25, color: '#d6c4ff'}}>column_relationship</div></div>
         <div style={{marginTop: 22, borderRadius: 15, padding: '17px 21px', background: '#211c3e', border: '1px solid #7253ab', fontFamily: 'ui-monospace, monospace', fontSize: 23, color: '#ebe4ff'}}>modified_datetime ≥ order_datetime</div>
       </div>
-      <div style={{opacity: runtime, display: 'flex', alignItems: 'center', gap: 15, marginTop: 28}}>{['Review', 'Save', 'Freeze', 'Execute'].map((item, index) => <div key={item} style={{fontSize: 19, fontWeight: 800, padding: '11px 14px', borderRadius: 11, color: index === 3 ? '#dfffee' : '#d7caff', background: index === 3 ? '#174434' : '#2c2450'}}>{item}</div>)}</div>
+      <div style={{opacity: runtime, marginTop: 28, fontSize: 23, fontWeight: 850, color: '#c5a8ff'}}>Structured rule → executable check</div>
     </Surface>
     <Mascot pose="scanning" x={115} y={765} size={210} delay={seconds(1.1)} />
     <Mascot pose="masking" x={680} y={740} size={220} delay={seconds(3.1)} />
     <Mascot pose="writing" x={1590} y={735} size={220} delay={seconds(5.2)} />
-    <Reveal at={seconds(10.2)} y={14}><div style={{position: 'absolute', left: 450, right: 450, top: 915, textAlign: 'center', fontSize: 25, fontWeight: 820, color: '#c5a8ff'}}>AI suggests · Human decides · Data Contract records · Pipeline enforces</div></Reveal>
   </SceneShell>;
 };
 
@@ -157,7 +158,7 @@ export const ValidationScene = () => {
   const row = enterProgress(frame, fps, seconds(1.3));
   const correction = enterProgress(frame, fps, seconds(5.8));
   const policy = enterProgress(frame, fps, seconds(7.2));
-  return <SceneShell duration={VALIDATION_DURATION} eyebrow="VALIDATION · STEP 4" heading="Fail. Correct. Prove it passes." subheading="The frozen rule executes against the real Development pipeline before Production activation." accent="#ff9c8c">
+  return <SceneShell duration={VALIDATION_DURATION} eyebrow="VALIDATION · STEP 4" heading="Fail. Correct. Pass." subheading="The frozen rule runs in Development." accent="#ff9c8c">
     <Surface accent={failed ? '#ff756d' : '#72e6ad'} style={{position: 'absolute', left: 120, top: 352, width: 1180, height: 440, padding: '30px 34px'}}>
       <div style={{display: 'grid', gridTemplateColumns: '185px 1fr 1fr 170px', gap: 2, borderRadius: 14, overflow: 'hidden', border: '1px solid #3b526d'}}>
         {['order_id', 'order_datetime', 'modified_datetime', 'result'].map((header) => <div key={header} style={{padding: '17px 18px', background: '#17314f', fontSize: 20, color: '#9db7d3', fontWeight: 800}}>{header}</div>)}
@@ -176,9 +177,9 @@ export const ValidationScene = () => {
     <Mascot pose="scanning" x={1390} y={335} size={360} delay={seconds(1)} />
     <div style={{position: 'absolute', left: 170, right: 170, top: 844, display: 'flex', gap: 22, opacity: policy}}>
       {[
-        ['VALIDATE', 'Runs every applicable check · never publishes', '#8ecbff'],
-        ['WARN', 'Records failure evidence · orchestration may continue', '#ffbd76'],
-        ['BLOCK', 'Stops orchestration at the selected Guardrail', '#ff9c8c'],
+        ['VALIDATE', 'Check only · no publish', '#8ecbff'],
+        ['WARN', 'Record · may continue', '#ffbd76'],
+        ['BLOCK', 'Stop at Guardrail', '#ff9c8c'],
       ].map(([title, copy, color]) => <div key={title} style={{flex: 1, borderRadius: 16, padding: '17px 21px', background: '#10243c', border: `1px solid ${color}77`}}><span style={{fontSize: 18, fontWeight: 900, color, marginRight: 12}}>{title}</span><span style={{fontSize: 18, color: '#c0cede'}}>{copy}</span></div>)}
     </div>
   </SceneShell>;
@@ -192,7 +193,7 @@ export const ActivationScene = () => {
   const promotion = enterProgress(frame, fps, seconds(6.2));
   const production = enterProgress(frame, fps, seconds(8.1));
   const deployLine = interpolate(frame, [seconds(6.5), seconds(8.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  return <SceneShell duration={ACTIVATION_DURATION} eyebrow="ACTIVATION + PRODUCTION · STEPS 5–6" heading="Approve the contract. Promote the pipeline." subheading="Two deliberate actions bring the validated governed pattern into Production." accent={theme.production}>
+  return <SceneShell duration={ACTIVATION_DURATION} eyebrow="ACTIVATION + PRODUCTION · STEPS 5–6" heading="Activate. Then promote." subheading="Contract approval and deployment stay distinct." accent={theme.production}>
     <Surface accent="#b487ff" style={{position: 'absolute', left: 115, top: 345, width: 780, height: 470, padding: '30px 34px', opacity: lifecycle}}>
       <div style={{fontSize: 21, letterSpacing: 1.5, fontWeight: 850, color: '#c5a8ff'}}>DATA CONTRACT LIFECYCLE</div>
       <div style={{display: 'flex', alignItems: 'center', marginTop: 60}}>
@@ -201,20 +202,20 @@ export const ActivationScene = () => {
           {index < 3 ? <div style={{fontSize: 31, color: '#69829e', margin: '0 10px'}}>→</div> : null}
         </div>)}
       </div>
-      <div style={{opacity: activation, marginTop: 53, padding: '18px 20px', borderRadius: 14, background: '#241d3c', borderLeft: '5px solid #b487ff'}}><div style={{fontSize: 23, fontWeight: 850}}>Governance activates the tested frozen version</div><div style={{fontSize: 20, color: '#aab8c9', marginTop: 10}}>Production resolves exactly one active contract per governed table.</div></div>
+      <div style={{opacity: activation, marginTop: 53, padding: '18px 20px', borderRadius: 14, background: '#241d3c', borderLeft: '5px solid #b487ff', fontSize: 23, fontWeight: 850}}>Activate the validated contract</div>
     </Surface>
     <Surface accent="#72e6ad" style={{position: 'absolute', left: 955, top: 345, width: 850, height: 470, padding: '30px 34px', opacity: promotion}}>
       <div style={{fontSize: 21, letterSpacing: 1.5, fontWeight: 850, color: '#72e6ad'}}>ENGINEERING PROMOTION</div>
       <div style={{position: 'relative', height: 210, marginTop: 20}}>
-        <div style={{position: 'absolute', left: 55, top: 35, width: 225, textAlign: 'center'}}><div style={{fontSize: 22, color: '#8ecbff', fontWeight: 850}}>DEVELOPMENT</div><div style={{fontSize: 20, color: '#9eb0c5', marginTop: 12}}>validated 02 pipeline</div></div>
+        <div style={{position: 'absolute', left: 55, top: 35, width: 225, textAlign: 'center'}}><div style={{fontSize: 22, color: '#8ecbff', fontWeight: 850}}>DEVELOPMENT</div></div>
         <div style={{position: 'absolute', left: 280, top: 85, width: 230, height: 6, borderRadius: 99, background: '#29415d'}}><div style={{height: '100%', width: `${deployLine * 100}%`, borderRadius: 99, background: '#72e6ad', boxShadow: '0 0 18px #72e6ad88'}} /></div>
-        <div style={{position: 'absolute', right: 45, top: 35, width: 225, textAlign: 'center', opacity: production}}><div style={{fontSize: 22, color: '#72e6ad', fontWeight: 850}}>PRODUCTION</div><div style={{fontSize: 20, color: '#9eb0c5', marginTop: 12}}>same pipeline pattern</div></div>
+        <div style={{position: 'absolute', right: 45, top: 35, width: 225, textAlign: 'center', opacity: production}}><div style={{fontSize: 22, color: '#72e6ad', fontWeight: 850}}>PRODUCTION</div></div>
         <Mascot pose="dev" x={75} y={112} size={150} delay={seconds(6.2)} />
         <Mascot pose="prod" x={590} y={112} size={150} delay={seconds(8.1)} />
       </div>
-      <div style={{opacity: production, marginTop: 25, padding: '18px 20px', borderRadius: 14, background: '#12362a', borderLeft: '5px solid #72e6ad'}}><div style={{fontSize: 23, fontWeight: 850}}>Engineering deploys the validated artifact</div><div style={{fontSize: 20, color: '#aab8c9', marginTop: 10}}>Production configuration resolves Production stores and the active contract.</div></div>
+      <div style={{opacity: production, marginTop: 25, padding: '18px 20px', borderRadius: 14, background: '#12362a', borderLeft: '5px solid #72e6ad', fontSize: 23, fontWeight: 850}}>Promote the validated pipeline</div>
     </Surface>
-    <Reveal at={seconds(10)} y={14}><div style={{position: 'absolute', left: 300, right: 300, top: 885, textAlign: 'center', fontSize: 26, color: '#d9e6f4', fontWeight: 820}}>Same Read → PySpark → Write workflow. Production resources. Active governed definition.</div></Reveal>
+    <Reveal at={seconds(10)} y={14}><div style={{position: 'absolute', left: 300, right: 300, top: 885, textAlign: 'center', fontSize: 26, color: '#d9e6f4', fontWeight: 820}}>Same governed pipeline. Production configuration.</div></Reveal>
   </SceneShell>;
 };
 
