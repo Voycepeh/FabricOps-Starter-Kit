@@ -4,9 +4,12 @@
   "scripts": {
     "studio": "remotion studio src/index.ts",
     "render": "remotion render src/index.ts FabricOpsHero out/fabricops-product-poc.mp4",
-    "motion:sfx": "node scripts/generate-motion-experiment-sfx.mjs",
-    "motion:render": "node scripts/render-motion-experiment.mjs",
+    "motion:sfx": "node scripts/generate-motion-sfx.mjs",
+    "motion:render": "node scripts/render-motion-range.mjs --full",
+    "motion:preview": "node scripts/render-motion-range.mjs",
+    "motion:frame": "node scripts/render-motion-frame.mjs",
     "motion:sheets": "node scripts/create-motion-contact-sheets.mjs",
+    "motion:guide": "node scripts/generate-motion-review-guide.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

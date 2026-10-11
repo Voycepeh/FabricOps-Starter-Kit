@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   render:
@@ -17,18 +17,11 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Stage narration asset for Remotion
-        run: |
-          mkdir -p video/remotion/product-poc/public/audio
-          cp video/remotion/product-poc/FabricOps_narration_master_numbered.m4a video/remotion/product-poc/public/audio/FabricOps_narration_master_numbered.m4a
 
       - name: Install dependencies
         working-directory: video/remotion/product-poc
@@ -43,13 +36,19 @@ jobs:
         working-directory: video/remotion/product-poc
         run: npm run typecheck
 
-      - name: Render review video
+      - name: Generate review guide
         working-directory: video/remotion/product-poc
-        run: npm run render
-
-      - name: Verify narration is audible
         run: |
-          ffmpeg -i video/remotion/product-poc/out/fabricops-product-poc.mp4 -map 0:a:0 -af volumedetect -f null - 2> /tmp/volumedetect.log
+          npm run motion:guide
+          git diff --exit-code -- MOTION_REVIEW_GUIDE.md
+
+      - name: Render enhanced Part 1
+        working-directory: video/remotion/product-poc
+        run: npm run motion:render
+
+      - name: Verify enhanced narration is audible
+        run: |
+          ffmpeg -i video/remotion/product-poc/out/motion-experiment/FabricOps-Part1-Motion-Full.mp4 -map 0:a:0 -af volumedetect -f null - 2> /tmp/volumedetect.log
           cat /tmp/volumedetect.log
           mean_volume=$(sed -n 's/.*mean_volume: \([-0-9.]*\) dB.*/\1/p' /tmp/volumedetect.log | tail -1)
           python - "$mean_volume" <<'PY'
@@ -60,38 +59,16 @@ jobs:
           print(f"Narration verified at mean volume {mean_volume} dB")
           PY
 
-      - name: Upload review video
-        uses: actions/upload-artifact@v4
-        with:
-          name: fabricops-product-poc
-          path: video/remotion/product-poc/out/fabricops-product-poc.mp4
-          if-no-files-found: error
-
-      - name: Render Part 1 motion experiment
+      - name: Generate enhanced Part 1 contact sheets
         working-directory: video/remotion/product-poc
-        run: |
-          npm run motion:render
-          npm run motion:sheets
+        run: npm run motion:sheets
 
-      - name: Upload Part 1 motion experiment
+      - name: Upload enhanced Part 1 review package
         uses: actions/upload-artifact@v4
         with:
-          name: fabricops-part1-motion-experiment
+          name: fabricops-part1-motion-full
           path: |
-            video/remotion/product-poc/out/motion-experiment/*.mp4
+            video/remotion/product-poc/out/motion-experiment/FabricOps-Part1-Motion-Full.mp4
             video/remotion/product-poc/out/motion-experiment/contact-sheets/**/*.png
+            video/remotion/product-poc/MOTION_REVIEW_GUIDE.md
           if-no-files-found: error
-
-      - name: Sync rendered homepage video
-        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]' && github.event.pull_request.head.repo.full_name == github.repository
-        run: |
-          cp video/remotion/product-poc/out/fabricops-product-poc.mp4 docs/assets/FabricOps_Overview_Video_web.mp4
-          if git diff --quiet -- docs/assets/FabricOps_Overview_Video_web.mp4; then
-            echo "Homepage video is already up to date."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/assets/FabricOps_Overview_Video_web.mp4
-          git commit -m "video: update homepage overview render"
-          git push origin "HEAD:${GITHUB_HEAD_REF}"

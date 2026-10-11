@@ -3,9 +3,14 @@ import timeline from './timeline.json';
 
 export const EXPERIMENT_TIMELINE = timeline;
 export const EXPERIMENT_DURATION = Math.round(timeline.durationSeconds * timeline.fps);
-export const SOURCE_START_FRAME = Math.round(timeline.sourceSegmentStartSeconds * timeline.fps);
-export const LIFECYCLE_START_FRAME = Math.round((556 + 1069 + 1851) / 30 * timeline.fps);
-export const SOURCE_LOCAL_START_FRAME = SOURCE_START_FRAME - LIFECYCLE_START_FRAME;
+
+export type MotionScene = (typeof timeline.scenes)[number];
+
+export const sceneById = (id: MotionScene['id']) => {
+  const scene = timeline.scenes.find((candidate) => candidate.id === id);
+  if (!scene) throw new Error(`Unknown motion scene: ${id}`);
+  return scene;
+};
 
 export const palette = {
   background: '#050b16',
@@ -57,3 +62,17 @@ export const settle = (
 
 export const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 export const mix = (from: number, to: number, amount: number) => from + (to - from) * amount;
+
+export const cameraAt = (scene: MotionScene, globalSeconds: number) => {
+  const input = scene.camera.map((keyframe) => keyframe.at);
+  const options = {
+    extrapolateLeft: 'clamp' as const,
+    extrapolateRight: 'clamp' as const,
+    easing: easeInOut,
+  };
+  return {
+    x: interpolate(globalSeconds, input, scene.camera.map((keyframe) => keyframe.x), options),
+    y: interpolate(globalSeconds, input, scene.camera.map((keyframe) => keyframe.y), options),
+    scale: interpolate(globalSeconds, input, scene.camera.map((keyframe) => keyframe.scale), options),
+  };
+};

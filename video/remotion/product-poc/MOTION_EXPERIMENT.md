@@ -1,14 +1,12 @@
-# FabricOps Part 1 motion experiment
+# FabricOps Part 1 motion upgrade
 
-This experiment compares the original Part 1 lifecycle animation with a motion-designed version of the same 29.5-second segment. It starts at the original 02:33.5 mark and preserves the original timings and technical meaning for Step 5, Step 6, and Step 7.
+This composition is a full-length, motion-enhanced treatment of FabricOps Part 1. The original `FabricOpsHero` remains available and unchanged as the content authority. `FabricOpsPart1Motion` preserves its 202.9-second narration, five-scene structure, terminology, seven-step lifecycle and hand-off to Part 2 while adding restrained camera direction, lighting, depth and sound cues.
 
-## Compositions
+## Timing model
 
-- `FabricOpsPart1OriginalSample` — unchanged `LifecycleScene` visuals and timing, framed as a standalone sample.
-- `FabricOpsPart1MotionExperiment` — enhanced 1920×1080 sample at 30 fps.
-- `FabricOpsPart1MotionComparison` — 3840×1080 side-by-side comparison at 30 fps.
+`src/motion-experiment/timeline.json` is the centralized edit map. For every scene it records start and end timestamps, message, focus, visible text, narration alignment, camera keyframes, element windows, animation beats and text holds. It also owns sound cues and significant review timestamps.
 
-The shared timing source is `src/motion-experiment/timeline.json`. It drives visual beats and the procedural sound-design script.
+Human-readable timestamps and scene-by-scene review notes are generated in `MOTION_REVIEW_GUIDE.md`.
 
 ## Reproduce
 
@@ -18,22 +16,37 @@ From `video/remotion/product-poc`:
 npm install
 npm run typecheck
 npm run motion:sfx
+npm run motion:guide
 npm run motion:render
 npm run motion:sheets
 ```
 
-Outputs are written to `out/motion-experiment/` and intentionally ignored by Git. The existing narration and generated sound layer are staged locally under ignored `public/` paths; no audio samples are downloaded.
+The final video is `out/motion-experiment/FabricOps-Part1-Motion-Full.mp4`. Contact sheets are grouped by scene and include an additional significant-beats sheet. Outputs are intentionally ignored by Git. The existing narration and generated sound layer are staged locally under ignored `public/` paths; no audio samples are downloaded.
 
-The render script asks Remotion for deterministic JPEG frame sequences, then assembles them with the pinned `ffmpeg-static` development dependency. This avoids a Windows crash in Remotion 4.0.479's bundled compositor while preserving Remotion as the rendering framework.
+The render workflow asks Remotion for deterministic JPEG sequences, then assembles them with the pinned `ffmpeg-static` development dependency. This avoids a Windows crash in Remotion 4.0.479's bundled compositor while preserving Remotion as the rendering framework.
 
-## Comparison notes
+## Targeted timestamp review
 
-The enhanced version replaces the static overview-board treatment with a guided camera journey. It keeps the lifecycle wording intact while introducing a clear visual hierarchy, persistent promotion token, layered workspace depth, state-driven lighting, flowing data packets, and a single payoff as approved Production data reaches the Consumer workspace. Motion uses deliberate bezier curves and restrained springs; exits are faster than entrances, and readable states receive dedicated holds.
+Render any synchronized range:
 
-The experiment is deliberately scoped to Steps 5–7. A full-video rollout would still need scene-by-scene storyboarding, narration-aware retiming, and a consistent sound mix across the complete Part 1 composition.
+```bash
+npm run motion:preview -- --from 01:24 --to 01:32
+```
+
+Export the exact global frame nearest a timestamp:
+
+```bash
+npm run motion:frame -- --at 01:26.5
+```
+
+Both commands use global Part 1 timestamps. Partial videos trim narration and sound design from the same global point, so visual and audio timing remain synchronized.
+
+## Design decisions
+
+The enhanced composition reuses the original scene components rather than introducing a second set of explanations. Camera movement follows the current narrated subject while leaving surrounding context visible. Lighting and sound remain secondary to the existing content, and no new product claims are introduced.
+
+The earlier original-versus-enhanced sample, 3840 x 1080 comparison composition and comparison render outputs have been removed. The published video under `docs/assets/` is not changed by this workflow.
 
 ## Review result
 
-The first contact-sheet pass exposed an empty opening frame and residual Production labels behind the Step 7 hold. The final pass keeps Step 5 readable from frame zero, clears each departing workspace before the next settles, and holds the Consumer destination cleanly through the ending. The final review samples every 2.5 seconds across all three outputs.
-
-The experiment demonstrates a stronger visual hierarchy and more legible hand-offs without changing the source narration or lifecycle meaning. Remaining work for a production rollout is deliberately outside this experiment: extend the visual language across the full story, tune the procedural sound layer against the complete narration mix, and replace system-font assumptions if a locked cross-platform typeface is required.
+The full composition was rendered and reviewed twice. The first review found an empty frame at `00:00`; the final pass adds a restrained opening anchor and confirms the correction in the regular and significant-beat contact sheets. The significant-beat sheet samples 0.5 seconds before, at and after every scene boundary so transition pacing is visible alongside the narration-aligned beats.

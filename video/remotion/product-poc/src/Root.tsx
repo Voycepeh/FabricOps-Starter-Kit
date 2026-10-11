@@ -1,10 +1,6 @@
 import {Composition, Folder} from 'remotion';
 import {FabricOpsHero} from './FabricOpsHero';
-import {
-  FabricOpsPart1MotionComparison,
-  FabricOpsPart1MotionExperiment,
-  FabricOpsPart1OriginalSample,
-} from './motion-experiment/MotionExperiment';
+import {FabricOpsPart1Motion} from './motion-experiment/MotionExperiment';
 import timeline from './motion-experiment/timeline.json';
 import {VIDEO_DURATION} from './videoConfig';
 
@@ -23,27 +19,11 @@ export const Root = () => {
       />
       <Folder name="Motion-Experiment">
         <Composition
-          id="FabricOpsPart1OriginalSample"
-          component={FabricOpsPart1OriginalSample}
+          id="FabricOpsPart1Motion"
+          component={FabricOpsPart1Motion}
           durationInFrames={durationInFrames}
           fps={30}
           width={1920}
-          height={1080}
-        />
-        <Composition
-          id="FabricOpsPart1MotionExperiment"
-          component={FabricOpsPart1MotionExperiment}
-          durationInFrames={durationInFrames}
-          fps={30}
-          width={1920}
-          height={1080}
-        />
-        <Composition
-          id="FabricOpsPart1MotionComparison"
-          component={FabricOpsPart1MotionComparison}
-          durationInFrames={durationInFrames}
-          fps={30}
-          width={3840}
           height={1080}
         />
       </Folder>

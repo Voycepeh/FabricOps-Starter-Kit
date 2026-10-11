@@ -1,28 +1,31 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import {spawnSync} from 'node:child_process';
-import {createRequire} from 'node:module';
-import {fileURLToPath} from 'node:url';
+import {ffmpeg, output, root, run, timeline} from './motion-render-utils.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const output = path.join(root, 'out', 'motion-experiment');
-const require = createRequire(import.meta.url);
-const ffmpeg = require('ffmpeg-static');
-const inputs = [
-  'FabricOps-Part1-Original-Sample.mp4',
-  'FabricOps-Part1-Claude-Motion-Sample.mp4',
-  'FabricOps-Part1-Motion-Comparison.mp4',
-];
+const source = path.join(output, 'FabricOps-Part1-Motion-Full.mp4');
+if (!fs.existsSync(source)) throw new Error(`Missing full render: ${source}`);
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 const sheets = path.join(output, 'contact-sheets', timestamp);
 fs.mkdirSync(sheets, {recursive: true});
 
-for (const input of inputs) {
-  const source = path.join(output, input);
-  if (!fs.existsSync(source)) throw new Error(`Missing render: ${source}`);
-  const target = path.join(sheets, `${path.parse(input).name}-contact-sheet.png`);
-  const filter = "fps=1/2.5,scale=640:360,drawtext=font='Consolas':text='t=%{pts\\:hms}':x=18:y=18:fontsize=24:fontcolor=white:box=1:boxcolor=black@0.68:boxborderw=8,tile=3x4:padding=6:margin=6:color=0x111827";
-  const result = spawnSync(ffmpeg, ['-y', '-i', source, '-vf', filter, '-frames:v', '1', '-update', '1', target], {cwd: root, stdio: 'inherit'});
-  if (result.status !== 0) process.exit(result.status ?? 1);
+for (const scene of timeline.scenes) {
+  const duration = scene.end - scene.start;
+  const count = Math.max(1, Math.ceil(duration / 4));
+  const columns = Math.min(4, count);
+  const rows = Math.ceil(count / columns);
+  const target = path.join(sheets, `${scene.id}-contact-sheet.png`);
+  const filter = `setpts=PTS+${scene.start}/TB,fps=1/4,scale=480:270,drawtext=text='t=%{pts\\:hms}':x=14:y=14:fontsize=22:fontcolor=white:box=1:boxcolor=black@0.7:boxborderw=7,tile=${columns}x${rows}:padding=6:margin=6:color=0x111827`;
+  run(ffmpeg, ['-y', '-ss', String(scene.start), '-t', String(duration), '-i', source, '-vf', filter, '-frames:v', '1', '-update', '1', target]);
 }
+
+const transitionTimes = timeline.scenes.slice(1).flatMap((scene) => [scene.start - 0.5, scene.start, scene.start + 0.5]);
+const selectedFrames = [...new Set([...timeline.reviewTimes, ...transitionTimes]
+  .filter((seconds) => seconds >= 0 && seconds < timeline.durationSeconds)
+  .map((seconds) => Math.round(seconds * timeline.fps)))].sort((left, right) => left - right);
+const selection = selectedFrames.map((frame) => `eq(n\\,${frame})`).join('+');
+const columns = 5;
+const rows = Math.ceil(selectedFrames.length / columns);
+const reviewTarget = path.join(sheets, 'significant-beats-contact-sheet.png');
+const reviewFilter = `select='${selection}',scale=384:216,drawtext=text='t=%{pts\\:hms}':x=12:y=12:fontsize=19:fontcolor=white:box=1:boxcolor=black@0.7:boxborderw=6,tile=${columns}x${rows}:padding=5:margin=5:color=0x111827`;
+run(ffmpeg, ['-y', '-i', source, '-vf', reviewFilter, '-fps_mode', 'vfr', '-frames:v', '1', '-update', '1', reviewTarget]);
 console.log(`Contact sheets: ${path.relative(root, sheets)}`);

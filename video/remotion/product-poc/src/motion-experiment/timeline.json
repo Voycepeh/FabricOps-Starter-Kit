@@ -1,16 +1,226 @@
 {
   "fps": 30,
-  "durationSeconds": 29.5,
-  "sourceSegmentStartSeconds": 153.5,
-  "beats": {
-    "step5": 0,
-    "contractActivated": 1.1,
-    "promotionBegins": 7.5,
-    "productionArrives": 14.5,
-    "pipelineChecks": [16.2, 18.15, 20.1],
-    "productionApproved": 22.1,
-    "consumerHandoff": 25.2,
-    "consumerSettled": 27.0,
-    "exit": 29.1
-  }
+  "durationSeconds": 202.9,
+  "narration": {
+    "file": "audio/FabricOps_narration_master_numbered.m4a",
+    "start": 0,
+    "end": 202.9
+  },
+  "scenes": [
+    {
+      "id": "opening",
+      "title": "Microsoft Fabric landscape",
+      "start": 0,
+      "end": 18.533,
+      "message": "Microsoft Fabric brings many analytical workloads together, creating the question of where governed delivery begins.",
+      "primaryFocus": "Microsoft Fabric, then the six featured Fabric artifacts and the opening question.",
+      "visibleText": ["Microsoft Fabric", "Notebook", "Data Pipeline", "Lakehouse", "Warehouse", "Environment", "Eventstream", "Where do we start?"],
+      "narrationAlignment": "The artifact population follows the opening inventory; the question holds before the transition into FabricOps.",
+      "camera": [
+        {"at": 0, "x": 960, "y": 520, "scale": 1.04},
+        {"at": 3, "x": 960, "y": 540, "scale": 1},
+        {"at": 14.8, "x": 960, "y": 510, "scale": 1.03},
+        {"at": 17.7, "x": 960, "y": 500, "scale": 1.08},
+        {"at": 18.533, "x": 960, "y": 500, "scale": 1.1}
+      ],
+      "elements": [
+        {"id": "fabric-title", "appear": 0, "disappear": 14.9},
+        {"id": "artifact-population", "appear": 3, "disappear": 18.533},
+        {"id": "opening-question", "appear": 15.167, "disappear": 18.533}
+      ],
+      "beats": [
+        {"id": "fabric-title-settles", "at": 0.9},
+        {"id": "artifact-population-begins", "at": 3},
+        {"id": "featured-artifacts-reframe", "at": 14.617},
+        {"id": "opening-question", "at": 15.167},
+        {"id": "scene-transition", "at": 17.567}
+      ],
+      "textHolds": [
+        {"text": "Microsoft Fabric", "start": 1, "end": 14.6},
+        {"text": "Where do we start?", "start": 15.7, "end": 17.6}
+      ]
+    },
+    {
+      "id": "fabricOps",
+      "title": "Why FabricOps",
+      "start": 18.533,
+      "end": 54.167,
+      "message": "FabricOps is a lightweight, self-contained way to bring governance and engineering together in Microsoft Fabric notebook workflows.",
+      "primaryFocus": "The FabricOps wordmark, followed by one supporting concept at a time and the governance–engineering relationship.",
+      "visibleText": ["FabricOps", "Operations", "Plug and play", "Self-contained", "Python", "Notebook", "PySpark", "Lakehouse", "Governance into Code", "Governance", "Engineering", "Why?", "How works?"],
+      "narrationAlignment": "Short supporting labels appear only when named; the governance and engineering relationship resolves before the how-it-works prompt.",
+      "camera": [
+        {"at": 18.533, "x": 960, "y": 540, "scale": 1.06},
+        {"at": 22, "x": 960, "y": 530, "scale": 1.02},
+        {"at": 39.5, "x": 960, "y": 520, "scale": 1.05},
+        {"at": 45.5, "x": 960, "y": 540, "scale": 1},
+        {"at": 51.5, "x": 960, "y": 525, "scale": 1.05},
+        {"at": 54.167, "x": 960, "y": 520, "scale": 1.08}
+      ],
+      "elements": [
+        {"id": "fabricops-wordmark", "appear": 18.533, "disappear": 54.167},
+        {"id": "supporting-concepts", "appear": 20, "disappear": 36.5},
+        {"id": "why-prompt", "appear": 39.5, "disappear": 42.033},
+        {"id": "governance-engineering", "appear": 43, "disappear": 50},
+        {"id": "how-prompt", "appear": 51.5, "disappear": 54.167}
+      ],
+      "beats": [
+        {"id": "operations", "at": 20},
+        {"id": "plug-and-play", "at": 23},
+        {"id": "self-contained", "at": 28},
+        {"id": "implementation-labels", "at": 31.5},
+        {"id": "why-fabricops", "at": 39.5},
+        {"id": "governance-into-code", "at": 43},
+        {"id": "governance-engineering-orbit", "at": 48},
+        {"id": "how-it-works", "at": 51.5}
+      ],
+      "textHolds": [
+        {"text": "FabricOps", "start": 19.2, "end": 53.3},
+        {"text": "Governance ↔ Engineering", "start": 46.3, "end": 49.7}
+      ]
+    },
+    {
+      "id": "notebooks",
+      "title": "Notebook foundation",
+      "start": 54.167,
+      "end": 115.867,
+      "message": "A reusable FabricOps package, Fabric Environment, environment configuration, governance notebook, Data Contract and pipeline notebook establish the governed workflow.",
+      "primaryFocus": "One setup relationship at a time, ending with the three-notebook operating model and central Data Contract.",
+      "visibleText": ["FabricOps package", "Fabric Environment", "00_env_config", "01_governance", "Data Contract", "02_pipeline"],
+      "narrationAlignment": "Package imports precede workspace setup; the environment configuration becomes the foundation before governance and pipeline responsibilities connect through the Data Contract.",
+      "camera": [
+        {"at": 54.167, "x": 960, "y": 520, "scale": 1.06},
+        {"at": 55, "x": 960, "y": 515, "scale": 1.05},
+        {"at": 65, "x": 960, "y": 500, "scale": 1.02},
+        {"at": 70, "x": 960, "y": 545, "scale": 1.05},
+        {"at": 78, "x": 960, "y": 560, "scale": 1},
+        {"at": 86.3, "x": 960, "y": 600, "scale": 1.04},
+        {"at": 103, "x": 960, "y": 610, "scale": 1.02},
+        {"at": 115.867, "x": 960, "y": 590, "scale": 1.06}
+      ],
+      "elements": [
+        {"id": "package-imports", "appear": 55, "disappear": 65},
+        {"id": "workspace-setup", "appear": 65, "disappear": 75.6},
+        {"id": "environment-foundation", "appear": 70, "disappear": 115.867},
+        {"id": "governance-and-pipeline-notebooks", "appear": 78, "disappear": 115.867},
+        {"id": "data-contract", "appear": 86.3, "disappear": 115.867},
+        {"id": "operating-relationships", "appear": 103, "disappear": 115.867}
+      ],
+      "beats": [
+        {"id": "package-arrives", "at": 55},
+        {"id": "package-imports", "at": 55.767},
+        {"id": "workspace-setup", "at": 65},
+        {"id": "environment-connects", "at": 70},
+        {"id": "notebook-foundation", "at": 78},
+        {"id": "data-contract", "at": 86.3},
+        {"id": "relationships-complete", "at": 103}
+      ],
+      "textHolds": [
+        {"text": "FabricOps package imports", "start": 57.8, "end": 64.5},
+        {"text": "Fabric workspace setup", "start": 70.9, "end": 75.1},
+        {"text": "Governance · Data Contract · ETL Pipeline", "start": 87.2, "end": 114.9}
+      ]
+    },
+    {
+      "id": "lifecycle",
+      "title": "Seven-step lifecycle",
+      "start": 115.867,
+      "end": 187.433,
+      "message": "Governance and engineering progress through seven explicit steps from Data Agreement to approved Production data consumption.",
+      "primaryFocus": "The currently narrated lifecycle step, while the surrounding workspace context remains visible.",
+      "visibleText": ["1 Data Stewards & Data Agreement", "2 ETL, Profile & Catalogue", "3 Author Data Contract", "4 ETL with Contract Guardrails", "5 Activate & Promote", "6 Run Production Pipeline", "7 Consume approved Production data"],
+      "narrationAlignment": "Each camera move settles on the corresponding numbered step; the validation loop remains visible before activation and promotion.",
+      "camera": [
+        {"at": 115.867, "x": 960, "y": 540, "scale": 1.02},
+        {"at": 120, "x": 250, "y": 280, "scale": 1.18},
+        {"at": 123.467, "x": 705, "y": 280, "scale": 1.18},
+        {"at": 128.933, "x": 250, "y": 560, "scale": 1.18},
+        {"at": 137.933, "x": 705, "y": 560, "scale": 1.18},
+        {"at": 145, "x": 480, "y": 560, "scale": 1.08},
+        {"at": 153.5, "x": 250, "y": 840, "scale": 1.18},
+        {"at": 161, "x": 960, "y": 820, "scale": 1.03},
+        {"at": 168, "x": 1160, "y": 840, "scale": 1.18},
+        {"at": 178.7, "x": 1615, "y": 840, "scale": 1.18},
+        {"at": 186.633, "x": 960, "y": 540, "scale": 1.02},
+        {"at": 187.433, "x": 960, "y": 540, "scale": 1.05}
+      ],
+      "elements": [
+        {"id": "workspace-context", "appear": 115.867, "disappear": 187.433},
+        {"id": "validation-loop", "appear": 145, "disappear": 153.5},
+        {"id": "production-handoff", "appear": 161, "disappear": 168},
+        {"id": "approved-consumption", "appear": 178.7, "disappear": 187.433}
+      ],
+      "beats": [
+        {"id": "step-1-data-agreement", "at": 120},
+        {"id": "step-2-profile-catalogue", "at": 123.467},
+        {"id": "step-3-data-contract", "at": 128.933},
+        {"id": "step-4-contract-guardrails", "at": 137.933},
+        {"id": "validation-loop", "at": 145},
+        {"id": "step-5-activate-promote", "at": 153.5},
+        {"id": "production-handoff", "at": 161},
+        {"id": "step-6-production-pipeline", "at": 168},
+        {"id": "step-7-approved-consumption", "at": 178.7}
+      ],
+      "textHolds": [
+        {"text": "Steps 1–2", "start": 120.6, "end": 128.3},
+        {"text": "Steps 3–4 and validation loop", "start": 129.5, "end": 152.8},
+        {"text": "Step 5", "start": 154.1, "end": 167.3},
+        {"text": "Step 6", "start": 168.6, "end": 178},
+        {"text": "Step 7", "start": 179.3, "end": 186.6}
+      ]
+    },
+    {
+      "id": "cta",
+      "title": "Continue to the Guided Demo",
+      "start": 187.433,
+      "end": 202.9,
+      "message": "Part 1 closes by directing viewers to how FabricOps works and the Guided Demo.",
+      "primaryFocus": "FabricOps wordmark, then the Guided Demo action.",
+      "visibleText": ["FabricOps", "Lightweight. Self-contained. Built for Microsoft Fabric.", "How FabricOps works", "Guided Demo"],
+      "narrationAlignment": "The first action settles before focus moves to Guided Demo and holds through the end.",
+      "camera": [
+        {"at": 187.433, "x": 960, "y": 540, "scale": 1.04},
+        {"at": 191.1, "x": 960, "y": 535, "scale": 1.02},
+        {"at": 195.567, "x": 960, "y": 565, "scale": 1.04},
+        {"at": 202.9, "x": 960, "y": 560, "scale": 1.06}
+      ],
+      "elements": [
+        {"id": "fabricops-close", "appear": 187.433, "disappear": 202.9},
+        {"id": "how-fabricops-works", "appear": 191.1, "disappear": 195.567},
+        {"id": "guided-demo", "appear": 195.567, "disappear": 202.9}
+      ],
+      "beats": [
+        {"id": "closing-wordmark", "at": 187.433},
+        {"id": "how-fabricops-works", "at": 191.1},
+        {"id": "guided-demo", "at": 195.567}
+      ],
+      "textHolds": [
+        {"text": "FabricOps", "start": 188.2, "end": 202.4},
+        {"text": "Guided Demo", "start": 196.2, "end": 202.4}
+      ]
+    }
+  ],
+  "soundCues": [
+    {"id": "ambient-bed", "at": 0, "duration": 202.9, "type": "bed", "gain": 0.012, "pan": 0},
+    {"id": "opening-settle", "at": 0.9, "duration": 0.5, "type": "tone", "gain": 0.05, "pan": 0},
+    {"id": "fabricops-transition", "at": 18.2, "duration": 0.8, "type": "whoosh", "gain": 0.055, "pan": 0.2},
+    {"id": "relationship-resolves", "at": 48, "duration": 0.8, "type": "tone", "gain": 0.045, "pan": 0},
+    {"id": "notebook-transition", "at": 53.8, "duration": 0.8, "type": "whoosh", "gain": 0.05, "pan": -0.15},
+    {"id": "package-arrives", "at": 55, "duration": 0.45, "type": "impact", "gain": 0.055, "pan": -0.2},
+    {"id": "environment-connects", "at": 70, "duration": 0.55, "type": "tone", "gain": 0.04, "pan": 0.15},
+    {"id": "contract-arrives", "at": 86.3, "duration": 0.55, "type": "impact", "gain": 0.05, "pan": 0},
+    {"id": "lifecycle-transition", "at": 115.5, "duration": 0.9, "type": "whoosh", "gain": 0.055, "pan": 0.1},
+    {"id": "step-1", "at": 120, "duration": 0.3, "type": "tone", "gain": 0.035, "pan": -0.45},
+    {"id": "step-2", "at": 123.467, "duration": 0.3, "type": "tone", "gain": 0.035, "pan": -0.2},
+    {"id": "step-3", "at": 128.933, "duration": 0.3, "type": "tone", "gain": 0.035, "pan": -0.45},
+    {"id": "step-4", "at": 137.933, "duration": 0.3, "type": "tone", "gain": 0.035, "pan": -0.2},
+    {"id": "validation-loop", "at": 145, "duration": 0.8, "type": "whoosh", "gain": 0.04, "pan": -0.25},
+    {"id": "step-5", "at": 153.5, "duration": 0.35, "type": "impact", "gain": 0.05, "pan": -0.35},
+    {"id": "production-handoff", "at": 161, "duration": 0.9, "type": "whoosh", "gain": 0.05, "pan": 0.1},
+    {"id": "step-6", "at": 168, "duration": 0.4, "type": "impact", "gain": 0.055, "pan": 0.25},
+    {"id": "step-7", "at": 178.7, "duration": 0.7, "type": "tone", "gain": 0.055, "pan": 0.45},
+    {"id": "cta-transition", "at": 187.1, "duration": 0.85, "type": "whoosh", "gain": 0.05, "pan": 0},
+    {"id": "guided-demo", "at": 195.567, "duration": 0.75, "type": "tone", "gain": 0.045, "pan": 0.2}
+  ],
+  "reviewTimes": [0, 3, 14.8, 17.7, 18.533, 23, 39.5, 45.5, 51.5, 54.167, 55, 65, 70, 78, 86.3, 103, 115.867, 120, 123.467, 128.933, 137.933, 145, 153.5, 161, 168, 178.7, 187.433, 191.1, 195.567, 202.4]
 }
