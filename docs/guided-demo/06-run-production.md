@@ -8,7 +8,7 @@ There is no new engineering pattern in this step. The point is to execute the sa
 
 Complete [Step 5](05-activate-data-contract-and-promote.md) and use the promoted Production pipeline.
 
-## 1. Load the Production configuration
+## Load the Production configuration
 
 Run the Production copy of `00_env_config`:
 
@@ -18,7 +18,7 @@ Run the Production copy of `00_env_config`:
 
 The same logical store names now resolve to the Production Lakehouses, Warehouses, schemas, paths, and SQL endpoints.
 
-## 2. Run the promoted pipeline
+## Run the promoted pipeline
 
 <div class="fabricops-mascot-callout" markdown="1">
   <img src="../../assets/robot-prod.png" alt="" loading="lazy">
@@ -45,7 +45,7 @@ The key difference is Data Contract resolution:
 
 The same Guardrail functions therefore enforce the Production-active definition, and [`pipeline_write()`](../api/reference/pipeline_write.md) uses the active governed Processing configuration for each target.
 
-## 3. Grant direct consumer access
+## Grant direct consumer access
 
 Once the governed Production output exists, consumers do not need a FabricOps exploration notebook to use it.
 
