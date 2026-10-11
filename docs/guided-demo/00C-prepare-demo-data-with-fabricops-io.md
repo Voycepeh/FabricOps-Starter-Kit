@@ -4,6 +4,10 @@
 
 **Run a notebook that demonstrates the FabricOps I/O helpers and prepares the original retail tables required by the Step 2A Full Refresh demo.**
 
+## Before you begin
+
+Complete [Step 0B](00B-configure-environment-and-load-assets.md) before preparing the demo data.
+
 ## 1. Import the setup notebook
 
 1. Download [`00C_demo_setup.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/DemoData/00C_demo_setup.ipynb) and import it into Fabric Engineering Workspace (Dev).
@@ -98,19 +102,19 @@ Read the remaining demo sources and write the managed Lakehouse and Warehouse ta
 </div>
 
 
-### Orders (we will write the dataframe we ingested earlier into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
+### Orders
 
 ![Orders demo](../assets/00C/Orders_Demo.png)
 
-### Products (we will ingest the product data and write into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
+### Products
 
 ![Products demo](../assets/00C/Products_Demo.png)
 
-### Create the Warehouse schema (for warehouses you will need to create schema via sql prior to writing to it)
+### Create the Warehouse schema
 
 ![Create Warehouse schema](../assets/00C/Create_Schema_Warehouse.png)
 
-### Order history (we will ingest the order history data and write into the bronze lakehouse table and then re-read from that lakehouse table to see if the data is loaded properly)
+### Order history
 ![Orders history demo](../assets/00C/Orders_History_Demo.png)
 
 !!! tip "FabricOps provides two Warehouse read helpers"
