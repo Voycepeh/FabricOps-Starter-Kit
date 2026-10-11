@@ -1,9 +1,23 @@
-import {AbsoluteFill, Easing, interpolate, Sequence, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Easing, Img, interpolate, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {font, theme} from './theme';
 import {LifecycleScene, STEP_7_LABEL, StepCard} from './scenes/LifecycleScene';
 import {SCENE_STARTS} from './videoConfig';
 
 const seconds = (value: number) => Math.round(value * 30);
+
+// Use the same mascot artwork as the documentation. Motion is limited to scene
+// entrances; the robot remains stationary while viewers read the information.
+const Mascot = ({pose, x, y, size = 260, delay = 0}: {pose: 'neutral' | 'writing' | 'scanning' | 'masking' | 'carrying' | 'pointing' | 'dev' | 'prod'; x: number; y: number; size?: number; delay?: number}) => {
+  const frame = useCurrentFrame();
+  const enter = interpolate(frame, [delay, delay + 18], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+  return <Img src={staticFile(`mascots/robot-${pose}.png`)} style={{
+    position: 'absolute', left: x, top: y, width: size, height: size,
+    objectFit: 'contain', opacity: enter,
+    transform: `translateY(${(1 - enter) * 22}px)`,
+    filter: 'drop-shadow(0 12px 22px #0006)', pointerEvents: 'none',
+  }} />;
+};
+
 
 const consumers = [
   {title: 'Dashboards', color: '#f2c811', left: 180, icon: 'bars'},
@@ -129,6 +143,7 @@ const LifecycleConsumptionScene = () => {
       <div style={{position: 'absolute', left: 34, right: 34, bottom: -18, height: 18, borderRadius: '0 0 12px 12px', background: '#9a5c28', opacity: foundation}} />
     </div> : null}
 
+    <Mascot pose="prod" x={840} y={580} size={190} delay={CONSUMER_REVEAL_START} />
     {consumers.map((consumer, index) => {
       const progress = interpolate(frame, [CONSUMER_REVEAL_START + index * CONSUMER_STAGGER_INTERVAL, CONSUMER_REVEAL_START + index * CONSUMER_STAGGER_INTERVAL + CONSUMER_REVEAL_DURATION], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.bezier(0.16, 1, 0.3, 1)});
       return <div key={consumer.title} style={{position: 'absolute', left: consumer.left, top: 250, zIndex: 2}}>
@@ -174,6 +189,7 @@ const EngineeringTeaser = () => {
     <Tile x={1365} w={465} color={theme.production} title="TWO GOVERNED WRITES">
       {['Silver · curated_orders', 'Gold · customer_summary'].map((t, i) => <div key={t} style={{opacity: appear(5 + i), fontSize: 27, padding: '25px 6px', marginTop: 27, borderBottom: '1px solid #34465f'}}>{t}</div>)}
     </Tile>
+<Mascot pose="carrying" x={1540} y={90} size={230} delay={seconds(2)} />
     <div style={{position: 'absolute', bottom: 125, left: 120, right: 120, display: 'flex', justifyContent: 'space-between', opacity: appear(7)}}>
       {['02A · Full Refresh / Overwrite', '02B · Incremental Append', '02C · SCD1 / SCD2'].map(t => <div key={t} style={{fontSize: 25, fontWeight: 800, padding: '18px 30px', borderRadius: 18, background: '#173354', color: '#c7e2ff'}}>{t}</div>)}
     </div>
@@ -184,6 +200,7 @@ const GovernanceTeaser = () => {
   const later = frame >= seconds(9);
   const enter = spring({frame: frame - seconds(2), fps: 30, config: {damping: 18, stiffness: 90}});
   return <Teaser heading="Governance-as-Code" subheading="01_governance · AI-assisted authoring, human-reviewed decisions, executable guardrails">
+    <Mascot pose={later ? "scanning" : "writing"} x={1580} y={65} size={190} delay={seconds(1)} />
     {!later ? <>
       <Tile x={110} w={810} color={theme.consumer} title="SENSITIVE DATA · curated_orders">
         <div style={{fontSize: 43, fontWeight: 850, marginTop: 48}}>customer_id</div>
@@ -216,6 +233,7 @@ const ClosingScene = () => {
   const frame = useCurrentFrame();
   const p = spring({frame, fps: 30, config: {damping: 18, stiffness: 85}});
   return <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 44%, #15334d, #07101f 72%)', display: 'grid', placeItems: 'center'}}>
+    <Mascot pose="pointing" x={1470} y={650} size={300} delay={seconds(1)} />
     <div style={{textAlign: 'center', opacity: p, transform: `translateY(${(1 - p) * 40}px)`}}>
       <div style={{fontSize: 26, fontWeight: 850, color: '#72e6ad', letterSpacing: 2}}>FABRICOPS STARTER KIT</div>
       <div style={{fontSize: 75, fontWeight: 950, marginTop: 35}}>Plug-and-Play Pipelines.</div>
