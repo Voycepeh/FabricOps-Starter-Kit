@@ -33,7 +33,7 @@ Start by understanding the shape of the notebook before changing its code.
   </div>
 </div>
 
-### 1. Get familiar with the notebook
+### Get familiar with the notebook
 
 
 The notebook follows one visible lifecycle:
@@ -49,7 +49,7 @@ The notebook follows one visible lifecycle:
 
 The template starts with one Read, one transformation, and one Write. Add more Read or Write blocks only when your pipeline needs them.
 
-### 2. Run the Environment block
+### Run the Environment block
 
 Run the two cells under **0. Environment**:
 
@@ -63,7 +63,7 @@ Then run the import cell immediately below it. The import cell provides the publ
 
 ![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
 
-### 3. Run the Data Contract block
+### Run the Data Contract block
 
 Run the Data Contract cell:
 
@@ -94,7 +94,7 @@ You generally do not edit the selector code. Use the displayed controls to choos
 
     The returned `CONTRACTS` object carries the table-level mode and contract identity into `orchestrate_write()`. See [`widget_select_data_contract()`](../api/reference/widget_select_data_contract.md) for the exact return contract.
 
-### 4. Configure the Governed Read
+### Configure the Governed Read
 
 **Replace the source identity in the existing Read block and keep the complete result in `sources`.**
 
@@ -157,7 +157,7 @@ For Incremental reads, add `read_parameters` and `target_table_id` rather than i
 
     Checks without an applicable Data Contract or Guardrail return a skipped result rather than inventing an expectation. Incremental batches are not profiled; FabricOps instead returns the eligible scope and uses `METADATA_SOURCE_OBSERVATION` plus the governed target's successful watermark progress to manage incremental execution.
 
-### 5. Write your PySpark Transform
+### Write your PySpark Transform
 
 **Replace this entire cell with the business transformation your project needs.**
 
@@ -174,7 +174,7 @@ Leaving the identity selection in place is fine when the source already has the 
 
 FabricOps does not prescribe the transformation style. Keep project-owned PySpark in this section and keep the governed orchestration calls in their Read and Write sections.
 
-### 6. Configure the Governed Write
+### Configure the Governed Write
 
 **Pass the transformed DataFrame and every contributing governed Read result into the target's Write block.**
 
@@ -232,7 +232,7 @@ You can add multiple independent Write blocks and give each result a unique key 
 
     A successful Write also records the source and target pipeline participation in `METADATA_DATA_LINEAGE`. Source Observation history used by Source Drift and incremental execution is committed only through the successful write path.
 
-### 7. Inspect selected results
+### Inspect selected results
 
 **Uncomment only the displays that help you understand or troubleshoot the current run.**
 
@@ -268,13 +268,13 @@ The guarded `.get()` call is useful because a Validate-mode Write does not publi
 
     The complete result contracts are documented on the [`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md) reference pages.
 
-### 8. Put the pattern together
+### Put the pattern together
 
 **The reusable core is `Governed Read → Your PySpark Transform → Governed Write`.**
 
 You configure the governed source and target identities and own the business transformation. FabricOps executes the standard checks, applies the selected Data Contract mode, publishes when allowed, and writes the applicable records to `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_DATA_LINEAGE`, `METADATA_GUARDRAIL_RESULTS`, and `METADATA_SOURCE_OBSERVATION`.
 
-### 9. Explore the guided demos
+### Explore the guided demos
 
 **Start with Full Refresh, then use the other demos to explore stateful processing patterns.**
 
