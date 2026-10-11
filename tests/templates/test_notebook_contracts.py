@@ -370,7 +370,6 @@ def test_02b_has_ordered_repeat_safe_incremental_append_flow():
         "imports",
         "demo-day",
         "read-csv",
-        "write-bronze",
         "contracts",
         "read-1",
         "transform",
@@ -379,10 +378,10 @@ def test_02b_has_ordered_repeat_safe_incremental_append_flow():
     ]
     assert [ids.index(cell_id) for cell_id in ordered] == sorted(ids.index(cell_id) for cell_id in ordered)
     assert "DEMO_DAY = 1" in _demo_cell("02B_incremental_append_demo.ipynb", "demo-day").source
-    assert "inventory_day1.csv" in source and "inventory_day2.csv" in source
+    assert "inventory_day2.csv" in source and "inventory_day1.csv" not in source
     assert '.dropDuplicates(["movement_id"])' in source
     assert 'table_name="inventory_movements"' in source
-    assert 'mode="overwrite"' in _demo_cell("02B_incremental_append_demo.ipynb", "write-bronze").source
+    assert 'mode="overwrite"' in _demo_cell("02B_incremental_append_demo.ipynb", "read-csv").source
     assert 'read_mode="incremental"' in source
     assert 'read_parameters={"watermark_column": "modified_datetime"}' in source
     assert 'table_name="inventory_movements_incremental"' in source
@@ -401,7 +400,6 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
         "imports",
         "demo-day",
         "read-csv",
-        "write-bronze",
         "contracts",
         "read-1",
         "transform",
@@ -414,7 +412,7 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
     assert "DEMO_DAY = 1" in source
     assert "products_day{DEMO_DAY}.csv" in source
     assert 'table_name="product_master_updates"' in source
-    assert 'mode="overwrite"' in _demo_cell("02C_scd_demo.ipynb", "write-bronze").source
+    assert 'mode="overwrite"' in _demo_cell("02C_scd_demo.ipynb", "read-csv").source
     assert source.count("orchestrate_read(") == 1
     assert 'read_mode="full"' in source
     assert 'write_mode="scd1"' in source
@@ -443,9 +441,10 @@ def test_guided_demo_pages_match_the_notebook_split():
     assert "# Step 2A. Run the Full Refresh Demo" in step_2a
     assert "02A_full_refresh_demo.ipynb" in step_2a
     assert "02B_incremental_append_demo.ipynb" in step_2b
-    assert "inventory_day1.csv" in step_2b and "inventory_day2.csv" in step_2b
+    assert "00C-prepare-demo-data-with-fabricops-io.md" in step_2b and "inventory_day2.csv" in step_2b
     assert "02C_scd_demo.ipynb" in step_2c
-    assert all(f"products_day{day}.csv" in step_2c for day in (1, 2, 3))
+    assert all(f"products_day{day}.csv" in step_2c for day in (2, 3))
+    assert "00C-prepare-demo-data-with-fabricops-io.md" in step_2c
     assert "02A-full-refresh-demo.md" in step_3
 
 
