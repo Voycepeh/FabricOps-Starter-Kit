@@ -331,7 +331,9 @@ def _physical_processing_definition(processing: dict[str, Any]) -> dict[str, Any
         if definition is None:
             raise ValueError("Resolved processing is missing its validated executable definition.")
     else:
-        definition = processing
+        # Preserve the exact object for existing plain-definition callers.
+        validated_processing(dict(processing))
+        return processing
     return validated_processing(dict(definition))
 
 
