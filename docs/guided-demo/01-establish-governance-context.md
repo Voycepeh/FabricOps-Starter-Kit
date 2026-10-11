@@ -2,7 +2,11 @@
 
 **Use `01_governance` for the first Governance task: creating the Data Stewards and the Data Agreement. We put this first in the walkthrough, but there is no dependency on the Data Agreement until Step 5 activation, so you may skip this step and revisit it later if you prefer to start with the ETL process first.**
 
-## 1. Load the shared environment notebook that we set up in 00B
+## Before you begin
+
+Complete [Step 0C](00C-prepare-demo-data-with-fabricops-io.md) and open `01_governance`.
+
+## 1. Load the shared environment
 
 ```python
 %run 00_env_config
