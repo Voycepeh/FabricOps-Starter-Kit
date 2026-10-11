@@ -326,9 +326,12 @@ def _physical_processing_definition(processing: dict[str, Any]) -> dict[str, Any
     """
     from fabricops_kit.pipeline.shared import validated_processing
 
-    definition = processing.get("governed_processing") or processing.get("authored_processing")
-    if definition is None:
-        raise ValueError("Resolved processing is missing its validated executable definition.")
+    if "governed_processing" in processing or "authored_processing" in processing:
+        definition = processing.get("governed_processing") or processing.get("authored_processing")
+        if definition is None:
+            raise ValueError("Resolved processing is missing its validated executable definition.")
+    else:
+        definition = processing
     return validated_processing(dict(definition))
 
 
