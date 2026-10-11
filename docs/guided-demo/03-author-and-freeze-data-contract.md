@@ -20,7 +20,7 @@ Freezing creates an **immutable Data Contract** candidate for validation. It doe
 
 Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the contracts.
 
-## 1. Cover the whole pipeline, not only the target
+## Cover the whole pipeline, not only the target
 
 <div class="fabricops-mascot-callout" markdown="1">
   <img src="../../assets/robot-writing.png" alt="" loading="lazy">
@@ -57,7 +57,7 @@ For `curated_orders`, enable **Schema**, add one **Sensitive Data** treatment on
 
 For this walkthrough, keep every DQ rule **Enabled** but leave **Block on failure** off. Step 4 intentionally breaks every DQ behavior in one validation run; Warn lets FabricOps report all of them instead of stopping at the first blocking failure.
 
-## 2. Table
+## Table
 
 Open **Table** and review:
 
@@ -69,7 +69,7 @@ Open **Table** and review:
 
 Use AI suggestions where useful, then review them before applying. Profile statistics are evidence only; they do not become contract requirements unless Governance authors a rule from them.
 
-## 3. Columns — author the direct DQ rules
+## Columns — author the direct DQ rules
 
 Open **Columns** and configure these rules for the integration exercise:
 
@@ -85,7 +85,7 @@ Keep **Block on failure** off for each rule.
 
 Whitelist and Blacklist are separate rules even though both persist using the `value_set` runtime type. The [DQ rule reference](../reference/dq-rules/index.md) maps every authoring control to its persisted rule.
 
-## 4. DQ Rules — exercise every Business Rule path
+## DQ Rules — exercise every Business Rule path
 
 Open **DQ Rules** and resolve each requirement below. Review the proposed rule before choosing **Add DQ Rule**.
 
@@ -109,7 +109,7 @@ For each proposal:
 
 If AI resolves one of these requirements to a different rule, do not accept it just to continue the demo. Refine the business wording until the intended deterministic rule is produced.
 
-## 5. Confirm the complete DQ contract
+## Confirm the complete DQ contract
 
 Before freezing, the contract should exercise all nine supported runtime DQ types and both Value List behaviors:
 
@@ -128,11 +128,11 @@ Before freezing, the contract should exercise all nine supported runtime DQ type
 
 This is intentionally broader than a normal contract. The Guided Demo uses it as the canonical Fabric integration exercise for the complete DQ authoring and execution path.
 
-## 6. Freeze every participating contract
+## Freeze every participating contract
 
 Freeze the three source contracts and the `curated_orders` target contract. Step 4 must select the exact frozen versions for all four participating tables; otherwise Guardrail Coverage correctly reports that the governed source → target path is not ready.
 
-## 7. Manifest & Freeze
+## Manifest & Freeze
 
 Open **Manifest & Freeze** and review the complete contract, including the DQ rules above.
 
