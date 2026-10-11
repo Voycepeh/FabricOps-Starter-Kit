@@ -774,7 +774,13 @@ def _recover_completed_source_observations(
     ]
     if not staged:
         return rows
-    identity = resolve_catalogue_table_identity(config, env, target_table_id, context=dict(context))
+    identity = _CURRENT_TABLE_IDENTITIES.get(str(target_table_id))
+    if identity is not None:
+        identity = _validated_observation_identity(config, env, target_table_id, identity)
+    else:
+        identity = resolve_catalogue_table_identity(
+            config, env, target_table_id, context=dict(context)
+        )
     recovered: list[dict[str, Any]] = []
     for activity_id in dict.fromkeys(str(row.get("_activity_id") or "") for row in staged):
         if activity_id and _physical_target_has_activity(identity, activity_id, context=context):
@@ -4083,22 +4089,49 @@ def _observe_dataframe(
     return _compact_rows(observed)
 
 
+def _validated_observation_identity(
+    config: Any, env: str, table_id: str, identity: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Revalidate a cached physical identity against the active environment."""
+    resolved = resolve_physical_table_identity(
+        config,
+        env,
+        store=str(identity["store"]),
+        schema=identity.get("schema"),
+        table_name=str(identity["table_name"]),
+    )
+    if str(resolved["table_id"]) != str(table_id):
+        raise ValueError(
+            f"Physical identity for {table_id!r} does not match environment {env!r}."
+        )
+    return resolved
+
+
 def capture_source_observation(
     *,
     table_id: str,
     dataframe: Any = None,
     incremental_columns: tuple[str, str] | None = None,
+    source_identity: Mapping[str, Any] | None = None,
 ) -> Any:
     """Capture independently configured current-run source Guardrail evidence."""
     config, env, context = resolve_fabric_context()
     spark = get_spark_session()
-    governed_source = resolve_catalogue_table_identity(
-        config,
-        env,
-        table_id,
-        spark_session=spark,
-        context=context,
+    # An explicit physical source identity does not require Catalogue activation.
+    # Revalidate it against this environment rather than trusting global cache state.
+    governed_source = (
+        _validated_observation_identity(config, env, table_id, source_identity)
+        if source_identity is not None
+        else None
     )
+    if governed_source is None:
+        governed_source = resolve_catalogue_table_identity(
+            config,
+            env,
+            table_id,
+            spark_session=spark,
+            context=context,
+        )
     governed_table_id = str(governed_source["table_id"])
     store_key = str(governed_source["store"])
     table_value = _identifier(governed_source["table_name"], "table_name")

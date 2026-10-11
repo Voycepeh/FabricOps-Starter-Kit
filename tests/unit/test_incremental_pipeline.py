@@ -412,3 +412,40 @@ def test_incremental_parameters_reject_invalid_shape_before_runtime(monkeypatch,
             table_id="source-orders", target_table_id="target-orders",
             read_mode="incremental", read_parameters=parameters,
         )
+
+
+def test_recovery_uses_validated_physical_target_without_catalogue(monkeypatch):
+    """A staged successful target publication can recover without a contract."""
+    history = [{
+        **_row(target="target-a", maximum="120"),
+        "observation_status": "observed",
+        "_activity_id": "run-a",
+    }]
+    _configure_scope(monkeypatch, history)
+    identity = {
+        "table_id": "target-a", "store": "Silver", "schema": "demo",
+        "table_name": "inventory_movements", "store_kind": "lakehouse",
+    }
+    monkeypatch.setitem(shared._CURRENT_TABLE_IDENTITIES, "target-a", identity)
+    monkeypatch.setattr(
+        shared, "resolve_physical_table_identity", lambda *args, **kwargs: identity
+    )
+    monkeypatch.setattr(
+        shared, "resolve_catalogue_table_identity",
+        lambda *args, **kwargs: pytest.fail("target must not require Catalogue activation"),
+    )
+    monkeypatch.setattr(
+        shared, "_physical_target_has_activity", lambda *args, **kwargs: True
+    )
+    merged = []
+    monkeypatch.setattr(
+        shared, "_merge_source_observation_records",
+        lambda records, **kwargs: merged.extend(records),
+    )
+    scope = shared.resolve_incremental_source_scope(
+        source_table_id="source-orders", target_table_id="target-a",
+        observation=_current("130"),
+    )
+    assert scope["after"] == "120"
+    assert scope["first_run"] is False
+    assert [row["observation_status"] for row in merged] == ["committed"]

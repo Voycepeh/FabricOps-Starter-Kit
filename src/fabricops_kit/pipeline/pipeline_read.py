@@ -324,6 +324,7 @@ def pipeline_read(
                 table_id=str(identity["table_id"]),
                 dataframe=complete_dataframe,
                 incremental_columns=incremental_columns,
+                source_identity=identity,
             )
             scope = resolve_incremental_source_scope(
                 source_table_id=str(identity["table_id"]),
@@ -339,6 +340,7 @@ def pipeline_read(
         observation = capture_source_observation(
             table_id=str(identity["table_id"]),
             incremental_columns=incremental_columns,
+            source_identity=identity,
         )
         scope = resolve_incremental_source_scope(
             source_table_id=str(identity["table_id"]),
