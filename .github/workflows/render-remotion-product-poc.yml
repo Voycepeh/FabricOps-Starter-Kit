@@ -57,7 +57,7 @@ jobs:
   render-hero:
     needs: changes
     if: |
-      (github.event_name == 'pull_request' && needs.changes.outputs.hero == 'true') ||
+      (github.event_name == 'pull_request' && needs.changes.outputs.hero == 'true' && needs.changes.outputs.part2 != 'true') ||
       (github.event_name == 'workflow_dispatch' && inputs.composition == 'hero')
     runs-on: ubuntu-latest
 
