@@ -8,13 +8,13 @@ Step 5 closes the Development loop. Governance makes the validated contract the 
 
 Complete [Step 4](04-validate-frozen-data-contract.md) and use the validated frozen contract versions.
 
-## 1. Select the tested Data Contract version
+## Select the tested Data Contract version
 
 Return to `01_governance` and select the exact frozen Data Contract version that passed Step 4.
 
 Do not activate a different draft or an untested version simply because it is newer.
 
-## 2. Link the Data Agreement
+## Link the Data Agreement
 
 Select the exact Data Agreement version created in Step 1 that governs this producer-to-consumer relationship.
 
@@ -34,13 +34,13 @@ Development validation
 Agreement linkage + activation
 ```
 
-## 3. Activate the Data Contract
+## Activate the Data Contract
 
 Review the selected `table_id`, tested Data Contract version, and linked Data Agreement version, then activate it.
 
 Activation tells FabricOps which immutable contract version Production must resolve for that governed table.
 
-## 4. Promote the validated pipeline
+## Promote the validated pipeline
 
 <div class="fabricops-mascot-callout" markdown="1">
   <img src="../../assets/robot-dev.png" alt="" loading="lazy">
