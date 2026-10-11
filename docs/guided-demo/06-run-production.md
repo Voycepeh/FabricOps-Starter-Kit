@@ -4,6 +4,10 @@
 
 There is no new engineering pattern in this step. The point is to execute the same tested workflow in the Production environment.
 
+## Before you begin
+
+Complete [Step 5](05-activate-data-contract-and-promote.md) and use the promoted Production pipeline.
+
 ## 1. Load the Production configuration
 
 Run the Production copy of `00_env_config`:
