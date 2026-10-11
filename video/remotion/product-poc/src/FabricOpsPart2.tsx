@@ -74,11 +74,11 @@ const DestinationCard = ({title, color, icon, progress}: {title: string; color: 
 
 const ConsumptionGift = ({open}: {open: number}) => (
   <div style={{position: 'relative', width: 400, height: 250, perspective: 900}}>
-    <div style={{position: 'absolute', left: 25, top: 74, width: 350, height: 170, borderRadius: 28, border: `3px solid ${theme.consumer}`, background: 'linear-gradient(145deg, #1d776e, #0b2432)', boxShadow: `0 25px 70px #0008, 0 0 48px ${theme.consumer}55`, display: 'grid', placeItems: 'center'}}>
+    <div style={{position: 'absolute', left: 25, top: 74, width: 350, height: 170, borderRadius: 28, border: `3px solid ${theme.consumer}`, background: `linear-gradient(145deg, ${theme.consumer}2e, #0d192b 72%)`, boxShadow: `0 25px 70px #0008, 0 0 48px ${theme.consumer}55`, display: 'grid', placeItems: 'center'}}>
       <div style={{fontSize: 40, fontWeight: 900, color: '#f7f9fd'}}>7</div>
-      <div style={{fontSize: 22, fontWeight: 750, color: '#e5fff6', marginTop: -42}}>Production Data</div>
+      <div style={{fontSize: 22, fontWeight: 750, color: '#f7f9fd', marginTop: -42}}>Production Data</div>
     </div>
-    <div style={{position: 'absolute', left: 12, top: 48, width: 376, height: 74, borderRadius: 22, border: '3px solid #85f0d3', background: 'linear-gradient(160deg, #55ddbd, #168c83)', boxShadow: `0 0 ${20 + open * 34}px ${theme.consumer}88`, transformOrigin: '50% 15%', transform: `translateY(${-open * 100}px) rotateX(${-open * 56}deg) rotateZ(${-open * 7}deg)`}} />
+    <div style={{position: 'absolute', left: 12, top: 48, width: 376, height: 74, borderRadius: 22, border: `3px solid ${theme.consumer}`, background: `linear-gradient(160deg, ${theme.consumer}, #bc7533)`, boxShadow: `0 0 ${20 + open * 34}px ${theme.consumer}88`, transformOrigin: '50% 15%', transform: `translateY(${-open * 100}px) rotateX(${-open * 56}deg) rotateZ(${-open * 7}deg)`}} />
   </div>
 );
 
