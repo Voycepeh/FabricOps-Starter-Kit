@@ -4092,13 +4092,18 @@ def capture_source_observation(
     """Capture independently configured current-run source Guardrail evidence."""
     config, env, context = resolve_fabric_context()
     spark = get_spark_session()
-    governed_source = resolve_catalogue_table_identity(
-        config,
-        env,
-        table_id,
-        spark_session=spark,
-        context=context,
-    )
+    # Physical source reads do not require an activated Data Contract or
+    # Catalogue registration. Pipeline resolution already validated and cached
+    # this identity; keep contract-based guardrails optional.
+    governed_source = _CURRENT_TABLE_IDENTITIES.get(str(table_id))
+    if governed_source is None:
+        governed_source = resolve_catalogue_table_identity(
+            config,
+            env,
+            table_id,
+            spark_session=spark,
+            context=context,
+        )
     governed_table_id = str(governed_source["table_id"])
     store_key = str(governed_source["store"])
     table_value = _identifier(governed_source["table_name"], "table_name")
