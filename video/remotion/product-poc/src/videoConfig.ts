@@ -1,5 +1,6 @@
 export const VIDEO_FPS = 30;
 export const seconds = (value: number) => Math.round(value * VIDEO_FPS);
+export const NARRATION_START_FRAME = seconds(0);
 
 export const VIDEO_CONFIG = {
   sizes: {
@@ -44,7 +45,7 @@ export const GUIDED_SCENE_DURATIONS = {
   governance: seconds(20),
   validation: seconds(12),
   activation: seconds(13),
-  closing: seconds(9),
+  closing: seconds(7.4),
 } as const;
 
 export const FULL_VIDEO_TIMELINE = {

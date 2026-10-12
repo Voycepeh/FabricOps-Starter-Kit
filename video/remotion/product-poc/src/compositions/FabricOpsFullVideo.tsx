@@ -3,6 +3,7 @@ import {AbsoluteFill, Sequence, staticFile, useVideoConfig} from 'remotion';
 import {font, theme} from '../theme';
 import {
   FULL_VIDEO_TIMELINE,
+  NARRATION_START_FRAME,
   OVERVIEW_HANDOFF_FRAME,
 } from '../videoConfig';
 import {ActivationScene, ClosingScene, EngineeringScene, GovernanceScene, ValidationScene} from '../scenes/GuidedDemoScenes';
@@ -18,14 +19,19 @@ export const FabricOpsFullVideo = () => {
 
   return (
     <AbsoluteFill style={{background: theme.background, color: theme.text, fontFamily: font, overflow: 'hidden'}}>
-      <Sequence name="Narration" from={0} durationInFrames={OVERVIEW_HANDOFF_FRAME} premountFor={fps}>
-        <Audio src={staticFile('audio/FabricOps_narration_master_numbered.m4a')} volume={1} />
-      </Sequence>
-
-      <Sequence name="Overview background" from={0} durationInFrames={OVERVIEW_HANDOFF_FRAME} premountFor={fps}>
+      <Audio
+        name="Original narration"
+        from={NARRATION_START_FRAME}
+        src={staticFile('audio/FabricOps_narration_master_numbered.m4a')}
+        volume={1}
+      />
+      <Sequence
+        name="Overview background"
+        from={0}
+        durationInFrames={OVERVIEW_HANDOFF_FRAME}
+        premountFor={fps}>
         <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 35%, #18365d 0%, #0b1830 34%, #060d19 74%)'}} />
       </Sequence>
-
       <Sequence name="Opening" from={timeline.opening.start} durationInFrames={timeline.opening.duration} premountFor={fps}>
         <OpeningPlatform />
       </Sequence>

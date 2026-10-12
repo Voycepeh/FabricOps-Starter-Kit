@@ -327,19 +327,27 @@ export const ActivationScene = () => {
 export const ClosingScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const title = enterProgress(frame, fps, seconds(0.5));
-  const support = enterProgress(frame, fps, seconds(1.8));
-  const cta = enterProgress(frame, fps, seconds(3));
-  return <AbsoluteFill style={{opacity: sceneOpacity(frame, CLOSING_DURATION), color: theme.text, fontFamily: font, background: 'radial-gradient(circle at 47% 44%, #17415b, #07101f 72%)'}}>
-    <AbsoluteFill style={{opacity: 0.16, backgroundImage: 'linear-gradient(#7ae4d81c 1px, transparent 1px), linear-gradient(90deg, #7ae4d81c 1px, transparent 1px)', backgroundSize: '72px 72px'}} />
-    <div style={{position: 'absolute', left: 150, top: 178, width: 1320, opacity: title, translate: `${(1 - title) * -30}px 0`}}>
-      <div style={{fontSize: 24, letterSpacing: 2.5, fontWeight: 900, color: '#72e6ad'}}>FABRICOPS STARTER KIT</div>
-      <div style={{fontSize: 82, lineHeight: 1.08, fontWeight: 950, marginTop: 34, letterSpacing: -2}}>Plug-and-Play Data Pipelines.</div>
-      <div style={{fontSize: 82, lineHeight: 1.08, fontWeight: 950, color: '#c5a8ff', marginTop: 10, letterSpacing: -2}}>Governance-as-Code.</div>
-      <div style={{fontSize: 31, color: '#b9c8d9', marginTop: 45, opacity: support}}>A faster, more consistent data foundation for the age of AI.</div>
+  return <AbsoluteFill style={{color: theme.text, fontFamily: font, background: 'radial-gradient(circle at 50% 43%, #153850 0%, #081524 48%, #03070d 100%)'}}>
+    <div style={{position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
+      <div style={{position: 'absolute', top: 318, opacity: interpolate(frame, [0, Math.round(0.65 * fps)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)}), fontSize: 126, lineHeight: 1, fontWeight: 840, letterSpacing: -6, whiteSpace: 'nowrap'}}>
+        <span style={{color: theme.production}}>Fabric</span>
+        <span style={{color: '#fff'}}>Ops</span>
+      </div>
+
+      <div style={{position: 'absolute', top: 488, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: interpolate(frame, [Math.round(0.45 * fps), Math.round(0.65 * fps), Math.round(2.15 * fps), Math.round(2.35 * fps)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}}>
+        Plug-and-Play Data Pipelines
+      </div>
+
+      <div style={{position: 'absolute', top: 488, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#c5a8ff', opacity: interpolate(frame, [Math.round(2.35 * fps), Math.round(2.55 * fps), Math.round(4.15 * fps), Math.round(4.35 * fps)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}}>
+        Governance-as-Code
+      </div>
+
+      <div style={{position: 'absolute', top: 606, display: 'flex', alignItems: 'center', gap: 24, opacity: interpolate(frame, [Math.round(4.35 * fps), Math.round(4.75 * fps)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)})}}>
+        <div style={{minWidth: 330, padding: '19px 34px', borderRadius: 14, border: '2px solid #72e6ad', color: '#dfffee', fontSize: 28, fontWeight: 800, boxSizing: 'border-box'}}>How FabricOps works</div>
+        <div style={{minWidth: 250, padding: '19px 34px', borderRadius: 14, border: '2px solid #c5a8ff', color: '#f0e8ff', fontSize: 28, fontWeight: 800, boxSizing: 'border-box'}}>Guided Demo</div>
+      </div>
     </div>
-    <div style={{position: 'absolute', left: 150, top: 730, display: 'flex', alignItems: 'center', gap: 26, opacity: cta}}><div style={{padding: '21px 31px', borderRadius: 17, background: '#72e6ad', color: '#071a24', fontSize: 29, fontWeight: 920, boxShadow: '0 16px 45px #0007'}}>Explore How FabricOps Works</div><div style={{fontSize: 33, color: '#8fa6bd'}}>→</div><div style={{fontSize: 33, color: '#f4f8fc', fontWeight: 870}}>Guided Demo</div></div>
-    <div style={{position: 'absolute', left: 154, top: 835, fontSize: 23, color: '#8fa6bd', opacity: cta}}>voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/</div>
-    <Mascot pose="pointing" x={1450} y={560} size={360} delay={seconds(2.4)} />
+
+    <AbsoluteFill style={{background: '#000', opacity: interpolate(frame, [Math.round(7 * fps), CLOSING_DURATION - 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}} />
   </AbsoluteFill>;
 };
