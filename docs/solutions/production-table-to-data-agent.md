@@ -43,16 +43,13 @@ Fabric permissions remain authoritative for access to the Production data and fo
 
 ## Under the hood
 
-<details class="fabricops-solution-details" markdown="1">
-<summary><strong>How FabricOps prepares and applies the Data Agent instructions</strong></summary>
+??? info "How FabricOps prepares and applies the Data Agent instructions"
 
-![FabricOps Production table to Data Agent implementation](../assets/data-agent-bootstrap-implementation.svg){ .fabricops-solution-diagram }
+    ![FabricOps Production table to Data Agent implementation](../assets/data-agent-bootstrap-implementation.svg){ .fabricops-solution-diagram }
 
-[`create_data_agent()`](../api/reference/create_data_agent.md) uses the current Fabric notebook caller identity to call the Microsoft Fabric REST API. It creates the Data Agent, attaches the configured Production Lakehouse or Warehouse datasource, selects the governed table, and applies the generated datasource and agent instructions.
+    [`create_data_agent()`](../api/reference/create_data_agent.md) uses the current Fabric notebook caller identity to call the Microsoft Fabric REST API. It creates the Data Agent, attaches the configured Production Lakehouse or Warehouse datasource, selects the governed table, and applies the generated datasource and agent instructions.
 
-FabricOps does **not** copy the Production table into an AI prompt. The table remains a Fabric datasource and the caller's Fabric permissions continue to control access.
-
-</details>
+    FabricOps does **not** copy the Production table into an AI prompt. The table remains a Fabric datasource and the caller's Fabric permissions continue to control access.
 
 ## Example
 
