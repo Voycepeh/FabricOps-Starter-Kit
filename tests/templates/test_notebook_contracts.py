@@ -278,9 +278,9 @@ def test_02_pipeline_is_a_small_reusable_scaffold():
     headings = (
         "# 0. Environment",
         "# 1. Data Contract",
-        "# 2. Governed Read",
+        "# 2. Read",
         "# 3. PySpark Transform",
-        "# 4. Governed Write",
+        "# 4. Write",
     )
     assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
     assert source.count("widget_select_data_contract(spark_session=spark)") == 1
