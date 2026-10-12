@@ -12,15 +12,15 @@ You need access to Microsoft Fabric capacity to complete this walkthrough.
 
 Open [Microsoft Fabric](https://app.fabric.microsoft.com/) and sign in with your Microsoft account.
 
-You need access to Microsoft Fabric capacity to complete the walkthrough. If you do not already have access through your organisation, you can use a Fabric trial where available.
+If your organisation does not provide Fabric capacity, you can use a Fabric trial where available.
 
 ## Create the workspaces
 
 <div class="fabricops-mascot-callout" markdown="1">
-  <img src="../../assets/robot-pointing.png" alt="" loading="lazy">
+  <img src="../assets/robot-pointing.png" alt="" loading="lazy">
   <div markdown="1">
 
-Create these workspaces for the walkthrough:
+Only **Governance** and **Engineering Development** are needed initially. You can add the Production and Consumer workspaces when you reach Steps 6 and 7.
 
   </div>
 </div>
@@ -32,8 +32,6 @@ Create these workspaces for the walkthrough:
 | **Engineering Development** | Yes | Build and validate the Engineering pipeline. |
 | **Engineering Production** | Optional until Step 6 | Production mirror of the Development engineering workspace. |
 | **Consumer** | Optional until Step 7 | Consume approved Production data. |
-
-For Steps 1–5, only **Governance** and **Engineering Development** are required. Create the optional workspaces now if you want to follow the entire seven-step walkthrough without stopping later.
 
 ![Fabric workspaces for the Guided Demo](../assets/00A/Workspace.png)
 
