@@ -142,6 +142,13 @@ gold Warehouse
   demo.order_history
 ```
 
+The final setup cell (Step 5) should also report these Day 1 row counts:
+
+```text
+Prepared Bronze demo.inventory_movements: 8 Day 1 rows
+Prepared Bronze demo.product_master_updates: 8 Day 1 rows
+```
+
 02B and 02C advance their respective Day 1 baselines within their own demo notebooks. Run 00C before starting those scenarios, not between their days.
 
 **Next:** [Step 1. Establish Governance context](01-establish-governance-context.md)
