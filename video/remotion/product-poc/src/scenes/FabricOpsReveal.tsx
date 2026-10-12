@@ -1,4 +1,5 @@
-import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {Easing, Img, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {mascotSrc} from '../mascotAssets';
 import {theme} from '../theme';
 import {VIDEO_CONFIG} from '../videoConfig';
 import {fabricOpsFrame, VIDEO_TUNING} from '../videoTuning';
@@ -133,24 +134,40 @@ export const FabricOpsReveal = () => {
         const orbitVisible = frame >= orbitStart && frame < end;
         const conceptStyle = (start: number) => {
           const enter = spring({frame: frame - start, fps, config: {damping: 16, stiffness: 100}});
-          return {opacity: enter * fadeOut, transform: `scale(${0.82 + enter * 0.18})`};
+          return {opacity: enter * fadeOut, scale: 0.82 + enter * 0.18};
+        };
+        const mascotStyle = (start: number) => {
+          const enter = spring({frame: frame - start, fps, durationInFrames: 22, config: {damping: 19, stiffness: 92}});
+          return {
+            opacity: enter * fadeOut,
+            scale: 0.9 + enter * 0.1,
+            translate: `0 ${(1 - enter) * 18}px`,
+          };
         };
         const orbitProgress = interpolate(frame, [orbitStart, orbitStart + 24], [0, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
           easing: Easing.inOut(Easing.cubic),
         });
+        const highlightOpacity = interpolate(frame, [orbitStart + 18, orbitStart + 27], [0, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: Easing.out(Easing.cubic),
+        });
+        const highlightOffset = -((Math.max(0, frame - orbitStart - 24) * 13) % 1000);
         return (
           <div style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
             {orbitVisible ? (
               <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, opacity: fadeOut}}>
-                <ellipse cx="960" cy="540" rx="760" ry="245" pathLength="1" fill="none" stroke={theme.production} strokeWidth="7" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - orbitProgress} style={{filter: 'drop-shadow(0 0 12px #38d99188)'}} />
-                <circle cx="200" cy="540" r="10" fill={theme.production} opacity={orbitProgress} />
-                <circle cx="1720" cy="540" r="10" fill={theme.production} opacity={orbitProgress} />
+                <ellipse cx="960" cy="540" rx="830" ry="330" pathLength="1" fill="none" stroke={theme.production} strokeWidth="15" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - orbitProgress} opacity={0.12} style={{filter: 'drop-shadow(0 0 18px #38d99188)'}} />
+                <ellipse cx="960" cy="540" rx="830" ry="330" pathLength="1" fill="none" stroke={theme.production} strokeWidth="7" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - orbitProgress} style={{filter: 'drop-shadow(0 0 10px #38d99188)'}} />
+                <ellipse cx="960" cy="540" rx="830" ry="330" pathLength="1000" fill="none" stroke="#c8ffe8" strokeWidth="11" strokeLinecap="round" strokeDasharray="88 912" strokeDashoffset={highlightOffset} opacity={highlightOpacity} style={{filter: 'drop-shadow(0 0 7px #fff) drop-shadow(0 0 15px #38d991)'}} />
               </svg>
             ) : null}
-            <div style={{position: 'absolute', left: 105, top: 505, width: 310, textAlign: 'center', fontSize: 52, fontWeight: 780, color: '#fff', textShadow: '0 0 26px #38d99166', ...conceptStyle(governanceStart)}}>Governance</div>
-            <div style={{position: 'absolute', right: 85, top: 505, width: 340, textAlign: 'center', fontSize: 52, fontWeight: 780, color: '#fff', textShadow: '0 0 26px #38d99166', ...conceptStyle(engineeringStart)}}>Engineering</div>
+            <div style={{position: 'absolute', left: 190, top: 345, width: 420, textAlign: 'center', fontSize: 56, fontWeight: 800, color: '#fff', textShadow: '0 0 26px #38d99166', ...conceptStyle(governanceStart)}}>Governance</div>
+            <Img src={mascotSrc('writing')} style={{position: 'absolute', left: 355, top: 445, width: 190, height: 190, objectFit: 'contain', filter: 'drop-shadow(0 18px 28px #0009)', ...mascotStyle(governanceStart + 10)}} />
+            <div style={{position: 'absolute', right: 190, top: 345, width: 420, textAlign: 'center', fontSize: 56, fontWeight: 800, color: '#fff', textShadow: '0 0 26px #38d99166', ...conceptStyle(engineeringStart)}}>Engineering</div>
+            <Img src={mascotSrc('coding')} style={{position: 'absolute', right: 355, top: 445, width: 190, height: 190, objectFit: 'contain', filter: 'drop-shadow(0 18px 28px #0009)', ...mascotStyle(engineeringStart + 10)}} />
           </div>
         );
       })()}
