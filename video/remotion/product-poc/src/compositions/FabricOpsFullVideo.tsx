@@ -2,9 +2,9 @@ import {Audio} from '@remotion/media';
 import {AbsoluteFill, Sequence, staticFile, useVideoConfig} from 'remotion';
 import {font, theme} from '../theme';
 import {
+  FULL_VIDEO_DURATION,
   FULL_VIDEO_TIMELINE,
   NARRATION_START_FRAME,
-  OVERVIEW_HANDOFF_FRAME,
 } from '../videoConfig';
 import {ActivationScene, ClosingScene, EngineeringScene, GovernanceScene, ValidationScene} from '../scenes/GuidedDemoScenes';
 import {ConsumptionScene} from '../scenes/ConsumptionScene';
@@ -28,7 +28,7 @@ export const FabricOpsFullVideo = () => {
       <Sequence
         name="Overview background"
         from={0}
-        durationInFrames={OVERVIEW_HANDOFF_FRAME}
+        durationInFrames={FULL_VIDEO_DURATION}
         premountFor={fps}>
         <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 35%, #18365d 0%, #0b1830 34%, #060d19 74%)'}} />
       </Sequence>
