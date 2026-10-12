@@ -10,7 +10,9 @@
 
 FabricOps (Fabric Operations) is an open-source starter kit that helps data teams build, govern, and operate reliable data pipelines in Microsoft Fabric.
 
-It brings reusable PySpark pipelines, executable Data Contracts, and shared metadata together so data engineering and governance are part of the same workflow.
+It combines reusable PySpark pipelines, executable Data Contracts, and centralized metadata management into one integrated engineering workflow.
+
+Rather than building governance and engineering processes separately, FabricOps brings them together so teams can deliver trusted data faster and more consistently.
 
 ## What FabricOps provides
 
