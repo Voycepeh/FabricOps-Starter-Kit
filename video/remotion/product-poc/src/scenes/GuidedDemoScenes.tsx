@@ -3,7 +3,7 @@ import {AbsoluteFill, Easing, Img, interpolate, spring, useCurrentFrame, useVide
 import {mascotSrc, type MascotName} from '../mascotAssets';
 import {font, theme} from '../theme';
 import {GUIDED_SCENE_DURATIONS, seconds} from '../videoConfig';
-import {AnimatedDataFlow, AnimatedFlowPath, FlowError} from '../components/AnimatedDataFlow';
+import {AnimatedDataFlow, AnimatedFlowPath} from '../components/AnimatedDataFlow';
 
 const {
   engineering: ENGINEERING_DURATION,
@@ -12,6 +12,28 @@ const {
   activation: ACTIVATION_DURATION,
   closing: CLOSING_DURATION,
 } = GUIDED_SCENE_DURATIONS;
+
+const PIPELINE_LAYOUT = {
+  left: 200,
+  cardWidth: 430,
+  cardHeight: 280,
+  gap: 115,
+  transformLeft: 745,
+  writeLeft: 1290,
+} as const;
+
+const VALIDATION_LAYOUT = {
+  pipelineTop: 200,
+  tableTop: 650,
+  tableWidth: 750,
+  tableHeight: 236,
+  rawLeft: 40,
+  outputLeft: 1130,
+  readCenter: PIPELINE_LAYOUT.left + PIPELINE_LAYOUT.cardWidth / 2,
+  writeCenter: PIPELINE_LAYOUT.writeLeft + PIPELINE_LAYOUT.cardWidth / 2,
+} as const;
+
+const FLOW_COLOR = '#5FE1D0';
 
 const Mascot = ({pose, x, y, size, delay}: {pose: MascotName; x: number; y: number; size: number; delay: number}) => {
   const frame = useCurrentFrame();
@@ -71,26 +93,27 @@ const Surface = ({children, accent, style}: {children: ReactNode; accent: string
   boxSizing: 'border-box', ...style,
 }}>{children}</div>;
 
-const PipelinePattern = ({top, read, transform, write, firstLink, secondLink}: {top: number; read: number; transform: number; write: number; firstLink: number; secondLink: number}) => <>
+const PipelinePattern = ({top, read, transform, write, firstLink, secondLink, linkColor, firstLinkOpacity = 1, secondLinkOpacity = 1, writeDetail}: {top: number; read: number; transform: number; write: number; firstLink: number; secondLink: number; linkColor?: string; firstLinkOpacity?: number; secondLinkOpacity?: number; writeDetail?: string}) => <>
   <AnimatedDataFlow style={{zIndex: 0}}>
-    <AnimatedFlowPath id={`pipeline-read-${top}`} d={`M630 ${top + 140} H745`} progress={firstLink} color="#52d6c6" />
-    <AnimatedFlowPath id={`pipeline-write-${top}`} d={`M1175 ${top + 140} H1290`} progress={secondLink} color="#72e6ad" />
+    <AnimatedFlowPath id={`pipeline-read-${top}`} d={`M${PIPELINE_LAYOUT.left + PIPELINE_LAYOUT.cardWidth} ${top + PIPELINE_LAYOUT.cardHeight / 2} H${PIPELINE_LAYOUT.transformLeft}`} progress={firstLink} color={linkColor ?? '#52d6c6'} opacity={firstLinkOpacity} />
+    <AnimatedFlowPath id={`pipeline-write-${top}`} d={`M${PIPELINE_LAYOUT.transformLeft + PIPELINE_LAYOUT.cardWidth} ${top + PIPELINE_LAYOUT.cardHeight / 2} H${PIPELINE_LAYOUT.writeLeft}`} progress={secondLink} color={linkColor ?? '#72e6ad'} opacity={secondLinkOpacity} />
   </AnimatedDataFlow>
-  <div style={{position: 'absolute', left: 200, top, display: 'flex', alignItems: 'center', gap: 115, zIndex: 1}}>
-    <Surface accent="#69b7ff" style={{width: 430, height: 280, padding: '34px 36px', opacity: read, translate: `0 ${(1 - read) * 24}px`}}>
+  <div style={{position: 'absolute', left: PIPELINE_LAYOUT.left, top, display: 'flex', alignItems: 'center', gap: PIPELINE_LAYOUT.gap, zIndex: 1}}>
+    <Surface accent="#69b7ff" style={{width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: read, translate: `0 ${(1 - read) * 24}px`}}>
       <div style={{fontSize: 20, color: '#8fc9ff', letterSpacing: 1.8, fontWeight: 850}}>GOVERNED READ</div>
       <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 34, color: '#d8ecff', fontWeight: 800, marginTop: 46}}>orchestrate_read()</div>
       <div style={{fontSize: 24, color: '#aebed3', marginTop: 38}}>Governed source</div>
     </Surface>
-    <Surface accent="#52d6c6" style={{width: 430, height: 280, padding: '34px 36px', opacity: transform, translate: `0 ${(1 - transform) * 24}px`}}>
+    <Surface accent="#52d6c6" style={{width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: transform, translate: `0 ${(1 - transform) * 24}px`}}>
       <div style={{fontSize: 20, color: '#7ae4d8', letterSpacing: 1.8, fontWeight: 850}}>YOUR LOGIC</div>
       <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 39, color: '#f6fbff', fontWeight: 850, marginTop: 43}}>PySpark</div>
       <div style={{fontSize: 24, color: '#aebed3', marginTop: 34}}>Your transformation</div>
     </Surface>
-    <Surface accent="#72e6ad" style={{width: 430, height: 280, padding: '34px 36px', opacity: write, translate: `0 ${(1 - write) * 24}px`}}>
+    <Surface accent="#72e6ad" style={{width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: write, translate: `0 ${(1 - write) * 24}px`}}>
       <div style={{fontSize: 20, color: '#72e6ad', letterSpacing: 1.8, fontWeight: 850}}>GOVERNED WRITE</div>
       <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 32, color: '#dcffec', fontWeight: 800, marginTop: 46}}>orchestrate_write()</div>
-      <div style={{fontSize: 24, color: '#aebed3', marginTop: 38}}>Governed target</div>
+      <div style={{fontSize: 24, color: '#aebed3', marginTop: writeDetail ? 24 : 38}}>Governed target</div>
+      {writeDetail ? <div style={{fontSize: 16, color: '#80cdb2', marginTop: 14, lineHeight: 1.25}}>{writeDetail}</div> : null}
     </Surface>
   </div>
 </>;
@@ -186,50 +209,68 @@ export const GovernanceScene = () => {
 export const ValidationScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const read = enterProgress(frame, fps, seconds(0.4));
-  const transform = enterProgress(frame, fps, seconds(0.9));
-  const write = enterProgress(frame, fps, seconds(1.4));
-  const source = enterProgress(frame, fps, seconds(2.3));
-  const sourceToRead = interpolate(frame, [seconds(3.2), seconds(4.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const readToTransform = interpolate(frame, [seconds(4.2), seconds(5.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const transformToWrite = interpolate(frame, [seconds(5.2), seconds(6.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const writeToOutput = interpolate(frame, [seconds(6.2), seconds(7.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const contract = enterProgress(frame, fps, seconds(5.6));
-  const output = enterProgress(frame, fps, seconds(6.3));
-  const masking = interpolate(frame, [seconds(7), seconds(7.8)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const results = enterProgress(frame, fps, seconds(8.1));
-  const violation = enterProgress(frame, fps, seconds(9.2));
-  const errorFlow = interpolate(frame, [seconds(9.1), seconds(9.8)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+  const sourceToReadStart = seconds(2);
+  const readToTransformStart = seconds(3.25);
+  const transformToWriteStart = seconds(4.5);
+  const writeToOutputStart = seconds(5.8);
+  const source = enterProgress(frame, fps, seconds(0.5));
+  const read = enterProgress(frame, fps, seconds(3));
+  const transform = enterProgress(frame, fps, seconds(4.25));
+  const write = enterProgress(frame, fps, seconds(5.5));
+  const output = enterProgress(frame, fps, seconds(6.8));
+  const sourceToRead = interpolate(frame, [sourceToReadStart, seconds(3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const readToTransform = interpolate(frame, [readToTransformStart, seconds(4.25)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const transformToWrite = interpolate(frame, [transformToWriteStart, seconds(5.5)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const writeToOutput = interpolate(frame, [writeToOutputStart, seconds(6.8)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const masking = interpolate(frame, [seconds(7.15), seconds(7.75)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const results = enterProgress(frame, fps, seconds(7.9));
+  const violation = enterProgress(frame, fps, seconds(8.55));
+  const connectorOpacity = (start: number) => interpolate(frame, [start - seconds(0.2), start], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const rows = [
     {id: '00007', customer: 'C001', order: '09:00', modified: '09:18', result: 'PASS', color: '#72e6ad'},
     {id: '00008', customer: 'C002', order: '09:00', modified: '08:00', result: 'FAIL', color: '#ff756d'},
   ];
   return <SceneShell duration={VALIDATION_DURATION} heading="One reusable pipeline pattern" accent="#72e6ad">
-    <PipelinePattern top={200} read={read} transform={transform} write={write} firstLink={readToTransform} secondLink={transformToWrite} />
+    <PipelinePattern
+      top={VALIDATION_LAYOUT.pipelineTop}
+      read={read}
+      transform={transform}
+      write={write}
+      firstLink={readToTransform}
+      secondLink={transformToWrite}
+      linkColor={FLOW_COLOR}
+      firstLinkOpacity={connectorOpacity(readToTransformStart)}
+      secondLinkOpacity={connectorOpacity(transformToWriteStart)}
+      writeDetail="Sensitive-data treatment + governed checks"
+    />
 
     <AnimatedDataFlow style={{zIndex: 0}}>
-      <AnimatedFlowPath id="source-to-read" d="M460 660 V550 Q460 540 450 540 H425 Q415 540 415 530 V480" progress={sourceToRead} color="#69b7ff" />
-      <AnimatedFlowPath id="write-to-output" d="M1505 480 V530 Q1505 540 1495 540 H1422 Q1412 540 1412 550 V660" progress={writeToOutput} color="#72e6ad" />
-      <FlowError id="write-row-error" d="M1660 480 V530 Q1660 540 1650 540 H1528 Q1518 540 1518 550 V575" progress={errorFlow} endX={1518} endY={575} />
+      <AnimatedFlowPath
+        id="source-to-read"
+        d={`M${VALIDATION_LAYOUT.readCenter} ${VALIDATION_LAYOUT.tableTop} V${VALIDATION_LAYOUT.pipelineTop + PIPELINE_LAYOUT.cardHeight}`}
+        progress={sourceToRead}
+        color={FLOW_COLOR}
+        opacity={connectorOpacity(sourceToReadStart)}
+      />
+      <AnimatedFlowPath
+        id="write-to-output"
+        d={`M${VALIDATION_LAYOUT.writeCenter} ${VALIDATION_LAYOUT.pipelineTop + PIPELINE_LAYOUT.cardHeight} V${VALIDATION_LAYOUT.tableTop}`}
+        progress={writeToOutput}
+        color={FLOW_COLOR}
+        opacity={connectorOpacity(writeToOutputStart)}
+      />
     </AnimatedDataFlow>
 
-    <div style={{position: 'absolute', left: 1360, top: 174, width: 360, padding: '10px 16px', borderRadius: 12, background: '#292145', border: '1px solid #8e6aca', boxSizing: 'border-box', textAlign: 'center', opacity: contract, zIndex: 3}}><span style={{fontSize: 16, color: '#c5a8ff', fontWeight: 900}}>DATA CONTRACT</span><span style={{fontSize: 15, color: '#eee7ff', marginLeft: 12}}>MASK + VALIDATE</span></div>
-    <div style={{position: 'absolute', left: 1538, top: 220, width: 4, height: 18, borderRadius: 4, background: '#b487ff', opacity: contract}} />
-
-    <div style={{position: 'absolute', left: 414, top: 480, width: 4, height: 180, borderRadius: 4, background: '#69b7ff66', opacity: source}} />
-    <Surface accent="#69b7ff" style={{position: 'absolute', left: 90, top: 660, width: 740, height: 226, padding: '20px 24px', opacity: source, translate: `0 ${(1 - source) * 18}px`}}>
+    <Surface accent="#69b7ff" style={{position: 'absolute', left: VALIDATION_LAYOUT.rawLeft, top: VALIDATION_LAYOUT.tableTop, width: VALIDATION_LAYOUT.tableWidth, height: VALIDATION_LAYOUT.tableHeight, padding: '20px 24px', opacity: source, translate: `0 ${(1 - source) * 18}px`}}>
       <div style={{fontSize: 17, fontWeight: 900, color: '#8fc9ff', letterSpacing: 1.5}}>RAW SOURCE</div>
-      <div style={{display: 'grid', gridTemplateColumns: '90px 125px 1fr 1fr', gap: 12, marginTop: 17, color: '#8fa7bf', fontSize: 14, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76'}}>customer_id</div><div>order_datetime</div><div>modified_datetime</div></div>
-      {rows.map((row) => <div key={row.id} style={{display: 'grid', gridTemplateColumns: '90px 125px 1fr 1fr', gap: 12, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', fontFamily: 'ui-monospace, monospace', fontSize: 18}}><div>{row.id}</div><div style={{color: '#ffbd76'}}>{row.customer}</div><div>{row.order}</div><div>{row.modified}</div></div>)}
+      <div style={{display: 'grid', gridTemplateColumns: '80px 115px 1fr 1fr', gap: 10, marginTop: 17, color: '#8fa7bf', fontSize: 14, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76'}}>customer_id</div><div>order_datetime</div><div>modified_datetime</div></div>
+      {rows.map((row) => <div key={row.id} style={{display: 'grid', gridTemplateColumns: '80px 115px 1fr 1fr', gap: 10, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', fontFamily: 'ui-monospace, monospace', fontSize: 18}}><div>{row.id}</div><div style={{color: '#ffbd76'}}>{row.customer}</div><div>{row.order}</div><div>{row.modified}</div></div>)}
     </Surface>
 
-    <Mascot pose="validate" x={1120} y={485} size={155} delay={seconds(8.8)} />
-    <div style={{position: 'absolute', left: 1544, top: 548, width: 276, padding: '12px 15px', borderRadius: 11, background: '#311823', border: '1px solid #ff756d99', boxSizing: 'border-box', color: '#ffb0aa', fontSize: 16, fontWeight: 900, letterSpacing: 0.7, opacity: errorFlow, zIndex: 2}}>ROW 00008 · RULE VIOLATION</div>
-
-    <Surface accent="#72e6ad" style={{position: 'absolute', left: 995, top: 660, width: 835, height: 226, padding: '20px 24px', opacity: output, translate: `0 ${(1 - output) * 18}px`}}>
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><div style={{fontSize: 17, fontWeight: 900, color: '#72e6ad', letterSpacing: 1.5}}>GOVERNED OUTPUT</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 15, color: '#cfc3ef'}}>modified_datetime &gt;= order_datetime</div></div>
-      <div style={{display: 'grid', gridTemplateColumns: '82px 112px 1fr 1fr 80px', gap: 10, marginTop: 17, color: '#8fa7bf', fontSize: 13, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76'}}>customer_id</div><div>order_datetime</div><div>modified_datetime</div><div>result</div></div>
-      {rows.map((row, index) => <div key={`output-${row.id}`} style={{position: 'relative', display: 'grid', gridTemplateColumns: '82px 112px 1fr 1fr 80px', gap: 10, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', borderRadius: 8, background: index === 1 ? `rgba(109, 40, 49, ${violation * 0.48})` : 'transparent', fontFamily: 'ui-monospace, monospace', fontSize: 18}}><div>{row.id}</div><div style={{color: '#ffbd76', position: 'relative'}}><span style={{opacity: 1 - masking}}>{row.customer}</span><span style={{position: 'absolute', left: 0, opacity: masking}}>C•••</span></div><div>{row.order}</div><div style={{color: index === 1 ? '#ff9c8c' : '#dcecff'}}>{row.modified}</div><div style={{opacity: results, color: row.color, fontWeight: 900}}>{row.result}</div>{index === 1 ? <div style={{position: 'absolute', right: 4, bottom: -21, color: '#ff9c8c', fontFamily: font, fontSize: 14, fontWeight: 850, opacity: violation}}>Rule violation</div> : null}</div>)}
+    <Surface accent="#72e6ad" style={{position: 'absolute', left: VALIDATION_LAYOUT.outputLeft, top: VALIDATION_LAYOUT.tableTop, width: VALIDATION_LAYOUT.tableWidth, height: VALIDATION_LAYOUT.tableHeight, padding: '20px 24px', opacity: output, translate: `0 ${(1 - output) * 18}px`}}>
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><div style={{fontSize: 17, fontWeight: 900, color: '#72e6ad', letterSpacing: 1.5}}>GOVERNED OUTPUT</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 13, color: '#cfc3ef'}}>VALIDATION RESULT · modified_datetime &gt;= order_datetime</div></div>
+      <div style={{display: 'grid', gridTemplateColumns: '76px 100px 1fr 1fr 70px', gap: 8, marginTop: 17, color: '#8fa7bf', fontSize: 13, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76'}}>customer_id</div><div>order_datetime</div><div>modified_datetime</div><div>result</div></div>
+      {rows.map((row, index) => <div key={`output-${row.id}`} style={{position: 'relative', display: 'grid', gridTemplateColumns: '76px 100px 1fr 1fr 70px', gap: 8, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', borderRadius: 8, background: index === 1 ? `rgba(109, 40, 49, ${violation * 0.48})` : 'transparent', fontFamily: 'ui-monospace, monospace', fontSize: 17}}><div>{row.id}</div><div style={{color: '#ffbd76', position: 'relative'}}><span style={{opacity: 1 - masking}}>{row.customer}</span><span style={{position: 'absolute', left: 0, opacity: masking}}>C•••</span></div><div>{row.order}</div><div style={{color: index === 1 ? '#ff9c8c' : '#dcecff'}}>{row.modified}</div><div style={{opacity: results, color: row.color, fontWeight: 900}}>{row.result}</div></div>)}
     </Surface>
   </SceneShell>;
 };
