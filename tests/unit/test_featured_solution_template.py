@@ -38,6 +38,8 @@ def test_featured_solution_pages_follow_shared_presentation_contract():
         example = text[text.index("## Example") : text.index("## Go deeper")]
 
         assert "```mermaid" not in under_hood, page
-        assert (\n            '<details class="fabricops-solution-details" markdown="1">' in under_hood\n            or '??? info "' in under_hood\n        ), page
-        assert '<details class="fabricops-solution-details" markdown="1">' in example, page
+        assert '??? info "' in under_hood, page
+        assert '??? info "' in example, page
+        assert "<details" not in under_hood, page
+        assert "<details" not in example, page
         assert ".svg){ .fabricops-solution-diagram }" in under_hood, page
