@@ -108,29 +108,23 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
   <div><p>Explore how the reusable pipeline orchestrators handle governed Read and Write operations around your PySpark transformations.</p></div>
 </div>
 
-<details class="fabricops-solution-details" markdown="1">
-<summary><strong>What happens in a standard FabricOps Pipeline</strong></summary>
+??? info "What happens in a standard FabricOps Pipeline"
 
-![What happens at the FabricOps Read and Write boundaries](../assets/pipeline-boundaries-implementation.svg){ .fabricops-solution-diagram }
+    ![What happens at the FabricOps Read and Write boundaries](../assets/pipeline-boundaries-implementation.svg){ .fabricops-solution-diagram }
 
-The Read boundary resolves the governed table and runs Freshness, Schema, and DQ checks before the DataFrame reaches the project-owned PySpark transformation. Full reads also produce full dataset profiling as part of the Read orchestration without making Profile another inline guardrail stage. The Write boundary applies pre-publication guardrails before writing, then performs full dataset profiling on the published table and records lineage.
+    The Read boundary resolves the governed table and runs Freshness, Schema, and DQ checks before the DataFrame reaches the project-owned PySpark transformation. Full reads also produce full dataset profiling as part of the Read orchestration without making Profile another inline guardrail stage. The Write boundary applies pre-publication guardrails before writing, then performs full dataset profiling on the published table and records lineage.
 
-The orchestrators provide the stable framework boundary. Read modes, Write modes, validation behaviour, and deployment are documented separately so this page can stay focused on the overall solution.
-
-</details>
+    The orchestrators provide the stable framework boundary. Read modes, Write modes, validation behaviour, and deployment are documented separately so this page can stay focused on the overall solution.
 
 ## Example
 
-<details class="fabricops-solution-details" markdown="1">
-<summary><strong>Orders + Products → Curated Orders</strong></summary>
+??? info "Orders + Products → Curated Orders"
 
-A project can read an Orders source and a Products reference table through governed Read boundaries, join and transform them using ordinary PySpark, then publish a Curated Orders table through a governed Write boundary.
+    A project can read an Orders source and a Products reference table through governed Read boundaries, join and transform them using ordinary PySpark, then publish a Curated Orders table through a governed Write boundary.
 
-The engineer owns the transformation. FabricOps handles the repeatable environment, governance, metadata, and enforcement plumbing around it.
+    The engineer owns the transformation. FabricOps handles the repeatable environment, governance, metadata, and enforcement plumbing around it.
 
-See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-etl.md) for the working pipeline example.
-
-</details>
+    See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-etl.md) for the working pipeline example.
 
 ## Go deeper
 
