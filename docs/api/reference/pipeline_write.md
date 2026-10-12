@@ -197,7 +197,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 79 |
+| Live-critical dependencies | 80 |
 
 ### Release history
 
@@ -260,6 +260,7 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.write_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._persist_target_processing</code></li>
+<li><code>fabricops_kit.pipeline.pipeline_write._physical_processing_definition</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._source_table_ids</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._target_has_activity</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._target_has_rows</code></li>
