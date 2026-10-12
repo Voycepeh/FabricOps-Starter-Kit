@@ -14,9 +14,12 @@ To configure a Data Agent well, teams usually need to provide this business cont
 
 That creates a natural opportunity: **reuse the context FabricOps already has to bootstrap a better-configured Data Agent instead of asking the team to describe the Production table again.**
 
-## The solution <img class="fabricops-solution-mascot" src="/FabricOps-Starter-Kit/assets/robot-pointing.png" alt="" loading="lazy">
+## The solution
 
-FabricOps reuses the governed context it already has: table purpose, grain, business terminology, column descriptions, approved business rules, known limitations, classification, sensitivity, and other Data Contract context.
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/robot-pointing.png" alt="FabricOps mascot" loading="eager">
+  <div><p>FabricOps reuses the governed context it already has: table purpose, grain, business terminology, column descriptions, approved business rules, known limitations, classification, sensitivity, and other Data Contract context.</p></div>
+</div>
 
 FabricOps prepares the governed context of the Production table into Data Agent instructions, then uses the Microsoft Fabric API to create and configure the Data Agent with those instructions.
 

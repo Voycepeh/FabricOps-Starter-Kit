@@ -12,9 +12,12 @@ A new engineer should not need to understand or rebuild all of that governance a
 
 FabricOps abstracts the repeatable plumbing behind a small, readable notebook interface: **choose how each source is read, write the project transformation in normal PySpark, choose how each target is written, and let FabricOps apply the governed lifecycle around it.**
 
-## The solution <img class="fabricops-solution-mascot" src="/FabricOps-Starter-Kit/assets/robot-carrying.png" alt="" loading="lazy">
+## The solution
 
-FabricOps provides a **clonable two-notebook engineering stack**:
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/robot-carrying.png" alt="FabricOps mascot" loading="eager">
+  <div><p>FabricOps provides a <strong>clonable two-notebook engineering stack</strong>:</p></div>
+</div>
 
 - [`00_env_config.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) maps logical Fabric Stores to the correct environment-specific Fabric locations.
 - [`02_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) keeps the pipeline definition portable between environments, with governed Read and Write boundaries around ordinary project-owned PySpark.
