@@ -9,16 +9,16 @@ export const OpeningPlatform = () => {
   const {fps} = useVideoConfig();
   const {text, timing, scenes} = VIDEO_CONFIG;
   const {opening} = VIDEO_TUNING;
-  const questionEnterAt = secondsToFrames(2, fps);
-  const questionEnterEnd = secondsToFrames(2.6, fps);
-  const questionExitAt = secondsToFrames(5.5, fps);
-  const questionExitEnd = secondsToFrames(6.3, fps);
-  const heroEnterAt = secondsToFrames(5.8, fps);
-  const heroEnterEnd = secondsToFrames(6.6, fps);
+  const fabricEnterAt = secondsToFrames(2, fps);
+  const fabricEnterEnd = secondsToFrames(2.6, fps);
+  const fabricExitAt = secondsToFrames(5.5, fps);
+  const fabricExitEnd = secondsToFrames(6.3, fps);
+  const questionEnterAt = secondsToFrames(5.8, fps);
+  const questionEnterEnd = secondsToFrames(6.6, fps);
   const titleExitAt = timing.openingPushAt;
-  const questionOpacity = interpolate(
+  const fabricOpacity = interpolate(
     frame,
-    [questionEnterAt, questionEnterEnd, questionExitAt, questionExitEnd],
+    [fabricEnterAt, fabricEnterEnd, fabricExitAt, fabricExitEnd],
     [0, 1, 1, 0],
     {
       extrapolateLeft: 'clamp',
@@ -26,7 +26,7 @@ export const OpeningPlatform = () => {
       easing: Easing.inOut(Easing.cubic),
     },
   );
-  const heroOpacity = interpolate(frame, [heroEnterAt, heroEnterEnd, titleExitAt, scenes.opening], [0, 1, 1, 0], {
+  const questionOpacity = interpolate(frame, [questionEnterAt, questionEnterEnd, titleExitAt, scenes.opening], [0, 1, 1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
@@ -72,7 +72,7 @@ export const OpeningPlatform = () => {
           top: opening.heroCenterY,
           display: 'flex',
           justifyContent: 'center',
-          opacity: questionOpacity,
+          opacity: fabricOpacity,
           translate: '0 -50%',
           zIndex: 3,
         }}
@@ -86,16 +86,8 @@ export const OpeningPlatform = () => {
             textShadow: '0 20px 60px #000',
           }}
         >
-          <span style={{color: '#fff'}}>Where do we </span>
-          <span
-            style={{
-              background: 'linear-gradient(90deg, #ffffff 0%, #55c8ff 45%, #20b8ff 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            start?
-          </span>
+          <span style={{color: '#fff'}}>Microsoft</span>{' '}
+          <span style={{color: '#38d991'}}>Fabric</span>
         </div>
       </div>
       <div
@@ -106,7 +98,7 @@ export const OpeningPlatform = () => {
           top: opening.heroCenterY,
           display: 'flex',
           justifyContent: 'center',
-          opacity: heroOpacity,
+          opacity: questionOpacity,
           translate: '0 -50%',
           zIndex: 3,
         }}
@@ -120,8 +112,16 @@ export const OpeningPlatform = () => {
             textShadow: '0 24px 80px #000',
           }}
         >
-          <span style={{color: '#fff'}}>Microsoft</span>{' '}
-          <span style={{color: '#38d991'}}>Fabric</span>
+          <span style={{color: '#fff'}}>Where do we </span>
+          <span
+            style={{
+              background: 'linear-gradient(90deg, #ffffff 0%, #55c8ff 45%, #20b8ff 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            start?
+          </span>
         </div>
       </div>
     </div>
