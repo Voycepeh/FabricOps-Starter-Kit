@@ -929,7 +929,7 @@ def test_orchestration_success_stage_record_remains_unchanged(capsys):
 
 
 @pytest.mark.parametrize("strategy", ["scd1", "scd2"])
-def test_scd_reconciles_changes_even_when_activity_already_exists(monkeypatch, strategy):
+def test_scd_reconciles_changes_even_when_activity_already_exists(monkeypatch, spark_session, strategy):
     """A reused interactive notebook activity cannot bypass keyed SCD change detection."""
     _patch_write(monkeypatch, strategy=strategy)
     processing = {"load_strategy": strategy, "key_columns": ["id"]}
