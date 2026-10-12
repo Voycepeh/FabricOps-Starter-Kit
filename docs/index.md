@@ -49,11 +49,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.6rem;
-  height: 2.6rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--md-primary-fg-color) 10%, transparent);
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--md-primary-fg-color) 5%, transparent);
   color: var(--md-primary-fg-color);
+}
+
+.fabricops-home-action__mascot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .fabricops-home-action__icon svg {
@@ -242,10 +250,10 @@
 
 .fabricops-feature-card__mascot {
   display: inline-block;
-  width: 2rem;
-  max-width: 2rem;
-  height: 2rem;
-  max-height: 2rem;
+  width: 2.6rem;
+  max-width: 2.6rem;
+  height: 2.6rem;
+  max-height: 2.6rem;
   margin: 0 0.4rem 0 0;
   vertical-align: middle;
   object-fit: contain;
@@ -287,13 +295,33 @@
   }
 
   .fabricops-home-action__icon {
-    width: 2.35rem;
-    height: 2.35rem;
+    width: 2.8rem;
+    height: 2.8rem;
   }
 
   .fabricops-home-quicklinks {
     grid-template-columns: 1fr;
   }
+}
+.fabricops-landing > .fabricops-mascot-callout {
+  min-height: 4.8rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.5rem;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.fabricops-landing > .fabricops-mascot-callout > img {
+  width: 3.2rem;
+  height: 3.2rem;
+  min-width: 3.2rem;
+  max-width: 3.2rem;
+  object-fit: contain;
+}
+
+.fabricops-landing > .fabricops-mascot-callout p {
+  margin: 0;
+  line-height: 1.45;
 }
 </style>
 
@@ -313,7 +341,7 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
 <div class="fabricops-home-primary">
   <a class="fabricops-home-action" href="how-fabricops-works/">
     <span class="fabricops-home-action__icon" aria-hidden="true">
-      <img src="assets/mascots/robot-writing.png" alt="" style="width:2.5rem;height:2.5rem;object-fit:contain">
+      <img class="fabricops-home-action__mascot" src="assets/mascots/robot-writing.png" alt="">
     </span>
     <span class="fabricops-home-action__copy">
       <span class="fabricops-home-action__label">How FabricOps works</span>
@@ -324,7 +352,7 @@ Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fab
 
   <a class="fabricops-home-action" href="guided-demo/">
     <span class="fabricops-home-action__icon" aria-hidden="true">
-      <img src="assets/mascots/robot-pointing.png" alt="" style="width:2.5rem;height:2.5rem;object-fit:contain">
+      <img class="fabricops-home-action__mascot" src="assets/mascots/robot-pointing.png" alt="">
     </span>
     <span class="fabricops-home-action__copy">
       <span class="fabricops-home-action__label">Step-by-step Guided Demo</span>
