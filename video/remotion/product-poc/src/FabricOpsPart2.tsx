@@ -1,7 +1,8 @@
-import {AbsoluteFill, Easing, Img, interpolate, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Easing, Img, interpolate, Sequence, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {font, theme} from './theme';
 import {LifecycleScene, STEP_7_LABEL, StepCard} from './scenes/LifecycleScene';
 import {SCENE_STARTS} from './videoConfig';
+import {mascotSrc, type MascotName} from './mascotAssets';
 import {
   ACTIVATION_DURATION,
   ActivationScene,
@@ -19,10 +20,10 @@ const seconds = (value: number) => Math.round(value * 30);
 
 // Use the same mascot artwork as the documentation. Motion is limited to scene
 // entrances; the robot remains stationary while viewers read the information.
-const Mascot = ({pose, x, y, size = 260, delay = 0}: {pose: 'neutral' | 'writing' | 'scanning' | 'masking' | 'carrying' | 'pointing' | 'dev' | 'prod'; x: number; y: number; size?: number; delay?: number}) => {
+const Mascot = ({pose, x, y, size = 260, delay = 0}: {pose: MascotName; x: number; y: number; size?: number; delay?: number}) => {
   const frame = useCurrentFrame();
   const enter = interpolate(frame, [delay, delay + 18], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
-  return <Img src={staticFile(`mascots/robot-${pose}.png`)} style={{
+  return <Img src={mascotSrc(pose)} style={{
     position: 'absolute', left: x, top: y, width: size, height: size,
     objectFit: 'contain', opacity: enter,
     transform: `translateY(${(1 - enter) * 22}px)`,

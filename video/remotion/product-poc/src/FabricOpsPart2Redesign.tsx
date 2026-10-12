@@ -1,6 +1,7 @@
 import type {CSSProperties, ReactNode} from 'react';
-import {AbsoluteFill, Easing, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Easing, Img, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {font, theme} from './theme';
+import {mascotSrc, type MascotName} from './mascotAssets';
 
 const seconds = (value: number) => Math.round(value * 30);
 
@@ -10,16 +11,14 @@ export const VALIDATION_DURATION = seconds(12);
 export const ACTIVATION_DURATION = seconds(13);
 export const CLOSING_DURATION = seconds(9);
 
-type MascotPose = 'writing' | 'scanning' | 'masking' | 'carrying' | 'pointing' | 'dev' | 'prod';
-
-const Mascot = ({pose, x, y, size, delay}: {pose: MascotPose; x: number; y: number; size: number; delay: number}) => {
+const Mascot = ({pose, x, y, size, delay}: {pose: MascotName; x: number; y: number; size: number; delay: number}) => {
   const frame = useCurrentFrame();
   const progress = interpolate(frame, [delay, delay + seconds(0.6)], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.out(Easing.cubic),
   });
-  return <Img src={staticFile(`mascots/robot-${pose}.png`)} style={{
+  return <Img src={mascotSrc(pose)} style={{
     position: 'absolute', left: x, top: y, width: size, height: size,
     objectFit: 'contain', opacity: progress, translate: `0 ${(1 - progress) * 24}px`,
     filter: 'drop-shadow(0 16px 26px #0008)',
@@ -105,7 +104,7 @@ export const EngineeringScene = () => {
     </div>
     <StageArrow left={630} top={438} width={112} progress={firstLink} color="#52d6c6" />
     <StageArrow left={1175} top={438} width={112} progress={secondLink} color="#72e6ad" />
-    <Img src={staticFile('mascots/robot-carrying.png')} style={{
+    <Img src={mascotSrc('carrying')} style={{
       position: 'absolute', left: 260 + ferry * 1265, top: 575, width: 220, height: 220,
       objectFit: 'contain', opacity: ferryOpacity, filter: 'drop-shadow(0 16px 26px #0008)',
     }} />
@@ -146,7 +145,7 @@ export const GovernanceScene = () => {
     </Surface>
     <Mascot pose="scanning" x={115} y={765} size={210} delay={seconds(1.1)} />
     <Mascot pose="masking" x={680} y={740} size={220} delay={seconds(3.1)} />
-    <Mascot pose="writing" x={1590} y={735} size={220} delay={seconds(5.2)} />
+    <Mascot pose="coding" x={1590} y={735} size={220} delay={seconds(5.2)} />
   </SceneShell>;
 };
 
@@ -173,7 +172,7 @@ export const ValidationScene = () => {
       </div>
       <div style={{height: 6, borderRadius: 99, background: '#243b55', marginTop: 35, overflow: 'hidden'}}><div style={{width: failed ? '42%' : '100%', height: '100%', background: failed ? '#ff756d' : '#72e6ad'}} /></div>
     </Surface>
-    <Mascot pose="scanning" x={1390} y={335} size={360} delay={seconds(1)} />
+    <Mascot pose="validate" x={1390} y={335} size={360} delay={seconds(1)} />
     <div style={{position: 'absolute', left: 170, right: 170, top: 844, display: 'flex', gap: 22, opacity: policy}}>
       {[
         ['VALIDATE', 'Check only · no publish', '#8ecbff'],

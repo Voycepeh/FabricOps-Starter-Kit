@@ -2,10 +2,16 @@
   "name": "fabricops-product-poc",
   "private": true,
   "scripts": {
+    "assets:sync": "node scripts/sync-mascots.mjs",
+    "assets:check": "node scripts/sync-mascots.mjs --check",
+    "prestudio": "npm run assets:sync",
     "studio": "remotion studio src/index.ts",
+    "prerender": "npm run assets:sync",
     "render": "remotion render src/index.ts FabricOpsFullVideo out/fabricops-full-video.mp4",
+    "prerender:part1": "npm run assets:sync",
     "render:part1": "remotion render src/index.ts FabricOpsPart1 out/fabricops-part1.mp4",
     "typecheck": "tsc --noEmit",
+    "prerender:part2": "npm run assets:sync",
     "render:part2": "remotion render src/index.ts FabricOpsPart2 out/fabricops-part2.mp4"
   },
   "dependencies": {
