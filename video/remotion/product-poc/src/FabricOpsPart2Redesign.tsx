@@ -132,64 +132,40 @@ export const EngineeringScene = () => {
 export const GovernanceScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const human = enterProgress(frame, fps, seconds(0.5));
-  const sensitiveBubble = enterProgress(frame, fps, seconds(0.9));
-  const ruleBubble = enterProgress(frame, fps, seconds(1.5));
-  const sensitivePhase = interpolate(frame, [seconds(2), seconds(2.5), seconds(7.1), seconds(7.8)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const scan = enterProgress(frame, fps, seconds(2.4));
-  const treatment = enterProgress(frame, fps, seconds(4.5));
-  const redact = interpolate(frame, [seconds(5.1), seconds(6.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const businessPhase = interpolate(frame, [seconds(7.2), seconds(7.9), seconds(12.7), seconds(13.4)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const coding = enterProgress(frame, fps, seconds(7.8));
-  const structuredRule = enterProgress(frame, fps, seconds(9));
-  const structureCheck = enterProgress(frame, fps, seconds(10.8));
-  const contract = enterProgress(frame, fps, seconds(13));
-  const inputOpacity = interpolate(frame, [seconds(12.8), seconds(13.5)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  return <SceneShell duration={GOVERNANCE_DURATION} eyebrow="GOVERNANCE · STEP 3" heading="Governance becomes executable" subheading="AI assists. Humans review and approve." accent={theme.governance}>
-    <div style={{opacity: inputOpacity}}>
-      <div style={{position: 'absolute', left: 104, top: 340, width: 230, height: 126, borderRadius: 20, background: '#132a44', border: '1px solid #527293', padding: '18px 20px', boxSizing: 'border-box', opacity: human}}>
-        <div style={{display: 'flex', alignItems: 'center', gap: 14}}><div style={{width: 46, height: 46, borderRadius: 99, background: '#d7e7f7', color: '#17304b', display: 'grid', placeItems: 'center', fontSize: 25, fontWeight: 900}}>H</div><div><div style={{fontSize: 16, letterSpacing: 1.4, color: '#8fc9ff', fontWeight: 900}}>HUMAN INPUT</div><div style={{fontSize: 19, marginTop: 5, color: '#dbe8f5'}}>Requirements entered</div></div></div>
-      </div>
-      <SpeechBubble accent="#ffae66" eyebrow="SENSITIVE DATA REQUIREMENT" style={{left: 385, top: 330, width: 495, height: 144, opacity: sensitiveBubble}}>&ldquo;This column is sensitive.&rdquo;<div style={{fontFamily: 'ui-monospace, monospace', fontSize: 19, color: '#ffd2a4', marginTop: 5}}>customer_id</div></SpeechBubble>
-      <SpeechBubble accent="#b487ff" eyebrow="BUSINESS RULE REQUIREMENT" style={{left: 930, top: 330, width: 875, height: 144, opacity: ruleBubble}}>&ldquo;Modified time must be on or after order time.&rdquo;</SpeechBubble>
-    </div>
-
+  const sensitiveBubble = enterProgress(frame, fps, seconds(0.5));
+  const sensitivePhase = interpolate(frame, [0, seconds(0.35), seconds(7.1), seconds(7.6)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const scan = enterProgress(frame, fps, seconds(1.6));
+  const treatment = enterProgress(frame, fps, seconds(3.5));
+  const redact = interpolate(frame, [seconds(4.2), seconds(5.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const businessBubble = enterProgress(frame, fps, seconds(8.1));
+  const businessPhase = interpolate(frame, [seconds(8), seconds(8.4), seconds(15.3), seconds(15.8)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const coding = enterProgress(frame, fps, seconds(9.2));
+  const structuredRule = enterProgress(frame, fps, seconds(10.4));
+  const structureCheck = enterProgress(frame, fps, seconds(11.8));
+  return <SceneShell duration={GOVERNANCE_DURATION} heading="Inject governance as code into your pipelines" accent={theme.governance}>
     <div style={{opacity: sensitivePhase}}>
-      <div style={{position: 'absolute', left: 165, top: 540, fontSize: 18, color: '#ffbd76', fontWeight: 900, letterSpacing: 1.4}}>INSPECT SAMPLE VALUES</div>
-      <Mascot pose="scanning" x={130} y={585} size={285} delay={seconds(2.4)} />
-      <Surface accent="#ffae66" style={{position: 'absolute', left: 475, top: 520, width: 860, height: 335, padding: '24px 30px', opacity: scan}}>
-        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}><div style={{fontSize: 20, color: '#ffbd76', fontWeight: 900, letterSpacing: 1.4}}>customer_id</div><div style={{padding: '9px 15px', borderRadius: 10, background: '#5d351f', color: '#ffd2a4', fontSize: 18, fontWeight: 850, opacity: treatment}}>FabricOps suggestion · Mask</div></div>
-        <div style={{display: 'grid', gridTemplateColumns: '1fr 80px 1fr', marginTop: 22, color: '#8fa7bf', fontSize: 17, fontWeight: 850}}><div>BEFORE</div><div /><div>AFTER</div></div>
-        {['C001', 'C002', 'C003'].map((value) => <div key={value} style={{display: 'grid', gridTemplateColumns: '1fr 80px 1fr', alignItems: 'center', height: 62, borderTop: '1px solid #3a526d', fontFamily: 'ui-monospace, monospace', fontSize: 26}}><div>{value}</div><div style={{color: '#66809b', textAlign: 'center'}}>→</div><div style={{color: '#ffbd76', position: 'relative'}}><span style={{opacity: 1 - redact}}>{value}</span><span style={{position: 'absolute', left: 0, opacity: redact}}>C•••</span></div></div>)}
+      <SpeechBubble accent="#ffae66" eyebrow="Sensitive data requirement" style={{left: 610, top: 205, width: 700, height: 120, opacity: sensitiveBubble}}>&ldquo;This column is sensitive.&rdquo;</SpeechBubble>
+      <Mascot pose="scanning" x={125} y={485} size={315} delay={seconds(1.6)} />
+      <Surface accent="#ffae66" style={{position: 'absolute', left: 480, top: 405, width: 850, height: 390, padding: '28px 34px', opacity: scan}}>
+        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 28, color: '#ffcf9f', fontWeight: 850}}>customer_id</div><div style={{padding: '9px 18px', borderRadius: 10, background: '#5d351f', color: '#ffd2a4', fontSize: 18, fontWeight: 900, opacity: treatment}}>MASKED</div></div>
+        <div style={{display: 'grid', gridTemplateColumns: '1fr 90px 1fr', marginTop: 30, color: '#8fa7bf', fontSize: 17, fontWeight: 850}}><div>BEFORE</div><div /><div>AFTER</div></div>
+        {['C001', 'C002', 'C003'].map((value) => <div key={value} style={{display: 'grid', gridTemplateColumns: '1fr 90px 1fr', alignItems: 'center', height: 72, borderTop: '1px solid #3a526d', fontFamily: 'ui-monospace, monospace', fontSize: 29}}><div>{value}</div><div style={{color: '#66809b', textAlign: 'center'}}>→</div><div style={{color: '#ffbd76', position: 'relative'}}><span style={{opacity: 1 - redact}}>{value}</span><span style={{position: 'absolute', left: 0, opacity: redact}}>C•••</span></div></div>)}
       </Surface>
-      <div style={{position: 'absolute', left: 1350, top: 540, fontSize: 18, color: '#ffbd76', fontWeight: 900, letterSpacing: 1.4, opacity: treatment}}>PREVIEW MASK TREATMENT</div>
-      <Mascot pose="masking" x={1390} y={585} size={285} delay={seconds(4.5)} />
-      <div style={{position: 'absolute', left: 405, top: 681, width: 70, height: 5, borderRadius: 99, background: '#ffae66', scale: `${scan} 1`, transformOrigin: 'left'}} />
-      <div style={{position: 'absolute', left: 1335, top: 681, width: 65, height: 5, borderRadius: 99, background: '#ffae66', scale: `${treatment} 1`, transformOrigin: 'left'}} />
+      <Mascot pose="masking" x={1390} y={485} size={315} delay={seconds(3.5)} />
+      <div style={{position: 'absolute', left: 425, top: 615, width: 55, height: 5, borderRadius: 99, background: '#ffae66', scale: `${scan} 1`, transformOrigin: 'left'}} />
+      <div style={{position: 'absolute', left: 1330, top: 615, width: 60, height: 5, borderRadius: 99, background: '#ffae66', scale: `${treatment} 1`, transformOrigin: 'left'}} />
     </div>
 
     <div style={{opacity: businessPhase}}>
-      <div style={{position: 'absolute', left: 130, top: 535, fontSize: 18, color: '#c5a8ff', fontWeight: 900, letterSpacing: 1.4}}>TRANSLATE REQUIREMENT</div>
-      <Mascot pose="coding" x={125} y={580} size={300} delay={seconds(7.8)} />
-      <Surface accent="#b487ff" style={{position: 'absolute', left: 500, top: 520, width: 855, height: 335, padding: '25px 30px', opacity: coding}}>
-        <div style={{fontSize: 18, color: '#c5a8ff', fontWeight: 900, letterSpacing: 1.4}}>FABRICOPS SUGGESTION · STRUCTURED DQ RULE</div>
-        <div style={{opacity: structuredRule, marginTop: 31}}><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 28, color: '#d8c9ff'}}>column_relationship</div><div style={{marginTop: 24, borderRadius: 14, padding: '20px 22px', background: '#211c3e', border: '1px solid #7253ab', fontFamily: 'ui-monospace, monospace', fontSize: 26, color: '#f1ebff', clipPath: `inset(0 ${(1 - structuredRule) * 100}% 0 0)`}}>modified_datetime &gt;= order_datetime</div></div>
-        <div style={{opacity: structureCheck, display: 'flex', alignItems: 'center', gap: 12, marginTop: 25, color: '#b9f4d4', fontSize: 20, fontWeight: 850}}><div style={{width: 30, height: 30, borderRadius: 99, background: '#1f6045', display: 'grid', placeItems: 'center'}}>✓</div>Structure ready for human review</div>
+      <SpeechBubble accent="#b487ff" eyebrow="Business rule requirement" style={{left: 500, top: 205, width: 920, height: 120, opacity: businessBubble}}>&ldquo;Modified time must be on or after order time.&rdquo;</SpeechBubble>
+      <Mascot pose="coding" x={120} y={485} size={320} delay={seconds(9.2)} />
+      <Surface accent="#b487ff" style={{position: 'absolute', left: 485, top: 430, width: 860, height: 335, padding: '38px 34px', opacity: coding}}>
+        <div style={{opacity: structuredRule}}><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 31, color: '#d8c9ff'}}>column_relationship</div><div style={{marginTop: 30, borderRadius: 14, padding: '22px 24px', background: '#211c3e', border: '1px solid #7253ab', fontFamily: 'ui-monospace, monospace', fontSize: 27, color: '#f1ebff', clipPath: `inset(0 ${(1 - structuredRule) * 100}% 0 0)`}}>modified_datetime &gt;= order_datetime</div></div>
+        <div style={{opacity: structureCheck, display: 'flex', alignItems: 'center', gap: 13, marginTop: 31, color: '#b9f4d4', fontSize: 22, fontWeight: 850}}><div style={{width: 32, height: 32, borderRadius: 99, background: '#1f6045', display: 'grid', placeItems: 'center'}}>✓</div>Check confirmed</div>
       </Surface>
-      <div style={{position: 'absolute', left: 1420, top: 535, fontSize: 18, color: '#c5a8ff', fontWeight: 900, letterSpacing: 1.4, opacity: structureCheck}}>CHECK RULE READINESS</div>
-      <Mascot pose="validate" x={1415} y={580} size={300} delay={seconds(10.8)} />
-      <div style={{position: 'absolute', left: 425, top: 681, width: 75, height: 5, borderRadius: 99, background: '#b487ff', scale: `${coding} 1`, transformOrigin: 'left'}} />
-      <div style={{position: 'absolute', left: 1355, top: 681, width: 70, height: 5, borderRadius: 99, background: '#b487ff', scale: `${structureCheck} 1`, transformOrigin: 'left'}} />
-    </div>
-
-    <div style={{position: 'absolute', left: 355, top: 565, width: 1210, opacity: contract, translate: `0 ${(1 - contract) * 22}px`}}>
-      <div style={{textAlign: 'center', fontSize: 18, color: '#a9bdd2', fontWeight: 900, letterSpacing: 1.6}}>HUMAN REVIEWED &amp; APPROVED</div>
-      <div style={{marginTop: 24, display: 'flex', alignItems: 'center', gap: 20, padding: '24px 28px', borderRadius: 20, background: '#132942', border: '2px solid #72e6ad88', boxShadow: '0 18px 45px #0007'}}>
-        <div style={{fontSize: 26, fontWeight: 900, color: '#f5f9fd', marginRight: 12}}>Data Contract</div>
-        <div style={{flex: 1, padding: '14px 18px', borderRadius: 13, background: '#3f2a1d', color: '#ffd2a4', fontSize: 20, fontWeight: 820}}>✓ Approved sensitive-data treatment</div>
-        <div style={{flex: 1, padding: '14px 18px', borderRadius: 13, background: '#292145', color: '#ddd0ff', fontSize: 20, fontWeight: 820}}>✓ Approved Data Quality rule</div>
-        <div style={{fontSize: 30, color: '#72e6ad'}}>→</div><div style={{fontSize: 20, fontWeight: 900, color: '#72e6ad'}}>VALIDATION</div>
-      </div>
+      <Mascot pose="validate" x={1390} y={485} size={320} delay={seconds(11.8)} />
+      <div style={{position: 'absolute', left: 430, top: 615, width: 55, height: 5, borderRadius: 99, background: '#b487ff', scale: `${coding} 1`, transformOrigin: 'left'}} />
+      <div style={{position: 'absolute', left: 1345, top: 615, width: 45, height: 5, borderRadius: 99, background: '#b487ff', scale: `${structureCheck} 1`, transformOrigin: 'left'}} />
     </div>
   </SceneShell>;
 };
