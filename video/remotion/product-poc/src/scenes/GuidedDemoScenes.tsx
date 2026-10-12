@@ -74,7 +74,6 @@ const SceneShell = ({duration, eyebrow, heading, subheading, accent, children}: 
   const frame = useCurrentFrame();
   return <AbsoluteFill style={{
     opacity: sceneOpacity(frame, duration), color: theme.text, fontFamily: font,
-    background: 'radial-gradient(circle at 48% 38%, #17375d 0%, #0b1930 44%, #060d19 86%)',
   }}>
     <AbsoluteFill style={{opacity: 0.14, backgroundImage: 'linear-gradient(#7aa7d51a 1px, transparent 1px), linear-gradient(90deg, #7aa7d51a 1px, transparent 1px)', backgroundSize: '64px 64px'}} />
     <div style={{position: 'absolute', top: 58, left: 104, right: 104}}>
@@ -327,7 +326,7 @@ export const ActivationScene = () => {
 export const ClosingScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  return <AbsoluteFill style={{color: theme.text, fontFamily: font, background: 'radial-gradient(circle at 50% 43%, #153850 0%, #081524 48%, #03070d 100%)'}}>
+  return <AbsoluteFill style={{color: theme.text, fontFamily: font}}>
     <div style={{position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
       <div style={{position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: interpolate(frame, [0, Math.round(0.65 * fps)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)})}}>
         <div style={{fontSize: VIDEO_CONFIG.text.hero, lineHeight: 1, fontWeight: 840, letterSpacing: -8, whiteSpace: 'nowrap'}}>

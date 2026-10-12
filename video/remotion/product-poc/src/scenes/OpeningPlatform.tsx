@@ -1,6 +1,5 @@
 import {Easing, Img, interpolate, useCurrentFrame} from 'remotion';
 import {mascotSrc} from '../mascotAssets';
-import {theme} from '../theme';
 import {VIDEO_CONFIG} from '../videoConfig';
 import {VIDEO_TUNING} from '../videoTuning';
 
@@ -40,7 +39,7 @@ export const OpeningPlatform = () => {
   );
 
   return (
-    <div style={{position: 'absolute', inset: 0, background: theme.background}}>
+    <div style={{position: 'absolute', inset: 0}}>
       <Img
         src={mascotSrc('dragging')}
         style={{

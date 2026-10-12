@@ -110,7 +110,6 @@ export const ConsumptionScene = () => {
   const lifecycleZoomScale = interpolate(focus, [0, 1], [1, 3.1]);
 
   return <AbsoluteFill style={{opacity: sceneOpacity}}>
-    <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 38%, #18365d 0%, #0b1830 40%, #060d19 82%)'}} />
     <AbsoluteFill style={{opacity: pipelineOpacity, transform: `translate(${(960 - 1615) * focus}px, ${(540 - 840) * focus}px) scale(${lifecycleZoomScale})`, transformOrigin: '1615px 840px'}}>
       <Sequence from={-LIFECYCLE_HANDOFF_LOCAL_FRAME} durationInFrames={LIFECYCLE_HANDOFF_LOCAL_FRAME + CONSUMPTION_SCENE_END} premountFor={fps}>
         <LifecycleScene hideStep7 />
