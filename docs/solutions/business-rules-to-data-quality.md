@@ -12,9 +12,12 @@ Real business requirements are often more nuanced. One sentence can combine seve
 
 That creates friction between the person who knows what clean data means and the person who has to turn that meaning into code.
 
-## The solution <img class="fabricops-solution-mascot" src="/FabricOps-Starter-Kit/assets/robot-writing.png" alt="" loading="lazy">
+## The solution
 
-FabricOps lets Governance describe what clean data means in natural language.
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/robot-writing.png" alt="FabricOps mascot" loading="eager">
+  <div><p>FabricOps lets Governance describe what clean data means in natural language.</p></div>
+</div>
 
 Built in AI suggestions combine that requirement with governed table metadata, profile evidence, and the supported Data Quality rule vocabulary. FabricOps then proposes the smallest set of explicit rules that preserves the requirement.
 
