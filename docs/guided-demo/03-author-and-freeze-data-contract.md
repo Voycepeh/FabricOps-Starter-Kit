@@ -23,7 +23,7 @@ Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the c
 ## Cover the whole pipeline, not only the target
 
 <div class="fabricops-mascot-callout" markdown="1">
-  <img src="../../assets/robot-writing.png" alt="" loading="lazy">
+  <img src="../assets/robot-writing.png" alt="" loading="lazy">
   <div markdown="1">
 
 Step 4 validates the complete governed path, so every participating table needs a frozen contract:
