@@ -18,6 +18,15 @@
 
 ## Foundation setup
 
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="assets/robot-pointing.png" alt="" loading="lazy">
+  <div markdown="1">
+
+Start with **0A–0C** to prepare your Fabric environment, configure the notebooks, and load the demo data before running the governed pipeline.
+
+  </div>
+</div>
+
 | Setup | What you do | Why it matters |
 | --- | --- | --- |
 | [0A. Prepare Fabric artifacts](guided-demo/00A-prepare-fabric-artifacts.md) | Create the workspaces, stores, and Fabric Environments, then install the FabricOps wheel. | The physical Fabric foundation exists. |
@@ -25,6 +34,15 @@
 | [0C. Prepare the demo data with FabricOps I/O](guided-demo/00C-prepare-demo-data-with-fabricops-io.md) | Run `00C_demo_setup` in Engineering Development to demonstrate file, Lakehouse, and Warehouse I/O and seed the original managed source tables. | The Full Refresh demo starts from real managed tables prepared through the public FabricOps I/O helpers. |
 
 ## The seven-step FabricOps workflow
+
+<div class="fabricops-mascot-callout" markdown="1">
+  <img src="assets/robot-carrying.png" alt="" loading="lazy">
+  <div markdown="1">
+
+Follow **Steps 1–7** from Governance through Engineering, validation, Production, and consumption. Steps **2A–2C** are hands-on pipeline examples within Step 2.
+
+  </div>
+</div>
 
 
 | Step | Notebook | What you do |
