@@ -51,7 +51,7 @@ export const OpeningPlatform = () => {
           opacity: platformEntry,
           translate: `${(1 - platformEntry) * opening.platformEntryDistance - push * 2200}px 0`,
           zIndex: 1,
-          scale: 0.833,
+          scale: 0.977,
         }}
       />
       <div

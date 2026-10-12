@@ -37,11 +37,7 @@ const LifecycleMascot = ({pose, x, y, size, enterAt}: {pose: MascotName; x: numb
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const enter = spring({frame: frame - enterAt, fps, durationInFrames: 20, config: {damping: 20, stiffness: 95}});
-  return <Img src={mascotSrc(pose)} style={{
-    position: 'absolute', left: x, top: y, width: size, height: size,
-    objectFit: 'contain', opacity: enter, translate: `0 ${(1 - enter) * 14}px`,
-    filter: 'drop-shadow(0 10px 18px #0007)', pointerEvents: 'none', zIndex: 2,
-  }} />;
+  return null;
 };
 
 type StepCardProps = {
