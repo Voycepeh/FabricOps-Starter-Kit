@@ -133,7 +133,7 @@ After the notebook finishes, Engineering Development should contain the starting
 
 ```text
 bronze Lakehouse
-  demo.orders       # canonical Day 1 Orders baseline
+  demo.orders
   demo.products
   demo.inventory_movements      # 02B incremental Day 1 baseline
   demo.product_master_updates   # 02C SCD Day 1 baseline
