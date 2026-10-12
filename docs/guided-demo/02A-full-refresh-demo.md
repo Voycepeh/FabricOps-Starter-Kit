@@ -21,7 +21,7 @@ Day 1 source preparation is handled by [Step 00C](00C-prepare-demo-data-with-fab
 ## What you will do
 
 <div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/robot-carrying.png" alt="FabricOps mascot" loading="lazy">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="FabricOps mascot" loading="lazy">
   <div markdown="1">
 
 Load the shared environment, read the three sources, transform the data, and publish two targets.
