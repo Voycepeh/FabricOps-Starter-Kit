@@ -79,13 +79,13 @@ Open **Engineering Development** and create:
 ??? info "Optional: prepare Engineering Production and Consumer"
 
     <div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
+      <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="FabricOps Production mascot" loading="lazy">
+      <div markdown="1">
 
-Production should be a **1:1 structural mirror** of Development so the validated pipeline can use the same logical stores after promotion.
+        Production should be a **1:1 structural mirror** of Development so the validated pipeline can use the same logical stores after promotion.
 
-  </div>
-</div>
+      </div>
+    </div>
 
     If you created **Engineering Production**, repeat the same setup there with `bronze`, `silver`, and `gold` using the same item types and names.
 
