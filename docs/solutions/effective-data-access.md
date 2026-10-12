@@ -72,30 +72,27 @@ Security groups expand recursively from `group_membership_df`. FabricOps detects
 
 ## Example
 
-<details class="fabricops-solution-details" markdown="1">
-<summary><strong>One table, multiple access paths</strong></summary>
+??? info "One table, multiple access paths"
 
-![One governed table can have access through multiple permission paths](../assets/effective-data-access-example.svg){ .fabricops-solution-diagram }
+    ![One governed table can have access through multiple permission paths](../assets/effective-data-access-example.svg){ .fabricops-solution-diagram }
 
-```python
-from fabricops_kit import scan_effective_access
+    ```python
+    from fabricops_kit import scan_effective_access
 
-result = scan_effective_access(
-    identity_map_df=identity_map_df,
-    group_membership_df=group_membership_df,
-)
+    result = scan_effective_access(
+        identity_map_df=identity_map_df,
+        group_membership_df=group_membership_df,
+    )
 
-display(result["access"])
-display(result["coverage"])
-```
+    display(result["access"])
+    display(result["coverage"])
+    ```
 
-`identity_map_df` contains `object_id`, `display_name`, `user_principal_name`, `principal_type`, and `group_type`. `group_membership_df` contains `group_object_id` and `member_object_id`.
+    `identity_map_df` contains `object_id`, `display_name`, `user_principal_name`, `principal_type`, and `group_type`. `group_membership_df` contains `group_object_id` and `member_object_id`.
 
-Filter `access_verification_status == "CONFIRMED"` for established effective access. Review `UNVERIFIED` and `coverage` together before drawing conclusions about a principal or table.
+    Filter `access_verification_status == "CONFIRMED"` for established effective access. Review `UNVERIFIED` and `coverage` together before drawing conclusions about a principal or table.
 
-If the caller can inspect Workspace and SQL permissions but cannot establish direct item assignments or the SQL endpoint access mode, FabricOps preserves the observed permission as unverified and records the limitation in `coverage`.
-
-</details>
+    If the caller can inspect Workspace and SQL permissions but cannot establish direct item assignments or the SQL endpoint access mode, FabricOps preserves the observed permission as unverified and records the limitation in `coverage`.
 
 ## Go deeper
 
