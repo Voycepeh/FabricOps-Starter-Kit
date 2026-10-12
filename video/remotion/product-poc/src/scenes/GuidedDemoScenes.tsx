@@ -2,7 +2,7 @@ import type {CSSProperties, ReactNode} from 'react';
 import {AbsoluteFill, Easing, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {mascotSrc, type MascotName} from '../mascotAssets';
 import {font, theme} from '../theme';
-import {GUIDED_SCENE_DURATIONS, seconds} from '../videoConfig';
+import {GUIDED_SCENE_DURATIONS, seconds, VIDEO_CONFIG} from '../videoConfig';
 import {AnimatedDataFlow, AnimatedFlowPath} from '../components/AnimatedDataFlow';
 
 const {
@@ -329,20 +329,22 @@ export const ClosingScene = () => {
   const {fps} = useVideoConfig();
   return <AbsoluteFill style={{color: theme.text, fontFamily: font, background: 'radial-gradient(circle at 50% 43%, #153850 0%, #081524 48%, #03070d 100%)'}}>
     <div style={{position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
-      <div style={{position: 'absolute', top: 318, opacity: interpolate(frame, [0, Math.round(0.65 * fps)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)}), fontSize: 126, lineHeight: 1, fontWeight: 840, letterSpacing: -6, whiteSpace: 'nowrap'}}>
-        <span style={{color: theme.production}}>Fabric</span>
-        <span style={{color: '#fff'}}>Ops</span>
+      <div style={{position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: interpolate(frame, [0, Math.round(0.65 * fps)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)})}}>
+        <div style={{fontSize: VIDEO_CONFIG.text.hero, lineHeight: 1, fontWeight: 840, letterSpacing: -8, whiteSpace: 'nowrap'}}>
+          <span style={{color: theme.production}}>Fabric</span>
+          <span style={{color: '#fff'}}>Ops</span>
+        </div>
       </div>
 
-      <div style={{position: 'absolute', top: 488, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: interpolate(frame, [Math.round(0.45 * fps), Math.round(0.65 * fps), Math.round(2.15 * fps), Math.round(2.35 * fps)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}}>
+      <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: interpolate(frame, [Math.round(0.45 * fps), Math.round(0.65 * fps), Math.round(2.15 * fps), Math.round(2.35 * fps)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}}>
         Plug-and-Play Data Pipelines
       </div>
 
-      <div style={{position: 'absolute', top: 488, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#c5a8ff', opacity: interpolate(frame, [Math.round(2.35 * fps), Math.round(2.55 * fps), Math.round(4.15 * fps), Math.round(4.35 * fps)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}}>
+      <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#c5a8ff', opacity: interpolate(frame, [Math.round(2.35 * fps), Math.round(2.55 * fps), Math.round(4.15 * fps), Math.round(4.35 * fps)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}}>
         Governance-as-Code
       </div>
 
-      <div style={{position: 'absolute', top: 606, display: 'flex', alignItems: 'center', gap: 24, opacity: interpolate(frame, [Math.round(4.35 * fps), Math.round(4.75 * fps)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)})}}>
+      <div style={{position: 'absolute', top: 776, display: 'flex', alignItems: 'center', gap: 24, opacity: interpolate(frame, [Math.round(4.35 * fps), Math.round(4.75 * fps)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)})}}>
         <div style={{minWidth: 330, padding: '19px 34px', borderRadius: 14, border: '2px solid #72e6ad', color: '#dfffee', fontSize: 28, fontWeight: 800, boxSizing: 'border-box'}}>How FabricOps works</div>
         <div style={{minWidth: 250, padding: '19px 34px', borderRadius: 14, border: '2px solid #c5a8ff', color: '#f0e8ff', fontSize: 28, fontWeight: 800, boxSizing: 'border-box'}}>Guided Demo</div>
       </div>
