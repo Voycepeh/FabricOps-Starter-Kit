@@ -17,7 +17,7 @@ You need access to Microsoft Fabric capacity to complete the walkthrough. If you
 ## Create the workspaces
 
 <div class="fabricops-mascot-callout" markdown="1">
-  <img src="../../assets/robot-pointing.png" alt="" loading="lazy">
+  <img src="../assets/robot-pointing.png" alt="" loading="lazy">
   <div markdown="1">
 
 Create these workspaces for the walkthrough:
