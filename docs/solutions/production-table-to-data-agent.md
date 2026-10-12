@@ -58,33 +58,30 @@ Fabric permissions remain authoritative for access to the Production data and fo
 
 ## Example
 
-<details class="fabricops-solution-details" markdown="1">
-<summary><strong>Example Data Agent instructions</strong></summary>
+??? info "Example Data Agent instructions"
 
-For a governed Orders table, FabricOps can prepare instructions such as:
+    For a governed Orders table, FabricOps can prepare instructions such as:
 
-**Table context**
+    **Table context**
 
-- Purpose: Governed Production order records.
-- Grain: One row per order.
-- `order_date`: Date the order was placed.
-- `ship_date`: Date the order was shipped.
-- `payment_date`: Date payment was received.
-- `gross_amount`: Amount before deductions.
-- `net_amount`: Amount after deductions.
+    - Purpose: Governed Production order records.
+    - Grain: One row per order.
+    - `order_date`: Date the order was placed.
+    - `ship_date`: Date the order was shipped.
+    - `payment_date`: Date payment was received.
+    - `gross_amount`: Amount before deductions.
+    - `net_amount`: Amount after deductions.
 
-**Data Agent instructions**
+    **Data Agent instructions**
 
-- Use the governed table and column descriptions when interpreting business questions.
-- Do not invent business meaning that is not provided in the governed context.
-- Treat `order_date`, `ship_date`, and `payment_date` as distinct business concepts.
-- Treat `gross_amount` and `net_amount` as distinct measures.
-- When a question could reasonably refer to multiple governed concepts, ask the user to clarify before choosing one.
-- For example, if a user asks for "monthly orders", clarify which governed date concept they intend when the question does not make that clear.
+    - Use the governed table and column descriptions when interpreting business questions.
+    - Do not invent business meaning that is not provided in the governed context.
+    - Treat `order_date`, `ship_date`, and `payment_date` as distinct business concepts.
+    - Treat `gross_amount` and `net_amount` as distinct measures.
+    - When a question could reasonably refer to multiple governed concepts, ask the user to clarify before choosing one.
+    - For example, if a user asks for "monthly orders", clarify which governed date concept they intend when the question does not make that clear.
 
-The exact instructions are generated from the governed context available for the selected Production table rather than maintained as a separate manual description of the same table.
-
-</details>
+    The exact instructions are generated from the governed context available for the selected Production table rather than maintained as a separate manual description of the same table.
 
 ## Go deeper
 
