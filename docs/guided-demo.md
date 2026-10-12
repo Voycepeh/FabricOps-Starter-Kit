@@ -18,13 +18,9 @@
 
 ## Foundation setup
 
-<div class="fabricops-mascot-callout" markdown="1">
-  <img src="/FabricOps-Starter-Kit/assets/robot-pointing.png" alt="" loading="lazy">
-  <div markdown="1">
-
-Start with **0A–0C** to prepare your Fabric environment, configure the notebooks, and load the demo data before running the governed pipeline.
-
-  </div>
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/robot-pointing.png" alt="FabricOps mascot" loading="eager">
+  <div><p>Start with <strong>0A–0C</strong> to prepare your Fabric environment, configure the notebooks, and load the demo data before running the governed pipeline.</p></div>
 </div>
 
 | Setup | What you do | Why it matters |
@@ -35,13 +31,9 @@ Start with **0A–0C** to prepare your Fabric environment, configure the noteboo
 
 ## The seven-step FabricOps workflow
 
-<div class="fabricops-mascot-callout" markdown="1">
-  <img src="/FabricOps-Starter-Kit/assets/robot-carrying.png" alt="" loading="lazy">
-  <div markdown="1">
-
-Follow **Steps 1–7** from Governance through Engineering, validation, Production, and consumption. Steps **2A–2C** are hands-on pipeline examples within Step 2.
-
-  </div>
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/robot-carrying.png" alt="FabricOps mascot" loading="eager">
+  <div><p>Follow <strong>Steps 1–7</strong> from Governance through Engineering, validation, Production, and consumption. Steps <strong>2A–2C</strong> are hands-on pipeline examples within Step 2.</p></div>
 </div>
 
 
