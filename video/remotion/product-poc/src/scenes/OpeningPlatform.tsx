@@ -1,32 +1,24 @@
-import {Easing, Img, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
+import {Easing, Img, interpolate, useCurrentFrame} from 'remotion';
 import {mascotSrc} from '../mascotAssets';
 import {theme} from '../theme';
 import {VIDEO_CONFIG} from '../videoConfig';
-import {VIDEO_TUNING, secondsToFrames} from '../videoTuning';
+import {VIDEO_TUNING} from '../videoTuning';
 
 export const OpeningPlatform = () => {
   const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
   const {text, timing, scenes} = VIDEO_CONFIG;
   const {opening} = VIDEO_TUNING;
-  const fabricEnterAt = secondsToFrames(2, fps);
-  const fabricEnterEnd = secondsToFrames(2.6, fps);
-  const fabricExitAt = secondsToFrames(5.5, fps);
-  const fabricExitEnd = secondsToFrames(6.3, fps);
-  const questionEnterAt = secondsToFrames(5.8, fps);
-  const questionEnterEnd = secondsToFrames(6.6, fps);
-  const titleExitAt = timing.openingPushAt;
   const fabricOpacity = interpolate(
     frame,
-    [fabricEnterAt, fabricEnterEnd, fabricExitAt, fabricExitEnd],
-    [0, 1, 1, 0],
+    [0, timing.openingFabricExitAt, timing.openingQuestionAt],
+    [1, 1, 0],
     {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
       easing: Easing.inOut(Easing.cubic),
     },
   );
-  const questionOpacity = interpolate(frame, [questionEnterAt, questionEnterEnd, titleExitAt, scenes.opening], [0, 1, 1, 0], {
+  const questionOpacity = interpolate(frame, [timing.openingQuestionAt, timing.openingQuestionAt + timing.openingQuestionEnterFrames, timing.openingPushAt, scenes.opening], [0, 1, 1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
@@ -36,10 +28,9 @@ export const OpeningPlatform = () => {
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
   });
-  const platformEntryStart = secondsToFrames(opening.platformEntryStartSeconds, fps);
   const platformEntry = interpolate(
     frame,
-    [platformEntryStart, platformEntryStart + opening.platformEntryFrames],
+    [timing.openingMascotAt, timing.openingMascotAt + opening.platformEntryFrames],
     [0, 1],
     {
       extrapolateLeft: 'clamp',

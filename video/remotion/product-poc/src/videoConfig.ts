@@ -15,6 +15,10 @@ export const VIDEO_CONFIG = {
   },
   timing: {
     sceneGap: 0,
+    openingMascotAt: 160,
+    openingFabricExitAt: 470,
+    openingQuestionAt: 480,
+    openingQuestionEnterFrames: 12,
     openingPushAt: 527,
     workflowStepEnter: 18,
     sceneExit: 24,

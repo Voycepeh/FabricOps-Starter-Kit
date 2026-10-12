@@ -3,11 +3,8 @@ import {SCENE_STARTS} from './videoConfig';
 export const globalSecondsToLocalFrame = (seconds: number, sceneStartFrame: number, fps: number) =>
   Math.round(seconds * fps - sceneStartFrame);
 
-export const secondsToFrames = (seconds: number, fps: number) => Math.round(seconds * fps);
-
 export const VIDEO_TUNING = {
   opening: {
-    platformEntryStartSeconds: 8,
     platformEntryFrames: 60,
     platformEntryDistance: 1750,
     platformLeft: 210,
