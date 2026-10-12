@@ -1,8 +1,8 @@
 # 0C. Prepare the demo data with FabricOps I/O
 
-**Demo setup:** After 00B, run this notebook to prepare the Day 1 Bronze sources for 02B (`demo.inventory_movements`) and 02C (`demo.product_master_updates`), in addition to the existing 02A sources. Day 2 and Day 3 changes are introduced by the respective demo notebooks. Do not rerun 00C after advancing either scenario; it overwrites the Day 1 Bronze sources but does not reset Silver targets or governed incremental metadata.
+**Demo setup:** After 00B, run this notebook once to prepare the baseline data for all three Step 2 demos: 02A Full Refresh, 02B Incremental (`demo.inventory_movements`), and 02C SCD (`demo.product_master_updates`). The 02B and 02C notebooks introduce their own Day 2 and Day 3 changes. Do not rerun 00C after advancing either scenario; it overwrites the Day 1 Bronze sources but does not reset Silver targets or governed incremental metadata.
 
-**Run a notebook that demonstrates the FabricOps I/O helpers and prepares the original retail tables required by the Step 2A Full Refresh demo.**
+This notebook demonstrates the FabricOps I/O helpers while preparing the shared starting data for Steps 02A, 02B, and 02C.
 
 ## Before you begin
 
@@ -96,7 +96,7 @@ The expected output confirms that all four file formats resolve to equivalent da
   <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="FabricOps mascot" loading="lazy">
   <div markdown="1">
 
-Read the remaining demo sources and write the managed Lakehouse and Warehouse tables used by the later pipeline walkthrough.
+Read the remaining retail sources and write the managed Lakehouse and Warehouse tables for 02A. The notebook also seeds the Day 1 Bronze tables for 02B and 02C.
 
   </div>
 </div>
@@ -127,21 +127,21 @@ Read the remaining demo sources and write the managed Lakehouse and Warehouse ta
     Use SQL pushdown when it materially reduces Warehouse data before Spark. For repeated heavy PySpark engineering, prefer landing the required data into Lakehouse Delta rather than repeatedly crossing the Warehouse-to-Spark boundary.
 
 
-??? info "This setup remains focused on the original retail sources"
-
-    Step 00C seeds only Orders, Products, and Order History and introduces the public FabricOps file and table I/O helpers. The separate Step 2B and 2C notebooks own their inventory and Product Master fixtures. Guardrail validation creates temporary notebook-session mutations, so these canonical files remain unchanged.
-
 ## Expected result
 
-After the notebook finishes, Engineering Development should contain the managed sources required by `02A_full_refresh_demo`:
+After the notebook finishes, Engineering Development should contain the starting tables for all three Step 2 demos:
 
 ```text
 bronze Lakehouse
   demo.orders       # canonical Day 1 Orders baseline
   demo.products
+  demo.inventory_movements      # 02B incremental Day 1 baseline
+  demo.product_master_updates   # 02C SCD Day 1 baseline
 
 gold Warehouse
   demo.order_history
 ```
+
+02B and 02C advance their respective Day 1 baselines within their own demo notebooks. Run 00C before starting those scenarios, not between their days.
 
 **Next:** [Step 1. Establish Governance context](01-establish-governance-context.md)
