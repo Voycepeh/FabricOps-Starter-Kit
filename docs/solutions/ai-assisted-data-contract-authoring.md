@@ -10,9 +10,12 @@ Identifying sensitive data is only the first step. The more important governance
 
 Governance users still need to decide how Direct or Indirect PII should be treated and understand what its classification becomes after that treatment is applied.
 
-## The solution <img class="fabricops-solution-mascot" src="/FabricOps-Starter-Kit/assets/robot-masking.png" alt="" loading="lazy">
+## The solution
 
-FabricOps turns sensitive-data governance into a three-step workflow:
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/robot-masking.png" alt="FabricOps mascot" loading="eager">
+  <div><p>FabricOps turns sensitive-data governance into a three-step workflow:</p></div>
+</div>
 
 1. **Identify sensitivity** — tag each governed column as **Direct PII**, **Indirect PII**, or **Not PII**.
 2. **Apply treatment** — for sensitive columns, choose how the data should be handled before publication. FabricOps supports **Mask, Bucket, Tokenize, and Remove**.
