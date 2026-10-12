@@ -283,6 +283,45 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", cont
     return identity, context
 
 
+def test_lakehouse_incremental_bootstrap_probe_uses_quiet_io_context(monkeypatch):
+    """Existing Lakehouse target checks must use a locally defined IO context."""
+    identity = _identity("lakehouse:unified:demo:inventory_movements_incremental", store_type="lakehouse")
+    identity.update({"store": "Silver", "schema": "demo"})
+    calls = []
+
+    class Frame:
+        def limit(self, count):
+            assert count == 1
+            return self
+
+        def count(self):
+            return 1
+
+    def read_table(table_name, **kwargs):
+        calls.append((table_name, kwargs))
+        return Frame()
+
+    monkeypatch.setattr(io_package, "read_lakehouse_table", read_table)
+
+    assert write_module._target_has_rows(
+        identity=identity,
+        context={"environment_name": "Development"},
+        spark_session="spark",
+    ) is True
+    assert calls == [(
+        "inventory_movements_incremental",
+        {
+            "store": "Silver",
+            "schema": "demo",
+            "spark_session": "spark",
+            "context": {
+                "environment_name": "Development",
+                "_fabricops_suppress_io_log": True,
+            },
+        },
+    )]
+
+
 @pytest.mark.parametrize("probe", ["activity", "rows"])
 def test_warehouse_first_write_treats_missing_target_as_not_applied(monkeypatch, probe):
     """Missing Warehouse targets must not be queried before their first publication."""
