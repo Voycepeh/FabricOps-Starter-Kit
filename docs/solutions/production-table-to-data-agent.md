@@ -43,6 +43,11 @@ Fabric permissions remain authoritative for access to the Production data and fo
 
 ## Under the hood
 
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="FabricOps mascot" loading="lazy">
+  <div><p>See how FabricOps turns governed Production table context into Data Agent instructions and configures the agent through Microsoft Fabric.</p></div>
+</div>
+
 ??? info "How FabricOps prepares and applies the Data Agent instructions"
 
     ![FabricOps Production table to Data Agent implementation](../assets/data-agent-bootstrap-implementation.svg){ .fabricops-solution-diagram }
