@@ -43,6 +43,11 @@ FabricOps separates the parts that need human judgement from the parts AI can ac
 
 ## Under the hood
 
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-masking.png" alt="FabricOps mascot" loading="lazy">
+  <div><p>See how governed metadata and profiling evidence support AI suggestions while people retain control of sensitive data treatments and enforcement.</p></div>
+</div>
+
 <details class="fabricops-solution-details" markdown="1">
 <summary><strong>How AI suggestions and enforcement work</strong></summary>
 
