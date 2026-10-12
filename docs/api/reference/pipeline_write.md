@@ -23,9 +23,9 @@ Lineage and Source Observation metadata only after publication succeeds.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_write.py:319`
+`fabricops_kit/pipeline/pipeline_write.py:340`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L319-L680">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L340-L707">View on GitHub</a>
 </div>
 
 

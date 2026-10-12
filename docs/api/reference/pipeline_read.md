@@ -26,7 +26,7 @@ choose between Lakehouse and Warehouse table readers.
 
 `fabricops_kit/pipeline/pipeline_read.py:63`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L63-L404">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L63-L406">View on GitHub</a>
 </div>
 
 
