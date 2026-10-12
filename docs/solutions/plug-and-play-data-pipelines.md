@@ -103,6 +103,11 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
 
 ## Under the hood
 
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-coding.png" alt="Coding mascot" loading="lazy">
+  <div><p>Explore how the reusable pipeline orchestrators handle governed Read and Write operations around your PySpark transformations.</p></div>
+</div>
+
 <details class="fabricops-solution-details" markdown="1">
 <summary><strong>What happens in a standard FabricOps Pipeline</strong></summary>
 
