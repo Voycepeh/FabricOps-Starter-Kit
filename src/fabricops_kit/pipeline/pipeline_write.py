@@ -201,6 +201,7 @@ def _target_has_rows(
     """Return whether an existing physical target contains at least one row."""
     from fabricops_kit.io import read_lakehouse_table, read_warehouse_query
 
+    io_context = {**context, "_fabricops_suppress_io_log": True}
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
     try:
         if store_kind == "lakehouse":

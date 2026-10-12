@@ -283,6 +283,45 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", cont
     return identity, context
 
 
+def test_lakehouse_incremental_bootstrap_probe_uses_quiet_io_context(monkeypatch):
+    """Existing Lakehouse target checks must use a locally defined IO context."""
+    identity = _identity("lakehouse:unified:demo:inventory_movements_incremental", store_type="lakehouse")
+    identity.update({"store": "Silver", "schema": "demo"})
+    calls = []
+
+    class Frame:
+        def limit(self, count):
+            assert count == 1
+            return self
+
+        def count(self):
+            return 1
+
+    def read_table(table_name, **kwargs):
+        calls.append((table_name, kwargs))
+        return Frame()
+
+    monkeypatch.setattr(io_package, "read_lakehouse_table", read_table)
+
+    assert write_module._target_has_rows(
+        identity=identity,
+        context={"environment_name": "Development"},
+        spark_session="spark",
+    ) is True
+    assert calls == [(
+        "inventory_movements_incremental",
+        {
+            "store": "Silver",
+            "schema": "demo",
+            "spark_session": "spark",
+            "context": {
+                "environment_name": "Development",
+                "_fabricops_suppress_io_log": True,
+            },
+        },
+    )]
+
+
 @pytest.mark.parametrize("probe", ["activity", "rows"])
 def test_warehouse_first_write_treats_missing_target_as_not_applied(monkeypatch, probe):
     """Missing Warehouse targets must not be queried before their first publication."""
@@ -839,3 +878,51 @@ def test_pipeline_write_does_not_own_visible_checks():
         "profile_table",
     ):
         assert not hasattr(write_module, name)
+
+
+@pytest.mark.parametrize("verbose", [True, False])
+def test_orchestration_failure_reports_root_cause_and_preserves_chain(capsys, verbose):
+    """Read and Write stage failures should expose the true error without losing the cause."""
+    def fail():
+        try:
+            raise NameError("name 'io_context' is not defined")
+        except NameError as exc:
+            raise ValueError("nested failure") from exc
+
+    for operation in ("READ", "WRITE"):
+        with pytest.raises(RuntimeError, match="Root cause: NameError: name 'io_context' is not defined") as error:
+            shared_module._run_orchestration_stage(
+                operation=operation,
+                name="inventory_movements_incremental",
+                index=1,
+                total=5,
+                stage="Read" if operation == "READ" else "Write",
+                function=fail,
+                verbose=verbose,
+            )
+        assert isinstance(error.value.__cause__, ValueError)
+        assert isinstance(error.value.__cause__.__cause__, NameError)
+        assert "in fail" in str(error.value)
+    output = capsys.readouterr().out
+    if verbose:
+        assert output.count("Root cause → NameError") == 2
+        assert "Later stages did not run" in output
+    else:
+        assert output == ""
+
+
+def test_orchestration_success_stage_record_remains_unchanged(capsys):
+    result, record = shared_module._run_orchestration_stage(
+        operation="READ",
+        name="orders",
+        index=1,
+        total=5,
+        stage="Read",
+        function=lambda: {"status": "skipped"},
+        verbose=False,
+    )
+    assert result == {"status": "skipped"}
+    assert record["stage"] == "Read"
+    assert record["status"] == "skipped"
+    assert record["duration_seconds"] >= 0.01
+    assert capsys.readouterr().out == ""
