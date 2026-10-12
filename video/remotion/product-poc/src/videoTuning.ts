@@ -7,13 +7,12 @@ export const secondsToFrames = (seconds: number, fps: number) => Math.round(seco
 
 export const VIDEO_TUNING = {
   opening: {
-    platformEntryStartSeconds: 3,
+    platformEntryStartSeconds: 8,
     platformEntryFrames: 60,
     platformEntryDistance: 1750,
     platformLeft: 210,
     platformTop: 560,
     platformWidth: 1500,
-    questionOffsetY: -100,
     heroCenterY: 360,
   },
   fabricOps: {

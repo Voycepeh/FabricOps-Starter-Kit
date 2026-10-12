@@ -1,5 +1,6 @@
-import {Easing, Img, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {Easing, Img, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {mascotSrc} from '../mascotAssets';
+import {theme} from '../theme';
 import {VIDEO_CONFIG} from '../videoConfig';
 import {VIDEO_TUNING, secondsToFrames} from '../videoTuning';
 
@@ -8,8 +9,24 @@ export const OpeningPlatform = () => {
   const {fps} = useVideoConfig();
   const {text, timing, scenes} = VIDEO_CONFIG;
   const {opening} = VIDEO_TUNING;
-  const hero = spring({frame, fps, config: {damping: 20, stiffness: 68}});
-  const heroExit = interpolate(frame, [timing.openingQuestionAt - 36, timing.openingQuestionAt], [1, 0], {
+  const questionEnterAt = secondsToFrames(2, fps);
+  const questionEnterEnd = secondsToFrames(2.6, fps);
+  const questionExitAt = secondsToFrames(5.5, fps);
+  const questionExitEnd = secondsToFrames(6.3, fps);
+  const heroEnterAt = secondsToFrames(5.8, fps);
+  const heroEnterEnd = secondsToFrames(6.6, fps);
+  const titleExitAt = timing.openingPushAt;
+  const questionOpacity = interpolate(
+    frame,
+    [questionEnterAt, questionEnterEnd, questionExitAt, questionExitEnd],
+    [0, 1, 1, 0],
+    {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: Easing.inOut(Easing.cubic),
+    },
+  );
+  const heroOpacity = interpolate(frame, [heroEnterAt, heroEnterEnd, titleExitAt, scenes.opening], [0, 1, 1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
@@ -18,11 +35,6 @@ export const OpeningPlatform = () => {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
-  });
-  const question = spring({
-    frame: frame - timing.openingQuestionAt,
-    fps,
-    config: {damping: 19, stiffness: 78},
   });
   const platformEntryStart = secondsToFrames(opening.platformEntryStartSeconds, fps);
   const platformEntry = interpolate(
@@ -37,7 +49,7 @@ export const OpeningPlatform = () => {
   );
 
   return (
-    <div style={{position: 'absolute', inset: 0}}>
+    <div style={{position: 'absolute', inset: 0, background: theme.background}}>
       <Img
         src={mascotSrc('dragging')}
         style={{
@@ -49,9 +61,9 @@ export const OpeningPlatform = () => {
           opacity: platformEntry,
           translate: `${(1 - platformEntry) * opening.platformEntryDistance - push * 2200}px 0`,
           zIndex: 1,
+          scale: 0.833,
         }}
       />
-
       <div
         style={{
           position: 'absolute',
@@ -60,8 +72,7 @@ export const OpeningPlatform = () => {
           top: opening.heroCenterY,
           display: 'flex',
           justifyContent: 'center',
-          opacity: hero * heroExit,
-          scale: 0.9 + hero * 0.1 - (1 - heroExit) * 0.08,
+          opacity: questionOpacity,
           translate: '0 -50%',
           zIndex: 3,
         }}
@@ -69,32 +80,6 @@ export const OpeningPlatform = () => {
         <div
           style={{
             fontSize: text.fabricHero,
-            lineHeight: 1,
-            fontWeight: 840,
-            letterSpacing: -7,
-            textShadow: '0 24px 80px #000',
-          }}
-        >
-          <span style={{color: '#fff'}}>Microsoft</span>{' '}
-          <span style={{color: '#38d991'}}>Fabric</span>
-        </div>
-      </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'grid',
-          placeItems: 'center',
-          opacity: question,
-          scale: 0.9 + question * 0.1,
-          translate: `0 ${opening.questionOffsetY - 760 * push}px`,
-          zIndex: 2,
-        }}
-      >
-        <div
-          style={{
-            fontSize: 126,
             lineHeight: 1,
             fontWeight: 840,
             letterSpacing: -5,
@@ -111,6 +96,32 @@ export const OpeningPlatform = () => {
           >
             start?
           </span>
+        </div>
+      </div>
+      <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: opening.heroCenterY,
+          display: 'flex',
+          justifyContent: 'center',
+          opacity: heroOpacity,
+          translate: '0 -50%',
+          zIndex: 3,
+        }}
+      >
+        <div
+          style={{
+            fontSize: text.fabricHero,
+            lineHeight: 1,
+            fontWeight: 840,
+            letterSpacing: -7,
+            textShadow: '0 24px 80px #000',
+          }}
+        >
+          <span style={{color: '#fff'}}>Microsoft</span>{' '}
+          <span style={{color: '#38d991'}}>Fabric</span>
         </div>
       </div>
     </div>
