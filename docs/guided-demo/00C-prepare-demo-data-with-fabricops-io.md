@@ -1,6 +1,6 @@
 # 0C. Prepare the demo data with FabricOps I/O
 
-**Demo setup:** After 00B, run this notebook once to prepare the baseline data for all three Step 2 demos: 02A Full Refresh, 02B Incremental (`demo.inventory_movements`), and 02C SCD (`demo.product_master_updates`). The 02B and 02C notebooks introduce their own Day 2 and Day 3 changes. Do not rerun 00C after advancing either scenario; it overwrites the Day 1 Bronze sources but does not reset Silver targets or governed incremental metadata.
+**Demo setup:** After 00B, run this notebook once to prepare the baseline data for all three Step 2 demos: 02A Full Refresh, 02B Incremental (`demo.inventory_movements`), and 02C SCD (`demo.product_master_updates`). 
 
 This notebook demonstrates the FabricOps I/O helpers while preparing the shared starting data for Steps 02A, 02B, and 02C.
 
