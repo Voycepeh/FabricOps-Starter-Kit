@@ -352,9 +352,10 @@ Explore the key capabilities FabricOps provides within that operating model. Eac
 
 ## Download FabricOps
 
-<p class="fabricops-feature-intro">
-Refer to the <a href="guided-demo/">Guided Demo</a> for how to use these assets. For detailed information, see the Reference Documentation below.
-</p>
+<div class="fabricops-mascot-callout">
+  <img src="assets/mascots/robot-carrying.png" alt="FabricOps carrying mascot" loading="lazy">
+  <div><p>Get the Python package, reusable notebook templates, and demo assets to start building. Follow the <a href="guided-demo/">Guided Demo</a> to put them to work.</p></div>
+</div>
 
 <div class="fabricops-home-quicklinks fabricops-home-quicklinks--assets">
   <a class="fabricops-home-quicklink" href="releases/">Releases (Python package)</a>
@@ -363,6 +364,11 @@ Refer to the <a href="guided-demo/">Guided Demo</a> for how to use these assets.
 </div>
 
 ## Reference Documentation
+
+<div class="fabricops-mascot-callout">
+  <img src="assets/mascots/robot-writing.png" alt="FabricOps writing mascot" loading="lazy">
+  <div><p>Explore FabricOps functions, Data Quality rules, metadata structures, and implementation guidance.</p></div>
+</div>
 
 <div class="fabricops-home-quicklinks">
   <a class="fabricops-home-quicklink" href="reference/">Function Reference</a>
