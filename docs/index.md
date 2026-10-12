@@ -49,11 +49,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.6rem;
-  height: 2.6rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--md-primary-fg-color) 10%, transparent);
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--md-primary-fg-color) 5%, transparent);
   color: var(--md-primary-fg-color);
+}
+
+.fabricops-home-action__mascot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .fabricops-home-action__icon svg {
@@ -242,10 +250,10 @@
 
 .fabricops-feature-card__mascot {
   display: inline-block;
-  width: 2rem;
-  max-width: 2rem;
-  height: 2rem;
-  max-height: 2rem;
+  width: 2.6rem;
+  max-width: 2.6rem;
+  height: 2.6rem;
+  max-height: 2.6rem;
   margin: 0 0.4rem 0 0;
   vertical-align: middle;
   object-fit: contain;
@@ -287,13 +295,33 @@
   }
 
   .fabricops-home-action__icon {
-    width: 2.35rem;
-    height: 2.35rem;
+    width: 2.8rem;
+    height: 2.8rem;
   }
 
   .fabricops-home-quicklinks {
     grid-template-columns: 1fr;
   }
+}
+.fabricops-landing > .fabricops-mascot-callout {
+  min-height: 4.8rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.5rem;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.fabricops-landing > .fabricops-mascot-callout > img {
+  width: 3.2rem;
+  height: 3.2rem;
+  min-width: 3.2rem;
+  max-width: 3.2rem;
+  object-fit: contain;
+}
+
+.fabricops-landing > .fabricops-mascot-callout p {
+  margin: 0;
+  line-height: 1.45;
 }
 </style>
 
@@ -315,7 +343,7 @@
 <div class="fabricops-home-primary">
   <a class="fabricops-home-action" href="how-fabricops-works/">
     <span class="fabricops-home-action__icon" aria-hidden="true">
-      <img src="assets/mascots/robot-writing.png" alt="" style="width:2.5rem;height:2.5rem;object-fit:contain">
+      <img class="fabricops-home-action__mascot" src="assets/mascots/robot-writing.png" alt="">
     </span>
     <span class="fabricops-home-action__copy">
       <span class="fabricops-home-action__label">How FabricOps works</span>
@@ -326,7 +354,7 @@
 
   <a class="fabricops-home-action" href="guided-demo/">
     <span class="fabricops-home-action__icon" aria-hidden="true">
-      <img src="assets/mascots/robot-pointing.png" alt="" style="width:2.5rem;height:2.5rem;object-fit:contain">
+      <img class="fabricops-home-action__mascot" src="assets/mascots/robot-pointing.png" alt="">
     </span>
     <span class="fabricops-home-action__copy">
       <span class="fabricops-home-action__label">Step-by-step Guided Demo</span>
@@ -344,19 +372,20 @@ Explore the key capabilities FabricOps provides within that operating model. Eac
 </p>
 
 <div class="fabricops-feature-grid">
-  <a class="fabricops-feature-card" href="solutions/plug-and-play-data-pipelines/"><span class="fabricops-feature-card__media"><img src="assets/05/PipelinesDeploymentOverview.png" alt="Same FabricOps pipeline promoted from Development to Production"></span><span class="fabricops-feature-card__content"><span><span class="fabricops-release-status fabricops-release-status--preview">Preview</span></span><span class="fabricops-feature-card__title">Plug-and-Play Data Pipelines with Data Contract Enforcement</span><span class="fabricops-feature-card__copy">Promote the same pipeline from Development to Production while configuration resolves environment-specific Fabric resources.</span><span class="fabricops-feature-card__cta"><img class="fabricops-feature-card__mascot" src="assets/mascots/robot-carrying.png" alt="" loading="lazy">Explore solution</span></span></a>
-  <a class="fabricops-feature-card" href="solutions/production-table-to-data-agent/"><span class="fabricops-feature-card__media"><img src="assets/DataAgentsBootstrap.png" alt="Production Table to Data Agent"></span><span class="fabricops-feature-card__content"><span><span class="fabricops-release-status fabricops-release-status--preview">Preview</span></span><span class="fabricops-feature-card__title">Production Table to Data Agent</span><span class="fabricops-feature-card__copy">Bootstrap a Microsoft Fabric Data Agent from an activated Production table using the governed context FabricOps already captures.</span><span class="fabricops-feature-card__cta"><img class="fabricops-feature-card__mascot" src="assets/mascots/robot-pointing.png" alt="" loading="lazy">Explore solution</span></span></a>
-  <a class="fabricops-feature-card" href="solutions/ai-assisted-data-contract-authoring/"><span class="fabricops-feature-card__media"><img src="assets/AiDatacontract.png" alt="Direct & Indirect PII Discovery & Treatment with Built-in AI Suggestions"></span><span class="fabricops-feature-card__content"><span><span class="fabricops-release-status fabricops-release-status--preview">Preview</span></span><span class="fabricops-feature-card__title">Direct & Indirect PII Discovery & Treatment with Built-in AI Suggestions</span><span class="fabricops-feature-card__copy">Identify Direct and Indirect PII, review the suggested classification, and apply governed Mask, Bucket, Tokenize, or Remove treatments. Built-in AI suggestions accelerate authoring while Governance remains in control.</span><span class="fabricops-feature-card__cta"><img class="fabricops-feature-card__mascot" src="assets/mascots/robot-validate.png" alt="" loading="lazy">Explore solution</span></span></a>
+  <a class="fabricops-feature-card" href="solutions/plug-and-play-data-pipelines/"><span class="fabricops-feature-card__media"><img src="assets/05/PipelinesDeploymentOverview.png" alt="Same FabricOps pipeline promoted from Development to Production"></span><span class="fabricops-feature-card__content"><span><span class="fabricops-release-status fabricops-release-status--preview">Preview</span></span><span class="fabricops-feature-card__title">Plug-and-Play Data Pipelines with Data Contract Enforcement</span><span class="fabricops-feature-card__copy">Promote the same pipeline from Development to Production while configuration resolves environment-specific Fabric resources.</span><span class="fabricops-feature-card__cta"><img class="fabricops-feature-card__mascot" src="assets/mascots/robot-coding.png" alt="" loading="lazy">Explore solution</span></span></a>
+  <a class="fabricops-feature-card" href="solutions/ai-assisted-data-contract-authoring/"><span class="fabricops-feature-card__media"><img src="assets/AiDatacontract.png" alt="Direct & Indirect PII Discovery & Treatment with Built-in AI Suggestions"></span><span class="fabricops-feature-card__content"><span><span class="fabricops-release-status fabricops-release-status--preview">Preview</span></span><span class="fabricops-feature-card__title">Direct & Indirect PII Discovery & Treatment with Built-in AI Suggestions</span><span class="fabricops-feature-card__copy">Identify Direct and Indirect PII, review the suggested classification, and apply governed Mask, Bucket, Tokenize, or Remove treatments. Built-in AI suggestions accelerate authoring while Governance remains in control.</span><span class="fabricops-feature-card__cta"><img class="fabricops-feature-card__mascot" src="assets/mascots/robot-masking.png" alt="" loading="lazy">Explore solution</span></span></a>
   <a class="fabricops-feature-card" href="solutions/business-rules-to-data-quality/"><span class="fabricops-feature-card__media"><img src="assets/BusinessRuletoDQ.png" alt="Business rules converted into enforceable Data Quality rules"></span><span class="fabricops-feature-card__content"><span><span class="fabricops-release-status fabricops-release-status--preview">Preview</span></span><span class="fabricops-feature-card__title">Data Quality Rules from Natural Language</span><span class="fabricops-feature-card__copy">Describe what clean data means in natural language and turn one nuanced business requirement into multiple reviewable, deterministic Data Quality rules.</span><span class="fabricops-feature-card__cta"><img class="fabricops-feature-card__mascot" src="assets/mascots/robot-writing.png" alt="" loading="lazy">Explore solution</span></span></a>
-  <a class="fabricops-feature-card" href="solutions/effective-data-access/"><span class="fabricops-feature-card__media"><img src="assets/EffectiveAccessScan.png" alt="Effective data access scan across Fabric permission paths"></span><span class="fabricops-feature-card__content"><span><span class="fabricops-release-status fabricops-release-status--preview">Preview</span></span><span class="fabricops-feature-card__title">Scan Effective Data Access</span><span class="fabricops-feature-card__copy">Resolve who can actually reach governed tables across overlapping Fabric permission paths.</span><span class="fabricops-feature-card__cta"><img class="fabricops-feature-card__mascot" src="assets/mascots/robot-scanning.png" alt="" loading="lazy">Explore solution</span></span></a>
   <a class="fabricops-feature-card" href="function-call-graph/"><span class="fabricops-feature-card__media"><img src="assets/fabricops-call-graph-dashboard.png" alt="Interactive FabricOps public function call flow dashboard"></span><span class="fabricops-feature-card__content"><span><span class="fabricops-release-status fabricops-release-status--live">Live</span> <span class="fabricops-release-status fabricops-release-status--maintainer">Maintainer</span></span><span class="fabricops-feature-card__title">Explore How FabricOps Functions Work Under the Hood</span><span class="fabricops-feature-card__copy">Understand the generated call-flow model, then open the dashboard to inspect callable relationships, architecture signals, and cleanup context.</span><span class="fabricops-feature-card__cta">Explore solution</span></span></a>
+  <a class="fabricops-feature-card" href="solutions/effective-data-access/"><span class="fabricops-feature-card__media"><img src="assets/EffectiveAccessScan.png" alt="Effective data access scan across Fabric permission paths"></span><span class="fabricops-feature-card__content"><span><span class="fabricops-release-status fabricops-release-status--preview">Preview</span></span><span class="fabricops-feature-card__title">Scan Effective Data Access</span><span class="fabricops-feature-card__copy">Resolve who can actually reach governed tables across overlapping Fabric permission paths.</span><span class="fabricops-feature-card__cta"><img class="fabricops-feature-card__mascot" src="assets/mascots/robot-scanning.png" alt="" loading="lazy">Explore solution</span></span></a>
+  <a class="fabricops-feature-card" href="solutions/production-table-to-data-agent/"><span class="fabricops-feature-card__media"><img src="assets/DataAgentsBootstrap.png" alt="Production Table to Data Agent"></span><span class="fabricops-feature-card__content"><span><span class="fabricops-release-status fabricops-release-status--preview">Preview</span></span><span class="fabricops-feature-card__title">Production Table to Data Agent</span><span class="fabricops-feature-card__copy">Bootstrap a Microsoft Fabric Data Agent from an activated Production table using the governed context FabricOps already captures.</span><span class="fabricops-feature-card__cta"><img class="fabricops-feature-card__mascot" src="assets/mascots/robot-prod.png" alt="" loading="lazy">Explore solution</span></span></a>
 </div>
 
 ## Download FabricOps
 
-<p class="fabricops-feature-intro">
-Refer to the <a href="guided-demo/">Guided Demo</a> for how to use these assets. For detailed information, see the Reference Documentation below.
-</p>
+<div class="fabricops-mascot-callout">
+  <img src="assets/mascots/robot-carrying.png" alt="FabricOps carrying mascot" loading="lazy">
+  <div><p>Get the Python package, reusable notebook templates, and demo assets to start building. Follow the <a href="guided-demo/">Guided Demo</a> to put them to work.</p></div>
+</div>
 
 <div class="fabricops-home-quicklinks fabricops-home-quicklinks--assets">
   <a class="fabricops-home-quicklink" href="releases/">Releases (Python package)</a>
@@ -365,6 +394,11 @@ Refer to the <a href="guided-demo/">Guided Demo</a> for how to use these assets.
 </div>
 
 ## Reference Documentation
+
+<div class="fabricops-mascot-callout">
+  <img src="assets/mascots/robot-writing.png" alt="FabricOps writing mascot" loading="lazy">
+  <div><p>Explore FabricOps functions, Data Quality rules, metadata structures, and implementation guidance.</p></div>
+</div>
 
 <div class="fabricops-home-quicklinks">
   <a class="fabricops-home-quicklink" href="reference/">Function Reference</a>

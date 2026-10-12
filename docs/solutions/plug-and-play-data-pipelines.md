@@ -15,7 +15,10 @@ FabricOps abstracts the repeatable plumbing behind a small, readable notebook in
 ## The solution
 
 <div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="FabricOps mascot" loading="eager">
+  <span style="display:inline-flex;align-items:center;gap:0.4rem;flex-shrink:0">
+    <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="Development mascot" loading="eager">
+    <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="Production mascot" loading="eager">
+  </span>
   <div><p>FabricOps provides a <strong>clonable two-notebook engineering stack</strong>:</p></div>
 </div>
 
@@ -100,29 +103,28 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
 
 ## Under the hood
 
-<details class="fabricops-solution-details" markdown="1">
-<summary><strong>What happens in a standard FabricOps Pipeline</strong></summary>
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-coding.png" alt="Coding mascot" loading="lazy">
+  <div><p>Explore how the reusable pipeline orchestrators handle governed Read and Write operations around your PySpark transformations.</p></div>
+</div>
 
-![What happens at the FabricOps Read and Write boundaries](../assets/pipeline-boundaries-implementation.svg){ .fabricops-solution-diagram }
+??? info "What happens in a standard FabricOps Pipeline"
 
-The Read boundary resolves the governed table and runs Freshness, Schema, and DQ checks before the DataFrame reaches the project-owned PySpark transformation. Full reads also produce full dataset profiling as part of the Read orchestration without making Profile another inline guardrail stage. The Write boundary applies pre-publication guardrails before writing, then performs full dataset profiling on the published table and records lineage.
+    ![What happens at the FabricOps Read and Write boundaries](../assets/pipeline-boundaries-implementation.svg){ .fabricops-solution-diagram }
 
-The orchestrators provide the stable framework boundary. Read modes, Write modes, validation behaviour, and deployment are documented separately so this page can stay focused on the overall solution.
+    The Read boundary resolves the governed table and runs Freshness, Schema, and DQ checks before the DataFrame reaches the project-owned PySpark transformation. Full reads also produce full dataset profiling as part of the Read orchestration without making Profile another inline guardrail stage. The Write boundary applies pre-publication guardrails before writing, then performs full dataset profiling on the published table and records lineage.
 
-</details>
+    The orchestrators provide the stable framework boundary. Read modes, Write modes, validation behaviour, and deployment are documented separately so this page can stay focused on the overall solution.
 
 ## Example
 
-<details class="fabricops-solution-details" markdown="1">
-<summary><strong>Orders + Products → Curated Orders</strong></summary>
+??? info "Orders + Products → Curated Orders"
 
-A project can read an Orders source and a Products reference table through governed Read boundaries, join and transform them using ordinary PySpark, then publish a Curated Orders table through a governed Write boundary.
+    A project can read an Orders source and a Products reference table through governed Read boundaries, join and transform them using ordinary PySpark, then publish a Curated Orders table through a governed Write boundary.
 
-The engineer owns the transformation. FabricOps handles the repeatable environment, governance, metadata, and enforcement plumbing around it.
+    The engineer owns the transformation. FabricOps handles the repeatable environment, governance, metadata, and enforcement plumbing around it.
 
-See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-etl.md) for the working pipeline example.
-
-</details>
+    See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-etl.md) for the working pipeline example.
 
 ## Go deeper
 

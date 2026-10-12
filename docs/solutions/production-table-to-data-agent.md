@@ -17,7 +17,7 @@ That creates a natural opportunity: **reuse the context FabricOps already has to
 ## The solution
 
 <div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-pointing.png" alt="FabricOps mascot" loading="eager">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="FabricOps mascot" loading="eager">
   <div><p>FabricOps reuses the governed context it already has: table purpose, grain, business terminology, column descriptions, approved business rules, known limitations, classification, sensitivity, and other Data Contract context.</p></div>
 </div>
 
@@ -43,46 +43,45 @@ Fabric permissions remain authoritative for access to the Production data and fo
 
 ## Under the hood
 
-<details class="fabricops-solution-details" markdown="1">
-<summary><strong>How FabricOps prepares and applies the Data Agent instructions</strong></summary>
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="FabricOps mascot" loading="lazy">
+  <div><p>See how FabricOps turns governed Production table context into Data Agent instructions and configures the agent through Microsoft Fabric.</p></div>
+</div>
 
-![FabricOps Production table to Data Agent implementation](../assets/data-agent-bootstrap-implementation.svg){ .fabricops-solution-diagram }
+??? info "How FabricOps prepares and applies the Data Agent instructions"
 
-[`create_data_agent()`](../api/reference/create_data_agent.md) uses the current Fabric notebook caller identity to call the Microsoft Fabric REST API. It creates the Data Agent, attaches the configured Production Lakehouse or Warehouse datasource, selects the governed table, and applies the generated datasource and agent instructions.
+    ![FabricOps Production table to Data Agent implementation](../assets/data-agent-bootstrap-implementation.svg){ .fabricops-solution-diagram }
 
-FabricOps does **not** copy the Production table into an AI prompt. The table remains a Fabric datasource and the caller's Fabric permissions continue to control access.
+    [`create_data_agent()`](../api/reference/create_data_agent.md) uses the current Fabric notebook caller identity to call the Microsoft Fabric REST API. It creates the Data Agent, attaches the configured Production Lakehouse or Warehouse datasource, selects the governed table, and applies the generated datasource and agent instructions.
 
-</details>
+    FabricOps does **not** copy the Production table into an AI prompt. The table remains a Fabric datasource and the caller's Fabric permissions continue to control access.
 
 ## Example
 
-<details class="fabricops-solution-details" markdown="1">
-<summary><strong>Example Data Agent instructions</strong></summary>
+??? info "Example Data Agent instructions"
 
-For a governed Orders table, FabricOps can prepare instructions such as:
+    For a governed Orders table, FabricOps can prepare instructions such as:
 
-**Table context**
+    **Table context**
 
-- Purpose: Governed Production order records.
-- Grain: One row per order.
-- `order_date`: Date the order was placed.
-- `ship_date`: Date the order was shipped.
-- `payment_date`: Date payment was received.
-- `gross_amount`: Amount before deductions.
-- `net_amount`: Amount after deductions.
+    - Purpose: Governed Production order records.
+    - Grain: One row per order.
+    - `order_date`: Date the order was placed.
+    - `ship_date`: Date the order was shipped.
+    - `payment_date`: Date payment was received.
+    - `gross_amount`: Amount before deductions.
+    - `net_amount`: Amount after deductions.
 
-**Data Agent instructions**
+    **Data Agent instructions**
 
-- Use the governed table and column descriptions when interpreting business questions.
-- Do not invent business meaning that is not provided in the governed context.
-- Treat `order_date`, `ship_date`, and `payment_date` as distinct business concepts.
-- Treat `gross_amount` and `net_amount` as distinct measures.
-- When a question could reasonably refer to multiple governed concepts, ask the user to clarify before choosing one.
-- For example, if a user asks for "monthly orders", clarify which governed date concept they intend when the question does not make that clear.
+    - Use the governed table and column descriptions when interpreting business questions.
+    - Do not invent business meaning that is not provided in the governed context.
+    - Treat `order_date`, `ship_date`, and `payment_date` as distinct business concepts.
+    - Treat `gross_amount` and `net_amount` as distinct measures.
+    - When a question could reasonably refer to multiple governed concepts, ask the user to clarify before choosing one.
+    - For example, if a user asks for "monthly orders", clarify which governed date concept they intend when the question does not make that clear.
 
-The exact instructions are generated from the governed context available for the selected Production table rather than maintained as a separate manual description of the same table.
-
-</details>
+    The exact instructions are generated from the governed context available for the selected Production table rather than maintained as a separate manual description of the same table.
 
 ## Go deeper
 
