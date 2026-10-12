@@ -1,5 +1,5 @@
 import type {CSSProperties, ReactNode} from 'react';
-import {AbsoluteFill, Easing, Img, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Easing, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {mascotSrc, type MascotName} from '../mascotAssets';
 import {font, theme} from '../theme';
 import {GUIDED_SCENE_DURATIONS, seconds} from '../videoConfig';
@@ -135,9 +135,14 @@ export const EngineeringScene = () => {
   const write = enterProgress(frame, fps, seconds(3.2));
   const firstLink = interpolate(frame, [seconds(2), seconds(3.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const secondLink = interpolate(frame, [seconds(3), seconds(4.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const ferry = interpolate(frame, [seconds(4.4), seconds(8.1)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const ferryOpacity = interpolate(frame, [seconds(4.2), seconds(4.6), seconds(8), seconds(8.4)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   return <SceneShell duration={ENGINEERING_DURATION} heading="One reusable pipeline pattern" accent={theme.engineering}>
     <PipelinePattern top={300} read={read} transform={transform} write={write} firstLink={firstLink} secondLink={secondLink} />
-    <Mascot pose="coding" x={855} y={580} size={215} delay={seconds(4.4)} />
+    <Img src={mascotSrc('carrying')} style={{
+      position: 'absolute', left: 260 + ferry * 1265, top: 575, width: 220, height: 220,
+      objectFit: 'contain', opacity: ferryOpacity, filter: 'drop-shadow(0 16px 26px #0008)',
+    }} />
     <Reveal at={seconds(8.2)} y={16}>
       <div style={{position: 'absolute', left: 210, right: 210, top: 815, display: 'flex', justifyContent: 'center', gap: 28}}>
         {['02A · Full Refresh', '02B · Incremental', '02C · SCD1 / SCD2'].map((label) => <div key={label} style={{padding: '17px 31px', borderRadius: 16, background: '#122d49', border: '1px solid #4d759c', fontSize: 24, fontWeight: 820, color: '#d5e9ff'}}>{label}</div>)}
@@ -278,34 +283,44 @@ export const ValidationScene = () => {
 export const ActivationScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const lifecycle = enterProgress(frame, fps, seconds(1.1));
-  const activation = enterProgress(frame, fps, seconds(3.7));
-  const promotion = enterProgress(frame, fps, seconds(6.2));
-  const production = enterProgress(frame, fps, seconds(8.1));
-  const deployLine = interpolate(frame, [seconds(6.5), seconds(8.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  return <SceneShell duration={ACTIVATION_DURATION} eyebrow="ACTIVATION + PRODUCTION · STEPS 5–6" heading="Activate. Then promote." subheading="Contract approval and deployment stay distinct." accent={theme.production}>
-    <Surface accent="#b487ff" style={{position: 'absolute', left: 115, top: 345, width: 780, height: 470, padding: '30px 34px', opacity: lifecycle}}>
-      <div style={{fontSize: 21, letterSpacing: 1.5, fontWeight: 850, color: '#c5a8ff'}}>DATA CONTRACT LIFECYCLE</div>
-      <div style={{display: 'flex', alignItems: 'center', marginTop: 60}}>
-        {['Draft', 'Frozen', 'Validated', 'Activated'].map((label, index) => <div key={label} style={{display: 'flex', alignItems: 'center'}}>
-          <div style={{width: 145, padding: '18px 10px', borderRadius: 15, textAlign: 'center', fontSize: 22, fontWeight: 850, color: index === 3 ? '#e8ddff' : '#c2cfdd', background: index === 3 ? '#49357c' : '#172d47', border: `1px solid ${index === 3 ? '#b487ff' : '#486079'}`}}>{label}</div>
-          {index < 3 ? <div style={{fontSize: 31, color: '#69829e', margin: '0 10px'}}>→</div> : null}
-        </div>)}
+  const frameAt = (value: number) => Math.round(value * fps);
+  const developmentEnter = interpolate(frame, [frameAt(0.5), frameAt(1.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+  const developmentShift = interpolate(frame, [frameAt(4.4), frameAt(5.4)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const developmentFocus = interpolate(frame, [frameAt(5.8), frameAt(6.4), frameAt(9.6), frameAt(10.2)], [1, 0, 0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const developmentHighlight = interpolate(frame, [frameAt(1.4), frameAt(3.8)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const validationOpacity = interpolate(frame, [frameAt(3.7), frameAt(4.1), frameAt(5.5), frameAt(5.9)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const promotionProgress = interpolate(frame, [frameAt(4.8), frameAt(6)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const promotionPhaseOpacity = interpolate(frame, [frameAt(4.6), frameAt(5), frameAt(6), frameAt(6.2)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const productionEnter = interpolate(frame, [frameAt(6.2), frameAt(7)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+  const productionShift = interpolate(frame, [frameAt(9.4), frameAt(10.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const productionHighlight = interpolate(frame, [frameAt(7), frameAt(9.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const comparisonOpacity = interpolate(frame, [frameAt(9.8), frameAt(10.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  return <SceneShell
+    duration={ACTIVATION_DURATION}
+    eyebrow="DEVELOPMENT + PRODUCTION · STEPS 5–6"
+    heading="Same pipeline pattern. Different environment."
+    subheading="Build and validate in Development. Promote the same engineering stack to Production."
+    accent={theme.production}
+  >
+    <div style={{position: 'absolute', left: 344, top: 236, width: 428, height: 760, opacity: developmentEnter * developmentFocus, translate: `${(1 - developmentShift) * 408}px ${(1 - developmentEnter) * 20}px`}}>
+      <Img src={staticFile('mascots/robot-dev-cycle.png')} style={{width: '100%', height: '100%', objectFit: 'contain'}} />
+      <div aria-hidden="true" style={{position: 'absolute', left: 0, right: 0, top: -52 + developmentHighlight * 780, height: 52, background: 'linear-gradient(180deg, transparent, #ffad3344, transparent)', opacity: interpolate(frame, [frameAt(1.4), frameAt(1.8), frameAt(3.4), frameAt(3.8)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}} />
+    </div>
+
+    <div style={{position: 'absolute', left: 1148, top: 236, width: 428, height: 760, opacity: productionEnter, translate: `${(1 - productionShift) * -408}px ${(1 - productionEnter) * 20}px`}}>
+      <Img src={staticFile('mascots/robot-prod-cycle.png')} style={{width: '100%', height: '100%', objectFit: 'contain'}} />
+      <div aria-hidden="true" style={{position: 'absolute', left: 0, right: 0, top: -52 + productionHighlight * 780, height: 52, background: 'linear-gradient(180deg, transparent, #72e6ad44, transparent)', opacity: interpolate(frame, [frameAt(7), frameAt(7.4), frameAt(8.9), frameAt(9.3)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}} />
+    </div>
+
+    <div style={{position: 'absolute', left: 1188, top: 278, padding: '10px 16px', borderRadius: 8, border: '1px solid #72e6ad', background: '#0d2630', color: '#baffd8', fontSize: 20, fontWeight: 900, opacity: validationOpacity}}>✓ Development validated</div>
+
+    <div style={{position: 'absolute', left: 812, top: 584, width: 296, height: 72, opacity: Math.max(promotionPhaseOpacity, comparisonOpacity)}}>
+      <div style={{position: 'absolute', left: 0, top: 38, width: 282, height: 4, borderRadius: 4, background: '#29415d'}}>
+        <div style={{width: `${promotionProgress * 100}%`, height: '100%', borderRadius: 4, background: '#5fe1d0'}} />
       </div>
-      <div style={{opacity: activation, marginTop: 53, padding: '18px 20px', borderRadius: 14, background: '#241d3c', borderLeft: '5px solid #b487ff', fontSize: 23, fontWeight: 850}}>Activate the validated contract</div>
-    </Surface>
-    <Surface accent="#72e6ad" style={{position: 'absolute', left: 955, top: 345, width: 850, height: 470, padding: '30px 34px', opacity: promotion}}>
-      <div style={{fontSize: 21, letterSpacing: 1.5, fontWeight: 850, color: '#72e6ad'}}>ENGINEERING PROMOTION</div>
-      <div style={{position: 'relative', height: 210, marginTop: 20}}>
-        <div style={{position: 'absolute', left: 55, top: 35, width: 225, textAlign: 'center'}}><div style={{fontSize: 22, color: '#8ecbff', fontWeight: 850}}>DEVELOPMENT</div></div>
-        <div style={{position: 'absolute', left: 280, top: 85, width: 230, height: 6, borderRadius: 99, background: '#29415d'}}><div style={{height: '100%', width: `${deployLine * 100}%`, borderRadius: 99, background: '#72e6ad', boxShadow: '0 0 18px #72e6ad88'}} /></div>
-        <div style={{position: 'absolute', right: 45, top: 35, width: 225, textAlign: 'center', opacity: production}}><div style={{fontSize: 22, color: '#72e6ad', fontWeight: 850}}>PRODUCTION</div></div>
-        <Mascot pose="dev" x={75} y={112} size={150} delay={seconds(6.2)} />
-        <Mascot pose="prod" x={590} y={112} size={150} delay={seconds(8.1)} />
-      </div>
-      <div style={{opacity: production, marginTop: 25, padding: '18px 20px', borderRadius: 14, background: '#12362a', borderLeft: '5px solid #72e6ad', fontSize: 23, fontWeight: 850}}>Promote the validated pipeline</div>
-    </Surface>
-    <Reveal at={seconds(10)} y={14}><div style={{position: 'absolute', left: 300, right: 300, top: 885, textAlign: 'center', fontSize: 26, color: '#d9e6f4', fontWeight: 820}}>Same governed pipeline. Production configuration.</div></Reveal>
+      <div style={{position: 'absolute', right: 0, top: 30, width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: `14px solid ${promotionProgress > 0.94 ? '#5fe1d0' : '#29415d'}`}} />
+      <div style={{position: 'absolute', left: 86, top: 0, width: 124, padding: '7px 0', borderRadius: 6, background: '#0b1930', border: '1px solid #5fe1d0', color: '#bffdf5', textAlign: 'center', fontSize: 18, fontWeight: 900, letterSpacing: 0.5}}>Promote 1:1</div>
+    </div>
   </SceneShell>;
 };
 
