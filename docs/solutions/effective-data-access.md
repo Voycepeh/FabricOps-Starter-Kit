@@ -47,25 +47,23 @@ Security groups expand recursively from `group_membership_df`. FabricOps detects
 
 ## Under the hood
 
-<details class="fabricops-solution-details" markdown="1">
-<summary><strong>How the effective access scan combines permission surfaces</strong></summary>
+??? info "How the effective access scan combines permission surfaces"
 
-![How FabricOps scans effective data access](../assets/effective-data-access-implementation.svg){ .fabricops-solution-diagram }
+    ![How FabricOps scans effective data access](../assets/effective-data-access-implementation.svg){ .fabricops-solution-diagram }
 
-`scan_effective_access()` reuses the lower-level Workspace, SQL endpoint, and OneLake scanning foundations while owning discovery, identity resolution, group expansion, and consolidation:
+    `scan_effective_access()` reuses the lower-level Workspace, SQL endpoint, and OneLake scanning foundations while owning discovery, identity resolution, group expansion, and consolidation:
 
-- Fabric REST Workspace and Catalog Search APIs discover caller-visible and directly shared supported items; item APIs then discover Lakehouse tables, Workspace roles, and OneLake `dataAccessRoles` where the caller has permission.
-- The existing read-only SQL endpoint connector discovers Warehouse or schema-enabled Lakehouse tables and reads SQL grants and explicit database-role permissions.
-- Caller-supplied mappings resolve principal Object IDs and recursively expand security groups to individual users.
-- FabricOps combines item-access evidence with data permissions, respects the endpoint security mode, and consolidates one row per person, table, and access surface while retaining grant provenance and inheritance paths.
+    - Fabric REST Workspace and Catalog Search APIs discover caller-visible and directly shared supported items; item APIs then discover Lakehouse tables, Workspace roles, and OneLake `dataAccessRoles` where the caller has permission.
+    - The existing read-only SQL endpoint connector discovers Warehouse or schema-enabled Lakehouse tables and reads SQL grants and explicit database-role permissions.
+    - Caller-supplied mappings resolve principal Object IDs and recursively expand security groups to individual users.
+    - FabricOps combines item-access evidence with data permissions, respects the endpoint security mode, and consolidates one row per person, table, and access surface while retaining grant provenance and inheritance paths.
 
-The scanner assumes the original Lakehouse `DefaultReader` behavior remains intact: users with item `ReadAll` receive OneLake `Read`. It never creates, deletes, or changes that role. If a successfully observed role contradicts the baseline, normal inherited Viewer access is marked `NOT_EFFECTIVE` and the discrepancy is recorded in `coverage`; if the role cannot be inspected, it remains `UNVERIFIED`.
+    The scanner assumes the original Lakehouse `DefaultReader` behavior remains intact: users with item `ReadAll` receive OneLake `Read`. It never creates, deletes, or changes that role. If a successfully observed role contradicts the baseline, normal inherited Viewer access is marked `NOT_EFFECTIVE` and the discrepancy is recorded in `coverage`; if the role cannot be inspected, it remains `UNVERIFIED`.
 
-The returned `coverage` DataFrame records inaccessible scopes, unresolved identities, incomplete group expansion, unsupported permissions, restrictions, applied denies, indeterminate SQL modes, direct-item visibility gaps, and scan errors. Automatic OneLake item-permission selectors are never reported as people.
+    The returned `coverage` DataFrame records inaccessible scopes, unresolved identities, incomplete group expansion, unsupported permissions, restrictions, applied denies, indeterminate SQL modes, direct-item visibility gaps, and scan errors. Automatic OneLake item-permission selectors are never reported as people.
 
-The scan is read-only with respect to permissions and results: it does not grant, revoke, change, or persist anything.
+    The scan is read-only with respect to permissions and results: it does not grant, revoke, change, or persist anything.
 
-</details>
 
 ## Example
 
