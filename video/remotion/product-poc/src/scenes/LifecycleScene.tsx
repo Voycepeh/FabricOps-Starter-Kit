@@ -1,4 +1,6 @@
-import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {Easing, Img, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AnimatedDataFlow, AnimatedFlowPath} from '../components/AnimatedDataFlow';
+import {mascotSrc, type MascotName} from '../mascotAssets';
 import {theme} from '../theme';
 import {VIDEO_CONFIG} from '../videoConfig';
 import {lifecycleFrame, VIDEO_TUNING} from '../videoTuning';
@@ -30,6 +32,17 @@ const connectors = [
   {d: 'M420 840 H990', destination: 5},
   {d: 'M1330 840 H1445', destination: 6},
 ];
+
+const LifecycleMascot = ({pose, x, y, size, enterAt}: {pose: MascotName; x: number; y: number; size: number; enterAt: number}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const enter = spring({frame: frame - enterAt, fps, durationInFrames: 20, config: {damping: 20, stiffness: 95}});
+  return <Img src={mascotSrc(pose)} style={{
+    position: 'absolute', left: x, top: y, width: size, height: size,
+    objectFit: 'contain', opacity: enter, translate: `0 ${(1 - enter) * 14}px`,
+    filter: 'drop-shadow(0 10px 18px #0007)', pointerEvents: 'none', zIndex: 2,
+  }} />;
+};
 
 type StepCardProps = {
   number: number;
@@ -102,31 +115,35 @@ export const LifecycleScene = ({hideStep7 = false}: {hideStep7?: boolean}) => {
   const loopEnter = interpolate(frame, [loopStart, loopStart + 24], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const loopExit = interpolate(frame, [loopEnd - 18, loopEnd], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const loopOpacity = loopEnter * loopExit;
+  const loopRestingOpacity = loopEnter * 0.28;
   const tracerOffset = -((Math.max(0, frame - loopStart) * 11) % 1000);
   return <div style={{position: 'absolute', inset: 0, opacity: exit}}>
     {workspaces.map((workspace, index) => {
       const enter = spring({frame: frame - index * 5, fps, config: {damping: 20, stiffness: 82}});
       return <div key={workspace.name} style={{position: 'absolute', left: workspace.x, top: 58, width: 445, height: 950, borderRadius: 34, border: `2px solid ${workspace.color}45`, background: `${workspace.color}0b`, opacity: enter}}><div style={{paddingTop: 28, textAlign: 'center', color: workspace.color, fontSize: 28, fontWeight: 800}}>{workspace.name}<br />Workspace</div></div>;
     })}
-    <svg width="1920" height="1080" style={{position: 'absolute', inset: 0}}>
-      <defs><marker id="lifecycle-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#9db0c8" /></marker></defs>
+    <AnimatedDataFlow>
       {connectors.map((connector) => {
         const isProductionArrow = connector.destination === 5;
         const reveal = isProductionArrow ? productionArrowStart : stepTimes[connector.destination];
         const complete = isProductionArrow ? productionArrowEnd : reveal + timing.workflowStepEnter;
         if (frame < reveal) return null;
         const draw = interpolate(frame, [reveal, complete], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: isProductionArrow ? Easing.inOut(Easing.cubic) : Easing.linear});
-        return <path key={connector.d} d={connector.d} fill="none" stroke="#8198b5" strokeWidth="6" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - draw} markerEnd={draw > 0.96 ? 'url(#lifecycle-arrow)' : undefined} />;
+        return <AnimatedFlowPath key={connector.d} id={`lifecycle-${connector.destination}`} d={connector.d} progress={draw} color={steps[connector.destination].color} baseColor="#405571" strokeWidth={6} />;
       })}
-      <ellipse cx={loop.cx} cy={loop.cy} rx={loop.rx} ry={loop.ry} fill="none" stroke={`${theme.production}58`} strokeWidth="6" opacity={loopOpacity} />
+      <ellipse cx={loop.cx} cy={loop.cy} rx={loop.rx} ry={loop.ry} fill="none" stroke={theme.governance} strokeWidth="4" strokeDasharray="12 11" opacity={loopRestingOpacity} />
       <ellipse cx={loop.cx} cy={loop.cy} rx={loop.rx} ry={loop.ry} fill="none" stroke={theme.production} strokeWidth="10" strokeLinecap="round" pathLength="1000" strokeDasharray="125 875" strokeDashoffset={tracerOffset} opacity={loopOpacity} style={{filter: `drop-shadow(0 0 12px ${theme.production})`}} />
-    </svg>
+      <path d={`M${loop.cx + loop.rx - 8} ${loop.cy - 10} L${loop.cx + loop.rx + 8} ${loop.cy} L${loop.cx + loop.rx - 8} ${loop.cy + 10} Z`} fill={theme.governance} opacity={loopRestingOpacity * 2.2} />
+    </AnimatedDataFlow>
     {steps.map((step, index) => {
       if (frame < stepTimes[index]) return null;
       if (hideStep7 && step.number === 7) return null;
       const enter = spring({frame: frame - stepTimes[index], fps, durationInFrames: timing.workflowStepEnter, config: {damping: 19, stiffness: 92}});
       return <div key={step.number} style={{position: 'absolute', left: step.x, top: step.y}}><StepCard {...step} enter={enter} active={activeIndex === index} /></div>;
     })}
+    <LifecycleMascot pose="writing" x={68} y={365} size={96} enterAt={stepTimes[2]} />
+    <LifecycleMascot pose="validate" x={820} y={890} size={90} enterAt={stepTimes[3] + 8} />
+    <LifecycleMascot pose="prod" x={1110} y={535} size={150} enterAt={stepTimes[5]} />
     <div style={{position: 'absolute', left: loop.captionLeft, top: loop.captionTop, width: 300, textAlign: 'center', color: '#dce7f5', fontSize: 24, fontWeight: 720, opacity: loopOpacity}}>Iterate until validations pass</div>
   </div>;
 };

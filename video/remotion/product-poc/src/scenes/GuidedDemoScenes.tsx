@@ -3,6 +3,7 @@ import {AbsoluteFill, Easing, Img, interpolate, spring, useCurrentFrame, useVide
 import {mascotSrc, type MascotName} from '../mascotAssets';
 import {font, theme} from '../theme';
 import {GUIDED_SCENE_DURATIONS, seconds} from '../videoConfig';
+import {AnimatedDataFlow, AnimatedFlowPath, FlowError} from '../components/AnimatedDataFlow';
 
 const {
   engineering: ENGINEERING_DURATION,
@@ -70,13 +71,12 @@ const Surface = ({children, accent, style}: {children: ReactNode; accent: string
   boxSizing: 'border-box', ...style,
 }}>{children}</div>;
 
-const StageArrow = ({left, top, width, progress, color}: {left: number; top: number; width: number; progress: number; color: string}) => <div style={{position: 'absolute', left, top, width, height: 6, borderRadius: 99, background: '#29415d'}}>
-  <div style={{width: `${progress * 100}%`, height: '100%', borderRadius: 99, background: color, boxShadow: `0 0 18px ${color}88`}} />
-  <div style={{position: 'absolute', right: -2, top: -7, width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: `14px solid ${progress > 0.95 ? color : '#29415d'}`}} />
-</div>;
-
 const PipelinePattern = ({top, read, transform, write, firstLink, secondLink}: {top: number; read: number; transform: number; write: number; firstLink: number; secondLink: number}) => <>
-  <div style={{position: 'absolute', left: 200, top, display: 'flex', alignItems: 'center', gap: 115}}>
+  <AnimatedDataFlow style={{zIndex: 0}}>
+    <AnimatedFlowPath id={`pipeline-read-${top}`} d={`M630 ${top + 140} H745`} progress={firstLink} color="#52d6c6" />
+    <AnimatedFlowPath id={`pipeline-write-${top}`} d={`M1175 ${top + 140} H1290`} progress={secondLink} color="#72e6ad" />
+  </AnimatedDataFlow>
+  <div style={{position: 'absolute', left: 200, top, display: 'flex', alignItems: 'center', gap: 115, zIndex: 1}}>
     <Surface accent="#69b7ff" style={{width: 430, height: 280, padding: '34px 36px', opacity: read, translate: `0 ${(1 - read) * 24}px`}}>
       <div style={{fontSize: 20, color: '#8fc9ff', letterSpacing: 1.8, fontWeight: 850}}>GOVERNED READ</div>
       <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 34, color: '#d8ecff', fontWeight: 800, marginTop: 46}}>orchestrate_read()</div>
@@ -93,8 +93,6 @@ const PipelinePattern = ({top, read, transform, write, firstLink, secondLink}: {
       <div style={{fontSize: 24, color: '#aebed3', marginTop: 38}}>Governed target</div>
     </Surface>
   </div>
-  <StageArrow left={630} top={top + 138} width={112} progress={firstLink} color="#52d6c6" />
-  <StageArrow left={1175} top={top + 138} width={112} progress={secondLink} color="#72e6ad" />
 </>;
 
 const SpeechBubble = ({accent, eyebrow, children, style}: {accent: string; eyebrow: string; children: ReactNode; style: CSSProperties}) => <div style={{
@@ -114,14 +112,9 @@ export const EngineeringScene = () => {
   const write = enterProgress(frame, fps, seconds(3.2));
   const firstLink = interpolate(frame, [seconds(2), seconds(3.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const secondLink = interpolate(frame, [seconds(3), seconds(4.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const ferry = interpolate(frame, [seconds(4.4), seconds(8.1)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const ferryOpacity = interpolate(frame, [seconds(4.2), seconds(4.6), seconds(8), seconds(8.4)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   return <SceneShell duration={ENGINEERING_DURATION} heading="One reusable pipeline pattern" accent={theme.engineering}>
     <PipelinePattern top={300} read={read} transform={transform} write={write} firstLink={firstLink} secondLink={secondLink} />
-    <Img src={mascotSrc('carrying')} style={{
-      position: 'absolute', left: 260 + ferry * 1265, top: 575, width: 220, height: 220,
-      objectFit: 'contain', opacity: ferryOpacity, filter: 'drop-shadow(0 16px 26px #0008)',
-    }} />
+    <Mascot pose="coding" x={855} y={580} size={215} delay={seconds(4.4)} />
     <Reveal at={seconds(8.2)} y={16}>
       <div style={{position: 'absolute', left: 210, right: 210, top: 815, display: 'flex', justifyContent: 'center', gap: 28}}>
         {['02A · Full Refresh', '02B · Incremental', '02C · SCD1 / SCD2'].map((label) => <div key={label} style={{padding: '17px 31px', borderRadius: 16, background: '#122d49', border: '1px solid #4d759c', fontSize: 24, fontWeight: 820, color: '#d5e9ff'}}>{label}</div>)}
@@ -196,22 +189,29 @@ export const ValidationScene = () => {
   const read = enterProgress(frame, fps, seconds(0.4));
   const transform = enterProgress(frame, fps, seconds(0.9));
   const write = enterProgress(frame, fps, seconds(1.4));
-  const firstLink = interpolate(frame, [seconds(0.8), seconds(1.7)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const secondLink = interpolate(frame, [seconds(1.3), seconds(2.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const source = enterProgress(frame, fps, seconds(2.3));
-  const travel = interpolate(frame, [seconds(3.8), seconds(6.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const travelOpacity = interpolate(frame, [seconds(3.5), seconds(3.9), seconds(6.1), seconds(6.5)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const sourceToRead = interpolate(frame, [seconds(3.2), seconds(4.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const readToTransform = interpolate(frame, [seconds(4.2), seconds(5.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const transformToWrite = interpolate(frame, [seconds(5.2), seconds(6.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const writeToOutput = interpolate(frame, [seconds(6.2), seconds(7.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const contract = enterProgress(frame, fps, seconds(5.6));
   const output = enterProgress(frame, fps, seconds(6.3));
   const masking = interpolate(frame, [seconds(7), seconds(7.8)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const results = enterProgress(frame, fps, seconds(8.1));
   const violation = enterProgress(frame, fps, seconds(9.2));
+  const errorFlow = interpolate(frame, [seconds(9.1), seconds(9.8)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const rows = [
     {id: '00007', customer: 'C001', order: '09:00', modified: '09:18', result: 'PASS', color: '#72e6ad'},
     {id: '00008', customer: 'C002', order: '09:00', modified: '08:00', result: 'FAIL', color: '#ff756d'},
   ];
   return <SceneShell duration={VALIDATION_DURATION} heading="One reusable pipeline pattern" accent="#72e6ad">
-    <PipelinePattern top={200} read={read} transform={transform} write={write} firstLink={firstLink} secondLink={secondLink} />
+    <PipelinePattern top={200} read={read} transform={transform} write={write} firstLink={readToTransform} secondLink={transformToWrite} />
+
+    <AnimatedDataFlow style={{zIndex: 0}}>
+      <AnimatedFlowPath id="source-to-read" d="M460 660 V550 Q460 540 450 540 H425 Q415 540 415 530 V480" progress={sourceToRead} color="#69b7ff" />
+      <AnimatedFlowPath id="write-to-output" d="M1505 480 V530 Q1505 540 1495 540 H1422 Q1412 540 1412 550 V660" progress={writeToOutput} color="#72e6ad" />
+      <FlowError id="write-row-error" d="M1660 480 V530 Q1660 540 1650 540 H1528 Q1518 540 1518 550 V575" progress={errorFlow} endX={1518} endY={575} />
+    </AnimatedDataFlow>
 
     <div style={{position: 'absolute', left: 1360, top: 174, width: 360, padding: '10px 16px', borderRadius: 12, background: '#292145', border: '1px solid #8e6aca', boxSizing: 'border-box', textAlign: 'center', opacity: contract, zIndex: 3}}><span style={{fontSize: 16, color: '#c5a8ff', fontWeight: 900}}>DATA CONTRACT</span><span style={{fontSize: 15, color: '#eee7ff', marginLeft: 12}}>MASK + VALIDATE</span></div>
     <div style={{position: 'absolute', left: 1538, top: 220, width: 4, height: 18, borderRadius: 4, background: '#b487ff', opacity: contract}} />
@@ -223,9 +223,9 @@ export const ValidationScene = () => {
       {rows.map((row) => <div key={row.id} style={{display: 'grid', gridTemplateColumns: '90px 125px 1fr 1fr', gap: 12, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', fontFamily: 'ui-monospace, monospace', fontSize: 18}}><div>{row.id}</div><div style={{color: '#ffbd76'}}>{row.customer}</div><div>{row.order}</div><div>{row.modified}</div></div>)}
     </Surface>
 
-    {rows.map((row, index) => <div key={`travel-${row.id}`} style={{position: 'absolute', left: 180, top: 535 + index * 52, width: 560, height: 40, borderRadius: 10, padding: '9px 16px', boxSizing: 'border-box', background: '#132d48', border: '1px solid #58799c', boxShadow: '0 10px 24px #0007', fontFamily: 'ui-monospace, monospace', fontSize: 17, color: '#dcecff', opacity: travelOpacity, translate: `${travel * 1000}px 0`, zIndex: 4}}>{row.id}&nbsp;&nbsp;|&nbsp;&nbsp;{row.customer}&nbsp;&nbsp;|&nbsp;&nbsp;{row.order}&nbsp;&nbsp;|&nbsp;&nbsp;{row.modified}</div>)}
+    <Mascot pose="validate" x={1120} y={485} size={155} delay={seconds(8.8)} />
+    <div style={{position: 'absolute', left: 1544, top: 548, width: 276, padding: '12px 15px', borderRadius: 11, background: '#311823', border: '1px solid #ff756d99', boxSizing: 'border-box', color: '#ffb0aa', fontSize: 16, fontWeight: 900, letterSpacing: 0.7, opacity: errorFlow, zIndex: 2}}>ROW 00008 · RULE VIOLATION</div>
 
-    <div style={{position: 'absolute', left: 1503, top: 480, width: 4, height: 180, borderRadius: 4, background: '#72e6ad88', opacity: output}} />
     <Surface accent="#72e6ad" style={{position: 'absolute', left: 995, top: 660, width: 835, height: 226, padding: '20px 24px', opacity: output, translate: `0 ${(1 - output) * 18}px`}}>
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><div style={{fontSize: 17, fontWeight: 900, color: '#72e6ad', letterSpacing: 1.5}}>GOVERNED OUTPUT</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 15, color: '#cfc3ef'}}>modified_datetime &gt;= order_datetime</div></div>
       <div style={{display: 'grid', gridTemplateColumns: '82px 112px 1fr 1fr 80px', gap: 10, marginTop: 17, color: '#8fa7bf', fontSize: 13, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76'}}>customer_id</div><div>order_datetime</div><div>modified_datetime</div><div>result</div></div>
