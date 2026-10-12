@@ -19,7 +19,7 @@
 ## Foundation setup
 
 <div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/robot-pointing.png" alt="FabricOps mascot" loading="eager">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-pointing.png" alt="FabricOps mascot" loading="eager">
   <div><p>Start with <strong>0A–0C</strong> to prepare your Fabric environment, configure the notebooks, and load the demo data before running the governed pipeline.</p></div>
 </div>
 
@@ -32,7 +32,7 @@
 ## The seven-step FabricOps workflow
 
 <div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/robot-carrying.png" alt="FabricOps mascot" loading="eager">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="FabricOps mascot" loading="eager">
   <div><p>Follow <strong>Steps 1–7</strong> from Governance through Engineering, validation, Production, and consumption. Steps <strong>2A–2C</strong> are hands-on pipeline examples within Step 2.</p></div>
 </div>
 
