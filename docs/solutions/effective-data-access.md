@@ -47,6 +47,11 @@ Security groups expand recursively from `group_membership_df`. FabricOps detects
 
 ## Under the hood
 
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="FabricOps scanning mascot" loading="lazy">
+  <div><p>See how FabricOps brings together Workspace, OneLake, and SQL permission evidence to determine effective access.</p></div>
+</div>
+
 ??? info "How the effective access scan combines permission surfaces"
 
     ![How FabricOps scans effective data access](../assets/effective-data-access-implementation.svg){ .fabricops-solution-diagram }
