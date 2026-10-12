@@ -47,7 +47,7 @@ const Reveal = ({at, children, x = 0, y = 22}: {at: number; children: ReactNode;
   return <div style={{opacity: progress, translate: `${(1 - progress) * x}px ${(1 - progress) * y}px`}}>{children}</div>;
 };
 
-const SceneShell = ({duration, eyebrow, heading, subheading, accent, children}: {duration: number; eyebrow: string; heading: string; subheading: string; accent: string; children: ReactNode}) => {
+const SceneShell = ({duration, eyebrow, heading, subheading, accent, children}: {duration: number; eyebrow?: string; heading: string; subheading?: string; accent: string; children: ReactNode}) => {
   const frame = useCurrentFrame();
   return <AbsoluteFill style={{
     opacity: sceneOpacity(frame, duration), color: theme.text, fontFamily: font,
@@ -55,9 +55,9 @@ const SceneShell = ({duration, eyebrow, heading, subheading, accent, children}: 
   }}>
     <AbsoluteFill style={{opacity: 0.14, backgroundImage: 'linear-gradient(#7aa7d51a 1px, transparent 1px), linear-gradient(90deg, #7aa7d51a 1px, transparent 1px)', backgroundSize: '64px 64px'}} />
     <div style={{position: 'absolute', top: 58, left: 104, right: 104}}>
-      <div style={{fontSize: 21, fontWeight: 850, letterSpacing: 2.4, color: accent}}>{eyebrow}</div>
-      <div style={{fontSize: 66, lineHeight: 1.05, fontWeight: 950, marginTop: 20, letterSpacing: -1.4}}>{heading}</div>
-      <div style={{fontSize: 28, color: '#afc0d5', marginTop: 20}}>{subheading}</div>
+      {eyebrow ? <div style={{fontSize: 21, fontWeight: 850, letterSpacing: 2.4, color: accent}}>{eyebrow}</div> : null}
+      <div style={{fontSize: 66, lineHeight: 1.05, fontWeight: 950, marginTop: eyebrow ? 20 : 0, letterSpacing: -1.4}}>{heading}</div>
+      {subheading ? <div style={{fontSize: 28, color: '#afc0d5', marginTop: 20}}>{subheading}</div> : null}
     </div>
     {children}
   </AbsoluteFill>;
@@ -85,8 +85,8 @@ export const EngineeringScene = () => {
   const secondLink = interpolate(frame, [seconds(3), seconds(4.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const ferry = interpolate(frame, [seconds(4.4), seconds(8.1)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const ferryOpacity = interpolate(frame, [seconds(4.2), seconds(4.6), seconds(8), seconds(8.4)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  return <SceneShell duration={ENGINEERING_DURATION} eyebrow="ENGINEERING · STEP 2" heading="One reusable pipeline pattern" subheading="Governed boundaries. Your PySpark." accent={theme.engineering}>
-    <div style={{position: 'absolute', left: 145, top: 352, display: 'flex', alignItems: 'center', gap: 115}}>
+  return <SceneShell duration={ENGINEERING_DURATION} heading="One reusable pipeline pattern" accent={theme.engineering}>
+    <div style={{position: 'absolute', left: 200, top: 300, display: 'flex', alignItems: 'center', gap: 115}}>
       <Surface accent="#69b7ff" style={{width: 430, height: 280, padding: '34px 36px', opacity: read, translate: `0 ${(1 - read) * 24}px`}}>
         <div style={{fontSize: 20, color: '#8fc9ff', letterSpacing: 1.8, fontWeight: 850}}>GOVERNED READ</div>
         <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 34, color: '#d8ecff', fontWeight: 800, marginTop: 46}}>orchestrate_read()</div>
@@ -103,17 +103,16 @@ export const EngineeringScene = () => {
         <div style={{fontSize: 24, color: '#aebed3', marginTop: 38}}>Governed target</div>
       </Surface>
     </div>
-    <StageArrow left={575} top={490} width={112} progress={firstLink} color="#52d6c6" />
-    <StageArrow left={1120} top={490} width={112} progress={secondLink} color="#72e6ad" />
+    <StageArrow left={630} top={438} width={112} progress={firstLink} color="#52d6c6" />
+    <StageArrow left={1175} top={438} width={112} progress={secondLink} color="#72e6ad" />
     <Img src={staticFile('mascots/robot-carrying.png')} style={{
-      position: 'absolute', left: 205 + ferry * 1375, top: 605, width: 220, height: 220,
+      position: 'absolute', left: 260 + ferry * 1265, top: 575, width: 220, height: 220,
       objectFit: 'contain', opacity: ferryOpacity, filter: 'drop-shadow(0 16px 26px #0008)',
     }} />
     <Reveal at={seconds(8.2)} y={16}>
-      <div style={{position: 'absolute', left: 210, right: 210, top: 810, display: 'flex', justifyContent: 'center', gap: 28}}>
-        {['02A · Full Refresh', '02B · Incremental', '02C · SCD'].map((label) => <div key={label} style={{padding: '17px 31px', borderRadius: 16, background: '#122d49', border: '1px solid #4d759c', fontSize: 24, fontWeight: 820, color: '#d5e9ff'}}>{label}</div>)}
+      <div style={{position: 'absolute', left: 210, right: 210, top: 815, display: 'flex', justifyContent: 'center', gap: 28}}>
+        {['02A · Full Refresh', '02B · Incremental', '02C · SCD1 / SCD2'].map((label) => <div key={label} style={{padding: '17px 31px', borderRadius: 16, background: '#122d49', border: '1px solid #4d759c', fontSize: 24, fontWeight: 820, color: '#d5e9ff'}}>{label}</div>)}
       </div>
-      <div style={{position: 'absolute', left: 0, right: 0, top: 897, textAlign: 'center', fontSize: 22, color: '#91a8c0'}}>Choose one pattern per workload.</div>
     </Reveal>
   </SceneShell>;
 };
