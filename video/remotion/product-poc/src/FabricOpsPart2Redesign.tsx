@@ -173,43 +173,44 @@ export const GovernanceScene = () => {
 export const ValidationScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const read = enterProgress(frame, fps, seconds(0.5));
-  const transform = enterProgress(frame, fps, seconds(1));
-  const write = enterProgress(frame, fps, seconds(1.5));
-  const firstLink = interpolate(frame, [seconds(0.9), seconds(1.8)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const secondLink = interpolate(frame, [seconds(1.4), seconds(2.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const contract = enterProgress(frame, fps, seconds(2.4));
-  const records = enterProgress(frame, fps, seconds(3.8));
-  const failed = frame < seconds(7.1);
-  const correction = enterProgress(frame, fps, seconds(6.1));
-  const rerun = enterProgress(frame, fps, seconds(7.1));
-  const enforcement = interpolate(frame, [seconds(8), seconds(8.5), seconds(9.8), seconds(10.2)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const success = enterProgress(frame, fps, seconds(9.9));
-  return <SceneShell duration={VALIDATION_DURATION} eyebrow="VALIDATION · STEP 4" heading="One reusable pipeline pattern" accent="#72e6ad">
-    <PipelinePattern top={230} read={read} transform={transform} write={write} firstLink={firstLink} secondLink={secondLink} />
-    <div style={{position: 'absolute', left: 958, top: 510, width: 4, height: 42, background: '#b487ff', opacity: contract, transformOrigin: 'top', scale: `1 ${contract}`}} />
-    <div style={{position: 'absolute', left: 590, top: 550, width: 740, padding: '14px 20px', borderRadius: 14, background: '#292145', border: '1px solid #8e6aca', boxSizing: 'border-box', textAlign: 'center', opacity: contract}}><span style={{fontSize: 18, color: '#c5a8ff', fontWeight: 900, marginRight: 16}}>FROZEN DATA CONTRACT</span><span style={{fontFamily: 'ui-monospace, monospace', color: '#eee7ff', fontSize: 19}}>modified_datetime &gt;= order_datetime</span></div>
-    <Mascot pose="validate" x={1395} y={555} size={290} delay={seconds(2.8)} />
+  const read = enterProgress(frame, fps, seconds(0.4));
+  const transform = enterProgress(frame, fps, seconds(0.9));
+  const write = enterProgress(frame, fps, seconds(1.4));
+  const firstLink = interpolate(frame, [seconds(0.8), seconds(1.7)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const secondLink = interpolate(frame, [seconds(1.3), seconds(2.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const source = enterProgress(frame, fps, seconds(2.3));
+  const travel = interpolate(frame, [seconds(3.8), seconds(6.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const travelOpacity = interpolate(frame, [seconds(3.5), seconds(3.9), seconds(6.1), seconds(6.5)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const contract = enterProgress(frame, fps, seconds(5.6));
+  const output = enterProgress(frame, fps, seconds(6.3));
+  const masking = interpolate(frame, [seconds(7), seconds(7.8)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const results = enterProgress(frame, fps, seconds(8.1));
+  const violation = enterProgress(frame, fps, seconds(9.2));
+  const rows = [
+    {id: '00007', customer: 'C001', order: '09:00', modified: '09:18', result: 'PASS', color: '#72e6ad'},
+    {id: '00008', customer: 'C002', order: '09:00', modified: '08:00', result: 'FAIL', color: '#ff756d'},
+  ];
+  return <SceneShell duration={VALIDATION_DURATION} heading="One reusable pipeline pattern" accent="#72e6ad">
+    <PipelinePattern top={200} read={read} transform={transform} write={write} firstLink={firstLink} secondLink={secondLink} />
 
-    <div style={{position: 'absolute', left: 190, top: 665, width: 540, height: 148, borderRadius: 18, background: '#112a25', border: '2px solid #4fbd87', padding: '18px 22px', boxSizing: 'border-box', opacity: records, translate: `${(1 - records) * -28}px 0`}}>
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><div style={{fontSize: 18, color: '#8fa7bf', fontWeight: 850}}>RECORD A</div><div style={{padding: '7px 14px', borderRadius: 10, background: '#1f6045', color: '#baffd8', fontSize: 20, fontWeight: 900}}>PASS</div></div>
-      <div style={{display: 'flex', gap: 28, marginTop: 18, fontFamily: 'ui-monospace, monospace', fontSize: 20}}><span>order 09:00</span><span style={{color: '#72e6ad'}}>modified 09:18</span></div>
-    </div>
-    <div style={{position: 'absolute', left: 770, top: 665, width: 560, height: 148, borderRadius: 18, background: failed ? '#351d27' : '#112a25', border: `2px solid ${failed ? '#cc5d64' : '#4fbd87'}`, padding: '18px 22px', boxSizing: 'border-box', opacity: records, translate: `0 ${(1 - records) * 22}px`}}>
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><div style={{fontSize: 18, color: '#8fa7bf', fontWeight: 850}}>RECORD B · ENGINEERING CORRECTION</div><div style={{padding: '7px 14px', borderRadius: 10, background: failed ? '#6d2831' : '#1f6045', color: failed ? '#ffb0aa' : '#baffd8', fontSize: 20, fontWeight: 900}}>{failed ? 'FAIL' : 'PASS'}</div></div>
-      <div style={{display: 'flex', gap: 28, marginTop: 18, fontFamily: 'ui-monospace, monospace', fontSize: 20}}><span>order 09:00</span><span style={{color: failed ? '#ff9c8c' : '#72e6ad'}}>{failed ? 'modified 08:00' : 'modified 09:18'}</span></div>
-      <div style={{position: 'absolute', left: 235, top: 103, opacity: correction, color: '#d5e2ef', fontSize: 17, fontWeight: 820}}>08:00 → 09:18 · rerun check</div>
-      {!failed ? <div style={{position: 'absolute', right: -36, top: 56, width: 34, height: 5, borderRadius: 99, background: '#72e6ad', scale: `${rerun} 1`, transformOrigin: 'left'}} /> : null}
-    </div>
+    <div style={{position: 'absolute', left: 1360, top: 174, width: 360, padding: '10px 16px', borderRadius: 12, background: '#292145', border: '1px solid #8e6aca', boxSizing: 'border-box', textAlign: 'center', opacity: contract, zIndex: 3}}><span style={{fontSize: 16, color: '#c5a8ff', fontWeight: 900}}>DATA CONTRACT</span><span style={{fontSize: 15, color: '#eee7ff', marginLeft: 12}}>MASK + VALIDATE</span></div>
+    <div style={{position: 'absolute', left: 1538, top: 220, width: 4, height: 18, borderRadius: 4, background: '#b487ff', opacity: contract}} />
 
-    <div style={{position: 'absolute', left: 255, right: 255, top: 878, display: 'flex', justifyContent: 'center', gap: 18, opacity: enforcement}}>
-      {[
-        ['VALIDATE', 'Check only · no publishing', '#8ecbff'],
-        ['WARN', 'Record violation · may continue', '#ffbd76'],
-        ['BLOCK', 'Stop a failing guarded operation', '#ff9c8c'],
-      ].map(([title, copy, color]) => <div key={title} style={{padding: '13px 18px', borderRadius: 13, background: '#10243c', border: `1px solid ${color}77`, fontSize: 17}}><span style={{fontWeight: 900, color, marginRight: 10}}>{title}</span><span style={{color: '#c0cede'}}>{copy}</span></div>)}
-    </div>
-    <div style={{position: 'absolute', left: 540, right: 540, top: 883, padding: '18px 24px', borderRadius: 16, background: '#153c2e', border: '2px solid #55bd89', textAlign: 'center', opacity: success, translate: `0 ${(1 - success) * 16}px`}}><span style={{fontSize: 27, color: '#baffd8', fontWeight: 900}}>✓ Frozen Data Contract validated</span><span style={{fontSize: 19, color: '#91c9aa', marginLeft: 17}}>Ready for activation review</span></div>
+    <div style={{position: 'absolute', left: 414, top: 480, width: 4, height: 180, borderRadius: 4, background: '#69b7ff66', opacity: source}} />
+    <Surface accent="#69b7ff" style={{position: 'absolute', left: 90, top: 660, width: 740, height: 226, padding: '20px 24px', opacity: source, translate: `0 ${(1 - source) * 18}px`}}>
+      <div style={{fontSize: 17, fontWeight: 900, color: '#8fc9ff', letterSpacing: 1.5}}>RAW SOURCE</div>
+      <div style={{display: 'grid', gridTemplateColumns: '90px 125px 1fr 1fr', gap: 12, marginTop: 17, color: '#8fa7bf', fontSize: 14, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76'}}>customer_id</div><div>order_datetime</div><div>modified_datetime</div></div>
+      {rows.map((row) => <div key={row.id} style={{display: 'grid', gridTemplateColumns: '90px 125px 1fr 1fr', gap: 12, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', fontFamily: 'ui-monospace, monospace', fontSize: 18}}><div>{row.id}</div><div style={{color: '#ffbd76'}}>{row.customer}</div><div>{row.order}</div><div>{row.modified}</div></div>)}
+    </Surface>
+
+    {rows.map((row, index) => <div key={`travel-${row.id}`} style={{position: 'absolute', left: 180, top: 535 + index * 52, width: 560, height: 40, borderRadius: 10, padding: '9px 16px', boxSizing: 'border-box', background: '#132d48', border: '1px solid #58799c', boxShadow: '0 10px 24px #0007', fontFamily: 'ui-monospace, monospace', fontSize: 17, color: '#dcecff', opacity: travelOpacity, translate: `${travel * 1000}px 0`, zIndex: 4}}>{row.id}&nbsp;&nbsp;|&nbsp;&nbsp;{row.customer}&nbsp;&nbsp;|&nbsp;&nbsp;{row.order}&nbsp;&nbsp;|&nbsp;&nbsp;{row.modified}</div>)}
+
+    <div style={{position: 'absolute', left: 1503, top: 480, width: 4, height: 180, borderRadius: 4, background: '#72e6ad88', opacity: output}} />
+    <Surface accent="#72e6ad" style={{position: 'absolute', left: 995, top: 660, width: 835, height: 226, padding: '20px 24px', opacity: output, translate: `0 ${(1 - output) * 18}px`}}>
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><div style={{fontSize: 17, fontWeight: 900, color: '#72e6ad', letterSpacing: 1.5}}>GOVERNED OUTPUT</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 15, color: '#cfc3ef'}}>modified_datetime &gt;= order_datetime</div></div>
+      <div style={{display: 'grid', gridTemplateColumns: '82px 112px 1fr 1fr 80px', gap: 10, marginTop: 17, color: '#8fa7bf', fontSize: 13, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76'}}>customer_id</div><div>order_datetime</div><div>modified_datetime</div><div>result</div></div>
+      {rows.map((row, index) => <div key={`output-${row.id}`} style={{position: 'relative', display: 'grid', gridTemplateColumns: '82px 112px 1fr 1fr 80px', gap: 10, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', borderRadius: 8, background: index === 1 ? `rgba(109, 40, 49, ${violation * 0.48})` : 'transparent', fontFamily: 'ui-monospace, monospace', fontSize: 18}}><div>{row.id}</div><div style={{color: '#ffbd76', position: 'relative'}}><span style={{opacity: 1 - masking}}>{row.customer}</span><span style={{position: 'absolute', left: 0, opacity: masking}}>C•••</span></div><div>{row.order}</div><div style={{color: index === 1 ? '#ff9c8c' : '#dcecff'}}>{row.modified}</div><div style={{opacity: results, color: row.color, fontWeight: 900}}>{row.result}</div>{index === 1 ? <div style={{position: 'absolute', right: 4, bottom: -21, color: '#ff9c8c', fontFamily: font, fontSize: 14, fontWeight: 850, opacity: violation}}>Rule violation</div> : null}</div>)}
+    </Surface>
   </SceneShell>;
 };
 
