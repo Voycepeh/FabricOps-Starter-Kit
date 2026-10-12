@@ -24,8 +24,8 @@ The template deliberately contains placeholder table names. Read this walkthroug
 
 ## What to do
 
-<div class="fabricops-mascot-callout" markdown="1">
-  <img src="/FabricOps-Starter-Kit/assets/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/robot-carrying.png" alt="FabricOps mascot" loading="lazy">
   <div markdown="1">
 
 Start by understanding the shape of the notebook before changing its code.
