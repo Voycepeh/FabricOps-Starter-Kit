@@ -15,7 +15,7 @@ Looking at only one surface can therefore give Governance an incomplete picture 
 ## The solution
 
 <div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/robot-scanning.png" alt="FabricOps mascot" loading="eager">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="FabricOps mascot" loading="eager">
   <div><p>FabricOps provides one read-only scan that discovers the Fabric scopes visible to the caller and resolves three supported permission paths to actual people and tables:</p></div>
 </div>
 

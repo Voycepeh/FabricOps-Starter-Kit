@@ -17,7 +17,7 @@ That creates a natural opportunity: **reuse the context FabricOps already has to
 ## The solution
 
 <div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/robot-pointing.png" alt="FabricOps mascot" loading="eager">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-pointing.png" alt="FabricOps mascot" loading="eager">
   <div><p>FabricOps reuses the governed context it already has: table purpose, grain, business terminology, column descriptions, approved business rules, known limitations, classification, sensitivity, and other Data Contract context.</p></div>
 </div>
 
