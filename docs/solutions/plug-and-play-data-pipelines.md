@@ -15,7 +15,7 @@ FabricOps abstracts the repeatable plumbing behind a small, readable notebook in
 ## The solution
 
 <div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="FabricOps mascot" loading="eager">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-coding.png" alt="FabricOps mascot" loading="eager">
   <div><p>FabricOps provides a <strong>clonable two-notebook engineering stack</strong>:</p></div>
 </div>
 
