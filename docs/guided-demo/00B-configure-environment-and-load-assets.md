@@ -65,8 +65,8 @@ Use the same FabricOps wheel version across the workspace-specific Environments 
 
 ## Configure `00_env_config`
 
-<div class="fabricops-mascot-callout" markdown="1">
-  <img src="/FabricOps-Starter-Kit/assets/robot-writing.png" alt="" loading="lazy">
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/robot-writing.png" alt="FabricOps mascot" loading="lazy">
   <div markdown="1">
 
 Open `00_env_config` and replace the example Fabric IDs with the IDs for the Fabric items you created in 0A.

@@ -19,8 +19,8 @@ FabricOps acquires the Fabric API token from `notebookutils`; do not paste or pe
 
 ## Review the governed context
 
-<div class="fabricops-mascot-callout" markdown="1">
-  <img src="/FabricOps-Starter-Kit/assets/robot-pointing.png" alt="" loading="lazy">
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/robot-pointing.png" alt="FabricOps mascot" loading="lazy">
   <div markdown="1">
 
 The consumer should be able to select approved Production table(s) and see the useful context FabricOps already captured: purpose, grain/key evidence, column meaning, business rules, Data Quality expectations, sensitivity/classification decisions, lineage, freshness, access information, and known limitations.

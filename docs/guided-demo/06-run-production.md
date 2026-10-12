@@ -20,8 +20,8 @@ The same logical store names now resolve to the Production Lakehouses, Warehouse
 
 ## Run the promoted pipeline
 
-<div class="fabricops-mascot-callout" markdown="1">
-  <img src="/FabricOps-Starter-Kit/assets/robot-prod.png" alt="" loading="lazy">
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/robot-prod.png" alt="FabricOps mascot" loading="lazy">
   <div markdown="1">
 
 Run the promoted `02A_full_refresh_demo` pipeline from start to finish.
