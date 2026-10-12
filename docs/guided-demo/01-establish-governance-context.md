@@ -27,7 +27,7 @@ from fabricops_kit import (
 ## Create the Data Stewards
 
 <div class="fabricops-mascot-callout" markdown="1">
-  <img src="../assets/robot-writing.png" alt="" loading="lazy">
+  <img src="/FabricOps-Starter-Kit/assets/robot-writing.png" alt="" loading="lazy">
   <div markdown="1">
 
 Use the widget to create the data producer and consumer stewards.
@@ -46,7 +46,7 @@ Use the widget to create the data producer and consumer stewards.
 ## Create the Data Agreement
 
 <div class="fabricops-mascot-callout" markdown="1">
-  <img src="../assets/robot-pointing.png" alt="" loading="lazy">
+  <img src="/FabricOps-Starter-Kit/assets/robot-pointing.png" alt="" loading="lazy">
   <div markdown="1">
 
 Use the Data Agreement widget to define the relationship between the accountable producer and consumer stewards, including the purpose, scope, permitted use, and validity.

@@ -11,7 +11,7 @@ Complete [Step 3](03-author-and-freeze-data-contract.md) and select the frozen c
 ## Select Validate for `curated_orders`
 
 <div class="fabricops-mascot-callout" markdown="1">
-  <img src="../assets/robot-masking.png" alt="" loading="lazy">
+  <img src="/FabricOps-Starter-Kit/assets/robot-masking.png" alt="" loading="lazy">
   <div markdown="1">
 
 In the Data Contract selector at the top of `02A_full_refresh_demo`:

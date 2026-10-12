@@ -19,7 +19,7 @@
 ## What you will do
 
 <div class="fabricops-mascot-callout" markdown="1">
-  <img src="../assets/robot-scanning.png" alt="" loading="lazy">
+  <img src="/FabricOps-Starter-Kit/assets/robot-scanning.png" alt="" loading="lazy">
   <div markdown="1">
 
 Compare how SCD1 and SCD2 record the same product changes.

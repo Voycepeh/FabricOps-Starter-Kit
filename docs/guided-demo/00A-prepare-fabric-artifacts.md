@@ -17,7 +17,7 @@ If your organisation does not provide Fabric capacity, you can use a Fabric tria
 ## Create the workspaces
 
 <div class="fabricops-mascot-callout" markdown="1">
-  <img src="../assets/robot-pointing.png" alt="" loading="lazy">
+  <img src="/FabricOps-Starter-Kit/assets/robot-pointing.png" alt="" loading="lazy">
   <div markdown="1">
 
 Only **Governance** and **Engineering Development** are needed initially. You can add the Production and Consumer workspaces when you reach Steps 6 and 7.
@@ -37,7 +37,7 @@ Only **Governance** and **Engineering Development** are needed initially. You ca
 ## Create the Governance metadata Lakehouse
 
 <div class="fabricops-mascot-callout" markdown="1">
-  <img src="../assets/robot-writing.png" alt="" loading="lazy">
+  <img src="/FabricOps-Starter-Kit/assets/robot-writing.png" alt="" loading="lazy">
   <div markdown="1">
 
 The **Metadata** Lakehouse is the shared home for FabricOps Governance records, separate from the engineering data stores.
@@ -58,7 +58,7 @@ Use this exact name and casing for the Guided Demo. FabricOps uses this Lakehous
 ## Create the Engineering stores
 
 <div class="fabricops-mascot-callout" markdown="1">
-  <img src="../assets/robot-dev.png" alt="" loading="lazy">
+  <img src="/FabricOps-Starter-Kit/assets/robot-dev.png" alt="" loading="lazy">
   <div markdown="1">
 
 Development uses three distinct stores: **bronze** for landing data, **silver** for curated data, and **gold** for serving.
@@ -79,7 +79,7 @@ Open **Engineering Development** and create:
 ??? info "Optional: prepare Engineering Production and Consumer"
 
     <div class="fabricops-mascot-callout" markdown="1">
-      <img src="../assets/robot-prod.png" alt="" loading="lazy">
+      <img src="/FabricOps-Starter-Kit/assets/robot-prod.png" alt="" loading="lazy">
       <div markdown="1">
 
     Production should be a **1:1 structural mirror** of Development so the validated pipeline can use the same logical stores after promotion.
@@ -108,7 +108,7 @@ The built wheel will be available under `dist/`.
 ## Create Fabric Environments and install FabricOps
 
 <div class="fabricops-mascot-callout" markdown="1">
-  <img src="../assets/robot-carrying.png" alt="" loading="lazy">
+  <img src="/FabricOps-Starter-Kit/assets/robot-carrying.png" alt="" loading="lazy">
   <div markdown="1">
 
 Fabric Environments are **workspace-specific**. Install and publish the same FabricOps wheel in each workspace that runs FabricOps notebooks.
