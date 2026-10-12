@@ -16,7 +16,7 @@ This demo uses a watermark on `modified_datetime` and an Append target. Run the 
 ## What you will do
 
 <div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/robot-scanning.png" alt="FabricOps mascot" loading="lazy">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="FabricOps mascot" loading="lazy">
   <div markdown="1">
 
 Compare the Day 1 baseline with the incremental changes in subsequent runs.

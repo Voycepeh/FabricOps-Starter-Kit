@@ -15,7 +15,7 @@ That creates friction between the person who knows what clean data means and the
 ## The solution
 
 <div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/robot-writing.png" alt="FabricOps mascot" loading="eager">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="FabricOps mascot" loading="eager">
   <div><p>FabricOps lets Governance describe what clean data means in natural language.</p></div>
 </div>
 

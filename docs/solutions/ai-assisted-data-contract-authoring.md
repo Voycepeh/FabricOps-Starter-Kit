@@ -13,7 +13,7 @@ Governance users still need to decide how Direct or Indirect PII should be treat
 ## The solution
 
 <div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/robot-masking.png" alt="FabricOps mascot" loading="eager">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="FabricOps mascot" loading="eager">
   <div><p>FabricOps turns sensitive-data governance into a three-step workflow:</p></div>
 </div>
 

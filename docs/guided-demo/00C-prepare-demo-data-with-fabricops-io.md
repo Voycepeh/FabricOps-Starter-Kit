@@ -93,7 +93,7 @@ The expected output confirms that all four file formats resolve to equivalent da
 ## Read and write the demo data
 
 <div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/robot-carrying.png" alt="FabricOps mascot" loading="lazy">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="FabricOps mascot" loading="lazy">
   <div markdown="1">
 
 Read the remaining demo sources and write the managed Lakehouse and Warehouse tables used by the later pipeline walkthrough.
