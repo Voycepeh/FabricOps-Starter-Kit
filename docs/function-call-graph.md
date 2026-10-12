@@ -13,6 +13,11 @@ This is a maintainer review surface for inspecting FabricOps public callable arc
 
 ## Purpose
 
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-coding.png" alt="FabricOps coding mascot" loading="lazy">
+  <div><p><strong>Explore how FabricOps functions work under the hood.</strong> Trace public functions through their helpers, review architecture boundaries, and identify opportunities to simplify the code.</p></div>
+</div>
+
 As the public API grows, reviewing functions one file at a time makes it harder to see helper reachability, architecture boundaries, call-tree complexity, and the impact of a change. The Function Call Graph is the maintainability checkpoint for that work.
 
 A deterministic generator scans the repository into a versioned call-flow JSON contract, and the interactive dashboard turns that contract into a focused review surface. Use it to inspect a public callable, understand its dependencies and architecture signals, and export focused cleanup context before changing the implementation.
