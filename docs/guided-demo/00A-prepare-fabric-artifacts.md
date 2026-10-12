@@ -20,7 +20,7 @@ If your organisation does not provide Fabric capacity, you can use a Fabric tria
   <img src="../assets/robot-pointing.png" alt="" loading="lazy">
   <div markdown="1">
 
-Only **Governance** and **Engineering Development** are needed initially. Add Production and Consumer when you reach Steps 6 and 7.
+Only **Governance** and **Engineering Development** are needed initially. You can add the Production and Consumer workspaces when you reach Steps 6 and 7.
 
   </div>
 </div>
