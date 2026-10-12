@@ -37,6 +37,11 @@ AI helps author the rules. **FabricOps enforces them.**
 
 ## Under the hood
 
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="FabricOps mascot" loading="lazy">
+  <div><p>Explore how FabricOps translates natural language business requirements into reviewable, deterministic Data Quality rules.</p></div>
+</div>
+
 <details class="fabricops-solution-details" markdown="1">
 <summary><strong>How natural language becomes governed rules</strong></summary>
 
