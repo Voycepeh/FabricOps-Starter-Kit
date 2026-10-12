@@ -1,5 +1,5 @@
+import {Environment48Item as EnvironmentIcon} from '@fabric-msft/svg-icons';
 import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {OPENING_ARTIFACTS} from '../components/FabricIcons';
 import {theme} from '../theme';
 import {VIDEO_CONFIG} from '../videoConfig';
 import {notebookFrame, VIDEO_TUNING} from '../videoTuning';
@@ -19,8 +19,6 @@ const IMPORT_GROUPS = [
   ['widget_data_contract,', 'widget_select_data_contract,'],
   ['check_schema,', 'check_dq,'],
 ] as const;
-
-const EnvironmentIcon = OPENING_ARTIFACTS[3].icon;
 
 const NotebookGlyph = ({color}: {color: string}) => (
   <div style={{position: 'relative', width: NOTEBOOK.glyphSize, height: NOTEBOOK.glyphSize, flex: '0 0 auto'}}>

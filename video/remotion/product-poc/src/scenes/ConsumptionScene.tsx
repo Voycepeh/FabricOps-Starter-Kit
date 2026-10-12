@@ -1,22 +1,8 @@
 import {AbsoluteFill, Easing, Img, interpolate, Sequence, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {font, theme} from './theme';
-import {LifecycleScene, STEP_7_LABEL, StepCard} from './scenes/LifecycleScene';
-import {SCENE_STARTS} from './videoConfig';
-import {mascotSrc, type MascotName} from './mascotAssets';
-import {
-  ACTIVATION_DURATION,
-  ActivationScene,
-  CLOSING_DURATION as REDESIGNED_CLOSING_DURATION,
-  ClosingScene as RedesignedClosingScene,
-  ENGINEERING_DURATION as REDESIGNED_ENGINEERING_DURATION,
-  EngineeringScene,
-  GOVERNANCE_DURATION as REDESIGNED_GOVERNANCE_DURATION,
-  GovernanceScene,
-  VALIDATION_DURATION,
-  ValidationScene,
-} from './FabricOpsPart2Redesign';
-
-const seconds = (value: number) => Math.round(value * 30);
+import {mascotSrc, type MascotName} from '../mascotAssets';
+import {theme} from '../theme';
+import {GUIDED_SCENE_DURATIONS, LIFECYCLE_HANDOFF_LOCAL_FRAME, OVERVIEW_HANDOFF_FRAME, seconds} from '../videoConfig';
+import {LifecycleScene, STEP_7_LABEL, StepCard} from './LifecycleScene';
 
 // Use the same mascot artwork as the documentation. Motion is limited to scene
 // entrances; the robot remains stationary while viewers read the information.
@@ -39,10 +25,8 @@ const consumers = [
   {title: 'ML Models', color: '#a879ff', left: 1440, icon: 'nodes'},
 ] as const;
 
-// Part 2 starts at the exact Part 1 lifecycle frame at 02:55.
-const PART_1_HANDOFF_FRAME = seconds(175);
-const LIFECYCLE_LOCAL_FRAME = PART_1_HANDOFF_FRAME - SCENE_STARTS.workflow;
-const STEP_7_REVEAL = seconds(178.7) - PART_1_HANDOFF_FRAME;
+// Consumption continues at the exact lifecycle handoff frame at 02:55.
+const STEP_7_REVEAL = seconds(178.7) - OVERVIEW_HANDOFF_FRAME;
 const STEP_7_FOCUS_START = seconds(4.5);
 const STEP_7_FOCUS_END = seconds(6.9);
 const FOUNDATION_TRANSFORMATION_START = seconds(7);
@@ -52,7 +36,7 @@ const CONSUMER_STAGGER_INTERVAL = seconds(0.35);
 const CONSUMER_REVEAL_DURATION = seconds(0.55);
 const CONSUMPTION_SCENE_HOLD = seconds(12);
 const CONSUMPTION_SCENE_FADE_START = seconds(23.1);
-const CONSUMPTION_SCENE_END = seconds(24);
+const CONSUMPTION_SCENE_END = GUIDED_SCENE_DURATIONS.consumption;
 
 const CardIcon = ({kind, color}: {kind: string; color: string}) => {
   if (kind === 'bars') {
@@ -105,7 +89,7 @@ const ConsumerCard = ({title, color, icon, progress}: {title: string; color: str
   </div>
 );
 
-const LifecycleConsumptionScene = () => {
+export const ConsumptionScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const stepEnter = spring({frame: frame - STEP_7_REVEAL, fps, durationInFrames: 18, config: {damping: 19, stiffness: 92}});
@@ -128,7 +112,7 @@ const LifecycleConsumptionScene = () => {
   return <AbsoluteFill style={{opacity: sceneOpacity}}>
     <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 38%, #18365d 0%, #0b1830 40%, #060d19 82%)'}} />
     <AbsoluteFill style={{opacity: pipelineOpacity, transform: `translate(${(960 - 1615) * focus}px, ${(540 - 840) * focus}px) scale(${lifecycleZoomScale})`, transformOrigin: '1615px 840px'}}>
-      <Sequence from={-LIFECYCLE_LOCAL_FRAME} durationInFrames={LIFECYCLE_LOCAL_FRAME + CONSUMPTION_SCENE_END} premountFor={fps}>
+      <Sequence from={-LIFECYCLE_HANDOFF_LOCAL_FRAME} durationInFrames={LIFECYCLE_HANDOFF_LOCAL_FRAME + CONSUMPTION_SCENE_END} premountFor={fps}>
         <LifecycleScene hideStep7 />
       </Sequence>
     </AbsoluteFill>
@@ -168,22 +152,3 @@ const LifecycleConsumptionScene = () => {
 
   </AbsoluteFill>;
 };
-
-
-const ENGINEERING_START = CONSUMPTION_SCENE_END;
-const GOVERNANCE_START = ENGINEERING_START + REDESIGNED_ENGINEERING_DURATION;
-const VALIDATION_START = GOVERNANCE_START + REDESIGNED_GOVERNANCE_DURATION;
-const ACTIVATION_START = VALIDATION_START + VALIDATION_DURATION;
-const CLOSING_START = ACTIVATION_START + ACTIVATION_DURATION;
-export const FABRIC_OPS_PART_2_DURATION = CLOSING_START + REDESIGNED_CLOSING_DURATION;
-
-export const FabricOpsPart2 = () => (
-  <AbsoluteFill style={{background: theme.background, color: theme.text, fontFamily: font, overflow: 'hidden'}}>
-    <Sequence from={0} durationInFrames={CONSUMPTION_SCENE_END} premountFor={30}><LifecycleConsumptionScene /></Sequence>
-    <Sequence from={ENGINEERING_START} durationInFrames={REDESIGNED_ENGINEERING_DURATION} premountFor={30}><EngineeringScene /></Sequence>
-    <Sequence from={GOVERNANCE_START} durationInFrames={REDESIGNED_GOVERNANCE_DURATION} premountFor={30}><GovernanceScene /></Sequence>
-    <Sequence from={VALIDATION_START} durationInFrames={VALIDATION_DURATION} premountFor={30}><ValidationScene /></Sequence>
-    <Sequence from={ACTIVATION_START} durationInFrames={ACTIVATION_DURATION} premountFor={30}><ActivationScene /></Sequence>
-    <Sequence from={CLOSING_START} durationInFrames={REDESIGNED_CLOSING_DURATION} premountFor={30}><RedesignedClosingScene /></Sequence>
-  </AbsoluteFill>
-);

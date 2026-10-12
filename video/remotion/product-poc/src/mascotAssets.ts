@@ -4,6 +4,7 @@ export const mascotFiles = {
   carrying: 'robot-carrying.png',
   coding: 'robot-coding.png',
   dev: 'robot-dev.png',
+  dragging: 'robot-dragging.png',
   masking: 'robot-masking.png',
   neutral: 'robot-neutral.png',
   pointing: 'robot-pointing.png',

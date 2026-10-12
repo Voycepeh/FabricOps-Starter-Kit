@@ -1,3 +1,5 @@
 node_modules/
 .remotion/
 public/mascots/
+public/audio/
+out/

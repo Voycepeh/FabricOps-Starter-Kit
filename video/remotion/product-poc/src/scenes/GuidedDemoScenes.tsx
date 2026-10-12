@@ -1,15 +1,16 @@
 import type {CSSProperties, ReactNode} from 'react';
 import {AbsoluteFill, Easing, Img, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {font, theme} from './theme';
-import {mascotSrc, type MascotName} from './mascotAssets';
+import {mascotSrc, type MascotName} from '../mascotAssets';
+import {font, theme} from '../theme';
+import {GUIDED_SCENE_DURATIONS, seconds} from '../videoConfig';
 
-const seconds = (value: number) => Math.round(value * 30);
-
-export const ENGINEERING_DURATION = seconds(13);
-export const GOVERNANCE_DURATION = seconds(20);
-export const VALIDATION_DURATION = seconds(12);
-export const ACTIVATION_DURATION = seconds(13);
-export const CLOSING_DURATION = seconds(9);
+const {
+  engineering: ENGINEERING_DURATION,
+  governance: GOVERNANCE_DURATION,
+  validation: VALIDATION_DURATION,
+  activation: ACTIVATION_DURATION,
+  closing: CLOSING_DURATION,
+} = GUIDED_SCENE_DURATIONS;
 
 const Mascot = ({pose, x, y, size, delay}: {pose: MascotName; x: number; y: number; size: number; delay: number}) => {
   const frame = useCurrentFrame();
