@@ -42,8 +42,8 @@ Activation tells FabricOps which immutable contract version Production must reso
 
 ## Promote the validated pipeline
 
-<div class="fabricops-mascot-callout" markdown="1">
-  <img src="/FabricOps-Starter-Kit/assets/robot-dev.png" alt="" loading="lazy">
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/robot-dev.png" alt="FabricOps mascot" loading="lazy">
   <div markdown="1">
 
 `00_env_config` owns the environment-specific resolution. Your tested `02A_full_refresh_demo` copy owns this demo pipeline definition.
