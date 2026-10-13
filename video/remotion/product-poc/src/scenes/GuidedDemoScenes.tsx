@@ -276,7 +276,7 @@ export const BusinessRulesScene = () => {
   const review = enterProgress(frame, fps, localCue(4));
   const engineerReview = enterProgress(frame, fps, localCue(5));
 
-  return <SceneShell duration={BUSINESS_RULES_DURATION} heading="Turn plain-English requirements into deterministic DQ rules" accent={theme.governance}>
+  return <SceneShell duration={BUSINESS_RULES_DURATION} heading="" accent={theme.governance}>
     <div>
       <SpeechBubble accent="#b487ff" eyebrow="Business rule requirement" style={{left: 430, top: 175, width: 1260, height: 195, opacity: businessBubble}}>&ldquo;Every completed order must have a delivery date, and it cannot be earlier than the order date.&rdquo;</SpeechBubble>
       <Mascot pose="coding" x={105} y={505} size={320} delay={localCue(1)} />
