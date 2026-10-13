@@ -328,7 +328,11 @@ export const BigPictureScene = () => {
   const masking = interpolate(frame, [localCue(7) + seconds(1.8), localCue(7) + seconds(3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const results = enterProgress(frame, fps, localCue(7) + seconds(4.2));
   const violation = enterProgress(frame, fps, localCue(8));
-  const summary = enterProgress(frame, fps, localCue(9));
+  const summary = interpolate(frame, [localCue(9), localCue(11)], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
   const connectorOpacity = (start: number) => interpolate(frame, [start - seconds(0.2), start], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const rows = [
     {id: '00007', customer: 'C001', order: '09:00', modified: '09:18', result: 'PASS', color: '#72e6ad'},

@@ -38,7 +38,8 @@ export const FINAL_VIDEO_FRAME = narrationFrame(FINAL_FADE_END_SECONDS);
 export const NARRATION_CUE_SHEET = {
   opening: sceneCue('Opening', 0, 18.2, 18.2, [
     {phrase: 'Microsoft Fabric gives us a powerful all-in-one analytics platform.', atSeconds: 0},
-    {phrase: 'So where do we start?', atSeconds: 15.2},
+    {phrase: 'There are many different features.', atSeconds: 5.47},
+    {phrase: 'So where do we start?', atSeconds: 15.45},
   ]),
   fabricOps: sceneCue('FabricOps solution', 18.2, 54, 54, [
     {phrase: 'FabricOps, short for Fabric Operations.', atSeconds: 18.2},
@@ -51,6 +52,9 @@ export const NARRATION_CUE_SHEET = {
     {phrase: 'Wire functions into the notebooks.', atSeconds: 71},
     {phrase: '01 Governance and 02 Engineering.', atSeconds: 79},
     {phrase: 'At the center is the Data Contract.', atSeconds: 86},
+    {phrase: 'Governance defines what good data should look like.', atSeconds: 91.34},
+    {phrase: 'Engineering respects and uses the Data Contract.', atSeconds: 103.56},
+    {phrase: 'The ETL should continue or fail.', atSeconds: 112.1},
   ]),
   lifecycle: sceneCue('Seven-step lifecycle', 115, 175, 175, [
     {phrase: 'FabricOps follows a simple seven-step workflow.', atSeconds: 115},
@@ -58,6 +62,7 @@ export const NARRATION_CUE_SHEET = {
     {phrase: 'Two: build ETL, profile, and catalogue.', atSeconds: 123},
     {phrase: 'Three: enrich and freeze the Data Contract.', atSeconds: 128},
     {phrase: 'Four: rerun ETL with the Data Contract.', atSeconds: 137},
+    {phrase: 'Steps three and four are iterative.', atSeconds: 144.39},
     {phrase: 'Five: activate and promote.', atSeconds: 154},
     {phrase: 'Six: run the Production pipeline.', atSeconds: 169},
   ]),
@@ -118,6 +123,7 @@ export const NARRATION_CUE_SHEET = {
     {phrase: 'One row failed.', atSeconds: 378.55},
     {phrase: 'Governance as code in action.', atSeconds: 386.52},
     {phrase: 'Business and governance requirements become executable rules.', atSeconds: 389.34},
+    {phrase: 'Consistently enforced through the same ETL process.', atSeconds: 395.34},
   ]),
   promotion: sceneCue('Promotion', 402.25, 426.34, 426.34, [
     {phrase: 'Clone and promote the pipelines.', atSeconds: 405.64},

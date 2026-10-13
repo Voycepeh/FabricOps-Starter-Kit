@@ -1,5 +1,6 @@
 import {Environment48Item as EnvironmentIcon} from '@fabric-msft/svg-icons';
 import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {NARRATION_CUE_SHEET} from '../narrationCues';
 import {theme} from '../theme';
 import {VIDEO_CONFIG} from '../videoConfig';
 import {notebookFrame, VIDEO_TUNING} from '../videoTuning';
@@ -176,13 +177,16 @@ export const NotebookJourney = () => {
   const {fps} = useVideoConfig();
   const {scenes, timing} = VIDEO_CONFIG;
   const {timingSeconds, layout} = VIDEO_TUNING.notebook;
+  const cue = NARRATION_CUE_SHEET.notebooks;
+  const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
   const enter = (delay: number) => spring({frame: frame - delay, fps, config: {damping: 21, stiffness: 88}});
   const environmentAt = notebookFrame(timingSeconds.environment, fps);
   const setupExitAt = notebookFrame(timingSeconds.setupExit, fps);
   const foundationAt = notebookFrame(timingSeconds.foundation, fps);
   const lowerNotebooksAt = notebookFrame(timingSeconds.lowerNotebooks, fps);
   const contractAt = notebookFrame(timingSeconds.contract, fps);
-  const relationshipAt = notebookFrame(timingSeconds.relationship, fps);
+  const relationshipAt = localCue(6);
+  const relationshipEndAt = localCue(7);
   const environment = enter(environmentAt);
   const environmentTop = interpolate(frame, [setupExitAt, setupExitAt + 18], [layout.setupEnvironment.top, layout.environment.top], {
     extrapolateLeft: 'clamp',
@@ -193,8 +197,8 @@ export const NotebookJourney = () => {
   const foundationFlow = interpolate(frame, [foundationAt, foundationAt + 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const lowerNotebooks = enter(lowerNotebooksAt);
   const contract = enter(contractAt);
-  const relationshipFlow = interpolate(frame, [relationshipAt, relationshipAt + 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const connectorSettle = spring({frame: frame - relationshipAt - 20, fps, config: {damping: 17, stiffness: 92}});
+  const relationshipFlow = interpolate(frame, [relationshipAt, relationshipEndAt], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const connectorSettle = spring({frame: frame - relationshipEndAt + Math.round(0.8 * fps), fps, config: {damping: 17, stiffness: 92}});
   const exit = interpolate(frame, [scenes.notebooks - timing.sceneExit, scenes.notebooks], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const connectorY = layout.connectorY;
   const environmentBottomY = layout.environment.top + NOTEBOOK.height;

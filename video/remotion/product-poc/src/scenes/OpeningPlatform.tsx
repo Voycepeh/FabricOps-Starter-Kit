@@ -1,15 +1,21 @@
-import {Easing, Img, interpolate, useCurrentFrame} from 'remotion';
+import {Easing, Img, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {mascotSrc} from '../mascotAssets';
+import {NARRATION_CUE_SHEET} from '../narrationCues';
 import {VIDEO_CONFIG} from '../videoConfig';
 import {VIDEO_TUNING} from '../videoTuning';
 
 export const OpeningPlatform = () => {
   const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
   const {text, timing, scenes} = VIDEO_CONFIG;
   const {opening} = VIDEO_TUNING;
+  const cue = NARRATION_CUE_SHEET.opening;
+  const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
+  const featureListAt = localCue(1);
+  const questionAt = localCue(2);
   const fabricOpacity = interpolate(
     frame,
-    [0, timing.openingFabricExitAt, timing.openingQuestionAt],
+    [0, questionAt - Math.round(0.35 * fps), questionAt],
     [1, 1, 0],
     {
       extrapolateLeft: 'clamp',
@@ -17,7 +23,7 @@ export const OpeningPlatform = () => {
       easing: Easing.inOut(Easing.cubic),
     },
   );
-  const questionOpacity = interpolate(frame, [timing.openingQuestionAt, timing.openingQuestionAt + timing.openingQuestionEnterFrames, timing.openingPushAt, scenes.opening], [0, 1, 1, 0], {
+  const questionOpacity = interpolate(frame, [questionAt, questionAt + timing.openingQuestionEnterFrames, timing.openingPushAt, scenes.opening], [0, 1, 1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
@@ -29,7 +35,7 @@ export const OpeningPlatform = () => {
   });
   const platformEntry = interpolate(
     frame,
-    [timing.openingMascotAt, timing.openingMascotAt + opening.platformEntryFrames],
+    [featureListAt, questionAt],
     [0, 1],
     {
       extrapolateLeft: 'clamp',
