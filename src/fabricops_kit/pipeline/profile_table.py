@@ -1208,7 +1208,7 @@ def profile_table(
     ):
         raise ValueError("frequency_max_distinct_percent must be finite and between 0.0 and 100.0 when supplied.")
 
-    selected_frequency_columns = ([] if not frequency_enabled else None) if frequency_columns is None or not frequency_enabled else list(frequency_columns)
+    selected_frequency_columns = [] if not frequency_enabled else (None if frequency_columns is None else list(frequency_columns))
     if frequency_top_n is not None and frequency_top_n <= 0:
         raise ValueError("frequency_top_n must be greater than zero when supplied.")
     identity = None
