@@ -184,32 +184,24 @@ export const RepeatablePipelineScene = () => {
   const {fps} = useVideoConfig();
   const cue = NARRATION_CUE_SHEET.repeatablePipeline;
   const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
-  const nodes = [
-    {label: '00 Env Config', color: '#8da0b8', at: localCue(0) + seconds(0.3)},
-    {label: 'Data Contract', color: '#b487ff', at: localCue(0) + seconds(0.8)},
-    {label: 'orchestrate_read()', color: '#69b7ff', at: localCue(1)},
-    {label: 'PySpark', color: '#52d6c6', at: localCue(3)},
-    {label: 'orchestrate_write()', color: '#72e6ad', at: localCue(2)},
-    {label: 'Inspect', color: '#ffad55', at: localCue(2) + seconds(1.2)},
-  ];
-  const ferry = interpolate(frame, [localCue(1), localCue(3) + seconds(1.5)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const ferryOpacity = interpolate(frame, [localCue(1) - seconds(0.3), localCue(1), localCue(3) + seconds(1.2), localCue(3) + seconds(1.6)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const readAt = localCue(1);
+  const transformAt = localCue(3);
+  const writeAt = transformAt + seconds(0.9);
+  const read = enterProgress(frame, fps, readAt);
+  const transform = enterProgress(frame, fps, transformAt);
+  const write = enterProgress(frame, fps, writeAt);
+  const firstLink = interpolate(frame, [readAt + seconds(0.6), transformAt + seconds(0.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const secondLink = interpolate(frame, [transformAt + seconds(0.6), writeAt + seconds(0.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const ferryStart = writeAt + seconds(0.6);
+  const ferryEnd = localCue(6) + seconds(0.8);
+  const ferry = interpolate(frame, [ferryStart, ferryEnd], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const ferryOpacity = interpolate(frame, [ferryStart - seconds(0.3), ferryStart, ferryEnd - seconds(0.4), ferryEnd], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
 
-  return <SceneShell duration={REPEATABLE_PIPELINE_DURATION} heading="One repeatable pipeline pattern" accent={theme.engineering}>
-    <div style={{position: 'absolute', left: 78, right: 78, top: 365, display: 'flex', alignItems: 'center'}}>
-      {nodes.map((node, index) => {
-        const progress = enterProgress(frame, fps, node.at);
-        const emphasisAt = index === 2 ? localCue(1) : index === 3 ? localCue(3) : index === 4 ? localCue(2) : node.at;
-        const emphasis = interpolate(frame, [emphasisAt - seconds(0.2), emphasisAt, emphasisAt + seconds(2.1), emphasisAt + seconds(2.5)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-        return <div key={node.label} style={{display: 'flex', alignItems: 'center', flex: 1}}>
-          <div style={{width: 245, height: 165, borderRadius: 22, border: `2px solid ${node.color}`, background: 'linear-gradient(145deg, #15304a, #0b192c)', boxShadow: `0 18px 42px #0008, 0 0 ${12 + emphasis * 24}px ${node.color}${emphasis > 0.5 ? '88' : '22'}`, display: 'grid', placeItems: 'center', padding: '0 20px', boxSizing: 'border-box', fontFamily: node.label.includes('(') ? 'ui-monospace, monospace' : font, color: '#f0f8ff', fontSize: node.label.includes('(') ? 22 : 26, fontWeight: 850, textAlign: 'center', opacity: progress, translate: `0 ${(1 - progress) * 18}px`}}>{node.label}</div>
-          {index < nodes.length - 1 ? <div style={{flex: 1, height: 4, background: FLOW_COLOR, boxShadow: `0 0 14px ${FLOW_COLOR}88`, opacity: progress}} /> : null}
-        </div>;
-      })}
-    </div>
+  return <SceneShell duration={REPEATABLE_PIPELINE_DURATION} heading="" accent={theme.engineering}>
+    <PipelinePattern top={300} read={read} transform={transform} write={write} firstLink={firstLink} secondLink={secondLink} />
 
     <Img src={mascotSrc('carrying')} style={{
-      position: 'absolute', left: 245 + ferry * 1280, top: 570, width: 220, height: 220,
+      position: 'absolute', left: 260 + ferry * 1265, top: 575, width: 220, height: 220,
       objectFit: 'contain', opacity: ferryOpacity, filter: 'drop-shadow(0 16px 26px #0008)',
     }} />
 
