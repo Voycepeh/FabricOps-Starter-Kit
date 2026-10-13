@@ -35,7 +35,7 @@ export const OpeningPlatform = () => {
   });
   const platformEntry = interpolate(
     frame,
-    [featureListAt, questionAt],
+    [featureListAt, featureListAt + opening.platformEntryFrames],
     [0, 1],
     {
       extrapolateLeft: 'clamp',
