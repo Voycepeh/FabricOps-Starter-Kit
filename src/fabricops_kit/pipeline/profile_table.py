@@ -1078,7 +1078,7 @@ def profile_table(
     table_name: str | None = None,
     table_id: str | None = None,
     frequency_columns=None,
-    frequency_top_n: int | None = 5,
+    frequency_enabled: bool = True, frequency_top_n: int | None = 5,
     frequency_max_distinct_percent: float | None = 80.0,
     spark_session=None,
 ):
@@ -1115,6 +1115,8 @@ def profile_table(
     frequency_columns : sequence of str, optional
         Columns to frequency profile. ``None`` automatically selects eligible
         scalar columns; an empty sequence skips frequency profiling.
+    frequency_enabled : bool, default=True
+        Whether to calculate frequency distributions for the table. False skips all frequency columns.
     frequency_top_n : int or None, default=5
         Ranked values to retain per frequency column. ``None`` retains all.
     frequency_max_distinct_percent : float or None, default=80.0
@@ -1206,7 +1208,7 @@ def profile_table(
     ):
         raise ValueError("frequency_max_distinct_percent must be finite and between 0.0 and 100.0 when supplied.")
 
-    selected_frequency_columns = None if frequency_columns is None else list(frequency_columns)
+    selected_frequency_columns = ([] if not frequency_enabled else None) if frequency_columns is None or not frequency_enabled else list(frequency_columns)
     if frequency_top_n is not None and frequency_top_n <= 0:
         raise ValueError("frequency_top_n must be greater than zero when supplied.")
     identity = None
