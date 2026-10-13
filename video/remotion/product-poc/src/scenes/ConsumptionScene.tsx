@@ -1,23 +1,9 @@
-import {AbsoluteFill, Easing, Img, interpolate, Sequence, useCurrentFrame, useVideoConfig} from 'remotion';
-import {mascotSrc, type MascotName} from '../mascotAssets';
+import {memo} from 'react';
+import {AbsoluteFill, Easing, Freeze, interpolate, useCurrentFrame} from 'remotion';
 import {NARRATION_CUE_SHEET} from '../narrationCues';
 import {theme} from '../theme';
 import {GUIDED_SCENE_DURATIONS, LIFECYCLE_HANDOFF_LOCAL_FRAME, OVERVIEW_HANDOFF_FRAME, seconds} from '../videoConfig';
 import {LifecycleScene, STEP_7_LABEL, StepCard} from './LifecycleScene';
-
-// Use the same mascot artwork as the documentation. Motion is limited to scene
-// entrances; the robot remains stationary while viewers read the information.
-const Mascot = ({pose, x, y, size = 260, delay = 0}: {pose: MascotName; x: number; y: number; size?: number; delay?: number}) => {
-  const frame = useCurrentFrame();
-  const enter = interpolate(frame, [delay, delay + 18], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
-  return <Img src={mascotSrc(pose)} style={{
-    position: 'absolute', left: x, top: y, width: size, height: size,
-    objectFit: 'contain', opacity: enter,
-    transform: `translateY(${(1 - enter) * 22}px)`,
-    filter: 'drop-shadow(0 12px 22px #0006)', pointerEvents: 'none',
-  }} />;
-};
-
 
 const consumers = [
   {title: 'Dashboards', color: '#f2c811', left: 180, icon: 'bars'},
@@ -89,12 +75,21 @@ const ConsumerCard = ({title, color, icon, progress}: {title: string; color: str
   </div>
 );
 
+const ConsumerNode = memo(({consumer, progress}: {consumer: (typeof consumers)[number]; progress: number}) => (
+  <div style={{position: 'absolute', left: consumer.left, top: 250, zIndex: 2}}>
+    <ConsumerCard {...consumer} progress={progress} />
+    <div style={{position: 'absolute', left: 148, top: 230, width: 4, height: 295, borderRadius: 4, background: `linear-gradient(${consumer.color}99, ${theme.consumer})`, opacity: progress * 0.72}} />
+    <div style={{position: 'absolute', left: 140, top: 516, width: 20, height: 20, borderRadius: 4, border: `3px solid ${theme.consumer}`, background: '#0d192b', opacity: progress}} />
+  </div>
+));
+
 export const ConsumptionScene = () => {
   const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
   const focus = interpolate(frame, [STEP_7_FOCUS_START, STEP_7_FOCUS_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const foundationProgress = interpolate(frame, [FOUNDATION_TRANSFORMATION_START, FOUNDATION_TRANSFORMATION_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const foundation = interpolate(frame, [FOUNDATION_TRANSFORMATION_START, FOUNDATION_TRANSFORMATION_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.bezier(0.16, 1, 0.3, 1)});
   const pipelineOpacity = interpolate(frame, [FOUNDATION_TRANSFORMATION_START, FOUNDATION_TRANSFORMATION_START + seconds(0.6)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const badgeProgress = interpolate(foundationProgress, [0.15, 0.45], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const holdLabelOpacity = interpolate(frame, [CONSUMER_REVEAL_FRAMES[3], CONSUMER_REVEAL_FRAMES[3] + seconds(0.6)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const sceneOpacity = interpolate(frame, [CONSUMPTION_SCENE_FADE_START, CONSUMPTION_SCENE_END], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const cardScale = frame < FOUNDATION_TRANSFORMATION_START ? interpolate(focus, [0, 1], [1, 3.1]) : interpolate(foundation, [0, 1], [3.1, 1]);
@@ -104,18 +99,19 @@ export const ConsumptionScene = () => {
   const visualCardHeight = frame < FOUNDATION_TRANSFORMATION_START ? 150 * cardScale : interpolate(foundation, [0, 1], [465, 180]);
   const cardWidth = visualCardWidth / cardScale;
   const cardHeight = visualCardHeight / cardScale;
-  const visualCircleSize = frame < FOUNDATION_TRANSFORMATION_START ? 62 * cardScale : interpolate(foundation, [0, 1], [192.2, 78]);
+  const visualCircleSize = frame < FOUNDATION_TRANSFORMATION_START ? 62 * cardScale : interpolate(foundation, [0, 1], [192.2, 110]);
   const visualFontSize = frame < FOUNDATION_TRANSFORMATION_START ? 20 * cardScale : interpolate(foundation, [0, 1], [62, 42]);
   const visualGap = frame < FOUNDATION_TRANSFORMATION_START ? 22 * cardScale : interpolate(foundation, [0, 1], [68.2, 32]);
   const visualHorizontalPadding = frame < FOUNDATION_TRANSFORMATION_START ? 25 * cardScale : interpolate(foundation, [0, 1], [77.5, 44]);
   const lifecycleZoomScale = interpolate(focus, [0, 1], [1, 3.1]);
+  const lifecycleVisible = pipelineOpacity > 0;
 
   return <AbsoluteFill style={{opacity: sceneOpacity}}>
-    <AbsoluteFill style={{opacity: pipelineOpacity, transform: `translate(${(960 - 1615) * focus}px, ${(540 - 840) * focus}px) scale(${lifecycleZoomScale})`, transformOrigin: '1615px 840px'}}>
-      <Sequence from={-LIFECYCLE_HANDOFF_LOCAL_FRAME} durationInFrames={LIFECYCLE_HANDOFF_LOCAL_FRAME + CONSUMPTION_SCENE_END} premountFor={fps}>
+    {lifecycleVisible ? <AbsoluteFill style={{opacity: pipelineOpacity, transform: `translate(${(960 - 1615) * focus}px, ${(540 - 840) * focus}px) scale(${lifecycleZoomScale})`, transformOrigin: '1615px 840px'}}>
+      <Freeze frame={LIFECYCLE_HANDOFF_LOCAL_FRAME}>
         <LifecycleScene hideStep7 />
-      </Sequence>
-    </AbsoluteFill>
+      </Freeze>
+    </AbsoluteFill> : null}
 
     <div style={{position: 'absolute', left: cardCenterX - cardWidth / 2, top: cardCenterY - cardHeight / 2, width: cardWidth, height: cardHeight, scale: cardScale, transformOrigin: '50% 50%', zIndex: 4}}>
       <StepCard
@@ -126,6 +122,10 @@ export const ConsumptionScene = () => {
         subtitleGap={9 / cardScale}
         subtitleOpacity={holdLabelOpacity}
         centerContent
+        badgeMascot="prod"
+        badgeProgress={badgeProgress}
+        labelAlignmentProgress={foundation}
+        singleLineLabel={foundation >= 0.8}
         color={theme.consumer}
         enter={1}
         active
@@ -140,14 +140,9 @@ export const ConsumptionScene = () => {
       <div style={{position: 'absolute', left: 34, right: 34, bottom: -18, height: 18, borderRadius: '0 0 12px 12px', background: '#9a5c28', opacity: foundation}} />
     </div>
 
-    <Mascot pose="prod" x={840} y={580} size={190} delay={CONSUMER_REVEAL_FRAMES[0]} />
     {consumers.map((consumer, index) => {
       const progress = interpolate(frame, [CONSUMER_REVEAL_FRAMES[index], CONSUMER_REVEAL_FRAMES[index] + CONSUMER_REVEAL_DURATION], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.bezier(0.16, 1, 0.3, 1)});
-      return <div key={consumer.title} style={{position: 'absolute', left: consumer.left, top: 250, zIndex: 2}}>
-        <ConsumerCard {...consumer} progress={progress} />
-        <div style={{position: 'absolute', left: 148, top: 230, width: 4, height: 295, borderRadius: 4, background: `linear-gradient(${consumer.color}99, ${theme.consumer})`, opacity: progress * 0.72}} />
-        <div style={{position: 'absolute', left: 140, top: 516, width: 20, height: 20, borderRadius: 4, border: `3px solid ${theme.consumer}`, background: '#0d192b', opacity: progress}} />
-      </div>;
+      return <ConsumerNode key={consumer.title} consumer={consumer} progress={progress} />;
     })}
 
   </AbsoluteFill>;

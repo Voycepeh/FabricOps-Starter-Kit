@@ -61,6 +61,9 @@ type StepCardProps = {
   subtitleOpacity?: number;
   singleLineLabel?: boolean;
   centerContent?: boolean;
+  badgeMascot?: MascotName;
+  badgeProgress?: number;
+  labelAlignmentProgress?: number;
 };
 
 export const StepCard = ({
@@ -84,12 +87,18 @@ export const StepCard = ({
   subtitleOpacity = 1,
   singleLineLabel = false,
   centerContent = false,
+  badgeMascot,
+  badgeProgress = 0,
+  labelAlignmentProgress = 0,
 }: StepCardProps) => {
   const {sizes, text} = VIDEO_CONFIG;
   return <div style={{width: width ?? sizes.workflowCardWidth, height: height ?? sizes.workflowCardHeight, borderRadius, display: 'flex', alignItems: 'center', gap, padding: `0 ${horizontalPadding}px`, boxSizing: 'border-box', background: `linear-gradient(145deg, ${color}2e, #0d192b 72%)`, border: `3px solid ${active ? color : `${color}88`}`, boxShadow: active ? `0 0 48px ${color}55` : '0 18px 40px #0007', opacity: enter * (active ? 1 : 0.62), scale: 0.86 + enter * 0.14}}>
-    <div style={{width: circleSize, height: circleSize, flex: '0 0 auto', borderRadius: 99, display: 'grid', placeItems: 'center', background: color, color: '#07101f', fontSize: circleSize * 0.55, fontWeight: 900}}>{number}</div>
-    {subtitle ? <div style={{position: centerContent ? 'relative' : undefined, flex: 1, alignSelf: 'stretch', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: centerContent ? 'center' : 'flex-start', justifyContent: 'center', textAlign: centerContent ? 'center' : 'left'}}>
-      <div style={{position: centerContent ? 'absolute' : undefined, inset: centerContent ? 0 : undefined, width: centerContent ? '100%' : undefined, display: centerContent ? 'flex' : undefined, alignItems: centerContent ? 'center' : undefined, justifyContent: centerContent ? 'center' : undefined, whiteSpace: singleLineLabel ? 'nowrap' : 'pre-line', color: '#f7f9fd', fontSize: fontSize ?? text.workflow, lineHeight: 1.08, fontWeight: 720, opacity: labelProgress}}>{label}</div>
+    <div style={{position: 'relative', width: circleSize, height: circleSize, flex: '0 0 auto'}}>
+      <div style={{position: 'absolute', inset: 0, borderRadius: 99, display: 'grid', placeItems: 'center', background: color, color: '#07101f', fontSize: circleSize * 0.55, fontWeight: 900, opacity: 1 - badgeProgress}}>{number}</div>
+      {badgeMascot ? <Img src={mascotSrc(badgeMascot)} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', opacity: badgeProgress, scale: 0.84 + badgeProgress * 0.16, filter: 'drop-shadow(0 7px 12px #0007)'}} /> : null}
+    </div>
+    {subtitle ? <div style={{position: centerContent ? 'relative' : undefined, flex: 1, alignSelf: 'stretch', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', textAlign: 'left'}}>
+      <div style={{position: centerContent ? 'absolute' : undefined, top: centerContent ? 0 : undefined, bottom: centerContent ? 0 : undefined, left: centerContent ? `${interpolate(labelAlignmentProgress, [0, 1], [50, 0])}%` : undefined, width: centerContent ? 'max-content' : undefined, maxWidth: centerContent ? '100%' : undefined, display: centerContent ? 'flex' : undefined, alignItems: centerContent ? 'center' : undefined, translate: centerContent ? `${interpolate(labelAlignmentProgress, [0, 1], [-50, 0])}% 0` : undefined, whiteSpace: singleLineLabel ? 'nowrap' : 'pre-line', textAlign: 'left', color: '#f7f9fd', fontSize: fontSize ?? text.workflow, lineHeight: 1.08, fontWeight: 720, opacity: labelProgress}}>{label}</div>
       <div style={{position: centerContent ? 'absolute' : undefined, left: centerContent ? 0 : undefined, right: centerContent ? 0 : undefined, bottom: centerContent ? subtitleGap : undefined, marginTop: centerContent ? 0 : subtitleGap, color: '#94a3b8', fontSize: subtitleFontSize ?? (fontSize ?? text.workflow) * 0.52, lineHeight: 1.2, fontWeight: 600, letterSpacing: 0.4, opacity: subtitleOpacity}}>{subtitle}</div>
     </div> : <div style={{position: 'relative', flex: 1, height: (fontSize ?? text.workflow) * 2.3}}>
       {previousLabel ? <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', whiteSpace: 'pre-line', color: '#f7f9fd', fontSize: fontSize ?? text.workflow, lineHeight: 1.15, fontWeight: 720, opacity: interpolate(labelProgress, [0, 0.46], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}}>{previousLabel}</div> : null}
