@@ -719,3 +719,11 @@ def test_profile_table_frequency_top_n_defaults_to_five():
 
     for function in (profile_table, orchestrate_read, orchestrate_write):
         assert inspect.signature(function).parameters["frequency_top_n"].default == 5
+        assert inspect.signature(function).parameters["frequency_enabled"].default is True
+
+
+def test_profile_table_frequency_disabled_skips_column_selection():
+    import inspect
+    from fabricops_kit.pipeline.profile_table import profile_table
+
+    assert "frequency_enabled" in inspect.signature(profile_table).parameters
