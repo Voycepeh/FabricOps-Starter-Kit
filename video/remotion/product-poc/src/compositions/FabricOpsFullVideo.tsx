@@ -6,7 +6,15 @@ import {
   FULL_VIDEO_TIMELINE,
   NARRATION_START_FRAME,
 } from '../videoConfig';
-import {ActivationScene, ClosingScene, EngineeringScene, GovernanceScene, ValidationScene} from '../scenes/GuidedDemoScenes';
+import {
+  BigPictureScene,
+  BusinessRulesScene,
+  ClosingScene,
+  DataEngineersScene,
+  PromotionScene,
+  RepeatablePipelineScene,
+  SensitiveDataScene,
+} from '../scenes/GuidedDemoScenes';
 import {ConsumptionScene} from '../scenes/ConsumptionScene';
 import {FabricOpsReveal} from '../scenes/FabricOpsReveal';
 import {LifecycleScene} from '../scenes/LifecycleScene';
@@ -20,9 +28,9 @@ export const FabricOpsFullVideo = () => {
   return (
     <AbsoluteFill style={{background: theme.background, color: theme.text, fontFamily: font, overflow: 'hidden'}}>
       <Audio
-        name="Original narration"
+        name="Normalized master narration"
         from={NARRATION_START_FRAME}
-        src={staticFile('audio/FabricOps_narration_master_numbered.m4a')}
+        src={staticFile('audio/FabricOps_full_narration_normalized.m4a')}
         volume={1}
       />
       <Sequence
@@ -47,17 +55,23 @@ export const FabricOpsFullVideo = () => {
       <Sequence name="Consumption" from={timeline.consumption.start} durationInFrames={timeline.consumption.duration} premountFor={fps}>
         <ConsumptionScene />
       </Sequence>
-      <Sequence name="Engineering" from={timeline.engineering.start} durationInFrames={timeline.engineering.duration} premountFor={fps}>
-        <EngineeringScene />
+      <Sequence name="Data engineers" from={timeline.dataEngineers.start} durationInFrames={timeline.dataEngineers.duration} premountFor={fps}>
+        <DataEngineersScene />
       </Sequence>
-      <Sequence name="Governance" from={timeline.governance.start} durationInFrames={timeline.governance.duration} premountFor={fps}>
-        <GovernanceScene />
+      <Sequence name="Repeatable pipeline" from={timeline.repeatablePipeline.start} durationInFrames={timeline.repeatablePipeline.duration} premountFor={fps}>
+        <RepeatablePipelineScene />
       </Sequence>
-      <Sequence name="Validation" from={timeline.validation.start} durationInFrames={timeline.validation.duration} premountFor={fps}>
-        <ValidationScene />
+      <Sequence name="Sensitive data" from={timeline.sensitiveData.start} durationInFrames={timeline.sensitiveData.duration} premountFor={fps}>
+        <SensitiveDataScene />
       </Sequence>
-      <Sequence name="Activation and production" from={timeline.activation.start} durationInFrames={timeline.activation.duration} premountFor={fps}>
-        <ActivationScene />
+      <Sequence name="Business rules" from={timeline.businessRules.start} durationInFrames={timeline.businessRules.duration} premountFor={fps}>
+        <BusinessRulesScene />
+      </Sequence>
+      <Sequence name="The big picture" from={timeline.bigPicture.start} durationInFrames={timeline.bigPicture.duration} premountFor={fps}>
+        <BigPictureScene />
+      </Sequence>
+      <Sequence name="Promotion" from={timeline.promotion.start} durationInFrames={timeline.promotion.duration} premountFor={fps}>
+        <PromotionScene />
       </Sequence>
       <Sequence name="CTA" from={timeline.closing.start} durationInFrames={timeline.closing.duration} premountFor={fps}>
         <ClosingScene />

@@ -1,5 +1,7 @@
-export const VIDEO_FPS = 30;
-export const seconds = (value: number) => Math.round(value * VIDEO_FPS);
+import {FINAL_VIDEO_FRAME, NARRATION_CUE_SHEET, VIDEO_FPS, narrationFrame} from './narrationCues';
+
+export {VIDEO_FPS};
+export const seconds = narrationFrame;
 export const NARRATION_START_FRAME = seconds(0);
 
 export const VIDEO_CONFIG = {
@@ -24,32 +26,34 @@ export const VIDEO_CONFIG = {
     sceneExit: 24,
   },
   scenes: {
-    opening: 556,
-    fabricOps: 1069,
-    notebooks: 1851,
-    workflow: 2147,
+    opening: NARRATION_CUE_SHEET.opening.transitionFrame - NARRATION_CUE_SHEET.opening.startFrame,
+    fabricOps: NARRATION_CUE_SHEET.fabricOps.transitionFrame - NARRATION_CUE_SHEET.fabricOps.startFrame,
+    notebooks: NARRATION_CUE_SHEET.notebooks.transitionFrame - NARRATION_CUE_SHEET.notebooks.startFrame,
+    workflow: NARRATION_CUE_SHEET.lifecycle.transitionFrame - NARRATION_CUE_SHEET.lifecycle.startFrame,
   },
 } as const;
 
-const {scenes, timing} = VIDEO_CONFIG;
+const {scenes} = VIDEO_CONFIG;
 
 export const SCENE_STARTS = {
-  opening: 0,
-  fabricOps: scenes.opening + timing.sceneGap,
-  notebooks: scenes.opening + timing.sceneGap + scenes.fabricOps + timing.sceneGap,
-  workflow: scenes.opening + timing.sceneGap + scenes.fabricOps + timing.sceneGap + scenes.notebooks + timing.sceneGap,
+  opening: NARRATION_CUE_SHEET.opening.startFrame,
+  fabricOps: NARRATION_CUE_SHEET.fabricOps.startFrame,
+  notebooks: NARRATION_CUE_SHEET.notebooks.startFrame,
+  workflow: NARRATION_CUE_SHEET.lifecycle.startFrame,
 } as const;
 
-export const OVERVIEW_HANDOFF_FRAME = seconds(175);
+export const OVERVIEW_HANDOFF_FRAME = NARRATION_CUE_SHEET.consumption.startFrame;
 export const LIFECYCLE_HANDOFF_LOCAL_FRAME = OVERVIEW_HANDOFF_FRAME - SCENE_STARTS.workflow;
 
 export const GUIDED_SCENE_DURATIONS = {
-  consumption: seconds(24),
-  engineering: seconds(13),
-  governance: seconds(20),
-  validation: seconds(12),
-  activation: seconds(13),
-  closing: seconds(7.4),
+  consumption: NARRATION_CUE_SHEET.consumption.transitionFrame - NARRATION_CUE_SHEET.consumption.startFrame,
+  dataEngineers: NARRATION_CUE_SHEET.dataEngineers.transitionFrame - NARRATION_CUE_SHEET.dataEngineers.startFrame,
+  repeatablePipeline: NARRATION_CUE_SHEET.repeatablePipeline.transitionFrame - NARRATION_CUE_SHEET.repeatablePipeline.startFrame,
+  sensitiveData: NARRATION_CUE_SHEET.sensitiveData.transitionFrame - NARRATION_CUE_SHEET.sensitiveData.startFrame,
+  businessRules: NARRATION_CUE_SHEET.businessRules.transitionFrame - NARRATION_CUE_SHEET.businessRules.startFrame,
+  bigPicture: NARRATION_CUE_SHEET.bigPicture.transitionFrame - NARRATION_CUE_SHEET.bigPicture.startFrame,
+  promotion: NARRATION_CUE_SHEET.promotion.transitionFrame - NARRATION_CUE_SHEET.promotion.startFrame,
+  closing: NARRATION_CUE_SHEET.closing.transitionFrame - NARRATION_CUE_SHEET.closing.startFrame,
 } as const;
 
 export const FULL_VIDEO_TIMELINE = {
@@ -57,27 +61,14 @@ export const FULL_VIDEO_TIMELINE = {
   fabricOps: {start: SCENE_STARTS.fabricOps, duration: scenes.fabricOps},
   notebooks: {start: SCENE_STARTS.notebooks, duration: scenes.notebooks},
   lifecycle: {start: SCENE_STARTS.workflow, duration: LIFECYCLE_HANDOFF_LOCAL_FRAME},
-  consumption: {start: OVERVIEW_HANDOFF_FRAME, duration: GUIDED_SCENE_DURATIONS.consumption},
-  engineering: {
-    start: OVERVIEW_HANDOFF_FRAME + GUIDED_SCENE_DURATIONS.consumption,
-    duration: GUIDED_SCENE_DURATIONS.engineering,
-  },
-  governance: {
-    start: OVERVIEW_HANDOFF_FRAME + GUIDED_SCENE_DURATIONS.consumption + GUIDED_SCENE_DURATIONS.engineering,
-    duration: GUIDED_SCENE_DURATIONS.governance,
-  },
-  validation: {
-    start: OVERVIEW_HANDOFF_FRAME + GUIDED_SCENE_DURATIONS.consumption + GUIDED_SCENE_DURATIONS.engineering + GUIDED_SCENE_DURATIONS.governance,
-    duration: GUIDED_SCENE_DURATIONS.validation,
-  },
-  activation: {
-    start: OVERVIEW_HANDOFF_FRAME + GUIDED_SCENE_DURATIONS.consumption + GUIDED_SCENE_DURATIONS.engineering + GUIDED_SCENE_DURATIONS.governance + GUIDED_SCENE_DURATIONS.validation,
-    duration: GUIDED_SCENE_DURATIONS.activation,
-  },
-  closing: {
-    start: OVERVIEW_HANDOFF_FRAME + GUIDED_SCENE_DURATIONS.consumption + GUIDED_SCENE_DURATIONS.engineering + GUIDED_SCENE_DURATIONS.governance + GUIDED_SCENE_DURATIONS.validation + GUIDED_SCENE_DURATIONS.activation,
-    duration: GUIDED_SCENE_DURATIONS.closing,
-  },
+  consumption: {start: NARRATION_CUE_SHEET.consumption.startFrame, duration: GUIDED_SCENE_DURATIONS.consumption},
+  dataEngineers: {start: NARRATION_CUE_SHEET.dataEngineers.startFrame, duration: GUIDED_SCENE_DURATIONS.dataEngineers},
+  repeatablePipeline: {start: NARRATION_CUE_SHEET.repeatablePipeline.startFrame, duration: GUIDED_SCENE_DURATIONS.repeatablePipeline},
+  sensitiveData: {start: NARRATION_CUE_SHEET.sensitiveData.startFrame, duration: GUIDED_SCENE_DURATIONS.sensitiveData},
+  businessRules: {start: NARRATION_CUE_SHEET.businessRules.startFrame, duration: GUIDED_SCENE_DURATIONS.businessRules},
+  bigPicture: {start: NARRATION_CUE_SHEET.bigPicture.startFrame, duration: GUIDED_SCENE_DURATIONS.bigPicture},
+  promotion: {start: NARRATION_CUE_SHEET.promotion.startFrame, duration: GUIDED_SCENE_DURATIONS.promotion},
+  closing: {start: NARRATION_CUE_SHEET.closing.startFrame, duration: GUIDED_SCENE_DURATIONS.closing},
 } as const;
 
-export const FULL_VIDEO_DURATION = FULL_VIDEO_TIMELINE.closing.start + FULL_VIDEO_TIMELINE.closing.duration;
+export const FULL_VIDEO_DURATION = FINAL_VIDEO_FRAME;

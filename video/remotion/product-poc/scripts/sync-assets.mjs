@@ -6,13 +6,11 @@ const mascotFiles = [
   'robot-carrying.png',
   'robot-coding.png',
   'robot-dev.png',
-  'robot-dev-cycle.png',
   'robot-dragging.png',
   'robot-masking.png',
   'robot-neutral.png',
   'robot-pointing.png',
   'robot-prod.png',
-  'robot-prod-cycle.png',
   'robot-scanning.png',
   'robot-validate.png',
   'robot-writing.png',
@@ -22,7 +20,7 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 const repositoryRoot = path.resolve(projectRoot, '../../..');
 const sourceMascotDirectory = path.join(repositoryRoot, 'docs', 'assets', 'mascots');
 const targetMascotDirectory = path.join(projectRoot, 'public', 'mascots');
-const narrationFilename = 'FabricOps_narration_master_numbered.m4a';
+const narrationFilename = 'FabricOps_full_narration_normalized.m4a';
 const sourceNarration = path.join(projectRoot, narrationFilename);
 const targetAudioDirectory = path.join(projectRoot, 'public', 'audio');
 const targetNarration = path.join(targetAudioDirectory, narrationFilename);

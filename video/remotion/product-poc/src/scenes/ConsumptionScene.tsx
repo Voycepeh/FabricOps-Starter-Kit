@@ -1,5 +1,6 @@
 import {AbsoluteFill, Easing, Img, interpolate, Sequence, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {mascotSrc, type MascotName} from '../mascotAssets';
+import {NARRATION_CUE_SHEET} from '../narrationCues';
 import {theme} from '../theme';
 import {GUIDED_SCENE_DURATIONS, LIFECYCLE_HANDOFF_LOCAL_FRAME, OVERVIEW_HANDOFF_FRAME, seconds} from '../videoConfig';
 import {LifecycleScene, STEP_7_LABEL, StepCard} from './LifecycleScene';
@@ -25,18 +26,21 @@ const consumers = [
   {title: 'ML Models', color: '#a879ff', left: 1440, icon: 'nodes'},
 ] as const;
 
-// Consumption continues at the exact lifecycle handoff frame at 02:55.
-const STEP_7_REVEAL = seconds(178.7) - OVERVIEW_HANDOFF_FRAME;
-const STEP_7_FOCUS_START = seconds(4.5);
-const STEP_7_FOCUS_END = seconds(6.9);
-const FOUNDATION_TRANSFORMATION_START = seconds(7);
-const FOUNDATION_TRANSFORMATION_END = seconds(9.2);
-const CONSUMER_REVEAL_START = seconds(9.8);
-const CONSUMER_STAGGER_INTERVAL = seconds(0.35);
+// Consumption continues at the lifecycle handoff and follows the master narration cues.
+const CONSUMPTION_CUE = NARRATION_CUE_SHEET.consumption;
+const localCueFrame = (index: number) => CONSUMPTION_CUE.keyPhrases[index].triggerFrame - CONSUMPTION_CUE.startFrame;
+const STEP_7_REVEAL = localCueFrame(0);
+const STEP_7_CARD_ENTER_FRAMES = 18;
+const STEP_7_LABEL_DELAY_FRAMES = 5;
+const STEP_7_LABEL_FADE_FRAMES = 8;
+const STEP_7_FOCUS_START = localCueFrame(1);
+const STEP_7_FOCUS_END = localCueFrame(2);
+const FOUNDATION_TRANSFORMATION_START = localCueFrame(2) + seconds(0.35);
+const FOUNDATION_TRANSFORMATION_END = localCueFrame(3) - seconds(0.45);
+const CONSUMER_REVEAL_FRAMES = [localCueFrame(3), localCueFrame(4), localCueFrame(5), localCueFrame(6)];
 const CONSUMER_REVEAL_DURATION = seconds(0.55);
-const CONSUMPTION_SCENE_HOLD = seconds(12);
-const CONSUMPTION_SCENE_FADE_START = seconds(23.1);
 const CONSUMPTION_SCENE_END = GUIDED_SCENE_DURATIONS.consumption;
+const CONSUMPTION_SCENE_FADE_START = CONSUMPTION_SCENE_END - seconds(0.6);
 
 const CardIcon = ({kind, color}: {kind: string; color: string}) => {
   if (kind === 'bars') {
@@ -92,11 +96,20 @@ const ConsumerCard = ({title, color, icon, progress}: {title: string; color: str
 export const ConsumptionScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const stepEnter = spring({frame: frame - STEP_7_REVEAL, fps, durationInFrames: 18, config: {damping: 19, stiffness: 92}});
+  const stepEnter = spring({frame: frame - STEP_7_REVEAL, fps, durationInFrames: STEP_7_CARD_ENTER_FRAMES, config: {damping: 19, stiffness: 92}});
+  const stepLabelEnter = interpolate(
+    frame,
+    [
+      STEP_7_REVEAL + STEP_7_CARD_ENTER_FRAMES + STEP_7_LABEL_DELAY_FRAMES,
+      STEP_7_REVEAL + STEP_7_CARD_ENTER_FRAMES + STEP_7_LABEL_DELAY_FRAMES + STEP_7_LABEL_FADE_FRAMES,
+    ],
+    [0, 1],
+    {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)},
+  );
   const focus = interpolate(frame, [STEP_7_FOCUS_START, STEP_7_FOCUS_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const foundation = interpolate(frame, [FOUNDATION_TRANSFORMATION_START, FOUNDATION_TRANSFORMATION_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.bezier(0.16, 1, 0.3, 1)});
   const pipelineOpacity = interpolate(frame, [FOUNDATION_TRANSFORMATION_START, FOUNDATION_TRANSFORMATION_START + seconds(0.6)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const holdLabelOpacity = interpolate(frame, [CONSUMPTION_SCENE_HOLD, CONSUMPTION_SCENE_HOLD + seconds(0.6)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+  const holdLabelOpacity = interpolate(frame, [CONSUMER_REVEAL_FRAMES[3], CONSUMER_REVEAL_FRAMES[3] + seconds(0.6)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const sceneOpacity = interpolate(frame, [CONSUMPTION_SCENE_FADE_START, CONSUMPTION_SCENE_END], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const cardScale = frame < FOUNDATION_TRANSFORMATION_START ? interpolate(focus, [0, 1], [1, 3.1]) : interpolate(foundation, [0, 1], [3.1, 1]);
   const cardCenterX = frame < FOUNDATION_TRANSFORMATION_START ? interpolate(focus, [0, 1], [1615, 960]) : 960;
@@ -127,6 +140,7 @@ export const ConsumptionScene = () => {
         singleLineLabel={frame >= FOUNDATION_TRANSFORMATION_START}
         color={theme.consumer}
         enter={stepEnter}
+        labelProgress={stepLabelEnter}
         active
         width={cardWidth}
         height={cardHeight}
@@ -139,9 +153,9 @@ export const ConsumptionScene = () => {
       <div style={{position: 'absolute', left: 34, right: 34, bottom: -18, height: 18, borderRadius: '0 0 12px 12px', background: '#9a5c28', opacity: foundation}} />
     </div> : null}
 
-    <Mascot pose="prod" x={840} y={580} size={190} delay={CONSUMER_REVEAL_START} />
+    <Mascot pose="prod" x={840} y={580} size={190} delay={CONSUMER_REVEAL_FRAMES[0]} />
     {consumers.map((consumer, index) => {
-      const progress = interpolate(frame, [CONSUMER_REVEAL_START + index * CONSUMER_STAGGER_INTERVAL, CONSUMER_REVEAL_START + index * CONSUMER_STAGGER_INTERVAL + CONSUMER_REVEAL_DURATION], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.bezier(0.16, 1, 0.3, 1)});
+      const progress = interpolate(frame, [CONSUMER_REVEAL_FRAMES[index], CONSUMER_REVEAL_FRAMES[index] + CONSUMER_REVEAL_DURATION], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.bezier(0.16, 1, 0.3, 1)});
       return <div key={consumer.title} style={{position: 'absolute', left: consumer.left, top: 250, zIndex: 2}}>
         <ConsumerCard {...consumer} progress={progress} />
         <div style={{position: 'absolute', left: 148, top: 230, width: 4, height: 295, borderRadius: 4, background: `linear-gradient(${consumer.color}99, ${theme.consumer})`, opacity: progress * 0.72}} />

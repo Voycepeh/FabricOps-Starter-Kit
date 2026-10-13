@@ -87,7 +87,7 @@ export const StepCard = ({
   return <div style={{width: width ?? sizes.workflowCardWidth, height: height ?? sizes.workflowCardHeight, borderRadius, display: 'flex', alignItems: 'center', gap, padding: `0 ${horizontalPadding}px`, boxSizing: 'border-box', background: `linear-gradient(145deg, ${color}2e, #0d192b 72%)`, border: `3px solid ${active ? color : `${color}88`}`, boxShadow: active ? `0 0 48px ${color}55` : '0 18px 40px #0007', opacity: enter * (active ? 1 : 0.62), scale: 0.86 + enter * 0.14}}>
     <div style={{width: circleSize, height: circleSize, flex: '0 0 auto', borderRadius: 99, display: 'grid', placeItems: 'center', background: color, color: '#07101f', fontSize: circleSize * 0.55, fontWeight: 900}}>{number}</div>
     {subtitle ? <div style={{flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center'}}>
-      <div style={{whiteSpace: singleLineLabel ? 'nowrap' : 'pre-line', color: '#f7f9fd', fontSize: fontSize ?? text.workflow, lineHeight: 1.08, fontWeight: 720}}>{label}</div>
+      <div style={{whiteSpace: singleLineLabel ? 'nowrap' : 'pre-line', color: '#f7f9fd', fontSize: fontSize ?? text.workflow, lineHeight: 1.08, fontWeight: 720, opacity: labelProgress}}>{label}</div>
       <div style={{marginTop: subtitleGap, color: '#94a3b8', fontSize: subtitleFontSize ?? (fontSize ?? text.workflow) * 0.52, lineHeight: 1.2, fontWeight: 600, letterSpacing: 0.4, opacity: subtitleOpacity}}>{subtitle}</div>
     </div> : <div style={{position: 'relative', flex: 1, height: (fontSize ?? text.workflow) * 2.3}}>
       {previousLabel ? <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', whiteSpace: 'pre-line', color: '#f7f9fd', fontSize: fontSize ?? text.workflow, lineHeight: 1.15, fontWeight: 720, opacity: interpolate(labelProgress, [0, 0.46], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}}>{previousLabel}</div> : null}
@@ -107,7 +107,7 @@ export const LifecycleScene = ({hideStep7 = false}: {hideStep7?: boolean}) => {
   const productionArrowStart = lifecycleFrame(timingSeconds.productionArrowStart, fps);
   const productionArrowEnd = lifecycleFrame(timingSeconds.productionArrowEnd, fps);
   const activeIndex = stepTimes.reduce((latest, reveal, index) => frame >= reveal ? index : latest, -1);
-  const exit = interpolate(frame, [scenes.workflow - timing.sceneExit, scenes.workflow], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const exit = hideStep7 ? 1 : interpolate(frame, [scenes.workflow - timing.sceneExit, scenes.workflow], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const loopEnter = interpolate(frame, [loopStart, loopStart + 24], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const loopExit = interpolate(frame, [loopEnd - 18, loopEnd], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const loopOpacity = loopEnter * loopExit;

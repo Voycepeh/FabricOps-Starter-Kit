@@ -1,15 +1,18 @@
 import type {CSSProperties, ReactNode} from 'react';
-import {AbsoluteFill, Easing, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Easing, Img, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {mascotSrc, type MascotName} from '../mascotAssets';
+import {NARRATION_CUE_SHEET} from '../narrationCues';
 import {font, theme} from '../theme';
 import {GUIDED_SCENE_DURATIONS, seconds, VIDEO_CONFIG} from '../videoConfig';
 import {AnimatedDataFlow, AnimatedFlowPath} from '../components/AnimatedDataFlow';
 
 const {
-  engineering: ENGINEERING_DURATION,
-  governance: GOVERNANCE_DURATION,
-  validation: VALIDATION_DURATION,
-  activation: ACTIVATION_DURATION,
+  dataEngineers: DATA_ENGINEERS_DURATION,
+  repeatablePipeline: REPEATABLE_PIPELINE_DURATION,
+  sensitiveData: SENSITIVE_DATA_DURATION,
+  businessRules: BUSINESS_RULES_DURATION,
+  bigPicture: BIG_PICTURE_DURATION,
+  promotion: PROMOTION_DURATION,
   closing: CLOSING_DURATION,
 } = GUIDED_SCENE_DURATIONS;
 
@@ -126,64 +129,157 @@ const SpeechBubble = ({accent, eyebrow, children, style}: {accent: string; eyebr
   <div style={{position: 'absolute', left: -13, bottom: 31, width: 24, height: 24, background: '#10243c', borderLeft: `1px solid ${accent}99`, borderBottom: `1px solid ${accent}99`, rotate: '45deg'}} />
 </div>;
 
-export const EngineeringScene = () => {
+export const DataEngineersScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const read = enterProgress(frame, fps, seconds(1.2));
-  const transform = enterProgress(frame, fps, seconds(2.2));
-  const write = enterProgress(frame, fps, seconds(3.2));
-  const firstLink = interpolate(frame, [seconds(2), seconds(3.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const secondLink = interpolate(frame, [seconds(3), seconds(4.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const ferry = interpolate(frame, [seconds(4.4), seconds(8.1)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const ferryOpacity = interpolate(frame, [seconds(4.2), seconds(4.6), seconds(8), seconds(8.4)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  return <SceneShell duration={ENGINEERING_DURATION} heading="One reusable pipeline pattern" accent={theme.engineering}>
-    <PipelinePattern top={300} read={read} transform={transform} write={write} firstLink={firstLink} secondLink={secondLink} />
+  const cue = NARRATION_CUE_SHEET.dataEngineers;
+  const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
+  const aiEnter = enterProgress(frame, fps, localCue(5));
+  const inconsistency = enterProgress(frame, fps, localCue(6));
+  const implementations = enterProgress(frame, fps, localCue(7));
+  const tasks = [
+    {label: 'Data-store connections', at: localCue(1)},
+    {label: 'Path resolution', at: localCue(2)},
+    {label: 'Profiling + EDA', at: localCue(3)},
+    {label: 'Data quality checks', at: localCue(4)},
+  ];
+
+  return <SceneShell duration={DATA_ENGINEERS_DURATION} heading="AI writes faster. FabricOps keeps pipelines consistent." accent={theme.engineering}>
+    <div style={{position: 'absolute', left: 125, top: 265, width: 760, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24}}>
+      {tasks.map(({label, at}, index) => {
+        const progress = enterProgress(frame, fps, at);
+        return <Surface key={label} accent="#69b7ff" style={{height: 150, padding: '28px 30px', opacity: progress, translate: `0 ${(1 - progress) * 18}px`}}>
+          <div style={{fontSize: 18, fontWeight: 900, color: '#8fc9ff', letterSpacing: 1.4}}>BOILERPLATE {String(index + 1).padStart(2, '0')}</div>
+          <div style={{fontSize: 29, fontWeight: 800, color: '#edf7ff', marginTop: 22}}>{label}</div>
+        </Surface>;
+      })}
+    </div>
+
+    <Surface accent="#52d6c6" style={{position: 'absolute', left: 960, top: 265, width: 825, height: 324, padding: '34px 38px', opacity: aiEnter}}>
+      <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+        <div style={{fontSize: 21, fontWeight: 900, color: '#7ae4d8', letterSpacing: 1.6}}>AI-ASSISTED CODE</div>
+        <div style={{padding: '9px 16px', borderRadius: 10, background: '#123f45', color: '#bffdf5', fontSize: 18, fontWeight: 850}}>FASTER</div>
+      </div>
+      <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 23, lineHeight: 1.75, marginTop: 34, color: '#cfe9f4'}}>
+        <div><span style={{color: '#b487ff'}}>def</span> build_pipeline(source, target):</div>
+        <div style={{paddingLeft: 28}}>data = connect(source)</div>
+        <div style={{paddingLeft: 28}}>return validate(transform(data))</div>
+      </div>
+    </Surface>
+
+    <div style={{position: 'absolute', left: 960, top: 625, width: 825, opacity: inconsistency}}>
+      <div style={{fontSize: 25, color: '#ffbf80', fontWeight: 850, textAlign: 'center'}}>Faster does not automatically mean consistent.</div>
+      <div style={{display: 'flex', gap: 18, marginTop: 25, opacity: implementations}}>
+        {['Engineer A', 'Engineer B', 'Engineer C'].map((label, index) => <div key={label} style={{flex: 1, height: 145, borderRadius: 18, border: `2px solid ${['#69b7ff', '#b487ff', '#ff9c72'][index]}`, background: '#101c30', padding: '23px 24px', boxSizing: 'border-box', rotate: `${[-1.5, 1.2, -0.8][index]}deg`}}>
+          <div style={{fontSize: 17, fontWeight: 900, color: ['#8fc9ff', '#c5a8ff', '#ffbd9b'][index]}}>{label}</div>
+          <div style={{fontFamily: 'ui-monospace, monospace', color: '#c4d1df', fontSize: 17, marginTop: 20}}>{['read_v1()', 'load_data()', 'fetch_table()'][index]}</div>
+        </div>)}
+      </div>
+    </div>
+  </SceneShell>;
+};
+
+export const RepeatablePipelineScene = () => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const cue = NARRATION_CUE_SHEET.repeatablePipeline;
+  const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
+  const nodes = [
+    {label: '00 Env Config', color: '#8da0b8', at: localCue(0) + seconds(0.3)},
+    {label: 'Data Contract', color: '#b487ff', at: localCue(0) + seconds(0.8)},
+    {label: 'orchestrate_read()', color: '#69b7ff', at: localCue(1)},
+    {label: 'PySpark', color: '#52d6c6', at: localCue(3)},
+    {label: 'orchestrate_write()', color: '#72e6ad', at: localCue(2)},
+    {label: 'Inspect', color: '#ffad55', at: localCue(2) + seconds(1.2)},
+  ];
+  const ferry = interpolate(frame, [localCue(1), localCue(3) + seconds(1.5)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const ferryOpacity = interpolate(frame, [localCue(1) - seconds(0.3), localCue(1), localCue(3) + seconds(1.2), localCue(3) + seconds(1.6)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+
+  return <SceneShell duration={REPEATABLE_PIPELINE_DURATION} heading="One repeatable pipeline pattern" accent={theme.engineering}>
+    <div style={{position: 'absolute', left: 78, right: 78, top: 365, display: 'flex', alignItems: 'center'}}>
+      {nodes.map((node, index) => {
+        const progress = enterProgress(frame, fps, node.at);
+        const emphasisAt = index === 2 ? localCue(1) : index === 3 ? localCue(3) : index === 4 ? localCue(2) : node.at;
+        const emphasis = interpolate(frame, [emphasisAt - seconds(0.2), emphasisAt, emphasisAt + seconds(2.1), emphasisAt + seconds(2.5)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+        return <div key={node.label} style={{display: 'flex', alignItems: 'center', flex: 1}}>
+          <div style={{width: 245, height: 165, borderRadius: 22, border: `2px solid ${node.color}`, background: 'linear-gradient(145deg, #15304a, #0b192c)', boxShadow: `0 18px 42px #0008, 0 0 ${12 + emphasis * 24}px ${node.color}${emphasis > 0.5 ? '88' : '22'}`, display: 'grid', placeItems: 'center', padding: '0 20px', boxSizing: 'border-box', fontFamily: node.label.includes('(') ? 'ui-monospace, monospace' : font, color: '#f0f8ff', fontSize: node.label.includes('(') ? 22 : 26, fontWeight: 850, textAlign: 'center', opacity: progress, translate: `0 ${(1 - progress) * 18}px`}}>{node.label}</div>
+          {index < nodes.length - 1 ? <div style={{flex: 1, height: 4, background: FLOW_COLOR, boxShadow: `0 0 14px ${FLOW_COLOR}88`, opacity: progress}} /> : null}
+        </div>;
+      })}
+    </div>
+
     <Img src={mascotSrc('carrying')} style={{
-      position: 'absolute', left: 260 + ferry * 1265, top: 575, width: 220, height: 220,
+      position: 'absolute', left: 245 + ferry * 1280, top: 570, width: 220, height: 220,
       objectFit: 'contain', opacity: ferryOpacity, filter: 'drop-shadow(0 16px 26px #0008)',
     }} />
-    <Reveal at={seconds(8.2)} y={16}>
+
+    <Reveal at={localCue(4)} y={16}>
       <div style={{position: 'absolute', left: 210, right: 210, top: 815, display: 'flex', justifyContent: 'center', gap: 28}}>
-        {['02A · Full Refresh', '02B · Incremental', '02C · SCD1 / SCD2'].map((label) => <div key={label} style={{padding: '17px 31px', borderRadius: 16, background: '#122d49', border: '1px solid #4d759c', fontSize: 24, fontWeight: 820, color: '#d5e9ff'}}>{label}</div>)}
+        {[
+          {label: '02A · Full Refresh', at: localCue(4)},
+          {label: '02B · Incremental', at: localCue(5)},
+          {label: '02C · SCD1 / SCD2', at: localCue(6)},
+        ].map(({label, at}) => <div key={label} style={{padding: '17px 31px', borderRadius: 16, background: '#122d49', border: '1px solid #4d759c', fontSize: 24, fontWeight: 820, color: '#d5e9ff', opacity: enterProgress(frame, fps, at)}}>{label}</div>)}
       </div>
     </Reveal>
   </SceneShell>;
 };
 
-export const GovernanceScene = () => {
+export const SensitiveDataScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const sensitiveBubble = enterProgress(frame, fps, seconds(0.5));
-  const sensitivePhase = interpolate(frame, [0, seconds(0.35), seconds(7.1), seconds(7.6)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const scan = enterProgress(frame, fps, seconds(1.7));
-  const treatment = enterProgress(frame, fps, seconds(3.7));
-  const redact = interpolate(frame, [seconds(4.4), seconds(5.4)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const businessBubble = enterProgress(frame, fps, seconds(8.2));
-  const businessPhase = interpolate(frame, [seconds(7.8), seconds(8.2), seconds(19.3), seconds(19.8)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const connectorMain = interpolate(frame, [seconds(9.8), seconds(10.25)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
-  const connectorTrunk = interpolate(frame, [seconds(10.25), seconds(10.75)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
-  const firstBranch = interpolate(frame, [seconds(10.75), seconds(11.1)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
-  const secondBranch = interpolate(frame, [seconds(13.15), seconds(13.5)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
-  const firstCheck = enterProgress(frame, fps, seconds(11.1));
-  const secondCheck = enterProgress(frame, fps, seconds(13.5));
-  const review = enterProgress(frame, fps, seconds(15.7));
-  return <SceneShell duration={GOVERNANCE_DURATION} heading="Inject governance as code into your pipelines" accent={theme.governance}>
-    <div style={{opacity: sensitivePhase}}>
+  const cue = NARRATION_CUE_SHEET.sensitiveData;
+  const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
+  const sensitiveBubble = enterProgress(frame, fps, localCue(0));
+  const scan = enterProgress(frame, fps, localCue(1));
+  const treatment = enterProgress(frame, fps, localCue(2));
+  const redact = interpolate(frame, [localCue(6), localCue(6) + seconds(1.1)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const contract = enterProgress(frame, fps, localCue(5));
+  return <SceneShell duration={SENSITIVE_DATA_DURATION} heading="Turn sensitive-data policy into pipeline behavior" accent={theme.governance}>
+    <div>
       <SpeechBubble accent="#ffae66" eyebrow="Sensitive data requirement" style={{left: 555, top: 185, width: 810, height: 160, opacity: sensitiveBubble}}>&ldquo;This column is sensitive.&rdquo;</SpeechBubble>
-      <Mascot pose="scanning" x={125} y={485} size={315} delay={seconds(1.7)} />
+      <Mascot pose="scanning" x={125} y={485} size={315} delay={localCue(1)} />
       <Surface accent="#ffae66" style={{position: 'absolute', left: 480, top: 395, width: 850, height: 390, padding: '28px 34px', opacity: scan}}>
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 28, color: '#ffcf9f', fontWeight: 850}}>customer_id</div><div style={{padding: '9px 18px', borderRadius: 10, background: '#5d351f', color: '#ffd2a4', fontSize: 18, fontWeight: 900, opacity: treatment}}>MASKED</div></div>
         <div style={{display: 'grid', gridTemplateColumns: '1fr 90px 1fr', marginTop: 30, color: '#8fa7bf', fontSize: 17, fontWeight: 850}}><div>BEFORE</div><div /><div>AFTER</div></div>
         {['C001', 'C002', 'C003'].map((value) => <div key={value} style={{display: 'grid', gridTemplateColumns: '1fr 90px 1fr', alignItems: 'center', height: 72, borderTop: '1px solid #3a526d', fontFamily: 'ui-monospace, monospace', fontSize: 29}}><div>{value}</div><div style={{color: '#66809b', textAlign: 'center'}}>→</div><div style={{color: '#ffbd76', position: 'relative'}}><span style={{opacity: 1 - redact}}>{value}</span><span style={{position: 'absolute', left: 0, opacity: redact}}>C•••</span></div></div>)}
       </Surface>
-      <Mascot pose="masking" x={1390} y={485} size={315} delay={seconds(3.7)} />
+      <Mascot pose="masking" x={1390} y={485} size={315} delay={localCue(2)} />
       <div style={{position: 'absolute', left: 425, top: 605, width: 55, height: 5, borderRadius: 99, background: '#ffae66', scale: `${scan} 1`, transformOrigin: 'left'}} />
       <div style={{position: 'absolute', left: 1330, top: 605, width: 60, height: 5, borderRadius: 99, background: '#ffae66', scale: `${treatment} 1`, transformOrigin: 'left'}} />
+      <div style={{position: 'absolute', left: 515, right: 515, top: 820, display: 'flex', justifyContent: 'center', gap: 18}}>
+        {[
+          {label: 'MASK', at: localCue(2)},
+          {label: 'HASH', at: localCue(3)},
+          {label: 'TOKENIZE', at: localCue(4)},
+          {label: 'REMOVE', at: localCue(4) + seconds(1.2)},
+        ].map(({label, at}) => <div key={label} style={{padding: '13px 22px', borderRadius: 12, border: '1px solid #ffae66', background: '#342419', color: '#ffd4aa', fontSize: 18, fontWeight: 900, opacity: enterProgress(frame, fps, at)}}>{label}</div>)}
+      </div>
+      <div style={{position: 'absolute', left: 710, top: 900, width: 500, padding: '15px 22px', borderRadius: 14, border: '2px solid #b487ff', background: '#211c3e', color: '#e9ddff', textAlign: 'center', fontSize: 21, fontWeight: 850, opacity: contract}}>Policy recorded in the Data Contract</div>
     </div>
 
-    <div style={{opacity: businessPhase}}>
+  </SceneShell>;
+};
+
+export const BusinessRulesScene = () => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const cue = NARRATION_CUE_SHEET.businessRules;
+  const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
+  const businessBubble = enterProgress(frame, fps, localCue(2));
+  const connectorMain = interpolate(frame, [localCue(3), localCue(3) + seconds(0.45)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+  const connectorTrunk = interpolate(frame, [localCue(3) + seconds(0.45), localCue(3) + seconds(0.95)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+  const firstBranch = interpolate(frame, [localCue(3) + seconds(0.95), localCue(3) + seconds(1.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+  const secondBranch = interpolate(frame, [localCue(3) + seconds(2.5), localCue(3) + seconds(2.85)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+  const firstCheck = enterProgress(frame, fps, localCue(3) + seconds(1.3));
+  const secondCheck = enterProgress(frame, fps, localCue(3) + seconds(2.85));
+  const review = enterProgress(frame, fps, localCue(4));
+  const engineerReview = enterProgress(frame, fps, localCue(5));
+
+  return <SceneShell duration={BUSINESS_RULES_DURATION} heading="Turn plain-English requirements into deterministic DQ rules" accent={theme.governance}>
+    <div>
       <SpeechBubble accent="#b487ff" eyebrow="Business rule requirement" style={{left: 430, top: 175, width: 1260, height: 195, opacity: businessBubble}}>&ldquo;Every completed order must have a delivery date, and it cannot be earlier than the order date.&rdquo;</SpeechBubble>
-      <Mascot pose="coding" x={105} y={505} size={320} delay={seconds(9.8)} />
+      <Mascot pose="coding" x={105} y={505} size={320} delay={localCue(1)} />
 
       <svg aria-hidden="true" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible', zIndex: 1, filter: 'drop-shadow(0 0 7px #b487ff88)'}}>
         <path d="M420 617 H455" fill="none" stroke="#b487ff" strokeWidth="5" strokeLinecap="round" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - connectorMain} />
@@ -206,35 +302,39 @@ export const GovernanceScene = () => {
       </Surface>
 
       <div style={{position: 'absolute', left: 785, top: 810, width: 620, padding: '17px 24px', borderRadius: 15, background: '#153c2e', border: '2px solid #55bd89', boxSizing: 'border-box', textAlign: 'center', color: '#baffd8', fontSize: 21, fontWeight: 900, letterSpacing: 1.1, opacity: review, translate: `0 ${(1 - review) * 15}px`}}>✓ HUMAN REVIEWED &amp; APPROVED</div>
+      <div style={{position: 'absolute', left: 810, top: 892, width: 570, textAlign: 'center', color: '#c5a8ff', fontSize: 18, fontWeight: 850, letterSpacing: 0.8, opacity: engineerReview}}>Complex rules route to Engineering review</div>
     </div>
   </SceneShell>;
 };
 
-export const ValidationScene = () => {
+export const BigPictureScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const sourceToReadStart = seconds(2);
-  const readToTransformStart = seconds(3.25);
-  const transformToWriteStart = seconds(4.5);
-  const writeToOutputStart = seconds(5.8);
-  const source = enterProgress(frame, fps, seconds(0.5));
-  const read = enterProgress(frame, fps, seconds(3));
-  const transform = enterProgress(frame, fps, seconds(4.25));
-  const write = enterProgress(frame, fps, seconds(5.5));
-  const output = enterProgress(frame, fps, seconds(6.8));
-  const sourceToRead = interpolate(frame, [sourceToReadStart, seconds(3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const readToTransform = interpolate(frame, [readToTransformStart, seconds(4.25)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const transformToWrite = interpolate(frame, [transformToWriteStart, seconds(5.5)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const writeToOutput = interpolate(frame, [writeToOutputStart, seconds(6.8)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const masking = interpolate(frame, [seconds(7.15), seconds(7.75)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const results = enterProgress(frame, fps, seconds(7.9));
-  const violation = enterProgress(frame, fps, seconds(8.55));
+  const cue = NARRATION_CUE_SHEET.bigPicture;
+  const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
+  const sourceToReadStart = localCue(1) - seconds(1.1);
+  const readToTransformStart = localCue(2) - seconds(1.1);
+  const transformToWriteStart = localCue(3) - seconds(1.1);
+  const writeToOutputStart = localCue(4) - seconds(1.1);
+  const source = enterProgress(frame, fps, localCue(0));
+  const read = enterProgress(frame, fps, localCue(1));
+  const transform = enterProgress(frame, fps, localCue(2));
+  const write = enterProgress(frame, fps, localCue(3));
+  const output = enterProgress(frame, fps, localCue(4));
+  const sourceToRead = interpolate(frame, [sourceToReadStart, localCue(1)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const readToTransform = interpolate(frame, [readToTransformStart, localCue(2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const transformToWrite = interpolate(frame, [transformToWriteStart, localCue(3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const writeToOutput = interpolate(frame, [writeToOutputStart, localCue(4)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const masking = interpolate(frame, [localCue(7) + seconds(1.8), localCue(7) + seconds(3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const results = enterProgress(frame, fps, localCue(7) + seconds(4.2));
+  const violation = enterProgress(frame, fps, localCue(8));
+  const summary = enterProgress(frame, fps, localCue(9));
   const connectorOpacity = (start: number) => interpolate(frame, [start - seconds(0.2), start], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const rows = [
     {id: '00007', customer: 'C001', order: '09:00', modified: '09:18', result: 'PASS', color: '#72e6ad'},
     {id: '00008', customer: 'C002', order: '09:00', modified: '08:00', result: 'FAIL', color: '#ff756d'},
   ];
-  return <SceneShell duration={VALIDATION_DURATION} heading="One reusable pipeline pattern" accent="#72e6ad">
+  return <SceneShell duration={BIG_PICTURE_DURATION} heading="One pipeline enforces engineering, governance, and business requirements" accent="#72e6ad">
     <PipelinePattern
       top={VALIDATION_LAYOUT.pipelineTop}
       read={read}
@@ -276,79 +376,148 @@ export const ValidationScene = () => {
       <div style={{display: 'grid', gridTemplateColumns: '76px 100px 1fr 1fr 70px', gap: 8, marginTop: 17, color: '#8fa7bf', fontSize: 13, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76'}}>customer_id</div><div>order_datetime</div><div>modified_datetime</div><div>result</div></div>
       {rows.map((row, index) => <div key={`output-${row.id}`} style={{position: 'relative', display: 'grid', gridTemplateColumns: '76px 100px 1fr 1fr 70px', gap: 8, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', borderRadius: 8, background: index === 1 ? `rgba(109, 40, 49, ${violation * 0.48})` : 'transparent', fontFamily: 'ui-monospace, monospace', fontSize: 17}}><div>{row.id}</div><div style={{color: '#ffbd76', position: 'relative'}}><span style={{opacity: 1 - masking}}>{row.customer}</span><span style={{position: 'absolute', left: 0, opacity: masking}}>C•••</span></div><div>{row.order}</div><div style={{color: index === 1 ? '#ff9c8c' : '#dcecff'}}>{row.modified}</div><div style={{opacity: results, color: row.color, fontWeight: 900}}>{row.result}</div></div>)}
     </Surface>
+    <div style={{position: 'absolute', left: 610, top: 932, width: 700, padding: '16px 24px', borderRadius: 14, border: '2px solid #72e6ad', background: '#153c2e', color: '#caffdf', textAlign: 'center', fontSize: 22, fontWeight: 900, opacity: summary}}>Governance as code · One reusable ETL process</div>
   </SceneShell>;
 };
 
-export const ActivationScene = () => {
+export const PromotionScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const frameAt = (value: number) => Math.round(value * fps);
-  const developmentEnter = interpolate(frame, [frameAt(0.5), frameAt(1.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
-  const developmentShift = interpolate(frame, [frameAt(4.4), frameAt(5.4)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const developmentFocus = interpolate(frame, [frameAt(5.8), frameAt(6.4), frameAt(9.6), frameAt(10.2)], [1, 0, 0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const developmentHighlight = interpolate(frame, [frameAt(1.4), frameAt(3.8)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const validationOpacity = interpolate(frame, [frameAt(3.7), frameAt(4.1), frameAt(5.5), frameAt(5.9)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const promotionProgress = interpolate(frame, [frameAt(4.8), frameAt(6)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const promotionPhaseOpacity = interpolate(frame, [frameAt(4.6), frameAt(5), frameAt(6), frameAt(6.2)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const productionEnter = interpolate(frame, [frameAt(6.2), frameAt(7)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
-  const productionShift = interpolate(frame, [frameAt(9.4), frameAt(10.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const productionHighlight = interpolate(frame, [frameAt(7), frameAt(9.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const comparisonOpacity = interpolate(frame, [frameAt(9.8), frameAt(10.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  return <SceneShell
-    duration={ACTIVATION_DURATION}
-    eyebrow="DEVELOPMENT + PRODUCTION · STEPS 5–6"
-    heading="Same pipeline pattern. Different environment."
-    subheading="Build and validate in Development. Promote the same engineering stack to Production."
-    accent={theme.production}
-  >
-    <div style={{position: 'absolute', left: 344, top: 236, width: 428, height: 760, opacity: developmentEnter * developmentFocus, translate: `${(1 - developmentShift) * 408}px ${(1 - developmentEnter) * 20}px`}}>
-      <Img src={staticFile('mascots/robot-dev-cycle.png')} style={{width: '100%', height: '100%', objectFit: 'contain'}} />
-      <div aria-hidden="true" style={{position: 'absolute', left: 0, right: 0, top: -52 + developmentHighlight * 780, height: 52, background: 'linear-gradient(180deg, transparent, #ffad3344, transparent)', opacity: interpolate(frame, [frameAt(1.4), frameAt(1.8), frameAt(3.4), frameAt(3.8)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}} />
+  const cue = NARRATION_CUE_SHEET.promotion;
+  const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
+  const devEnter = enterProgress(frame, fps, seconds(0.4));
+  const nodeLabels = ['00 Env Config', '02 Pipeline', 'Data Contract'];
+  const nodePositions = [480, 800, 1120];
+  const nodeDelays = [localCue(2), localCue(3), localCue(4)];
+  const connectorSegments = [
+    {left: 418, width: 62, delay: localCue(0)},
+    {left: 740, width: 60, delay: localCue(2) + seconds(0.65)},
+    {left: 1060, width: 60, delay: localCue(3) + seconds(0.65)},
+    {left: 1380, width: 112, delay: localCue(4) + seconds(0.65)},
+  ];
+  const productionEnter = enterProgress(frame, fps, localCue(6));
+  const sentenceEnter = enterProgress(frame, fps, localCue(5));
+  const pulseTravel = interpolate(frame, [localCue(5), localCue(6)], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.cubic),
+  });
+  const pulseOpacity = interpolate(
+    frame,
+    [localCue(5) - seconds(0.25), localCue(5), localCue(6), localCue(6) + seconds(0.35)],
+    [0, 1, 1, 0],
+    {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'},
+  );
+
+  return <AbsoluteFill style={{
+    opacity: sceneOpacity(frame, PROMOTION_DURATION),
+    color: theme.text,
+    fontFamily: font,
+  }}>
+    <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 54%, #12365099 0%, #07101f00 58%)'}} />
+
+    <div style={{
+      position: 'absolute', top: 132, left: 240, right: 240,
+      color: '#f7f9fd', fontSize: 52, fontWeight: 850, letterSpacing: -0.7,
+      lineHeight: 1.15, textAlign: 'center', opacity: sentenceEnter,
+      translate: `0 ${(1 - sentenceEnter) * 16}px`,
+    }}>
+      The data pipeline is promoted from Development to Production.
     </div>
 
-    <div style={{position: 'absolute', left: 1148, top: 236, width: 428, height: 760, opacity: productionEnter, translate: `${(1 - productionShift) * -408}px ${(1 - productionEnter) * 20}px`}}>
-      <Img src={staticFile('mascots/robot-prod-cycle.png')} style={{width: '100%', height: '100%', objectFit: 'contain'}} />
-      <div aria-hidden="true" style={{position: 'absolute', left: 0, right: 0, top: -52 + productionHighlight * 780, height: 52, background: 'linear-gradient(180deg, transparent, #72e6ad44, transparent)', opacity: interpolate(frame, [frameAt(7), frameAt(7.4), frameAt(8.9), frameAt(9.3)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}} />
-    </div>
+    {connectorSegments.map(({left, width, delay}) => {
+      const progress = interpolate(frame, [delay, delay + seconds(0.65)], [0, 1], {
+        extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic),
+      });
+      return <div key={left} style={{
+        position: 'absolute', left, top: 538, width, height: 4, borderRadius: 99,
+        background: FLOW_COLOR, boxShadow: `0 0 18px ${FLOW_COLOR}99`, opacity: progress,
+        scale: `${progress} 1`, transformOrigin: 'left center',
+      }}>
+        <div style={{
+          position: 'absolute', right: -1, top: -7, width: 0, height: 0,
+          borderTop: '9px solid transparent', borderBottom: '9px solid transparent',
+          borderLeft: `13px solid ${FLOW_COLOR}`,
+        }} />
+      </div>;
+    })}
 
-    <div style={{position: 'absolute', left: 1188, top: 278, padding: '10px 16px', borderRadius: 8, border: '1px solid #72e6ad', background: '#0d2630', color: '#baffd8', fontSize: 20, fontWeight: 900, opacity: validationOpacity}}>✓ Development validated</div>
+    <div aria-hidden="true" style={{
+      position: 'absolute', left: 420 + pulseTravel * 1058, top: 529, zIndex: 1,
+      width: 22, height: 22, borderRadius: '50%', background: '#c7fff8',
+      boxShadow: `0 0 10px #ffffff, 0 0 28px ${FLOW_COLOR}`, opacity: pulseOpacity,
+    }} />
 
-    <div style={{position: 'absolute', left: 812, top: 584, width: 296, height: 72, opacity: Math.max(promotionPhaseOpacity, comparisonOpacity)}}>
-      <div style={{position: 'absolute', left: 0, top: 38, width: 282, height: 4, borderRadius: 4, background: '#29415d'}}>
-        <div style={{width: `${promotionProgress * 100}%`, height: '100%', borderRadius: 4, background: '#5fe1d0'}} />
-      </div>
-      <div style={{position: 'absolute', right: 0, top: 30, width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: `14px solid ${promotionProgress > 0.94 ? '#5fe1d0' : '#29415d'}`}} />
-      <div style={{position: 'absolute', left: 86, top: 0, width: 124, padding: '7px 0', borderRadius: 6, background: '#0b1930', border: '1px solid #5fe1d0', color: '#bffdf5', textAlign: 'center', fontSize: 18, fontWeight: 900, letterSpacing: 0.5}}>Promote 1:1</div>
-    </div>
-  </SceneShell>;
+    <Img src={mascotSrc('dev')} style={{
+      position: 'absolute', left: 88, top: 350, zIndex: 2, width: 340, height: 430,
+      objectFit: 'contain', opacity: devEnter, translate: `${(1 - devEnter) * -32}px 0`,
+      filter: 'drop-shadow(0 20px 34px #0009) drop-shadow(0 0 18px #ff8a2844)',
+    }} />
+
+    {nodeLabels.map((label, index) => {
+      const progress = enterProgress(frame, fps, nodeDelays[index]);
+      return <div key={label} style={{
+        position: 'absolute', left: nodePositions[index], top: 465, zIndex: 2,
+        width: 260, height: 150, boxSizing: 'border-box', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', padding: '0 28px', borderRadius: 24,
+        border: `2px solid ${FLOW_COLOR}99`, background: 'linear-gradient(145deg, #15304a, #0b192c)',
+        boxShadow: `0 20px 44px #0008, inset 0 1px 0 #ffffff18, 0 0 22px ${FLOW_COLOR}18`,
+        color: '#eefcfb', fontSize: 29, fontWeight: 850, lineHeight: 1.15,
+        textAlign: 'center', opacity: progress, translate: `0 ${(1 - progress) * 20}px`, scale: progress,
+      }}>
+        {label}
+      </div>;
+    })}
+
+    <Img src={mascotSrc('prod')} style={{
+      position: 'absolute', left: 1492, top: 350, zIndex: 2, width: 340, height: 430,
+      objectFit: 'contain', opacity: productionEnter, translate: `${(1 - productionEnter) * 32}px 0`,
+      filter: 'drop-shadow(0 20px 34px #0009) drop-shadow(0 0 18px #38d99144)',
+    }} />
+  </AbsoluteFill>;
 };
 
 export const ClosingScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
+  const cue = NARRATION_CUE_SHEET.closing;
+  const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
+  const brandEnter = enterProgress(frame, fps, seconds(0.5));
+  const plugIn = localCue(1);
+  const governanceIn = localCue(2);
+  const collaborationIn = localCue(3);
+  const documentationIn = localCue(6);
+  const demoIn = localCue(7);
+  const narrationEnd = cue.endFrame - cue.startFrame;
+  const documentationEnter = enterProgress(frame, fps, documentationIn);
+  const demoEnter = enterProgress(frame, fps, demoIn);
   return <AbsoluteFill style={{color: theme.text, fontFamily: font}}>
     <div style={{position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
-      <div style={{position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: interpolate(frame, [0, Math.round(0.65 * fps)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)})}}>
+      <div style={{position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: brandEnter}}>
         <div style={{fontSize: VIDEO_CONFIG.text.hero, lineHeight: 1, fontWeight: 840, letterSpacing: -8, whiteSpace: 'nowrap'}}>
           <span style={{color: theme.production}}>Fabric</span>
           <span style={{color: '#fff'}}>Ops</span>
         </div>
       </div>
 
-      <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: interpolate(frame, [Math.round(0.45 * fps), Math.round(0.65 * fps), Math.round(2.15 * fps), Math.round(2.35 * fps)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}}>
+      <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: interpolate(frame, [plugIn, plugIn + seconds(0.35), governanceIn - seconds(0.25), governanceIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}}>
         Plug-and-Play Data Pipelines
       </div>
 
-      <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#c5a8ff', opacity: interpolate(frame, [Math.round(2.35 * fps), Math.round(2.55 * fps), Math.round(4.15 * fps), Math.round(4.35 * fps)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}}>
+      <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#c5a8ff', opacity: interpolate(frame, [governanceIn, governanceIn + seconds(0.35), collaborationIn - seconds(0.25), collaborationIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}}>
         Governance-as-Code
       </div>
 
-      <div style={{position: 'absolute', top: 776, display: 'flex', alignItems: 'center', gap: 24, opacity: interpolate(frame, [Math.round(4.35 * fps), Math.round(4.75 * fps)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)})}}>
-        <div style={{minWidth: 330, padding: '19px 34px', borderRadius: 14, border: '2px solid #72e6ad', color: '#dfffee', fontSize: 28, fontWeight: 800, boxSizing: 'border-box'}}>How FabricOps works</div>
-        <div style={{minWidth: 250, padding: '19px 34px', borderRadius: 14, border: '2px solid #c5a8ff', color: '#f0e8ff', fontSize: 28, fontWeight: 800, boxSizing: 'border-box'}}>Guided Demo</div>
+      <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#72e6ad', opacity: interpolate(frame, [collaborationIn, collaborationIn + seconds(0.4)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)})}}>
+        One Consistent Framework
+      </div>
+
+      <div style={{position: 'absolute', top: 776, display: 'flex', alignItems: 'center', gap: 24}}>
+        <div style={{minWidth: 330, padding: '19px 34px', borderRadius: 14, border: '2px solid #72e6ad', color: '#dfffee', fontSize: 28, fontWeight: 800, boxSizing: 'border-box', opacity: documentationEnter, translate: `0 ${(1 - documentationEnter) * 16}px`}}>Read the documentation</div>
+        <div style={{minWidth: 250, padding: '19px 34px', borderRadius: 14, border: '2px solid #c5a8ff', color: '#f0e8ff', fontSize: 28, fontWeight: 800, boxSizing: 'border-box', opacity: demoEnter, translate: `0 ${(1 - demoEnter) * 16}px`}}>Guided Demo</div>
       </div>
     </div>
 
-    <AbsoluteFill style={{background: '#000', opacity: interpolate(frame, [Math.round(7 * fps), CLOSING_DURATION - 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}} />
+    <AbsoluteFill style={{background: '#000', opacity: interpolate(frame, [narrationEnd, CLOSING_DURATION - 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}} />
   </AbsoluteFill>;
 };
