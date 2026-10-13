@@ -712,6 +712,7 @@ def test_failed_governed_profile_removes_uncommitted_snapshot(
 
 
 def test_profile_table_frequency_top_n_defaults_to_five():
+    """Ensure profiling entry points default to Top 5 frequencies."""
     import inspect
     from fabricops_kit.pipeline.profile_table import profile_table
     from fabricops_kit.pipeline.orchestrate_read import orchestrate_read
@@ -723,6 +724,7 @@ def test_profile_table_frequency_top_n_defaults_to_five():
 
 
 def test_profile_table_frequency_disabled_skips_column_selection():
+    """Ensure table-wide frequency profiling can be disabled."""
     import inspect
     from fabricops_kit.pipeline.profile_table import profile_table
 
