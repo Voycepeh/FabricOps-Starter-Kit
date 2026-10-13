@@ -1,4 +1,4 @@
-import {AbsoluteFill, Easing, Img, interpolate, Sequence, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Easing, Img, interpolate, Sequence, useCurrentFrame, useVideoConfig} from 'remotion';
 import {mascotSrc, type MascotName} from '../mascotAssets';
 import {NARRATION_CUE_SHEET} from '../narrationCues';
 import {theme} from '../theme';
@@ -29,8 +29,6 @@ const consumers = [
 // Consumption continues at the lifecycle handoff and follows the master narration cues.
 const CONSUMPTION_CUE = NARRATION_CUE_SHEET.consumption;
 const localCueFrame = (index: number) => CONSUMPTION_CUE.keyPhrases[index].triggerFrame - CONSUMPTION_CUE.startFrame;
-const STEP_7_REVEAL = localCueFrame(0);
-const STEP_7_CARD_ENTER_FRAMES = 18;
 const STEP_7_FOCUS_START = localCueFrame(1);
 const STEP_7_FOCUS_END = localCueFrame(2);
 const FOUNDATION_TRANSFORMATION_START = localCueFrame(2) + seconds(0.35);
@@ -94,12 +92,22 @@ const ConsumerCard = ({title, color, icon, progress}: {title: string; color: str
 export const ConsumptionScene = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const stepEnter = spring({frame: frame - STEP_7_REVEAL, fps, durationInFrames: STEP_7_CARD_ENTER_FRAMES, config: {damping: 19, stiffness: 92}});
   const focus = interpolate(frame, [STEP_7_FOCUS_START, STEP_7_FOCUS_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const foundation = interpolate(frame, [FOUNDATION_TRANSFORMATION_START, FOUNDATION_TRANSFORMATION_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.bezier(0.16, 1, 0.3, 1)});
   const pipelineOpacity = interpolate(frame, [FOUNDATION_TRANSFORMATION_START, FOUNDATION_TRANSFORMATION_START + seconds(0.6)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const holdLabelOpacity = interpolate(frame, [CONSUMER_REVEAL_FRAMES[3], CONSUMER_REVEAL_FRAMES[3] + seconds(0.6)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const sceneOpacity = interpolate(frame, [CONSUMPTION_SCENE_FADE_START, CONSUMPTION_SCENE_END], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const cardScale = frame < FOUNDATION_TRANSFORMATION_START ? interpolate(focus, [0, 1], [1, 3.1]) : interpolate(foundation, [0, 1], [3.1, 1]);
+  const cardCenterX = frame < FOUNDATION_TRANSFORMATION_START ? interpolate(focus, [0, 1], [1615, 960]) : 960;
+  const cardCenterY = frame < FOUNDATION_TRANSFORMATION_START ? interpolate(focus, [0, 1], [840, 540]) : interpolate(foundation, [0, 1], [540, 865]);
+  const visualCardWidth = frame < FOUNDATION_TRANSFORMATION_START ? 340 * cardScale : interpolate(foundation, [0, 1], [1054, 1640]);
+  const visualCardHeight = frame < FOUNDATION_TRANSFORMATION_START ? 150 * cardScale : interpolate(foundation, [0, 1], [465, 180]);
+  const cardWidth = visualCardWidth / cardScale;
+  const cardHeight = visualCardHeight / cardScale;
+  const visualCircleSize = frame < FOUNDATION_TRANSFORMATION_START ? 62 * cardScale : interpolate(foundation, [0, 1], [192.2, 78]);
+  const visualFontSize = frame < FOUNDATION_TRANSFORMATION_START ? 20 * cardScale : interpolate(foundation, [0, 1], [62, 42]);
+  const visualGap = frame < FOUNDATION_TRANSFORMATION_START ? 22 * cardScale : interpolate(foundation, [0, 1], [68.2, 32]);
+  const visualHorizontalPadding = frame < FOUNDATION_TRANSFORMATION_START ? 25 * cardScale : interpolate(foundation, [0, 1], [77.5, 44]);
   const lifecycleZoomScale = interpolate(focus, [0, 1], [1, 3.1]);
 
   return <AbsoluteFill style={{opacity: sceneOpacity}}>
@@ -109,29 +117,28 @@ export const ConsumptionScene = () => {
       </Sequence>
     </AbsoluteFill>
 
-    {frame >= STEP_7_REVEAL ? <div style={{position: 'absolute', left: 140, top: 775, width: 1640, height: 180, zIndex: 4}}>
+    <div style={{position: 'absolute', left: cardCenterX - cardWidth / 2, top: cardCenterY - cardHeight / 2, width: cardWidth, height: cardHeight, scale: cardScale, transformOrigin: '50% 50%', zIndex: 4}}>
       <StepCard
         number={7}
         label={STEP_7_LABEL}
         subtitle="Governed · Reliable · Fit for downstream use"
-        subtitleFontSize={22}
-        subtitleGap={9}
+        subtitleFontSize={22 / cardScale}
+        subtitleGap={9 / cardScale}
         subtitleOpacity={holdLabelOpacity}
-        singleLineLabel
         centerContent
         color={theme.consumer}
-        enter={stepEnter}
+        enter={1}
         active
-        width={1640}
-        height={180}
+        width={cardWidth}
+        height={cardHeight}
         borderRadius={interpolate(foundation, [0, 1], [28, 24])}
-        circleSize={78}
-        fontSize={42}
-        gap={32}
-        horizontalPadding={44}
+        circleSize={visualCircleSize / cardScale}
+        fontSize={visualFontSize / cardScale}
+        gap={visualGap / cardScale}
+        horizontalPadding={visualHorizontalPadding / cardScale}
       />
       <div style={{position: 'absolute', left: 34, right: 34, bottom: -18, height: 18, borderRadius: '0 0 12px 12px', background: '#9a5c28', opacity: foundation}} />
-    </div> : null}
+    </div>
 
     <Mascot pose="prod" x={840} y={580} size={190} delay={CONSUMER_REVEAL_FRAMES[0]} />
     {consumers.map((consumer, index) => {
