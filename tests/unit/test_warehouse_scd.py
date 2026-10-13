@@ -81,6 +81,8 @@ def test_scd2_generates_atomic_history_safety_and_idempotency_checks(monkeypatch
     )
     sql = observed["sql"]
     assert "moves backwards" in sql
+    assert "<= target.[_effective_from]" in sql
+    assert "source.[effective_at] IS NULL" in sql
     assert "multiple current records" in sql
     assert "UPDATE target SET target.[_effective_to] = source.[effective_at]" in sql
     assert "target.[_is_current] = 0" in sql
