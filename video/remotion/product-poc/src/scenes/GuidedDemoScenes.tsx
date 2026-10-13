@@ -225,21 +225,28 @@ export const RepeatablePipelineScene = () => {
   const ferryEnd = 6900 - cue.startFrame;
   const ferry = interpolate(frame, [ferryStart, ferryEnd], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const ferryOpacity = interpolate(frame, [ferryStart, ferryEnd - seconds(0.35), ferryEnd], [1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const mascotFormation = [
+    {x: 0, y: -55},
+    {x: 210, y: 35},
+    {x: 420, y: -25},
+    {x: 630, y: 65},
+  ];
 
   return (
     <SceneShell duration={REPEATABLE_PIPELINE_DURATION} heading="" accent={theme.engineering}>
       <PipelinePattern top={300} read={read} transform={transform} write={write} firstLink={firstLink} secondLink={secondLink} />
-      <Img src={mascotSrc('carrying')} style={{
-        position: 'absolute',
-        left: 260 + ferry * 1265,
-        top: 575,
-        width: 220,
-        height: 220,
-        objectFit: 'contain',
-        opacity: ferryOpacity,
-        filter: 'drop-shadow(0 16px 26px #0008)',
-        translate: "-12.1px -245px"
-      }} />
+      {mascotFormation.map(({x, y}, index) => <Img key={`pipeline-mascot-${index}`} src={mascotSrc('carrying')} style={{
+          position: 'absolute',
+          left: -460 + ferry * 2100 + x,
+          top: 575 + y,
+          width: 220,
+          height: 220,
+          objectFit: 'contain',
+          opacity: ferryOpacity,
+          filter: 'drop-shadow(0 16px 26px #0008)',
+          translate: '-12.1px -245px',
+          scale: 1.574,
+        }} />)}
       <Reveal at={localCue(4)} y={16}>
         <div style={{position: 'absolute', left: 150, right: 150, top: 800, display: 'flex', justifyContent: 'center', gap: 36}}>
           {[
