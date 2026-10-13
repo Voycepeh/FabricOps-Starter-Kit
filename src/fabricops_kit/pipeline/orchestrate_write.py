@@ -12,7 +12,7 @@ from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 from fabricops_kit.pipeline.shared import _run_orchestration_stage
 
 
-def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, spark_session=None, verbose: bool = True) -> dict[str, Any]:
+def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_top_n: int | None = 5, spark_session=None, verbose: bool = True) -> dict[str, Any]:
     """Execute the standard FabricOps governed Write lifecycle.
 
     Parameters
@@ -41,6 +41,8 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
         Enforce publication behaviour. Both modes run the same Guardrails.
     repartition_by : int, optional
         Spark write partition count.
+    frequency_top_n : int or None, default=5
+        Maximum ranked frequency values per eligible column; None retains all.
     spark_session : object, optional
         Spark session used by every stage.
     verbose : bool, default=True
@@ -113,5 +115,5 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
             "validation_passed": True,
         }
     write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=write_mode, load_strategy_parameters=write_parameters, source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False))
-    profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], spark_session=spark_session))
+    profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], frequency_top_n=frequency_top_n, spark_session=spark_session))
     return {**common_results, **write_result, "published": True, "profile_result": profile}
