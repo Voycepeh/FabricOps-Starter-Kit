@@ -720,7 +720,7 @@ def test_pipeline_write_failure_does_not_commit_or_establish_profile(monkeypatch
 def test_pipeline_write_retry_uses_activity_marker_and_replays_metadata(
     monkeypatch, spark_session, strategy
 ):
-    """Row-producing retries skip physical work and replay metadata safely."""
+    """Non-SCD retries skip writes; SCD retries reevaluate keyed merges safely."""
     identity, context = _patch_write(monkeypatch, strategy=strategy)
     processing = {"load_strategy": strategy}
     if strategy in {"scd1", "scd2"}:
@@ -767,7 +767,8 @@ def test_pipeline_write_retry_uses_activity_marker_and_replays_metadata(
         frame, table_id=identity["table_id"], source_table_ids=["source-a"], verbose=False
     )
 
-    assert physical == [strategy]
+    expected_merges = 3 if strategy in {"scd1", "scd2"} else 1
+    assert physical == [strategy] * expected_merges
     assert catalogue == [strategy, strategy, strategy]
     assert finalizations == [strategy, strategy, strategy]
     assert "_fabricops_active_profile_registration" not in context
