@@ -210,7 +210,7 @@ def _target_has_rows(
                 store=str(identity["store"]),
                 schema=identity.get("schema"),
                 spark_session=spark_session,
-                context={**context, "_fabricops_suppress_io_log": True},
+                context=io_context,
             )
         elif store_kind == "warehouse":
             if not _warehouse_target_exists(
