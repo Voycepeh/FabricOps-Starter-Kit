@@ -328,17 +328,12 @@ export const BigPictureScene = () => {
   const masking = interpolate(frame, [localCue(7) + seconds(1.8), localCue(7) + seconds(3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const results = enterProgress(frame, fps, localCue(7) + seconds(4.2));
   const violation = enterProgress(frame, fps, localCue(8));
-  const summary = interpolate(frame, [localCue(9), localCue(11)], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: Easing.inOut(Easing.cubic),
-  });
   const connectorOpacity = (start: number) => interpolate(frame, [start - seconds(0.2), start], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const rows = [
     {id: '00007', customer: 'C001', order: '09:00', modified: '09:18', result: 'PASS', color: '#72e6ad'},
     {id: '00008', customer: 'C002', order: '09:00', modified: '08:00', result: 'FAIL', color: '#ff756d'},
   ];
-  return <SceneShell duration={BIG_PICTURE_DURATION} heading="One pipeline enforces engineering, governance, and business requirements" accent="#72e6ad">
+  return <SceneShell duration={BIG_PICTURE_DURATION} heading="" accent="#72e6ad">
     <PipelinePattern
       top={VALIDATION_LAYOUT.pipelineTop}
       read={read}
@@ -380,7 +375,6 @@ export const BigPictureScene = () => {
       <div style={{display: 'grid', gridTemplateColumns: '76px 100px 1fr 1fr 70px', gap: 8, marginTop: 17, color: '#8fa7bf', fontSize: 13, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76'}}>customer_id</div><div>order_datetime</div><div>modified_datetime</div><div>result</div></div>
       {rows.map((row, index) => <div key={`output-${row.id}`} style={{position: 'relative', display: 'grid', gridTemplateColumns: '76px 100px 1fr 1fr 70px', gap: 8, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', borderRadius: 8, background: index === 1 ? `rgba(109, 40, 49, ${violation * 0.48})` : 'transparent', fontFamily: 'ui-monospace, monospace', fontSize: 17}}><div>{row.id}</div><div style={{color: '#ffbd76', position: 'relative'}}><span style={{opacity: 1 - masking}}>{row.customer}</span><span style={{position: 'absolute', left: 0, opacity: masking}}>C•••</span></div><div>{row.order}</div><div style={{color: index === 1 ? '#ff9c8c' : '#dcecff'}}>{row.modified}</div><div style={{opacity: results, color: row.color, fontWeight: 900}}>{row.result}</div></div>)}
     </Surface>
-    <div style={{position: 'absolute', left: 610, top: 932, width: 700, padding: '16px 24px', borderRadius: 14, border: '2px solid #72e6ad', background: '#153c2e', color: '#caffdf', textAlign: 'center', fontSize: 22, fontWeight: 900, opacity: summary}}>Governance as code · One reusable ETL process</div>
   </SceneShell>;
 };
 
