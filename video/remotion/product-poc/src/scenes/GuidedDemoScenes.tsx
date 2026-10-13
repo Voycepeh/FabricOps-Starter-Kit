@@ -400,7 +400,7 @@ export const PromotionScene = () => {
     {left: 1380, width: 112, delay: localCue(4) + seconds(0.65)},
   ];
   const productionEnter = enterProgress(frame, fps, localCue(6));
-  const sentenceEnter = enterProgress(frame, fps, localCue(5));
+  const sentenceEnter = enterProgress(frame, fps, 0);
   const pulseTravel = interpolate(frame, [localCue(5), localCue(6)], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
