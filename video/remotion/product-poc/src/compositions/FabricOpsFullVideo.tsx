@@ -52,7 +52,14 @@ export const FabricOpsFullVideo = () => {
       <Sequence name="Lifecycle" from={timeline.lifecycle.start} durationInFrames={timeline.lifecycle.duration} premountFor={fps}>
         <LifecycleScene />
       </Sequence>
-      <Sequence name="Consumption" from={timeline.consumption.start} durationInFrames={timeline.consumption.duration} premountFor={fps}>
+      <Sequence
+        name="Consumption"
+        from={timeline.consumption.start}
+        durationInFrames={timeline.consumption.duration}
+        premountFor={fps}
+        style={{
+          translate: "2px 0px"
+        }}>
         <ConsumptionScene />
       </Sequence>
       <Sequence name="Data engineers" from={timeline.dataEngineers.start} durationInFrames={timeline.dataEngineers.duration} premountFor={fps}>
