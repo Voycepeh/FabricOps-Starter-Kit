@@ -235,7 +235,7 @@ export const SensitiveDataScene = () => {
   const treatment = enterProgress(frame, fps, localCue(2));
   const redact = interpolate(frame, [localCue(6), localCue(6) + seconds(1.1)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const contract = enterProgress(frame, fps, localCue(5));
-  return <SceneShell duration={SENSITIVE_DATA_DURATION} heading="Turn sensitive-data policy into pipeline behavior" accent={theme.governance}>
+  return <SceneShell duration={SENSITIVE_DATA_DURATION} heading="" accent={theme.governance}>
     <div>
       <SpeechBubble accent="#ffae66" eyebrow="Sensitive data requirement" style={{left: 555, top: 185, width: 810, height: 160, opacity: sensitiveBubble}}>&ldquo;This column is sensitive.&rdquo;</SpeechBubble>
       <Mascot pose="scanning" x={125} y={485} size={315} delay={localCue(1)} />
