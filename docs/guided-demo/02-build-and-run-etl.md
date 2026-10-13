@@ -117,6 +117,7 @@ source = orchestrate_read(
     read_mode="full",
     query=None,
     spark_session=spark,
+    frequency_top_n=5,
 )
 sources["source"] = source
 ```
@@ -200,6 +201,7 @@ writes["target"] = orchestrate_write(
     contracts=CONTRACTS,
     repartition_by=None,
     spark_session=spark,
+    frequency_top_n=5,
 )
 ```
 
