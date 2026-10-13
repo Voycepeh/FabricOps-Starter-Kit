@@ -210,35 +210,42 @@ export const RepeatablePipelineScene = () => {
   const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
   const readAt = localCue(1);
   const transformAt = localCue(3);
-  const writeAt = transformAt + seconds(0.9);
+  const writeAt = readAt;
   const read = enterProgress(frame, fps, readAt);
   const transform = enterProgress(frame, fps, transformAt);
   const write = enterProgress(frame, fps, writeAt);
-  const firstLink = interpolate(frame, [readAt + seconds(0.6), transformAt + seconds(0.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const secondLink = interpolate(frame, [transformAt + seconds(0.6), writeAt + seconds(0.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const ferryStart = writeAt + seconds(0.6);
-  const ferryEnd = localCue(6) + seconds(0.8);
+  const firstLink = interpolate(frame, [transformAt - seconds(0.4), transformAt + seconds(0.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const secondLink = interpolate(frame, [transformAt - seconds(0.2), transformAt + seconds(0.4)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const ferryStart = 0;
+  const ferryEnd = 6900 - cue.startFrame;
   const ferry = interpolate(frame, [ferryStart, ferryEnd], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const ferryOpacity = interpolate(frame, [ferryStart - seconds(0.3), ferryStart, ferryEnd - seconds(0.4), ferryEnd], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const ferryOpacity = interpolate(frame, [ferryStart, ferryEnd - seconds(0.35), ferryEnd], [1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
 
-  return <SceneShell duration={REPEATABLE_PIPELINE_DURATION} heading="" accent={theme.engineering}>
-    <PipelinePattern top={300} read={read} transform={transform} write={write} firstLink={firstLink} secondLink={secondLink} />
-
-    <Img src={mascotSrc('carrying')} style={{
-      position: 'absolute', left: 260 + ferry * 1265, top: 575, width: 220, height: 220,
-      objectFit: 'contain', opacity: ferryOpacity, filter: 'drop-shadow(0 16px 26px #0008)',
-    }} />
-
-    <Reveal at={localCue(4)} y={16}>
-      <div style={{position: 'absolute', left: 210, right: 210, top: 815, display: 'flex', justifyContent: 'center', gap: 28}}>
-        {[
-          {label: '02A · Full Refresh', at: localCue(4)},
-          {label: '02B · Incremental', at: localCue(5)},
-          {label: '02C · SCD1 / SCD2', at: localCue(6)},
-        ].map(({label, at}) => <div key={label} style={{padding: '17px 31px', borderRadius: 16, background: '#122d49', border: '1px solid #4d759c', fontSize: 24, fontWeight: 820, color: '#d5e9ff', opacity: enterProgress(frame, fps, at)}}>{label}</div>)}
-      </div>
-    </Reveal>
-  </SceneShell>;
+  return (
+    <SceneShell duration={REPEATABLE_PIPELINE_DURATION} heading="" accent={theme.engineering}>
+      <PipelinePattern top={300} read={read} transform={transform} write={write} firstLink={firstLink} secondLink={secondLink} />
+      <Img src={mascotSrc('carrying')} style={{
+        position: 'absolute',
+        left: 260 + ferry * 1265,
+        top: 575,
+        width: 220,
+        height: 220,
+        objectFit: 'contain',
+        opacity: ferryOpacity,
+        filter: 'drop-shadow(0 16px 26px #0008)',
+        translate: "-12.1px -245px"
+      }} />
+      <Reveal at={localCue(4)} y={16}>
+        <div style={{position: 'absolute', left: 150, right: 150, top: 800, display: 'flex', justifyContent: 'center', gap: 36}}>
+          {[
+            {label: '02A · Full Refresh', at: localCue(4)},
+            {label: '02B · Incremental', at: localCue(5)},
+            {label: '02C · SCD1 / SCD2', at: localCue(6)},
+          ].map(({label, at}) => <div key={label} style={{padding: '26px 47px', borderRadius: 24, background: '#122d49', border: '1px solid #4d759c', fontSize: 36, fontWeight: 820, color: '#d5e9ff', opacity: enterProgress(frame, fps, at)}}>{label}</div>)}
+        </div>
+      </Reveal>
+    </SceneShell>
+  );
 };
 
 export const SensitiveDataScene = () => {
