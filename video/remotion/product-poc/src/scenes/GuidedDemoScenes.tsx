@@ -138,7 +138,7 @@ export const DataEngineersScene = () => {
   const aiWritingEnd = 6200 - cue.startFrame;
   const introOpacity = interpolate(frame, [0, seconds(0.4), introEnd - seconds(0.4), introEnd], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const taskExit = localCue(5);
-  const inconsistencyAt = localCue(6);
+  const inconsistencyAt = 6250 - cue.startFrame;
   const implementationsAt = localCue(7);
   const taskOpacity = interpolate(frame, [taskExit - seconds(0.35), taskExit + seconds(0.25)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const aiOpacity = interpolate(frame, [taskExit - seconds(0.15), taskExit + seconds(0.35), inconsistencyAt - seconds(0.35), inconsistencyAt + seconds(0.25)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
@@ -163,7 +163,7 @@ export const DataEngineersScene = () => {
   ];
 
   return <SceneShell duration={DATA_ENGINEERS_DURATION} heading="" accent={theme.engineering}>
-    <div style={{position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', textAlign: 'center', fontSize: 76, fontWeight: 900, letterSpacing: 1.5, color: '#f2f7fc', opacity: introOpacity, translate: `0 ${(1 - introOpacity) * 12}px`}}>Rewritting Boilerplate codes</div>
+    <div style={{position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', textAlign: 'center', fontSize: 91, fontWeight: 900, letterSpacing: 1.5, color: '#f2f7fc', opacity: introOpacity, translate: `0 ${(1 - introOpacity) * 12}px`}}>Rewriting Boilerplate Code</div>
 
     <div style={{position: 'absolute', left: 140, right: 140, top: 405, display: 'flex', gap: 32, opacity: taskOpacity}}>
       {tasks.map(({label, detail, at, accent}) => {
@@ -180,8 +180,8 @@ export const DataEngineersScene = () => {
       <div style={{display: 'flex', alignItems: 'center', gap: 27}}>
         <div style={{width: 78, height: 78, borderRadius: 22, display: 'grid', placeItems: 'center', background: '#123f45', border: '1px solid #52d6c688', color: '#a8fff4', fontFamily: 'ui-monospace, monospace', fontSize: 30, fontWeight: 900}}>&lt;/&gt;</div>
         <div>
-          <div style={{fontSize: 19, fontWeight: 900, color: '#7ae4d8', letterSpacing: 1.8}}>AI-ASSISTED</div>
-          <div style={{fontSize: 36, fontWeight: 850, color: '#f2f9fb', marginTop: 7}}>Faster coding</div>
+          <div style={{fontSize: 23, fontWeight: 900, color: '#7ae4d8', letterSpacing: 1.8}}>AI-ASSISTED</div>
+          <div style={{fontSize: 43, fontWeight: 850, color: '#f2f9fb', marginTop: 7}}>Faster coding</div>
         </div>
       </div>
       <div style={{marginTop: 43, display: 'grid', gap: 18}}>
@@ -196,8 +196,8 @@ export const DataEngineersScene = () => {
       {implementations.map(({engineer, context, accent, widths, offset, rotate}, index) => {
         const progress = enterProgress(frame, fps, inconsistencyAt + seconds(index * 0.13));
         return <Surface key={engineer} accent={accent} style={{flex: 1, height: 350, padding: '30px 32px', opacity: progress, translate: `0 ${(1 - progress) * 15 + offset * misalignment}px`, rotate: `${rotate * misalignment}deg`}}>
-          <div style={{fontSize: 23, fontWeight: 850, color: '#f1f6fb'}}>{engineer}</div>
-          <div style={{fontSize: 16, fontWeight: 750, color: accent, marginTop: 8, letterSpacing: 0.7}}>{context}</div>
+          <div style={{fontSize: 35, fontWeight: 850, color: '#f1f6fb'}}>{engineer}</div>
+          <div style={{fontSize: 24, fontWeight: 750, color: accent, marginTop: 8, letterSpacing: 0.7}}>{context}</div>
           <div style={{height: 1, background: '#33465c', margin: '25px 0 27px'}} />
           <div style={{display: 'grid', gap: index === 1 ? 21 : 17}}>
             {widths.map((width, lineIndex) => <div key={`${engineer}-${lineIndex}`} style={{height: lineIndex === 0 ? 12 : 9, width: `${width}%`, marginLeft: index === 2 && lineIndex > 0 ? 28 : index === 0 && lineIndex === 2 ? 18 : 0, borderRadius: 99, background: lineIndex === 0 ? accent : '#60768d', opacity: lineIndex === 0 ? 0.9 : 0.72}} />)}
