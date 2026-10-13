@@ -9,7 +9,7 @@ from fabricops_kit.pipeline.profile_table import profile_table
 from fabricops_kit.pipeline.shared import _run_orchestration_stage
 
 
-def orchestrate_read(*, name: str, store: str, schema: str | None, table_name: str, read_mode: str = "full", query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session=None, verbose: bool = True) -> dict[str, Any]:
+def orchestrate_read(*, name: str, store: str, schema: str | None, table_name: str, read_mode: str = "full", query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_top_n: int | None = 5, spark_session=None, verbose: bool = True) -> dict[str, Any]:
     """Execute the standard FabricOps governed Read lifecycle.
 
     Parameters
@@ -31,6 +31,8 @@ def orchestrate_read(*, name: str, store: str, schema: str | None, table_name: s
         A selected Data Contract must agree with the supplied watermark.
     target_table_id : str, optional
         Governed target identity required for incremental reads.
+    frequency_top_n : int or None, default=5
+        Maximum ranked frequency values per eligible column; None retains all.
     spark_session : object, optional
         Spark session used by every stage.
     verbose : bool, default=True
@@ -79,5 +81,5 @@ def orchestrate_read(*, name: str, store: str, schema: str | None, table_name: s
     freshness = run(2, "Freshness", lambda: check_freshness(table_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
     schema_result = run(3, "Schema", lambda: check_schema(dataframe, table_id=table_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
     dq_result = run(4, "Data Quality", lambda: check_dq(dataframe, table_id=table_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
-    profile = run(5, "Profile", lambda: profile_table(dataframe=dataframe, store=store, schema=schema, table_name=table_name, spark_session=spark_session) if read_mode == "full" else {"status": "skipped", "reason": "Incremental batch"})
+    profile = run(5, "Profile", lambda: profile_table(dataframe=dataframe, store=store, schema=schema, table_name=table_name, frequency_top_n=frequency_top_n, spark_session=spark_session) if read_mode == "full" else {"status": "skipped", "reason": "Incremental batch"})
     return {**source, "freshness_result": freshness, "schema_result": schema_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages}
