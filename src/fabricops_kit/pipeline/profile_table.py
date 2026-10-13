@@ -1078,7 +1078,7 @@ def profile_table(
     table_name: str | None = None,
     table_id: str | None = None,
     frequency_columns=None,
-    frequency_top_n: int | None = None,
+    frequency_top_n: int | None = 5,
     frequency_max_distinct_percent: float | None = 80.0,
     spark_session=None,
 ):
@@ -1115,7 +1115,7 @@ def profile_table(
     frequency_columns : sequence of str, optional
         Columns to frequency profile. ``None`` automatically selects eligible
         scalar columns; an empty sequence skips frequency profiling.
-    frequency_top_n : int or None, optional
+    frequency_top_n : int or None, default=5
         Ranked values to retain per frequency column. ``None`` retains all.
     frequency_max_distinct_percent : float or None, default=80.0
         Maximum distinct-per-non-null percentage for automatically selected
