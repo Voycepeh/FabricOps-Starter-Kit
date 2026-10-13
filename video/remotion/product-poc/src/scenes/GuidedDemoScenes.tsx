@@ -377,8 +377,8 @@ export const BigPictureScene = () => {
   const violation = enterProgress(frame, fps, localCue(8));
   const connectorOpacity = (start: number) => interpolate(frame, [start - seconds(0.2), start], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const rows = [
-    {id: '00007', customer: 'C001', order: '09:00', modified: '09:18', result: 'PASS', color: '#72e6ad'},
-    {id: '00008', customer: 'C002', order: '09:00', modified: '08:00', result: 'FAIL', color: '#ff756d'},
+    {id: '00007', nric: 'S1234567D', maskedNric: 'S****567D', order: '09:00', modified: '09:18', result: 'PASS', color: '#72e6ad'},
+    {id: '00008', nric: 'T7654321F', maskedNric: 'T****321F', order: '09:00', modified: '08:00', result: 'FAIL', color: '#ff756d'},
   ];
   return <SceneShell duration={BIG_PICTURE_DURATION} heading="" accent="#72e6ad">
     <PipelinePattern
@@ -413,14 +413,14 @@ export const BigPictureScene = () => {
 
     <Surface accent="#69b7ff" style={{position: 'absolute', left: VALIDATION_LAYOUT.rawLeft, top: VALIDATION_LAYOUT.tableTop, width: VALIDATION_LAYOUT.tableWidth, height: VALIDATION_LAYOUT.tableHeight, padding: '20px 24px', opacity: source, translate: `0 ${(1 - source) * 18}px`}}>
       <div style={{fontSize: 17, fontWeight: 900, color: '#8fc9ff', letterSpacing: 1.5}}>RAW SOURCE</div>
-      <div style={{display: 'grid', gridTemplateColumns: '80px 115px 1fr 1fr', gap: 10, marginTop: 17, color: '#8fa7bf', fontSize: 14, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76'}}>customer_id</div><div>order_datetime</div><div>modified_datetime</div></div>
-      {rows.map((row) => <div key={row.id} style={{display: 'grid', gridTemplateColumns: '80px 115px 1fr 1fr', gap: 10, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', fontFamily: 'ui-monospace, monospace', fontSize: 18}}><div>{row.id}</div><div style={{color: '#ffbd76'}}>{row.customer}</div><div>{row.order}</div><div>{row.modified}</div></div>)}
+      <div style={{display: 'grid', gridTemplateColumns: '100px 155px 1fr 1.2fr', gap: 10, marginTop: 17, color: '#8fa7bf', fontSize: 21, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76'}}>person_nric</div><div>order_datetime</div><div>modified_datetime</div></div>
+      {rows.map((row) => <div key={row.id} style={{display: 'grid', gridTemplateColumns: '100px 155px 1fr 1.2fr', gap: 10, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', fontFamily: 'ui-monospace, monospace', fontSize: 27}}><div>{row.id}</div><div style={{color: '#ffbd76'}}>{row.nric}</div><div>{row.order}</div><div>{row.modified}</div></div>)}
     </Surface>
 
     <Surface accent="#72e6ad" style={{position: 'absolute', left: VALIDATION_LAYOUT.outputLeft, top: VALIDATION_LAYOUT.tableTop, width: VALIDATION_LAYOUT.tableWidth, height: VALIDATION_LAYOUT.tableHeight, padding: '20px 24px', opacity: output, translate: `0 ${(1 - output) * 18}px`}}>
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><div style={{fontSize: 17, fontWeight: 900, color: '#72e6ad', letterSpacing: 1.5}}>GOVERNED OUTPUT</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 13, color: '#cfc3ef'}}>VALIDATION RESULT · modified_datetime &gt;= order_datetime</div></div>
-      <div style={{display: 'grid', gridTemplateColumns: '76px 100px 1fr 1fr 70px', gap: 8, marginTop: 17, color: '#8fa7bf', fontSize: 13, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76'}}>customer_id</div><div>order_datetime</div><div>modified_datetime</div><div>result</div></div>
-      {rows.map((row, index) => <div key={`output-${row.id}`} style={{position: 'relative', display: 'grid', gridTemplateColumns: '76px 100px 1fr 1fr 70px', gap: 8, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', borderRadius: 8, background: index === 1 ? `rgba(109, 40, 49, ${violation * 0.48})` : 'transparent', fontFamily: 'ui-monospace, monospace', fontSize: 17}}><div>{row.id}</div><div style={{color: '#ffbd76', position: 'relative'}}><span style={{opacity: 1 - masking}}>{row.customer}</span><span style={{position: 'absolute', left: 0, opacity: masking}}>C•••</span></div><div>{row.order}</div><div style={{color: index === 1 ? '#ff9c8c' : '#dcecff'}}>{row.modified}</div><div style={{opacity: results, color: row.color, fontWeight: 900}}>{row.result}</div></div>)}
+      <div style={{display: 'grid', gridTemplateColumns: '90px 150px 1fr 1.25fr 88px', gap: 8, marginTop: 17, color: '#8fa7bf', fontSize: 20, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76', background: '#5d351f99', borderRadius: 7, padding: '3px 8px'}}>person_nric</div><div>order_datetime</div><div>modified_datetime</div><div>result</div></div>
+      {rows.map((row, index) => <div key={`output-${row.id}`} style={{position: 'relative', display: 'grid', gridTemplateColumns: '90px 150px 1fr 1.25fr 88px', gap: 8, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', borderRadius: 8, background: index === 1 ? `rgba(109, 40, 49, ${violation * 0.48})` : 'transparent', fontFamily: 'ui-monospace, monospace', fontSize: 26}}><div>{row.id}</div><div style={{alignSelf: 'stretch', display: 'flex', alignItems: 'center', color: '#ffbd76', position: 'relative', background: `rgba(93, 53, 31, ${0.38 + masking * 0.42})`, borderRadius: 8, padding: '0 8px'}}><span style={{opacity: 1 - masking}}>{row.nric}</span><span style={{position: 'absolute', left: 8, opacity: masking}}>{row.maskedNric}</span></div><div>{row.order}</div><div style={{color: index === 1 ? '#ff9c8c' : '#dcecff'}}>{row.modified}</div><div style={{opacity: results, color: row.color, fontWeight: 900}}>{row.result}</div></div>)}
     </Surface>
   </SceneShell>;
 };
