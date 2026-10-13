@@ -134,6 +134,9 @@ export const DataEngineersScene = () => {
   const {fps} = useVideoConfig();
   const cue = NARRATION_CUE_SHEET.dataEngineers;
   const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
+  const introEnd = 5880 - cue.startFrame;
+  const aiWritingEnd = 6200 - cue.startFrame;
+  const introOpacity = interpolate(frame, [0, seconds(0.4), introEnd - seconds(0.4), introEnd], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const taskExit = localCue(5);
   const inconsistencyAt = localCue(6);
   const implementationsAt = localCue(7);
@@ -160,6 +163,8 @@ export const DataEngineersScene = () => {
   ];
 
   return <SceneShell duration={DATA_ENGINEERS_DURATION} heading="" accent={theme.engineering}>
+    <div style={{position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', textAlign: 'center', fontSize: 76, fontWeight: 900, letterSpacing: 1.5, color: '#f2f7fc', opacity: introOpacity, translate: `0 ${(1 - introOpacity) * 12}px`}}>Rewritting Boilerplate codes</div>
+
     <div style={{position: 'absolute', left: 140, right: 140, top: 405, display: 'flex', gap: 32, opacity: taskOpacity}}>
       {tasks.map(({label, detail, at, accent}) => {
         const progress = enterProgress(frame, fps, at);
@@ -181,7 +186,7 @@ export const DataEngineersScene = () => {
       </div>
       <div style={{marginTop: 43, display: 'grid', gap: 18}}>
         {codeLines.map(({width, color}, index) => {
-          const lineProgress = interpolate(frame, [taskExit + seconds(0.2 + index * 0.16), taskExit + seconds(0.65 + index * 0.16)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+          const lineProgress = interpolate(frame, [taskExit + index * seconds(0.2), aiWritingEnd - (codeLines.length - 1 - index) * seconds(0.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
           return <div key={width} style={{height: 11, width: `${width * lineProgress}%`, marginLeft: index === 0 ? 0 : 44, borderRadius: 99, background: color, opacity: 0.38 + lineProgress * 0.62}} />;
         })}
       </div>
