@@ -14,6 +14,10 @@ The same pattern supports Full and Incremental reads and the Overwrite, Append, 
 
 ![FabricOps places governed Read and Write boundaries around project-owned PySpark](../assets/pipeline-boundaries-implementation.svg)
 
+### Frequency profiling controls
+
+The notebook explicitly sets `frequency_enabled=True` and `frequency_top_n=5` on its `orchestrate_read()` and `orchestrate_write()` calls. This retains up to five frequency values per eligible column. For faster runs when frequency distributions are not needed, set **`frequency_enabled=False`** on the relevant orchestrator call to skip frequency profiling for **all columns** while keeping the standard statistical profile. `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating frequencies.
+
 ## Before you begin
 
 1. Complete [Step 00B. Configure the Environment and load assets](00B-configure-environment-and-load-assets.md).
