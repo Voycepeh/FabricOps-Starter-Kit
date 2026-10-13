@@ -2447,7 +2447,19 @@ def execute_lakehouse_processing(
         ],
         F.lit(False),
     )
-    changed_existing = joined.where(changed_expression).select("incoming.*")
+    changed_matches = joined.where(changed_expression)
+    current_starts = current_rows.select(
+        *[F.col(name) for name in keys],
+        F.col("_effective_from").alias("_fabricops_previous_start"),
+    )
+    invalid_time = (
+        changed_matches.select("incoming.*")
+        .join(current_starts, on=keys, how="inner")
+        .where(F.col(effective).isNull() | (F.col(effective) <= F.col("_fabricops_previous_start")))
+    )
+    if invalid_time.limit(1).count():
+        raise ValueError("Changed SCD2 rows require an effective time later than the current version start.")
+    changed_existing = changed_matches.select("incoming.*")
     keyed = persisted_df
     inserts = changed_existing
     for merge_key, key in zip(merge_keys, keys, strict=True):
