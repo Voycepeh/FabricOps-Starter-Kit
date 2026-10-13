@@ -90,7 +90,6 @@ export const ConsumptionScene = () => {
   const foundation = interpolate(frame, [FOUNDATION_TRANSFORMATION_START, FOUNDATION_TRANSFORMATION_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.bezier(0.16, 1, 0.3, 1)});
   const pipelineOpacity = interpolate(frame, [FOUNDATION_TRANSFORMATION_START, FOUNDATION_TRANSFORMATION_START + seconds(0.6)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const badgeProgress = interpolate(foundationProgress, [0.15, 0.45], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const holdLabelOpacity = interpolate(frame, [CONSUMER_REVEAL_FRAMES[3], CONSUMER_REVEAL_FRAMES[3] + seconds(0.6)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const sceneOpacity = interpolate(frame, [CONSUMPTION_SCENE_FADE_START, CONSUMPTION_SCENE_END], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const cardScale = frame < FOUNDATION_TRANSFORMATION_START ? interpolate(focus, [0, 1], [1, 3.1]) : interpolate(foundation, [0, 1], [3.1, 1]);
   const cardCenterX = frame < FOUNDATION_TRANSFORMATION_START ? interpolate(focus, [0, 1], [1615, 960]) : 960;
@@ -100,7 +99,7 @@ export const ConsumptionScene = () => {
   const cardWidth = visualCardWidth / cardScale;
   const cardHeight = visualCardHeight / cardScale;
   const visualCircleSize = frame < FOUNDATION_TRANSFORMATION_START ? 62 * cardScale : interpolate(foundation, [0, 1], [192.2, 110]);
-  const visualFontSize = frame < FOUNDATION_TRANSFORMATION_START ? 20 * cardScale : interpolate(foundation, [0, 1], [62, 42]);
+  const visualFontSize = frame < FOUNDATION_TRANSFORMATION_START ? 20 * cardScale : interpolate(foundation, [0, 1], [62, 50]);
   const visualGap = frame < FOUNDATION_TRANSFORMATION_START ? 22 * cardScale : interpolate(foundation, [0, 1], [68.2, 32]);
   const visualHorizontalPadding = frame < FOUNDATION_TRANSFORMATION_START ? 25 * cardScale : interpolate(foundation, [0, 1], [77.5, 44]);
   const lifecycleZoomScale = interpolate(focus, [0, 1], [1, 3.1]);
@@ -117,10 +116,6 @@ export const ConsumptionScene = () => {
       <StepCard
         number={7}
         label={STEP_7_LABEL}
-        subtitle="Governed · Reliable · Fit for downstream use"
-        subtitleFontSize={22 / cardScale}
-        subtitleGap={9 / cardScale}
-        subtitleOpacity={holdLabelOpacity}
         centerContent
         badgeMascot="prod"
         badgeProgress={badgeProgress}
