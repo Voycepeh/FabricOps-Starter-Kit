@@ -225,8 +225,8 @@ def test_scd2_identical_business_state_updates_watermark_without_new_version(mon
 
     recorded = {"appends": 0}
     current = spark_session.createDataFrame(
-        [(1, "active", "2026-08-22", 100, True)],
-        ["student_id", "status", "effective_at", "_watermark_value", "_is_current"],
+        [(1, "active", "2026-08-22", 100, True, "2026-08-22")],
+        ["student_id", "status", "effective_at", "_watermark_value", "_is_current", "_effective_from"],
     )
 
     class Merge:
