@@ -709,3 +709,13 @@ def test_failed_governed_profile_removes_uncommitted_snapshot(
     assert "summary" in events
     assert ("frequency" in events) is (failure_stage == "catalogue")
     assert ("cleanup failed" in capsys.readouterr().out) is cleanup_fails
+
+
+def test_profile_table_frequency_top_n_defaults_to_five():
+    import inspect
+    from fabricops_kit.pipeline.profile_table import profile_table
+    from fabricops_kit.pipeline.orchestrate_read import orchestrate_read
+    from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
+
+    for function in (profile_table, orchestrate_read, orchestrate_write):
+        assert inspect.signature(function).parameters["frequency_top_n"].default == 5
