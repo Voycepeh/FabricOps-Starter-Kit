@@ -135,14 +135,14 @@ export const DataEngineersScene = () => {
   const cue = NARRATION_CUE_SHEET.dataEngineers;
   const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
   const introEnd = 5880 - cue.startFrame;
-  const aiWritingEnd = 6200 - cue.startFrame;
+  const aiEnter = 6250 - cue.startFrame;
+  const aiFadeAt = 6400 - cue.startFrame;
   const introOpacity = interpolate(frame, [0, seconds(0.4), introEnd - seconds(0.4), introEnd], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const taskExit = localCue(5);
-  const inconsistencyAt = 6250 - cue.startFrame;
+  const inconsistencyAt = aiFadeAt;
   const implementationsAt = localCue(7);
-  const taskOpacity = interpolate(frame, [taskExit - seconds(0.35), taskExit + seconds(0.25)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const aiOpacity = interpolate(frame, [taskExit - seconds(0.15), taskExit + seconds(0.35), inconsistencyAt - seconds(0.35), inconsistencyAt + seconds(0.25)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const implementationOpacity = interpolate(frame, [inconsistencyAt - seconds(0.1), inconsistencyAt + seconds(0.45)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const taskOpacity = interpolate(frame, [aiEnter - seconds(0.35), aiEnter + seconds(0.25)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const aiOpacity = interpolate(frame, [aiEnter, aiEnter + seconds(0.35), aiFadeAt, aiFadeAt + seconds(0.35)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const implementationOpacity = interpolate(frame, [inconsistencyAt, inconsistencyAt + seconds(0.45)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const misalignment = interpolate(frame, [implementationsAt, implementationsAt + seconds(0.8)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const tasks = [
     {label: 'Connect', detail: 'Data stores', at: localCue(1), accent: '#69b7ff'},
@@ -186,7 +186,7 @@ export const DataEngineersScene = () => {
       </div>
       <div style={{marginTop: 43, display: 'grid', gap: 18}}>
         {codeLines.map(({width, color}, index) => {
-          const lineProgress = interpolate(frame, [taskExit + index * seconds(0.2), aiWritingEnd - (codeLines.length - 1 - index) * seconds(0.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+          const lineProgress = interpolate(frame, [aiEnter + index * seconds(0.2), aiFadeAt - (codeLines.length - 1 - index) * seconds(0.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
           return <div key={width} style={{height: 11, width: `${width * lineProgress}%`, marginLeft: index === 0 ? 0 : 44, borderRadius: 99, background: color, opacity: 0.38 + lineProgress * 0.62}} />;
         })}
       </div>
