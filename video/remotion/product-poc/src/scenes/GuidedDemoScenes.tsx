@@ -253,13 +253,22 @@ export const SensitiveDataScene = () => {
   const {fps} = useVideoConfig();
   const cue = NARRATION_CUE_SHEET.sensitiveData;
   const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
-  const sensitiveBubble = enterProgress(frame, fps, localCue(0));
+  const policyAt = 7620 - cue.startFrame;
+  const enforcedAt = 7720 - cue.startFrame;
+  const introEnd = 7800 - cue.startFrame;
+  const policyOpacity = interpolate(frame, [policyAt, policyAt + seconds(0.4), introEnd - seconds(0.4), introEnd], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const enforcedOpacity = interpolate(frame, [enforcedAt, enforcedAt + seconds(0.4), introEnd - seconds(0.4), introEnd], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const sensitiveBubble = enterProgress(frame, fps, introEnd);
   const scan = enterProgress(frame, fps, localCue(1));
   const treatment = enterProgress(frame, fps, localCue(2));
   const redact = interpolate(frame, [localCue(6), localCue(6) + seconds(1.1)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const contract = enterProgress(frame, fps, localCue(5));
   return <SceneShell duration={SENSITIVE_DATA_DURATION} heading="" accent={theme.governance}>
     <div>
+      <div style={{position: 'absolute', left: 340, right: 340, top: 455, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+        <div style={{fontSize: 82, fontWeight: 900, letterSpacing: 4, color: '#ffbe82', opacity: policyOpacity, translate: `0 ${(1 - policyOpacity) * 12}px`}}>POLICY</div>
+        <div style={{fontSize: 82, fontWeight: 900, letterSpacing: 4, color: '#c5a8ff', opacity: enforcedOpacity, translate: `0 ${(1 - enforcedOpacity) * 12}px`}}>ENFORCED</div>
+      </div>
       <SpeechBubble accent="#ffae66" eyebrow="Sensitive data requirement" style={{left: 555, top: 185, width: 810, height: 160, opacity: sensitiveBubble}}>&ldquo;This column is sensitive.&rdquo;</SpeechBubble>
       <Mascot pose="scanning" x={125} y={485} size={315} delay={localCue(1)} />
       <Surface accent="#ffae66" style={{position: 'absolute', left: 480, top: 395, width: 850, height: 390, padding: '28px 34px', opacity: scan}}>
@@ -270,13 +279,13 @@ export const SensitiveDataScene = () => {
       <Mascot pose="masking" x={1390} y={485} size={315} delay={localCue(2)} />
       <div style={{position: 'absolute', left: 425, top: 605, width: 55, height: 5, borderRadius: 99, background: '#ffae66', scale: `${scan} 1`, transformOrigin: 'left'}} />
       <div style={{position: 'absolute', left: 1330, top: 605, width: 60, height: 5, borderRadius: 99, background: '#ffae66', scale: `${treatment} 1`, transformOrigin: 'left'}} />
-      <div style={{position: 'absolute', left: 515, right: 515, top: 820, display: 'flex', justifyContent: 'center', gap: 18}}>
+      <div style={{position: 'absolute', left: 430, right: 430, top: 810, display: 'flex', justifyContent: 'center', gap: 27}}>
         {[
           {label: 'MASK', at: localCue(2)},
           {label: 'HASH', at: localCue(3)},
           {label: 'TOKENIZE', at: localCue(4)},
           {label: 'REMOVE', at: localCue(4) + seconds(1.2)},
-        ].map(({label, at}) => <div key={label} style={{padding: '13px 22px', borderRadius: 12, border: '1px solid #ffae66', background: '#342419', color: '#ffd4aa', fontSize: 18, fontWeight: 900, opacity: enterProgress(frame, fps, at)}}>{label}</div>)}
+        ].map(({label, at}) => <div key={label} style={{padding: '20px 33px', borderRadius: 18, border: '1px solid #ffae66', background: '#342419', color: '#ffd4aa', fontSize: 27, fontWeight: 900, opacity: enterProgress(frame, fps, at)}}>{label}</div>)}
       </div>
       <div style={{position: 'absolute', left: 710, top: 900, width: 500, padding: '15px 22px', borderRadius: 14, border: '2px solid #b487ff', background: '#211c3e', color: '#e9ddff', textAlign: 'center', fontSize: 21, fontWeight: 850, opacity: contract}}>Policy recorded in the Data Contract</div>
     </div>
