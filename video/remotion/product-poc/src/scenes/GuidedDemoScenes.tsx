@@ -134,47 +134,71 @@ export const DataEngineersScene = () => {
   const {fps} = useVideoConfig();
   const cue = NARRATION_CUE_SHEET.dataEngineers;
   const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
-  const aiEnter = enterProgress(frame, fps, localCue(5));
-  const inconsistency = enterProgress(frame, fps, localCue(6));
-  const implementations = enterProgress(frame, fps, localCue(7));
+  const taskExit = localCue(5);
+  const inconsistencyAt = localCue(6);
+  const implementationsAt = localCue(7);
+  const taskOpacity = interpolate(frame, [taskExit - seconds(0.35), taskExit + seconds(0.25)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const aiOpacity = interpolate(frame, [taskExit - seconds(0.15), taskExit + seconds(0.35), inconsistencyAt - seconds(0.35), inconsistencyAt + seconds(0.25)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const implementationOpacity = interpolate(frame, [inconsistencyAt - seconds(0.1), inconsistencyAt + seconds(0.45)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const misalignment = interpolate(frame, [implementationsAt, implementationsAt + seconds(0.8)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const tasks = [
-    {label: 'Data-store connections', at: localCue(1)},
-    {label: 'Path resolution', at: localCue(2)},
-    {label: 'Profiling + EDA', at: localCue(3)},
-    {label: 'Data quality checks', at: localCue(4)},
+    {label: 'Connect', detail: 'Data stores', at: localCue(1), accent: '#69b7ff'},
+    {label: 'Resolve', detail: 'Paths', at: localCue(2), accent: '#52d6c6'},
+    {label: 'Profile', detail: 'Profiling + EDA', at: localCue(3), accent: '#b487ff'},
+    {label: 'Validate', detail: 'Quality checks', at: localCue(4), accent: '#ffae66'},
+  ];
+  const codeLines = [
+    {width: 76, color: '#69b7ff'},
+    {width: 54, color: '#52d6c6'},
+    {width: 66, color: '#b487ff'},
+    {width: 43, color: '#ffae66'},
+  ];
+  const implementations = [
+    {engineer: 'Engineer A', context: 'Prompt A · Model 1', accent: '#69b7ff', widths: [76, 48, 64, 38], offset: -9, rotate: -0.65},
+    {engineer: 'Engineer B', context: 'Prompt B · Model 2', accent: '#b487ff', widths: [48, 82, 56, 70], offset: 11, rotate: 0.55},
+    {engineer: 'Engineer C', context: 'Prompt C · Model 3', accent: '#ff9c72', widths: [68, 42, 78, 51], offset: -5, rotate: -0.35},
   ];
 
-  return <SceneShell duration={DATA_ENGINEERS_DURATION} heading="AI writes faster. FabricOps keeps pipelines consistent." accent={theme.engineering}>
-    <div style={{position: 'absolute', left: 125, top: 265, width: 760, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24}}>
-      {tasks.map(({label, at}, index) => {
+  return <SceneShell duration={DATA_ENGINEERS_DURATION} heading="" accent={theme.engineering}>
+    <div style={{position: 'absolute', left: 140, right: 140, top: 405, display: 'flex', gap: 32, opacity: taskOpacity}}>
+      {tasks.map(({label, detail, at, accent}) => {
         const progress = enterProgress(frame, fps, at);
-        return <Surface key={label} accent="#69b7ff" style={{height: 150, padding: '28px 30px', opacity: progress, translate: `0 ${(1 - progress) * 18}px`}}>
-          <div style={{fontSize: 18, fontWeight: 900, color: '#8fc9ff', letterSpacing: 1.4}}>BOILERPLATE {String(index + 1).padStart(2, '0')}</div>
-          <div style={{fontSize: 29, fontWeight: 800, color: '#edf7ff', marginTop: 22}}>{label}</div>
+        return <Surface key={label} accent={accent} style={{flex: 1, height: 196, padding: '38px 34px', opacity: progress, translate: `0 ${(1 - progress) * 16}px`}}>
+          <div style={{width: 48, height: 5, borderRadius: 99, background: accent}} />
+          <div style={{fontSize: 34, fontWeight: 850, color: '#f2f7fc', marginTop: 27}}>{label}</div>
+          <div style={{fontSize: 21, color: '#9fb1c5', marginTop: 12}}>{detail}</div>
         </Surface>;
       })}
     </div>
 
-    <Surface accent="#52d6c6" style={{position: 'absolute', left: 960, top: 265, width: 825, height: 324, padding: '34px 38px', opacity: aiEnter}}>
-      <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-        <div style={{fontSize: 21, fontWeight: 900, color: '#7ae4d8', letterSpacing: 1.6}}>AI-ASSISTED CODE</div>
-        <div style={{padding: '9px 16px', borderRadius: 10, background: '#123f45', color: '#bffdf5', fontSize: 18, fontWeight: 850}}>FASTER</div>
+    <Surface accent="#52d6c6" style={{position: 'absolute', left: 520, top: 320, width: 880, height: 390, padding: '46px 54px', opacity: aiOpacity, translate: `0 ${(1 - aiOpacity) * 12}px`}}>
+      <div style={{display: 'flex', alignItems: 'center', gap: 27}}>
+        <div style={{width: 78, height: 78, borderRadius: 22, display: 'grid', placeItems: 'center', background: '#123f45', border: '1px solid #52d6c688', color: '#a8fff4', fontFamily: 'ui-monospace, monospace', fontSize: 30, fontWeight: 900}}>&lt;/&gt;</div>
+        <div>
+          <div style={{fontSize: 19, fontWeight: 900, color: '#7ae4d8', letterSpacing: 1.8}}>AI-ASSISTED</div>
+          <div style={{fontSize: 36, fontWeight: 850, color: '#f2f9fb', marginTop: 7}}>Faster coding</div>
+        </div>
       </div>
-      <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 23, lineHeight: 1.75, marginTop: 34, color: '#cfe9f4'}}>
-        <div><span style={{color: '#b487ff'}}>def</span> build_pipeline(source, target):</div>
-        <div style={{paddingLeft: 28}}>data = connect(source)</div>
-        <div style={{paddingLeft: 28}}>return validate(transform(data))</div>
+      <div style={{marginTop: 43, display: 'grid', gap: 18}}>
+        {codeLines.map(({width, color}, index) => {
+          const lineProgress = interpolate(frame, [taskExit + seconds(0.2 + index * 0.16), taskExit + seconds(0.65 + index * 0.16)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+          return <div key={width} style={{height: 11, width: `${width * lineProgress}%`, marginLeft: index === 0 ? 0 : 44, borderRadius: 99, background: color, opacity: 0.38 + lineProgress * 0.62}} />;
+        })}
       </div>
     </Surface>
 
-    <div style={{position: 'absolute', left: 960, top: 625, width: 825, opacity: inconsistency}}>
-      <div style={{fontSize: 25, color: '#ffbf80', fontWeight: 850, textAlign: 'center'}}>Faster does not automatically mean consistent.</div>
-      <div style={{display: 'flex', gap: 18, marginTop: 25, opacity: implementations}}>
-        {['Engineer A', 'Engineer B', 'Engineer C'].map((label, index) => <div key={label} style={{flex: 1, height: 145, borderRadius: 18, border: `2px solid ${['#69b7ff', '#b487ff', '#ff9c72'][index]}`, background: '#101c30', padding: '23px 24px', boxSizing: 'border-box', rotate: `${[-1.5, 1.2, -0.8][index]}deg`}}>
-          <div style={{fontSize: 17, fontWeight: 900, color: ['#8fc9ff', '#c5a8ff', '#ffbd9b'][index]}}>{label}</div>
-          <div style={{fontFamily: 'ui-monospace, monospace', color: '#c4d1df', fontSize: 17, marginTop: 20}}>{['read_v1()', 'load_data()', 'fetch_table()'][index]}</div>
-        </div>)}
-      </div>
+    <div style={{position: 'absolute', left: 220, right: 220, top: 350, display: 'flex', gap: 58, opacity: implementationOpacity}}>
+      {implementations.map(({engineer, context, accent, widths, offset, rotate}, index) => {
+        const progress = enterProgress(frame, fps, inconsistencyAt + seconds(index * 0.13));
+        return <Surface key={engineer} accent={accent} style={{flex: 1, height: 350, padding: '30px 32px', opacity: progress, translate: `0 ${(1 - progress) * 15 + offset * misalignment}px`, rotate: `${rotate * misalignment}deg`}}>
+          <div style={{fontSize: 23, fontWeight: 850, color: '#f1f6fb'}}>{engineer}</div>
+          <div style={{fontSize: 16, fontWeight: 750, color: accent, marginTop: 8, letterSpacing: 0.7}}>{context}</div>
+          <div style={{height: 1, background: '#33465c', margin: '25px 0 27px'}} />
+          <div style={{display: 'grid', gap: index === 1 ? 21 : 17}}>
+            {widths.map((width, lineIndex) => <div key={`${engineer}-${lineIndex}`} style={{height: lineIndex === 0 ? 12 : 9, width: `${width}%`, marginLeft: index === 2 && lineIndex > 0 ? 28 : index === 0 && lineIndex === 2 ? 18 : 0, borderRadius: 99, background: lineIndex === 0 ? accent : '#60768d', opacity: lineIndex === 0 ? 0.9 : 0.72}} />)}
+          </div>
+        </Surface>;
+      })}
     </div>
   </SceneShell>;
 };
