@@ -95,7 +95,7 @@ const Surface = ({children, accent, style}: {children: ReactNode; accent: string
   boxSizing: 'border-box', ...style,
 }}>{children}</div>;
 
-const PipelinePattern = ({top, read, transform, write, firstLink, secondLink, linkColor, firstLinkOpacity = 1, secondLinkOpacity = 1, writeDetail}: {top: number; read: number; transform: number; write: number; firstLink: number; secondLink: number; linkColor?: string; firstLinkOpacity?: number; secondLinkOpacity?: number; writeDetail?: string}) => <>
+const PipelinePattern = ({top, read, transform, transformScale = 1, write, firstLink, secondLink, linkColor, firstLinkOpacity = 1, secondLinkOpacity = 1, writeDetail}: {top: number; read: number; transform: number; transformScale?: number; write: number; firstLink: number; secondLink: number; linkColor?: string; firstLinkOpacity?: number; secondLinkOpacity?: number; writeDetail?: string}) => <>
   <AnimatedDataFlow style={{zIndex: 0}}>
     <AnimatedFlowPath id={`pipeline-read-${top}`} d={`M${PIPELINE_LAYOUT.left + PIPELINE_LAYOUT.cardWidth} ${top + PIPELINE_LAYOUT.cardHeight / 2} H${PIPELINE_LAYOUT.transformLeft}`} progress={firstLink} color={linkColor ?? '#52d6c6'} opacity={firstLinkOpacity} />
     <AnimatedFlowPath id={`pipeline-write-${top}`} d={`M${PIPELINE_LAYOUT.transformLeft + PIPELINE_LAYOUT.cardWidth} ${top + PIPELINE_LAYOUT.cardHeight / 2} H${PIPELINE_LAYOUT.writeLeft}`} progress={secondLink} color={linkColor ?? '#72e6ad'} opacity={secondLinkOpacity} />
@@ -106,14 +106,14 @@ const PipelinePattern = ({top, read, transform, write, firstLink, secondLink, li
       <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 34, color: '#d8ecff', fontWeight: 800, marginTop: 46}}>orchestrate_read()</div>
       <div style={{fontSize: 24, color: '#aebed3', marginTop: 38}}>Governed source</div>
     </Surface>
-    <Surface accent="#52d6c6" style={{width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: transform, translate: `0 ${(1 - transform) * 24}px`}}>
+    <Surface accent="#52d6c6" style={{position: 'relative', zIndex: 2, width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: transform, translate: `0 ${(1 - transform) * 24}px`, scale: transformScale, transformOrigin: 'center'}}>
       <div style={{fontSize: 20, color: '#7ae4d8', letterSpacing: 1.8, fontWeight: 850}}>YOUR LOGIC</div>
       <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 39, color: '#f6fbff', fontWeight: 850, marginTop: 43}}>PySpark</div>
       <div style={{fontSize: 24, color: '#aebed3', marginTop: 34}}>Your transformation</div>
     </Surface>
-    <Surface accent="#72e6ad" style={{width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: write, translate: `0 ${(1 - write) * 24}px`}}>
-      <div style={{fontSize: 20, color: '#72e6ad', letterSpacing: 1.8, fontWeight: 850}}>GOVERNED WRITE</div>
-      <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 32, color: '#dcffec', fontWeight: 800, marginTop: 46}}>orchestrate_write()</div>
+    <Surface accent="#69b7ff" style={{width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: write, translate: `0 ${(1 - write) * 24}px`}}>
+      <div style={{fontSize: 20, color: '#8fc9ff', letterSpacing: 1.8, fontWeight: 850}}>GOVERNED WRITE</div>
+      <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 32, color: '#d8ecff', fontWeight: 800, marginTop: 46}}>orchestrate_write()</div>
       <div style={{fontSize: 24, color: '#aebed3', marginTop: writeDetail ? 24 : 38}}>Governed target</div>
       {writeDetail ? <div style={{fontSize: 16, color: '#80cdb2', marginTop: 14, lineHeight: 1.25}}>{writeDetail}</div> : null}
     </Surface>
@@ -219,6 +219,12 @@ export const RepeatablePipelineScene = () => {
   const read = enterProgress(frame, fps, readAt);
   const transform = enterProgress(frame, fps, transformAt);
   const write = enterProgress(frame, fps, writeAt);
+  const transformScale = interpolate(
+    frame,
+    [transformAt - seconds(0.35), transformAt + seconds(0.45), localCue(4) - seconds(0.45), localCue(4)],
+    [1, 1.2, 1.2, 1],
+    {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)},
+  );
   const firstLink = interpolate(frame, [transformAt - seconds(0.4), transformAt + seconds(0.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const secondLink = interpolate(frame, [transformAt - seconds(0.2), transformAt + seconds(0.4)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const ferryStart = 0;
@@ -234,19 +240,20 @@ export const RepeatablePipelineScene = () => {
 
   return (
     <SceneShell duration={REPEATABLE_PIPELINE_DURATION} heading="" accent={theme.engineering}>
-      <PipelinePattern top={300} read={read} transform={transform} write={write} firstLink={firstLink} secondLink={secondLink} />
+      <PipelinePattern top={300} read={read} transform={transform} transformScale={transformScale} write={write} firstLink={firstLink} secondLink={secondLink} />
       {mascotFormation.map(({x, y}, index) => <Img key={`pipeline-mascot-${index}`} src={mascotSrc('carrying')} style={{
-          position: 'absolute',
-          left: -460 + ferry * 2100 + x,
-          top: 575 + y,
-          width: 220,
-          height: 220,
-          objectFit: 'contain',
-          opacity: ferryOpacity,
-          filter: 'drop-shadow(0 16px 26px #0008)',
-          translate: '-12.1px -245px',
-          scale: 1.574,
-        }} />)}
+        position: 'absolute',
+        left: -460 + ferry * 2100 + x,
+        top: 575 + y,
+        width: 220,
+        height: 220,
+        objectFit: 'contain',
+        opacity: ferryOpacity,
+        filter: 'drop-shadow(0 16px 26px #0008)',
+        translate: "518.2px -174.3px",
+        scale: 1.8,
+        rotate: "-14.9deg"
+      }} />)}
       <Reveal at={localCue(4)} y={16}>
         <div style={{position: 'absolute', left: 150, right: 150, top: 800, display: 'flex', justifyContent: 'center', gap: 36}}>
           {[
