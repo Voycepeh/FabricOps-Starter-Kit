@@ -418,7 +418,7 @@ export const BigPictureScene = () => {
   const openingTransitionEnd = localCue(1) + seconds(0.25);
   const sideEnter = enterProgress(frame, fps, seconds(0.35));
   const handshakeEnter = enterProgress(frame, fps, localCue(0));
-  const contractEnter = enterProgress(frame, fps, localCue(0) + seconds(0.65));
+  const contractEnter = enterProgress(frame, fps, 10180 - cue.startFrame);
   const openingOpacity = interpolate(frame, [openingTransitionStart, openingTransitionEnd], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const contractCarry = interpolate(frame, [openingTransitionStart, openingTransitionEnd], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const sourceAt = localCue(4);
