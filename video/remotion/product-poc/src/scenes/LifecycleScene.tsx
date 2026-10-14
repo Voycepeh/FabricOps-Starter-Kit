@@ -103,7 +103,7 @@ export const StepCard = memo(({
   </div>;
 });
 
-export const LifecycleScene = ({hideStep7 = false}: {hideStep7?: boolean}) => {
+export const LifecycleScene = ({hideStep7 = false, seamlessHandoff = true}: {hideStep7?: boolean; seamlessHandoff?: boolean}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const {scenes, timing} = VIDEO_CONFIG;
@@ -114,7 +114,7 @@ export const LifecycleScene = ({hideStep7 = false}: {hideStep7?: boolean}) => {
   const productionArrowStart = lifecycleFrame(timingSeconds.productionArrowStart, fps);
   const productionArrowEnd = lifecycleFrame(timingSeconds.productionArrowEnd, fps);
   const activeIndex = stepTimes.reduce((latest, reveal, index) => frame >= reveal ? index : latest, -1);
-  const exit = hideStep7 ? 1 : interpolate(frame, [scenes.workflow - timing.sceneExit, scenes.workflow], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const exit = hideStep7 || seamlessHandoff ? 1 : interpolate(frame, [scenes.workflow - timing.sceneExit, scenes.workflow], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const loopEnter = interpolate(frame, [loopStart, loopStart + 24], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const loopExit = interpolate(frame, [loopEnd - 18, loopEnd], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const loopOpacity = loopEnter * loopExit;

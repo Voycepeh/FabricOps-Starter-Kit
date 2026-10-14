@@ -1,5 +1,6 @@
 import {memo} from 'react';
 import {AbsoluteFill, Easing, Freeze, interpolate, useCurrentFrame} from 'remotion';
+import {AnimatedDataFlow, AnimatedFlowPath} from '../components/AnimatedDataFlow';
 import {NARRATION_CUE_SHEET} from '../narrationCues';
 import {theme} from '../theme';
 import {GUIDED_SCENE_DURATIONS, LIFECYCLE_HANDOFF_LOCAL_FRAME, seconds} from '../videoConfig';
@@ -15,8 +16,12 @@ const consumers = [
 // Consumption continues at the lifecycle handoff and follows the master narration cues.
 const CONSUMPTION_CUE = NARRATION_CUE_SHEET.consumption;
 const localCueFrame = (index: number) => CONSUMPTION_CUE.keyPhrases[index].triggerFrame - CONSUMPTION_CUE.startFrame;
+const STEP_7_REVEAL_START = localCueFrame(0);
+const STEP_7_REVEAL_END = STEP_7_REVEAL_START + seconds(0.55);
+const STEP_7_ARROW_START = STEP_7_REVEAL_START + seconds(0.2);
 const STEP_7_FOCUS_START = localCueFrame(1);
 const STEP_7_FOCUS_END = localCueFrame(2);
+const STEP_7_ARROW_END = STEP_7_FOCUS_START - seconds(0.15);
 const FOUNDATION_TRANSFORMATION_START = localCueFrame(2) + seconds(0.35);
 const FOUNDATION_TRANSFORMATION_END = localCueFrame(3) - seconds(0.45);
 const CONSUMER_REVEAL_FRAMES = [localCueFrame(3), localCueFrame(4), localCueFrame(5), localCueFrame(6)];
@@ -85,6 +90,8 @@ const ConsumerNode = memo(({consumer, progress}: {consumer: (typeof consumers)[n
 
 export const ConsumptionScene = () => {
   const frame = useCurrentFrame();
+  const step7Enter = interpolate(frame, [STEP_7_REVEAL_START, STEP_7_REVEAL_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+  const step7Arrow = interpolate(frame, [STEP_7_ARROW_START, STEP_7_ARROW_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const focus = interpolate(frame, [STEP_7_FOCUS_START, STEP_7_FOCUS_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const foundationProgress = interpolate(frame, [FOUNDATION_TRANSFORMATION_START, FOUNDATION_TRANSFORMATION_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const foundation = interpolate(frame, [FOUNDATION_TRANSFORMATION_START, FOUNDATION_TRANSFORMATION_END], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.bezier(0.16, 1, 0.3, 1)});
@@ -110,9 +117,12 @@ export const ConsumptionScene = () => {
       <Freeze frame={LIFECYCLE_HANDOFF_LOCAL_FRAME}>
         <LifecycleScene hideStep7 />
       </Freeze>
+      {frame >= STEP_7_ARROW_START ? <AnimatedDataFlow>
+        <AnimatedFlowPath id="consumption-step-7-handoff" d="M1330 840 H1445" progress={step7Arrow} color={theme.consumer} baseColor="#405571" strokeWidth={6} opacity={step7Arrow} />
+      </AnimatedDataFlow> : null}
     </AbsoluteFill> : null}
 
-    <div style={{position: 'absolute', left: cardCenterX - cardWidth / 2, top: cardCenterY - cardHeight / 2, width: cardWidth, height: cardHeight, scale: cardScale, transformOrigin: '50% 50%', zIndex: 4}}>
+    {frame >= STEP_7_REVEAL_START ? <div style={{position: 'absolute', left: cardCenterX - cardWidth / 2, top: cardCenterY - cardHeight / 2, width: cardWidth, height: cardHeight, scale: cardScale, transformOrigin: '50% 50%', zIndex: 4}}>
       <StepCard
         number={7}
         label={STEP_7_LABEL}
@@ -122,7 +132,7 @@ export const ConsumptionScene = () => {
         labelAlignmentProgress={foundation}
         singleLineLabel={foundation >= 0.8}
         color={theme.consumer}
-        enter={1}
+        enter={step7Enter}
         active
         width={cardWidth}
         height={cardHeight}
@@ -133,7 +143,7 @@ export const ConsumptionScene = () => {
         horizontalPadding={visualHorizontalPadding / cardScale}
       />
       <div style={{position: 'absolute', left: 34, right: 34, bottom: -18, height: 18, borderRadius: '0 0 12px 12px', background: '#9a5c28', opacity: foundation}} />
-    </div>
+    </div> : null}
 
     {consumers.map((consumer, index) => {
       if (frame < CONSUMER_REVEAL_FRAMES[index]) return null;
