@@ -39,6 +39,8 @@ export const FabricOpsReveal = () => {
   const whyExitAt = fabricOpsFrame(prompts.whyExit, fps);
   const howAt = fabricOpsFrame(prompts.how, fps);
   const worksAt = fabricOpsFrame(prompts.works, fps);
+  const relationshipAt = 800;
+  const relationshipCircleAt = 870;
   const whyEnter = spring({frame: frame - whyAt, fps, config: {damping: 18, stiffness: 88}});
   const whyExit = interpolate(frame, [whyExitAt - 20, whyExitAt], [0, 1], {
     extrapolateLeft: 'clamp',
@@ -47,6 +49,9 @@ export const FabricOpsReveal = () => {
   });
   const howEnter = spring({frame: frame - howAt, fps, config: {damping: 18, stiffness: 88}});
   const worksEnter = spring({frame: frame - worksAt, fps, config: {damping: 14, stiffness: 105}});
+  const relationshipEnter = spring({frame: frame - relationshipAt, fps, config: {damping: 16, stiffness: 100}});
+  const relationshipFade = interpolate(frame, [howAt - 30, howAt - 10], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const relationshipCircle = interpolate(frame, [relationshipCircleAt, relationshipCircleAt + 30], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const exit = interpolate(
     frame,
     [VIDEO_CONFIG.scenes.fabricOps - timing.sceneExit, VIDEO_CONFIG.scenes.fabricOps],
@@ -126,6 +131,15 @@ export const FabricOpsReveal = () => {
           </div>
         );
       })()}
+
+      {frame >= relationshipAt && relationshipFade > 0 ? <div style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
+        {frame >= relationshipCircleAt ? <svg aria-hidden="true" width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, opacity: relationshipFade}}>
+          <ellipse cx="960" cy="540" rx="830" ry="330" pathLength="1" fill="none" stroke={theme.production} strokeWidth="15" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - relationshipCircle} opacity={0.12 * relationshipCircle} />
+          <ellipse cx="960" cy="540" rx="830" ry="330" pathLength="1" fill="none" stroke={theme.production} strokeWidth="7" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - relationshipCircle} opacity={relationshipCircle} />
+        </svg> : null}
+        <div style={{position: 'absolute', left: 190, top: 345, width: 420, textAlign: 'center', fontSize: 56, fontWeight: 800, color: '#fff', textShadow: '0 0 26px #38d99166', opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18}}>Governance</div>
+        <div style={{position: 'absolute', right: 190, top: 345, width: 420, textAlign: 'center', fontSize: 56, fontWeight: 800, color: '#fff', textShadow: '0 0 26px #38d99166', opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18}}>Engineering</div>
+      </div> : null}
 
       <div
         style={{
