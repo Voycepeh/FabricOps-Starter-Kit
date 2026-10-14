@@ -294,8 +294,9 @@ export const SensitiveDataScene = () => {
   const introEnd = 7800 - cue.startFrame;
   const inspectionAt = 8430 - cue.startFrame;
   const maskAt = 950;
-  const hashAt = maskAt + localCue(3) - localCue(2);
-  const tokenizeAt = maskAt + localCue(4) - localCue(2);
+  const hashAt = localCue(3);
+  const tokenizeAt = localCue(4);
+  const removeAt = localCue(4) + seconds(1.2);
   const policyOpacity = interpolate(frame, [policyAt, policyAt + seconds(0.4), introEnd - seconds(0.4), introEnd], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const enforcedOpacity = interpolate(frame, [enforcedAt, enforcedAt + seconds(0.4), introEnd - seconds(0.4), introEnd], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const sensitiveBubble = enterProgress(frame, fps, introEnd);
@@ -318,12 +319,12 @@ export const SensitiveDataScene = () => {
       <Mascot pose="masking" x={1390} y={485} size={315} delay={maskAt} />
       {scan > 0 ? <div style={{position: 'absolute', left: 425, top: 605, width: 55, height: 5, borderRadius: 99, background: '#ffae66', scale: `${scan} 1`, transformOrigin: 'left'}} /> : null}
       {treatment > 0 ? <div style={{position: 'absolute', left: 1330, top: 605, width: 60, height: 5, borderRadius: 99, background: '#ffae66', scale: `${treatment} 1`, transformOrigin: 'left'}} /> : null}
-      {frame >= maskAt ? <div style={{position: 'absolute', left: 430, right: 430, top: 810, display: 'flex', justifyContent: 'center', gap: 27}}>
+      {frame >= hashAt ? <div style={{position: 'absolute', left: 430, right: 430, top: 810, display: 'flex', justifyContent: 'center', gap: 27}}>
         {[
           {label: 'MASK', at: maskAt},
           {label: 'HASH', at: hashAt},
           {label: 'TOKENIZE', at: tokenizeAt},
-          {label: 'REMOVE', at: tokenizeAt + seconds(1.2)},
+          {label: 'REMOVE', at: removeAt},
         ].map(({label, at}) => <div key={label} style={{padding: '20px 33px', borderRadius: 18, border: '1px solid #ffae66', background: '#342419', color: '#ffd4aa', fontSize: 27, fontWeight: 900, opacity: enterProgress(frame, fps, at)}}>{label}</div>)}
       </div> : null}
     </div>
