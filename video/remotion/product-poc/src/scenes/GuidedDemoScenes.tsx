@@ -334,6 +334,8 @@ export const BusinessRulesScene = () => {
   const introduction = enterProgress(frame, fps, localCue(0));
   const businessBubble = enterProgress(frame, fps, localCue(2));
   const introductionOpacity = introduction * (1 - businessBubble);
+  const translationWait = interpolate(frame, [seconds(2.2), localCue(1) - seconds(0.8)], [0, 0.5], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const translationLabels = interpolate(frame, [seconds(1.5), seconds(2.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const connectorMain = interpolate(frame, [localCue(3), localCue(3) + seconds(0.45)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const connectorTrunk = interpolate(frame, [localCue(3) + seconds(0.45), localCue(3) + seconds(0.95)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const firstBranch = interpolate(frame, [localCue(3) + seconds(0.95), localCue(3) + seconds(1.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
@@ -345,7 +347,22 @@ export const BusinessRulesScene = () => {
 
   return <SceneShell duration={BUSINESS_RULES_DURATION} heading="" accent={theme.governance}>
     <div>
-      {introductionOpacity > 0 ? <div style={{position: 'absolute', left: 430, top: 175, width: 1260, fontSize: 42, fontWeight: 850, color: '#e9ddff', opacity: introductionOpacity, textAlign: 'center'}}>Business requirements become data quality rules</div> : null}
+      {introductionOpacity > 0 ? <div style={{position: 'absolute', inset: 0, opacity: introductionOpacity}}>
+        <div style={{position: 'absolute', left: 330, top: 345, width: 1260, color: '#f3edff', fontSize: 66, lineHeight: 1.12, fontWeight: 900, letterSpacing: -1.2, textAlign: 'center'}}>
+          The hidden cost of translating<br />requirements into code.
+        </div>
+        <div style={{position: 'absolute', left: 430, top: 650, width: 1060, opacity: translationLabels}}>
+          <div style={{position: 'relative', height: 5, borderRadius: 99, background: '#413654'}}>
+            <div style={{position: 'absolute', inset: 0, width: `${translationWait * 100}%`, borderRadius: 99, background: '#b487ff', boxShadow: '0 0 14px #b487ff66'}} />
+            <div style={{position: 'absolute', left: '50%', top: '50%', width: 18, height: 18, borderRadius: 99, background: '#171329', border: '4px solid #b487ff', boxSizing: 'border-box', translate: '-50% -50%', boxShadow: '0 0 22px #b487ff66'}} />
+          </div>
+          <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', marginTop: 30, color: '#8fa0b7', fontSize: 17, fontWeight: 850, letterSpacing: 1.6}}>
+            <div>BUSINESS INTENT</div>
+            <div style={{color: '#c5a8ff', textAlign: 'center'}}>WAITING FOR ENGINEERING</div>
+            <div style={{textAlign: 'right', opacity: 0.48}}>EXECUTABLE RULE</div>
+          </div>
+        </div>
+      </div> : null}
       {businessBubble > 0 ? <SpeechBubble accent="#b487ff" eyebrow="Business rule requirement" style={{left: 430, top: 175, width: 1260, height: 195, opacity: businessBubble}}>&ldquo;Every completed order must have a delivery date, and it cannot be earlier than the order date.&rdquo;</SpeechBubble> : null}
       <Mascot pose="coding" x={105} y={505} size={320} delay={localCue(1)} />
 
