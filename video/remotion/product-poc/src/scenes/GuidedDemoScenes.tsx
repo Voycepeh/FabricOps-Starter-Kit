@@ -567,6 +567,8 @@ export const ClosingScene = () => {
   const plugIn = localCue(1);
   const governanceIn = localCue(2);
   const collaborationIn = localCue(3);
+  const dataFoundationIn = localCue(4);
+  const analyticsAndAiIn = localCue(5);
   const documentationIn = localCue(6);
   const demoIn = localCue(7);
   const narrationEnd = cue.endFrame - cue.startFrame;
@@ -574,7 +576,9 @@ export const ClosingScene = () => {
   const demoEnter = enterProgress(frame, fps, demoIn);
   const plugOpacity = interpolate(frame, [plugIn, plugIn + seconds(0.35), governanceIn - seconds(0.25), governanceIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const governanceOpacity = interpolate(frame, [governanceIn, governanceIn + seconds(0.35), collaborationIn - seconds(0.25), collaborationIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const collaborationOpacity = interpolate(frame, [collaborationIn, collaborationIn + seconds(0.4)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+  const collaborationOpacity = interpolate(frame, [collaborationIn, collaborationIn + seconds(0.35), dataFoundationIn - seconds(0.25), dataFoundationIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const dataFoundationOpacity = interpolate(frame, [dataFoundationIn, dataFoundationIn + seconds(0.35), analyticsAndAiIn - seconds(0.25), analyticsAndAiIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const analyticsAndAiOpacity = interpolate(frame, [analyticsAndAiIn, analyticsAndAiIn + seconds(0.35), documentationIn - seconds(0.25), documentationIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const fadeOpacity = interpolate(frame, [narrationEnd, CLOSING_DURATION - 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   return <AbsoluteFill style={{color: theme.text, fontFamily: font}}>
     <div style={{position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
@@ -589,12 +593,20 @@ export const ClosingScene = () => {
         Plug-and-Play Data Pipelines
       </div> : null}
 
-      {governanceOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#c5a8ff', opacity: governanceOpacity}}>
-        Governance-as-Code
+      {governanceOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: governanceOpacity}}>
+        Governance as Code
       </div> : null}
 
-      {collaborationOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#72e6ad', opacity: collaborationOpacity}}>
+      {collaborationOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: collaborationOpacity}}>
         One Consistent Framework
+      </div> : null}
+
+      {dataFoundationOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: dataFoundationOpacity}}>
+        The Data Foundation for the AI Era
+      </div> : null}
+
+      {analyticsAndAiOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: analyticsAndAiOpacity}}>
+        Powering Analytics and AI
       </div> : null}
 
       {documentationEnter > 0 || demoEnter > 0 ? <div style={{position: 'absolute', top: 776, display: 'flex', alignItems: 'center', gap: 24}}>
