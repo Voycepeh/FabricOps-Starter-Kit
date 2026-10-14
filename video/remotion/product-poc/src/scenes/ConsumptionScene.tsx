@@ -2,7 +2,7 @@ import {memo} from 'react';
 import {AbsoluteFill, Easing, Freeze, interpolate, useCurrentFrame} from 'remotion';
 import {NARRATION_CUE_SHEET} from '../narrationCues';
 import {theme} from '../theme';
-import {GUIDED_SCENE_DURATIONS, LIFECYCLE_HANDOFF_LOCAL_FRAME, OVERVIEW_HANDOFF_FRAME, seconds} from '../videoConfig';
+import {GUIDED_SCENE_DURATIONS, LIFECYCLE_HANDOFF_LOCAL_FRAME, seconds} from '../videoConfig';
 import {LifecycleScene, STEP_7_LABEL, StepCard} from './LifecycleScene';
 
 const consumers = [
@@ -136,6 +136,7 @@ export const ConsumptionScene = () => {
     </div>
 
     {consumers.map((consumer, index) => {
+      if (frame < CONSUMER_REVEAL_FRAMES[index]) return null;
       const progress = interpolate(frame, [CONSUMER_REVEAL_FRAMES[index], CONSUMER_REVEAL_FRAMES[index] + CONSUMER_REVEAL_DURATION], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.bezier(0.16, 1, 0.3, 1)});
       return <ConsumerNode key={consumer.title} consumer={consumer} progress={progress} />;
     })}

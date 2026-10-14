@@ -60,7 +60,7 @@ export const OpeningPlatform = () => {
           scale: 0.977,
         }}
       />
-      <div
+      {fabricOpacity > 0 ? <div
         style={{
           position: 'absolute',
           left: 0,
@@ -85,8 +85,8 @@ export const OpeningPlatform = () => {
           <span style={{color: '#fff'}}>Microsoft</span>{' '}
           <span style={{color: '#38d991'}}>Fabric</span>
         </div>
-      </div>
-      <div
+      </div> : null}
+      {questionOpacity > 0 ? <div
         style={{
           position: 'absolute',
           left: 0,
@@ -119,7 +119,7 @@ export const OpeningPlatform = () => {
             start?
           </span>
         </div>
-      </div>
+      </div> : null}
     </div>
   );
 };

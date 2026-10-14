@@ -1,3 +1,4 @@
+import {memo} from 'react';
 import {Easing, Img, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {AnimatedDataFlow, AnimatedFlowPath} from '../components/AnimatedDataFlow';
 import {mascotSrc, type MascotName} from '../mascotAssets';
@@ -33,12 +34,7 @@ const connectors = [
   {d: 'M1330 840 H1445', destination: 6},
 ];
 
-const LifecycleMascot = ({pose, x, y, size, enterAt}: {pose: MascotName; x: number; y: number; size: number; enterAt: number}) => {
-  const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
-  const enter = spring({frame: frame - enterAt, fps, durationInFrames: 20, config: {damping: 20, stiffness: 95}});
-  return null;
-};
+const MascotBadgeArtwork = memo(({pose}: {pose: MascotName}) => <Img src={mascotSrc(pose)} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 7px 12px #0007)'}} />);
 
 type StepCardProps = {
   number: number;
@@ -66,7 +62,7 @@ type StepCardProps = {
   labelAlignmentProgress?: number;
 };
 
-export const StepCard = ({
+export const StepCard = memo(({
   number,
   label,
   color,
@@ -95,7 +91,7 @@ export const StepCard = ({
   return <div style={{width: width ?? sizes.workflowCardWidth, height: height ?? sizes.workflowCardHeight, borderRadius, display: 'flex', alignItems: 'center', gap, padding: `0 ${horizontalPadding}px`, boxSizing: 'border-box', background: `linear-gradient(145deg, ${color}2e, #0d192b 72%)`, border: `3px solid ${active ? color : `${color}88`}`, boxShadow: active ? `0 0 48px ${color}55` : '0 18px 40px #0007', opacity: enter * (active ? 1 : 0.62), scale: 0.86 + enter * 0.14}}>
     <div style={{position: 'relative', width: circleSize, height: circleSize, flex: '0 0 auto'}}>
       <div style={{position: 'absolute', inset: 0, borderRadius: 99, display: 'grid', placeItems: 'center', background: color, color: '#07101f', fontSize: circleSize * 0.55, fontWeight: 900, opacity: 1 - badgeProgress}}>{number}</div>
-      {badgeMascot ? <Img src={mascotSrc(badgeMascot)} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', opacity: badgeProgress, scale: 0.84 + badgeProgress * 0.16, filter: 'drop-shadow(0 7px 12px #0007)'}} /> : null}
+      {badgeMascot ? <div style={{position: 'absolute', inset: 0, opacity: badgeProgress, scale: 0.84 + badgeProgress * 0.16}}><MascotBadgeArtwork pose={badgeMascot} /></div> : null}
     </div>
     {subtitle ? <div style={{position: centerContent ? 'relative' : undefined, flex: 1, alignSelf: 'stretch', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', textAlign: 'left'}}>
       <div style={{position: centerContent ? 'absolute' : undefined, top: centerContent ? 0 : undefined, bottom: centerContent ? 0 : undefined, left: centerContent ? `${interpolate(labelAlignmentProgress, [0, 1], [50, 0])}%` : undefined, width: centerContent ? 'max-content' : undefined, maxWidth: centerContent ? '100%' : undefined, display: centerContent ? 'flex' : undefined, alignItems: centerContent ? 'center' : undefined, translate: centerContent ? `${interpolate(labelAlignmentProgress, [0, 1], [-50, 0])}% 0` : undefined, whiteSpace: singleLineLabel ? 'nowrap' : 'pre-line', textAlign: 'left', color: '#f7f9fd', fontSize: fontSize ?? text.workflow, lineHeight: 1.08, fontWeight: 720, opacity: labelProgress}}>{label}</div>
@@ -105,7 +101,7 @@ export const StepCard = ({
       <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', whiteSpace: singleLineLabel ? 'nowrap' : 'pre-line', color: '#f7f9fd', fontSize: fontSize ?? text.workflow, lineHeight: 1.15, fontWeight: 720, opacity: previousLabel ? interpolate(labelProgress, [0.54, 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : labelProgress}}>{label}</div>
     </div>}
   </div>;
-};
+});
 
 export const LifecycleScene = ({hideStep7 = false}: {hideStep7?: boolean}) => {
   const frame = useCurrentFrame();
@@ -139,7 +135,7 @@ export const LifecycleScene = ({hideStep7 = false}: {hideStep7?: boolean}) => {
         return <AnimatedFlowPath key={connector.d} id={`lifecycle-${connector.destination}`} d={connector.d} progress={draw} color={steps[connector.destination].color} baseColor="#405571" strokeWidth={6} />;
       })}
       <ellipse cx={loop.cx} cy={loop.cy} rx={loop.rx} ry={loop.ry} fill="none" stroke={theme.governance} strokeWidth="4" strokeDasharray="12 11" opacity={loopRestingOpacity} />
-      <ellipse cx={loop.cx} cy={loop.cy} rx={loop.rx} ry={loop.ry} fill="none" stroke={theme.production} strokeWidth="10" strokeLinecap="round" pathLength="1000" strokeDasharray="125 875" strokeDashoffset={tracerOffset} opacity={loopOpacity} style={{filter: `drop-shadow(0 0 12px ${theme.production})`}} />
+      {loopOpacity > 0 ? <ellipse cx={loop.cx} cy={loop.cy} rx={loop.rx} ry={loop.ry} fill="none" stroke={theme.production} strokeWidth="10" strokeLinecap="round" pathLength="1000" strokeDasharray="125 875" strokeDashoffset={tracerOffset} opacity={loopOpacity} style={{filter: `drop-shadow(0 0 12px ${theme.production})`}} /> : null}
       <path d={`M${loop.cx + loop.rx - 8} ${loop.cy - 10} L${loop.cx + loop.rx + 8} ${loop.cy} L${loop.cx + loop.rx - 8} ${loop.cy + 10} Z`} fill={theme.governance} opacity={loopRestingOpacity * 2.2} />
     </AnimatedDataFlow>
     {steps.map((step, index) => {
@@ -148,9 +144,6 @@ export const LifecycleScene = ({hideStep7 = false}: {hideStep7?: boolean}) => {
       const enter = spring({frame: frame - stepTimes[index], fps, durationInFrames: timing.workflowStepEnter, config: {damping: 19, stiffness: 92}});
       return <div key={step.number} style={{position: 'absolute', left: step.x, top: step.y}}><StepCard {...step} enter={enter} active={activeIndex === index} /></div>;
     })}
-    <LifecycleMascot pose="writing" x={68} y={365} size={96} enterAt={stepTimes[2]} />
-    <LifecycleMascot pose="validate" x={820} y={890} size={90} enterAt={stepTimes[3] + 8} />
-    <LifecycleMascot pose="prod" x={1110} y={535} size={150} enterAt={stepTimes[5]} />
-    <div style={{position: 'absolute', left: loop.captionLeft, top: loop.captionTop, width: 300, textAlign: 'center', color: '#dce7f5', fontSize: 24, fontWeight: 720, opacity: loopOpacity}}>Iterate until validations pass</div>
+    {loopOpacity > 0 ? <div style={{position: 'absolute', left: loop.captionLeft, top: loop.captionTop, width: 300, textAlign: 'center', color: '#dce7f5', fontSize: 24, fontWeight: 720, opacity: loopOpacity}}>Iterate until validations pass</div> : null}
   </div>;
 };

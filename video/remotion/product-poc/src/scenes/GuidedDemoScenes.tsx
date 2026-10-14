@@ -1,4 +1,4 @@
-import type {CSSProperties, ReactNode} from 'react';
+import {memo, type CSSProperties, type ReactNode} from 'react';
 import {AbsoluteFill, Easing, Img, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {mascotSrc, type MascotName} from '../mascotAssets';
 import {NARRATION_CUE_SHEET} from '../narrationCues';
@@ -38,18 +38,58 @@ const VALIDATION_LAYOUT = {
 
 const FLOW_COLOR = '#5FE1D0';
 
+const DATA_ENGINEER_TASKS = [
+  {label: 'Connect', detail: 'Data stores', cueIndex: 1, accent: '#69b7ff'},
+  {label: 'Resolve', detail: 'Paths', cueIndex: 2, accent: '#52d6c6'},
+  {label: 'Profile', detail: 'Profiling + EDA', cueIndex: 3, accent: '#b487ff'},
+  {label: 'Validate', detail: 'Quality checks', cueIndex: 4, accent: '#ffae66'},
+] as const;
+
+const DATA_ENGINEER_CODE_LINES = [
+  {width: 76, color: '#69b7ff'},
+  {width: 54, color: '#52d6c6'},
+  {width: 66, color: '#b487ff'},
+  {width: 43, color: '#ffae66'},
+] as const;
+
+const DATA_ENGINEER_IMPLEMENTATIONS = [
+  {engineer: 'Engineer A', context: 'Prompt A · Model 1', accent: '#69b7ff', widths: [76, 48, 64, 38], offset: -9, rotate: -0.65},
+  {engineer: 'Engineer B', context: 'Prompt B · Model 2', accent: '#b487ff', widths: [48, 82, 56, 70], offset: 11, rotate: 0.55},
+  {engineer: 'Engineer C', context: 'Prompt C · Model 3', accent: '#ff9c72', widths: [68, 42, 78, 51], offset: -5, rotate: -0.35},
+] as const;
+
+const PIPELINE_MASCOT_FORMATION = [
+  {x: 0, y: -55},
+  {x: 210, y: 35},
+  {x: 420, y: -25},
+  {x: 630, y: 65},
+] as const;
+
+const SENSITIVE_IDENTITY_ROWS = [
+  {before: 'S1234567D', after: 'S****567D'},
+  {before: 'T7654321F', after: 'T****321F'},
+  {before: 'F2468135N', after: 'F****135N'},
+] as const;
+
+const BIG_PICTURE_ROWS = [
+  {id: '00007', nric: 'S1234567D', maskedNric: 'S****567D', order: '09:00', modified: '09:18', result: 'PASS', color: '#72e6ad'},
+  {id: '00008', nric: 'T7654321F', maskedNric: 'T****321F', order: '09:00', modified: '08:00', result: 'FAIL', color: '#ff756d'},
+] as const;
+
+const MascotArtwork = memo(({pose, shadow = 'drop-shadow(0 16px 26px #0008)'}: {pose: MascotName; shadow?: string}) => <Img src={mascotSrc(pose)} style={{width: '100%', height: '100%', objectFit: 'contain', filter: shadow}} />);
+
 const Mascot = ({pose, x, y, size, delay}: {pose: MascotName; x: number; y: number; size: number; delay: number}) => {
   const frame = useCurrentFrame();
+  if (frame < delay) return null;
+
   const progress = interpolate(frame, [delay, delay + seconds(0.6)], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.out(Easing.cubic),
   });
-  return <Img src={mascotSrc(pose)} style={{
-    position: 'absolute', left: x, top: y, width: size, height: size,
-    objectFit: 'contain', opacity: progress, translate: `0 ${(1 - progress) * 24}px`,
-    filter: 'drop-shadow(0 16px 26px #0008)',
-  }} />;
+  return <div style={{position: 'absolute', left: x, top: y, width: size, height: size, opacity: progress, translate: `0 ${(1 - progress) * 24}px`}}>
+    <MascotArtwork pose={pose} />
+  </div>;
 };
 
 const sceneOpacity = (frame: number, duration: number) => interpolate(
@@ -69,6 +109,8 @@ const enterProgress = (frame: number, fps: number, at: number) => spring({
 const Reveal = ({at, children, x = 0, y = 22}: {at: number; children: ReactNode; x?: number; y?: number}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
+  if (frame < at) return null;
+
   const progress = enterProgress(frame, fps, at);
   return <div style={{opacity: progress, translate: `${(1 - progress) * x}px ${(1 - progress) * y}px`}}>{children}</div>;
 };
@@ -95,30 +137,30 @@ const Surface = ({children, accent, style}: {children: ReactNode; accent: string
   boxSizing: 'border-box', ...style,
 }}>{children}</div>;
 
-const PipelinePattern = ({top, read, transform, transformScale = 1, write, firstLink, secondLink, linkColor, firstLinkOpacity = 1, secondLinkOpacity = 1, writeDetail}: {top: number; read: number; transform: number; transformScale?: number; write: number; firstLink: number; secondLink: number; linkColor?: string; firstLinkOpacity?: number; secondLinkOpacity?: number; writeDetail?: string}) => <>
+const PipelinePattern = memo(({top, read, transform, transformScale = 1, write, firstLink, secondLink, linkColor, firstLinkOpacity = 1, secondLinkOpacity = 1, writeDetail}: {top: number; read: number; transform: number; transformScale?: number; write: number; firstLink: number; secondLink: number; linkColor?: string; firstLinkOpacity?: number; secondLinkOpacity?: number; writeDetail?: string}) => <>
   <AnimatedDataFlow style={{zIndex: 0}}>
     <AnimatedFlowPath id={`pipeline-read-${top}`} d={`M${PIPELINE_LAYOUT.left + PIPELINE_LAYOUT.cardWidth} ${top + PIPELINE_LAYOUT.cardHeight / 2} H${PIPELINE_LAYOUT.transformLeft}`} progress={firstLink} color={linkColor ?? '#52d6c6'} opacity={firstLinkOpacity} />
     <AnimatedFlowPath id={`pipeline-write-${top}`} d={`M${PIPELINE_LAYOUT.transformLeft + PIPELINE_LAYOUT.cardWidth} ${top + PIPELINE_LAYOUT.cardHeight / 2} H${PIPELINE_LAYOUT.writeLeft}`} progress={secondLink} color={linkColor ?? '#72e6ad'} opacity={secondLinkOpacity} />
   </AnimatedDataFlow>
   <div style={{position: 'absolute', left: PIPELINE_LAYOUT.left, top, display: 'flex', alignItems: 'center', gap: PIPELINE_LAYOUT.gap, zIndex: 1}}>
-    <Surface accent="#69b7ff" style={{width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: read, translate: `0 ${(1 - read) * 24}px`}}>
+    {read > 0 ? <Surface accent="#69b7ff" style={{width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: read, translate: `0 ${(1 - read) * 24}px`}}>
       <div style={{fontSize: 20, color: '#8fc9ff', letterSpacing: 1.8, fontWeight: 850}}>GOVERNED READ</div>
       <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 34, color: '#d8ecff', fontWeight: 800, marginTop: 46}}>orchestrate_read()</div>
       <div style={{fontSize: 24, color: '#aebed3', marginTop: 38}}>Governed source</div>
-    </Surface>
-    <Surface accent="#52d6c6" style={{position: 'relative', zIndex: 2, width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: transform, translate: `0 ${(1 - transform) * 24}px`, scale: transformScale, transformOrigin: 'center'}}>
+    </Surface> : null}
+    {transform > 0 ? <Surface accent="#52d6c6" style={{position: 'relative', zIndex: 2, width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: transform, translate: `0 ${(1 - transform) * 24}px`, scale: transformScale, transformOrigin: 'center'}}>
       <div style={{fontSize: 20, color: '#7ae4d8', letterSpacing: 1.8, fontWeight: 850}}>YOUR LOGIC</div>
       <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 39, color: '#f6fbff', fontWeight: 850, marginTop: 43}}>PySpark</div>
       <div style={{fontSize: 24, color: '#aebed3', marginTop: 34}}>Your transformation</div>
-    </Surface>
-    <Surface accent="#69b7ff" style={{width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: write, translate: `0 ${(1 - write) * 24}px`}}>
+    </Surface> : null}
+    {write > 0 ? <Surface accent="#69b7ff" style={{width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: write, translate: `0 ${(1 - write) * 24}px`}}>
       <div style={{fontSize: 20, color: '#8fc9ff', letterSpacing: 1.8, fontWeight: 850}}>GOVERNED WRITE</div>
       <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 32, color: '#d8ecff', fontWeight: 800, marginTop: 46}}>orchestrate_write()</div>
       <div style={{fontSize: 24, color: '#aebed3', marginTop: writeDetail ? 24 : 38}}>Governed target</div>
       {writeDetail ? <div style={{fontSize: 16, color: '#80cdb2', marginTop: 14, lineHeight: 1.25}}>{writeDetail}</div> : null}
-    </Surface>
+    </Surface> : null}
   </div>
-</>;
+</>);
 
 const SpeechBubble = ({accent, eyebrow, children, style}: {accent: string; eyebrow: string; children: ReactNode; style: CSSProperties}) => <div style={{
   position: 'absolute', borderRadius: 18, border: `1px solid ${accent}99`, background: '#10243cf2',
@@ -144,29 +186,12 @@ export const DataEngineersScene = () => {
   const aiOpacity = interpolate(frame, [aiEnter, aiEnter + seconds(0.35), aiFadeAt, aiFadeAt + seconds(0.35)], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const implementationOpacity = interpolate(frame, [inconsistencyAt, inconsistencyAt + seconds(0.45)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const misalignment = interpolate(frame, [implementationsAt, implementationsAt + seconds(0.8)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const tasks = [
-    {label: 'Connect', detail: 'Data stores', at: localCue(1), accent: '#69b7ff'},
-    {label: 'Resolve', detail: 'Paths', at: localCue(2), accent: '#52d6c6'},
-    {label: 'Profile', detail: 'Profiling + EDA', at: localCue(3), accent: '#b487ff'},
-    {label: 'Validate', detail: 'Quality checks', at: localCue(4), accent: '#ffae66'},
-  ];
-  const codeLines = [
-    {width: 76, color: '#69b7ff'},
-    {width: 54, color: '#52d6c6'},
-    {width: 66, color: '#b487ff'},
-    {width: 43, color: '#ffae66'},
-  ];
-  const implementations = [
-    {engineer: 'Engineer A', context: 'Prompt A · Model 1', accent: '#69b7ff', widths: [76, 48, 64, 38], offset: -9, rotate: -0.65},
-    {engineer: 'Engineer B', context: 'Prompt B · Model 2', accent: '#b487ff', widths: [48, 82, 56, 70], offset: 11, rotate: 0.55},
-    {engineer: 'Engineer C', context: 'Prompt C · Model 3', accent: '#ff9c72', widths: [68, 42, 78, 51], offset: -5, rotate: -0.35},
-  ];
-
   return <SceneShell duration={DATA_ENGINEERS_DURATION} heading="" accent={theme.engineering}>
-    <div style={{position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', textAlign: 'center', fontSize: 91, fontWeight: 900, letterSpacing: 1.5, color: '#f2f7fc', opacity: introOpacity, translate: `0 ${(1 - introOpacity) * 12}px`}}>Rewriting Boilerplate Code</div>
+    {introOpacity > 0 ? <div style={{position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', textAlign: 'center', fontSize: 91, fontWeight: 900, letterSpacing: 1.5, color: '#f2f7fc', opacity: introOpacity, translate: `0 ${(1 - introOpacity) * 12}px`}}>Rewriting Boilerplate Code</div> : null}
 
-    <div style={{position: 'absolute', left: 140, right: 140, top: 405, display: 'flex', gap: 32, opacity: taskOpacity}}>
-      {tasks.map(({label, detail, at, accent}) => {
+    {frame >= localCue(1) && taskOpacity > 0 ? <div style={{position: 'absolute', left: 140, right: 140, top: 405, display: 'flex', gap: 32, opacity: taskOpacity}}>
+      {DATA_ENGINEER_TASKS.map(({label, detail, cueIndex, accent}) => {
+        const at = localCue(cueIndex);
         const progress = enterProgress(frame, fps, at);
         return <Surface key={label} accent={accent} style={{flex: 1, height: 196, padding: '38px 34px', opacity: progress, translate: `0 ${(1 - progress) * 16}px`}}>
           <div style={{width: 48, height: 5, borderRadius: 99, background: accent}} />
@@ -174,9 +199,9 @@ export const DataEngineersScene = () => {
           <div style={{fontSize: 21, color: '#9fb1c5', marginTop: 12}}>{detail}</div>
         </Surface>;
       })}
-    </div>
+    </div> : null}
 
-    <Surface accent="#52d6c6" style={{position: 'absolute', left: 520, top: 320, width: 880, height: 390, padding: '46px 54px', opacity: aiOpacity, translate: `0 ${(1 - aiOpacity) * 12}px`}}>
+    {aiOpacity > 0 ? <Surface accent="#52d6c6" style={{position: 'absolute', left: 520, top: 320, width: 880, height: 390, padding: '46px 54px', opacity: aiOpacity, translate: `0 ${(1 - aiOpacity) * 12}px`}}>
       <div style={{display: 'flex', alignItems: 'center', gap: 27}}>
         <div style={{width: 78, height: 78, borderRadius: 22, display: 'grid', placeItems: 'center', background: '#123f45', border: '1px solid #52d6c688', color: '#a8fff4', fontFamily: 'ui-monospace, monospace', fontSize: 30, fontWeight: 900}}>&lt;/&gt;</div>
         <div>
@@ -185,15 +210,15 @@ export const DataEngineersScene = () => {
         </div>
       </div>
       <div style={{marginTop: 43, display: 'grid', gap: 18}}>
-        {codeLines.map(({width, color}, index) => {
-          const lineProgress = interpolate(frame, [aiEnter + index * seconds(0.2), aiFadeAt - (codeLines.length - 1 - index) * seconds(0.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+        {DATA_ENGINEER_CODE_LINES.map(({width, color}, index) => {
+          const lineProgress = interpolate(frame, [aiEnter + index * seconds(0.2), aiFadeAt - (DATA_ENGINEER_CODE_LINES.length - 1 - index) * seconds(0.2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
           return <div key={width} style={{height: 11, width: `${width * lineProgress}%`, marginLeft: index === 0 ? 0 : 44, borderRadius: 99, background: color, opacity: 0.38 + lineProgress * 0.62}} />;
         })}
       </div>
-    </Surface>
+    </Surface> : null}
 
-    <div style={{position: 'absolute', left: 220, right: 220, top: 350, display: 'flex', gap: 58, opacity: implementationOpacity}}>
-      {implementations.map(({engineer, context, accent, widths, offset, rotate}, index) => {
+    {implementationOpacity > 0 ? <div style={{position: 'absolute', left: 220, right: 220, top: 350, display: 'flex', gap: 58, opacity: implementationOpacity}}>
+      {DATA_ENGINEER_IMPLEMENTATIONS.map(({engineer, context, accent, widths, offset, rotate}, index) => {
         const progress = enterProgress(frame, fps, inconsistencyAt + seconds(index * 0.13));
         return <Surface key={engineer} accent={accent} style={{flex: 1, height: 350, padding: '30px 32px', opacity: progress, translate: `0 ${(1 - progress) * 15 + offset * misalignment}px`, rotate: `${rotate * misalignment}deg`}}>
           <div style={{fontSize: 35, fontWeight: 850, color: '#f1f6fb'}}>{engineer}</div>
@@ -204,7 +229,7 @@ export const DataEngineersScene = () => {
           </div>
         </Surface>;
       })}
-    </div>
+    </div> : null}
   </SceneShell>;
 };
 
@@ -231,29 +256,20 @@ export const RepeatablePipelineScene = () => {
   const ferryEnd = 6900 - cue.startFrame;
   const ferry = interpolate(frame, [ferryStart, ferryEnd], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const ferryOpacity = interpolate(frame, [ferryStart, ferryEnd - seconds(0.35), ferryEnd], [1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const mascotFormation = [
-    {x: 0, y: -55},
-    {x: 210, y: 35},
-    {x: 420, y: -25},
-    {x: 630, y: 65},
-  ];
-
   return (
     <SceneShell duration={REPEATABLE_PIPELINE_DURATION} heading="" accent={theme.engineering}>
       <PipelinePattern top={300} read={read} transform={transform} transformScale={transformScale} write={write} firstLink={firstLink} secondLink={secondLink} />
-      {mascotFormation.map(({x, y}, index) => <Img key={`pipeline-mascot-${index}`} src={mascotSrc('carrying')} style={{
+      {ferryOpacity > 0 ? PIPELINE_MASCOT_FORMATION.map(({x, y}, index) => <div key={`pipeline-mascot-${index}`} style={{
         position: 'absolute',
         left: -460 + ferry * 2100 + x,
         top: 575 + y,
         width: 220,
         height: 220,
-        objectFit: 'contain',
         opacity: ferryOpacity,
-        filter: 'drop-shadow(0 16px 26px #0008)',
         translate: "518.2px -174.3px",
         scale: 1.8,
         rotate: "-14.9deg"
-      }} />)}
+      }}><MascotArtwork pose="carrying" /></div>) : null}
       <Reveal at={localCue(4)} y={16}>
         <div style={{position: 'absolute', left: 150, right: 150, top: 800, display: 'flex', justifyContent: 'center', gap: 36}}>
           {[
@@ -281,35 +297,30 @@ export const SensitiveDataScene = () => {
   const scan = enterProgress(frame, fps, localCue(1));
   const treatment = enterProgress(frame, fps, localCue(2));
   const redact = interpolate(frame, [localCue(2), localCue(2) + seconds(0.8)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const identityRows = [
-    {before: 'S1234567D', after: 'S****567D'},
-    {before: 'T7654321F', after: 'T****321F'},
-    {before: 'F2468135N', after: 'F****135N'},
-  ];
   return <SceneShell duration={SENSITIVE_DATA_DURATION} heading="" accent={theme.governance}>
     <div>
-      <div style={{position: 'absolute', left: 340, right: 340, top: 455, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+      {frame < introEnd ? <div style={{position: 'absolute', left: 340, right: 340, top: 455, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
         <div style={{fontSize: 82, fontWeight: 900, letterSpacing: 4, color: '#ffbe82', opacity: policyOpacity, translate: `0 ${(1 - policyOpacity) * 12}px`}}>POLICY</div>
         <div style={{fontSize: 82, fontWeight: 900, letterSpacing: 4, color: '#c5a8ff', opacity: enforcedOpacity, translate: `0 ${(1 - enforcedOpacity) * 12}px`}}>ENFORCED</div>
-      </div>
-      <SpeechBubble accent="#ffae66" eyebrow="Sensitive data requirement" style={{left: 555, top: 55, width: 810, height: 160, opacity: sensitiveBubble, scale: 1.5, transformOrigin: 'top center'}}>&ldquo;This column is sensitive.&rdquo;</SpeechBubble>
+      </div> : null}
+      {sensitiveBubble > 0 ? <SpeechBubble accent="#ffae66" eyebrow="Sensitive data requirement" style={{left: 555, top: 55, width: 810, height: 160, opacity: sensitiveBubble, scale: 1.5, transformOrigin: 'top center'}}>&ldquo;This column is sensitive.&rdquo;</SpeechBubble> : null}
       <Mascot pose="scanning" x={125} y={485} size={315} delay={localCue(1)} />
-      <Surface accent="#ffae66" style={{position: 'absolute', left: 480, top: 395, width: 850, height: 390, padding: '28px 34px', opacity: scan}}>
+      {scan > 0 ? <Surface accent="#ffae66" style={{position: 'absolute', left: 480, top: 395, width: 850, height: 390, padding: '28px 34px', opacity: scan}}>
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 28, color: '#ffcf9f', fontWeight: 850}}>person_nric</div><div style={{padding: '9px 18px', borderRadius: 10, background: '#5d351f', color: '#ffd2a4', fontSize: 18, fontWeight: 900, opacity: treatment}}>MASKED</div></div>
         <div style={{display: 'grid', gridTemplateColumns: '1fr 90px 1fr', marginTop: 30, color: '#8fa7bf', fontSize: 17, fontWeight: 850}}><div>BEFORE</div><div /><div>AFTER</div></div>
-        {identityRows.map(({before, after}) => <div key={before} style={{display: 'grid', gridTemplateColumns: '1fr 90px 1fr', alignItems: 'center', height: 72, borderTop: '1px solid #3a526d', fontFamily: 'ui-monospace, monospace', fontSize: 29}}><div>{before}</div><div style={{color: '#66809b', textAlign: 'center'}}>→</div><div style={{color: '#ffbd76', position: 'relative'}}><span style={{opacity: 1 - redact}}>{before}</span><span style={{position: 'absolute', left: 0, opacity: redact}}>{after}</span></div></div>)}
-      </Surface>
+        {SENSITIVE_IDENTITY_ROWS.map(({before, after}) => <div key={before} style={{display: 'grid', gridTemplateColumns: '1fr 90px 1fr', alignItems: 'center', height: 72, borderTop: '1px solid #3a526d', fontFamily: 'ui-monospace, monospace', fontSize: 29}}><div>{before}</div><div style={{color: '#66809b', textAlign: 'center'}}>→</div><div style={{color: '#ffbd76', position: 'relative'}}><span style={{opacity: 1 - redact}}>{before}</span><span style={{position: 'absolute', left: 0, opacity: redact}}>{after}</span></div></div>)}
+      </Surface> : null}
       <Mascot pose="masking" x={1390} y={485} size={315} delay={localCue(2)} />
-      <div style={{position: 'absolute', left: 425, top: 605, width: 55, height: 5, borderRadius: 99, background: '#ffae66', scale: `${scan} 1`, transformOrigin: 'left'}} />
-      <div style={{position: 'absolute', left: 1330, top: 605, width: 60, height: 5, borderRadius: 99, background: '#ffae66', scale: `${treatment} 1`, transformOrigin: 'left'}} />
-      <div style={{position: 'absolute', left: 430, right: 430, top: 810, display: 'flex', justifyContent: 'center', gap: 27}}>
+      {scan > 0 ? <div style={{position: 'absolute', left: 425, top: 605, width: 55, height: 5, borderRadius: 99, background: '#ffae66', scale: `${scan} 1`, transformOrigin: 'left'}} /> : null}
+      {treatment > 0 ? <div style={{position: 'absolute', left: 1330, top: 605, width: 60, height: 5, borderRadius: 99, background: '#ffae66', scale: `${treatment} 1`, transformOrigin: 'left'}} /> : null}
+      {frame >= localCue(2) ? <div style={{position: 'absolute', left: 430, right: 430, top: 810, display: 'flex', justifyContent: 'center', gap: 27}}>
         {[
           {label: 'MASK', at: localCue(2)},
           {label: 'HASH', at: localCue(3)},
           {label: 'TOKENIZE', at: localCue(4)},
           {label: 'REMOVE', at: localCue(4) + seconds(1.2)},
         ].map(({label, at}) => <div key={label} style={{padding: '20px 33px', borderRadius: 18, border: '1px solid #ffae66', background: '#342419', color: '#ffd4aa', fontSize: 27, fontWeight: 900, opacity: enterProgress(frame, fps, at)}}>{label}</div>)}
-      </div>
+      </div> : null}
     </div>
 
   </SceneShell>;
@@ -322,6 +333,7 @@ export const BusinessRulesScene = () => {
   const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
   const introduction = enterProgress(frame, fps, localCue(0));
   const businessBubble = enterProgress(frame, fps, localCue(2));
+  const introductionOpacity = introduction * (1 - businessBubble);
   const connectorMain = interpolate(frame, [localCue(3), localCue(3) + seconds(0.45)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const connectorTrunk = interpolate(frame, [localCue(3) + seconds(0.45), localCue(3) + seconds(0.95)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const firstBranch = interpolate(frame, [localCue(3) + seconds(0.95), localCue(3) + seconds(1.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
@@ -333,11 +345,11 @@ export const BusinessRulesScene = () => {
 
   return <SceneShell duration={BUSINESS_RULES_DURATION} heading="" accent={theme.governance}>
     <div>
-      <div style={{position: 'absolute', left: 430, top: 175, width: 1260, fontSize: 42, fontWeight: 850, color: '#e9ddff', opacity: introduction * (1 - businessBubble), textAlign: 'center'}}>Business requirements become data quality rules</div>
-      <SpeechBubble accent="#b487ff" eyebrow="Business rule requirement" style={{left: 430, top: 175, width: 1260, height: 195, opacity: businessBubble}}>&ldquo;Every completed order must have a delivery date, and it cannot be earlier than the order date.&rdquo;</SpeechBubble>
+      {introductionOpacity > 0 ? <div style={{position: 'absolute', left: 430, top: 175, width: 1260, fontSize: 42, fontWeight: 850, color: '#e9ddff', opacity: introductionOpacity, textAlign: 'center'}}>Business requirements become data quality rules</div> : null}
+      {businessBubble > 0 ? <SpeechBubble accent="#b487ff" eyebrow="Business rule requirement" style={{left: 430, top: 175, width: 1260, height: 195, opacity: businessBubble}}>&ldquo;Every completed order must have a delivery date, and it cannot be earlier than the order date.&rdquo;</SpeechBubble> : null}
       <Mascot pose="coding" x={105} y={505} size={320} delay={localCue(1)} />
 
-      <svg aria-hidden="true" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible', zIndex: 1, filter: 'drop-shadow(0 0 7px #b487ff88)'}}>
+      {connectorMain > 0 ? <svg aria-hidden="true" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible', zIndex: 1, filter: 'drop-shadow(0 0 7px #b487ff88)'}}>
         <path d="M420 617 H455" fill="none" stroke="#b487ff" strokeWidth="5" strokeLinecap="round" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - connectorMain} />
         <path d="M455 617 V492" fill="none" stroke="#b487ff" strokeWidth="5" strokeLinecap="round" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - connectorTrunk} />
         <path d="M455 617 V685" fill="none" stroke="#b487ff" strokeWidth="5" strokeLinecap="round" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - connectorTrunk} />
@@ -345,20 +357,20 @@ export const BusinessRulesScene = () => {
         <path d="M455 685 H499" fill="none" stroke="#b487ff" strokeWidth="5" strokeLinecap="round" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - secondBranch} />
         <circle cx="497" cy="492" r="5" fill="#d8c9ff" opacity={interpolate(firstBranch, [0.82, 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})} />
         <circle cx="497" cy="685" r="5" fill="#d8c9ff" opacity={interpolate(secondBranch, [0.82, 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})} />
-      </svg>
+      </svg> : null}
 
-      <Surface accent="#b487ff" style={{position: 'absolute', left: 475, top: 415, width: 1235, height: 155, padding: '22px 28px', opacity: firstCheck, translate: `${(1 - firstCheck) * 24}px 0`, zIndex: 2}}>
+      {firstCheck > 0 ? <Surface accent="#b487ff" style={{position: 'absolute', left: 475, top: 415, width: 1235, height: 155, padding: '22px 28px', opacity: firstCheck, translate: `${(1 - firstCheck) * 24}px 0`, zIndex: 2}}>
         <div style={{display: 'flex', alignItems: 'center', gap: 16}}><div style={{fontSize: 17, color: '#c5a8ff', fontWeight: 900, letterSpacing: 1.3}}>CHECK 1</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 20, color: '#d8c9ff'}}>conditional_completeness</div></div>
         <div style={{marginTop: 20, borderRadius: 12, padding: '15px 20px', background: '#211c3e', border: '1px solid #7253ab', fontFamily: 'ui-monospace, monospace', fontSize: 24, color: '#f1ebff'}}>status = &apos;Completed&apos; → delivery_date IS NOT NULL</div>
-      </Surface>
+      </Surface> : null}
 
-      <Surface accent="#b487ff" style={{position: 'absolute', left: 475, top: 590, width: 1235, height: 190, padding: '22px 28px', opacity: secondCheck, translate: `${(1 - secondCheck) * 24}px 0`, zIndex: 2}}>
+      {secondCheck > 0 ? <Surface accent="#b487ff" style={{position: 'absolute', left: 475, top: 590, width: 1235, height: 190, padding: '22px 28px', opacity: secondCheck, translate: `${(1 - secondCheck) * 24}px 0`, zIndex: 2}}>
         <div style={{display: 'flex', alignItems: 'center', gap: 16}}><div style={{fontSize: 17, color: '#c5a8ff', fontWeight: 900, letterSpacing: 1.3}}>CHECK 2</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 20, color: '#d8c9ff'}}>custom_expression · PySpark</div></div>
         <div style={{marginTop: 17, borderRadius: 12, padding: '14px 20px', background: '#211c3e', border: '1px solid #7253ab', fontFamily: 'ui-monospace, monospace', fontSize: 20, lineHeight: 1.45, color: '#f1ebff'}}><div>(F.col(&quot;status&quot;) != &quot;Completed&quot;) |</div><div>(F.col(&quot;delivery_date&quot;) &gt;= F.col(&quot;order_date&quot;))</div></div>
-      </Surface>
+      </Surface> : null}
 
-      <div style={{position: 'absolute', left: 785, top: 810, width: 620, padding: '17px 24px', borderRadius: 15, background: '#153c2e', border: '2px solid #55bd89', boxSizing: 'border-box', textAlign: 'center', color: '#baffd8', fontSize: 21, fontWeight: 900, letterSpacing: 1.1, opacity: review, translate: `0 ${(1 - review) * 15}px`}}>✓ HUMAN REVIEWED &amp; APPROVED</div>
-      <div style={{position: 'absolute', left: 810, top: 892, width: 570, textAlign: 'center', color: '#c5a8ff', fontSize: 18, fontWeight: 850, letterSpacing: 0.8, opacity: engineerReview}}>Complex rules route to Engineering review</div>
+      {review > 0 ? <div style={{position: 'absolute', left: 785, top: 810, width: 620, padding: '17px 24px', borderRadius: 15, background: '#153c2e', border: '2px solid #55bd89', boxSizing: 'border-box', textAlign: 'center', color: '#baffd8', fontSize: 21, fontWeight: 900, letterSpacing: 1.1, opacity: review, translate: `0 ${(1 - review) * 15}px`}}>✓ HUMAN REVIEWED &amp; APPROVED</div> : null}
+      {engineerReview > 0 ? <div style={{position: 'absolute', left: 810, top: 892, width: 570, textAlign: 'center', color: '#c5a8ff', fontSize: 18, fontWeight: 850, letterSpacing: 0.8, opacity: engineerReview}}>Complex rules route to Engineering review</div> : null}
     </div>
   </SceneShell>;
 };
@@ -385,10 +397,6 @@ export const BigPictureScene = () => {
   const results = enterProgress(frame, fps, localCue(7) + seconds(4.2));
   const violation = enterProgress(frame, fps, localCue(8));
   const connectorOpacity = (start: number) => interpolate(frame, [start - seconds(0.2), start], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const rows = [
-    {id: '00007', nric: 'S1234567D', maskedNric: 'S****567D', order: '09:00', modified: '09:18', result: 'PASS', color: '#72e6ad'},
-    {id: '00008', nric: 'T7654321F', maskedNric: 'T****321F', order: '09:00', modified: '08:00', result: 'FAIL', color: '#ff756d'},
-  ];
   return <SceneShell duration={BIG_PICTURE_DURATION} heading="" accent="#72e6ad">
     <PipelinePattern
       top={VALIDATION_LAYOUT.pipelineTop}
@@ -420,17 +428,17 @@ export const BigPictureScene = () => {
       />
     </AnimatedDataFlow>
 
-    <Surface accent="#69b7ff" style={{position: 'absolute', left: VALIDATION_LAYOUT.rawLeft, top: VALIDATION_LAYOUT.tableTop, width: VALIDATION_LAYOUT.tableWidth, height: VALIDATION_LAYOUT.tableHeight, padding: '20px 24px', opacity: source, translate: `0 ${(1 - source) * 18}px`}}>
+    {source > 0 ? <Surface accent="#69b7ff" style={{position: 'absolute', left: VALIDATION_LAYOUT.rawLeft, top: VALIDATION_LAYOUT.tableTop, width: VALIDATION_LAYOUT.tableWidth, height: VALIDATION_LAYOUT.tableHeight, padding: '20px 24px', opacity: source, translate: `0 ${(1 - source) * 18}px`}}>
       <div style={{fontSize: 17, fontWeight: 900, color: '#8fc9ff', letterSpacing: 1.5}}>RAW SOURCE</div>
       <div style={{display: 'grid', gridTemplateColumns: '100px 155px 1fr 1.2fr', gap: 10, marginTop: 17, color: '#8fa7bf', fontSize: 21, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76'}}>person_nric</div><div>order_datetime</div><div>modified_datetime</div></div>
-      {rows.map((row) => <div key={row.id} style={{display: 'grid', gridTemplateColumns: '100px 155px 1fr 1.2fr', gap: 10, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', fontFamily: 'ui-monospace, monospace', fontSize: 27}}><div>{row.id}</div><div style={{color: '#ffbd76'}}>{row.nric}</div><div>{row.order}</div><div>{row.modified}</div></div>)}
-    </Surface>
+      {BIG_PICTURE_ROWS.map((row) => <div key={row.id} style={{display: 'grid', gridTemplateColumns: '100px 155px 1fr 1.2fr', gap: 10, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', fontFamily: 'ui-monospace, monospace', fontSize: 27}}><div>{row.id}</div><div style={{color: '#ffbd76'}}>{row.nric}</div><div>{row.order}</div><div>{row.modified}</div></div>)}
+    </Surface> : null}
 
-    <Surface accent="#72e6ad" style={{position: 'absolute', left: VALIDATION_LAYOUT.outputLeft, top: VALIDATION_LAYOUT.tableTop, width: VALIDATION_LAYOUT.tableWidth, height: VALIDATION_LAYOUT.tableHeight, padding: '20px 24px', opacity: output, translate: `0 ${(1 - output) * 18}px`}}>
+    {output > 0 ? <Surface accent="#72e6ad" style={{position: 'absolute', left: VALIDATION_LAYOUT.outputLeft, top: VALIDATION_LAYOUT.tableTop, width: VALIDATION_LAYOUT.tableWidth, height: VALIDATION_LAYOUT.tableHeight, padding: '20px 24px', opacity: output, translate: `0 ${(1 - output) * 18}px`}}>
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}><div style={{fontSize: 17, fontWeight: 900, color: '#72e6ad', letterSpacing: 1.5}}>GOVERNED OUTPUT</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 13, color: '#cfc3ef'}}>VALIDATION RESULT · modified_datetime &gt;= order_datetime</div></div>
       <div style={{display: 'grid', gridTemplateColumns: '90px 150px 1fr 1.25fr 88px', gap: 8, marginTop: 17, color: '#8fa7bf', fontSize: 20, fontWeight: 850}}><div>order_id</div><div style={{color: '#ffbd76', background: '#5d351f99', borderRadius: 7, padding: '3px 8px'}}>person_nric</div><div>order_datetime</div><div>modified_datetime</div><div>result</div></div>
-      {rows.map((row, index) => <div key={`output-${row.id}`} style={{position: 'relative', display: 'grid', gridTemplateColumns: '90px 150px 1fr 1.25fr 88px', gap: 8, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', borderRadius: 8, background: index === 1 ? `rgba(109, 40, 49, ${violation * 0.48})` : 'transparent', fontFamily: 'ui-monospace, monospace', fontSize: 26}}><div>{row.id}</div><div style={{alignSelf: 'stretch', display: 'flex', alignItems: 'center', color: '#ffbd76', position: 'relative', background: `rgba(93, 53, 31, ${0.38 + masking * 0.42})`, borderRadius: 8, padding: '0 8px'}}><span style={{opacity: 1 - masking}}>{row.nric}</span><span style={{position: 'absolute', left: 8, opacity: masking}}>{row.maskedNric}</span></div><div>{row.order}</div><div style={{color: index === 1 ? '#ff9c8c' : '#dcecff'}}>{row.modified}</div><div style={{opacity: results, color: row.color, fontWeight: 900}}>{row.result}</div></div>)}
-    </Surface>
+      {BIG_PICTURE_ROWS.map((row, index) => <div key={`output-${row.id}`} style={{position: 'relative', display: 'grid', gridTemplateColumns: '90px 150px 1fr 1.25fr 88px', gap: 8, alignItems: 'center', height: 58, borderTop: '1px solid #3a526d', borderRadius: 8, background: index === 1 ? `rgba(109, 40, 49, ${violation * 0.48})` : 'transparent', fontFamily: 'ui-monospace, monospace', fontSize: 26}}><div>{row.id}</div><div style={{alignSelf: 'stretch', display: 'flex', alignItems: 'center', color: '#ffbd76', position: 'relative', background: `rgba(93, 53, 31, ${0.38 + masking * 0.42})`, borderRadius: 8, padding: '0 8px'}}><span style={{opacity: 1 - masking}}>{row.nric}</span><span style={{position: 'absolute', left: 8, opacity: masking}}>{row.maskedNric}</span></div><div>{row.order}</div><div style={{color: index === 1 ? '#ff9c8c' : '#dcecff'}}>{row.modified}</div><div style={{opacity: results, color: row.color, fontWeight: 900}}>{row.result}</div></div>)}
+    </Surface> : null}
   </SceneShell>;
 };
 
@@ -483,6 +491,8 @@ export const PromotionScene = () => {
       const progress = interpolate(frame, [delay, delay + seconds(0.65)], [0, 1], {
         extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic),
       });
+      if (progress <= 0) return null;
+
       return <div key={left} style={{
         position: 'absolute', left, top: 538, width, height: 4, borderRadius: 99,
         background: FLOW_COLOR, boxShadow: `0 0 18px ${FLOW_COLOR}99`, opacity: progress,
@@ -496,20 +506,21 @@ export const PromotionScene = () => {
       </div>;
     })}
 
-    <div aria-hidden="true" style={{
+    {pulseOpacity > 0 ? <div aria-hidden="true" style={{
       position: 'absolute', left: 420 + pulseTravel * 1058, top: 529, zIndex: 1,
       width: 22, height: 22, borderRadius: '50%', background: '#c7fff8',
       boxShadow: `0 0 10px #ffffff, 0 0 28px ${FLOW_COLOR}`, opacity: pulseOpacity,
-    }} />
+    }} /> : null}
 
-    <Img src={mascotSrc('dev')} style={{
+    {devEnter > 0 ? <div style={{
       position: 'absolute', left: 88, top: 350, zIndex: 2, width: 340, height: 430,
-      objectFit: 'contain', opacity: devEnter, translate: `${(1 - devEnter) * -32}px 0`,
-      filter: 'drop-shadow(0 20px 34px #0009) drop-shadow(0 0 18px #ff8a2844)',
-    }} />
+      opacity: devEnter, translate: `${(1 - devEnter) * -32}px 0`,
+    }}><MascotArtwork pose="dev" shadow="drop-shadow(0 20px 34px #0009) drop-shadow(0 0 18px #ff8a2844)" /></div> : null}
 
     {nodeLabels.map((label, index) => {
       const progress = enterProgress(frame, fps, nodeDelays[index]);
+      if (progress <= 0) return null;
+
       return <div key={label} style={{
         position: 'absolute', left: nodePositions[index], top: 465, zIndex: 2,
         width: 260, height: 150, boxSizing: 'border-box', display: 'flex',
@@ -523,11 +534,10 @@ export const PromotionScene = () => {
       </div>;
     })}
 
-    <Img src={mascotSrc('prod')} style={{
+    {productionEnter > 0 ? <div style={{
       position: 'absolute', left: 1492, top: 350, zIndex: 2, width: 340, height: 430,
-      objectFit: 'contain', opacity: productionEnter, translate: `${(1 - productionEnter) * 32}px 0`,
-      filter: 'drop-shadow(0 20px 34px #0009) drop-shadow(0 0 18px #38d99144)',
-    }} />
+      opacity: productionEnter, translate: `${(1 - productionEnter) * 32}px 0`,
+    }}><MascotArtwork pose="prod" shadow="drop-shadow(0 20px 34px #0009) drop-shadow(0 0 18px #38d99144)" /></div> : null}
   </AbsoluteFill>;
 };
 
@@ -545,6 +555,10 @@ export const ClosingScene = () => {
   const narrationEnd = cue.endFrame - cue.startFrame;
   const documentationEnter = enterProgress(frame, fps, documentationIn);
   const demoEnter = enterProgress(frame, fps, demoIn);
+  const plugOpacity = interpolate(frame, [plugIn, plugIn + seconds(0.35), governanceIn - seconds(0.25), governanceIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const governanceOpacity = interpolate(frame, [governanceIn, governanceIn + seconds(0.35), collaborationIn - seconds(0.25), collaborationIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const collaborationOpacity = interpolate(frame, [collaborationIn, collaborationIn + seconds(0.4)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
+  const fadeOpacity = interpolate(frame, [narrationEnd, CLOSING_DURATION - 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   return <AbsoluteFill style={{color: theme.text, fontFamily: font}}>
     <div style={{position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
       <div style={{position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: brandEnter}}>
@@ -554,24 +568,24 @@ export const ClosingScene = () => {
         </div>
       </div>
 
-      <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: interpolate(frame, [plugIn, plugIn + seconds(0.35), governanceIn - seconds(0.25), governanceIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}}>
+      {plugOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: plugOpacity}}>
         Plug-and-Play Data Pipelines
-      </div>
+      </div> : null}
 
-      <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#c5a8ff', opacity: interpolate(frame, [governanceIn, governanceIn + seconds(0.35), collaborationIn - seconds(0.25), collaborationIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}}>
+      {governanceOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#c5a8ff', opacity: governanceOpacity}}>
         Governance-as-Code
-      </div>
+      </div> : null}
 
-      <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#72e6ad', opacity: interpolate(frame, [collaborationIn, collaborationIn + seconds(0.4)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)})}}>
+      {collaborationOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#72e6ad', opacity: collaborationOpacity}}>
         One Consistent Framework
-      </div>
+      </div> : null}
 
-      <div style={{position: 'absolute', top: 776, display: 'flex', alignItems: 'center', gap: 24}}>
+      {documentationEnter > 0 || demoEnter > 0 ? <div style={{position: 'absolute', top: 776, display: 'flex', alignItems: 'center', gap: 24}}>
         <div style={{minWidth: 330, padding: '19px 34px', borderRadius: 14, border: '2px solid #72e6ad', color: '#dfffee', fontSize: 28, fontWeight: 800, boxSizing: 'border-box', opacity: documentationEnter, translate: `0 ${(1 - documentationEnter) * 16}px`}}>Read the documentation</div>
         <div style={{minWidth: 250, padding: '19px 34px', borderRadius: 14, border: '2px solid #c5a8ff', color: '#f0e8ff', fontSize: 28, fontWeight: 800, boxSizing: 'border-box', opacity: demoEnter, translate: `0 ${(1 - demoEnter) * 16}px`}}>Guided Demo</div>
-      </div>
+      </div> : null}
     </div>
 
-    <AbsoluteFill style={{background: '#000', opacity: interpolate(frame, [narrationEnd, CLOSING_DURATION - 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)})}} />
+    {fadeOpacity > 0 ? <AbsoluteFill style={{background: '#000', opacity: fadeOpacity}} /> : null}
   </AbsoluteFill>;
 };

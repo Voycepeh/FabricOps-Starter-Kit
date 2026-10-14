@@ -1,4 +1,4 @@
-import type {CSSProperties, ReactNode} from 'react';
+import {memo, type CSSProperties, type ReactNode} from 'react';
 
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 
@@ -22,9 +22,10 @@ type FlowPulseProps = {
   radius?: number;
 };
 
-export const FlowPulse = ({d, progress, color, radius = 8}: FlowPulseProps) => {
+export const FlowPulse = memo(({d, progress, color, radius = 8}: FlowPulseProps) => {
   const bounded = clamp(progress);
-  const opacity = bounded <= 0.02 || bounded >= 0.99 ? 0 : 1;
+  if (bounded <= 0.02 || bounded >= 0.99) return null;
+
   return <circle
     cx={0}
     cy={0}
@@ -32,7 +33,6 @@ export const FlowPulse = ({d, progress, color, radius = 8}: FlowPulseProps) => {
     fill="#f7fbff"
     stroke={color}
     strokeWidth={4}
-    opacity={opacity}
     style={{
       offsetPath: `path('${d}')`,
       offsetDistance: `${bounded * 100}%`,
@@ -40,7 +40,7 @@ export const FlowPulse = ({d, progress, color, radius = 8}: FlowPulseProps) => {
       filter: `drop-shadow(0 0 5px #ffffff) drop-shadow(0 0 13px ${color})`,
     } as CSSProperties}
   />;
-};
+});
 
 type AnimatedFlowPathProps = {
   id: string;
@@ -55,7 +55,7 @@ type AnimatedFlowPathProps = {
   dashed?: boolean;
 };
 
-export const AnimatedFlowPath = ({
+export const AnimatedFlowPath = memo(({
   id,
   d,
   progress,
@@ -69,6 +69,8 @@ export const AnimatedFlowPath = ({
 }: AnimatedFlowPathProps) => {
   const bounded = clamp(progress);
   const markerId = `flow-arrow-${id}`;
+  if (opacity <= 0) return null;
+
   return <g opacity={opacity}>
     <defs>
       <marker id={markerId} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
@@ -112,7 +114,7 @@ export const AnimatedFlowPath = ({
     />
     {pulse ? <FlowPulse d={d} progress={bounded} color={color} radius={strokeWidth + 2} /> : null}
   </g>;
-};
+});
 
 type FlowErrorProps = {
   id: string;

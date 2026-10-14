@@ -82,6 +82,7 @@ export const FabricOpsReveal = () => {
           extrapolateRight: 'clamp',
           easing: Easing.out(Easing.cubic),
         });
+        if (frame < start || frame >= end) return null;
 
         return (
           <div
@@ -117,6 +118,8 @@ export const FabricOpsReveal = () => {
           extrapolateRight: 'clamp',
           easing: Easing.out(Easing.back(1.2)),
         });
+        if (opacity <= 0) return null;
+
         return (
           <div style={{position: 'absolute', top: 675, width: '100%', textAlign: 'center', opacity, transform: `scale(${scale})`, fontSize: 54, fontWeight: 760, color: '#dcecff', textShadow: '0 0 30px #38d99155'}}>
             Governance into Code
@@ -136,7 +139,7 @@ export const FabricOpsReveal = () => {
           scale: 0.86 + brand * 0.14,
         }}
       >
-        <div
+        {frame >= whyAt && frame <= whyExitAt ? <div
           style={{
             position: 'absolute',
             left: 65,
@@ -149,9 +152,9 @@ export const FabricOpsReveal = () => {
           }}
         >
           Why
-        </div>
+        </div> : null}
 
-        <div
+        {frame >= whyAt && frame <= whyExitAt ? <div
           style={{
             position: 'absolute',
             right: 78,
@@ -164,11 +167,11 @@ export const FabricOpsReveal = () => {
           }}
         >
           ?
-        </div>
+        </div> : null}
 
         <Brand />
 
-        <div
+        {frame >= howAt ? <div
           style={{
             position: 'absolute',
             left: 65,
@@ -181,9 +184,9 @@ export const FabricOpsReveal = () => {
           }}
         >
           How
-        </div>
+        </div> : null}
 
-        <div
+        {frame >= worksAt ? <div
           style={{
             position: 'absolute',
             right: 75,
@@ -196,7 +199,7 @@ export const FabricOpsReveal = () => {
           }}
         >
           works?
-        </div>
+        </div> : null}
       </div>
     </div>
   );
