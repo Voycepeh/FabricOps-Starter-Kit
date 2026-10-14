@@ -638,10 +638,13 @@ export const ClosingScene = () => {
   const narrationEnd = cue.endFrame - cue.startFrame;
   const teamFlashStart = 140;
   const teamFade = interpolate(frame, [plugIn, plugIn + seconds(0.35)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const engineerToGovernance = interpolate(frame, [teamFlashStart, teamFlashStart + 12], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const governanceToBusiness = interpolate(frame, [teamFlashStart + 12, teamFlashStart + 24], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const businessToEngineer = interpolate(frame, [teamFlashStart + 24, teamFlashStart + 36], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const teamTriangle = [
-    {label: 'Data Engineers', accent: '#69b7ff', left: 770, top: 250, at: teamFlashStart},
-    {label: 'Data Governance', accent: '#b487ff', left: 340, top: 720, at: teamFlashStart + 12},
-    {label: 'Business Users', accent: '#ffae66', left: 1200, top: 720, at: teamFlashStart + 24},
+    {label: 'Data Engineers', accent: '#69b7ff', left: 700, top: 250, at: teamFlashStart},
+    {label: 'Data Governance', accent: '#b487ff', left: 270, top: 720, at: teamFlashStart + 12},
+    {label: 'Business Users', accent: '#ffae66', left: 1130, top: 720, at: teamFlashStart + 24},
   ] as const;
   const documentationEnter = enterProgress(frame, fps, documentationIn);
   const demoEnter = enterProgress(frame, fps, demoIn);
@@ -653,7 +656,13 @@ export const ClosingScene = () => {
   const fadeOpacity = interpolate(frame, [narrationEnd, CLOSING_DURATION - 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   return <AbsoluteFill style={{color: theme.text, fontFamily: font}}>
     <div style={{position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
-      <div style={{position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: brandEnter}}>
+      {teamFade > 0 ? <svg aria-hidden="true" width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, zIndex: 0, opacity: teamFade}}>
+        <path d="M960 330 530 700" pathLength="1" fill="none" stroke="#b487ff" strokeWidth="5" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - engineerToGovernance} />
+        <path d="M530 700 1390 700" pathLength="1" fill="none" stroke="#ffae66" strokeWidth="5" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - governanceToBusiness} />
+        <path d="M1390 700 960 330" pathLength="1" fill="none" stroke="#69b7ff" strokeWidth="5" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - businessToEngineer} />
+      </svg> : null}
+
+      <div style={{position: 'absolute', inset: 0, zIndex: 2, display: 'grid', placeItems: 'center', opacity: brandEnter}}>
         <div style={{fontSize: VIDEO_CONFIG.text.hero, lineHeight: 1, fontWeight: 840, letterSpacing: -8, whiteSpace: 'nowrap'}}>
           <span style={{color: theme.production}}>Fabric</span>
           <span style={{color: '#fff'}}>Ops</span>
@@ -665,8 +674,8 @@ export const ClosingScene = () => {
         const flash = interpolate(frame, [at, at + 6, at + 12], [0, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
         if (progress <= 0) return null;
 
-        return <div key={label} style={{position: 'absolute', left, top, width: 380, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, color: accent, fontSize: 31, fontWeight: 850, letterSpacing: 0.2, opacity: progress * teamFade, scale: 0.88 + progress * 0.12}}>
-          <div aria-hidden="true" style={{width: 15, height: 15, borderRadius: '50%', background: accent, opacity: 0.65 + flash * 0.35, scale: 1 + flash * 0.75, boxShadow: `0 0 ${10 + flash * 28}px ${accent}`}} />
+        return <div key={label} style={{position: 'absolute', left, top, zIndex: 3, width: 520, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 21, color: accent, fontSize: 46.5, fontWeight: 850, letterSpacing: 0.2, opacity: progress * teamFade, scale: 0.88 + progress * 0.12}}>
+          <div aria-hidden="true" style={{width: 22.5, height: 22.5, borderRadius: '50%', background: accent, opacity: 0.65 + flash * 0.35, scale: 1 + flash * 0.75, boxShadow: `0 0 ${10 + flash * 28}px ${accent}`}} />
           {label}
         </div>;
       }) : null}
