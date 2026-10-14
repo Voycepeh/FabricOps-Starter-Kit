@@ -629,6 +629,13 @@ export const ClosingScene = () => {
   const documentationIn = localCue(6);
   const demoIn = localCue(7);
   const narrationEnd = cue.endFrame - cue.startFrame;
+  const teamFlashStart = 140;
+  const teamFade = interpolate(frame, [plugIn, plugIn + seconds(0.35)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const teamTriangle = [
+    {label: 'Data Engineers', accent: '#69b7ff', left: 770, top: 250, at: teamFlashStart},
+    {label: 'Data Governance', accent: '#b487ff', left: 340, top: 720, at: teamFlashStart + 12},
+    {label: 'Business Users', accent: '#ffae66', left: 1200, top: 720, at: teamFlashStart + 24},
+  ] as const;
   const documentationEnter = enterProgress(frame, fps, documentationIn);
   const demoEnter = enterProgress(frame, fps, demoIn);
   const plugOpacity = interpolate(frame, [plugIn, plugIn + seconds(0.35), governanceIn - seconds(0.25), governanceIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
@@ -645,6 +652,17 @@ export const ClosingScene = () => {
           <span style={{color: '#fff'}}>Ops</span>
         </div>
       </div>
+
+      {teamFade > 0 ? teamTriangle.map(({label, accent, left, top, at}) => {
+        const progress = enterProgress(frame, fps, at);
+        const flash = interpolate(frame, [at, at + 6, at + 12], [0, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+        if (progress <= 0) return null;
+
+        return <div key={label} style={{position: 'absolute', left, top, width: 380, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, color: accent, fontSize: 31, fontWeight: 850, letterSpacing: 0.2, opacity: progress * teamFade, scale: 0.88 + progress * 0.12}}>
+          <div aria-hidden="true" style={{width: 15, height: 15, borderRadius: '50%', background: accent, opacity: 0.65 + flash * 0.35, scale: 1 + flash * 0.75, boxShadow: `0 0 ${10 + flash * 28}px ${accent}`}} />
+          {label}
+        </div>;
+      }) : null}
 
       {plugOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: plugOpacity}}>
         Plug-and-Play Data Pipelines
