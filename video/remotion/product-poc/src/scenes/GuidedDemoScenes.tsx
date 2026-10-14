@@ -413,16 +413,25 @@ export const BigPictureScene = () => {
   const {fps} = useVideoConfig();
   const cue = NARRATION_CUE_SHEET.bigPicture;
   const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
-  const sourceToReadStart = localCue(1) - seconds(1.1);
+  const openingTransitionStart = localCue(1) - seconds(1.6);
+  const openingTransitionEnd = localCue(1) + seconds(0.25);
+  const sideEnter = enterProgress(frame, fps, seconds(0.35));
+  const handshakeEnter = enterProgress(frame, fps, localCue(0));
+  const contractEnter = enterProgress(frame, fps, localCue(0) + seconds(0.65));
+  const openingOpacity = interpolate(frame, [openingTransitionStart, openingTransitionEnd], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const contractCarry = interpolate(frame, [openingTransitionStart, openingTransitionEnd], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const sourceAt = localCue(4);
+  const sourceToReadStart = sourceAt + seconds(0.2);
+  const sourceToReadEnd = sourceAt + seconds(1.1);
   const readToTransformStart = localCue(2) - seconds(1.1);
   const transformToWriteStart = localCue(3) - seconds(1.1);
   const writeToOutputStart = localCue(4) - seconds(1.1);
-  const source = enterProgress(frame, fps, localCue(0));
+  const source = enterProgress(frame, fps, sourceAt);
   const read = enterProgress(frame, fps, localCue(1));
   const transform = enterProgress(frame, fps, localCue(2));
   const write = enterProgress(frame, fps, localCue(3));
   const output = enterProgress(frame, fps, localCue(4));
-  const sourceToRead = interpolate(frame, [sourceToReadStart, localCue(1)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const sourceToRead = interpolate(frame, [sourceToReadStart, sourceToReadEnd], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const readToTransform = interpolate(frame, [readToTransformStart, localCue(2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const transformToWrite = interpolate(frame, [transformToWriteStart, localCue(3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const writeToOutput = interpolate(frame, [writeToOutputStart, localCue(4)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
@@ -431,6 +440,37 @@ export const BigPictureScene = () => {
   const violation = enterProgress(frame, fps, localCue(8));
   const connectorOpacity = (start: number) => interpolate(frame, [start - seconds(0.2), start], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   return <SceneShell duration={BIG_PICTURE_DURATION} heading="" accent="#72e6ad">
+    {openingOpacity > 0 ? <div style={{position: 'absolute', inset: 0, opacity: openingOpacity}}>
+      <div style={{position: 'absolute', left: 245, top: 382, width: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: sideEnter, translate: `${(1 - sideEnter) * -28}px 0`}}>
+        <svg aria-hidden="true" width="112" height="112" viewBox="0 0 96 96">
+          <path d="M48 8 82 22v25c0 22-14 34-34 41C28 81 14 69 14 47V22Z" fill="#261f42" stroke="#b487ff" strokeWidth="5" strokeLinejoin="round" />
+          <path d="M31 47h34M31 34h34M31 60h22" fill="none" stroke="#d8c9ff" strokeWidth="5" strokeLinecap="round" />
+        </svg>
+        <div style={{marginTop: 26, color: '#e9ddff', fontSize: 31, fontWeight: 850}}>Data Governance</div>
+      </div>
+
+      <div style={{position: 'absolute', right: 245, top: 382, width: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: sideEnter, translate: `${(1 - sideEnter) * 28}px 0`}}>
+        <svg aria-hidden="true" width="112" height="112" viewBox="0 0 96 96">
+          <path d="M36 22 12 48l24 26M60 22l24 26-24 26M55 13 41 83" fill="none" stroke="#69b7ff" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <div style={{marginTop: 26, color: '#d8ecff', fontSize: 31, fontWeight: 850}}>Data Engineering</div>
+      </div>
+
+      <div style={{position: 'absolute', left: 810, top: 330, width: 300, height: 260, opacity: handshakeEnter, scale: 0.9 + handshakeEnter * 0.1}}>
+        <svg aria-hidden="true" width="300" height="220" viewBox="0 0 260 180">
+          <path d="M14 113 68 61l45 31-40 48Z" fill="#2c244c" stroke="#b487ff" strokeWidth="6" strokeLinejoin="round" />
+          <path d="m246 113-54-52-45 31 40 48Z" fill="#183c5b" stroke="#69b7ff" strokeWidth="6" strokeLinejoin="round" />
+          <path d="m73 80 34-24c9-7 20-7 29 0l18 14 27 15c11 6 13 20 4 29l-33 28c-10 8-24 8-33 0L76 105c-9-8-11-18-3-25Z" fill="#17473f" stroke="#72e6ad" strokeWidth="6" strokeLinejoin="round" />
+          <path d="m107 84 31 28M124 75l31 27M91 94l31 28" fill="none" stroke="#baffd8" strokeWidth="5" strokeLinecap="round" />
+        </svg>
+      </div>
+    </div> : null}
+
+    {contractEnter > 0 ? <div style={{position: 'absolute', left: 780, top: 105, zIndex: 3, width: 360, color: '#baffd8', fontSize: 30, fontWeight: 900, letterSpacing: 0.3, textAlign: 'center', opacity: contractEnter, translate: `0 ${interpolate(contractCarry, [0, 1], [535, 0])}px`, scale: interpolate(contractCarry, [0, 1], [1.18, 1])}}>
+      <div style={{height: 3, margin: '0 74px 14px', borderRadius: 99, background: '#72e6ad'}} />
+      Data Contract
+    </div> : null}
+
     <PipelinePattern
       top={VALIDATION_LAYOUT.pipelineTop}
       read={read}
