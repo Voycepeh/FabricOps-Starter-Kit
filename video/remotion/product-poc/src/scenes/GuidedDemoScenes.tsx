@@ -320,6 +320,7 @@ export const BusinessRulesScene = () => {
   const {fps} = useVideoConfig();
   const cue = NARRATION_CUE_SHEET.businessRules;
   const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
+  const introduction = enterProgress(frame, fps, localCue(0));
   const businessBubble = enterProgress(frame, fps, localCue(2));
   const connectorMain = interpolate(frame, [localCue(3), localCue(3) + seconds(0.45)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const connectorTrunk = interpolate(frame, [localCue(3) + seconds(0.45), localCue(3) + seconds(0.95)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
@@ -332,6 +333,7 @@ export const BusinessRulesScene = () => {
 
   return <SceneShell duration={BUSINESS_RULES_DURATION} heading="" accent={theme.governance}>
     <div>
+      <div style={{position: 'absolute', left: 430, top: 175, width: 1260, fontSize: 42, fontWeight: 850, color: '#e9ddff', opacity: introduction * (1 - businessBubble), textAlign: 'center'}}>Business requirements become data quality rules</div>
       <SpeechBubble accent="#b487ff" eyebrow="Business rule requirement" style={{left: 430, top: 175, width: 1260, height: 195, opacity: businessBubble}}>&ldquo;Every completed order must have a delivery date, and it cannot be earlier than the order date.&rdquo;</SpeechBubble>
       <Mascot pose="coding" x={105} y={505} size={320} delay={localCue(1)} />
 
