@@ -421,9 +421,9 @@ export const BigPictureScene = () => {
   const contractEnter = enterProgress(frame, fps, 10180 - cue.startFrame);
   const openingOpacity = interpolate(frame, [openingTransitionStart, openingTransitionEnd], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const contractCarry = interpolate(frame, [openingTransitionStart, openingTransitionEnd], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const sourceAt = localCue(4);
-  const sourceToReadStart = sourceAt + seconds(0.2);
-  const sourceToReadEnd = sourceAt + seconds(1.1);
+  const sourceAt = 380;
+  const sourceToReadStart = sourceAt;
+  const sourceToReadEnd = sourceAt + seconds(0.9);
   const readToTransformStart = localCue(2) - seconds(1.1);
   const transformToWriteStart = localCue(3) - seconds(1.1);
   const writeToOutputStart = localCue(4) - seconds(1.1);
@@ -491,7 +491,7 @@ export const BigPictureScene = () => {
         d={`M${VALIDATION_LAYOUT.readCenter} ${VALIDATION_LAYOUT.tableTop} V${VALIDATION_LAYOUT.pipelineTop + PIPELINE_LAYOUT.cardHeight}`}
         progress={sourceToRead}
         color={FLOW_COLOR}
-        opacity={connectorOpacity(sourceToReadStart)}
+        opacity={connectorOpacity(sourceToReadStart + seconds(0.2))}
       />
       <AnimatedFlowPath
         id="write-to-output"
