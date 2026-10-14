@@ -469,7 +469,12 @@ export const BigPictureScene = () => {
       </div>
     </div> : null}
 
-    {contractEnter > 0 ? <div style={{position: 'absolute', left: 780, top: 105, zIndex: 3, width: 360, color: '#baffd8', fontSize: 30, fontWeight: 900, letterSpacing: 0.3, textAlign: 'center', opacity: contractEnter, translate: `0 ${interpolate(contractCarry, [0, 1], [430, 0])}px`, scale: interpolate(contractCarry, [0, 1], [1.18, 1])}}>
+    {contractEnter > 0 ? <div style={{position: 'absolute', left: interpolate(contractCarry, [0, 1], [780, 235]), top: 105, zIndex: 3, width: 360, color: '#baffd8', fontSize: 30, fontWeight: 900, letterSpacing: 0.3, textAlign: 'center', opacity: contractEnter, translate: `0 ${interpolate(contractCarry, [0, 1], [430, 0])}px`, scale: interpolate(contractCarry, [0, 1], [1.18, 1])}}>
+      <div style={{height: 3, margin: '0 74px 14px', borderRadius: 99, background: '#72e6ad'}} />
+      Data Contract
+    </div> : null}
+
+    {contractCarry > 0 ? <div style={{position: 'absolute', left: interpolate(contractCarry, [0, 1], [780, 1325]), top: 105, zIndex: 3, width: 360, color: '#baffd8', fontSize: 30, fontWeight: 900, letterSpacing: 0.3, textAlign: 'center', opacity: contractEnter * contractCarry, translate: `0 ${interpolate(contractCarry, [0, 1], [430, 0])}px`, scale: interpolate(contractCarry, [0, 1], [1.18, 1])}}>
       <div style={{height: 3, margin: '0 74px 14px', borderRadius: 99, background: '#72e6ad'}} />
       Data Contract
     </div> : null}
