@@ -142,18 +142,18 @@ const PipelinePattern = memo(({top, read, transform, transformScale = 1, write, 
     <AnimatedFlowPath id={`pipeline-read-${top}`} d={`M${PIPELINE_LAYOUT.left + PIPELINE_LAYOUT.cardWidth} ${top + PIPELINE_LAYOUT.cardHeight / 2} H${PIPELINE_LAYOUT.transformLeft}`} progress={firstLink} color={linkColor ?? '#52d6c6'} opacity={firstLinkOpacity} />
     <AnimatedFlowPath id={`pipeline-write-${top}`} d={`M${PIPELINE_LAYOUT.transformLeft + PIPELINE_LAYOUT.cardWidth} ${top + PIPELINE_LAYOUT.cardHeight / 2} H${PIPELINE_LAYOUT.writeLeft}`} progress={secondLink} color={linkColor ?? '#72e6ad'} opacity={secondLinkOpacity} />
   </AnimatedDataFlow>
-  <div style={{position: 'absolute', left: PIPELINE_LAYOUT.left, top, display: 'flex', alignItems: 'center', gap: PIPELINE_LAYOUT.gap, zIndex: 1}}>
-    {read > 0 ? <Surface accent="#69b7ff" style={{width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: read, translate: `0 ${(1 - read) * 24}px`}}>
+  <div style={{position: 'absolute', left: PIPELINE_LAYOUT.left, top, width: PIPELINE_LAYOUT.writeLeft - PIPELINE_LAYOUT.left + PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, zIndex: 1}}>
+    {read > 0 ? <Surface accent="#69b7ff" style={{position: 'absolute', left: 0, width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: read, translate: `0 ${(1 - read) * 24}px`}}>
       <div style={{fontSize: 20, color: '#8fc9ff', letterSpacing: 1.8, fontWeight: 850}}>GOVERNED READ</div>
       <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 34, color: '#d8ecff', fontWeight: 800, marginTop: 46}}>orchestrate_read()</div>
       <div style={{fontSize: 24, color: '#aebed3', marginTop: 38}}>Governed source</div>
     </Surface> : null}
-    {transform > 0 ? <Surface accent="#52d6c6" style={{position: 'relative', zIndex: 2, width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: transform, translate: `0 ${(1 - transform) * 24}px`, scale: transformScale, transformOrigin: 'center'}}>
+    {transform > 0 ? <Surface accent="#52d6c6" style={{position: 'absolute', left: PIPELINE_LAYOUT.transformLeft - PIPELINE_LAYOUT.left, zIndex: 2, width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: transform, translate: `0 ${(1 - transform) * 24}px`, scale: transformScale, transformOrigin: 'center'}}>
       <div style={{fontSize: 20, color: '#7ae4d8', letterSpacing: 1.8, fontWeight: 850}}>YOUR LOGIC</div>
       <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 39, color: '#f6fbff', fontWeight: 850, marginTop: 43}}>PySpark</div>
       <div style={{fontSize: 24, color: '#aebed3', marginTop: 34}}>Your transformation</div>
     </Surface> : null}
-    {write > 0 ? <Surface accent="#69b7ff" style={{width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: write, translate: `0 ${(1 - write) * 24}px`}}>
+    {write > 0 ? <Surface accent="#69b7ff" style={{position: 'absolute', left: PIPELINE_LAYOUT.writeLeft - PIPELINE_LAYOUT.left, width: PIPELINE_LAYOUT.cardWidth, height: PIPELINE_LAYOUT.cardHeight, padding: '34px 36px', opacity: write, translate: `0 ${(1 - write) * 24}px`}}>
       <div style={{fontSize: 20, color: '#8fc9ff', letterSpacing: 1.8, fontWeight: 850}}>GOVERNED WRITE</div>
       <div style={{fontFamily: 'ui-monospace, monospace', fontSize: 32, color: '#d8ecff', fontWeight: 800, marginTop: 46}}>orchestrate_write()</div>
       <div style={{fontSize: 24, color: '#aebed3', marginTop: writeDetail ? 24 : 38}}>Governed target</div>
