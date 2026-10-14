@@ -37,6 +37,7 @@ const VALIDATION_LAYOUT = {
 } as const;
 
 const FLOW_COLOR = '#5FE1D0';
+const BUSINESS_RULE_FONT_SCALE = 1.2;
 
 const DATA_ENGINEER_TASKS = [
   {label: 'Connect', detail: 'Data stores', cueIndex: 1, accent: '#69b7ff'},
@@ -162,12 +163,12 @@ const PipelinePattern = memo(({top, read, transform, transformScale = 1, write, 
   </div>
 </>);
 
-const SpeechBubble = ({accent, eyebrow, children, style}: {accent: string; eyebrow: string; children: ReactNode; style: CSSProperties}) => <div style={{
+const SpeechBubble = ({accent, eyebrow, children, style, fontScale = 1}: {accent: string; eyebrow: string; children: ReactNode; style: CSSProperties; fontScale?: number}) => <div style={{
   position: 'absolute', borderRadius: 18, border: `1px solid ${accent}99`, background: '#10243cf2',
   padding: '23px 30px', boxSizing: 'border-box', boxShadow: '0 14px 35px #0006', ...style,
 }}>
-  <div style={{fontSize: 18, fontWeight: 900, letterSpacing: 1.5, color: accent}}>{eyebrow}</div>
-  <div style={{fontSize: 34, fontWeight: 780, lineHeight: 1.24, marginTop: 9, color: '#f3f7fc'}}>{children}</div>
+  <div style={{fontSize: 18 * fontScale, fontWeight: 900, letterSpacing: 1.5, color: accent}}>{eyebrow}</div>
+  <div style={{fontSize: 34 * fontScale, fontWeight: 780, lineHeight: 1.24, marginTop: 9, color: '#f3f7fc'}}>{children}</div>
   <div style={{position: 'absolute', left: -13, bottom: 31, width: 24, height: 24, background: '#10243c', borderLeft: `1px solid ${accent}99`, borderBottom: `1px solid ${accent}99`, rotate: '45deg'}} />
 </div>;
 
@@ -331,12 +332,14 @@ export const BusinessRulesScene = () => {
   const {fps} = useVideoConfig();
   const cue = NARRATION_CUE_SHEET.businessRules;
   const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
+  const clockAt = 8860 - cue.startFrame;
+  const mascotAt = 8960 - cue.startFrame;
   const cardsEnter = enterProgress(frame, fps, localCue(0));
   const cardsExit = interpolate(frame, [localCue(1) - seconds(1.2), localCue(1) - seconds(0.2)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const cardsOpacity = cardsEnter * cardsExit;
-  const clockEnter = enterProgress(frame, fps, seconds(0.9));
-  const clockToMascotStart = localCue(1) - seconds(5);
-  const clockToMascotEnd = localCue(1) - seconds(4.1);
+  const clockEnter = enterProgress(frame, fps, clockAt);
+  const clockToMascotStart = mascotAt;
+  const clockToMascotEnd = mascotAt + seconds(0.9);
   const clockOpacity = clockEnter * interpolate(frame, [clockToMascotStart, clockToMascotEnd], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const mascotOpacity = interpolate(frame, [clockToMascotStart, clockToMascotEnd], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const mascotMove = interpolate(frame, [localCue(1), localCue(2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
@@ -348,15 +351,14 @@ export const BusinessRulesScene = () => {
   const firstCheck = enterProgress(frame, fps, localCue(3) + seconds(1.3));
   const secondCheck = enterProgress(frame, fps, localCue(3) + seconds(2.85));
   const review = enterProgress(frame, fps, localCue(4));
-  const engineerReview = enterProgress(frame, fps, localCue(5));
 
   return <SceneShell duration={BUSINESS_RULES_DURATION} heading="" accent={theme.governance}>
     <div>
       {cardsOpacity > 0 ? <div style={{position: 'absolute', inset: 0, opacity: cardsOpacity}}>
-        <Surface accent="#b487ff" style={{position: 'absolute', left: 120, top: 450, width: 430, height: 180, display: 'grid', placeItems: 'center', padding: '0 36px', color: '#f0e8ff', fontSize: 34, lineHeight: 1.15, fontWeight: 850, textAlign: 'center', translate: `${(1 - cardsEnter) * -24}px 0`}}>
+        <Surface accent="#b487ff" style={{position: 'absolute', left: 120, top: 450, width: 430, height: 180, display: 'grid', placeItems: 'center', padding: '0 36px', color: '#f0e8ff', fontSize: 34 * BUSINESS_RULE_FONT_SCALE, lineHeight: 1.15, fontWeight: 850, textAlign: 'center', translate: `${(1 - cardsEnter) * -24}px 0`}}>
           Business Requirement
         </Surface>
-        <Surface accent="#69b7ff" style={{position: 'absolute', right: 120, top: 450, width: 430, height: 180, display: 'grid', placeItems: 'center', padding: '0 36px', color: '#d8ecff', fontSize: 34, lineHeight: 1.15, fontWeight: 850, textAlign: 'center', translate: `${(1 - cardsEnter) * 24}px 0`}}>
+        <Surface accent="#69b7ff" style={{position: 'absolute', right: 120, top: 450, width: 430, height: 180, display: 'grid', placeItems: 'center', padding: '0 36px', color: '#d8ecff', fontSize: 34 * BUSINESS_RULE_FONT_SCALE, lineHeight: 1.15, fontWeight: 850, textAlign: 'center', translate: `${(1 - cardsEnter) * 24}px 0`}}>
           Executable Rule
         </Surface>
       </div> : null}
@@ -371,7 +373,7 @@ export const BusinessRulesScene = () => {
           <div style={{position: 'absolute', left: '50%', top: 116, width: 76, height: 7, borderRadius: 99, background: '#72e6ad', transformOrigin: '0 50%', rotate: '24deg'}} />
           <div style={{position: 'absolute', left: '50%', top: '50%', width: 20, height: 20, borderRadius: '50%', background: '#72e6ad', translate: '-50% -50%'}} />
         </div>
-        <div style={{marginTop: 34, color: '#e9ddff', fontSize: 27, lineHeight: 1.2, fontWeight: 820, textAlign: 'center'}}>
+        <div style={{marginTop: 34, color: '#e9ddff', fontSize: 27 * BUSINESS_RULE_FONT_SCALE, lineHeight: 1.2, fontWeight: 820, textAlign: 'center'}}>
           Time to translate requirements into code
         </div>
       </div> : null}
@@ -380,7 +382,7 @@ export const BusinessRulesScene = () => {
         <MascotArtwork pose="coding" />
       </div> : null}
 
-      {businessBubble > 0 ? <SpeechBubble accent="#b487ff" eyebrow="Business rule requirement" style={{left: 430, top: 175, width: 1260, height: 195, opacity: businessBubble}}>&ldquo;Every completed order must have a delivery date, and it cannot be earlier than the order date.&rdquo;</SpeechBubble> : null}
+      {businessBubble > 0 ? <SpeechBubble accent="#b487ff" eyebrow="Business rule requirement" fontScale={BUSINESS_RULE_FONT_SCALE} style={{left: 430, top: 175, width: 1260, height: 195, opacity: businessBubble}}>&ldquo;Every completed order must have a delivery date, and it cannot be earlier than the order date.&rdquo;</SpeechBubble> : null}
 
       {connectorMain > 0 ? <svg aria-hidden="true" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible', zIndex: 1, filter: 'drop-shadow(0 0 7px #b487ff88)'}}>
         <path d="M420 617 H455" fill="none" stroke="#b487ff" strokeWidth="5" strokeLinecap="round" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - connectorMain} />
@@ -393,17 +395,16 @@ export const BusinessRulesScene = () => {
       </svg> : null}
 
       {firstCheck > 0 ? <Surface accent="#b487ff" style={{position: 'absolute', left: 475, top: 415, width: 1235, height: 155, padding: '22px 28px', opacity: firstCheck, translate: `${(1 - firstCheck) * 24}px 0`, zIndex: 2}}>
-        <div style={{display: 'flex', alignItems: 'center', gap: 16}}><div style={{fontSize: 17, color: '#c5a8ff', fontWeight: 900, letterSpacing: 1.3}}>CHECK 1</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 20, color: '#d8c9ff'}}>conditional_completeness</div></div>
-        <div style={{marginTop: 20, borderRadius: 12, padding: '15px 20px', background: '#211c3e', border: '1px solid #7253ab', fontFamily: 'ui-monospace, monospace', fontSize: 24, color: '#f1ebff'}}>status = &apos;Completed&apos; → delivery_date IS NOT NULL</div>
+        <div style={{display: 'flex', alignItems: 'center', gap: 16}}><div style={{fontSize: 17 * BUSINESS_RULE_FONT_SCALE, color: '#c5a8ff', fontWeight: 900, letterSpacing: 1.3}}>CHECK 1</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 20 * BUSINESS_RULE_FONT_SCALE, color: '#d8c9ff'}}>conditional_completeness</div></div>
+        <div style={{marginTop: 20, borderRadius: 12, padding: '15px 20px', background: '#211c3e', border: '1px solid #7253ab', fontFamily: 'ui-monospace, monospace', fontSize: 24 * BUSINESS_RULE_FONT_SCALE, color: '#f1ebff'}}>status = &apos;Completed&apos; → delivery_date IS NOT NULL</div>
       </Surface> : null}
 
       {secondCheck > 0 ? <Surface accent="#b487ff" style={{position: 'absolute', left: 475, top: 590, width: 1235, height: 190, padding: '22px 28px', opacity: secondCheck, translate: `${(1 - secondCheck) * 24}px 0`, zIndex: 2}}>
-        <div style={{display: 'flex', alignItems: 'center', gap: 16}}><div style={{fontSize: 17, color: '#c5a8ff', fontWeight: 900, letterSpacing: 1.3}}>CHECK 2</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 20, color: '#d8c9ff'}}>custom_expression · PySpark</div></div>
-        <div style={{marginTop: 17, borderRadius: 12, padding: '14px 20px', background: '#211c3e', border: '1px solid #7253ab', fontFamily: 'ui-monospace, monospace', fontSize: 20, lineHeight: 1.45, color: '#f1ebff'}}><div>(F.col(&quot;status&quot;) != &quot;Completed&quot;) |</div><div>(F.col(&quot;delivery_date&quot;) &gt;= F.col(&quot;order_date&quot;))</div></div>
+        <div style={{display: 'flex', alignItems: 'center', gap: 16}}><div style={{fontSize: 17 * BUSINESS_RULE_FONT_SCALE, color: '#c5a8ff', fontWeight: 900, letterSpacing: 1.3}}>CHECK 2</div><div style={{fontFamily: 'ui-monospace, monospace', fontSize: 20 * BUSINESS_RULE_FONT_SCALE, color: '#d8c9ff'}}>custom_expression · PySpark</div></div>
+        <div style={{marginTop: 17, borderRadius: 12, padding: '14px 20px', background: '#211c3e', border: '1px solid #7253ab', fontFamily: 'ui-monospace, monospace', fontSize: 20 * BUSINESS_RULE_FONT_SCALE, lineHeight: 1.45, color: '#f1ebff'}}><div>(F.col(&quot;status&quot;) != &quot;Completed&quot;) |</div><div>(F.col(&quot;delivery_date&quot;) &gt;= F.col(&quot;order_date&quot;))</div></div>
       </Surface> : null}
 
-      {review > 0 ? <div style={{position: 'absolute', left: 785, top: 810, width: 620, padding: '17px 24px', borderRadius: 15, background: '#153c2e', border: '2px solid #55bd89', boxSizing: 'border-box', textAlign: 'center', color: '#baffd8', fontSize: 21, fontWeight: 900, letterSpacing: 1.1, opacity: review, translate: `0 ${(1 - review) * 15}px`}}>✓ HUMAN REVIEWED &amp; APPROVED</div> : null}
-      {engineerReview > 0 ? <div style={{position: 'absolute', left: 810, top: 892, width: 570, textAlign: 'center', color: '#c5a8ff', fontSize: 18, fontWeight: 850, letterSpacing: 0.8, opacity: engineerReview}}>Complex rules route to Engineering review</div> : null}
+      {review > 0 ? <div style={{position: 'absolute', left: 785, top: 810, width: 620, padding: '17px 24px', borderRadius: 15, background: '#153c2e', border: '2px solid #55bd89', boxSizing: 'border-box', textAlign: 'center', color: '#baffd8', fontSize: 21 * BUSINESS_RULE_FONT_SCALE, fontWeight: 900, letterSpacing: 1.1, opacity: review, translate: `0 ${(1 - review) * 15}px`}}>✓ HUMAN REVIEWED &amp; APPROVED</div> : null}
     </div>
   </SceneShell>;
 };
