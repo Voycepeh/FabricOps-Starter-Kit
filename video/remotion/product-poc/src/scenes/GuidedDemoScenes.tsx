@@ -655,6 +655,8 @@ export const ClosingScene = () => {
   const analyticsAndAiOpacity = interpolate(frame, [analyticsAndAiIn, analyticsAndAiIn + seconds(0.35), documentationIn - seconds(0.25), documentationIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const collaborateFlash = interpolate(frame, [470, 478, 500, 512], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const standardsFlash = interpolate(frame, [610, 618, 640, 652], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const highQualityFlash = interpolate(frame, [720, 728, 742, 754], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const trustworthyFlash = interpolate(frame, [740, 748, 762, 774], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const fadeOpacity = interpolate(frame, [narrationEnd, CLOSING_DURATION - 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   return <AbsoluteFill style={{color: theme.text, fontFamily: font}}>
     <div style={{position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
@@ -677,6 +679,14 @@ export const ClosingScene = () => {
 
       {standardsFlash > 0 ? <div style={{position: 'absolute', right: 190, top: 448, zIndex: 3, width: 470, color: '#8fc9ff', fontSize: 54, fontWeight: 900, letterSpacing: 2.4, opacity: standardsFlash, rotate: '18deg', scale: 0.9 + standardsFlash * 0.1, translate: `${(1 - standardsFlash) * 22}px 0`, textShadow: '0 0 24px #69b7ff99'}}>
         Data Standards
+      </div> : null}
+
+      {highQualityFlash > 0 ? <div style={{position: 'absolute', left: 190, top: 448, zIndex: 3, width: 470, color: '#72e6ad', fontSize: 54, fontWeight: 900, letterSpacing: 2.4, opacity: highQualityFlash, rotate: '-18deg', scale: 0.9 + highQualityFlash * 0.1, translate: `${(1 - highQualityFlash) * -22}px 0`, textShadow: '0 0 24px #38d99199'}}>
+        High Quality
+      </div> : null}
+
+      {trustworthyFlash > 0 ? <div style={{position: 'absolute', right: 190, top: 448, zIndex: 3, width: 470, color: '#c5a8ff', fontSize: 54, fontWeight: 900, letterSpacing: 2.4, opacity: trustworthyFlash, rotate: '18deg', scale: 0.9 + trustworthyFlash * 0.1, translate: `${(1 - trustworthyFlash) * 22}px 0`, textShadow: '0 0 24px #9e74ff99'}}>
+        Trustworthy
       </div> : null}
 
       {teamFade > 0 ? teamTriangle.map(({label, accent, left, top, at}) => {
