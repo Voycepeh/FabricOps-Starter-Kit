@@ -657,6 +657,9 @@ export const ClosingScene = () => {
   const standardsFlash = interpolate(frame, [610, 618, 640, 652], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const highQualityFlash = interpolate(frame, [720, 728, 742, 754], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const trustworthyFlash = interpolate(frame, [740, 748, 762, 774], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const dataAgentFlash = interpolate(frame, [940, 948, 960, 972], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const machineLearningFlash = interpolate(frame, [970, 978, 990, 1002], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const applicationsFlash = interpolate(frame, [1015, 1023, 1035, 1047], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const fadeOpacity = interpolate(frame, [narrationEnd, CLOSING_DURATION - 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   return <AbsoluteFill style={{color: theme.text, fontFamily: font}}>
     <div style={{position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
@@ -687,6 +690,18 @@ export const ClosingScene = () => {
 
       {trustworthyFlash > 0 ? <div style={{position: 'absolute', right: 190, top: 448, zIndex: 3, width: 470, color: '#c5a8ff', fontSize: 54, fontWeight: 900, letterSpacing: 2.4, opacity: trustworthyFlash, rotate: '18deg', scale: 0.9 + trustworthyFlash * 0.1, translate: `${(1 - trustworthyFlash) * 22}px 0`, textShadow: '0 0 24px #9e74ff99'}}>
         Trustworthy
+      </div> : null}
+
+      {dataAgentFlash > 0 ? <div style={{position: 'absolute', left: 260, top: 300, zIndex: 3, width: 410, color: '#8fc9ff', fontSize: 54, fontWeight: 900, letterSpacing: 2.4, opacity: dataAgentFlash, rotate: '-11deg', scale: 0.9 + dataAgentFlash * 0.1, translate: `${(1 - dataAgentFlash) * -18}px ${(1 - dataAgentFlash) * -12}px`, textShadow: '0 0 24px #69b7ff99'}}>
+        Data Agent
+      </div> : null}
+
+      {machineLearningFlash > 0 ? <div style={{position: 'absolute', right: 90, top: 790, zIndex: 3, width: 720, color: '#c5a8ff', fontSize: 48, fontWeight: 900, letterSpacing: 1.8, opacity: machineLearningFlash, rotate: '7deg', scale: 0.9 + machineLearningFlash * 0.1, translate: `${(1 - machineLearningFlash) * 22}px ${(1 - machineLearningFlash) * 14}px`, textShadow: '0 0 24px #9e74ff99'}}>
+        Machine Learning Model
+      </div> : null}
+
+      {applicationsFlash > 0 ? <div style={{position: 'absolute', left: 170, top: 790, zIndex: 3, width: 470, color: '#ffbd76', fontSize: 54, fontWeight: 900, letterSpacing: 2.4, opacity: applicationsFlash, rotate: '-8deg', scale: 0.9 + applicationsFlash * 0.1, translate: `${(1 - applicationsFlash) * -20}px ${(1 - applicationsFlash) * 12}px`, textShadow: '0 0 24px #ffae6699'}}>
+        Applications
       </div> : null}
 
       {teamFade > 0 ? teamTriangle.map(({label, accent, left, top, at}) => {
