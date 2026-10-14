@@ -331,11 +331,16 @@ export const BusinessRulesScene = () => {
   const {fps} = useVideoConfig();
   const cue = NARRATION_CUE_SHEET.businessRules;
   const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
-  const introduction = enterProgress(frame, fps, localCue(0));
+  const cardsEnter = enterProgress(frame, fps, localCue(0));
+  const cardsExit = interpolate(frame, [localCue(1) - seconds(1.2), localCue(1) - seconds(0.2)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const cardsOpacity = cardsEnter * cardsExit;
+  const clockEnter = enterProgress(frame, fps, seconds(0.9));
+  const clockToMascotStart = localCue(1) - seconds(5);
+  const clockToMascotEnd = localCue(1) - seconds(4.1);
+  const clockOpacity = clockEnter * interpolate(frame, [clockToMascotStart, clockToMascotEnd], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const mascotOpacity = interpolate(frame, [clockToMascotStart, clockToMascotEnd], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const mascotMove = interpolate(frame, [localCue(1), localCue(2)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const businessBubble = enterProgress(frame, fps, localCue(2));
-  const introductionOpacity = introduction * (1 - businessBubble);
-  const translationWait = interpolate(frame, [seconds(2.2), localCue(1) - seconds(0.8)], [0, 0.5], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const translationLabels = interpolate(frame, [seconds(1.5), seconds(2.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const connectorMain = interpolate(frame, [localCue(3), localCue(3) + seconds(0.45)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const connectorTrunk = interpolate(frame, [localCue(3) + seconds(0.45), localCue(3) + seconds(0.95)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
   const firstBranch = interpolate(frame, [localCue(3) + seconds(0.95), localCue(3) + seconds(1.3)], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic)});
@@ -347,24 +352,35 @@ export const BusinessRulesScene = () => {
 
   return <SceneShell duration={BUSINESS_RULES_DURATION} heading="" accent={theme.governance}>
     <div>
-      {introductionOpacity > 0 ? <div style={{position: 'absolute', inset: 0, opacity: introductionOpacity}}>
-        <div style={{position: 'absolute', left: 330, top: 345, width: 1260, color: '#f3edff', fontSize: 66, lineHeight: 1.12, fontWeight: 900, letterSpacing: -1.2, textAlign: 'center'}}>
-          The hidden cost of translating<br />requirements into code.
+      {cardsOpacity > 0 ? <div style={{position: 'absolute', inset: 0, opacity: cardsOpacity}}>
+        <Surface accent="#b487ff" style={{position: 'absolute', left: 120, top: 450, width: 430, height: 180, display: 'grid', placeItems: 'center', padding: '0 36px', color: '#f0e8ff', fontSize: 34, lineHeight: 1.15, fontWeight: 850, textAlign: 'center', translate: `${(1 - cardsEnter) * -24}px 0`}}>
+          Business Requirement
+        </Surface>
+        <Surface accent="#69b7ff" style={{position: 'absolute', right: 120, top: 450, width: 430, height: 180, display: 'grid', placeItems: 'center', padding: '0 36px', color: '#d8ecff', fontSize: 34, lineHeight: 1.15, fontWeight: 850, textAlign: 'center', translate: `${(1 - cardsEnter) * 24}px 0`}}>
+          Executable Rule
+        </Surface>
+      </div> : null}
+
+      {clockOpacity > 0 ? <div style={{position: 'absolute', left: 760, top: 332, width: 400, height: 416, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: clockOpacity}}>
+        <div style={{position: 'relative', width: 250, height: 250, borderRadius: '50%', border: '8px solid #b487ff', background: '#111d33', boxSizing: 'border-box'}}>
+          <div style={{position: 'absolute', left: '50%', top: 24, width: 6, height: 19, borderRadius: 99, background: '#c5a8ff', translate: '-50% 0'}} />
+          <div style={{position: 'absolute', left: '50%', bottom: 24, width: 6, height: 19, borderRadius: 99, background: '#c5a8ff', translate: '-50% 0'}} />
+          <div style={{position: 'absolute', left: 24, top: '50%', width: 19, height: 6, borderRadius: 99, background: '#c5a8ff', translate: '0 -50%'}} />
+          <div style={{position: 'absolute', right: 24, top: '50%', width: 19, height: 6, borderRadius: 99, background: '#c5a8ff', translate: '0 -50%'}} />
+          <div style={{position: 'absolute', left: '50%', top: 62, width: 7, height: 70, borderRadius: 99, background: '#f3edff', transformOrigin: '50% 100%', rotate: '-18deg', translate: '-50% 0'}} />
+          <div style={{position: 'absolute', left: '50%', top: 116, width: 76, height: 7, borderRadius: 99, background: '#72e6ad', transformOrigin: '0 50%', rotate: '24deg'}} />
+          <div style={{position: 'absolute', left: '50%', top: '50%', width: 20, height: 20, borderRadius: '50%', background: '#72e6ad', translate: '-50% -50%'}} />
         </div>
-        <div style={{position: 'absolute', left: 430, top: 650, width: 1060, opacity: translationLabels}}>
-          <div style={{position: 'relative', height: 5, borderRadius: 99, background: '#413654'}}>
-            <div style={{position: 'absolute', inset: 0, width: `${translationWait * 100}%`, borderRadius: 99, background: '#b487ff', boxShadow: '0 0 14px #b487ff66'}} />
-            <div style={{position: 'absolute', left: '50%', top: '50%', width: 18, height: 18, borderRadius: 99, background: '#171329', border: '4px solid #b487ff', boxSizing: 'border-box', translate: '-50% -50%', boxShadow: '0 0 22px #b487ff66'}} />
-          </div>
-          <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', marginTop: 30, color: '#8fa0b7', fontSize: 17, fontWeight: 850, letterSpacing: 1.6}}>
-            <div>BUSINESS INTENT</div>
-            <div style={{color: '#c5a8ff', textAlign: 'center'}}>WAITING FOR ENGINEERING</div>
-            <div style={{textAlign: 'right', opacity: 0.48}}>EXECUTABLE RULE</div>
-          </div>
+        <div style={{marginTop: 34, color: '#e9ddff', fontSize: 27, lineHeight: 1.2, fontWeight: 820, textAlign: 'center'}}>
+          Time to translate requirements into code
         </div>
       </div> : null}
+
+      {mascotOpacity > 0 ? <div style={{position: 'absolute', left: 105, top: 505, zIndex: 3, width: 320, height: 320, opacity: mascotOpacity, translate: `${interpolate(mascotMove, [0, 1], [695, 0])}px ${interpolate(mascotMove, [0, 1], [-165, 0])}px`, scale: interpolate(mascotMove, [0, 1], [0.94, 1])}}>
+        <MascotArtwork pose="coding" />
+      </div> : null}
+
       {businessBubble > 0 ? <SpeechBubble accent="#b487ff" eyebrow="Business rule requirement" style={{left: 430, top: 175, width: 1260, height: 195, opacity: businessBubble}}>&ldquo;Every completed order must have a delivery date, and it cannot be earlier than the order date.&rdquo;</SpeechBubble> : null}
-      <Mascot pose="coding" x={105} y={505} size={320} delay={localCue(1)} />
 
       {connectorMain > 0 ? <svg aria-hidden="true" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible', zIndex: 1, filter: 'drop-shadow(0 0 7px #b487ff88)'}}>
         <path d="M420 617 H455" fill="none" stroke="#b487ff" strokeWidth="5" strokeLinecap="round" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - connectorMain} />
