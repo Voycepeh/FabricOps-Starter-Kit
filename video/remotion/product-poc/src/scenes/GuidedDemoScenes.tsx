@@ -653,6 +653,8 @@ export const ClosingScene = () => {
   const collaborationOpacity = interpolate(frame, [collaborationIn, collaborationIn + seconds(0.35), dataFoundationIn - seconds(0.25), dataFoundationIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const dataFoundationOpacity = interpolate(frame, [dataFoundationIn, dataFoundationIn + seconds(0.35), analyticsAndAiIn - seconds(0.25), analyticsAndAiIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const analyticsAndAiOpacity = interpolate(frame, [analyticsAndAiIn, analyticsAndAiIn + seconds(0.35), documentationIn - seconds(0.25), documentationIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const collaborateFlash = interpolate(frame, [470, 478, 500, 512], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const standardsFlash = interpolate(frame, [610, 618, 640, 652], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const fadeOpacity = interpolate(frame, [narrationEnd, CLOSING_DURATION - 1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   return <AbsoluteFill style={{color: theme.text, fontFamily: font}}>
     <div style={{position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
@@ -668,6 +670,14 @@ export const ClosingScene = () => {
           <span style={{color: '#fff'}}>Ops</span>
         </div>
       </div>
+
+      {collaborateFlash > 0 ? <div style={{position: 'absolute', left: 230, top: 448, zIndex: 3, width: 430, color: '#c5a8ff', fontSize: 54, fontWeight: 900, letterSpacing: 2.4, opacity: collaborateFlash, rotate: '-18deg', scale: 0.9 + collaborateFlash * 0.1, translate: `${(1 - collaborateFlash) * -22}px 0`, textShadow: '0 0 24px #9e74ff99'}}>
+        Collaborate
+      </div> : null}
+
+      {standardsFlash > 0 ? <div style={{position: 'absolute', right: 190, top: 448, zIndex: 3, width: 470, color: '#8fc9ff', fontSize: 54, fontWeight: 900, letterSpacing: 2.4, opacity: standardsFlash, rotate: '18deg', scale: 0.9 + standardsFlash * 0.1, translate: `${(1 - standardsFlash) * 22}px 0`, textShadow: '0 0 24px #69b7ff99'}}>
+        Data Standards
+      </div> : null}
 
       {teamFade > 0 ? teamTriangle.map(({label, accent, left, top, at}) => {
         const progress = enterProgress(frame, fps, at);
