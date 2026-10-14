@@ -421,8 +421,8 @@ export const BigPictureScene = () => {
   const openingTransitionStart = localCue(1) - seconds(1.6);
   const openingTransitionEnd = localCue(1) + seconds(0.25);
   const sideEnter = enterProgress(frame, fps, seconds(0.35));
-  const handshakeEnter = enterProgress(frame, fps, localCue(0));
   const contractEnter = enterProgress(frame, fps, 10180 - cue.startFrame);
+  const contractArrowEnd = interpolate(contractEnter, [0, 1], [24, 626], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const openingOpacity = interpolate(frame, [openingTransitionStart, openingTransitionEnd], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const contractCarry = interpolate(frame, [openingTransitionStart, openingTransitionEnd], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const sourceAt = 380;
@@ -461,17 +461,15 @@ export const BigPictureScene = () => {
         <div style={{marginTop: 26, color: '#d8ecff', fontSize: 31, fontWeight: 850}}>Data Engineering</div>
       </div>
 
-      <div style={{position: 'absolute', left: 810, top: 330, width: 300, height: 260, opacity: handshakeEnter, scale: 0.9 + handshakeEnter * 0.1}}>
-        <svg aria-hidden="true" width="300" height="220" viewBox="0 0 260 180">
-          <path d="M14 113 68 61l45 31-40 48Z" fill="#2c244c" stroke="#b487ff" strokeWidth="6" strokeLinejoin="round" />
-          <path d="m246 113-54-52-45 31 40 48Z" fill="#183c5b" stroke="#69b7ff" strokeWidth="6" strokeLinejoin="round" />
-          <path d="m73 80 34-24c9-7 20-7 29 0l18 14 27 15c11 6 13 20 4 29l-33 28c-10 8-24 8-33 0L76 105c-9-8-11-18-3-25Z" fill="#17473f" stroke="#72e6ad" strokeWidth="6" strokeLinejoin="round" />
-          <path d="m107 84 31 28M124 75l31 27M91 94l31 28" fill="none" stroke="#baffd8" strokeWidth="5" strokeLinecap="round" />
+      <div style={{position: 'absolute', left: 635, top: 414, width: 650, height: 80, opacity: contractEnter}}>
+        <svg aria-hidden="true" width="650" height="80" viewBox="0 0 650 80">
+          <line x1="24" y1="40" x2={contractArrowEnd} y2="40" stroke="#72e6ad" strokeWidth="7" strokeLinecap="round" />
+          <path d={`M${contractArrowEnd - 23} 26 ${contractArrowEnd + 1} 40 ${contractArrowEnd - 23} 54Z`} fill="#69b7ff" opacity={contractEnter} />
         </svg>
       </div>
     </div> : null}
 
-    {contractEnter > 0 ? <div style={{position: 'absolute', left: 780, top: 105, zIndex: 3, width: 360, color: '#baffd8', fontSize: 30, fontWeight: 900, letterSpacing: 0.3, textAlign: 'center', opacity: contractEnter, translate: `0 ${interpolate(contractCarry, [0, 1], [535, 0])}px`, scale: interpolate(contractCarry, [0, 1], [1.18, 1])}}>
+    {contractEnter > 0 ? <div style={{position: 'absolute', left: 780, top: 105, zIndex: 3, width: 360, color: '#baffd8', fontSize: 30, fontWeight: 900, letterSpacing: 0.3, textAlign: 'center', opacity: contractEnter, translate: `0 ${interpolate(contractCarry, [0, 1], [430, 0])}px`, scale: interpolate(contractCarry, [0, 1], [1.18, 1])}}>
       <div style={{height: 3, margin: '0 74px 14px', borderRadius: 99, background: '#72e6ad'}} />
       Data Contract
     </div> : null}
