@@ -684,9 +684,9 @@ export const ClosingScene = () => {
         Powering Analytics and AI
       </div> : null}
 
-      {documentationEnter > 0 || demoEnter > 0 ? <div style={{position: 'absolute', top: 776, display: 'flex', alignItems: 'center', gap: 24}}>
-        <div style={{minWidth: 330, padding: '19px 34px', borderRadius: 14, border: '2px solid #72e6ad', color: '#dfffee', fontSize: 28, fontWeight: 800, boxSizing: 'border-box', opacity: documentationEnter, translate: `0 ${(1 - documentationEnter) * 16}px`}}>Read the documentation</div>
-        <div style={{minWidth: 250, padding: '19px 34px', borderRadius: 14, border: '2px solid #c5a8ff', color: '#f0e8ff', fontSize: 28, fontWeight: 800, boxSizing: 'border-box', opacity: demoEnter, translate: `0 ${(1 - demoEnter) * 16}px`}}>Guided Demo</div>
+      {documentationEnter > 0 || demoEnter > 0 ? <div style={{position: 'absolute', top: 680, display: 'flex', alignItems: 'center', gap: 36}}>
+        <div style={{minWidth: 495, padding: '29px 51px', borderRadius: 21, border: '3px solid #72e6ad', color: '#dfffee', fontSize: 42, fontWeight: 800, boxSizing: 'border-box', opacity: documentationEnter, translate: `0 ${(1 - documentationEnter) * 24}px`}}>Read the documentation</div>
+        <div style={{minWidth: 375, padding: '29px 51px', borderRadius: 21, border: '3px solid #c5a8ff', color: '#f0e8ff', fontSize: 42, fontWeight: 800, boxSizing: 'border-box', opacity: demoEnter, translate: `0 ${(1 - demoEnter) * 24}px`}}>Guided Demo</div>
       </div> : null}
     </div>
 
