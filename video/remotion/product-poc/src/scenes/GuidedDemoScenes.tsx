@@ -296,6 +296,7 @@ export const SensitiveDataScene = () => {
   const enforcedAt = 7720 - cue.startFrame;
   const introEnd = 7800 - cue.startFrame;
   const inspectionAt = 8430 - cue.startFrame;
+  const maskChipAt = 455;
   const maskAt = 950;
   const hashAt = localCue(3);
   const tokenizeAt = localCue(4);
@@ -322,9 +323,9 @@ export const SensitiveDataScene = () => {
       <Mascot pose="masking" x={1390} y={485} size={315} delay={maskAt} />
       {scan > 0 ? <div style={{position: 'absolute', left: 425, top: 605, width: 55, height: 5, borderRadius: 99, background: '#ffae66', scale: `${scan} 1`, transformOrigin: 'left'}} /> : null}
       {treatment > 0 ? <div style={{position: 'absolute', left: 1330, top: 605, width: 60, height: 5, borderRadius: 99, background: '#ffae66', scale: `${treatment} 1`, transformOrigin: 'left'}} /> : null}
-      {frame >= hashAt ? <div style={{position: 'absolute', left: 430, right: 430, top: 810, display: 'flex', justifyContent: 'center', gap: 27}}>
+      {frame >= maskChipAt ? <div style={{position: 'absolute', left: 430, right: 430, top: 810, display: 'flex', justifyContent: 'center', gap: 27}}>
         {[
-          {label: 'MASK', at: maskAt},
+          {label: 'MASK', at: maskChipAt},
           {label: 'HASH', at: hashAt},
           {label: 'TOKENIZE', at: tokenizeAt},
           {label: 'REMOVE', at: removeAt},
