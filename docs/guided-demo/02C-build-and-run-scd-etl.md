@@ -4,6 +4,10 @@
 
 00C stages the Day 1 Bronze snapshot. Days 2 and 3 replace the Bronze source with a new eight-row snapshot, then the unchanged orchestrated pipeline publishes to both Silver targets. Run the days in order so you can watch the two load strategies respond to the same business changes.
 
+### Frequency profiling controls
+
+The notebook explicitly sets `frequency_enabled=True` and `frequency_top_n=5` on its `orchestrate_read()` and `orchestrate_write()` calls. This retains up to five frequency values per eligible column. For faster runs when frequency distributions are not needed, set **`frequency_enabled=False`** on the relevant orchestrator call to skip frequency profiling for **all columns** while keeping the standard statistical profile. `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating frequencies.
+
 ## Before you begin
 
 1. Download [`02C_scd_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02C_scd_demo.ipynb) and import it into the Engineering Development workspace.

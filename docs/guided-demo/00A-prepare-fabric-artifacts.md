@@ -25,14 +25,8 @@ Only **Governance** and **Engineering Development** are needed initially. You ca
   </div>
 </div>
 
-| Workspace | Required? | Used for |
-| --- | --- | --- |
-| **Governance** | Yes | Governance metadata, Data Stewards, Data Agreements, and Data Contracts. |
-| **Engineering Development** | Yes | Build and validate the Engineering pipeline. |
-| **Engineering Production** | Optional until Step 6 | Production mirror of the Development engineering workspace. |
-| **Consumer** | Optional until Step 7 | Consume approved Production data. |
-
 ![Fabric workspaces for the Guided Demo](../assets/00A/Workspace.png)
+
 
 ## Create the Governance metadata Lakehouse
 
@@ -40,18 +34,13 @@ Only **Governance** and **Engineering Development** are needed initially. You ca
   <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="FabricOps mascot" loading="lazy">
   <div markdown="1">
 
-The **Metadata** Lakehouse is the shared home for FabricOps Governance records, separate from the engineering data stores.
+Inside the **Governance** workspace and create a Lakehouse named **Metadata**, it is the shared home for FabricOps Governance records
+
+Use this exact name and casing for the Guided Demo. FabricOps uses this Lakehouse to persist its Governance metadata throughout the walkthrough.
 
   </div>
 </div>
 
-Open the **Governance** workspace and create a Lakehouse named:
-
-```text
-Metadata
-```
-
-Use this exact name and casing for the Guided Demo. FabricOps uses this Lakehouse to persist its Governance metadata throughout the walkthrough.
 
 ![Create the Governance metadata Lakehouse](../assets/00A/Create_Lakehouse.png)
 
@@ -61,18 +50,11 @@ Use this exact name and casing for the Guided Demo. FabricOps uses this Lakehous
   <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="FabricOps mascot" loading="lazy">
   <div markdown="1">
 
-Development uses three distinct stores: **bronze** for landing data, **silver** for curated data, and **gold** for serving.
+Open **Engineering Development** and create three distinct stores: **bronze**, **silver** lakehouse and **gold** warehouse.
 
   </div>
 </div>
 
-Open **Engineering Development** and create:
-
-| Item | Name | Role in the walkthrough |
-| --- | --- | --- |
-| Lakehouse | `bronze` | Source / landing data. |
-| Lakehouse | `silver` | Curated engineering data. |
-| Warehouse | `gold` | Product / serving data. |
 
 ![Engineering Development Fabric items](../assets/00A/Objects.png)
 
@@ -89,13 +71,21 @@ Open **Engineering Development** and create:
 
     If you created **Engineering Production**, repeat the same setup there with `bronze`, `silver`, and `gold` using the same item types and names.
 
-    The **Consumer** workspace does not need its own Fabric store for this Guided Demo. It will consume approved Production data in Step 7.
+    The **Consumer** workspace does not need its own Fabric store for this Guided Demo.
 
 ## Get FabricOps
 
-The easiest option is to download the packaged FabricOps wheel from the [FabricOps Releases page](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases).
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="FabricOps mascot" loading="lazy">
+  <div markdown="1">
 
-Download the `.whl` file from the release you want to run.
+Download the packaged FabricOps wheel from the [FabricOps Releases page](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases).
+
+Download the `.whl` file from the release you want to use, please check that you do not download the release version than is earlier than what was declared on the demo files you want to run, else the demo may not run correctly.
+
+  </div>
+</div>
+
 
 If you prefer to build FabricOps yourself, clone the repository locally and run:
 
@@ -116,7 +106,7 @@ Fabric Environments are **workspace-specific**. Install and publish the same Fab
   </div>
 </div>
 
-A Fabric Environment belongs to a **workspace**. An Environment created in Governance is not automatically available in Engineering Development, Engineering Production, or Consumer.
+A Fabric Environment belongs to a workspace. An Environment created in Governance is not automatically available in Engineering Development, Engineering Production, or Consumer.
 
 Start in the **Governance** workspace and create a Fabric **Environment**. Then:
 
@@ -129,14 +119,6 @@ Publishing is required before the installed FabricOps package is available to no
 
 ![Install the FabricOps wheel as a custom library](../assets/00A/install-custom-whl.png)
 
-Repeat the same Environment setup in every workspace that will run FabricOps notebooks:
-
-| Workspace | Environment needed? | Why |
-| --- | --- | --- |
-| **Governance** | Yes | Runs `01_governance` and Governance metadata operations. |
-| **Engineering Development** | Yes | Runs `00_env_config`, the reusable `02_pipeline`, and the Guided Demo pipeline notebooks. |
-| **Engineering Production** | Yes when you reach Step 6 | Runs the Production copy of the validated pipeline. |
-| **Consumer** | Yes when you reach Step 7 | Runs `99_explore` using the FabricOps package. |
 
 Use the same FabricOps wheel version in each workspace so Governance, Development, Production, and Consumer are running the same package version during the Guided Demo.
 

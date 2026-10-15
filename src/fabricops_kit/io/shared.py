@@ -545,7 +545,7 @@ BEGIN
                HAVING SUM(CASE WHEN [_is_current] = 1 THEN 1 ELSE 0 END) > 1)
         THROW 50002, 'SCD2 target contains multiple current records for a business key.', 1;
     IF EXISTS (SELECT 1 FROM {qtarget} target JOIN {qstage} source ON {join}
-               WHERE target.[_is_current] = 1 AND source.{effective} < target.[_effective_from])
+               WHERE target.[_is_current] = 1 AND (source.{effective} IS NULL OR source.{effective} <= target.[_effective_from]) AND ({changed}))
         THROW 50003, 'Incoming SCD2 effective time moves backwards.', 1;
 
     UPDATE target SET target.[_effective_to] = source.{effective}, target.[_is_current] = 0

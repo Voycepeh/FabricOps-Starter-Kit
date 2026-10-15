@@ -11,11 +11,15 @@ def _selected_names(*paths: str) -> set[str]:
     return {check.name for check in validation.select_checks(paths)}
 
 
-def test_source_public_callable_change_selects_call_flow_and_reference_checks() -> None:
-    """Source package changes require call-flow and reference freshness checks."""
+def test_source_public_callable_change_selects_api_contract_checks() -> None:
+    """Source package changes require every generated public API contract check."""
     names = _selected_names("src/fabricops_kit/io/read_lakehouse_table.py")
 
-    assert names == {"public call-flow architecture contract", "individual function reference pages"}
+    assert names == {
+        "public call-flow architecture contract",
+        "individual function reference pages",
+        "public API compatibility snapshots",
+    }
 
 
 def test_source_public_callable_change_skips_dashboard_html() -> None:
@@ -40,6 +44,7 @@ def test_metadata_schema_change_requires_metadata_reference_generation() -> None
         "public call-flow architecture contract",
         "individual function reference pages",
         "metadata reference pages",
+        "public API compatibility snapshots",
     }
 
 
@@ -82,7 +87,18 @@ def test_mixed_change_triggers_all_directly_affected_checks() -> None:
         "individual function reference pages",
         "metadata reference pages",
         "public call-flow dashboard HTML",
+        "public API compatibility snapshots",
     }
+
+
+def test_compatibility_generator_change_requires_snapshot_generation() -> None:
+    """The compatibility generator owns only its companion JSON contract."""
+    names = _selected_names("scripts/generate_public_api_compatibility.py")
+
+    assert names == {"public API compatibility snapshots"}
+    assert validation.COMPATIBILITY_CHECK.diff_paths == (
+        "docs/reference/_data/public-api-compatibility.json",
+    )
 
 
 def test_stale_public_call_flow_json_fails_validation(monkeypatch) -> None:

@@ -22,7 +22,7 @@ def test_profile_table_public_signature_and_removed_symbols():
     assert str(inspect.signature(profile_table)) == (
         "(*, dataframe=None, store: 'str | None' = None, schema: 'str | None' = None, "
         "table_name: 'str | None' = None, table_id: 'str | None' = None, frequency_columns=None, "
-        "frequency_top_n: 'int | None' = None, frequency_max_distinct_percent: 'float | None' = 80.0, "
+        "frequency_enabled: 'bool' = True, frequency_top_n: 'int | None' = 5, frequency_max_distinct_percent: 'float | None' = 80.0, "
         "spark_session=None)"
     )
     for name in ("profile_dataframe", "profile_frequency_distribution", "profile_and_register_table"):
@@ -709,3 +709,23 @@ def test_failed_governed_profile_removes_uncommitted_snapshot(
     assert "summary" in events
     assert ("frequency" in events) is (failure_stage == "catalogue")
     assert ("cleanup failed" in capsys.readouterr().out) is cleanup_fails
+
+
+def test_profile_table_frequency_top_n_defaults_to_five():
+    """Ensure profiling entry points default to Top 5 frequencies."""
+    import inspect
+    from fabricops_kit.pipeline.profile_table import profile_table
+    from fabricops_kit.pipeline.orchestrate_read import orchestrate_read
+    from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
+
+    for function in (profile_table, orchestrate_read, orchestrate_write):
+        assert inspect.signature(function).parameters["frequency_top_n"].default == 5
+        assert inspect.signature(function).parameters["frequency_enabled"].default is True
+
+
+def test_profile_table_frequency_disabled_skips_column_selection():
+    """Ensure table-wide frequency profiling can be disabled."""
+    import inspect
+    from fabricops_kit.pipeline.profile_table import profile_table
+
+    assert "frequency_enabled" in inspect.signature(profile_table).parameters

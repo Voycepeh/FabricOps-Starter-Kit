@@ -55,10 +55,28 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
             raise RuntimeError(f"Stage returned blocking status.{detail}")
     except Exception as exc:
         duration = max(0.01, round(time.perf_counter() - started, 2))
+        root = exc
+        seen = set()
+        while id(root) not in seen:
+            seen.add(id(root))
+            next_error = root.__cause__ or (root.__context__ if not root.__suppress_context__ else None)
+            if next_error is None:
+                break
+            root = next_error
+        reason = f"{type(root).__name__}: {root}"
+        location = ""
+        if root.__traceback__ is not None:
+            import traceback
+
+            origin = traceback.extract_tb(root.__traceback__)[-1]
+            location = f" ({origin.filename.rsplit('/', 1)[-1]}:{origin.lineno} in {origin.name})"
         if verbose:
             print(f"[{index}/{total}] {stage} ... ✗ Failed ({duration:.2f}s)")
+            print(f"  Root cause → {reason}{location}")
             print(f"{operation} {name!r} stopped at {stage}. Later stages did not run.")
-        raise RuntimeError(f"{operation} {name!r} failed during {stage}.") from exc
+        raise RuntimeError(
+            f"{operation} {name!r} failed during {stage}. Root cause: {reason}{location}"
+        ) from exc
     duration = max(0.01, round(time.perf_counter() - started, 2))
     if verbose:
         outcomes = {
@@ -2429,7 +2447,19 @@ def execute_lakehouse_processing(
         ],
         F.lit(False),
     )
-    changed_existing = joined.where(changed_expression).select("incoming.*")
+    changed_matches = joined.where(changed_expression)
+    current_starts = current_rows.select(
+        *[F.col(name) for name in keys],
+        F.col("_effective_from").alias("_fabricops_previous_start"),
+    )
+    invalid_time = (
+        changed_matches.select("incoming.*")
+        .join(current_starts, on=keys, how="inner")
+        .where(F.col(effective).isNull() | (F.col(effective) <= F.col("_fabricops_previous_start")))
+    )
+    if invalid_time.limit(1).count():
+        raise ValueError("Changed SCD2 rows require an effective time later than the current version start.")
+    changed_existing = changed_matches.select("incoming.*")
     keyed = persisted_df
     inserts = changed_existing
     for merge_key, key in zip(merge_keys, keys, strict=True):

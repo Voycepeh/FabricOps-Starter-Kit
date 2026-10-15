@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DASHBOARD = ROOT / "docs/assets/public-function-call-flows-dashboard.html"
 DATA = ROOT / "docs/reference/_data/public-function-call-flows.json"
 ARTIFACTS = ROOT / "docs/reference/_data/generated-artifacts.json"
+COMPATIBILITY = ROOT / "docs/reference/_data/public-api-compatibility.json"
 
 
 def _browser_executable() -> str | None:
@@ -50,6 +51,7 @@ SMOKE_SCRIPT = r"""
   const fail = error => finish({ok:false,error:String(error && error.stack || error),errors});
   const timer = setInterval(() => {
     if (!document.getElementById('dataLoadStatus')?.textContent.includes('Loaded')) return;
+    if (document.getElementById('compatBaseline')?.options.length < 2) return;
     clearInterval(timer);
     try {
       const check = (condition, message) => { if (!condition) throw new Error(message); };
@@ -88,6 +90,24 @@ SMOKE_SCRIPT = r"""
       signal.value = 'architecture_violation'; signal.dispatchEvent(new Event('input', {bubbles:true}));
       check(publicRows.length > 0 && publicRows.every(row => hasPublicSignal(row, 'architecture_violation')), 'signal filter failed');
       signal.value = ''; signal.dispatchEvent(new Event('input', {bubbles:true}));
+
+      showWorkflow('compatibility');
+      const compatBaseline = document.getElementById('compatBaseline');
+      const compatTarget = document.getElementById('compatTarget');
+      check([...compatBaseline.options].some(option => option.value === 'v0.1.0'), 'v0.1.0 baseline option is missing');
+      check([...compatTarget.options].some(option => option.value === 'v0.2.0'), 'v0.2.0 target option is missing');
+      check(!compatBaseline.textContent.includes('PR #1613'), 'stale PR selector remains');
+      compatBaseline.value = 'v0.1.0'; compatTarget.value = 'v0.2.0';
+      document.getElementById('compatCompare').click();
+      check(document.querySelectorAll('.compatibility-record').length > 0, 'release comparison did not render');
+      check(document.querySelector('.compatibility-summary').textContent.includes('Potentially breaking'), 'compatibility summary is missing');
+      check(document.getElementById('compatStatus').textContent.includes('source-backed'), 'source-backed status is missing');
+      check(new URLSearchParams(location.search).get('baseline') === 'v0.1.0', 'baseline URL parameter was not retained');
+      check(new URLSearchParams(location.search).get('compare') === 'v0.2.0', 'compare URL parameter was not retained');
+      const compatLifecycle = document.getElementById('compatLifecycle');
+      compatLifecycle.value = 'Live'; compatLifecycle.dispatchEvent(new Event('change', {bubbles:true}));
+      check(new URLSearchParams(location.search).get('compatLifecycle') === 'Live', 'lifecycle URL parameter was not retained');
+      showWorkflow('architecture');
 
       selectPublic(recursiveRoot.qualified_name, {scrollToPanel:false});
       const fullInventoryCount = uniqInventory(selectedPublic.flow).length;
@@ -156,6 +176,7 @@ def _run_browser_smoke(tmp_path: Path, browser: str, width: int) -> dict[str, ob
     (assets / DASHBOARD.name).write_text(dashboard_html, encoding="utf-8")
     shutil.copy2(DATA, data_dir / DATA.name)
     shutil.copy2(ARTIFACTS, data_dir / ARTIFACTS.name)
+    shutil.copy2(COMPATIBILITY, data_dir / COMPATIBILITY.name)
 
     handler = partial(_QuietHandler, directory=str(tmp_path))
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)

@@ -51,6 +51,11 @@ DASHBOARD_CHECK = ArtifactCheck(
     command=(sys.executable, "scripts/generate_public_function_call_flows_dashboard.py"),
     diff_paths=("docs/assets/public-function-call-flows-dashboard.html",),
 )
+COMPATIBILITY_CHECK = ArtifactCheck(
+    name="public API compatibility snapshots",
+    command=(sys.executable, "scripts/generate_public_api_compatibility.py"),
+    diff_paths=("docs/reference/_data/public-api-compatibility.json",),
+)
 
 
 def _is_under(path: str, prefix: str) -> bool:
@@ -90,6 +95,14 @@ def owns_dashboard_html(path: str) -> bool:
     } or _is_under(path, "dashboard") or _is_under(path, "frontend")
 
 
+def owns_public_api_compatibility(path: str) -> bool:
+    """Return whether a path owns public API compatibility snapshot freshness."""
+    return is_public_callable_source(path) or path in {
+        "scripts/generate_public_api_compatibility.py",
+        "docs/reference/_data/public-api-compatibility.json",
+    }
+
+
 def owns_metadata_reference_pages(path: str) -> bool:
     """Return whether a path owns generated metadata reference page freshness."""
     return path in {
@@ -112,6 +125,8 @@ def select_checks(changed_paths: Iterable[str]) -> tuple[ArtifactCheck, ...]:
         checks.append(METADATA_REFERENCE_CHECK)
     if any(owns_dashboard_html(path) for path in paths):
         checks.append(DASHBOARD_CHECK)
+    if any(owns_public_api_compatibility(path) for path in paths):
+        checks.append(COMPATIBILITY_CHECK)
     return tuple(checks)
 
 
