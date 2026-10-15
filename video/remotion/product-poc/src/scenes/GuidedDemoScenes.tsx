@@ -699,7 +699,7 @@ export const ClosingScene = () => {
         Trustworthy
       </div> : null}
 
-      {dataFoundationFlash > 0 ? <div style={{position: 'absolute', left: 110, top: 448, zIndex: 3, width: 700, color: '#72e6ad', fontSize: 50, fontWeight: 900, letterSpacing: 1.8, opacity: dataFoundationFlash, rotate: '-18deg', scale: 0.9 + dataFoundationFlash * 0.1, translate: `${(1 - dataFoundationFlash) * -22}px 0`, textShadow: '0 0 24px #38d99199'}}>
+      {dataFoundationFlash > 0 ? <div style={{position: 'absolute', left: 0, right: 0, top: 680, zIndex: 3, color: '#fff', fontSize: 60, fontWeight: 900, letterSpacing: 1.8, textAlign: 'center', opacity: dataFoundationFlash, scale: 0.9 + dataFoundationFlash * 0.1, translate: `0 ${(1 - dataFoundationFlash) * 18}px`, textShadow: '0 0 24px #69b7ff88'}}>
         Lay the Data Foundation
       </div> : null}
 
