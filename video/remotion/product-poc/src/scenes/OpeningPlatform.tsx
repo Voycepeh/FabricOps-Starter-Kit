@@ -1,57 +1,29 @@
-import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {Artifact, OPENING_ARTIFACTS} from '../components/FabricIcons';
+import {Easing, Img, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
+import {mascotSrc} from '../mascotAssets';
+import {NARRATION_CUE_SHEET} from '../narrationCues';
 import {VIDEO_CONFIG} from '../videoConfig';
-import {VIDEO_TUNING, secondsToFrames} from '../videoTuning';
-
-const OPENING_CENTER = {x: 960, y: 540} as const;
-const PUSH_DISTANCE = 1500;
-
-const OPENING_POSITION_KEYS = [
-  'Notebook',
-  'Lakehouse',
-  'Warehouse',
-  'Environment',
-  'Data Pipeline',
-  'Dataflow Gen2',
-  'Data Engineering',
-  'Data Science',
-  'SQL Database',
-  'Eventstream',
-  'Eventhouse',
-  'Semantic Model',
-  'Report',
-  'Dashboard',
-  'Mirrored Database',
-  'ML Model',
-  'OneLake',
-  'Graph Intelligence',
-] as const;
-
-const FEATURED_POSITION_KEYS = new Set<string>([
-  'Notebook',
-  'Data Pipeline',
-  'Lakehouse',
-  'Warehouse',
-  'Environment',
-  'Eventstream',
-]);
-
-const entryVectors = [
-  {x: -145, y: -65},
-  {x: 105, y: -125},
-  {x: 15, y: -150},
-  {x: -155, y: 55},
-  {x: 150, y: 45},
-  {x: 35, y: 145},
-] as const;
+import {VIDEO_TUNING} from '../videoTuning';
 
 export const OpeningPlatform = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const {sizes, text, timing, scenes} = VIDEO_CONFIG;
+  const {text, timing, scenes} = VIDEO_CONFIG;
   const {opening} = VIDEO_TUNING;
-  const hero = spring({frame, fps, config: {damping: 20, stiffness: 68}});
-  const heroExit = interpolate(frame, [timing.openingQuestionAt - 36, timing.openingQuestionAt], [1, 0], {
+  const cue = NARRATION_CUE_SHEET.opening;
+  const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
+  const featureListAt = localCue(1);
+  const questionAt = localCue(2);
+  const fabricOpacity = interpolate(
+    frame,
+    [0, questionAt - Math.round(0.35 * fps), questionAt],
+    [1, 1, 0],
+    {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: Easing.inOut(Easing.cubic),
+    },
+  );
+  const questionOpacity = interpolate(frame, [questionAt, questionAt + timing.openingQuestionEnterFrames, timing.openingPushAt, scenes.opening], [0, 1, 1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
@@ -61,73 +33,34 @@ export const OpeningPlatform = () => {
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.cubic),
   });
-  const question = spring({
-    frame: frame - timing.openingQuestionAt,
-    fps,
-    config: {damping: 19, stiffness: 78},
-  });
-  const repositionStart =
-    timing.openingQuestionAt - secondsToFrames(opening.questionRepositionLeadSeconds, fps);
-  const repositionProgress = interpolate(frame, [repositionStart, timing.openingQuestionAt], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: Easing.inOut(Easing.cubic),
-  });
+  const platformEntry = interpolate(
+    frame,
+    [featureListAt, featureListAt + opening.platformEntryFrames],
+    [0, 1],
+    {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: Easing.out(Easing.cubic),
+    },
+  );
 
   return (
     <div style={{position: 'absolute', inset: 0}}>
-      {OPENING_ARTIFACTS.map((item, index) => {
-        const positionKey = OPENING_POSITION_KEYS[index];
-        const basePosition = positionKey ? opening.positions[positionKey] : {left: item.x, top: item.y};
-        const questionPosition =
-          positionKey && FEATURED_POSITION_KEYS.has(positionKey)
-            ? opening.questionPositions[positionKey as keyof typeof opening.questionPositions]
-            : undefined;
-        const currentLeft = questionPosition
-          ? interpolate(repositionProgress, [0, 1], [basePosition.left, questionPosition.left])
-          : basePosition.left;
-        const currentTop = questionPosition
-          ? interpolate(repositionProgress, [0, 1], [basePosition.top, questionPosition.top])
-          : basePosition.top;
-        const burstStart = secondsToFrames(
-          opening.iconPopulationStartSeconds + opening.iconBurstOffsetsSeconds[index],
-          fps,
-        );
-        const enter = interpolate(frame, [burstStart, burstStart + opening.iconEntryFrames], [0, 1], {
-          extrapolateLeft: 'clamp',
-          extrapolateRight: 'clamp',
-          easing: Easing.out(Easing.back(1.15)),
-        });
-        const vector = entryVectors[index % entryVectors.length];
-        const cardCenterX = currentLeft + sizes.openingArtifactWidth / 2;
-        const cardCenterY = currentTop + sizes.openingArtifactHeight / 2;
-        const deltaX = cardCenterX - OPENING_CENTER.x;
-        const deltaY = cardCenterY - OPENING_CENTER.y;
-        const magnitude = Math.max(1, Math.hypot(deltaX, deltaY));
-        const pushX = (deltaX / magnitude) * PUSH_DISTANCE * push;
-        const pushY = (deltaY / magnitude) * PUSH_DISTANCE * push;
-        const entryX = vector.x * (1 - enter);
-        const entryY = vector.y * (1 - enter);
-        const scale = 0.78 + enter * 0.22;
-
-        return (
-          <div
-            key={`${item.label}-${index}`}
-            style={{
-              position: 'absolute',
-              left: currentLeft,
-              top: currentTop,
-              opacity: enter,
-              transform: `translate(${pushX + entryX}px, ${pushY + entryY}px) scale(${scale})`,
-              zIndex: 1,
-            }}
-          >
-            <Artifact icon={item.icon} label={item.label} iconScale={item.iconScale} />
-          </div>
-        );
-      })}
-
-      <div
+      <Img
+        src={mascotSrc('dragging')}
+        style={{
+          position: 'absolute',
+          left: opening.platformLeft,
+          top: opening.platformTop,
+          width: opening.platformWidth,
+          height: 'auto',
+          opacity: platformEntry,
+          translate: `${(1 - platformEntry) * opening.platformEntryDistance - push * 2200}px 0`,
+          zIndex: 1,
+          scale: 0.977,
+        }}
+      />
+      {fabricOpacity > 0 ? <div
         style={{
           position: 'absolute',
           left: 0,
@@ -135,8 +68,34 @@ export const OpeningPlatform = () => {
           top: opening.heroCenterY,
           display: 'flex',
           justifyContent: 'center',
-          opacity: hero * heroExit,
-          transform: `translateY(-50%) scale(${0.9 + hero * 0.1 - (1 - heroExit) * 0.08})`,
+          opacity: fabricOpacity,
+          translate: '0 -50%',
+          zIndex: 3,
+        }}
+      >
+        <div
+          style={{
+            fontSize: text.fabricHero,
+            lineHeight: 1,
+            fontWeight: 840,
+            letterSpacing: -5,
+            textShadow: '0 20px 60px #000',
+          }}
+        >
+          <span style={{color: '#fff'}}>Microsoft</span>{' '}
+          <span style={{color: '#38d991'}}>Fabric</span>
+        </div>
+      </div> : null}
+      {questionOpacity > 0 ? <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: opening.heroCenterY,
+          display: 'flex',
+          justifyContent: 'center',
+          opacity: questionOpacity,
+          translate: '0 -50%',
           zIndex: 3,
         }}
       >
@@ -147,31 +106,6 @@ export const OpeningPlatform = () => {
             fontWeight: 840,
             letterSpacing: -7,
             textShadow: '0 24px 80px #000',
-          }}
-        >
-          <span style={{color: '#fff'}}>Microsoft</span>{' '}
-          <span style={{color: '#38d991'}}>Fabric</span>
-        </div>
-      </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'grid',
-          placeItems: 'center',
-          opacity: question,
-          transform: `translateY(${-760 * push}px) scale(${0.9 + question * 0.1})`,
-          zIndex: 2,
-        }}
-      >
-        <div
-          style={{
-            fontSize: 126,
-            lineHeight: 1,
-            fontWeight: 840,
-            letterSpacing: -5,
-            textShadow: '0 20px 60px #000',
           }}
         >
           <span style={{color: '#fff'}}>Where do we </span>
@@ -185,7 +119,7 @@ export const OpeningPlatform = () => {
             start?
           </span>
         </div>
-      </div>
+      </div> : null}
     </div>
   );
 };

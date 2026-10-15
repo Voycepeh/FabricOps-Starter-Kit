@@ -81,7 +81,7 @@ Open **Engineering Development** and create three distinct stores: **bronze**, *
 
 Download the packaged FabricOps wheel from the [FabricOps Releases page](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases).
 
-Download the `.whl` file from the release you want to use, please check that you do not download the release version than is earlier than what was declared on the demo files you want to run, else the demo may not run correctly. 
+Download the `.whl` file from the release you want to use, please check that you do not download the release version than is earlier than what was declared on the demo files you want to run, else the demo may not run correctly.
 
   </div>
 </div>

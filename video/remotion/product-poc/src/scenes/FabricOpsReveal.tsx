@@ -1,4 +1,5 @@
 import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {DataEngineeringIcon, DataGovernanceIcon} from '../components/TeamIdentityIcons';
 import {theme} from '../theme';
 import {VIDEO_CONFIG} from '../videoConfig';
 import {fabricOpsFrame, VIDEO_TUNING} from '../videoTuning';
@@ -39,6 +40,8 @@ export const FabricOpsReveal = () => {
   const whyExitAt = fabricOpsFrame(prompts.whyExit, fps);
   const howAt = fabricOpsFrame(prompts.how, fps);
   const worksAt = fabricOpsFrame(prompts.works, fps);
+  const relationshipAt = 800;
+  const relationshipCircleAt = 870;
   const whyEnter = spring({frame: frame - whyAt, fps, config: {damping: 18, stiffness: 88}});
   const whyExit = interpolate(frame, [whyExitAt - 20, whyExitAt], [0, 1], {
     extrapolateLeft: 'clamp',
@@ -47,6 +50,9 @@ export const FabricOpsReveal = () => {
   });
   const howEnter = spring({frame: frame - howAt, fps, config: {damping: 18, stiffness: 88}});
   const worksEnter = spring({frame: frame - worksAt, fps, config: {damping: 14, stiffness: 105}});
+  const relationshipEnter = spring({frame: frame - relationshipAt, fps, config: {damping: 16, stiffness: 100}});
+  const relationshipFade = interpolate(frame, [howAt - 30, howAt - 10], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const relationshipCircle = interpolate(frame, [relationshipCircleAt, relationshipCircleAt + 30], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const exit = interpolate(
     frame,
     [VIDEO_CONFIG.scenes.fabricOps - timing.sceneExit, VIDEO_CONFIG.scenes.fabricOps],
@@ -82,6 +88,7 @@ export const FabricOpsReveal = () => {
           extrapolateRight: 'clamp',
           easing: Easing.out(Easing.cubic),
         });
+        if (frame < start || frame >= end) return null;
 
         return (
           <div
@@ -90,7 +97,7 @@ export const FabricOpsReveal = () => {
               position: 'absolute',
               left: word.left,
               top: word.top,
-              fontSize: 52,
+              fontSize: 62.4,
               lineHeight: 1,
               fontWeight: 760,
               letterSpacing: -1.2,
@@ -117,43 +124,33 @@ export const FabricOpsReveal = () => {
           extrapolateRight: 'clamp',
           easing: Easing.out(Easing.back(1.2)),
         });
+        if (opacity <= 0) return null;
+
         return (
-          <div style={{position: 'absolute', top: 675, width: '100%', textAlign: 'center', opacity, transform: `scale(${scale})`, fontSize: 54, fontWeight: 760, color: '#dcecff', textShadow: '0 0 30px #38d99155'}}>
+          <div style={{position: 'absolute', top: 675, width: '100%', textAlign: 'center', opacity, transform: `scale(${scale})`, fontSize: 64.8, fontWeight: 760, color: '#dcecff', textShadow: '0 0 30px #38d99155'}}>
             Governance into Code
           </div>
         );
       })()}
 
-      {(() => {
-        const governanceStart = fabricOpsFrame(relationship.governance, fps);
-        const engineeringStart = fabricOpsFrame(relationship.engineering, fps);
-        const orbitStart = fabricOpsFrame(relationship.orbitStart, fps);
-        const end = fabricOpsFrame(relationship.end, fps);
-        const fadeOut = interpolate(frame, [end - 8, end], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-        const orbitVisible = frame >= orbitStart && frame < end;
-        const conceptStyle = (start: number) => {
-          const enter = spring({frame: frame - start, fps, config: {damping: 16, stiffness: 100}});
-          return {opacity: enter * fadeOut, transform: `scale(${0.82 + enter * 0.18})`};
-        };
-        const orbitProgress = interpolate(frame, [orbitStart, orbitStart + 24], [0, 1], {
-          extrapolateLeft: 'clamp',
-          extrapolateRight: 'clamp',
-          easing: Easing.inOut(Easing.cubic),
-        });
-        return (
-          <div style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
-            {orbitVisible ? (
-              <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, opacity: fadeOut}}>
-                <ellipse cx="960" cy="540" rx="760" ry="245" pathLength="1" fill="none" stroke={theme.production} strokeWidth="7" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - orbitProgress} style={{filter: 'drop-shadow(0 0 12px #38d99188)'}} />
-                <circle cx="200" cy="540" r="10" fill={theme.production} opacity={orbitProgress} />
-                <circle cx="1720" cy="540" r="10" fill={theme.production} opacity={orbitProgress} />
-              </svg>
-            ) : null}
-            <div style={{position: 'absolute', left: 105, top: 505, width: 310, textAlign: 'center', fontSize: 52, fontWeight: 780, color: '#fff', textShadow: '0 0 26px #38d99166', ...conceptStyle(governanceStart)}}>Governance</div>
-            <div style={{position: 'absolute', right: 85, top: 505, width: 340, textAlign: 'center', fontSize: 52, fontWeight: 780, color: '#fff', textShadow: '0 0 26px #38d99166', ...conceptStyle(engineeringStart)}}>Engineering</div>
+      {frame >= relationshipAt && relationshipFade > 0 ? <div style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
+        {frame >= relationshipCircleAt ? <svg aria-hidden="true" width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, zIndex: 0, opacity: relationshipFade}}>
+          <ellipse cx="960" cy="540" rx="830" ry="330" pathLength="1" fill="none" stroke={theme.production} strokeWidth="15" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - relationshipCircle} opacity={0.12 * relationshipCircle} />
+          <ellipse cx="960" cy="540" rx="830" ry="330" pathLength="1" fill="none" stroke={theme.production} strokeWidth="7" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - relationshipCircle} opacity={relationshipCircle} />
+        </svg> : null}
+        <div style={{position: 'absolute', left: 63, top: 473, zIndex: 1, display: 'flex', alignItems: 'center', gap: 24, opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18, transformOrigin: 'left center'}}>
+          <DataGovernanceIcon size={134.4} />
+          <div style={{color: theme.governance, fontSize: 38, fontWeight: 820, letterSpacing: 0.4, textShadow: '0 0 24px #a879ff66'}}>
+            Governance
           </div>
-        );
-      })()}
+        </div>
+        <div style={{position: 'absolute', right: 63, top: 473, zIndex: 1, display: 'flex', alignItems: 'center', gap: 24, opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18, transformOrigin: 'right center'}}>
+          <div style={{color: theme.engineering, fontSize: 38, fontWeight: 820, letterSpacing: 0.4, textShadow: '0 0 24px #4ea1ff66'}}>
+            Engineering
+          </div>
+          <DataEngineeringIcon size={134.4} />
+        </div>
+      </div> : null}
 
       <div
         style={{
@@ -164,15 +161,15 @@ export const FabricOpsReveal = () => {
           alignItems: 'center',
           justifyContent: 'center',
           opacity: brand,
-          transform: `translateX(${(1 - brand) * -180}px) scale(${0.86 + brand * 0.14})`,
+          scale: 0.86 + brand * 0.14,
         }}
       >
-        <div
+        {frame >= whyAt && frame <= whyExitAt ? <div
           style={{
             position: 'absolute',
             left: 65,
             top: 36,
-            fontSize: VIDEO_CONFIG.text.title,
+            fontSize: VIDEO_CONFIG.text.title * 1.2,
             fontWeight: 820,
             color: '#fff',
             opacity: whyEnter,
@@ -180,14 +177,14 @@ export const FabricOpsReveal = () => {
           }}
         >
           Why
-        </div>
+        </div> : null}
 
-        <div
+        {frame >= whyAt && frame <= whyExitAt ? <div
           style={{
             position: 'absolute',
             right: 78,
             bottom: 34,
-            fontSize: VIDEO_CONFIG.text.title,
+            fontSize: VIDEO_CONFIG.text.title * 1.2,
             fontWeight: 820,
             color: '#fff',
             opacity: whyEnter,
@@ -195,16 +192,16 @@ export const FabricOpsReveal = () => {
           }}
         >
           ?
-        </div>
+        </div> : null}
 
         <Brand />
 
-        <div
+        {frame >= howAt ? <div
           style={{
             position: 'absolute',
             left: 65,
             top: 36,
-            fontSize: VIDEO_CONFIG.text.title,
+            fontSize: VIDEO_CONFIG.text.title * 1.2,
             fontWeight: 820,
             color: '#fff',
             opacity: howEnter,
@@ -212,14 +209,14 @@ export const FabricOpsReveal = () => {
           }}
         >
           How
-        </div>
+        </div> : null}
 
-        <div
+        {frame >= worksAt ? <div
           style={{
             position: 'absolute',
             right: 75,
             bottom: 34,
-            fontSize: VIDEO_CONFIG.text.title,
+            fontSize: VIDEO_CONFIG.text.title * 1.2,
             fontWeight: 820,
             color: '#fff',
             opacity: worksEnter,
@@ -227,7 +224,7 @@ export const FabricOpsReveal = () => {
           }}
         >
           works?
-        </div>
+        </div> : null}
       </div>
     </div>
   );

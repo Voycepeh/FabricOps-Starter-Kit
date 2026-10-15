@@ -327,11 +327,13 @@
 
 <div class="fabricops-landing" markdown="1">
 
-# FabricOps documentation
 
-**Microsoft Fabric gives you the platform. FabricOps gives you the operating practice.**
+# Microsoft Fabric gives you the platform. 
+### FabricOps gives you the Plug-and-play Data Engineering and Data Governance foundations.
 
-Plug-and-play Data Engineering and Data Governance foundations for Microsoft Fabric.
+![FabricOps robot dragging](assets/mascots/robot-dragging.png)
+
+
 
 <video class="fabricops-home-video" controls preload="metadata" playsinline aria-label="FabricOps overview video">
   <source src="assets/FabricOps_Overview_Video_web.mp4" type="video/mp4">

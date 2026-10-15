@@ -8,10 +8,10 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  render:
+  render-full-video:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,31 +25,81 @@ jobs:
         with:
           node-version: 20
 
-      - name: Stage narration asset for Remotion
-        run: |
-          mkdir -p video/remotion/product-poc/public/audio
-          cp video/remotion/product-poc/FabricOps_narration_master_numbered.m4a video/remotion/product-poc/public/audio/FabricOps_narration_master_numbered.m4a
-
       - name: Install dependencies
         working-directory: video/remotion/product-poc
-        run: npm install
+        run: npm ci
+
+      - name: Synchronize source assets
+        working-directory: video/remotion/product-poc
+        run: npm run assets:sync
+
+      - name: Verify synchronized assets
+        working-directory: video/remotion/product-poc
+        run: npm run assets:check
+
+      - name: Type-check composition
+        working-directory: video/remotion/product-poc
+        run: npm run typecheck
+
+      - name: Discover Remotion compositions
+        working-directory: video/remotion/product-poc
+        run: npx remotion compositions src/index.ts
+
+      - name: Render authoritative full video
+        working-directory: video/remotion/product-poc
+        run: npm run render
 
       - name: Install FFmpeg
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Type-check composition
-        working-directory: video/remotion/product-poc
-        run: npm run typecheck
+      - name: Verify constant video frame cadence
+        run: |
+          ffprobe -v error \
+            -select_streams v:0 \
+            -show_entries stream=codec_name,pix_fmt,r_frame_rate,avg_frame_rate,nb_frames,duration \
+            -of json \
+            video/remotion/product-poc/out/fabricops-full-video.mp4 > /tmp/video-stream.json
+          python - /tmp/video-stream.json <<'PY'
+          import json
+          import sys
+          from fractions import Fraction
 
-      - name: Render review video
-        working-directory: video/remotion/product-poc
-        run: npm run render
+          with open(sys.argv[1], encoding="utf-8") as stream_file:
+              stream = json.load(stream_file)["streams"][0]
+
+          rendered_fps = Fraction(stream["avg_frame_rate"])
+          declared_fps = Fraction(stream["r_frame_rate"])
+          frame_count = int(stream["nb_frames"])
+          duration = Fraction(stream["duration"])
+          expected_frames = round(duration * rendered_fps)
+
+          if stream["codec_name"] != "h264":
+              raise SystemExit(f"Expected H.264 video, got {stream['codec_name']}")
+          if stream["pix_fmt"] not in {"yuv420p", "yuvj420p"}:
+              raise SystemExit(
+                  f"Expected an 8-bit 4:2:0 pixel format, got {stream['pix_fmt']}"
+              )
+          if rendered_fps != 30 or declared_fps != 30:
+              raise SystemExit(
+                  f"Expected constant 30 fps, got avg={rendered_fps} declared={declared_fps}"
+              )
+          if frame_count != expected_frames:
+              raise SystemExit(
+                  f"Frame cadence mismatch: {frame_count} frames across {float(duration):.3f}s "
+                  f"at {float(rendered_fps):.3f} fps; expected {expected_frames}"
+              )
+
+          print(
+              f"Frame cadence verified: {frame_count} frames, constant {float(rendered_fps):.0f} fps, "
+              f"{stream['codec_name']}/{stream['pix_fmt']}"
+          )
+          PY
 
       - name: Verify narration is audible
         run: |
-          ffmpeg -i video/remotion/product-poc/out/fabricops-product-poc.mp4 -map 0:a:0 -af volumedetect -f null - 2> /tmp/volumedetect.log
+          ffmpeg -i video/remotion/product-poc/out/fabricops-full-video.mp4 -map 0:a:0 -af volumedetect -f null - 2> /tmp/volumedetect.log
           cat /tmp/volumedetect.log
           mean_volume=$(sed -n 's/.*mean_volume: \([-0-9.]*\) dB.*/\1/p' /tmp/volumedetect.log | tail -1)
           python - "$mean_volume" <<'PY'
@@ -60,23 +110,9 @@ jobs:
           print(f"Narration verified at mean volume {mean_volume} dB")
           PY
 
-      - name: Upload review video
+      - name: Upload full-video review artifact
         uses: actions/upload-artifact@v4
         with:
-          name: fabricops-product-poc
-          path: video/remotion/product-poc/out/fabricops-product-poc.mp4
+          name: fabricops-full-video
+          path: video/remotion/product-poc/out/fabricops-full-video.mp4
           if-no-files-found: error
-
-      - name: Sync rendered homepage video
-        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]' && github.event.pull_request.head.repo.full_name == github.repository
-        run: |
-          cp video/remotion/product-poc/out/fabricops-product-poc.mp4 docs/assets/FabricOps_Overview_Video_web.mp4
-          if git diff --quiet -- docs/assets/FabricOps_Overview_Video_web.mp4; then
-            echo "Homepage video is already up to date."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/assets/FabricOps_Overview_Video_web.mp4
-          git commit -m "video: update homepage overview render"
-          git push origin "HEAD:${GITHUB_HEAD_REF}"

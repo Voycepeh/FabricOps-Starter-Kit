@@ -13,7 +13,7 @@ Run the observable standard governed source lifecycle.
 
 `fabricops_kit/pipeline/orchestrate_read.py:12`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L12-L83">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L12-L87">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -41,6 +41,8 @@ def orchestrate_read(
     query: str | None=None,
     read_parameters: dict[str, Any] | None=None,
     target_table_id: str | None=None,
+    frequency_enabled: bool=True,
+    frequency_top_n: int | None=5,
     spark_session=None,
     verbose: bool=True,
 ) -> dict[str, Any]:
@@ -69,6 +71,8 @@ def orchestrate_read(
 | `query` | `str \| None` | No | Read-only Warehouse query forwarded to :func:`pipeline_read`. |
 | `read_parameters` | `dict[str, Any] \| None` | No | Incremental configuration, for example {"watermark_column": "modified_datetime"}. A selected Data Contract must agree with the supplied watermark. |
 | `target_table_id` | `str \| None` | No | Governed target identity required for incremental reads. |
+| `frequency_enabled` | `bool` | No | Whether to calculate frequency distributions for this table. |
+| `frequency_top_n` | `int \| None` | No | Maximum ranked frequency values per eligible column; None retains all. |
 | `spark_session` | `object` | No | Spark session used by every stage. |
 | `verbose` | `bool` | No | Print stage start, outcome, duration, and failure attribution. |
 

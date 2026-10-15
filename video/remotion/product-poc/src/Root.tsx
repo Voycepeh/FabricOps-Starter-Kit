@@ -1,14 +1,16 @@
 import {Composition} from 'remotion';
-import {FabricOpsHero} from './FabricOpsHero';
-import {VIDEO_DURATION} from './videoConfig';
+import {FabricOpsFullVideo} from './compositions/FabricOpsFullVideo';
+import {FULL_VIDEO_DURATION, VIDEO_FPS} from './videoConfig';
 
 export const Root = () => (
-  <Composition
-    id="FabricOpsHero"
-    component={FabricOpsHero}
-    durationInFrames={VIDEO_DURATION}
-    fps={30}
-    width={1920}
-    height={1080}
-  />
+  <>
+    <Composition
+      id="FabricOpsFullVideo"
+      component={FabricOpsFullVideo}
+      durationInFrames={FULL_VIDEO_DURATION}
+      fps={VIDEO_FPS}
+      width={1920}
+      height={1080}
+    />
+  </>
 );

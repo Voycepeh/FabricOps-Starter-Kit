@@ -2,8 +2,12 @@
   "name": "fabricops-product-poc",
   "private": true,
   "scripts": {
+    "assets:sync": "node scripts/sync-assets.mjs",
+    "assets:check": "node scripts/sync-assets.mjs --check",
+    "prestudio": "npm run assets:sync",
     "studio": "remotion studio src/index.ts",
-    "render": "remotion render src/index.ts FabricOpsHero out/fabricops-product-poc.mp4",
+    "prerender": "npm run assets:sync",
+    "render": "remotion render src/index.ts FabricOpsFullVideo out/fabricops-full-video.mp4 --codec=h264 --audio-codec=aac --pixel-format=yuv420p --crf=18 --gop=60",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -1,5 +1,7 @@
+import {Environment48Item as EnvironmentIcon} from '@fabric-msft/svg-icons';
+import {memo} from 'react';
 import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
-import {OPENING_ARTIFACTS} from '../components/FabricIcons';
+import {NARRATION_CUE_SHEET} from '../narrationCues';
 import {theme} from '../theme';
 import {VIDEO_CONFIG} from '../videoConfig';
 import {notebookFrame, VIDEO_TUNING} from '../videoTuning';
@@ -20,7 +22,7 @@ const IMPORT_GROUPS = [
   ['check_schema,', 'check_dq,'],
 ] as const;
 
-const EnvironmentIcon = OPENING_ARTIFACTS[3].icon;
+const CONTRACT_GUARDRAILS = ['Schema', 'Freshness', 'Data Quality', 'Sensitivity', 'Source Drift'] as const;
 
 const NotebookGlyph = ({color}: {color: string}) => (
   <div style={{position: 'relative', width: NOTEBOOK.glyphSize, height: NOTEBOOK.glyphSize, flex: '0 0 auto'}}>
@@ -30,13 +32,15 @@ const NotebookGlyph = ({color}: {color: string}) => (
   </div>
 );
 
-const NotebookCard = ({title, subtitle, color, progress, position}: {
+type NotebookCardProps = {
   title: string;
   subtitle: string;
   color: string;
   progress: number;
   position: {left: number; top: number};
-}) => (
+};
+
+const NotebookCard = memo(({title, subtitle, color, progress, position}: NotebookCardProps) => (
   <div style={{position: 'absolute', ...position, width: NOTEBOOK.width, height: NOTEBOOK.height, boxSizing: 'border-box', borderRadius: NOTEBOOK.borderRadius, padding: NOTEBOOK.padding, display: 'flex', alignItems: 'center', background: `linear-gradient(145deg, ${color}24, #0b1525 74%)`, border: `2px solid ${color}cc`, boxShadow: `0 24px 58px #0008, 0 0 30px ${color}16, inset 0px 1px 0 #ffffff12`, opacity: progress, transform: `translateY(${(1 - progress) * 20}px) scale(${0.94 + progress * 0.06})`}}>
     <div style={{position: 'absolute', top: -2, left: 34, width: 80, height: 9, borderRadius: '0 0 8px 8px', background: color}} />
     <div style={{display: 'flex', alignItems: 'center', gap: 26, width: '100%'}}>
@@ -47,10 +51,14 @@ const NotebookCard = ({title, subtitle, color, progress, position}: {
       </div>
     </div>
   </div>
-);
+), (previous, next) => previous.title === next.title
+  && previous.subtitle === next.subtitle
+  && previous.color === next.color
+  && previous.progress === next.progress
+  && previous.position.left === next.position.left
+  && previous.position.top === next.position.top);
 
-const ContractDocument = ({progress}: {progress: number}) => {
-  const guardrails = ['Schema', 'Freshness', 'Data Quality', 'Sensitivity', 'Source Drift'];
+const ContractDocument = memo(({progress}: {progress: number}) => {
   const {contract} = VIDEO_TUNING.notebook.layout;
   return (
     <div style={{position: 'absolute', ...contract, boxSizing: 'border-box', padding: '34px 38px 24px', background: 'linear-gradient(150deg, #303a49, #1b2432 78%)', border: '2px solid #7f8b9b', borderRadius: '16px 16px 20px 20px', boxShadow: '0 28px 65px #0009, inset 0 1px 0 #ffffff1a', opacity: progress, transform: `translateY(${(1 - progress) * 18}px) scale(${0.95 + progress * 0.05})`, overflow: 'hidden'}}>
@@ -62,7 +70,7 @@ const ContractDocument = ({progress}: {progress: number}) => {
       <div style={{fontSize: 30, lineHeight: 1.15, fontWeight: 820, color: '#f5f7fa', whiteSpace: 'nowrap'}}>Data Contract</div>
       <div style={{marginTop: 18, marginBottom: 9, fontSize: 19, lineHeight: 1.25, fontWeight: 740, color: '#aeb7c3', letterSpacing: 1, textTransform: 'uppercase'}}>Guardrails</div>
       <div style={{display: 'flex', flexDirection: 'column', gap: 7}}>
-        {guardrails.map((guardrail) => (
+        {CONTRACT_GUARDRAILS.map((guardrail) => (
           <div key={guardrail} style={{minHeight: 29, display: 'flex', alignItems: 'center', gap: 13, fontSize: 21, lineHeight: 1.3, fontWeight: 560, color: '#dce1e8'}}>
             <span style={{width: 7, height: 7, flex: '0 0 auto', borderRadius: 7, background: '#9ca7b5'}} />
             {guardrail}
@@ -71,7 +79,7 @@ const ContractDocument = ({progress}: {progress: number}) => {
       </div>
     </div>
   );
-};
+});
 
 const CodePackage = ({frame, fps}: {frame: number; fps: number}) => {
   const {timingSeconds, layout} = VIDEO_TUNING.notebook;
@@ -178,13 +186,19 @@ export const NotebookJourney = () => {
   const {fps} = useVideoConfig();
   const {scenes, timing} = VIDEO_CONFIG;
   const {timingSeconds, layout} = VIDEO_TUNING.notebook;
+  const cue = NARRATION_CUE_SHEET.notebooks;
+  const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
   const enter = (delay: number) => spring({frame: frame - delay, fps, config: {damping: 21, stiffness: 88}});
+  const packageEnterAt = notebookFrame(timingSeconds.packageEnter, fps);
+  const packageExitAt = notebookFrame(timingSeconds.packageExit, fps);
+  const setupStartAt = notebookFrame(timingSeconds.setupWorkspace, fps);
   const environmentAt = notebookFrame(timingSeconds.environment, fps);
   const setupExitAt = notebookFrame(timingSeconds.setupExit, fps);
   const foundationAt = notebookFrame(timingSeconds.foundation, fps);
   const lowerNotebooksAt = notebookFrame(timingSeconds.lowerNotebooks, fps);
   const contractAt = notebookFrame(timingSeconds.contract, fps);
-  const relationshipAt = notebookFrame(timingSeconds.relationship, fps);
+  const relationshipAt = localCue(6);
+  const relationshipEndAt = localCue(7);
   const environment = enter(environmentAt);
   const environmentTop = interpolate(frame, [setupExitAt, setupExitAt + 18], [layout.setupEnvironment.top, layout.environment.top], {
     extrapolateLeft: 'clamp',
@@ -195,8 +209,8 @@ export const NotebookJourney = () => {
   const foundationFlow = interpolate(frame, [foundationAt, foundationAt + 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const lowerNotebooks = enter(lowerNotebooksAt);
   const contract = enter(contractAt);
-  const relationshipFlow = interpolate(frame, [relationshipAt, relationshipAt + 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const connectorSettle = spring({frame: frame - relationshipAt - 20, fps, config: {damping: 17, stiffness: 92}});
+  const relationshipFlow = interpolate(frame, [relationshipAt, relationshipEndAt], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const connectorSettle = spring({frame: frame - relationshipEndAt + Math.round(0.8 * fps), fps, config: {damping: 17, stiffness: 92}});
   const exit = interpolate(frame, [scenes.notebooks - timing.sceneExit, scenes.notebooks], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const connectorY = layout.connectorY;
   const environmentBottomY = layout.environment.top + NOTEBOOK.height;
@@ -204,10 +218,10 @@ export const NotebookJourney = () => {
   const environmentRightX = layout.environment.left + NOTEBOOK.width - 100;
 
   return <div style={{position: 'absolute', inset: 0, opacity: exit}}>
-    <CodePackage frame={frame} fps={fps} />
-    <SetupFlow frame={frame} fps={fps} />
+    {frame >= packageEnterAt && frame < packageExitAt ? <CodePackage frame={frame} fps={fps} /> : null}
+    {frame >= setupStartAt && frame < setupExitAt ? <SetupFlow frame={frame} fps={fps} /> : null}
 
-    <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0}}>
+    {frame >= foundationAt ? <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0}}>
       <defs>
         <marker id="notebook-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill={theme.neutral} /></marker>
       </defs>
@@ -227,11 +241,11 @@ export const NotebookJourney = () => {
         <circle cx="785" cy={connectorY} r={23 + connectorSettle * 5} fill="none" stroke={theme.governance} strokeWidth="4" />
         <circle cx="1135" cy={connectorY} r={23 + connectorSettle * 5} fill="none" stroke={theme.engineering} strokeWidth="4" />
       </g>
-    </svg>
+    </svg> : null}
 
-    <NotebookCard title="00_env_config" subtitle="Config-driven" color={theme.neutral} progress={environment} position={environmentPosition} />
-    <NotebookCard title="01_governance" subtitle="Governance" color={theme.governance} progress={lowerNotebooks} position={layout.governance} />
-    <ContractDocument progress={contract} />
-    <NotebookCard title="02_pipeline" subtitle="ETL Pipeline" color={theme.engineering} progress={lowerNotebooks} position={layout.pipeline} />
+    {frame >= environmentAt ? <NotebookCard title="00_env_config" subtitle="Config-driven" color={theme.neutral} progress={environment} position={environmentPosition} /> : null}
+    {frame >= lowerNotebooksAt ? <NotebookCard title="01_governance" subtitle="Governance" color={theme.governance} progress={lowerNotebooks} position={layout.governance} /> : null}
+    {frame >= contractAt ? <ContractDocument progress={contract} /> : null}
+    {frame >= lowerNotebooksAt ? <NotebookCard title="02_pipeline" subtitle="ETL Pipeline" color={theme.engineering} progress={lowerNotebooks} position={layout.pipeline} /> : null}
   </div>;
 };
