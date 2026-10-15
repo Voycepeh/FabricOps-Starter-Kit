@@ -243,6 +243,8 @@ export const RepeatablePipelineScene = () => {
   const readAt = localCue(1);
   const transformAt = localCue(3);
   const writeAt = readAt;
+  const incrementalAt = 720;
+  const slowlyChangingDimensionsAt = 770;
   const read = enterProgress(frame, fps, readAt);
   const transform = enterProgress(frame, fps, transformAt);
   const write = enterProgress(frame, fps, writeAt);
@@ -276,8 +278,8 @@ export const RepeatablePipelineScene = () => {
         <div style={{position: 'absolute', left: 150, right: 150, top: 800, display: 'flex', justifyContent: 'center', gap: 36}}>
           {[
             {label: '02A · Full Refresh', at: localCue(4)},
-            {label: '02B · Incremental', at: localCue(5)},
-            {label: '02C · SCD1 / SCD2', at: localCue(6)},
+            {label: '02B · Incremental', at: incrementalAt},
+            {label: '02C · SCD1 / SCD2', at: slowlyChangingDimensionsAt},
           ].map(({label, at}) => <div key={label} style={{padding: '26px 47px', borderRadius: 24, background: '#122d49', border: '1px solid #4d759c', fontSize: 36, fontWeight: 820, color: '#d5e9ff', opacity: enterProgress(frame, fps, at)}}>{label}</div>)}
         </div>
       </Reveal>
