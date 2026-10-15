@@ -7,7 +7,7 @@
     "prestudio": "npm run assets:sync",
     "studio": "remotion studio src/index.ts",
     "prerender": "npm run assets:sync",
-    "render": "remotion render src/index.ts FabricOpsFullVideo out/fabricops-full-video.mp4",
+    "render": "remotion render src/index.ts FabricOpsFullVideo out/fabricops-full-video.mp4 --codec=h264 --audio-codec=aac --pixel-format=yuv420p --crf=18 --gop=60",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

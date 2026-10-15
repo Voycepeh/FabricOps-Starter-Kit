@@ -134,16 +134,22 @@ export const FabricOpsReveal = () => {
       })()}
 
       {frame >= relationshipAt && relationshipFade > 0 ? <div style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
-        <div style={{position: 'absolute', left: 74, top: 484, width: 112, height: 112, opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18}}>
-          <DataGovernanceIcon size={112} />
-        </div>
-        <div style={{position: 'absolute', right: 74, top: 484, width: 112, height: 112, opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18}}>
-          <DataEngineeringIcon size={112} />
-        </div>
-        {frame >= relationshipCircleAt ? <svg aria-hidden="true" width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, zIndex: 1, opacity: relationshipFade}}>
+        {frame >= relationshipCircleAt ? <svg aria-hidden="true" width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, zIndex: 0, opacity: relationshipFade}}>
           <ellipse cx="960" cy="540" rx="830" ry="330" pathLength="1" fill="none" stroke={theme.production} strokeWidth="15" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - relationshipCircle} opacity={0.12 * relationshipCircle} />
           <ellipse cx="960" cy="540" rx="830" ry="330" pathLength="1" fill="none" stroke={theme.production} strokeWidth="7" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - relationshipCircle} opacity={relationshipCircle} />
         </svg> : null}
+        <div style={{position: 'absolute', left: 63, top: 473, zIndex: 1, display: 'flex', alignItems: 'center', gap: 24, opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18, transformOrigin: 'left center'}}>
+          <DataGovernanceIcon size={134.4} />
+          <div style={{color: theme.governance, fontSize: 38, fontWeight: 820, letterSpacing: 0.4, textShadow: '0 0 24px #a879ff66'}}>
+            Governance
+          </div>
+        </div>
+        <div style={{position: 'absolute', right: 63, top: 473, zIndex: 1, display: 'flex', alignItems: 'center', gap: 24, opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18, transformOrigin: 'right center'}}>
+          <div style={{color: theme.engineering, fontSize: 38, fontWeight: 820, letterSpacing: 0.4, textShadow: '0 0 24px #4ea1ff66'}}>
+            Engineering
+          </div>
+          <DataEngineeringIcon size={134.4} />
+        </div>
       </div> : null}
 
       <div

@@ -54,6 +54,49 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
+      - name: Verify constant video frame cadence
+        run: |
+          ffprobe -v error \
+            -select_streams v:0 \
+            -show_entries stream=codec_name,pix_fmt,r_frame_rate,avg_frame_rate,nb_frames,duration \
+            -of json \
+            video/remotion/product-poc/out/fabricops-full-video.mp4 > /tmp/video-stream.json
+          python - /tmp/video-stream.json <<'PY'
+          import json
+          import sys
+          from fractions import Fraction
+
+          with open(sys.argv[1], encoding="utf-8") as stream_file:
+              stream = json.load(stream_file)["streams"][0]
+
+          rendered_fps = Fraction(stream["avg_frame_rate"])
+          declared_fps = Fraction(stream["r_frame_rate"])
+          frame_count = int(stream["nb_frames"])
+          duration = Fraction(stream["duration"])
+          expected_frames = round(duration * rendered_fps)
+
+          if stream["codec_name"] != "h264":
+              raise SystemExit(f"Expected H.264 video, got {stream['codec_name']}")
+          if stream["pix_fmt"] not in {"yuv420p", "yuvj420p"}:
+              raise SystemExit(
+                  f"Expected an 8-bit 4:2:0 pixel format, got {stream['pix_fmt']}"
+              )
+          if rendered_fps != 30 or declared_fps != 30:
+              raise SystemExit(
+                  f"Expected constant 30 fps, got avg={rendered_fps} declared={declared_fps}"
+              )
+          if frame_count != expected_frames:
+              raise SystemExit(
+                  f"Frame cadence mismatch: {frame_count} frames across {float(duration):.3f}s "
+                  f"at {float(rendered_fps):.3f} fps; expected {expected_frames}"
+              )
+
+          print(
+              f"Frame cadence verified: {frame_count} frames, constant {float(rendered_fps):.0f} fps, "
+              f"{stream['codec_name']}/{stream['pix_fmt']}"
+          )
+          PY
+
       - name: Verify narration is audible
         run: |
           ffmpeg -i video/remotion/product-poc/out/fabricops-full-video.mp4 -map 0:a:0 -af volumedetect -f null - 2> /tmp/volumedetect.log
