@@ -168,18 +168,72 @@ def test_unresolved_registry_entry_requires_review_instead_of_disappearing() -> 
     assert comparison["changes"][0]["classification"] == "review_required"
 
 
+def test_same_named_function_elsewhere_does_not_resolve_registry_identity() -> None:
+    """A same-named function outside the registered path is not identity evidence."""
+    snapshot = compatibility.build_snapshot(
+        version="v1.0.0",
+        revision="old",
+        source_kind="git_tag",
+        sources={
+            "src/fabricops_kit/public_api.py": (
+                'SUPPORTED_PUBLIC_API = ("fabricops_kit.expected.demo",)\nPREVIEW_PUBLIC_API = ()\n'
+            ),
+            "src/fabricops_kit/unrelated.py": "def demo(value=None):\n    pass\n",
+        },
+    )
+
+    assert snapshot["certainty"] == "uncertain"
+    assert snapshot["apis"][0]["source_qualified_name"] is None
+    assert snapshot["apis"][0]["extraction_error"]
+
+
+def test_package_shorthand_resolves_only_through_verified_re_export() -> None:
+    """A registry package attribute may resolve through its actual static import."""
+    snapshot = compatibility.build_snapshot(
+        version="v1.0.0",
+        revision="old",
+        source_kind="git_tag",
+        sources={
+            "src/fabricops_kit/public_api.py": (
+                'SUPPORTED_PUBLIC_API = ("fabricops_kit.pipeline.demo",)\nPREVIEW_PUBLIC_API = ()\n'
+            ),
+            "src/fabricops_kit/pipeline/__init__.py": "from .owner import demo\n",
+            "src/fabricops_kit/pipeline/owner.py": "def demo(value=None):\n    pass\n",
+        },
+    )
+
+    assert snapshot["certainty"] == "certain"
+    assert snapshot["apis"][0]["source_qualified_name"] == "fabricops_kit.pipeline.owner.demo"
+
+
+def test_explicit_parameters_that_consume_variadic_inputs_are_potentially_breaking() -> None:
+    """New explicit bindings must not be treated as harmless optional additions."""
+    positional = _change("def demo(*items):\n    pass\n", "def demo(value=None, *items):\n    pass\n")
+    keyword = _change("def demo(**options):\n    pass\n", "def demo(*, flag=None, **options):\n    pass\n")
+
+    assert positional["classification"] == "potentially_breaking"
+    assert "consume an existing *args value" in " ".join(positional["reasons"])
+    assert keyword["classification"] == "potentially_breaking"
+    assert "consume an existing **kwargs key" in " ".join(keyword["reasons"])
+
+
 def test_published_release_snapshots_use_each_tags_actual_source() -> None:
     """Release snapshots are extracted from tags and do not clone current definitions."""
     payload = compatibility.build_payload(tags=("v0.1.0", "v0.2.0"))
     snapshots = {snapshot["version"]: snapshot for snapshot in payload["snapshots"]}
 
-    assert payload["versions"] == ["v0.1.0", "v0.2.0", "main"]
+    assert payload["versions"] == ["v0.1.0", "v0.2.0", "working-tree"]
     assert snapshots["v0.1.0"]["source_kind"] == "git_tag"
     assert snapshots["v0.2.0"]["source_kind"] == "git_tag"
     assert snapshots["v0.1.0"]["revision"] != snapshots["v0.2.0"]["revision"]
     assert len(snapshots["v0.1.0"]["apis"]) == 26
     assert len(snapshots["v0.2.0"]["apis"]) == 28
     assert snapshots["v0.1.0"]["apis"] != snapshots["v0.2.0"]["apis"]
+    assert all(record["extraction_error"] is None for record in snapshots["v0.1.0"]["apis"])
+    assert all(record["extraction_error"] is None for record in snapshots["v0.2.0"]["apis"])
+    assert snapshots["working-tree"]["revision"] is None
+    assert snapshots["working-tree"]["source_digest"].startswith("sha256:")
+    assert "does not assert a Git branch identity" in snapshots["working-tree"]["notes"][-1]
     comparison = next(
         comparison
         for comparison in payload["comparisons"]

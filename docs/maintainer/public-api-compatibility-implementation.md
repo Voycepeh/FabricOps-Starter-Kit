@@ -1,13 +1,13 @@
 # Public API compatibility snapshots
 
-The Public Function Call Flows dashboard compares source-backed public API contracts across releases and the current branch.
+The Public Function Call Flows dashboard compares source-backed public API contracts across releases and the source tree used to generate the dashboard.
 
 ## Canonical inputs
 
 - `src/fabricops_kit/public_api.py` is the lifecycle registry for Live, Preview, and Discontinued public callables.
 - Each callable signature is parsed from Python source with `ast`; Fabric-dependent modules are never imported.
 - Published versions come from semantic release tags and are read from each tag's own Git tree.
-- The current `main` option is generated from the checked-out package source and records the current `HEAD` revision.
+- The logical `working-tree` option is generated from the checked-out package source. It has no Git revision because the source may come from any branch or contain uncommitted changes; a deterministic SHA-256 source digest identifies its exact content.
 
 The compatibility generator does not expect historical tags to contain a snapshot JSON file and never substitutes current source for a historical release.
 
@@ -26,7 +26,7 @@ This writes `docs/reference/_data/public-api-compatibility.json` using the versi
 - `snapshots`: revision, extraction certainty, lifecycle source, and API records for every version
 - `comparisons`: every ordered version pair with summary counts and classified changes
 
-Each API record contains its registry-qualified name, lifecycle, extraction certainty, source identity, readable signature, ordered parameters, parameter kinds, required/default state, annotations, and return annotation. Keys and records are sorted deterministically, and the contract has no generated timestamp.
+Each API record contains its registry-qualified name, lifecycle, extraction certainty, source identity, readable signature, ordered parameters, parameter kinds, required/default state, annotations, and return annotation. Registry identities resolve only to an exact source function or through a statically verified package `__init__.py` re-export. A same-named function elsewhere in the package is not accepted as identity evidence. Keys and records are sorted deterministically, and the contract has no generated timestamp.
 
 Do not edit the JSON manually. Regenerate it after a package-source or generator change, then run the generator again and confirm that it produces no diff.
 
@@ -44,7 +44,7 @@ The comparison reports added, removed, and modified APIs and uses three outcomes
 
 | Outcome | Examples |
 | --- | --- |
-| Potentially breaking | Live removal or demotion, parameter removal, required parameter addition, parameter-kind change, optional-to-required change, positional reordering, optional positional insertion before an existing positional parameter |
+| Potentially breaking | Live removal or demotion, parameter removal, required parameter addition, parameter-kind change, optional-to-required change, positional reordering, optional positional insertion before an existing positional parameter, or a new explicit parameter that can consume values previously bound by `*args` or `**kwargs` |
 | Nonbreaking | New API, optional keyword-only or trailing positional parameter addition, required-to-optional change, Preview-to-Live promotion when no breaking signature change is present |
 | Review required | Default or annotation change, Preview removal, unresolved source, Unknown lifecycle, or uncertain historical extraction |
 
@@ -52,7 +52,7 @@ The highest-risk finding wins for a modified callable. Static comparison cannot 
 
 ## Dashboard behavior
 
-The dashboard loads the generated companion JSON beside the unchanged v4 call-flow contract. Baseline and comparison versions remain independent, and the selected pair and lifecycle filter are retained in `baseline`, `compare`, and `compatLifecycle` URL parameters. The dashboard shows filtered summary counts, lifecycle transitions, before/after signatures, and classification reasons.
+The dashboard loads the generated companion JSON beside the unchanged v4 call-flow contract. Baseline and comparison versions remain independent, and the selected pair and lifecycle filter are retained in `baseline`, `compare`, and `compatLifecycle` URL parameters. `Current generated source` is the `working-tree` snapshot captured by the generator, not a claim about the `main` branch or `HEAD`. The dashboard shows filtered summary counts, lifecycle transitions, before/after signatures, and classification reasons.
 
 If the companion contract or a selected comparison is missing, the dashboard reports the missing generated data. It does not display an empty comparison as compatible.
 

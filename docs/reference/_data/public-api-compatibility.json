@@ -50,7 +50,7 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
           "reasons": [
             "Parameter removed: target.",
-            "Optional parameter added: store."
+            "Optional parameter can consume an existing **kwargs key: store."
           ],
           "signature_after": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_lakehouse_csv(relative_path: str, *, target: str = 'source', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)"
@@ -63,7 +63,7 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
           "reasons": [
             "Parameter removed: target.",
-            "Optional parameter added: store."
+            "Optional parameter can consume an existing **kwargs key: store."
           ],
           "signature_after": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)",
           "signature_before": "read_lakehouse_excel(relative_path: str, *, target: str = 'source', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)"
@@ -88,7 +88,7 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
           "reasons": [
             "Parameter removed: target.",
-            "Optional parameter added: store."
+            "Optional parameter can consume an existing **kwargs key: store."
           ],
           "signature_after": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_lakehouse_parquet(relative_path: str, *, target: str = 'source', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)"
@@ -101,8 +101,8 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
           "reasons": [
             "Parameter removed: target.",
-            "Optional parameter added: store.",
-            "Optional parameter added: table_id.",
+            "Optional parameter can consume an existing **kwargs key: store.",
+            "Optional parameter can consume an existing **kwargs key: table_id.",
             "Parameter became optional: table_name.",
             "Annotation changed for table_name: str to str | None."
           ],
@@ -117,7 +117,7 @@
           "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
           "reasons": [
             "Parameter removed: target.",
-            "Optional parameter added: store."
+            "Optional parameter can consume an existing **kwargs key: store."
           ],
           "signature_after": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_query(query: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
@@ -130,7 +130,7 @@
           "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
           "reasons": [
             "Parameter removed: target.",
-            "Optional parameter added: store."
+            "Optional parameter can consume an existing **kwargs key: store."
           ],
           "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
@@ -631,7 +631,7 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
           "reasons": [
             "Parameter removed: target.",
-            "Optional parameter added: store."
+            "Optional parameter can consume an existing **kwargs key: store."
           ],
           "signature_after": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_lakehouse_csv(relative_path: str, *, target: str = 'source', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)"
@@ -644,7 +644,7 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
           "reasons": [
             "Parameter removed: target.",
-            "Optional parameter added: store."
+            "Optional parameter can consume an existing **kwargs key: store."
           ],
           "signature_after": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)",
           "signature_before": "read_lakehouse_excel(relative_path: str, *, target: str = 'source', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)"
@@ -669,7 +669,7 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
           "reasons": [
             "Parameter removed: target.",
-            "Optional parameter added: store."
+            "Optional parameter can consume an existing **kwargs key: store."
           ],
           "signature_after": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_lakehouse_parquet(relative_path: str, *, target: str = 'source', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)"
@@ -682,8 +682,8 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
           "reasons": [
             "Parameter removed: target.",
-            "Optional parameter added: store.",
-            "Optional parameter added: table_id.",
+            "Optional parameter can consume an existing **kwargs key: store.",
+            "Optional parameter can consume an existing **kwargs key: table_id.",
             "Parameter became optional: table_name.",
             "Annotation changed for table_name: str to str | None."
           ],
@@ -698,7 +698,7 @@
           "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
           "reasons": [
             "Parameter removed: target.",
-            "Optional parameter added: store."
+            "Optional parameter can consume an existing **kwargs key: store."
           ],
           "signature_after": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_query(query: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
@@ -711,7 +711,7 @@
           "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
           "reasons": [
             "Parameter removed: target.",
-            "Optional parameter added: store."
+            "Optional parameter can consume an existing **kwargs key: store."
           ],
           "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
@@ -1136,7 +1136,7 @@
         "review_required": 14,
         "total": 48
       },
-      "target": "main"
+      "target": "working-tree"
     },
     {
       "baseline": "v0.2.0",
@@ -1188,7 +1188,7 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
           "reasons": [
             "Parameter removed: store.",
-            "Optional parameter added: target."
+            "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_lakehouse_csv(relative_path: str, *, target: str = 'source', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)"
@@ -1201,7 +1201,7 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
           "reasons": [
             "Parameter removed: store.",
-            "Optional parameter added: target."
+            "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_lakehouse_excel(relative_path: str, *, target: str = 'source', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)",
           "signature_before": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)"
@@ -1226,7 +1226,7 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
           "reasons": [
             "Parameter removed: store.",
-            "Optional parameter added: target."
+            "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_lakehouse_parquet(relative_path: str, *, target: str = 'source', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)"
@@ -1240,7 +1240,7 @@
           "reasons": [
             "Parameter removed: store.",
             "Parameter removed: table_id.",
-            "Optional parameter added: target.",
+            "Optional parameter can consume an existing **kwargs key: target.",
             "Parameter became required: table_name.",
             "Annotation changed for table_name: str | None to str."
           ],
@@ -1255,7 +1255,7 @@
           "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
           "reasons": [
             "Parameter removed: store.",
-            "Optional parameter added: target."
+            "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_warehouse_query(query: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
@@ -1268,7 +1268,7 @@
           "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
           "reasons": [
             "Parameter removed: store.",
-            "Optional parameter added: target."
+            "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_warehouse_table(schema: str, table_name: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
@@ -1848,10 +1848,10 @@
         "review_required": 3,
         "total": 13
       },
-      "target": "main"
+      "target": "working-tree"
     },
     {
-      "baseline": "main",
+      "baseline": "working-tree",
       "changes": [
         {
           "change_type": "removed",
@@ -1948,7 +1948,7 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
           "reasons": [
             "Parameter removed: store.",
-            "Optional parameter added: target."
+            "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_lakehouse_csv(relative_path: str, *, target: str = 'source', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)"
@@ -1961,7 +1961,7 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
           "reasons": [
             "Parameter removed: store.",
-            "Optional parameter added: target."
+            "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_lakehouse_excel(relative_path: str, *, target: str = 'source', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)",
           "signature_before": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)"
@@ -1986,7 +1986,7 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
           "reasons": [
             "Parameter removed: store.",
-            "Optional parameter added: target."
+            "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_lakehouse_parquet(relative_path: str, *, target: str = 'source', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)"
@@ -2000,7 +2000,7 @@
           "reasons": [
             "Parameter removed: store.",
             "Parameter removed: table_id.",
-            "Optional parameter added: target.",
+            "Optional parameter can consume an existing **kwargs key: target.",
             "Parameter became required: table_name.",
             "Annotation changed for table_name: str | None to str."
           ],
@@ -2015,7 +2015,7 @@
           "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
           "reasons": [
             "Parameter removed: store.",
-            "Optional parameter added: target."
+            "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_warehouse_query(query: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
@@ -2028,7 +2028,7 @@
           "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
           "reasons": [
             "Parameter removed: store.",
-            "Optional parameter added: target."
+            "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_warehouse_table(schema: str, table_name: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
@@ -2456,7 +2456,7 @@
       "target": "v0.1.0"
     },
     {
-      "baseline": "main",
+      "baseline": "working-tree",
       "changes": [
         {
           "change_type": "added",
@@ -2640,7 +2640,8 @@
     "historical_extraction": "Each tag is read from its own Git tree. Missing registries use uncertain package exports.",
     "schema": "fabricops_public_api_compatibility_v1",
     "schema_version": 1,
-    "signature_extraction": "Python AST; package modules are not imported."
+    "signature_extraction": "Python AST; package modules are not imported.",
+    "working_tree_extraction": "The working-tree target has no Git revision or branch identity; source_digest identifies its content."
   },
   "snapshots": [
     {
@@ -8308,15 +8309,18 @@
       ],
       "certainty": "certain",
       "lifecycle_source": "public_api_registry",
-      "notes": [],
-      "revision": "4cb733d28889d366eb42c1b8d2ce65d56815b215",
+      "notes": [
+        "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
+      ],
+      "revision": null,
+      "source_digest": "sha256:e0dc6e84740f9e5bc8fbaf31db0d286ac36d11dd7803fe7e8f08db57cf3d7df4",
       "source_kind": "working_tree",
-      "version": "main"
+      "version": "working-tree"
     }
   ],
   "versions": [
     "v0.1.0",
     "v0.2.0",
-    "main"
+    "working-tree"
   ]
 }

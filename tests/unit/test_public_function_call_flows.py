@@ -1033,6 +1033,8 @@ def test_dashboard_uses_generated_release_compatibility_contract(tmp_path: Path)
     assert "params.set('baseline',base)" in html
     assert "params.set('compare',target)" in html
     assert "uncertain historical evidence" in html
+    assert "Current generated source" in html
+    assert "Current main" not in html
 
 
 def test_dashboard_refactor_packet_wraps_evidence_with_scope_prompts(tmp_path: Path) -> None:

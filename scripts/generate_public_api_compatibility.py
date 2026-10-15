@@ -6,6 +6,7 @@ import argparse
 import ast
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+import hashlib
 import itertools
 import json
 from pathlib import Path
@@ -180,25 +181,65 @@ def _legacy_export_names(sources: Mapping[str, str]) -> tuple[str, ...]:
     return tuple(sorted(exports))
 
 
+def _absolute_import_module(package: str, statement: ast.ImportFrom) -> str | None:
+    """Resolve one package ``from`` import without importing Python code."""
+    if statement.level == 0:
+        return statement.module
+    package_parts = package.split(".")
+    keep = len(package_parts) - statement.level + 1
+    if keep < 1:
+        return None
+    base = package_parts[:keep]
+    if statement.module:
+        base.extend(statement.module.split("."))
+    return ".".join(base)
+
+
+def _verified_function_exports(
+    sources: Mapping[str, str],
+    functions: Mapping[str, SourceFunction],
+) -> dict[str, SourceFunction]:
+    """Map package attributes to functions through static ``__init__`` re-exports."""
+    import_targets: dict[str, str] = {}
+    for path, text in sorted(sources.items()):
+        if not path.endswith("/__init__.py") or not path.startswith(f"{PACKAGE_ROOT}/"):
+            continue
+        package = _module_name(path)
+        for statement in _parse_source(path, text).body:
+            if not isinstance(statement, ast.ImportFrom):
+                continue
+            imported_module = _absolute_import_module(package, statement)
+            if imported_module is None:
+                continue
+            for alias in statement.names:
+                if alias.name == "*":
+                    continue
+                exposed_name = alias.asname or alias.name
+                import_targets[f"{package}.{exposed_name}"] = f"{imported_module}.{alias.name}"
+
+    resolved: dict[str, SourceFunction] = {}
+    pending = dict(import_targets)
+    while pending:
+        changed = False
+        for exposed_name, imported_name in tuple(pending.items()):
+            function = functions.get(imported_name) or resolved.get(imported_name)
+            if function is None:
+                continue
+            resolved[exposed_name] = function
+            del pending[exposed_name]
+            changed = True
+        if not changed:
+            break
+    return resolved
+
+
 def _resolve_function(
     qualified_name: str,
     functions: Mapping[str, SourceFunction],
+    verified_exports: Mapping[str, SourceFunction],
 ) -> SourceFunction | None:
-    """Resolve registry paths, including package-export shorthand paths."""
-    direct = functions.get(qualified_name)
-    if direct is not None:
-        return direct
-    name = qualified_name.rsplit(".", 1)[-1]
-    prefix = qualified_name.rsplit(".", 1)[0]
-    candidates = [
-        function
-        for function in functions.values()
-        if function.node.name == name and (function.module == prefix or function.module.startswith(f"{prefix}."))
-    ]
-    if len(candidates) == 1:
-        return candidates[0]
-    all_named = [function for function in functions.values() if function.node.name == name]
-    return all_named[0] if len(all_named) == 1 else None
+    """Resolve only exact source identities or statically verified exports."""
+    return functions.get(qualified_name) or verified_exports.get(qualified_name)
 
 
 def _annotation(node: ast.AST | None) -> str | None:
@@ -276,13 +317,14 @@ def _signature(name: str, parameters: Sequence[Mapping[str, Any]], return_annota
 def build_snapshot(
     *,
     version: str,
-    revision: str,
+    revision: str | None,
     source_kind: str,
     sources: Mapping[str, str],
 ) -> dict[str, Any]:
     """Build one version snapshot from package source text."""
     registry, registry_exists = _registry_entries(sources)
     functions = _function_index(sources)
+    verified_exports = _verified_function_exports(sources, functions)
     lifecycle_source = "public_api_registry" if registry_exists else "legacy_package_exports"
     snapshot_certainty = "certain" if registry_exists else "uncertain"
     notes = []
@@ -303,7 +345,7 @@ def build_snapshot(
 
     apis: list[dict[str, Any]] = []
     for qualified_name, lifecycle in sorted(registry.items()):
-        function = _resolve_function(qualified_name, functions)
+        function = _resolve_function(qualified_name, functions, verified_exports)
         if function is None:
             apis.append(
                 {
@@ -361,6 +403,8 @@ def _parameter_changes(before: Mapping[str, Any], after: Mapping[str, Any]) -> t
     classification = "nonbreaking"
     old_parameters = {parameter["name"]: parameter for parameter in before["parameters"]}
     new_parameters = {parameter["name"]: parameter for parameter in after["parameters"]}
+    old_has_var_positional = any(parameter["kind"] == "var_positional" for parameter in before["parameters"])
+    old_has_var_keyword = any(parameter["kind"] == "var_keyword" for parameter in before["parameters"])
     for name in sorted(old_parameters.keys() - new_parameters.keys()):
         reasons.append(f"Parameter removed: {name}.")
         classification = "potentially_breaking"
@@ -386,6 +430,12 @@ def _parameter_changes(before: Mapping[str, Any], after: Mapping[str, Any]) -> t
             )
             if shifts_existing_position:
                 reasons.append(f"Optional positional parameter inserted before an existing parameter: {name}.")
+                classification = "potentially_breaking"
+            elif old_has_var_positional and parameter["kind"] in {"positional_only", "positional_or_keyword"}:
+                reasons.append(f"Optional positional parameter can consume an existing *args value: {name}.")
+                classification = "potentially_breaking"
+            elif old_has_var_keyword and parameter["kind"] in {"positional_or_keyword", "keyword_only"}:
+                reasons.append(f"Optional parameter can consume an existing **kwargs key: {name}.")
                 classification = "potentially_breaking"
             else:
                 reasons.append(f"Optional parameter added: {name}.")
@@ -523,6 +573,17 @@ def _working_tree_sources() -> dict[str, str]:
     }
 
 
+def _source_digest(sources: Mapping[str, str]) -> str:
+    """Return a deterministic digest for an exact source mapping."""
+    digest = hashlib.sha256()
+    for path, text in sorted(sources.items()):
+        digest.update(path.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(text.encode("utf-8"))
+        digest.update(b"\0")
+    return f"sha256:{digest.hexdigest()}"
+
+
 def build_payload(tags: Iterable[str] | None = None) -> dict[str, Any]:
     """Build snapshots and all independently selectable comparisons."""
     selected_tags = tuple(tags) if tags is not None else _release_tags()
@@ -537,14 +598,19 @@ def build_payload(tags: Iterable[str] | None = None) -> dict[str, Any]:
                 sources=_sources_from_git(tag),
             )
         )
-    snapshots.append(
-        build_snapshot(
-            version="main",
-            revision=_run_git("rev-parse", "HEAD").strip(),
-            source_kind="working_tree",
-            sources=_working_tree_sources(),
-        )
+    working_tree_sources = _working_tree_sources()
+    working_tree_snapshot = build_snapshot(
+        version="working-tree",
+        revision=None,
+        source_kind="working_tree",
+        sources=working_tree_sources,
     )
+    working_tree_snapshot["source_digest"] = _source_digest(working_tree_sources)
+    working_tree_snapshot["notes"].append(
+        "This logical target represents the package working tree used for generation. It does not assert a Git branch "
+        "identity; source_digest identifies its exact source content."
+    )
+    snapshots.append(working_tree_snapshot)
     comparisons = [compare_snapshots(baseline, target) for baseline, target in itertools.permutations(snapshots, 2)]
     return {
         "metadata": {
@@ -553,6 +619,9 @@ def build_payload(tags: Iterable[str] | None = None) -> dict[str, Any]:
             "authoritative_registry": "src/fabricops_kit/public_api.py",
             "signature_extraction": "Python AST; package modules are not imported.",
             "historical_extraction": "Each tag is read from its own Git tree. Missing registries use uncertain package exports.",
+            "working_tree_extraction": (
+                "The working-tree target has no Git revision or branch identity; source_digest identifies its content."
+            ),
         },
         "versions": [snapshot["version"] for snapshot in snapshots],
         "snapshots": snapshots,
