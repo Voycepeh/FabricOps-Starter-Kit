@@ -1010,6 +1010,33 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "if(e.target.closest('a'))return" in html
 
 
+def test_dashboard_uses_generated_release_compatibility_contract(tmp_path: Path) -> None:
+    """Compatibility selectors use source-backed generated snapshots and shareable state."""
+    root, pkg, init_path = write_project(tmp_path)
+    payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path)
+
+    html = dashboard.render_dashboard(payload)
+
+    assert "../reference/_data/public-api-compatibility.json" in html
+    assert "fabricops_public_api_compatibility_v1" in html
+    assert "Current PR #1613" not in html
+    assert "api.github.com/repos" not in html
+    assert "raw.githubusercontent.com" not in html
+    assert 'id="compatBaseline"' in html
+    assert 'id="compatTarget"' in html
+    assert 'id="compatLifecycle"' in html
+    assert "comparison.baseline===base&&comparison.target===target" in html
+    assert "Potentially breaking" in html
+    assert "Review required" in html
+    assert "Baseline signature" in html
+    assert "Compare-against signature" in html
+    assert "params.set('baseline',base)" in html
+    assert "params.set('compare',target)" in html
+    assert "uncertain historical evidence" in html
+    assert "Current generated source" in html
+    assert "Current main" not in html
+
+
 def test_dashboard_refactor_packet_wraps_evidence_with_scope_prompts(tmp_path: Path) -> None:
     """Validate all export scopes produce Codex-ready prompt branches."""
     root, pkg, init_path = write_project(tmp_path)
