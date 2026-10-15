@@ -5,6 +5,7 @@ import {NARRATION_CUE_SHEET} from '../narrationCues';
 import {font, theme} from '../theme';
 import {GUIDED_SCENE_DURATIONS, seconds, VIDEO_CONFIG} from '../videoConfig';
 import {AnimatedDataFlow, AnimatedFlowPath} from '../components/AnimatedDataFlow';
+import {DataEngineeringIcon, DataGovernanceIcon} from '../components/TeamIdentityIcons';
 
 const {
   dataEngineers: DATA_ENGINEERS_DURATION,
@@ -448,17 +449,12 @@ export const BigPictureScene = () => {
   return <SceneShell duration={BIG_PICTURE_DURATION} heading="" accent="#72e6ad">
     {openingOpacity > 0 ? <div style={{position: 'absolute', inset: 0, opacity: openingOpacity}}>
       <div style={{position: 'absolute', left: 245, top: 382, width: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: sideEnter, translate: `${(1 - sideEnter) * -28}px 0`}}>
-        <svg aria-hidden="true" width="112" height="112" viewBox="0 0 96 96">
-          <path d="M48 8 82 22v25c0 22-14 34-34 41C28 81 14 69 14 47V22Z" fill="#261f42" stroke="#b487ff" strokeWidth="5" strokeLinejoin="round" />
-          <path d="M31 47h34M31 34h34M31 60h22" fill="none" stroke="#d8c9ff" strokeWidth="5" strokeLinecap="round" />
-        </svg>
+        <DataGovernanceIcon />
         <div style={{marginTop: 26, color: '#e9ddff', fontSize: 31, fontWeight: 850}}>Data Governance</div>
       </div>
 
       <div style={{position: 'absolute', right: 245, top: 382, width: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: sideEnter, translate: `${(1 - sideEnter) * 28}px 0`}}>
-        <svg aria-hidden="true" width="112" height="112" viewBox="0 0 96 96">
-          <path d="M36 22 12 48l24 26M60 22l24 26-24 26M55 13 41 83" fill="none" stroke="#69b7ff" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <DataEngineeringIcon />
         <div style={{marginTop: 26, color: '#d8ecff', fontSize: 31, fontWeight: 850}}>Data Engineering</div>
       </div>
 

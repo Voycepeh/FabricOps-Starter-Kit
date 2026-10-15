@@ -1,4 +1,5 @@
 import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {DataEngineeringIcon, DataGovernanceIcon} from '../components/TeamIdentityIcons';
 import {theme} from '../theme';
 import {VIDEO_CONFIG} from '../videoConfig';
 import {fabricOpsFrame, VIDEO_TUNING} from '../videoTuning';
@@ -96,7 +97,7 @@ export const FabricOpsReveal = () => {
               position: 'absolute',
               left: word.left,
               top: word.top,
-              fontSize: 52,
+              fontSize: 62.4,
               lineHeight: 1,
               fontWeight: 760,
               letterSpacing: -1.2,
@@ -126,7 +127,7 @@ export const FabricOpsReveal = () => {
         if (opacity <= 0) return null;
 
         return (
-          <div style={{position: 'absolute', top: 675, width: '100%', textAlign: 'center', opacity, transform: `scale(${scale})`, fontSize: 54, fontWeight: 760, color: '#dcecff', textShadow: '0 0 30px #38d99155'}}>
+          <div style={{position: 'absolute', top: 675, width: '100%', textAlign: 'center', opacity, transform: `scale(${scale})`, fontSize: 64.8, fontWeight: 760, color: '#dcecff', textShadow: '0 0 30px #38d99155'}}>
             Governance into Code
           </div>
         );
@@ -137,8 +138,14 @@ export const FabricOpsReveal = () => {
           <ellipse cx="960" cy="540" rx="830" ry="330" pathLength="1" fill="none" stroke={theme.production} strokeWidth="15" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - relationshipCircle} opacity={0.12 * relationshipCircle} />
           <ellipse cx="960" cy="540" rx="830" ry="330" pathLength="1" fill="none" stroke={theme.production} strokeWidth="7" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - relationshipCircle} opacity={relationshipCircle} />
         </svg> : null}
-        <div style={{position: 'absolute', left: 190, top: 345, width: 420, textAlign: 'center', fontSize: 56, fontWeight: 800, color: '#fff', textShadow: '0 0 26px #38d99166', opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18}}>Governance</div>
-        <div style={{position: 'absolute', right: 190, top: 345, width: 420, textAlign: 'center', fontSize: 56, fontWeight: 800, color: '#fff', textShadow: '0 0 26px #38d99166', opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18}}>Engineering</div>
+        <div style={{position: 'absolute', left: 95, top: 474, width: 480, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 22, color: '#e9ddff', fontSize: 37.2, fontWeight: 850, opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18}}>
+          <DataGovernanceIcon size={112} />
+          <span>Data Governance</span>
+        </div>
+        <div style={{position: 'absolute', right: 95, top: 474, width: 480, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 22, color: '#d8ecff', fontSize: 37.2, fontWeight: 850, opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18}}>
+          <DataEngineeringIcon size={112} />
+          <span>Data Engineering</span>
+        </div>
       </div> : null}
 
       <div
@@ -158,7 +165,7 @@ export const FabricOpsReveal = () => {
             position: 'absolute',
             left: 65,
             top: 36,
-            fontSize: VIDEO_CONFIG.text.title,
+            fontSize: VIDEO_CONFIG.text.title * 1.2,
             fontWeight: 820,
             color: '#fff',
             opacity: whyEnter,
@@ -173,7 +180,7 @@ export const FabricOpsReveal = () => {
             position: 'absolute',
             right: 78,
             bottom: 34,
-            fontSize: VIDEO_CONFIG.text.title,
+            fontSize: VIDEO_CONFIG.text.title * 1.2,
             fontWeight: 820,
             color: '#fff',
             opacity: whyEnter,
@@ -190,7 +197,7 @@ export const FabricOpsReveal = () => {
             position: 'absolute',
             left: 65,
             top: 36,
-            fontSize: VIDEO_CONFIG.text.title,
+            fontSize: VIDEO_CONFIG.text.title * 1.2,
             fontWeight: 820,
             color: '#fff',
             opacity: howEnter,
@@ -205,7 +212,7 @@ export const FabricOpsReveal = () => {
             position: 'absolute',
             right: 75,
             bottom: 34,
-            fontSize: VIDEO_CONFIG.text.title,
+            fontSize: VIDEO_CONFIG.text.title * 1.2,
             fontWeight: 820,
             color: '#fff',
             opacity: worksEnter,
