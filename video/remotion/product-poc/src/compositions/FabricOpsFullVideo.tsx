@@ -35,9 +35,11 @@ export const FabricOpsFullVideo = () => {
       />
       <Sequence
         name="Overview background"
-        from={0}
         durationInFrames={FULL_VIDEO_DURATION}
-        premountFor={fps}>
+        premountFor={fps}
+        style={{
+          translate: "1px 0px"
+        }}>
         <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 35%, #18365d 0%, #0b1830 34%, #060d19 74%)'}} />
       </Sequence>
       <Sequence name="Opening" from={timeline.opening.start} durationInFrames={timeline.opening.duration} premountFor={fps}>
@@ -68,7 +70,14 @@ export const FabricOpsFullVideo = () => {
       <Sequence name="Repeatable pipeline" from={timeline.repeatablePipeline.start} durationInFrames={timeline.repeatablePipeline.duration} premountFor={fps}>
         <RepeatablePipelineScene />
       </Sequence>
-      <Sequence name="Sensitive data" from={timeline.sensitiveData.start} durationInFrames={timeline.sensitiveData.duration} premountFor={fps}>
+      <Sequence
+        name="Sensitive data"
+        from={timeline.sensitiveData.start}
+        durationInFrames={timeline.sensitiveData.duration}
+        premountFor={fps}
+        style={{
+          translate: "-1px 0px"
+        }}>
         <SensitiveDataScene />
       </Sequence>
       <Sequence name="Business rules" from={timeline.businessRules.start} durationInFrames={timeline.businessRules.duration} premountFor={fps}>
