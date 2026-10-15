@@ -23,9 +23,9 @@ Lineage and Source Observation metadata only after publication succeeds.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_write.py:340`
+`fabricops_kit/pipeline/pipeline_write.py:341`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L340-L707">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L341-L710">View on GitHub</a>
 </div>
 
 
@@ -142,8 +142,10 @@ provide only the canonical identities of the sources that actually feed
 this target, rather than internal read or preparation dictionaries. This
 keeps multiple target writes in one activity exact and independent.
 
-Same-activity retries use the target's persisted ``_activity_id`` audit
-field to detect a row-producing publication and skip its physical mutation.
+Append and overwrite retries use the target's persisted ``_activity_id``
+to skip an already-applied physical mutation. SCD1 and SCD2 always run
+their keyed change-aware merge, even when an interactive notebook reuses
+an activity ID, so new business changes are not silently suppressed.
 Catalogue processing, Lineage, and accepted Source Observation metadata are
 idempotent and replayed on every retry. Empty append, empty overwrite, and
 true SCD no-op operations may leave
