@@ -179,7 +179,7 @@ export const DataEngineersScene = () => {
   const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
   const introEnd = 5880 - cue.startFrame;
   const aiEnter = 6250 - cue.startFrame;
-  const aiFadeAt = 6400 - cue.startFrame;
+  const aiFadeAt = 600;
   const introOpacity = interpolate(frame, [0, seconds(0.4), introEnd - seconds(0.4), introEnd], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const inconsistencyAt = aiFadeAt;
   const implementationsAt = localCue(7);
@@ -632,32 +632,31 @@ export const ClosingScene = () => {
   const plugIn = localCue(1);
   const governanceIn = localCue(2);
   const collaborationIn = localCue(3);
-  const dataFoundationIn = localCue(4);
-  const analyticsAndAiIn = localCue(5);
   const documentationIn = localCue(6);
   const demoIn = localCue(7);
   const narrationEnd = cue.endFrame - cue.startFrame;
   const teamFlashStart = 140;
   const teamFade = interpolate(frame, [plugIn, plugIn + seconds(0.35)], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const engineerToGovernance = interpolate(frame, [teamFlashStart, teamFlashStart + 12], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const governanceToBusiness = interpolate(frame, [teamFlashStart + 12, teamFlashStart + 24], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const businessToEngineer = interpolate(frame, [teamFlashStart + 24, teamFlashStart + 36], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const governanceTeamAt = 172;
+  const businessTeamAt = 200;
+  const triangleCloseAt = 228;
+  const engineerToGovernance = interpolate(frame, [teamFlashStart, governanceTeamAt], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const governanceToBusiness = interpolate(frame, [governanceTeamAt, businessTeamAt], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const businessToEngineer = interpolate(frame, [businessTeamAt, triangleCloseAt], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const teamTriangle = [
     {label: 'Data Engineers', accent: '#69b7ff', left: 700, top: 250, at: teamFlashStart},
-    {label: 'Data Governance', accent: '#b487ff', left: 270, top: 720, at: teamFlashStart + 12},
-    {label: 'Business Users', accent: '#ffae66', left: 1130, top: 720, at: teamFlashStart + 24},
+    {label: 'Data Governance', accent: '#b487ff', left: 270, top: 720, at: governanceTeamAt},
+    {label: 'Business Users', accent: '#ffae66', left: 1130, top: 720, at: businessTeamAt},
   ] as const;
   const documentationEnter = enterProgress(frame, fps, documentationIn);
   const demoEnter = enterProgress(frame, fps, demoIn);
-  const plugOpacity = interpolate(frame, [plugIn, plugIn + seconds(0.35), governanceIn - seconds(0.25), governanceIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const governanceOpacity = interpolate(frame, [governanceIn, governanceIn + seconds(0.35), collaborationIn - seconds(0.25), collaborationIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const collaborationOpacity = interpolate(frame, [collaborationIn, collaborationIn + seconds(0.35), dataFoundationIn - seconds(0.25), dataFoundationIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const dataFoundationOpacity = interpolate(frame, [dataFoundationIn, dataFoundationIn + seconds(0.35), analyticsAndAiIn - seconds(0.25), analyticsAndAiIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const analyticsAndAiOpacity = interpolate(frame, [analyticsAndAiIn, analyticsAndAiIn + seconds(0.35), documentationIn - seconds(0.25), documentationIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const plugFlash = interpolate(frame, [plugIn, plugIn + seconds(0.25), governanceIn - seconds(0.25), governanceIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const governanceFlash = interpolate(frame, [governanceIn, governanceIn + seconds(0.25), collaborationIn - seconds(0.25), collaborationIn], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const collaborateFlash = interpolate(frame, [470, 478, 500, 512], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const standardsFlash = interpolate(frame, [610, 618, 640, 652], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const highQualityFlash = interpolate(frame, [720, 728, 742, 754], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const trustworthyFlash = interpolate(frame, [740, 748, 762, 774], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const highQualityFlash = interpolate(frame, [720, 728, 772, 784], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const trustworthyFlash = interpolate(frame, [740, 748, 792, 804], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
+  const dataFoundationFlash = interpolate(frame, [835, 843, 873, 885], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const dataAgentFlash = interpolate(frame, [940, 948, 960, 972], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const machineLearningFlash = interpolate(frame, [970, 978, 990, 1002], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   const applicationsFlash = interpolate(frame, [1015, 1023, 1035, 1047], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
@@ -685,12 +684,24 @@ export const ClosingScene = () => {
         Data Standards
       </div> : null}
 
+      {plugFlash > 0 ? <div style={{position: 'absolute', left: 120, top: 448, zIndex: 3, width: 650, color: '#72e6ad', fontSize: 48, fontWeight: 900, letterSpacing: 1.8, opacity: plugFlash, rotate: '-18deg', scale: 0.9 + plugFlash * 0.1, translate: `${(1 - plugFlash) * -22}px 0`, textShadow: '0 0 24px #38d99199'}}>
+        Plug-and-Play Data Pipelines
+      </div> : null}
+
+      {governanceFlash > 0 ? <div style={{position: 'absolute', right: 150, top: 448, zIndex: 3, width: 570, color: '#c5a8ff', fontSize: 54, fontWeight: 900, letterSpacing: 2.4, opacity: governanceFlash, rotate: '18deg', scale: 0.9 + governanceFlash * 0.1, translate: `${(1 - governanceFlash) * 22}px 0`, textShadow: '0 0 24px #9e74ff99'}}>
+        Governance as Code
+      </div> : null}
+
       {highQualityFlash > 0 ? <div style={{position: 'absolute', left: 190, top: 448, zIndex: 3, width: 470, color: '#72e6ad', fontSize: 54, fontWeight: 900, letterSpacing: 2.4, opacity: highQualityFlash, rotate: '-18deg', scale: 0.9 + highQualityFlash * 0.1, translate: `${(1 - highQualityFlash) * -22}px 0`, textShadow: '0 0 24px #38d99199'}}>
         High Quality
       </div> : null}
 
       {trustworthyFlash > 0 ? <div style={{position: 'absolute', right: 190, top: 448, zIndex: 3, width: 470, color: '#c5a8ff', fontSize: 54, fontWeight: 900, letterSpacing: 2.4, opacity: trustworthyFlash, rotate: '18deg', scale: 0.9 + trustworthyFlash * 0.1, translate: `${(1 - trustworthyFlash) * 22}px 0`, textShadow: '0 0 24px #9e74ff99'}}>
         Trustworthy
+      </div> : null}
+
+      {dataFoundationFlash > 0 ? <div style={{position: 'absolute', left: 110, top: 448, zIndex: 3, width: 700, color: '#72e6ad', fontSize: 50, fontWeight: 900, letterSpacing: 1.8, opacity: dataFoundationFlash, rotate: '-18deg', scale: 0.9 + dataFoundationFlash * 0.1, translate: `${(1 - dataFoundationFlash) * -22}px 0`, textShadow: '0 0 24px #38d99199'}}>
+        Lay the Data Foundation
       </div> : null}
 
       {dataAgentFlash > 0 ? <div style={{position: 'absolute', left: 260, top: 300, zIndex: 3, width: 410, color: '#8fc9ff', fontSize: 54, fontWeight: 900, letterSpacing: 2.4, opacity: dataAgentFlash, rotate: '-11deg', scale: 0.9 + dataAgentFlash * 0.1, translate: `${(1 - dataAgentFlash) * -18}px ${(1 - dataAgentFlash) * -12}px`, textShadow: '0 0 24px #69b7ff99'}}>
@@ -715,26 +726,6 @@ export const ClosingScene = () => {
           {label}
         </div>;
       }) : null}
-
-      {plugOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: plugOpacity}}>
-        Plug-and-Play Data Pipelines
-      </div> : null}
-
-      {governanceOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: governanceOpacity}}>
-        Governance as Code
-      </div> : null}
-
-      {collaborationOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: collaborationOpacity}}>
-        One Consistent Framework
-      </div> : null}
-
-      {dataFoundationOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: dataFoundationOpacity}}>
-        The Data Foundation for the AI Era
-      </div> : null}
-
-      {analyticsAndAiOpacity > 0 ? <div style={{position: 'absolute', top: 674, left: 0, right: 0, fontSize: 44, lineHeight: 1.1, fontWeight: 720, letterSpacing: -0.8, color: '#dcecff', opacity: analyticsAndAiOpacity}}>
-        Powering Analytics and AI
-      </div> : null}
 
       {documentationEnter > 0 || demoEnter > 0 ? <div style={{position: 'absolute', top: 680, display: 'flex', alignItems: 'center', gap: 36}}>
         <div style={{minWidth: 495, padding: '29px 51px', borderRadius: 21, border: '3px solid #72e6ad', color: '#dfffee', fontSize: 42, fontWeight: 800, boxSizing: 'border-box', opacity: documentationEnter, translate: `0 ${(1 - documentationEnter) * 24}px`}}>Read the documentation</div>
