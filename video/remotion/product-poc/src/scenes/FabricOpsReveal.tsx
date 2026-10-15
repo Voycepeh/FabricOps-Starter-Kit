@@ -134,18 +134,16 @@ export const FabricOpsReveal = () => {
       })()}
 
       {frame >= relationshipAt && relationshipFade > 0 ? <div style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
-        {frame >= relationshipCircleAt ? <svg aria-hidden="true" width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, opacity: relationshipFade}}>
+        <div style={{position: 'absolute', left: 74, top: 484, width: 112, height: 112, opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18}}>
+          <DataGovernanceIcon size={112} />
+        </div>
+        <div style={{position: 'absolute', right: 74, top: 484, width: 112, height: 112, opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18}}>
+          <DataEngineeringIcon size={112} />
+        </div>
+        {frame >= relationshipCircleAt ? <svg aria-hidden="true" width="1920" height="1080" viewBox="0 0 1920 1080" style={{position: 'absolute', inset: 0, zIndex: 1, opacity: relationshipFade}}>
           <ellipse cx="960" cy="540" rx="830" ry="330" pathLength="1" fill="none" stroke={theme.production} strokeWidth="15" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - relationshipCircle} opacity={0.12 * relationshipCircle} />
           <ellipse cx="960" cy="540" rx="830" ry="330" pathLength="1" fill="none" stroke={theme.production} strokeWidth="7" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={1 - relationshipCircle} opacity={relationshipCircle} />
         </svg> : null}
-        <div style={{position: 'absolute', left: 95, top: 474, width: 480, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 22, color: '#e9ddff', fontSize: 37.2, fontWeight: 850, opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18}}>
-          <DataGovernanceIcon size={112} />
-          <span>Data Governance</span>
-        </div>
-        <div style={{position: 'absolute', right: 95, top: 474, width: 480, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 22, color: '#d8ecff', fontSize: 37.2, fontWeight: 850, opacity: relationshipEnter * relationshipFade, scale: 0.82 + relationshipEnter * 0.18}}>
-          <DataEngineeringIcon size={112} />
-          <span>Data Engineering</span>
-        </div>
       </div> : null}
 
       <div
