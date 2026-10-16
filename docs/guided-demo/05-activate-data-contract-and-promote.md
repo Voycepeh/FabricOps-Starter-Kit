@@ -4,17 +4,22 @@
 
 Step 5 closes the Development loop. Governance makes the validated contract the active Production definition, and Engineering promotes the same tested pipeline through the Fabric Deployment Pipeline.
 
-## Before you begin
+### Before you begin
 
 Complete [Step 4](04-validate-frozen-data-contract.md) and use the validated frozen contract versions.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
+
 ## Select the tested Data Contract version
+
+</div>
 
 Return to `01_governance` and select the exact frozen Data Contract version that passed Step 4.
 
 Do not activate a different draft or an untested version simply because it is newer.
 
-## Link the Data Agreement
+### Link the Data Agreement
 
 Select the exact Data Agreement version created in Step 1 that governs this producer-to-consumer relationship.
 
@@ -34,22 +39,22 @@ Development validation
 Agreement linkage + activation
 ```
 
-## Activate the Data Contract
+### Activate the Data Contract
 
 Review the selected `table_id`, tested Data Contract version, and linked Data Agreement version, then activate it.
 
 Activation tells FabricOps which immutable contract version Production must resolve for that governed table.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
+
 ## Promote the validated pipeline
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
+</div>
+
 
 `00_env_config` owns the environment-specific resolution. Your tested `02A_full_refresh_demo` copy owns this demo pipeline definition.
 
-  </div>
-</div>
 
 
 That separation means Engineering promotes the same tested 02A demo notebook from Development to Production while `00_env_config` maps logical Fabric Stores such as Bronze, Silver, Gold, and Metadata to their environment-specific Fabric locations.
@@ -81,7 +86,7 @@ The important boundary is:
 * keep environment-specific workspace IDs, item IDs, paths, schemas, and SQL endpoints in `00_env_config`
 * do not move Development output data or draft governance state into Production
 
-## Expected result
+### Expected result
 
 The tested Data Contract is active for the governed table, and the validated pipeline artifact is deployed to Engineering Production.
 
