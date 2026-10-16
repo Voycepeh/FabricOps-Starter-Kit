@@ -168,7 +168,7 @@ Download the **entire DemoData folder**. Every retained file has an explicit Gui
 
 ## Upload the demo data
 
-Follow this part of the Guided Demo before continuing to the next activity.
+Upload the downloaded retail files to the Bronze Lakehouse so the demo notebooks can access them.
 
 </div>
 </div>
