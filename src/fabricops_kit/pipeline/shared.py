@@ -86,7 +86,7 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
         }
         marker, label = outcomes[status]
         print(f"[{index}/{total}] {stage} ... {marker} {label} ({duration:.2f}s)")
-    return result, {"stage": stage, "status": status, "duration_seconds": duration}
+    return result, {"name": name, "stage": stage, "status": status, "duration_seconds": duration}
 
 
 from fabricops_kit.config.shared import (

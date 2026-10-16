@@ -5963,7 +5963,7 @@
       "architecture_classification": "standard_orchestration",
       "contract_classification": "preview_public_function",
       "contract_risk": "preview",
-      "examples": ">>> source = orchestrate_read(name=\"orders\", store=\"Bronze\", schema=\"demo\", table_name=\"orders\")\n>>> orders_df = source[\"dataframe\"]",
+      "examples": ">>> source = orchestrate_read(store=\"Bronze\", schema=\"demo\", table_name=\"orders\")\n>>> orders_df = source[\"dataframe\"]",
       "function_name": "orchestrate_read",
       "function_type": "public_function",
       "inbound_source_references": [
@@ -5972,12 +5972,6 @@
       "lifecycle_status": "preview",
       "live_impact_level": "preview_only",
       "parameters": [
-        {
-          "description": "Notebook-facing name used in orchestration output.",
-          "name": "name",
-          "required": "Yes",
-          "type": "str"
-        },
         {
           "description": "Configured source store key.",
           "name": "store",
@@ -6049,8 +6043,8 @@
       "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
       "raises_documentation": "RuntimeError\n    If a stage fails. Its name is reported and the original exception is\n    retained as ``__cause__``.",
       "returns_documentation": "dict\n    The ``pipeline_read`` result, including ``dataframe`` and ``table_id``,\n    plus capability results and ``orchestration_stages``.",
-      "signature": "def orchestrate_read(*, name: str, store: str, schema: str | None, table_name: str, read_mode: str='full', query: str | None=None, read_parameters: dict[str, Any] | None=None, target_table_id: str | None=None, frequency_enabled: bool=True, frequency_top_n: int | None=5, spark_session=None, verbose: bool=True) -> dict[str, Any]",
-      "source_end_line": 87,
+      "signature": "def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str='full', query: str | None=None, read_parameters: dict[str, Any] | None=None, target_table_id: str | None=None, frequency_enabled: bool=True, frequency_top_n: int | None=5, spark_session=None, verbose: bool=True) -> dict[str, Any]",
+      "source_end_line": 85,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_read.py",
       "source_start_line": 12,
       "summary": "Execute the standard FabricOps governed Read lifecycle.",
@@ -6061,7 +6055,7 @@
       "architecture_classification": "standard_orchestration",
       "contract_classification": "preview_public_function",
       "contract_risk": "preview",
-      "examples": ">>> result = orchestrate_write(transformed_df, name=\"curated_orders\", sources=[orders], store=\"Silver\", schema=\"demo\", table_name=\"curated_orders\", write_mode=\"overwrite\", contracts=CONTRACTS)\n>>> result = orchestrate_write(product_mapping_df, name=\"product_mapping\", sources=[], store=\"Silver\", schema=\"demo\", table_name=\"product_mapping\", write_mode=\"scd1\", write_parameters={\"key_columns\": [\"product_id\"]})",
+      "examples": ">>> result = orchestrate_write(transformed_df, sources=[orders], store=\"Silver\", schema=\"demo\", table_name=\"curated_orders\", write_mode=\"overwrite\", contracts=CONTRACTS)\n>>> result = orchestrate_write(product_mapping_df, sources=[], store=\"Silver\", schema=\"demo\", table_name=\"product_mapping\", write_mode=\"scd1\", write_parameters={\"key_columns\": [\"product_id\"]})",
       "function_name": "orchestrate_write",
       "function_type": "public_function",
       "inbound_source_references": [
@@ -6075,12 +6069,6 @@
           "name": "dataframe",
           "required": "Yes",
           "type": "Any"
-        },
-        {
-          "description": "Notebook-facing target name used in orchestration output.",
-          "name": "name",
-          "required": "Yes",
-          "type": "str"
         },
         {
           "description": "Governed source results containing ``table_id``.",
@@ -6158,14 +6146,14 @@
       "public_import_path": "fabricops_kit.orchestrate_write",
       "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
       "raises_documentation": "RuntimeError\n    If any stage fails. Its name is reported and the original exception is\n    retained as ``__cause__``.",
-      "returns_documentation": "dict\n    Write identity and capability results. ``published`` is false when a\n    Validate-mode contract passes without publication.",
-      "signature": "def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None=None, contracts: dict[str, Any] | None=None, repartition_by: int | None=None, frequency_enabled: bool=True, frequency_top_n: int | None=5, spark_session=None, verbose: bool=True) -> dict[str, Any]",
-      "source_end_line": 121,
+      "returns_documentation": "dict\n    Write identity and capability results. The top-level ``dataframe`` is\n    the prepared input after Sensitive Data treatment, in both Validate\n    and Enforce modes. It is the Write input, not necessarily the persisted\n    target after Append, SCD1, or SCD2. ``sensitive_result`` retains its\n    nested ``dataframe`` result. ``published`` is false when a Validate-mode\n    contract passes without publication.",
+      "signature": "def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None=None, contracts: dict[str, Any] | None=None, repartition_by: int | None=None, frequency_enabled: bool=True, frequency_top_n: int | None=5, spark_session=None, verbose: bool=True) -> dict[str, Any]",
+      "source_end_line": 127,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
       "source_start_line": 15,
       "summary": "Execute the standard FabricOps governed Write lifecycle.",
       "usage": "public_flow_reachable",
-      "usage_notes": "Both contract modes run Schema, Sensitive Data, Source Drift, Data Quality,\nand Guardrail Coverage identically. Validate then returns without writing;\nEnforce continues through Write and persisted-target Profile. Existing\nmetadata and Source Observation commit behaviour remains owned by\n``pipeline_write``. No DataFrame is displayed."
+      "usage_notes": "Both contract modes run Schema, Sensitive Data, Source Drift, Data Quality,\nand Guardrail Coverage identically. Validate then returns without writing;\nEnforce continues through Write and persisted-target Profile. Existing\nmetadata and Source Observation commit behaviour remains owned by\n``pipeline_write``. The returned ``dataframe`` is the prepared Write input,\nnot a reread of the persisted target; Append, SCD1, and SCD2 may produce a\ndifferent target state. No DataFrame is displayed or materialized for this\nreturn value."
     },
     {
       "architecture_classification": "internal",

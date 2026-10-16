@@ -9,13 +9,11 @@ from fabricops_kit.pipeline.profile_table import profile_table
 from fabricops_kit.pipeline.shared import _run_orchestration_stage
 
 
-def orchestrate_read(*, name: str, store: str, schema: str | None, table_name: str, read_mode: str = "full", query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session=None, verbose: bool = True) -> dict[str, Any]:
+def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = "full", query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session=None, verbose: bool = True) -> dict[str, Any]:
     """Execute the standard FabricOps governed Read lifecycle.
 
     Parameters
     ----------
-    name : str
-        Notebook-facing name used in orchestration output.
     store : str
         Configured source store key.
     schema : str, optional
@@ -60,7 +58,7 @@ def orchestrate_read(*, name: str, store: str, schema: str | None, table_name: s
 
     Examples
     --------
-    >>> source = orchestrate_read(name="orders", store="Bronze", schema="demo", table_name="orders")
+    >>> source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
     >>> orders_df = source["dataframe"]
 
     See Also
@@ -70,9 +68,9 @@ def orchestrate_read(*, name: str, store: str, schema: str | None, table_name: s
     """
     stages = []
     if verbose:
-        print(f"FabricOps READ · {name}")
+        print(f"FabricOps READ · {table_name}")
     def run(index, stage, function):
-        result, record = _run_orchestration_stage(operation="READ", name=name, index=index, total=5, stage=stage, function=function, verbose=verbose)
+        result, record = _run_orchestration_stage(operation="READ", name=table_name, index=index, total=5, stage=stage, function=function, verbose=verbose)
         stages.append(record)
         return result
     source = run(1, "Read", lambda: pipeline_read(store=store, schema=schema, table_name=table_name, read_mode=read_mode, query=query, read_parameters=read_parameters, target_table_id=target_table_id, spark_session=spark_session, verbose=False))

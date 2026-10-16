@@ -96,7 +96,6 @@ Then run the configured Read cell:
 
 ```python
 source = orchestrate_read(
-    name="source",
     store="Bronze",
     schema="demo",
     table_name="source_table",  # Replace with the governed source table.
@@ -192,7 +191,6 @@ Then run the configured Write cell:
 ```python
 writes["target"] = orchestrate_write(
     transformed_df,
-    name="target",
     sources=[sources["source"]],
     store="Silver",
     schema="demo",

@@ -12,15 +12,13 @@ from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 from fabricops_kit.pipeline.shared import _run_orchestration_stage
 
 
-def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session=None, verbose: bool = True) -> dict[str, Any]:
+def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session=None, verbose: bool = True) -> dict[str, Any]:
     """Execute the standard FabricOps governed Write lifecycle.
 
     Parameters
     ----------
     dataframe : object
         Transformed Spark DataFrame to validate and publish.
-    name : str
-        Notebook-facing target name used in orchestration output.
     sources : iterable of dict
         Governed source results containing ``table_id``.
     store : str
@@ -79,8 +77,8 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
 
     Examples
     --------
-    >>> result = orchestrate_write(transformed_df, name="curated_orders", sources=[orders], store="Silver", schema="demo", table_name="curated_orders", write_mode="overwrite", contracts=CONTRACTS)
-    >>> result = orchestrate_write(product_mapping_df, name="product_mapping", sources=[], store="Silver", schema="demo", table_name="product_mapping", write_mode="scd1", write_parameters={"key_columns": ["product_id"]})
+    >>> result = orchestrate_write(transformed_df, sources=[orders], store="Silver", schema="demo", table_name="curated_orders", write_mode="overwrite", contracts=CONTRACTS)
+    >>> result = orchestrate_write(product_mapping_df, sources=[], store="Silver", schema="demo", table_name="product_mapping", write_mode="scd1", write_parameters={"key_columns": ["product_id"]})
 
     See Also
     --------
@@ -97,9 +95,9 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
         names.extend(["Write", "Profile"])
     stages = []
     if verbose:
-        print(f"FabricOps WRITE · {name}")
+        print(f"FabricOps WRITE · {table_name}")
     def run(stage, function):
-        result, record = _run_orchestration_stage(operation="WRITE", name=name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose)
+        result, record = _run_orchestration_stage(operation="WRITE", name=table_name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose)
         stages.append(record)
         return result
     schema_result = run("Schema", lambda: check_schema(dataframe, table_id=target_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
