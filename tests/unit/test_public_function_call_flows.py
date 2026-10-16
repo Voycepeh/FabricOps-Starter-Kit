@@ -749,7 +749,8 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert '<span class="metric-chip">Files ${esc((f.files_touched||[]).length)}</span>' in html
     assert '${badges(publicSignalsForFunction(f))}' in html
     assert "functionLink(f)}<div>${publicLifecycleBits(f)}</div></td><td>${esc(f.derived_width)}</td>" in html
-    assert "<td>${badges(publicSignalsForFunction(f))}</td><td>${esc(f.source_path)} · ${githubLink(f)}</td>" in html
+    assert "<td>${badges(publicSignalsForFunction(f))}</td><td>${esc(f.source_path)}" in html
+    assert "${githubLink(f)}" in html
     assert '<th class="col-select">Select</th><th class="col-small"><button class="sort-button" data-inventory-sort="call_depth" type="button" title="Distance from the selected public callable root.">Call depth</button></th><th class="col-function"><button class="sort-button" data-inventory-sort="function_name" type="button">Function</button></th><th class="col-type"><button class="sort-button" data-inventory-sort="function_type" type="button">Type</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_width" type="button" title="Number of direct package-local calls made by this function.">Width</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_scope" type="button" title="Total downstream functions reached from this function.">Scope</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_downstream_depth" type="button" title="Deepest downstream call path from this function.">Depth</button></th><th>Violation</th><th>Inline candidate</th><th>Promote to shared</th><th class="col-file"><button class="sort-button" data-inventory-sort="source_path" type="button">File</button></th>' in html
     assert "function inventoryDownstreamMetrics(flow,qualifiedName)" in html
     assert "function enrichInventoryRows(rows,flow)" in html
@@ -1037,8 +1038,12 @@ def test_dashboard_uses_generated_release_compatibility_contract(tmp_path: Path)
     assert "comparison.baseline===base&&comparison.target===target" in html
     assert "Potentially breaking" in html
     assert "Review required" in html
-    assert "Baseline signature" in html
-    assert "Compare-against signature" in html
+    assert 'id="releaseImpactPanel"' in html
+    assert 'id="historicalImpactPanel"' in html
+    assert "Current production release" in html
+    assert "main (current source)" in html
+    assert "Signature details" in html
+    assert "Baseline signature" not in html
     assert "params.set('baseline',base)" in html
     assert "params.set('compare',target)" in html
     assert "uncertain historical evidence" in html

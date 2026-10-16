@@ -222,7 +222,7 @@ def test_published_release_snapshots_use_each_tags_actual_source() -> None:
     payload = compatibility.build_payload(tags=("v0.1.0", "v0.2.0"))
     snapshots = {snapshot["version"]: snapshot for snapshot in payload["snapshots"]}
 
-    assert payload["versions"] == ["v0.1.0", "v0.2.0", "working-tree"]
+    assert payload["versions"] == ["v0.1.0", "v0.2.0", "main", "working-tree"]
     assert snapshots["v0.1.0"]["source_kind"] == "git_tag"
     assert snapshots["v0.2.0"]["source_kind"] == "git_tag"
     assert snapshots["v0.1.0"]["revision"] != snapshots["v0.2.0"]["revision"]
@@ -232,6 +232,8 @@ def test_published_release_snapshots_use_each_tags_actual_source() -> None:
     assert all(record["extraction_error"] is None for record in snapshots["v0.1.0"]["apis"])
     assert all(record["extraction_error"] is None for record in snapshots["v0.2.0"]["apis"])
     assert snapshots["working-tree"]["revision"] is None
+    assert snapshots["main"]["revision"]
+    assert snapshots["main"]["source_kind"] == "git_branch"
     assert snapshots["working-tree"]["source_digest"].startswith("sha256:")
     assert "does not assert a Git branch identity" in snapshots["working-tree"]["notes"][-1]
     comparison = next(
