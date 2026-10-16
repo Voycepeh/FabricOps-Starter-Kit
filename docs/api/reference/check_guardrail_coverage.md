@@ -115,6 +115,7 @@ Raises ValueError for missing canonical identities or missing Fabric activity id
 | Status | Version |
 | --- | --- |
 | Preview | 0.2.0 |
+| Preview | 0.2.5 |
 
 
 </details>

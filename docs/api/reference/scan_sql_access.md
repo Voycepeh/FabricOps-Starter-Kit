@@ -34,9 +34,9 @@ physical item identifier.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access_scanner/scan_sql_access.py:267`
+`fabricops_kit/access_scanner/scan_sql_access.py:268`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_sql_access.py#L267-L394">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_sql_access.py#L268-L395">View on GitHub</a>
 </div>
 
 
@@ -142,6 +142,12 @@ pass persist=False for inspection-only scans. The scanner never changes permissi
 | Contract classification | Preview public function |
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
+
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Preview | 0.2.5 |
 
 
 </details>

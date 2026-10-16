@@ -6,33 +6,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-10-17
+
 ### Added
+
+- Promoted `orchestrate_read()` and `orchestrate_write()` to the Live public API after validating full refresh, incremental append, and SCD write flows in Microsoft Fabric.
 
 ### Changed
 
-- `setup_metadata_tables()` now additively evolves existing metadata tables by adding missing canonical columns while preserving existing rows and extra columns; incompatible canonical types and known legacy schemas still fail validation.
-
-### Deprecated
-
-### Removed
+- `profile_table()` now enables frequency profiling by default and uses a top-five frequency limit by default. Set `frequency_enabled=False` to disable frequency profiling.
+- `setup_metadata_tables()` additively adds missing canonical metadata columns while preserving existing rows and extra columns.
 
 ### Fixed
 
-### Security
-
-### Python package
-
-### Notebook templates
+- Corrected SCD2 effective-time validation, reused-activity reconciliation, and incremental target probing across governed writes.
 
 ### Metadata model
 
-### Documentation
+- Added identity and descriptive columns to metadata schemas, including readable table, column, and steward names. `setup_metadata_tables()` adds missing canonical columns while retaining existing rows and extra columns; incompatible canonical types and known legacy schemas still require explicit remediation.
 
-### Breaking changes
+### Notebook templates
 
-### Known limitations
+- The full refresh, incremental append, and SCD demo flows passed manual Microsoft Fabric validation.
 
 ### Upgrade instructions
+
+- Upgrade the Fabric Environment custom library to the v0.2.5 wheel and restart notebook sessions. Run `setup_metadata_tables()` against the configured metadata target to add missing canonical columns; existing rows and extra columns are preserved. Review `profile_table()` frequency defaults if your workflow expects frequency profiling to be disabled or a different top-N limit.
 
 ## [0.2.0] - 2026-09-22
 
