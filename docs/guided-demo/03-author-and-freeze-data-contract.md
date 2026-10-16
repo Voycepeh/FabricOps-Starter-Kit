@@ -174,7 +174,7 @@ Open **Manifest & Freeze** and review the complete contract, including the DQ ru
 
 Choose **Save Data Contract** while the version is still a draft. When it is ready for Engineering validation, choose **Freeze**.
 
-The frozen version is immutable and becomes the exact candidate Engineering selects in Step 4. Freezing does not activate it for Production.
+The frozen version is an immutable data contract and becomes the exact candidate Engineering selects in Step 4. Freezing does not activate it for Production.
 
 ### Expected result
 
