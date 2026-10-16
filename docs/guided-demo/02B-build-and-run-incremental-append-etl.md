@@ -183,8 +183,6 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 | Governed target watermark | Successful watermark progress for the exact Bronze-to-Silver relationship. |
 | `METADATA_GUARDRAIL_RESULTS` | Guardrail evaluation results when a selected Data Contract supplies executable Guardrails. |
 
-*Image coming soon: Metadata Lakehouse records after the three Incremental Append runs.*
-
 ### Reset the demo
 
 An Incremental demo cannot be reset by rerunning Day 1 or deleting only the Silver target. FabricOps remembers successful progress for the exact Bronze-to-Silver relationship.

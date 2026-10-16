@@ -48,133 +48,79 @@ The standard Environment, Data Contract, result-storage, and inspection patterns
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run Day 1 in Fabric
+## Run all for day 1 demo 
+Reads 8 rows of data from bronze.demo."product_master" then set 'product_id' as key column for SCD1 and write to silver.demo.product_master_scd1, likewise set 'product_id' as key column , set `product_category` and `list_price` as tracking columns with `modified_datetime` as the effective column for SCD2 and write to silver.demo.product_master_scd2
 
-Establish the baseline with one complete Full Read, PySpark Transform, and pair of SCD Writes.
 
 </div>
 </div>
 
-### Choose Day 1
+![Day 1 SCD demo run](../assets/2c/Day%201.png)
 
-Leave the value under **1. Choose the demo day** as:
+8 rows are read its just full read nothing special 
 
-```python
-DEMO_DAY = 1
-```
+![Day 1 source read](../assets/2c/Day1Read.png)
 
-Run the cell. It validates that the selected day is supported.
+### SCD1 configurations
+- write_mode="scd1"	Overwrites existing records instead of preserving historical versions.
+- key_columns	Identifies the unique business entity, such as product_id.
 
-### Stage the Day 1 snapshot
+![SCD1 write configuration](../assets/2c/SCD1Write.png)
 
-Run the short cell under **2. Advance the Bronze product snapshot**.
 
-00C has already loaded Day 1 into Bronze `demo.product_master_updates`. The scenario cell does nothing on Day 1; for Days 2 and 3 it overwrites Bronze with the selected eight-row snapshot.
+### SCD2 Configurations
+- write_mode="scd2"	Preserves historical records instead of overwriting them.
+- key_columns	Identifies the unique business entity, such as product_id.
+- effective_column	Specifies when each record version becomes effective, using modified_datetime.
+- tracked_columns	Specifies which columns to monitor for changes. A change to any tracked value creates a new historical version.
 
-The cell should complete without an error. Bronze now contains the complete Day 1 Product Master snapshot.
+![SCD2 write configuration](../assets/2c/SCD2Write.png)
 
-*Image coming soon: Day 1 Product Master snapshot saved in Bronze.*
-
-### Run the changed pipeline blocks
-
-Run the remaining blocks through **5. Inspect**. For the initial Guided Demo run, leave the Data Contract selection unchanged.
-
-The changes from Step 2 are:
-
-- **Governed Full Read:** reads the complete eight-row Product Master snapshot into `sources["product_master"]`.
-- **PySpark Transform:** selects the Product Master columns and casts `list_price` to double and `modified_datetime` to timestamp.
-- **WRITE 1 — SCD1 current state:** keys Silver `demo.product_master_scd1` by `product_id` and keeps one current row per product.
-- **WRITE 2 — SCD2 history:** uses `modified_datetime` as the effective column and tracks changes to `product_category` and `list_price` in Silver `demo.product_master_scd2`.
-
-*Image coming soon: Day 1 Product Master Full Read output.*
-
-*Image coming soon: transformed Day 1 Product Master DataFrame.*
-
-*Image coming soon: Day 1 SCD1 Write output.*
-
-*Image coming soon: Day 1 SCD2 Write output.*
-
-### Inspect the Day 1 profiles
-
-Run the cell under **5. Inspect**. It displays the `profile_result` already returned by each governed Write; it does not read either Silver table again.
-
-The SCD1 and SCD2 profiles should both show `row_count = 8` on their profiled columns.
-
-*Image coming soon: Day 1 SCD1 and SCD2 target profiles.*
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run Day 2 in Fabric
-
-Apply the next source change and compare the resulting governed output.
-
-</div>
-</div>
-
-### Change only the demo day
-
-Return to the day cell and change it to:
-
-```python
-DEMO_DAY = 2
-```
-
-### Rerun the complete notebook
-
-Use **Run all** or run every block again from **0. Environment** through **5. Inspect**.
-
-The notebook replaces Bronze with the complete Day 2 snapshot. The sequence-safety block confirms that the expected earlier SCD2 state exists before either target is updated.
+## Change to day 2 and run all 
 
 Product `P002` has a new `list_price`:
 
 - SCD1 updates the value on `P002`'s existing row and keeps eight rows.
 - SCD2 closes the earlier `P002` version and inserts a new current version.
 
-### Check the Day 2 output
+</div>
+</div>
+
+![Day 2 SCD demo run](../assets/2c/Day%202.png)
+
+![Day 2 SCD source read](../assets/2c/Read.png)
 
 The SCD1 profile should show `row_count = 8`; the SCD2 profile should show `row_count = 9`, confirming that the changed `P002` created one additional historical version.
 
-*Image coming soon: Day 2 SCD1 and SCD2 target profiles.*
+![Day 2 SCD target profiles](../assets/2c/SCDDay2.png)
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run Day 3 in Fabric
-
-Run the final scenario and inspect how the output changes.
-
-</div>
-</div>
-
-### Change only the demo day
-
-Return to the day cell and change it to:
-
-```python
-DEMO_DAY = 3
-```
-
-### Rerun the complete notebook
-
-Run every block again. The notebook replaces Bronze with the complete Day 3 snapshot and verifies the prior SCD2 state.
+## Change to day 2 and run all 
 
 Product `P001` has a new `product_category`:
 
 - SCD1 replaces the category on `P001`'s current row and keeps eight rows.
 - SCD2 closes the earlier `P001` version and inserts a new current version.
 
-### Check the Day 3 output
+</div>
+</div>
+
+![Day 3 SCD demo run](../assets/2c/Day%203.png)
+
+![Day 3 SCD source read](../assets/2c/Day3Read.png)
 
 The SCD1 profile should show `row_count = 8`; the SCD2 profile should show `row_count = 10`, confirming that the changed `P001` created one additional historical version.
 
-*Image coming soon: Day 3 SCD1 and SCD2 target profiles.*
+![Day 3 SCD target profiles](../assets/2c/SCDDay3.png)
 
-!!! warning "Keep the days in order"
-
-    Run Day 1 → Day 2 → Day 3. The sequence-safety block stops if an expected prior state is missing. Replaying the current day is safe because unchanged tracked values do not create another SCD2 version.
 
 ### Expected result
 
@@ -201,7 +147,6 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 | `METADATA_SOURCE_OBSERVATION` | Source-state observations associated with successful target publication where applicable. |
 | `METADATA_GUARDRAIL_RESULTS` | Guardrail evaluation results when a selected Data Contract supplies executable Guardrails. |
 
-*Image coming soon: Metadata Lakehouse records after the three SCD runs.*
 
 ### Reset the demo
 
