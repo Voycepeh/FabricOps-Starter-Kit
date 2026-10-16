@@ -161,7 +161,7 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
     public_b_row = next(item for item in public_a["flow"] if item["function_name"] == "public_b")
     assert public_b_row["violation_types"] == ["Type 1"]
     assert public_b_row["violation_details"] == [
-        "Public function calls a non-foundational public function directly."
+        flows.ARCHITECTURE_VIOLATION_RULES["Type 1"]
     ]
     assert public_b_row["inline_candidate"] is True
     assert public_b_row["promote_to_shared_candidate"] is False
@@ -188,6 +188,9 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
     }
     assert "Type 6" not in payload["metadata"]["architecture_violation_rules"]
     assert payload["metadata"]["architecture_violation_signal"] == "Any Type 1 to Type 5 edge appears in the public function flow."
+    assert payload["metadata"]["architecture_type_1_allowed_callers"] == sorted(
+        flows.ARCHITECTURE_TYPE_1_ALLOWED_CALLERS
+    )
     assert payload["metadata"]["foundational_io_functions"] == sorted(flows.FOUNDATIONAL_IO_FUNCTION_NAMES)
     assert "terminal node" in payload["metadata"]["foundational_io_boundary"]
 
@@ -422,6 +425,10 @@ def test_architecture_violation_type_classification() -> None:
     other_private = info("_other_private", "src/fabricops_kit/other.py")
 
     assert flows.classify_architecture_violation(public, other_public, "public_function", "public_dependency")["type"] == "Type 1"
+    orchestrator = info("orchestrate_read", "pipeline/orchestrate_read.py")
+    assert flows.classify_architecture_violation(
+        orchestrator, other_public, "public_function", "public_dependency"
+    ) is None
     assert flows.classify_architecture_violation(shared, public, "shared_function", "public_dependency")["type"] == "Type 2"
     assert flows.classify_architecture_violation(private, public, "private_function", "public_dependency")["type"] == "Type 3"
     assert flows.classify_architecture_violation(shared, other_private, "shared_function", "private_function")["type"] == "Type 4"
@@ -693,7 +700,7 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     for violation_type in ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5"]:
         assert violation_type in html
     assert "Type 6" not in html
-    assert "Public function calls a non-foundational public function directly." in html
+    assert "Public function calls a non-foundational public function directly. The standard orchestrators orchestrate_read and orchestrate_write are allowed to compose public workflow functions." in html
     assert "Shared function calls a non-foundational public function directly." in html
     assert "Private function calls a non-foundational public function directly." in html
     assert "Shared function calls a private function from another file." in html
@@ -742,7 +749,8 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert '<span class="metric-chip">Files ${esc((f.files_touched||[]).length)}</span>' in html
     assert '${badges(publicSignalsForFunction(f))}' in html
     assert "functionLink(f)}<div>${publicLifecycleBits(f)}</div></td><td>${esc(f.derived_width)}</td>" in html
-    assert "<td>${badges(publicSignalsForFunction(f))}</td><td>${esc(f.source_path)} · ${githubLink(f)}</td>" in html
+    assert "<td>${badges(publicSignalsForFunction(f))}</td><td>${esc(f.source_path)}" in html
+    assert "${githubLink(f)}" in html
     assert '<th class="col-select">Select</th><th class="col-small"><button class="sort-button" data-inventory-sort="call_depth" type="button" title="Distance from the selected public callable root.">Call depth</button></th><th class="col-function"><button class="sort-button" data-inventory-sort="function_name" type="button">Function</button></th><th class="col-type"><button class="sort-button" data-inventory-sort="function_type" type="button">Type</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_width" type="button" title="Number of direct package-local calls made by this function.">Width</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_scope" type="button" title="Total downstream functions reached from this function.">Scope</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_downstream_depth" type="button" title="Deepest downstream call path from this function.">Depth</button></th><th>Violation</th><th>Inline candidate</th><th>Promote to shared</th><th class="col-file"><button class="sort-button" data-inventory-sort="source_path" type="button">File</button></th>' in html
     assert "function inventoryDownstreamMetrics(flow,qualifiedName)" in html
     assert "function enrichInventoryRows(rows,flow)" in html
@@ -861,6 +869,7 @@ def test_dashboard_javascript_classifies_foundational_io_edges_by_caller_layer(t
 
     script = "\n".join([
         "const ARCHITECTURE_VIOLATION_RULES={'Type 1':'one','Type 2':'two','Type 3':'three','Type 4':'four','Type 5':'five'};",
+        "const ARCHITECTURE_TYPE_1_ALLOWED_CALLERS=new Set(['fabricops_kit.pipeline.orchestrate_read.orchestrate_read','fabricops_kit.pipeline.orchestrate_write.orchestrate_write']);",
         "const PUBLIC_CALLABLE_TYPES=new Set(['public_function','widget_function']);",
         "function isPublicCallableType(type){return PUBLIC_CALLABLE_TYPES.has(type)}",
         javascript_function("deriveFlowEdges", "classifyDerivedViolation"),
@@ -921,6 +930,7 @@ def test_dashboard_derives_signals_from_old_shape_payload() -> None:
     assert "callerPublic=isPublicCallableType(pt)||pt==='public_dependency'" in html
     assert "calleePublic=isPublicCallableType(ct)||ct==='public_dependency'" in html
     assert "if(pt==='widget_function'&&calleePublic)return null" in html
+    assert "ARCHITECTURE_TYPE_1_ALLOWED_CALLERS.has(parent.qualified_name)" in html
     assert "return 'Type 1'" in html
     assert "return 'Type 2'" in html
     assert "return 'Type 3'" in html
@@ -1028,8 +1038,12 @@ def test_dashboard_uses_generated_release_compatibility_contract(tmp_path: Path)
     assert "comparison.baseline===base&&comparison.target===target" in html
     assert "Potentially breaking" in html
     assert "Review required" in html
-    assert "Baseline signature" in html
-    assert "Compare-against signature" in html
+    assert 'id="releaseImpactPanel"' in html
+    assert 'id="historicalImpactPanel"' in html
+    assert "Current production release" in html
+    assert "main (current source)" in html
+    assert "Signature details" in html
+    assert "Baseline signature" not in html
     assert "params.set('baseline',base)" in html
     assert "params.set('compare',target)" in html
     assert "uncertain historical evidence" in html

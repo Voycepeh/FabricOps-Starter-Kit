@@ -7,6 +7,7 @@ The Public Function Call Flows dashboard compares source-backed public API contr
 - `src/fabricops_kit/public_api.py` is the lifecycle registry for Live, Preview, and Discontinued public callables.
 - Each callable signature is parsed from Python source with `ast`; Fabric-dependent modules are never imported.
 - Published versions come from semantic release tags and are read from each tag's own Git tree.
+- The proposed release snapshot is read from the exact `origin/main` commit when available, otherwise the local `main` commit, and records its commit revision.
 - The logical `working-tree` option is generated from the checked-out package source. It has no Git revision because the source may come from any branch or contain uncommitted changes; a deterministic SHA-256 source digest identifies its exact content.
 
 The compatibility generator does not expect historical tags to contain a snapshot JSON file and never substitutes current source for a historical release.
@@ -22,7 +23,7 @@ PYTHONPATH=src python scripts/generate_public_api_compatibility.py
 This writes `docs/reference/_data/public-api-compatibility.json` using the versioned schema `fabricops_public_api_compatibility_v1`. The file contains:
 
 - `metadata`: schema version and extraction rules
-- `versions`: independently selectable dashboard versions
+- `versions`: release tags, the exact `main` commit, and the separate working-tree snapshot
 - `snapshots`: revision, extraction certainty, lifecycle source, and API records for every version
 - `comparisons`: every ordered version pair with summary counts and classified changes
 
@@ -52,7 +53,7 @@ The highest-risk finding wins for a modified callable. Static comparison cannot 
 
 ## Dashboard behavior
 
-The dashboard loads the generated companion JSON beside the unchanged v4 call-flow contract. Baseline and comparison versions remain independent, and the selected pair and lifecycle filter are retained in `baseline`, `compare`, and `compatLifecycle` URL parameters. `Current generated source` is the `working-tree` snapshot captured by the generator, not a claim about the `main` branch or `HEAD`. The dashboard shows filtered summary counts, lifecycle transitions, before/after signatures, and classification reasons.
+The dashboard loads the generated companion JSON beside the unchanged v4 call-flow contract. Its primary release-impact view compares the latest production release tag with the exact `main` commit, leads with Public and Preview counts, and sorts potentially breaking and review-required changes first. Signature details are collapsed until requested. The separate historical mode compares release tags. The working-tree snapshot remains available in the data contract for source inspection but is not presented as `main`. The compatibility artifact generation time is shown so maintainers can identify stale snapshots.
 
 If the companion contract or a selected comparison is missing, the dashboard reports the missing generated data. It does not display an empty comparison as compatible.
 

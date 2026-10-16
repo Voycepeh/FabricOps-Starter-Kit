@@ -27,12 +27,16 @@ SOURCE_BLOB_BASE_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/m
 LARGE_WIDTH_THRESHOLD = 10
 LARGE_DEPTH_THRESHOLD = 5
 ARCHITECTURE_VIOLATION_RULES = {
-    "Type 1": "Public function calls a non-foundational public function directly.",
+    "Type 1": "Public function calls a non-foundational public function directly, except the standard orchestrators orchestrate_read and orchestrate_write, which are allowed to compose public workflow functions.",
     "Type 2": "Shared function calls a non-foundational public function directly.",
     "Type 3": "Private function calls a non-foundational public function directly.",
     "Type 4": "Shared function calls a private function from another file.",
     "Type 5": "Private function calls a private function from another file.",
 }
+ARCHITECTURE_TYPE_1_ALLOWED_CALLERS = frozenset({
+    "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+    "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+})
 ARCHITECTURE_EDGE_SIGNALS = {
     "Type 0": "Calls foundational Fabric I/O.",
 }
@@ -501,6 +505,8 @@ def classify_architecture_violation(
         return None
     if caller_type == "widget_function" and callee_public:
         return None
+    if caller_public and caller.qualified_name in ARCHITECTURE_TYPE_1_ALLOWED_CALLERS:
+        return None
     if caller_public and callee_public:
         return {"type": "Type 1", "detail": ARCHITECTURE_VIOLATION_RULES["Type 1"]}
     if caller_type == "shared_function" and callee_public:
@@ -933,6 +939,7 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             "foundational_io_functions": sorted(FOUNDATIONAL_IO_FUNCTION_NAMES),
             "foundational_io_boundary": "A foundational I/O public dependency is retained as a terminal node when traversed from another public root; it expands normally when selected as the root.",
             "architecture_violation_rules": ARCHITECTURE_VIOLATION_RULES,
+            "architecture_type_1_allowed_callers": sorted(ARCHITECTURE_TYPE_1_ALLOWED_CALLERS),
             "architecture_edge_signals": ARCHITECTURE_EDGE_SIGNALS,
             "architecture_violation_signal": "Any Type 1 to Type 5 edge appears in the public function flow.",
             "unused_function_definition": "Not reachable from a public function flow, has no inbound package source references, and is not an implicit Python runtime hook.",
