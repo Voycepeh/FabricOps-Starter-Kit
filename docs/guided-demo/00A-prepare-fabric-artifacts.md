@@ -4,87 +4,82 @@
 
 This is foundation setup, not one of the seven FabricOps lifecycle steps.
 
-## Before you begin
+### Before you begin
 
 You need access to Microsoft Fabric capacity to complete this walkthrough.
 
-## Open Microsoft Fabric
+### Open Microsoft Fabric
 
 Open [Microsoft Fabric](https://app.fabric.microsoft.com/) and sign in with your Microsoft account.
 
 If your organisation does not provide Fabric capacity, you can use a Fabric trial where available.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-pointing.png" alt="" loading="lazy">
+
 ## Create the workspaces
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-pointing.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
+</div>
+
 
 Only **Governance** and **Engineering Development** are needed initially. You can add the Production and Consumer workspaces when you reach Steps 6 and 7.
 
-  </div>
-</div>
 
 ![Fabric workspaces for the Guided Demo](../assets/00A/Workspace.png)
 
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+
 ## Create the Governance metadata Lakehouse
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
+</div>
+
 
 Inside the **Governance** workspace and create a Lakehouse named **Metadata**, it is the shared home for FabricOps Governance records
 
 Use this exact name and casing for the Guided Demo. FabricOps uses this Lakehouse to persist its Governance metadata throughout the walkthrough.
 
-  </div>
-</div>
 
 
 ![Create the Governance metadata Lakehouse](../assets/00A/Create_Lakehouse.png)
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
+
 ## Create the Engineering stores
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
+</div>
+
 
 Open **Engineering Development** and create three distinct stores: **bronze**, **silver** lakehouse and **gold** warehouse.
 
-  </div>
-</div>
 
 
 ![Engineering Development Fabric items](../assets/00A/Objects.png)
 
 ??? info "Optional: prepare Engineering Production and Consumer"
 
-    <div class="fabricops-mascot-callout">
-      <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="FabricOps Production mascot" loading="lazy">
-      <div markdown="1">
 
-        Production should be a **1:1 structural mirror** of Development so the validated pipeline can use the same logical stores after promotion.
+Production should be a **1:1 structural mirror** of Development so the validated pipeline can use the same logical stores after promotion.
 
-      </div>
-    </div>
 
     If you created **Engineering Production**, repeat the same setup there with `bronze`, `silver`, and `gold` using the same item types and names.
 
     The **Consumer** workspace does not need its own Fabric store for this Guided Demo.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+
 ## Get FabricOps
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
+</div>
+
 
 Download the packaged FabricOps wheel from the [FabricOps Releases page](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases).
 
 Download the `.whl` file from the release you want to use, please check that you do not download the release version than is earlier than what was declared on the demo files you want to run, else the demo may not run correctly.
 
-  </div>
-</div>
 
 
 If you prefer to build FabricOps yourself, clone the repository locally and run:
@@ -95,16 +90,16 @@ uv build
 
 The built wheel will be available under `dist/`.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+
 ## Create Fabric Environments and install FabricOps
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
+</div>
+
 
 Fabric Environments are **workspace-specific**. Install and publish the same FabricOps wheel in each workspace that runs FabricOps notebooks.
 
-  </div>
-</div>
 
 A Fabric Environment belongs to a workspace. An Environment created in Governance is not automatically available in Engineering Development, Engineering Production, or Consumer.
 
@@ -132,7 +127,7 @@ Use the same FabricOps wheel version in each workspace so Governance, Developmen
 
     You will enable or disable the FabricOps authoring integration itself through `GOVERNANCE_CONFIG.ai_enrichment.enabled` in `00_env_config`.
 
-## Expected result
+### Expected result
 
 You now have:
 
