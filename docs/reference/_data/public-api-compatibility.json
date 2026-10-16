@@ -835,7 +835,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_read(*, name: str, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -847,7 +847,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -1755,7 +1755,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_read(*, name: str, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -1767,7 +1767,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -2153,7 +2153,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_read(*, name: str, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -2165,7 +2165,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -2540,7 +2540,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_read(*, name: str, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -2552,7 +2552,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -7524,14 +7524,6 @@
               "default": null,
               "has_default": false,
               "kind": "keyword_only",
-              "name": "name",
-              "required": true
-            },
-            {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
               "name": "store",
               "required": true
             },
@@ -7618,7 +7610,7 @@
           ],
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "return_annotation": "dict[str, Any]",
-          "signature": "orchestrate_read(*, name: str, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/pipeline/orchestrate_read.py",
           "source_qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read"
         },
@@ -7633,14 +7625,6 @@
               "has_default": false,
               "kind": "positional_or_keyword",
               "name": "dataframe",
-              "required": true
-            },
-            {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "name",
               "required": true
             },
             {
@@ -7742,7 +7726,7 @@
           ],
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "return_annotation": "dict[str, Any]",
-          "signature": "orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
           "source_qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
         },
@@ -8313,7 +8297,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:e0dc6e84740f9e5bc8fbaf31db0d286ac36d11dd7803fe7e8f08db57cf3d7df4",
+      "source_digest": "sha256:4a5228138cc0e6ef288b8701731f3b34ff7a67e53fe7239f270d4477fca02a22",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

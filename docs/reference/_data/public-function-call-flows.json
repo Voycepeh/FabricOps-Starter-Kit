@@ -6146,14 +6146,14 @@
       "public_import_path": "fabricops_kit.orchestrate_write",
       "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
       "raises_documentation": "RuntimeError\n    If any stage fails. Its name is reported and the original exception is\n    retained as ``__cause__``.",
-      "returns_documentation": "dict\n    Write identity and capability results. ``published`` is false when a\n    Validate-mode contract passes without publication.",
+      "returns_documentation": "dict\n    Write identity and capability results. The top-level ``dataframe`` is\n    the prepared input after Sensitive Data treatment, in both Validate\n    and Enforce modes. It is the Write input, not necessarily the persisted\n    target after Append, SCD1, or SCD2. ``sensitive_result`` retains its\n    nested ``dataframe`` result. ``published`` is false when a Validate-mode\n    contract passes without publication.",
       "signature": "def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None=None, contracts: dict[str, Any] | None=None, repartition_by: int | None=None, frequency_enabled: bool=True, frequency_top_n: int | None=5, spark_session=None, verbose: bool=True) -> dict[str, Any]",
-      "source_end_line": 119,
+      "source_end_line": 127,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
       "source_start_line": 15,
       "summary": "Execute the standard FabricOps governed Write lifecycle.",
       "usage": "public_flow_reachable",
-      "usage_notes": "Both contract modes run Schema, Sensitive Data, Source Drift, Data Quality,\nand Guardrail Coverage identically. Validate then returns without writing;\nEnforce continues through Write and persisted-target Profile. Existing\nmetadata and Source Observation commit behaviour remains owned by\n``pipeline_write``. No DataFrame is displayed."
+      "usage_notes": "Both contract modes run Schema, Sensitive Data, Source Drift, Data Quality,\nand Guardrail Coverage identically. Validate then returns without writing;\nEnforce continues through Write and persisted-target Profile. Existing\nmetadata and Source Observation commit behaviour remains owned by\n``pipeline_write``. The returned ``dataframe`` is the prepared Write input,\nnot a reread of the persisted target; Append, SCD1, and SCD2 may produce a\ndifferent target state. No DataFrame is displayed or materialized for this\nreturn value."
     },
     {
       "architecture_classification": "internal",
