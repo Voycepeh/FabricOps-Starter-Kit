@@ -1136,6 +1136,611 @@
         "review_required": 14,
         "total": 48
       },
+      "target": "main"
+    },
+    {
+      "baseline": "v0.1.0",
+      "changes": [
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_effective_access.scan_effective_access",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_effective_access(*, identity_map_df, group_membership_df) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "reasons": [
+            "Lifecycle changed: Preview to Live.",
+            "Parameter removed: metadata_schema.",
+            "Optional parameter added: raise_on_failure.",
+            "Optional parameter added: verbose."
+          ],
+          "signature_after": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
+          "signature_before": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, metadata_schema: str | None = None, require_active_steward: bool = False) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
+          "reasons": [
+            "Lifecycle changed: Preview to Live."
+          ],
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
+          "reasons": [
+            "Parameter removed: target.",
+            "Optional parameter can consume an existing **kwargs key: store."
+          ],
+          "signature_after": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_csv(relative_path: str, *, target: str = 'source', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+          "reasons": [
+            "Parameter removed: target.",
+            "Optional parameter can consume an existing **kwargs key: store."
+          ],
+          "signature_after": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)",
+          "signature_before": "read_lakehouse_excel(relative_path: str, *, target: str = 'source', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": null
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+          "reasons": [
+            "Parameter removed: target.",
+            "Optional parameter can consume an existing **kwargs key: store."
+          ],
+          "signature_after": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_parquet(relative_path: str, *, target: str = 'source', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+          "reasons": [
+            "Parameter removed: target.",
+            "Optional parameter can consume an existing **kwargs key: store.",
+            "Optional parameter can consume an existing **kwargs key: table_id.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
+          ],
+          "signature_after": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_table(table_name: str, *, target: str = 'source', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+          "reasons": [
+            "Parameter removed: target.",
+            "Optional parameter can consume an existing **kwargs key: store."
+          ],
+          "signature_after": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_query(query: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+          "reasons": [
+            "Parameter removed: target.",
+            "Optional parameter can consume an existing **kwargs key: store."
+          ],
+          "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_table(schema: str, table_name: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
+          "reasons": [
+            "Parameter removed: target.",
+            "Optional parameter added: store."
+          ],
+          "signature_after": "write_lakehouse_table(df, table_name: str, *, store: str = 'Silver', schema = None, mode = 'append', partition_by = None, repartition_by = None, options = None, verbose = True, context = None)",
+          "signature_before": "write_lakehouse_table(df, table_name: str, *, target: str = 'unified', schema = None, mode = 'append', partition_by = None, repartition_by = None, options = None, verbose = True, context = None)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
+          "reasons": [
+            "Parameter removed: target.",
+            "Optional parameter added: store."
+          ],
+          "signature_after": "write_warehouse_table(df, schema: str, table_name: str, *, store: str = 'warehouse', mode: str = 'append', repartition_by = None, options: dict[str, Any] | None = None, context: dict[str, Any] | None = None)",
+          "signature_before": "write_warehouse_table(df, schema: str, table_name: str, *, target: str = 'warehouse', mode: str = 'append', repartition_by = None, options: dict[str, Any] | None = None, context: dict[str, Any] | None = None)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.check_dq.check_dq",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "check_dq(dataframe, *, table_id: str, dataset_name: str = '', run_id: str = '', row_identity_columns: list[str] | None = None, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.check_freshness",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "check_freshness(table_id: str, *, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "check_guardrail_coverage(*, target_table_id: str, source_table_ids: list[str] | tuple[str, ...], spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.check_schema",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "check_schema(dataframe = None, *, table_id: str, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "check_sensitive_data(dataframe, *, table_id: str, run_id: str = '', existing_mapping = None, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.check_source_drift",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "check_source_drift(source_table_id: str, *, target_table_id: str, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "display_guardrail_results(result_bundle: Mapping[str, Any], mode: str = 'summary', spark_session: Any | None = None) -> Any"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, str]",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "prepare_pipeline_table_configs(table_configs: list[dict[str, Any]], default_settings: Mapping[str, Any], *, table_role: str, run_id: str = '', pipeline_name: str = '') -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.profile_dataframe",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "profile_dataframe(df, table_name: str, *, exclude_columns = None, run_timestamp_timezone: str | None = None, config: Any = None, include_distributions: bool = False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None = None, distribution_bin_edges: dict[str, list[float]] | None = None, categorical_categories: dict[str, list[str]] | None = None, categorical_top_n: int = 20)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str) -> str",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "run_table_guardrails(table_configs: list[dict[str, Any]], *, run_id: str | None = None, context: dict[str, Any] | None = None, spark_session: Any | None = None, agreement_id: str = '', agreement_version: str = '', table_role: str = '', mode: str = 'profile', stop_on_failure: bool | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_pipeline_lineage(*, spark: Any, context: dict[str, Any] | None = None, source_definitions: Mapping[str, Mapping[str, Any]], target_definitions: Mapping[str, Mapping[str, Any]], relationships: list[Mapping[str, Any]] | None = None, dataset_name: str = '', agreement_id: str = '', agreement_version: str = '', metadata_table: str = LINEAGE_TABLE, mode: str = 'append') -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_pipeline_run_summary(*, spark: Any | None = None, context: dict[str, Any] | None = None, agreement_id: str = '', agreement_version: str = '', notebook_type: str = '02_pipeline', started_at: str | None = None, completed_at: str | None = None, status: str = 'completed', source_definitions: Mapping[str, Mapping[str, Any]] | None = None, target_definitions: Mapping[str, Mapping[str, Any]] | None = None, source_schema_results: Mapping[str, Mapping[str, Any]] | None = None, target_schema_results: Mapping[str, Mapping[str, Any]] | None = None, source_freshness_results: Mapping[str, Mapping[str, Any]] | None = None, target_freshness_results: Mapping[str, Mapping[str, Any]] | None = None, source_stability_results: Mapping[str, Mapping[str, Any]] | None = None, target_stability_results: Mapping[str, Mapping[str, Any]] | None = None, source_dq_results: Mapping[str, Mapping[str, Any]] | None = None, target_dq_results: Mapping[str, Mapping[str, Any]] | None = None, lineage_status: str = 'not_run', catalogue_status: str = 'not_run', message: str = '', source_guardrail_results: Mapping[str, Any] | None = None, target_guardrail_results: Mapping[str, Any] | None = None, target_write_status: Mapping[str, Any] | None = None, lineage_result: Mapping[str, Any] | None = None, metadata_table: str = METADATA_PIPELINE_RUNS_TABLE, mode: str = 'append') -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_author_dq_rules(state: Mapping[str, Any], *, dq_authoring_mode: str = 'manual', rule_type: str = 'not_null', selected_columns: Iterable[str] | None = None, parameters: Mapping[str, Any] | None = None, severity: str = 'warning', spark_session: Any = None, context: dict[str, Any] | None = None, bypass_reason: str = '', source_notebook_type: str = '02_pipeline', created_by_role: str = 'engineering', commit: bool = False) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_author_schema_freshness_profile_rules(state: Mapping[str, Any], *, spark_session: Any = None, context: dict[str, Any] | None = None, bypass_reason: str = '', source_notebook_type: str = '02_pipeline', created_by_role: str = 'engineering', commit: bool = False) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_browse_metadata_catalogue.widget_browse_metadata_catalogue",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_browse_metadata_catalogue(*, agreement: dict | None = None, agreement_id: str | None = None, agreement_version: str | None = None, target: str = 'metadata', schema: str | None = None, metadata_table: str = 'METADATA_DATA_CATALOGUE', spark_session = None, context = None)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_enrich_table_metadata(guardrail_state: Mapping[str, Any], *, spark_session: Any, context: dict[str, Any] | None = None, source_notebook_type: str = '02_pipeline', created_by_role: str = 'engineering') -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_pipeline_bootstrap(*, notebook_type: str = '02_pipeline', select_agreement: bool = False, register_notebook: bool = False, read_only: bool = False, run_context: Any = None, spark_session: Any = None, metadata_schema: str | None = None, context: dict[str, Any] | None = None) -> Any"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_render_agreement_evidence(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Lifecycle changed: Preview to Live."
+          ],
+          "signature_after": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Lifecycle changed: Preview to Live."
+          ],
+          "signature_after": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_review_guardrail_governance(state: Mapping[str, Any], *, spark_session: Any = None, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_select_data_contract(*, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_select_guardrail_target(*, spark_session: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None = None, spark_session = None, store: str = 'Metadata', schema: str | None = None, context = None)",
+          "signature_before": null
+        }
+      ],
+      "summary": {
+        "added": 22,
+        "modified": 12,
+        "nonbreaking": 25,
+        "potentially_breaking": 9,
+        "removed": 14,
+        "review_required": 14,
+        "total": 48
+      },
       "target": "working-tree"
     },
     {
@@ -1847,6 +2452,983 @@
         "removed": 2,
         "review_required": 3,
         "total": 13
+      },
+      "target": "main"
+    },
+    {
+      "baseline": "v0.2.0",
+      "changes": [
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access.scan_workspace_access",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_effective_access.scan_effective_access",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_effective_access(*, identity_map_df, group_membership_df) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Optional parameter added: read_parameters."
+          ],
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
+          "reasons": [
+            "Optional parameter added: frequency_enabled.",
+            "Default changed for frequency_top_n: None to 5."
+          ],
+          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)",
+          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_top_n: int | None = None, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
+          "reasons": [
+            "Parameter removed: agreement_id.",
+            "Parameter removed: agreement_version.",
+            "Parameter removed: contract_id.",
+            "Parameter removed: schema.",
+            "Parameter removed: store.",
+            "Annotation changed for context: None to Any.",
+            "Annotation changed for spark_session: None to Any.",
+            "Return annotation changed: None to dict[str, Any]."
+          ],
+          "signature_after": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "signature_before": "widget_activate_data_contract(*, table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, agreement_id: str | None = None, agreement_version: str | None = None, store: str = 'Metadata', schema: str | None = None, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_author_data_contract.widget_author_data_contract",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_author_data_contract(*, table_id: str, spark_session: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "signature_before": null
+        }
+      ],
+      "summary": {
+        "added": 8,
+        "modified": 3,
+        "nonbreaking": 9,
+        "potentially_breaking": 1,
+        "removed": 2,
+        "review_required": 3,
+        "total": 13
+      },
+      "target": "working-tree"
+    },
+    {
+      "baseline": "main",
+      "changes": [
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_effective_access.scan_effective_access",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_effective_access(*, identity_map_df, group_membership_df) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "reasons": [
+            "Lifecycle changed: Live to Preview.",
+            "Parameter removed: raise_on_failure.",
+            "Parameter removed: verbose.",
+            "Optional parameter added: metadata_schema."
+          ],
+          "signature_after": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, metadata_schema: str | None = None, require_active_steward: bool = False) -> dict[str, Any]",
+          "signature_before": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
+          "reasons": [
+            "Lifecycle changed: Live to Preview."
+          ],
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
+          "reasons": [
+            "Parameter removed: store.",
+            "Optional parameter can consume an existing **kwargs key: target."
+          ],
+          "signature_after": "read_lakehouse_csv(relative_path: str, *, target: str = 'source', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+          "reasons": [
+            "Parameter removed: store.",
+            "Optional parameter can consume an existing **kwargs key: target."
+          ],
+          "signature_after": "read_lakehouse_excel(relative_path: str, *, target: str = 'source', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)",
+          "signature_before": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+          "reasons": [
+            "Parameter removed: store.",
+            "Optional parameter can consume an existing **kwargs key: target."
+          ],
+          "signature_after": "read_lakehouse_parquet(relative_path: str, *, target: str = 'source', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+          "reasons": [
+            "Parameter removed: store.",
+            "Parameter removed: table_id.",
+            "Optional parameter can consume an existing **kwargs key: target.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
+          ],
+          "signature_after": "read_lakehouse_table(table_name: str, *, target: str = 'source', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+          "reasons": [
+            "Parameter removed: store.",
+            "Optional parameter can consume an existing **kwargs key: target."
+          ],
+          "signature_after": "read_warehouse_query(query: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+          "reasons": [
+            "Parameter removed: store.",
+            "Optional parameter can consume an existing **kwargs key: target."
+          ],
+          "signature_after": "read_warehouse_table(schema: str, table_name: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
+          "reasons": [
+            "Parameter removed: store.",
+            "Optional parameter added: target."
+          ],
+          "signature_after": "write_lakehouse_table(df, table_name: str, *, target: str = 'unified', schema = None, mode = 'append', partition_by = None, repartition_by = None, options = None, verbose = True, context = None)",
+          "signature_before": "write_lakehouse_table(df, table_name: str, *, store: str = 'Silver', schema = None, mode = 'append', partition_by = None, repartition_by = None, options = None, verbose = True, context = None)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
+          "reasons": [
+            "Parameter removed: store.",
+            "Optional parameter added: target."
+          ],
+          "signature_after": "write_warehouse_table(df, schema: str, table_name: str, *, target: str = 'warehouse', mode: str = 'append', repartition_by = None, options: dict[str, Any] | None = None, context: dict[str, Any] | None = None)",
+          "signature_before": "write_warehouse_table(df, schema: str, table_name: str, *, store: str = 'warehouse', mode: str = 'append', repartition_by = None, options: dict[str, Any] | None = None, context: dict[str, Any] | None = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.check_dq.check_dq",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "check_dq(dataframe, *, table_id: str, dataset_name: str = '', run_id: str = '', row_identity_columns: list[str] | None = None, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.check_freshness",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "check_freshness(table_id: str, *, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "check_guardrail_coverage(*, target_table_id: str, source_table_ids: list[str] | tuple[str, ...], spark_session = None, verbose: bool = True) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.check_schema",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "check_schema(dataframe = None, *, table_id: str, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "check_sensitive_data(dataframe, *, table_id: str, run_id: str = '', existing_mapping = None, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.check_source_drift",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "check_source_drift(source_table_id: str, *, target_table_id: str, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "display_guardrail_results(result_bundle: Mapping[str, Any], mode: str = 'summary', spark_session: Any | None = None) -> Any",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, str]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "prepare_pipeline_table_configs(table_configs: list[dict[str, Any]], default_settings: Mapping[str, Any], *, table_role: str, run_id: str = '', pipeline_name: str = '') -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.profile_dataframe",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "profile_dataframe(df, table_name: str, *, exclude_columns = None, run_timestamp_timezone: str | None = None, config: Any = None, include_distributions: bool = False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None = None, distribution_bin_edges: dict[str, list[float]] | None = None, categorical_categories: dict[str, list[str]] | None = None, categorical_top_n: int = 20)",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str) -> str"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "run_table_guardrails(table_configs: list[dict[str, Any]], *, run_id: str | None = None, context: dict[str, Any] | None = None, spark_session: Any | None = None, agreement_id: str = '', agreement_version: str = '', table_role: str = '', mode: str = 'profile', stop_on_failure: bool | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_pipeline_lineage(*, spark: Any, context: dict[str, Any] | None = None, source_definitions: Mapping[str, Mapping[str, Any]], target_definitions: Mapping[str, Mapping[str, Any]], relationships: list[Mapping[str, Any]] | None = None, dataset_name: str = '', agreement_id: str = '', agreement_version: str = '', metadata_table: str = LINEAGE_TABLE, mode: str = 'append') -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_pipeline_run_summary(*, spark: Any | None = None, context: dict[str, Any] | None = None, agreement_id: str = '', agreement_version: str = '', notebook_type: str = '02_pipeline', started_at: str | None = None, completed_at: str | None = None, status: str = 'completed', source_definitions: Mapping[str, Mapping[str, Any]] | None = None, target_definitions: Mapping[str, Mapping[str, Any]] | None = None, source_schema_results: Mapping[str, Mapping[str, Any]] | None = None, target_schema_results: Mapping[str, Mapping[str, Any]] | None = None, source_freshness_results: Mapping[str, Mapping[str, Any]] | None = None, target_freshness_results: Mapping[str, Mapping[str, Any]] | None = None, source_stability_results: Mapping[str, Mapping[str, Any]] | None = None, target_stability_results: Mapping[str, Mapping[str, Any]] | None = None, source_dq_results: Mapping[str, Mapping[str, Any]] | None = None, target_dq_results: Mapping[str, Mapping[str, Any]] | None = None, lineage_status: str = 'not_run', catalogue_status: str = 'not_run', message: str = '', source_guardrail_results: Mapping[str, Any] | None = None, target_guardrail_results: Mapping[str, Any] | None = None, target_write_status: Mapping[str, Any] | None = None, lineage_result: Mapping[str, Any] | None = None, metadata_table: str = METADATA_PIPELINE_RUNS_TABLE, mode: str = 'append') -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_author_dq_rules(state: Mapping[str, Any], *, dq_authoring_mode: str = 'manual', rule_type: str = 'not_null', selected_columns: Iterable[str] | None = None, parameters: Mapping[str, Any] | None = None, severity: str = 'warning', spark_session: Any = None, context: dict[str, Any] | None = None, bypass_reason: str = '', source_notebook_type: str = '02_pipeline', created_by_role: str = 'engineering', commit: bool = False) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_author_schema_freshness_profile_rules(state: Mapping[str, Any], *, spark_session: Any = None, context: dict[str, Any] | None = None, bypass_reason: str = '', source_notebook_type: str = '02_pipeline', created_by_role: str = 'engineering', commit: bool = False) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_browse_metadata_catalogue.widget_browse_metadata_catalogue",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_browse_metadata_catalogue(*, agreement: dict | None = None, agreement_id: str | None = None, agreement_version: str | None = None, target: str = 'metadata', schema: str | None = None, metadata_table: str = 'METADATA_DATA_CATALOGUE', spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_enrich_table_metadata(guardrail_state: Mapping[str, Any], *, spark_session: Any, context: dict[str, Any] | None = None, source_notebook_type: str = '02_pipeline', created_by_role: str = 'engineering') -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_pipeline_bootstrap(*, notebook_type: str = '02_pipeline', select_agreement: bool = False, register_notebook: bool = False, read_only: bool = False, run_context: Any = None, spark_session: Any = None, metadata_schema: str | None = None, context: dict[str, Any] | None = None) -> Any",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_render_agreement_evidence(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Lifecycle changed: Live to Preview."
+          ],
+          "signature_after": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Lifecycle changed: Live to Preview."
+          ],
+          "signature_after": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_review_guardrail_governance(state: Mapping[str, Any], *, spark_session: Any = None, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_select_data_contract(*, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_select_guardrail_target(*, spark_session: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None = None, spark_session = None, store: str = 'Metadata', schema: str | None = None, context = None)"
+        }
+      ],
+      "summary": {
+        "added": 14,
+        "modified": 12,
+        "nonbreaking": 14,
+        "potentially_breaking": 17,
+        "removed": 22,
+        "review_required": 17,
+        "total": 48
+      },
+      "target": "v0.1.0"
+    },
+    {
+      "baseline": "main",
+      "changes": [
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access.scan_workspace_access",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_effective_access.scan_effective_access",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_effective_access(*, identity_map_df, group_membership_df) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Parameter removed: read_parameters."
+          ],
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
+          "reasons": [
+            "Parameter removed: frequency_enabled.",
+            "Default changed for frequency_top_n: 5 to None."
+          ],
+          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_top_n: int | None = None, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)",
+          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
+          "reasons": [
+            "Optional parameter added: agreement_id.",
+            "Optional parameter added: agreement_version.",
+            "Optional parameter added: contract_id.",
+            "Optional parameter added: schema.",
+            "Optional parameter added: store.",
+            "Annotation changed for context: Any to None.",
+            "Annotation changed for spark_session: Any to None.",
+            "Return annotation changed: dict[str, Any] to None."
+          ],
+          "signature_after": "widget_activate_data_contract(*, table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, agreement_id: str | None = None, agreement_version: str | None = None, store: str = 'Metadata', schema: str | None = None, spark_session = None, context = None)",
+          "signature_before": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_author_data_contract.widget_author_data_contract",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_author_data_contract(*, table_id: str, spark_session: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
+        }
+      ],
+      "summary": {
+        "added": 2,
+        "modified": 3,
+        "nonbreaking": 2,
+        "potentially_breaking": 2,
+        "removed": 8,
+        "review_required": 9,
+        "total": 13
+      },
+      "target": "v0.2.0"
+    },
+    {
+      "baseline": "main",
+      "changes": [],
+      "summary": {
+        "added": 0,
+        "modified": 0,
+        "nonbreaking": 0,
+        "potentially_breaking": 0,
+        "removed": 0,
+        "review_required": 0,
+        "total": 0
       },
       "target": "working-tree"
     },
@@ -2633,11 +4215,26 @@
         "total": 13
       },
       "target": "v0.2.0"
+    },
+    {
+      "baseline": "working-tree",
+      "changes": [],
+      "summary": {
+        "added": 0,
+        "modified": 0,
+        "nonbreaking": 0,
+        "potentially_breaking": 0,
+        "removed": 0,
+        "review_required": 0,
+        "total": 0
+      },
+      "target": "main"
     }
   ],
   "metadata": {
     "authoritative_registry": "src/fabricops_kit/public_api.py",
     "historical_extraction": "Each tag is read from its own Git tree. Missing registries use uncertain package exports.",
+    "main_extraction": "The main snapshot uses origin/main when available, otherwise the local main ref; the exact Git commit is recorded.",
     "schema": "fabricops_public_api_compatibility_v1",
     "schema_version": 1,
     "signature_extraction": "Python AST; package modules are not imported.",
@@ -8293,11 +9890,2189 @@
       ],
       "certainty": "certain",
       "lifecycle_source": "public_api_registry",
+      "notes": [],
+      "revision": "bd4c5295f1305811d9827b937ea319cd360b7e82",
+      "source_kind": "git_branch",
+      "version": "main"
+    },
+    {
+      "apis": [
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "identity_map_df",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "group_membership_df",
+              "required": true
+            }
+          ],
+          "qualified_name": "fabricops_kit.access_scanner.scan_effective_access.scan_effective_access",
+          "return_annotation": "dict[str, Any]",
+          "signature": "scan_effective_access(*, identity_map_df, group_membership_df) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/access_scanner/scan_effective_access.py",
+          "source_qualified_name": "fabricops_kit.access_scanner.scan_effective_access.scan_effective_access"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "catalogue_df",
+              "required": true
+            },
+            {
+              "annotation": "str | list[str] | tuple[str, ...]",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "targets",
+              "required": true
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "environment_name",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "access_snapshot_id",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "access_token",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "persist",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
+          "return_annotation": "dict[str, Any]",
+          "signature": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/access_scanner/scan_onelake_access.py",
+          "source_qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "catalogue_df",
+              "required": true
+            },
+            {
+              "annotation": "str | list[str] | tuple[str, ...]",
+              "default": "'warehouse'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "targets",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "environment_name",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "access_snapshot_id",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "persist",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
+          "return_annotation": "dict[str, Any]",
+          "signature": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/access_scanner/scan_sql_access.py",
+          "source_qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "catalogue_df",
+              "required": true
+            },
+            {
+              "annotation": "str | list[str] | tuple[str, ...]",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "targets",
+              "required": true
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "environment_name",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "access_snapshot_id",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "access_token",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "persist",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
+          "return_annotation": "dict[str, Any]",
+          "signature": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/access_scanner/scan_workspace_access.py",
+          "source_qualified_name": "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": "Any",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "spark",
+              "required": true
+            },
+            {
+              "annotation": "FrameworkConfig | dict[str, Any]",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "config",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "env",
+              "required": true
+            },
+            {
+              "annotation": "bool",
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "require_active_steward",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "raise_on_failure",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "return_annotation": "dict[str, Any]",
+          "signature": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": "FrameworkConfig | dict[str, Any]",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "config",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": "'Sandbox'",
+              "has_default": true,
+              "kind": "positional_or_keyword",
+              "name": "env",
+              "required": false
+            },
+            {
+              "annotation": "list[str] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "positional_or_keyword",
+              "name": "required_targets",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "positional_or_keyword",
+              "name": "notebook_name",
+              "required": false
+            },
+            {
+              "annotation": "str",
+              "default": "'run'",
+              "has_default": true,
+              "kind": "positional_or_keyword",
+              "name": "run_id_prefix",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "positional_or_keyword",
+              "name": "local_fallback_name",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
+          "return_annotation": "NotebookSetupContext",
+          "signature": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
+          "source_path": "src/fabricops_kit/config/setup_notebook.py",
+          "source_qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "table_id",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "target_workspace_id",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "display_name",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": "'FabricOps governed single-table Data Agent'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "description",
+              "required": false
+            },
+            {
+              "annotation": "Any",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "config",
+              "required": false
+            },
+            {
+              "annotation": "Mapping[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            },
+            {
+              "annotation": "Any",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "Callable[[], str]",
+              "default": "default_token_provider",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "token_provider",
+              "required": false
+            },
+            {
+              "annotation": "Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse]",
+              "default": "http_request",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "transport",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
+          "return_annotation": "dict[str, Any]",
+          "signature": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/data_agent/create_data_agent.py",
+          "source_qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "relative_path",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": "'Bronze'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "header",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "var_keyword",
+              "name": "options",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
+          "return_annotation": null,
+          "signature": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)",
+          "source_path": "src/fabricops_kit/io/read_lakehouse_csv.py",
+          "source_qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "relative_path",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": "'Bronze'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "0",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "sheet_name",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "var_keyword",
+              "name": "read_excel_kwargs",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+          "return_annotation": null,
+          "signature": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)",
+          "source_path": "src/fabricops_kit/io/read_lakehouse_excel.py",
+          "source_qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "relative_path",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": "'Bronze'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "var_keyword",
+              "name": "options",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
+          "return_annotation": null,
+          "signature": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "source_path": "src/fabricops_kit/io/read_lakehouse_json.py",
+          "source_qualified_name": "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "relative_path",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": "'Bronze'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "var_keyword",
+              "name": "options",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+          "return_annotation": null,
+          "signature": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "source_path": "src/fabricops_kit/io/read_lakehouse_parquet.py",
+          "source_qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "positional_or_keyword",
+              "name": "table_name",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "table_id",
+              "required": false
+            },
+            {
+              "annotation": "str",
+              "default": "'Bronze'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "schema",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "var_keyword",
+              "name": "options",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+          "return_annotation": null,
+          "signature": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
+          "source_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "query",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": "'warehouse'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "var_keyword",
+              "name": "options",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+          "return_annotation": null,
+          "signature": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "source_path": "src/fabricops_kit/io/read_warehouse_query.py",
+          "source_qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "schema",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "table_name",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": "'warehouse'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "var_keyword",
+              "name": "options",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+          "return_annotation": null,
+          "signature": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "source_path": "src/fabricops_kit/io/read_warehouse_table.py",
+          "source_qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "df",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "table_name",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": "'Silver'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "schema",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "'append'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "mode",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "partition_by",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "repartition_by",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "options",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
+          "return_annotation": null,
+          "signature": "write_lakehouse_table(df, table_name: str, *, store: str = 'Silver', schema = None, mode = 'append', partition_by = None, repartition_by = None, options = None, verbose = True, context = None)",
+          "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
+          "source_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "df",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "schema",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "table_name",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": "'warehouse'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": "str",
+              "default": "'append'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "mode",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "repartition_by",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "options",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
+          "return_annotation": null,
+          "signature": "write_warehouse_table(df, schema: str, table_name: str, *, store: str = 'warehouse', mode: str = 'append', repartition_by = None, options: dict[str, Any] | None = None, context: dict[str, Any] | None = None)",
+          "source_path": "src/fabricops_kit/io/write_warehouse_table.py",
+          "source_qualified_name": "fabricops_kit.io.write_warehouse_table.write_warehouse_table"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "dataframe",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "table_id",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": "''",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "dataset_name",
+              "required": false
+            },
+            {
+              "annotation": "str",
+              "default": "''",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "run_id",
+              "required": false
+            },
+            {
+              "annotation": "list[str] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "row_identity_columns",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "enabled",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "raise_on_failure",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.pipeline.check_dq.check_dq",
+          "return_annotation": "dict",
+          "signature": "check_dq(dataframe, *, table_id: str, dataset_name: str = '', run_id: str = '', row_identity_columns: list[str] | None = None, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict",
+          "source_path": "src/fabricops_kit/pipeline/check_dq.py",
+          "source_qualified_name": "fabricops_kit.pipeline.check_dq.check_dq"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "table_id",
+              "required": true
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "enabled",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "raise_on_failure",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.pipeline.check_freshness",
+          "return_annotation": "dict",
+          "signature": "check_freshness(table_id: str, *, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict",
+          "source_path": "src/fabricops_kit/pipeline/check_freshness.py",
+          "source_qualified_name": "fabricops_kit.pipeline.check_freshness.check_freshness"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "target_table_id",
+              "required": true
+            },
+            {
+              "annotation": "list[str] | tuple[str, ...]",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "source_table_ids",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage",
+          "return_annotation": "dict[str, Any]",
+          "signature": "check_guardrail_coverage(*, target_table_id: str, source_table_ids: list[str] | tuple[str, ...], spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/pipeline/check_guardrail_coverage.py",
+          "source_qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "positional_or_keyword",
+              "name": "dataframe",
+              "required": false
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "table_id",
+              "required": true
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "enabled",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "raise_on_failure",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.pipeline.check_schema",
+          "return_annotation": "dict",
+          "signature": "check_schema(dataframe = None, *, table_id: str, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict",
+          "source_path": "src/fabricops_kit/pipeline/check_schema.py",
+          "source_qualified_name": "fabricops_kit.pipeline.check_schema.check_schema"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "dataframe",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "table_id",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": "''",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "run_id",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "existing_mapping",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "enabled",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "raise_on_failure",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
+          "return_annotation": "dict",
+          "signature": "check_sensitive_data(dataframe, *, table_id: str, run_id: str = '', existing_mapping = None, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict",
+          "source_path": "src/fabricops_kit/pipeline/check_sensitive_data.py",
+          "source_qualified_name": "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "source_table_id",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "target_table_id",
+              "required": true
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "enabled",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "raise_on_failure",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.pipeline.check_source_drift",
+          "return_annotation": "dict",
+          "signature": "check_source_drift(source_table_id: str, *, target_table_id: str, enabled: bool = True, raise_on_failure: bool = False, spark_session = None, verbose: bool = True) -> dict",
+          "source_path": "src/fabricops_kit/pipeline/check_source_drift.py",
+          "source_qualified_name": "fabricops_kit.pipeline.check_source_drift.check_source_drift"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": true
+            },
+            {
+              "annotation": "str | None",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "schema",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "table_name",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": "'full'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "read_mode",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "query",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "read_parameters",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "target_table_id",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "frequency_enabled",
+              "required": false
+            },
+            {
+              "annotation": "int | None",
+              "default": "5",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "frequency_top_n",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "return_annotation": "dict[str, Any]",
+          "signature": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/pipeline/orchestrate_read.py",
+          "source_qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": "Any",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "dataframe",
+              "required": true
+            },
+            {
+              "annotation": "Iterable[dict[str, Any]]",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "sources",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": true
+            },
+            {
+              "annotation": "str | None",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "schema",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "table_name",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "write_mode",
+              "required": true
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "write_parameters",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "contracts",
+              "required": false
+            },
+            {
+              "annotation": "int | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "repartition_by",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "frequency_enabled",
+              "required": false
+            },
+            {
+              "annotation": "int | None",
+              "default": "5",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "frequency_top_n",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "return_annotation": "dict[str, Any]",
+          "signature": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
+          "source_qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "schema",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "table_name",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "table_id",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "query",
+              "required": false
+            },
+            {
+              "annotation": "str",
+              "default": "'full'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "read_mode",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "read_parameters",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "target_table_id",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "return_annotation": "dict[str, Any]",
+          "signature": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
+          "source_qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "df",
+              "required": true
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "schema",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "table_name",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "table_id",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "load_strategy",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "load_strategy_parameters",
+              "required": false
+            },
+            {
+              "annotation": "list[str] | tuple[str, ...] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "source_table_ids",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "repartition_by",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "options",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
+          "return_annotation": "dict[str, str]",
+          "signature": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, str]",
+          "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
+          "source_qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "dataframe",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "schema",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "table_name",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "table_id",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "frequency_columns",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "frequency_enabled",
+              "required": false
+            },
+            {
+              "annotation": "int | None",
+              "default": "5",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "frequency_top_n",
+              "required": false
+            },
+            {
+              "annotation": "float | None",
+              "default": "80.0",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "frequency_max_distinct_percent",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
+          "return_annotation": null,
+          "signature": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)",
+          "source_path": "src/fabricops_kit/pipeline/profile_table.py",
+          "source_qualified_name": "fabricops_kit.pipeline.profile_table.profile_table"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": true
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "schema",
+              "required": false
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "table_name",
+              "required": true
+            }
+          ],
+          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
+          "return_annotation": "str",
+          "signature": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str) -> str",
+          "source_path": "src/fabricops_kit/pipeline/resolve_table_id.py",
+          "source_qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "table_id",
+              "required": false
+            },
+            {
+              "annotation": "int | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "contract_version",
+              "required": false
+            },
+            {
+              "annotation": "Any",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "Any",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
+          "return_annotation": "dict[str, Any]",
+          "signature": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/widgets/widget_activate_data_contract.py",
+          "source_qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "table_id",
+              "required": false
+            },
+            {
+              "annotation": "int | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "contract_version",
+              "required": false
+            },
+            {
+              "annotation": "Any",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "Any",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "return_annotation": "dict[str, Any]",
+          "signature": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
+          "source_qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": "Any",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "spark",
+              "required": true
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "return_annotation": "dict[str, Any]",
+          "signature": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
+          "source_qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": "Any",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "spark",
+              "required": true
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "return_annotation": "dict[str, Any]",
+          "signature": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
+          "source_qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract",
+          "return_annotation": null,
+          "signature": "widget_select_data_contract(*, spark_session = None, context = None)",
+          "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
+          "source_qualified_name": "fabricops_kit.widgets.widget_select_data_contract.widget_select_data_contract"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "mode",
+              "required": true
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "agreement",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "str",
+              "default": "'Metadata'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "schema",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
+          "return_annotation": null,
+          "signature": "widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None = None, spark_session = None, store: str = 'Metadata', schema: str | None = None, context = None)",
+          "source_path": "src/fabricops_kit/widgets/widget_view_catalogue.py",
+          "source_qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue"
+        }
+      ],
+      "certainty": "certain",
+      "lifecycle_source": "public_api_registry",
       "notes": [
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:4a5228138cc0e6ef288b8701731f3b34ff7a67e53fe7239f270d4477fca02a22",
+      "source_digest": "sha256:96f4560ef3852f2dfbcf61d742fa774a213be60f11f31c607fad680bb807ff7d",
       "source_kind": "working_tree",
       "version": "working-tree"
     }
@@ -8305,6 +12080,7 @@
   "versions": [
     "v0.1.0",
     "v0.2.0",
+    "main",
     "working-tree"
   ]
 }

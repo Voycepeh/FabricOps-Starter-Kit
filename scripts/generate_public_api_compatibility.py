@@ -598,6 +598,21 @@ def build_payload(tags: Iterable[str] | None = None) -> dict[str, Any]:
                 sources=_sources_from_git(tag),
             )
         )
+    try:
+        _run_git("rev-parse", "origin/main^{commit}")
+        main_ref = "origin/main"
+    except subprocess.CalledProcessError:
+        main_ref = "main"
+    main_revision = _run_git("rev-parse", f"{main_ref}^{{commit}}").strip()
+    main_sources = _sources_from_git(main_ref)
+    snapshots.append(
+        build_snapshot(
+            version="main",
+            revision=main_revision,
+            source_kind="git_branch",
+            sources=main_sources,
+        )
+    )
     working_tree_sources = _working_tree_sources()
     working_tree_snapshot = build_snapshot(
         version="working-tree",
@@ -618,6 +633,7 @@ def build_payload(tags: Iterable[str] | None = None) -> dict[str, Any]:
             "schema_version": 1,
             "authoritative_registry": "src/fabricops_kit/public_api.py",
             "signature_extraction": "Python AST; package modules are not imported.",
+            "main_extraction": "The main snapshot uses origin/main when available, otherwise the local main ref; the exact Git commit is recorded.",
             "historical_extraction": "Each tag is read from its own Git tree. Missing registries use uncertain package exports.",
             "working_tree_extraction": (
                 "The working-tree target has no Git revision or branch identity; source_digest identifies its content."
