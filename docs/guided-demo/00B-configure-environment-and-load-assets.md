@@ -1,9 +1,5 @@
 # 0B. Load and configure the Guided Demo assets
 
-**Import the FabricOps notebooks, attach the correct Fabric Environment, configure the Fabric item IDs, create the Governance metadata tables, and upload the packaged demo files.**
-
-This is the final setup step before the executable demo-data preparation in 0C.
-
 ### Before you begin
 
 Complete [Step 0A](00A-prepare-fabric-artifacts.md) before importing and configuring the demo assets.
@@ -12,16 +8,13 @@ Complete [Step 0A](00A-prepare-fabric-artifacts.md) before importing and configu
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Download and import the notebooks
+## Download and import the [FabricOps notebook templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
 Download the current notebook templates from the FabricOps repository:
 
 </div>
 </div>
 
-
-
-[FabricOps notebook templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
 Import the four reusable notebooks:
 
@@ -32,25 +25,17 @@ Import the four reusable notebooks:
 | `02_pipeline.ipynb` | Engineering Development workspace |
 | `99_explore.ipynb` | Consumer workspace |
 
-Also download the ready-to-run pipeline demos from [FabricOps DemoData](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData):
-
-| Demo notebook | Where it goes now |
-| --- | --- |
-| `02A_full_refresh_demo.ipynb` | Engineering Development workspace |
-| `02B_incremental_append_demo.ipynb` | Engineering Development workspace |
-| `02C_scd_demo.ipynb` | Engineering Development workspace |
-
 In Fabric, open the target workspace, choose **Import notebook**, and upload the downloaded `.ipynb` file.
 
 After importing the notebooks, the two required workspaces should now look like this.
 
-The Governance workspace contains the `metadata` Lakehouse, its Fabric Environment, `00_env_config`, and `01_governance`.
-
 ![Governance workspace assets](../assets/00B/Governance_Assets.png)
 
-The Engineering Development workspace contains `bronze`, `silver`, `gold`, its Fabric Environment, `00_env_config`, the reusable `02_pipeline`, and the three demo notebooks.
+The Governance workspace contains the `metadata` Lakehouse, its Fabric Environment, `00_env_config`, and `01_governance`.
 
 ![Engineering Development workspace assets](../assets/00B/Engineering_Assets.png)
+
+The Engineering Development workspace contains `bronze`, `silver`, `gold`, its Fabric Environment, `00_env_config`, the reusable `02_pipeline`, and the three demo notebooks.
 
 The Consumer workspace should contain `00_env_config` and `99_explore`. It does not need its own Fabric store for this Guided Demo.
 
@@ -92,10 +77,7 @@ Open `00_env_config` and replace the example Fabric IDs with the IDs for the Fab
 </div>
 </div>
 
-
-
-
-
+![Path config](../assets/00B/00_config_paths.png)
 
 The easiest way to get them is directly from the Fabric URL in your browser.
 
@@ -125,9 +107,6 @@ Use the current walkthrough store keys exactly as they appear in `00_env_config`
 | `Silver` | Engineering Development → `Silver` | `lakehouse` |
 | `Gold` | Engineering Development → `Gold` | `warehouse` |
 
-You can rename the objects to whatever make sense, also for each environment you have in engineering you should have a corrosponding group of paths.
-
-![Path config](../assets/00B/00_config_paths.png)
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
@@ -160,7 +139,6 @@ Download the supplied demo files from: [FabricOps DemoData](https://github.com/V
 </div>
 
 
-
 Download the **entire DemoData folder**. Every retained file has an explicit Guided Demo owner:
 
 | Demo asset | When it is used |
@@ -171,13 +149,23 @@ Download the **entire DemoData folder**. Every retained file has an explicit Gui
 | `inventory_day1.csv`, `inventory_day2.csv` | Step 2B stages the inventory batches; Day 3 intentionally has no file. |
 | `products_day1.csv`, `products_day2.csv`, `products_day3.csv` | Step 2C overwrites Bronze with each complete Product Master snapshot. |
 
+Also download the ready-to-run pipeline demos from [FabricOps DemoData](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData):
+
+| Demo notebook | Where it goes now |
+| --- | --- |
+| `02A_full_refresh_demo.ipynb` | Engineering Development workspace |
+| `02B_incremental_append_demo.ipynb` | Engineering Development workspace |
+| `02C_scd_demo.ipynb` | Engineering Development workspace |
+| `00C_demo_setup.ipynb` | Engineering Development workspace |
+
+
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
 ## Upload the demo data
 
-Upload the downloaded retail files to the Bronze Lakehouse so the demo notebooks can access them.
+Upload the downloaded demo files to the Bronze Lakehouse and the demo notebooks into the engineering workspace.
 
 </div>
 </div>

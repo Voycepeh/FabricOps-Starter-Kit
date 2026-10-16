@@ -1,12 +1,8 @@
 # 0A. Prepare the Fabric environment
 
-**Create the Fabric workspaces and stores, then install FabricOps into a Fabric Environment in each workspace that will run FabricOps notebooks.**
-
-This is foundation setup, not one of the seven FabricOps lifecycle steps.
-
 ### Before you begin
 
-You need access to Microsoft Fabric capacity to complete this walkthrough.
+You need access to Microsoft Fabric to complete this walkthrough.
 
 ### Open Microsoft Fabric
 
@@ -24,9 +20,6 @@ Only **Governance** and **Engineering Development** are needed initially. You ca
 
 </div>
 </div>
-
-
-
 
 
 ![Fabric workspaces for the Guided Demo](../assets/00A/Workspace.png)
