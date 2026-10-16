@@ -1,13 +1,5 @@
 # Step 2A. Run the Full Refresh Demo
 
-Day 1 source preparation is handled by [Step 00C](00C-prepare-demo-data-with-fabricops-io.md). This full-refresh notebook focuses on the governed read, transformation, and overwrite writes.
-
-**Run the completed retail pipeline in Microsoft Fabric: three Full Reads, one PySpark transformation, and two Overwrite targets.**
-
-### Frequency profiling controls
-
-The notebook explicitly sets `frequency_enabled=True` and `frequency_top_n=5` on its `orchestrate_read()` and `orchestrate_write()` calls. This retains up to five frequency values per eligible column. For faster runs when frequency distributions are not needed, set **`frequency_enabled=False`** on the relevant orchestrator call to skip frequency profiling for **all columns** while keeping the standard statistical profile. `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating frequencies.
-
 ### Before you begin
 
 1. Complete [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md).
@@ -51,9 +43,7 @@ Execute the governed Full Reads, PySpark transformation, and Overwrite writes.
 </div>
 </div>
 
-### Run the Environment block
-
-Run the two cells under **0. Environment**:
+### Run the two cells under **0. Environment**:
 
 ```python
 %run 00_env_config
@@ -75,8 +65,6 @@ widget_select_data_contract
 ![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
 
 ### Run the Data Contract block
-
-Run the Data Contract cell:
 
 ```python
 CONTRACTS = widget_select_data_contract(spark_session=spark)

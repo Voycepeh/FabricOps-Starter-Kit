@@ -1,23 +1,5 @@
 # Step 2. Build a Pipeline
 
-**Learn the reusable `02_pipeline` notebook from top to bottom, then adapt it to your own governed pipeline.**
-
-`02_pipeline` is the standard starting point for governed data engineering in FabricOps. You configure the sources and targets and write the PySpark transformation; FabricOps runs the governance lifecycle around that project-owned logic.
-
-1. Environment
-2. Data Contract
-3. Read
-4. Transform
-5. Write
-
-The same pattern supports Full and Incremental reads and the Overwrite, Append, SCD1, and SCD2 load strategies. The later demos apply it to each processing style.
-
-![FabricOps places governed Read and Write boundaries around project-owned PySpark](../assets/pipeline-boundaries-implementation.svg)
-
-### Frequency profiling controls
-
-The notebook explicitly sets `frequency_enabled=True` and `frequency_top_n=5` on its `orchestrate_read()` and `orchestrate_write()` calls. This retains up to five frequency values per eligible column. For faster runs when frequency distributions are not needed, set **`frequency_enabled=False`** on the relevant orchestrator call to skip frequency profiling for **all columns** while keeping the standard statistical profile. `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating frequencies.
-
 ### Before you begin
 
 1. Complete [Step 00B. Configure the Environment and load assets](00B-configure-environment-and-load-assets.md).
@@ -30,19 +12,20 @@ The template deliberately contains placeholder table names. Read this walkthroug
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## What to do
+## The big picture
 
 Start by understanding the shape of the notebook before changing its code.
 
 </div>
 </div>
 
+**Learn the reusable `02_pipeline` notebook from top to bottom, then adapt it to your own governed pipeline.**
 
+![FabricOps places governed Read and Write boundaries around project-owned PySpark](../assets/pipeline-boundaries-implementation.svg)
 
-
+The same pattern supports Full and Incremental reads and the Overwrite, Append, SCD1, and SCD2 load strategies. The later demos apply it to each processing style.
 
 ### Get familiar with the notebook
-
 
 The notebook follows one visible lifecycle:
 
@@ -57,23 +40,21 @@ The notebook follows one visible lifecycle:
 
 The template starts with one Read, one transformation, and one Write. Add more Read or Write blocks only when your pipeline needs them.
 
-### Run the Environment block
-
-Run the two cells under **0. Environment**:
+### Load the shared environment
 
 ```python
 %run 00_env_config
 ```
 
-Then run the import cell immediately below it. The import cell provides the public APIs used by that notebook, so its exact list can vary by demo.
-
 `00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
+
+### Import required widget functions
+
+Then run the import cell immediately below it. The import cell provides the public APIs used by that notebook, so its exact list can vary by demo.
 
 ![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
 
 ### Run the Data Contract block
-
-Run the Data Contract cell:
 
 ```python
 CONTRACTS = widget_select_data_contract(spark_session=spark)
@@ -81,18 +62,8 @@ CONTRACTS = widget_select_data_contract(spark_session=spark)
 
 For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped, and the targets can publish in Engineering Development.
 
-If you revisit the notebook after Data Contracts exist, choose **Enforce** to allow publication after the required checks pass. Choose **Validate** to evaluate a frozen candidate without publishing the target.
-
 ![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
-The widget discovers the tables linked to this notebook through `METADATA_DATA_LINEAGE`. Sources remain in **Enforce** mode; in Engineering Development, each target can independently use **Enforce** or **Validate**.
-
-| Mode | When to use it | Publication behavior |
-| --- | --- | --- |
-| **Enforce** | Run with the active Data Contract for the current environment. A new Development target can remain unselected until Governance authors one. | The Write can publish after the required checks pass. |
-| **Validate** | Test one exact frozen candidate before Governance activates it. | The same pre-publication checks run, but the target is not written. |
-
-You generally do not edit the selector code. Use the displayed controls to choose the mode and candidate for each target.
 
 ??? info "Under the hood"
 
@@ -112,8 +83,6 @@ Select governed sources and run Read checks before transforming the data.
 
 </div>
 </div>
-
-**Replace the source identity in the existing Read block and keep the complete result in `sources`.**
 
 First, run the source results dictionary cell:
 
@@ -138,8 +107,6 @@ source = orchestrate_read(
 )
 sources["source"] = source
 ```
-
-The template values show exactly where to customize the Read:
 
 | Parameter | What you normally change |
 | --- | --- |
@@ -212,8 +179,6 @@ Publish the transformed data through the governed Write orchestrator.
 </div>
 </div>
 
-**Pass the transformed DataFrame and every contributing governed Read result into the target's Write block.**
-
 First, run the write results dictionary cell:
 
 ```python
@@ -251,9 +216,6 @@ writes["target"] = orchestrate_write(
 | `contracts` | Leave as `CONTRACTS` so the target follows the widget selection. |
 | `repartition_by` | Optionally control the Spark partition count before writing; otherwise leave it as `None`. |
 
-The `sources` list is part of the governed hand-off. FabricOps uses those canonical source identities to evaluate source-aware Guardrails and record source-to-target participation in `METADATA_DATA_LINEAGE`.
-
-You can add multiple independent Write blocks and give each result a unique key in `writes`. They do not form an atomic multi-target transaction: an earlier target can publish successfully even if a later Write fails.
 
 ??? info "Under the hood"
 
@@ -314,29 +276,15 @@ The guarded `.get()` call is useful because a Validate-mode Write does not publi
 
     The complete result contracts are documented on the [`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md) reference pages.
 
-### Put the pattern together
 
-**The reusable core is `Governed Read → Your PySpark Transform → Governed Write`.**
+### Expected result
 
-You configure the governed source and target identities and own the business transformation. FabricOps executes the standard checks, applies the selected Data Contract mode, publishes when allowed, and writes the applicable records to `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_DATA_LINEAGE`, `METADATA_GUARDRAIL_RESULTS`, and `METADATA_SOURCE_OBSERVATION`.
+You can now identify every section of `02_pipeline`, know which cells to customize, and understand what FabricOps handles at the governed Read and Write boundaries. You are ready to apply the same scaffold in a working example.
 
-### Explore the guided demos
-
-**Start with Full Refresh, then use the other demos to explore stateful processing patterns.**
+**Next:** Start with Full Refresh, then use the other demos to explore stateful processing patterns.
 
 | Demo | What you will learn |
 | --- | --- |
 | [Step 2A. Full Refresh](02A-full-refresh-demo.md) | The recommended starting point. Read three retail sources, transform them with PySpark, and publish two targets using Full reads and Overwrite. |
 | [Step 2B. Incremental Append](02B-build-and-run-incremental-append-etl.md) | Use a watermark and governed source-to-target identity to process only newly eligible inventory movements. Its three runs show the initial load, new source data, and a no-change run. |
 | [Step 2C. SCD1 and SCD2](02C-build-and-run-scd-etl.md) | Send three complete Product Master snapshots through Full reads. Compare SCD1, which replaces changed values in the current record, with SCD2, which preserves prior versions as history. |
-
-### Expected result
-
-You can now identify every section of `02_pipeline`, know which cells to customize, and understand what FabricOps handles at the governed Read and Write boundaries. You are ready to apply the same scaffold in a working example.
-
-**Next (recommended):** 
-[Step 2A. Run the Full Refresh Demo](02A-full-refresh-demo.md)
-
-**Other processing modes:** [
-    Step 2B. Incremental Append](02B-build-and-run-incremental-append-etl.md) 
-[Step 2C. SCD1 and SCD2](02C-build-and-run-scd-etl.md)

@@ -1,7 +1,5 @@
 # Step 1. Establish Governance context
 
-**Use `01_governance` for the first Governance task: creating the Data Stewards and the Data Agreement. We put this first in the walkthrough, but there is no dependency on the Data Agreement until Step 5 activation, so you may skip this step and revisit it later if you prefer to start with the ETL process first.**
-
 ### Before you begin
 
 Complete [Step 0C](00C-prepare-demo-data-with-fabricops-io.md) and open `01_governance`.
@@ -11,6 +9,7 @@ Complete [Step 0C](00C-prepare-demo-data-with-fabricops-io.md) and open `01_gove
 ```python
 %run 00_env_config
 ```
+`00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
 
 ### Import required widget functions
 
