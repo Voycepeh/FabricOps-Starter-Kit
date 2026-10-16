@@ -560,7 +560,8 @@ def test_canonical_agreement_schema_exact_order_and_nullability():
     schema = metadata_table_schema_registry()[agreement.DATA_AGREEMENT_TABLE]
     expected = [
         "agreement_id", "agreement_version", "agreement_name", "domain",
-        "provider_steward_id", "recipient_steward_id", "start_date",
+        "provider_steward_id", "provider_steward_name", "recipient_steward_id",
+        "recipient_steward_name", "start_date",
         "expiry_date", "business_purpose", "supporting_documents_json",
         "approved_usage_json", "custom_fields_json", *agreement.STANDARD_RUNTIME_AUDIT_COLUMNS,
     ]

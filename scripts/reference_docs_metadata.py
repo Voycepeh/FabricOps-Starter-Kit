@@ -154,7 +154,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_CONTRACT": {
-        "purpose": "Own one table-centric governed definition in a single versioned JSON payload; edit the draft in place, freeze the reviewed definition, and link an exact Data Agreement version only when activating it for Production.",
+        "purpose": "Own one table-centric governed definition in a single versioned JSON payload; table_name captures the table name at this contract write, alongside stable table_id, and may differ after a later rename.",
         "grain": "One Data Contract lifecycle version for one governed table; the draft payload is overwritten on Save, becomes immutable when frozen, and is selected for Production through is_active.",
         "primary_key": ["contract_id", "contract_version"],
         "foreign_keys": [
@@ -174,7 +174,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_SOURCE_OBSERVATION": {
-        "purpose": "Store source evidence observed by one logical pipeline for one governed target. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed means the associated physical target write succeeded and accepted it as the Source Drift baseline.",
+        "purpose": "Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed means the associated physical target write succeeded and accepted it as the Source Drift baseline.",
         "grain": "One observed or committed partition-state row within one logical notebook, source table, target table, and observation.",
         "primary_key": ["observation_id", "partition_value", "observation_status"],
         "foreign_keys": [
@@ -184,7 +184,7 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_DATA_PROFILED": {
-        "purpose": "See the column-level profile metrics captured for a dataset snapshot.",
+        "purpose": "See column-level profile metrics for a dataset snapshot. table_name and column_name record the names observed when written and do not follow later Catalogue renames.",
         "grain": "One observed column in one profiling snapshot.",
         "primary_key": ["profile_id"],
         "foreign_keys": [
@@ -196,7 +196,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_PROFILED_FREQUENCY": {
-        "purpose": "See the frequency distribution captured for a profiled column.",
+        "purpose": "See a profiled column's frequency distribution without joining its parent Profile for table and column IDs, captured names, datatype, or environment. Captured names do not follow later renames.",
         "grain": "One flattened ranked value within one logical frequency distribution for a column Profile.",
         "primary_key": ["frequency_id"],
         "foreign_keys": [
@@ -208,7 +208,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_LINEAGE": {
-        "purpose": "See which registered tables participated as sources and targets in pipeline activities; the current notebook's Lineage defines Data Contract resolution scope.",
+        "purpose": "See which registered tables participated as sources and targets in pipeline activities; table_name records the name at the participation write while table_id remains stable. The current notebook's Lineage defines Data Contract resolution scope.",
         "grain": "One registered table participating as a source or target in one pipeline activity.",
         "primary_key": ["lineage_id"],
         "foreign_keys": [
@@ -217,7 +217,7 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_ENRICHMENT": {
-        "purpose": "Store descriptive Description and Classification metadata for one exact Data Contract version; Enrichment does not enforce runtime behavior.",
+        "purpose": "Store descriptive Description and Classification metadata for one exact Data Contract version, including table and optional column names captured when written; Enrichment does not enforce runtime behavior.",
         "grain": "One appended enrichment value for one exact Data Contract version and optional column identity.",
         "primary_key": ["enrichment_id"],
         "foreign_keys": [
@@ -228,7 +228,7 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_DATA_ACCESS": {
-        "purpose": "See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; this is not an effective-access resolver.",
+        "purpose": "See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.",
         "grain": "One observed access grant for one principal or access selector and one governed table within one access snapshot.",
         "primary_key": ["access_id"],
         "foreign_keys": [
@@ -237,7 +237,7 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_GUARDRAIL": {
-        "purpose": "Define enforced Schema, Freshness, Source Drift, Data Quality, and Sensitive Data requirements with Warn or Block actions.",
+        "purpose": "Define enforced Schema, Freshness, Source Drift, Data Quality, and Sensitive Data requirements with Warn or Block actions; table_name and optional column_name capture their names when the rule is written.",
         "grain": "One configured Guardrail rule revision for one exact Data Contract version and optional column identity.",
         "primary_key": ["guardrail_rule_id", "guardrail_version"],
         "foreign_keys": [
@@ -250,7 +250,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_GUARDRAIL_RESULTS": {
-        "purpose": "Store aggregate enforce and validate Guardrail summaries and continuation decisions; caller-owned failed business rows are not persisted here. Additive missing columns are upgraded automatically by metadata setup; incompatible types and known legacy schemas still require explicit migration or recreation.",
+        "purpose": "Store aggregate enforce and validate Guardrail summaries, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.",
         "grain": "One Guardrail outcome for one exact Data Contract version in one enforce or validate execution.",
         "primary_key": ["guardrail_result_id"],
         "foreign_keys": [
@@ -297,6 +297,7 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+        "table_name": ["fabricops_kit.data_contract.shared.create_contract_draft", "fabricops_kit.data_contract.shared.freeze_contract"],
         "steward_id": [
             "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
             "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
@@ -360,6 +361,8 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe",
             "fabricops_kit.config.shared.build_column_id",
         ],
+        "table_name": ["fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe"],
+        "column_name": ["fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe"],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe",
         ],
@@ -378,6 +381,10 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe",
             "fabricops_kit.config.shared.build_column_id",
         ],
+        "table_name": ["fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe"],
+        "column_name": ["fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe"],
+        "data_type": ["fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe"],
+        "environment_name": ["fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe"],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe",
         ],
@@ -393,6 +400,7 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.profile_table.profile_table",
         ],
         "__audit__": ["fabricops_kit.pipeline.profile_table._audit_literal_columns"],
+        "table_id": ["fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe"],
         "column_id": [
             "fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe",
             "fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe",
@@ -410,6 +418,7 @@ METADATA_COLUMN_OWNERS = {
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
         "lineage_id": ["fabricops_kit.pipeline.shared.lineage_id"],
         "table_id": ["fabricops_kit.pipeline.shared.persist_lineage_participation"],
+        "table_name": ["fabricops_kit.pipeline.shared.persist_lineage_participation"],
         "pipeline_role": ["fabricops_kit.pipeline.shared.persist_lineage_participation"],
     },
     "METADATA_DATA_ACCESS": {
@@ -433,6 +442,7 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.access_scanner.scan_onelake_access._map_to_catalogue",
             "fabricops_kit.access_scanner.scan_sql_access._map_to_catalogue",
         ],
+        "table_name": ["fabricops_kit.access_scanner.scan_workspace_access._access_rows", "fabricops_kit.access_scanner.scan_onelake_access._access_rows", "fabricops_kit.access_scanner.scan_sql_access._access_rows"],
         "access_snapshot_id": [
             "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
             "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
@@ -474,6 +484,9 @@ METADATA_COLUMN_OWNERS = {
         "contract_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
         "contract_version": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
         "column_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+        "table_id": ["fabricops_kit.data_contract.shared.build_enrichment_records"],
+        "table_name": ["fabricops_kit.data_contract.shared.build_enrichment_records"],
+        "column_name": ["fabricops_kit.data_contract.shared.build_enrichment_records"],
         "environment_name": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
         "enrichment_level": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
         "enrichment_type": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
@@ -489,7 +502,10 @@ METADATA_COLUMN_OWNERS = {
         "guardrail_version": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
         "contract_id": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
         "contract_version": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
+        "table_id": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
+        "table_name": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
         "column_id": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
+        "column_name": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
         "environment_name": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
         "guardrail_type": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
         "rule_id": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
@@ -509,6 +525,11 @@ METADATA_COLUMN_OWNERS = {
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
         "guardrail_result_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
+        "table_name": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
+        "guardrail_type": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
+        "rule_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
+        "rule_type": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
+        "action": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "guardrail_rule_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "run_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "environment_name": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
@@ -526,6 +547,8 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.config.shared.build_table_id",
         ],
         "target_table_id": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
+        "source_table_name": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
+        "target_table_name": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
         "observation_status": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
     },
 }

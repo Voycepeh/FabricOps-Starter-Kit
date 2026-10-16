@@ -1,6 +1,6 @@
 # METADATA_DATA_PROFILED_FREQUENCY
 
-See the frequency distribution captured for a profiled column.
+See a profiled column's frequency distribution without joining its parent Profile for table and column IDs, captured names, datatype, or environment. Captured names do not follow later renames.
 
 ## Writer functions
 
@@ -29,8 +29,8 @@ via `profile_id` + `profile_snapshot_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 17 |
-| Business columns | 9 |
+| Total columns | 23 |
+| Business columns | 15 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -40,6 +40,12 @@ via `profile_id` + `profile_snapshot_id`
 | `frequency_id` | `string` | Identifier stored for `frequency_id`. |
 | `profile_id` | `string` | Identifier stored for `profile_id`. |
 | `profile_snapshot_id` | `string` | Identifier stored for `profile_snapshot_id`. |
+| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `column_id` | `string` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
+| `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
+| `column_name` | `string` | Column name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
+| `data_type` | `string` | Stable data type label recorded for the column. |
+| `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `value` | `string` | Metadata Data Profiled Frequency field `value`. |
 | `frequency_count` | `long` | Metadata Data Profiled Frequency field `frequency_count`. |
 | `frequency_percent` | `double` | Metadata Data Profiled Frequency field `frequency_percent`. |

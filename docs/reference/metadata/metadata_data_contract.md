@@ -1,6 +1,6 @@
 # METADATA_DATA_CONTRACT
 
-Own one table-centric governed definition in a single versioned JSON payload; edit the draft in place, freeze the reviewed definition, and link an exact Data Agreement version only when activating it for Production.
+Own one table-centric governed definition in a single versioned JSON payload; table_name captures the table name at this contract write, alongside stable table_id, and may differ after a later rename.
 
 ## Writer functions
 
@@ -32,8 +32,8 @@ via `table_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 17 |
-| Business columns | 9 |
+| Total columns | 18 |
+| Business columns | 10 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -45,6 +45,7 @@ via `table_id`
 | `agreement_id` | `string` | Stable identifier for the agreement lifecycle. |
 | `agreement_version` | `string` | Canonical agreement version associated with the row. |
 | `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `contract_payload_json` | `string` | Serialized governed Data Contract definition; mutable while draft and immutable once frozen. |
 | `status` | `string` | Pipeline run status recorded with the run summary. |

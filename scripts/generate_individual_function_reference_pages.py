@@ -62,7 +62,9 @@ METADATA_FIELD_DESCRIPTIONS = {
     "domain": "Business domain recorded for the metadata row.",
     "recipient": "Recipient recorded for the agreement or access context.",
     "provider_steward_id": "Steward identifier recorded for the provider side of the agreement.",
+    "provider_steward_name": "Provider steward name captured when this Data Agreement version was written; later steward renames do not change it.",
     "recipient_steward_id": "Steward identifier recorded for the recipient side of the agreement.",
+    "recipient_steward_name": "Recipient steward name captured when this Data Agreement version was written; later steward renames do not change it.",
     "business_purpose": "Business purpose recorded for the agreement or access request.",
     "steward_id": "Stable identifier for the steward row.",
     "steward_name": "Human-readable steward name.",
@@ -84,8 +86,8 @@ METADATA_FIELD_DESCRIPTIONS = {
     "store_type": "Configured Fabric store type recorded for the profiled dataset.",
     "layer": "The configured medallion layer where the table is stored.",
     "schema_name": "Lakehouse or warehouse schema name recorded for the dataset when available.",
-    "table_name": "Physical table name recorded for the metadata row.",
-    "column_name": "Physical column name recorded for the metadata row.",
+    "table_name": "Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.",
+    "column_name": "Column name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.",
     "data_type": "Stable data type label recorded for the column.",
     "contract_id": "Stable identifier for the contract row.",
     "contract_version": "Version recorded for the contract row.",
@@ -205,6 +207,8 @@ METADATA_FIELD_DESCRIPTIONS = {
 }
 
 SOURCE_OBSERVATION_FIELD_DESCRIPTIONS = {
+    "source_table_name": "Source table name captured from the Catalogue when this observation was written; later renames do not change it.",
+    "target_table_name": "Target table name captured from the Catalogue when this observation was written; later renames do not change it.",
     "table_id": "Canonical table identity shared with METADATA_DATA_CATALOGUE.",
     "source_target": "Logical FabricOps target resolved through 00_env_config.",
     "source_schema": "Resolved physical source schema when the configured store uses one.",

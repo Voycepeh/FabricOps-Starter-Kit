@@ -1,6 +1,6 @@
 # METADATA_DATA_LINEAGE
 
-See which registered tables participated as sources and targets in pipeline activities; the current notebook's Lineage defines Data Contract resolution scope.
+See which registered tables participated as sources and targets in pipeline activities; table_name records the name at the participation write while table_id remains stable. The current notebook's Lineage defines Data Contract resolution scope.
 
 ## Writer functions
 
@@ -29,8 +29,8 @@ via `table_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 12 |
-| Business columns | 4 |
+| Total columns | 13 |
+| Business columns | 5 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -39,6 +39,7 @@ via `table_id`
 | --- | --- | --- |
 | `lineage_id` | `string` | Identifier stored for `lineage_id`. |
 | `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `pipeline_role` | `string` | Metadata Data Lineage field `pipeline_role`. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |

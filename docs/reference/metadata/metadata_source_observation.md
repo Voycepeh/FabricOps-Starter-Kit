@@ -1,6 +1,6 @@
 # METADATA_SOURCE_OBSERVATION
 
-Store source evidence observed by one logical pipeline for one governed target. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed means the associated physical target write succeeded and accepted it as the Source Drift baseline.
+Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed means the associated physical target write succeeded and accepted it as the Source Drift baseline.
 
 ## Writer functions
 
@@ -29,8 +29,8 @@ via `source_table_id` + `target_table_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 19 |
-| Business columns | 11 |
+| Total columns | 21 |
+| Business columns | 13 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -39,7 +39,9 @@ via `source_table_id` + `target_table_id`
 | --- | --- | --- |
 | `observation_id` | `string` | Identifier stored for `observation_id`. |
 | `source_table_id` | `string` | Identifier stored for `source_table_id`. |
+| `source_table_name` | `string` | Source table name captured from the Catalogue when this observation was written; later renames do not change it. |
 | `target_table_id` | `string` | Identifier stored for `target_table_id`. |
+| `target_table_name` | `string` | Target table name captured from the Catalogue when this observation was written; later renames do not change it. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `partition_value` | `string` | String representation of the observed partition value. |
 | `row_count` | `long` | Number of rows observed in the partition, or zero for a removal tombstone. |

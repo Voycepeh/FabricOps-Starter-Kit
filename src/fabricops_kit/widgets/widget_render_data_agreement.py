@@ -605,6 +605,12 @@ def _create_or_update_data_agreement(
         raise ValueError("provider_steward_id must reference an active data steward.")
     if recipient_id not in active_steward_ids:
         raise ValueError("recipient_steward_id must reference an active data steward.")
+    steward_names = {
+        str(item.get("steward_id") or ""): str(item.get("steward_name") or "")
+        for item in list_data_stewards(config, env, spark_session=spark, active_only=False)
+    }
+    row["provider_steward_name"] = steward_names.get(provider_id, "")
+    row["recipient_steward_name"] = steward_names.get(recipient_id, "")
     row["custom_fields_json"] = serialize_custom_fields(custom_fields)
     if latest is not None:
         if _business_agreement_snapshot(row) == _business_agreement_snapshot(latest):

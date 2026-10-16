@@ -171,7 +171,7 @@ def check_freshness(
             env=env,
             run_id=str(evidence.get("_activity_id") or ""),
             dataset_name="",
-            table_name="",
+            table_name=str(identity.get("table_name") or ""),
             store_type="",
             layer="",
             schema_name=None,

@@ -217,6 +217,7 @@ def _access_rows(
             access_id.alias("access_id"),
             F.col("user_name").alias("user_principal"),
             F.col("_catalogue_table_id").alias("table_id"),
+            F.col("_catalogue_table_name").alias("table_name"),
             F.lit(environment_name).alias("environment_name"),
             F.col("class_desc").alias("access_level"),
             F.col("permission_name").alias("access_value"),

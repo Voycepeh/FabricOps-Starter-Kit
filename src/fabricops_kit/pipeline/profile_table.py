@@ -724,6 +724,8 @@ def _canonical_profiled_dataframe(
         column_id_udf(F.col("_column_name")).alias("column_id"),
         F.lit(environment_name).cast("string").alias("environment_name"),
         F.col("data_type").cast("string"),
+        F.lit(str(runtime_context.get("table_name") or "")).cast("string").alias("table_name"),
+        F.col("_column_name").cast("string").alias("column_name"),
         "row_count",
         "non_null_count",
         "null_count",
@@ -755,7 +757,10 @@ def _frequency_metadata_dataframe(
     from pyspark.sql import types as T
 
     column_id_udf = F.udf(lambda column_name: build_column_id(table_id, column_name), T.StringType())
-    identities = profiled_df.select("column_id", "data_type", "profile_id", "profile_snapshot_id")
+    identities = profiled_df.select(
+        "column_id", "column_name", "table_id", "table_name", "data_type",
+        "environment_name", "profile_id", "profile_snapshot_id",
+    )
     joined = frequency_df.withColumn("_column_id", column_id_udf(F.col("COLUMN_NAME"))).join(
         identities,
         (F.col("_column_id") == identities.column_id) & (frequency_df.DATA_TYPE == identities.data_type),
@@ -770,6 +775,12 @@ def _frequency_metadata_dataframe(
         frequency_id_udf(identities.profile_id, F.col("FREQUENCY_RANK")).alias("frequency_id"),
         identities.profile_id.cast("string").alias("profile_id"),
         identities.profile_snapshot_id.cast("string").alias("profile_snapshot_id"),
+        identities.table_id.cast("string").alias("table_id"),
+        identities.column_id.cast("string").alias("column_id"),
+        identities.table_name.cast("string").alias("table_name"),
+        identities.column_name.cast("string").alias("column_name"),
+        identities.data_type.cast("string").alias("data_type"),
+        identities.environment_name.cast("string").alias("environment_name"),
         F.col("VALUE").cast("string").alias("value"),
         F.col("FREQUENCY_COUNT").cast("long").alias("frequency_count"),
         F.col("FREQUENCY_PERCENT").cast("double").alias("frequency_percent"),
@@ -1304,7 +1315,7 @@ def profile_table(
         statistical_profile,
         config=config,
         env=env,
-        runtime_context=context,
+        runtime_context={**context, "table_name": identity.get("table_name")},
         environment_name=env,
         table_id=identity["table_id"],
         profile_snapshot_id=profile_snapshot_id,

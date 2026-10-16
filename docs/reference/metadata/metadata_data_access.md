@@ -1,6 +1,6 @@
 # METADATA_DATA_ACCESS
 
-See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; this is not an effective-access resolver.
+See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.
 
 ## Writer functions
 
@@ -31,8 +31,8 @@ via `table_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 23 |
-| Business columns | 15 |
+| Total columns | 24 |
+| Business columns | 16 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -42,6 +42,7 @@ via `table_id`
 | `access_id` | `string` | Stable identifier for one observed SQL permission row. |
 | `user_principal` | `string` | SQL principal name observed for the permission row. |
 | `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `access_level` | `string` | SQL permission class or scope, such as SCHEMA or OBJECT_OR_COLUMN. |
 | `access_value` | `string` | SQL permission name, such as SELECT. |

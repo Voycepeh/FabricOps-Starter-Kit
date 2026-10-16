@@ -1,6 +1,6 @@
 # METADATA_DATA_PROFILED
 
-See the column-level profile metrics captured for a dataset snapshot.
+See column-level profile metrics for a dataset snapshot. table_name and column_name record the names observed when written and do not follow later Catalogue renames.
 
 ## Writer functions
 
@@ -32,8 +32,8 @@ via `profile_id` + `profile_snapshot_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 27 |
-| Business columns | 19 |
+| Total columns | 29 |
+| Business columns | 21 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -46,6 +46,8 @@ via `profile_id` + `profile_snapshot_id`
 | `column_id` | `string` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `data_type` | `string` | Stable data type label recorded for the column. |
+| `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
+| `column_name` | `string` | Column name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `row_count` | `long` | Observed total row count in the profiled dataset snapshot. |
 | `non_null_count` | `long` | Observed non-null value count for the column. |
 | `null_count` | `long` | Observed null value count for the column. |

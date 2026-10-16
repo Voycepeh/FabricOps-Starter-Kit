@@ -172,6 +172,7 @@ def create_contract_draft(
         "enrichment": dict(seed.get("enrichment") or {"table": [], "columns": []}),
         "guardrails": list(seed.get("guardrails") or []),
     }
+    payload_table_name = str(payload.get("table", {}).get("table_name") or "")
     payload["table"].pop("scheduled_refresh", None)
     for item in [*payload["enrichment"].get("table", []), *payload["enrichment"].get("columns", [])]:
         item["contract_id"] = lifecycle_id
@@ -187,6 +188,7 @@ def create_contract_draft(
         "agreement_id": None,
         "agreement_version": None,
         "table_id": str(table_id).strip(),
+        "table_name": payload_table_name,
         "environment_name": env,
         "contract_payload_json": json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
         "status": "draft",
@@ -520,12 +522,30 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, e
         if not column_id:
             raise ValueError("Sensitive Data Guardrails require a canonical column_id.")
         parameters = validate_sensitive_data_parameters(parameters)
+    contract_rows = [] if record.get("table_name") or record.get("table_id") else row_dicts(read_lakehouse_table(
+        DATA_CONTRACT_TABLE, store="Metadata",
+        schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
+        context=_metadata_io_context(config, env), missing_ok=True,
+    ))
+    contract = next((row for row in contract_rows
+                     if str(row.get("contract_id") or "") == contract_id
+                     and int(row.get("contract_version") or 0) == contract_version), {})
+    payload = _json_value(contract.get("contract_payload_json"), field="contract_payload_json", default={})
+    table = payload.get("table") if isinstance(payload, dict) else {}
+    if record.get("table_name") or record.get("table_id"):
+        table = {"table_id": record.get("table_id"), "table_name": record.get("table_name"), "columns": record.get("columns", [])}
+    columns = table.get("columns") or [] if isinstance(table, dict) else []
+    column_name = next((str(column.get("column_name") or "") for column in columns
+                        if isinstance(column, dict) and str(column.get("column_id") or "") == column_id), "")
     return {
         "guardrail_rule_id": str(record.get("guardrail_rule_id") or "").strip(),
         "guardrail_version": int(record.get("guardrail_version") or 1),
         "contract_id": contract_id,
         "contract_version": contract_version,
+        "table_id": str(table.get("table_id") or "") if isinstance(table, dict) else "",
+        "table_name": str(table.get("table_name") or "") if isinstance(table, dict) else "",
         "column_id": column_id,
+        "column_name": column_name,
         "environment_name": str(record.get("environment_name") or env),
         "guardrail_type": guardrail_type,
         "rule_id": str(record.get("rule_id") or "").strip(),
@@ -1115,6 +1135,9 @@ def activate_contract_version(
         raise ValueError("Selected Data Contract version does not belong to the selected table_id.")
     if str(row.get("status") or "").lower() != "frozen":
         raise ValueError("Only a frozen Data Contract version can be activated.")
+    payload = _json_value(row.get("contract_payload_json"), field="contract_payload_json", default={})
+    table = payload.get("table") if isinstance(payload, dict) else {}
+    row["table_name"] = str(table.get("table_name") or "") if isinstance(table, dict) else ""
     payload = _json_value(row.get("contract_payload_json"), field="contract_payload_json", default=None)
     if not isinstance(payload, dict) or payload.get("contract", {}).get("contract_id") != contract_id:
         raise ValueError("Selected Data Contract payload identity is invalid.")
@@ -1188,6 +1211,7 @@ def build_enrichment_records(
 
     audit = build_runtime_audit_fields(config=config, env=env)
     built = []
+    identity_cache: dict[tuple[str, int], tuple[str, str, dict[str, str]]] = {}
     for raw_value in records:
         raw = dict(raw_value)
         level = str(raw.get("enrichment_level") or "").strip().lower()
@@ -1214,10 +1238,37 @@ def build_enrichment_records(
         value = str(raw.get("value") or "").strip()
         if not value:
             continue
+        identity_key = (contract_id, contract_version)
+        if identity_key not in identity_cache and raw.get("table_name"):
+            identity_cache[identity_key] = (
+                str(raw.get("table_id") or ""), str(raw.get("table_name") or ""),
+                {str(raw.get("column_id") or ""): str(raw.get("column_name") or "")},
+            )
+        if identity_key not in identity_cache:
+            contract = next((row for row in row_dicts(read_lakehouse_table(
+                DATA_CONTRACT_TABLE, store="Metadata",
+                schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
+                context=_metadata_io_context(config, env), missing_ok=True,
+            )) if str(row.get("contract_id") or "") == contract_id
+                and int(row.get("contract_version") or 0) == contract_version), {})
+            payload = _json_value(contract.get("contract_payload_json"), field="contract_payload_json", default={})
+            table = payload.get("table") if isinstance(payload, dict) else {}
+            column_names = {
+                str(column.get("column_id") or ""): str(column.get("column_name") or "")
+                for column in (table.get("columns") or []) if isinstance(column, dict)
+            } if isinstance(table, dict) else {}
+            identity_cache[identity_key] = (
+                str(table.get("table_id") or "") if isinstance(table, dict) else "",
+                str(table.get("table_name") or "") if isinstance(table, dict) else "",
+                column_names,
+            )
+        table_identity, table_name, column_names = identity_cache[identity_key]
         built.append({
             "enrichment_id": str(raw.get("enrichment_id") or uuid.uuid4()),
             "contract_id": contract_id, "contract_version": contract_version,
+            "table_id": table_identity, "table_name": table_name,
             "column_id": column_id if level == "column" else "",
+            "column_name": column_names.get(column_id, "") if level == "column" else "",
             "environment_name": row_env, "enrichment_level": level,
             "enrichment_type": canonical_type, "value": value,
             **{name: raw.get(name, default) for name, default in audit.items()},
@@ -1494,7 +1545,7 @@ def freeze_contract(
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
     frozen = coerce_metadata_row_types(
         DATA_CONTRACT_TABLE,
-        freeze_contract_record(draft=draft, audit=audit),
+        {**freeze_contract_record(draft=draft, audit=audit), "table_name": str(table.get("table_name") or "")},
     )
     frame = spark_session.createDataFrame(
         [frozen], schema=metadata_table_schema_registry()[DATA_CONTRACT_TABLE]

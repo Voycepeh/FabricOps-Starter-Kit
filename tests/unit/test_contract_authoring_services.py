@@ -160,6 +160,10 @@ def test_invalid_contract_identity_is_rejected(contract_id, version):
 def test_enrichment_build_preserves_exact_owner_and_column(monkeypatch):
     """Enrichment preserves its exact contract and Catalogue ownership."""
     monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **kwargs: {"_activity_id": "a"})
+    monkeypatch.setattr(service, "read_lakehouse_table", lambda *args, **kwargs: [{
+        "contract_id": "contract-orders", "contract_version": 3,
+        "contract_payload_json": json.dumps({"table": {"table_id": "orders-id", "table_name": "orders", "columns": [{"column_id": "col-id", "column_name": "order_id"}]}}),
+    }])
     rows = service.build_enrichment_records([{
         "contract_id": "contract-orders", "contract_version": 3,
         "environment_name": "dev", "enrichment_level": "column",
@@ -168,6 +172,9 @@ def test_enrichment_build_preserves_exact_owner_and_column(monkeypatch):
     assert rows[0]["contract_id"] == "contract-orders"
     assert rows[0]["contract_version"] == 3
     assert rows[0]["column_id"] == "col-id"
+    assert rows[0]["table_id"] == "orders-id"
+    assert rows[0]["table_name"] == "orders"
+    assert rows[0]["column_name"] == "order_id"
     with pytest.raises(ValueError, match="environment"):
         service.build_enrichment_records([{**rows[0], "environment_name": "prod"}], env="dev")
 
@@ -311,6 +318,10 @@ def test_freeze_record_locks_saved_payload_without_version_churn():
 def test_enrichment_model_is_descriptive_and_level_specific(monkeypatch):
     """Allow only the minimal table and column descriptive fields."""
     monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **_kwargs: {})
+    monkeypatch.setattr(service, "read_lakehouse_table", lambda *args, **kwargs: [{
+        "contract_id": "c", "contract_version": 1,
+        "contract_payload_json": json.dumps({"table": {"table_id": "t", "table_name": "orders", "columns": [{"column_id": "col", "column_name": "order_id"}]}}),
+    }])
     common = {"contract_id": "c", "contract_version": 1, "environment_name": "dev", "value": "value"}
     records = service.build_enrichment_records([
         {**common, "enrichment_level": "table", "enrichment_type": "Description"},
@@ -342,6 +353,10 @@ def test_guardrail_service_normalizes_all_supported_types_and_actions(
 ):
     """All authoring subtypes use one exact-version Guardrail service contract."""
     monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **_kwargs: {})
+    monkeypatch.setattr(service, "read_lakehouse_table", lambda *args, **kwargs: [{
+        "contract_id": "contract", "contract_version": 2,
+        "contract_payload_json": json.dumps({"table": {"table_id": "orders-id", "table_name": "orders", "columns": []}}),
+    }])
     row = service.canonical_guardrail_rule_record(
         {
             "guardrail_rule_id": "rule",
@@ -362,6 +377,7 @@ def test_guardrail_service_normalizes_all_supported_types_and_actions(
     assert row["action"] == action
     assert row["contract_id"] == "contract"
     assert row["contract_version"] == 2
+    assert row["table_name"] == "orders"
 
 
 @pytest.mark.parametrize("treatment,extra", [
@@ -376,6 +392,10 @@ def test_sensitive_data_guardrail_requires_column_scope_and_exact_contract(
 ):
     """Sensitive Data uses the normalized exact-version authoring contract."""
     monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **_kwargs: {})
+    monkeypatch.setattr(service, "read_lakehouse_table", lambda *args, **kwargs: [{
+        "contract_id": "contract", "contract_version": 2,
+        "contract_payload_json": json.dumps({"table": {"table_id": "orders-id", "table_name": "orders", "columns": [{"column_id": "email-id", "column_name": "email"}]}}),
+    }])
     row = service.canonical_guardrail_rule_record(
         {
             "guardrail_rule_id": "sensitive-email",

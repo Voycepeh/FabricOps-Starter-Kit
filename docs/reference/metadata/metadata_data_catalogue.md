@@ -43,8 +43,8 @@ No immediate table relationship is defined in the current implementation.
 | `store_type` | `string` | Configured Fabric store type recorded for the profiled dataset. |
 | `layer` | `string` | The configured medallion layer where the table is stored. |
 | `schema_name` | `string` | Lakehouse or warehouse schema name recorded for the dataset when available. |
-| `table_name` | `string` | Physical table name recorded for the metadata row. |
-| `column_name` | `string` | Physical column name recorded for the metadata row. |
+| `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
+| `column_name` | `string` | Column name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `data_type` | `string` | Stable data type label recorded for the column. |
 | `load_strategy` | `string` | Metadata Data Catalogue field `load_strategy`. |
 | `load_strategy_parameters_json` | `string` | JSON payload stored for `load_strategy_parameters_json`. |
