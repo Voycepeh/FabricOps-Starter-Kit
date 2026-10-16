@@ -53,8 +53,12 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
     Returns
     -------
     dict
-        Write identity and capability results. ``published`` is false when a
-        Validate-mode contract passes without publication.
+        Write identity and capability results. The top-level ``dataframe`` is
+        the prepared input after Sensitive Data treatment, in both Validate
+        and Enforce modes. It is the Write input, not necessarily the persisted
+        target after Append, SCD1, or SCD2. ``sensitive_result`` retains its
+        nested ``dataframe`` result. ``published`` is false when a Validate-mode
+        contract passes without publication.
 
     Raises
     ------
@@ -68,7 +72,10 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
     and Guardrail Coverage identically. Validate then returns without writing;
     Enforce continues through Write and persisted-target Profile. Existing
     metadata and Source Observation commit behaviour remains owned by
-    ``pipeline_write``. No DataFrame is displayed.
+    ``pipeline_write``. The returned ``dataframe`` is the prepared Write input,
+    not a reread of the persisted target; Append, SCD1, and SCD2 may produce a
+    different target state. No DataFrame is displayed or materialized for this
+    return value.
 
     Examples
     --------
@@ -113,9 +120,10 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
     if contract_mode == "validate":
         return {
             **common_results,
+            "dataframe": prepared,
             "published": False,
             "validation_passed": True,
         }
     write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=write_mode, load_strategy_parameters=write_parameters, source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False))
     profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session))
-    return {**common_results, **write_result, "published": True, "profile_result": profile}
+    return {**common_results, **write_result, "dataframe": prepared, "published": True, "profile_result": profile}
