@@ -165,7 +165,7 @@ This is intentionally broader than a normal contract. The Guided Demo uses it as
 
 ## Freeze every participating contract
 
-Follow this part of the Guided Demo before continuing to the next activity.
+Freeze the source and target contracts that the next validation step will test.
 
 </div>
 </div>
