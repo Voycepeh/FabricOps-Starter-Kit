@@ -3677,7 +3677,7 @@ def check_dq_runtime(
         "DQ_CHECKED_AT": get_current_audit_timestamp(config=config, drop_microseconds=False),
     }
     if not rules:
-        result["failed_values"] = _empty_dq_failed_values(spark_session)
+        result["failed_values"] = spark_session.createDataFrame([], _dq_failed_value_schema())
         return result
 
     audit = build_runtime_audit_fields(config=config, env=env)
