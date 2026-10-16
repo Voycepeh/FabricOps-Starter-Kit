@@ -22,13 +22,17 @@ Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the c
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Cover the whole pipeline, not only the target
 
+Step 4 validates the complete governed path, so every participating table needs a frozen contract:
+
+</div>
 </div>
 
 
-Step 4 validates the complete governed path, so every participating table needs a frozen contract:
+
 
 
 
@@ -59,12 +63,16 @@ For this walkthrough, keep every DQ rule **Enabled** but leave **Block on failur
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Table
 
+Open **Table** and review:
+
+</div>
 </div>
 
-Open **Table** and review:
+
 
 * Description and Classification
 * Grain & Row Key — use `order_id`
@@ -76,12 +84,16 @@ Use AI suggestions where useful, then review them before applying. Profile stati
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Columns — author the direct DQ rules
 
+Open **Columns** and configure these rules for the integration exercise:
+
+</div>
 </div>
 
-Open **Columns** and configure these rules for the integration exercise:
+
 
 | UI | Column | Configuration | Runtime rule |
 | --- | --- | --- | --- |
@@ -97,12 +109,16 @@ Whitelist and Blacklist are separate rules even though both persist using the `v
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## DQ Rules — exercise every Business Rule path
 
+Open **DQ Rules** and resolve each requirement below. Review the proposed rule before choosing **Add DQ Rule**.
+
+</div>
 </div>
 
-Open **DQ Rules** and resolve each requirement below. Review the proposed rule before choosing **Add DQ Rule**.
+
 
 | Business requirement to enter | Expected resolved rule | Why the clean target passes |
 | --- | --- | --- |
@@ -145,9 +161,13 @@ This is intentionally broader than a normal contract. The Guided Demo uses it as
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Freeze every participating contract
 
+Freeze the source and target contracts that the next validation step will test.
+
+</div>
 </div>
 
 Freeze the three source contracts and the `curated_orders` target contract. Step 4 must select the exact frozen versions for all four participating tables; otherwise Guardrail Coverage correctly reports that the governed source → target path is not ready.

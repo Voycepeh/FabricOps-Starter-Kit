@@ -47,9 +47,13 @@ The notebook uses these governed tables throughout:
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Run Day 1 in Fabric
 
+Establish the baseline by running the complete notebook for Day 1.
+
+</div>
 </div>
 
 ### Run the Environment block
@@ -177,9 +181,13 @@ The first display shows one current SCD1 row per product. The second shows one c
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Run Day 2 in Fabric
 
+Apply the next source change and compare the resulting governed output.
+
+</div>
 </div>
 
 ### Change only the demo day
@@ -216,9 +224,13 @@ In the SCD2 display, `P002` now has one historical version and one current versi
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Run Day 3 in Fabric
 
+Run the final scenario and inspect how the output changes.
+
+</div>
 </div>
 
 ### Change only the demo day

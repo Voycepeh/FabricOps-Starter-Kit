@@ -124,9 +124,9 @@ Guided Demo pages use mascot banners as **real major section headings and visual
 - Keep prerequisites, notebook execution cells, explanations, checks, expected results, and other smaller topics in ordinary `###` subsections or normal prose. Preserve the notebook step numbering and existing page names.
 - Use banners for narrative section breaks, **not** every instruction, screenshot, or minor technical subsection. Group coherent activities under one banner.
 - Reuse existing `docs/assets/mascots/` images on the left of the heading; keep decorative images `alt=""` because the adjacent heading is the accessible label.
-- Move useful copy from old mascot callouts into normal prose immediately after the banner. Preserve links, code, outcomes, screenshots, and original technical meaning.
+- Put a single concise subtitle inside the banner directly below its heading. Move suitable existing section-introduction prose into that subtitle rather than duplicating it below the banner. Keep detailed instructions outside; do not silently remove them. Preserve links, code, outcomes, screenshots, and original technical meaning.
 - Author the real heading inside the banner with `markdown="1"` and `md_in_html` enabled, so Material heading anchors and the table of contents continue to work.
-- Use shared `docs/stylesheets/guided-demo-banners.css` for banner appearance and responsive rules. Do not add per-page CSS or duplicate banner styles.
+- Keep the mascot compact and the banner height driven by the title and one short subtitle. Use shared `docs/stylesheets/guided-demo-banners.css` for banner appearance and responsive rules. Do not add per-page CSS or duplicate banner styles.
 - Use Material admonitions for warnings/tips and collapsibles for optional detail. Do not add a second colored box below a section banner.
 
 Example:
@@ -134,12 +134,14 @@ Example:
 ```md
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Create the Data Agreement
 
-</div>
+Define the agreement between producer and consumer.
 
-Define the agreement between the producer and consumer.
+</div>
+</div>
 
 ### Configure the agreement
 

@@ -19,9 +19,13 @@ FabricOps acquires the Fabric API token from `notebookutils`; do not paste or pe
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-pointing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Review the governed context
 
+Review the approved Production table and its governance context before creating a Data Agent.
+
+</div>
 </div>
 
 
@@ -33,12 +37,16 @@ This is derived from authoritative FabricOps metadata rather than maintained aga
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-pointing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Create a single-table Data Agent
 
+FabricOps V1 exposes a thin programmatic handoff:
+
+</div>
 </div>
 
-FabricOps V1 exposes a thin programmatic handoff:
+
 
 ```python
 from fabricops_kit import create_data_agent

@@ -10,12 +10,16 @@ Complete [Step 4](04-validate-frozen-data-contract.md) and use the validated fro
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Select the tested Data Contract version
 
+Return to `01_governance` and select the exact frozen Data Contract version that passed Step 4.
+
+</div>
 </div>
 
-Return to `01_governance` and select the exact frozen Data Contract version that passed Step 4.
+
 
 Do not activate a different draft or an untested version simply because it is newer.
 
@@ -47,13 +51,17 @@ Activation tells FabricOps which immutable contract version Production must reso
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Promote the validated pipeline
 
+`00_env_config` owns the environment-specific resolution. Your tested `02A_full_refresh_demo` copy owns this demo pipeline definition.
+
+</div>
 </div>
 
 
-`00_env_config` owns the environment-specific resolution. Your tested `02A_full_refresh_demo` copy owns this demo pipeline definition.
+
 
 
 

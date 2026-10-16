@@ -8,7 +8,16 @@ This notebook demonstrates the FabricOps I/O helpers while preparing the shared 
 
 Complete [Step 0B](00B-configure-environment-and-load-assets.md) before preparing the demo data.
 
-### Import the setup notebook
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Import the setup notebook
+
+Import the setup notebook and connect it to the configured Fabric Environment.
+
+</div>
+</div>
 
 1. Download [`00C_demo_setup.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/DemoData/00C_demo_setup.ipynb) and import it into Fabric Engineering Workspace (Dev).
 
@@ -22,12 +31,16 @@ Complete [Step 0B](00B-configure-environment-and-load-assets.md) before preparin
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Read the same Orders dataset from four file formats
 
+Read the same canonical Orders dataset using CSV, JSON, Parquet, and Excel.
+
+</div>
 </div>
 
-Read the same canonical Orders dataset using CSV, JSON, Parquet, and Excel.
+
 
 ![Read CSV](../assets/00C/Read_csv.png)
 
@@ -97,29 +110,69 @@ The expected output confirms that all four file formats resolve to equivalent da
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Read and write the demo data
 
+Read the remaining retail sources and write the managed Lakehouse and Warehouse tables for 02A. The notebook also seeds the Day 1 Bronze tables for 02B and 02C.
+
+</div>
 </div>
 
 
-Read the remaining retail sources and write the managed Lakehouse and Warehouse tables for 02A. The notebook also seeds the Day 1 Bronze tables for 02B and 02C.
 
 
 
-### Orders
+
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Orders
+
+Prepare the Orders baseline that feeds the Full Refresh demo.
+
+</div>
+</div>
 
 ![Orders demo](../assets/00C/Orders_Demo.png)
 
-### Products
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Products
+
+Prepare the product records needed for the retail pipeline.
+
+</div>
+</div>
 
 ![Products demo](../assets/00C/Products_Demo.png)
 
-### Create the Warehouse schema
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Create the Warehouse schema
+
+Create the Warehouse schema required before the demo writes its summary.
+
+</div>
+</div>
 
 ![Create Warehouse schema](../assets/00C/Create_Schema_Warehouse.png)
 
-### Order history
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Order history
+
+Prepare the history source used for the governed retail reads.
+
+</div>
+</div>
 ![Orders history demo](../assets/00C/Orders_History_Demo.png)
 
 !!! tip "FabricOps provides two Warehouse read helpers"

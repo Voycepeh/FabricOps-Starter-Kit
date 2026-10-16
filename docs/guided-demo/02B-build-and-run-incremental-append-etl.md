@@ -71,12 +71,16 @@ from fabricops_kit import (
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Run Day 1 in Fabric
 
+Leave the value under **1. Choose the demo day** as:
+
+</div>
 </div>
 
-Leave the value under **1. Choose the demo day** as:
+
 
 ```python
 DEMO_DAY = 1
@@ -168,9 +172,13 @@ You should see:
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Run Day 2 in Fabric
 
+Apply the next source change and compare the resulting governed output.
+
+</div>
 </div>
 
 ### Change only the demo day
@@ -208,9 +216,13 @@ The final inspection should show:
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Run Day 3 in Fabric
 
+Run the final scenario and inspect how the output changes.
+
+</div>
 </div>
 
 ### Change only the demo day

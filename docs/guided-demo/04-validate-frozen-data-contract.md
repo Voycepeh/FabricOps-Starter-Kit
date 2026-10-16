@@ -10,13 +10,17 @@ Complete [Step 3](03-author-and-freeze-data-contract.md) and select the frozen c
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Select Validate for `curated_orders`
 
+In the Data Contract selector at the top of `02A_full_refresh_demo`:
+
+</div>
 </div>
 
 
-In the Data Contract selector at the top of `02A_full_refresh_demo`:
+
 
 
 
@@ -30,12 +34,16 @@ The frozen-version picker appears only for a target in Validate mode. There is n
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Prove the happy path first
 
+Run the normal visible **Read → Transform → Write** sequence without changing `transformed_df`.
+
+</div>
 </div>
 
-Run the normal visible **Read → Transform → Write** sequence without changing `transformed_df`.
+
 
 The `curated_orders` Write block evaluates the frozen contract but does not publish the target.
 
@@ -54,9 +62,13 @@ This proves the contract describes the canonical target before we deliberately b
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Exercise the source-side Guardrails
 
+Test Freshness, Schema, Source Drift, and Data Quality at the governed Read boundary.
+
+</div>
 </div>
 
 Source Guardrails are evaluated from the real source read and Source Observation metadata, so changing only `transformed_df` cannot test them. Use a controlled mutation of the Development `orders` table, then restore it from the canonical fixture.
@@ -102,12 +114,16 @@ After restoration, rerun the Orders Read block so the notebook is again holding 
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Build a deterministic dirty target
 
+Rerun the notebook through the normal Transform cell. Immediately after that cell, add this temporary validation cell:
+
+</div>
 </div>
 
-Rerun the notebook through the normal Transform cell. Immediately after that cell, add this temporary validation cell:
+
 
 ```python
 dirty_transformed_df = (
@@ -260,12 +276,16 @@ This gate intentionally blocks rather than warns: publishing without the require
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Restore the happy path before activation
 
+Remove the temporary dirty-target cell or switch the Write block back to `transformed_df`, then rerun the normal target validation using the contract version you intend to activate.
+
+</div>
 </div>
 
-Remove the temporary dirty-target cell or switch the Write block back to `transformed_df`, then rerun the normal target validation using the contract version you intend to activate.
+
 
 Require a clean validation result before continuing to Step 5.
 

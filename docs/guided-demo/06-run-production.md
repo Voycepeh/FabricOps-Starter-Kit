@@ -20,13 +20,17 @@ The same logical store names now resolve to the Production Lakehouses, Warehouse
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Run the promoted pipeline
 
+Run the promoted `02A_full_refresh_demo` pipeline from start to finish.
+
+</div>
 </div>
 
 
-Run the promoted `02A_full_refresh_demo` pipeline from start to finish.
+
 
 
 
@@ -47,12 +51,16 @@ The same Guardrail functions therefore enforce the Production-active definition,
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Grant direct consumer access
 
+Once the governed Production output exists, consumers do not need a FabricOps exploration notebook to use it.
+
+</div>
 </div>
 
-Once the governed Production output exists, consumers do not need a FabricOps exploration notebook to use it.
+
 
 Grant the required access through the appropriate native Fabric path, such as Workspace roles, SQL endpoint grants, or OneLake security roles. Keep access scoped to the approved Production data the consumer needs.
 
