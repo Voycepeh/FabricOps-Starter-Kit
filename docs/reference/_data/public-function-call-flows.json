@@ -7701,7 +7701,8 @@
       "function_name": "_dq_failed_value_schema",
       "function_type": "private_function",
       "inbound_source_references": [
-        "fabricops_kit.pipeline.shared._dq_failed_values_dataframe"
+        "fabricops_kit.pipeline.shared._dq_failed_values_dataframe",
+        "fabricops_kit.pipeline.shared.check_dq_runtime"
       ],
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
@@ -16806,6 +16807,10 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.pipeline.shared._dq_failed_expression",
+      "caller_qualified_name": "fabricops_kit.pipeline.shared.check_dq_runtime"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.pipeline.shared._dq_failed_value_schema",
       "caller_qualified_name": "fabricops_kit.pipeline.shared.check_dq_runtime"
     },
     {
