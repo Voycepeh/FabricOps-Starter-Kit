@@ -324,8 +324,8 @@ def test_02_pipeline_optional_inspection_stays_outside_orchestration():
     """Optional displays remain commented and separate from Read and Write calls."""
     read_inspection = _cell_by_id("02_pipeline.ipynb", "read-inspection").source
     write_inspection = _cell_by_id("02_pipeline.ipynb", "write-inspection").source
-    assert '# display(sources["source"]["dataframe"])' in read_inspection
-    assert '# display(writes["target"]["schema_result"])' in write_inspection
+    assert 'sources[inspect_source]["dataframe"].limit(10)' in read_inspection
+    assert 'writes[inspect_write]["schema_result"]' in write_inspection
     assert "display(" not in _cell_by_id("02_pipeline.ipynb", "read-1").source
     assert "display(" not in _cell_by_id("02_pipeline.ipynb", "write-1").source
 
@@ -341,6 +341,42 @@ def test_02_pipeline_scaffold_uses_public_fabricops_boundary():
                 assert not node.module.startswith("fabricops_kit."), (
                     f"02_pipeline.ipynb cell {cell_index} imports FabricOps internals: {node.module}"
                 )
+
+
+def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
+    """Each pipeline notebook defaults to bounded top-level Read and Write previews."""
+    paths = [
+        NOTEBOOK_DIR / "02_pipeline.ipynb",
+        DEMO_NOTEBOOK_DIR / "02A_full_refresh_demo.ipynb",
+        DEMO_NOTEBOOK_DIR / "02B_incremental_append_demo.ipynb",
+        DEMO_NOTEBOOK_DIR / "02C_scd_demo.ipynb",
+    ]
+    expected_optional = {
+        "profile_result",
+        "frequency_profile",
+        "schema_result",
+        "sensitive_result",
+        "source_drift_results",
+        "dq_result",
+        "coverage_result",
+        "orchestration_stages",
+    }
+    for path in paths:
+        notebook = _load_notebook(path)
+        source = "\n".join(
+            cell.source for cell in notebook.cells if cell.cell_type == "code"
+        )
+        assert 'sources[inspect_source]["dataframe"].limit(10)' in source
+        assert 'writes[inspect_write]["dataframe"].limit(10)' in source
+        assert "post-treatment" in source
+        assert "not necessarily persisted" in source or "not cumulative persisted" in source
+        assert all(key in source for key in expected_optional)
+        inspection = "\n".join(
+            cell.source
+            for cell in notebook.cells
+            if cell.cell_type == "code" and cell.get("id") in {"write-inspection", "inspect"}
+        )
+        assert all(key in inspection for key in expected_optional)
 
 
 def test_02a_preserves_the_full_refresh_pipeline():
@@ -390,7 +426,7 @@ def test_02b_has_ordered_repeat_safe_incremental_append_flow():
     assert 'sources=[sources["inventory_movements"]]' in source
     assert "should_process" not in source
     inspect = _demo_cell("02B_incremental_append_demo.ipynb", "inspect").source
-    assert 'writes["inventory_movements_incremental"]["profile_result"]["profile"]' in inspect
+    assert 'writes[inspect_write]["profile_result"]["profile"]' in inspect
     assert "read_lakehouse_table(" not in inspect
 
 

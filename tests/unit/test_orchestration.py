@@ -89,6 +89,8 @@ def test_orchestrate_write_orders_stages_and_profiles_after_write():
     assert actual["published"] is True
     assert actual["table_id"] == "target-id"
     assert write.call_args.args[0] is prepared
+    assert actual["dataframe"] is prepared
+    assert actual["sensitive_result"]["dataframe"] is prepared
 
 
 def test_orchestrate_write_forwards_scd_write_parameters():
@@ -262,6 +264,8 @@ def test_validate_runs_enforce_guardrails_then_skips_write_and_profile():
 
     assert calls == ["schema", "sensitive", "drift", "dq", "coverage"]
     assert result["published"] is False
+    assert result["dataframe"] is prepared
+    assert result["sensitive_result"]["dataframe"] is prepared
     assert result["validation_passed"] is True
     assert [stage["stage"] for stage in result["orchestration_stages"]] == [
         "Schema",
