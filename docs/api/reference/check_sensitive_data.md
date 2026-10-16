@@ -11,9 +11,9 @@ Apply explicit Sensitive Data treatment before a governed write.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_sensitive_data.py:24`
+`fabricops_kit/pipeline/check_sensitive_data.py:20`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_sensitive_data.py#L24-L193">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_sensitive_data.py#L20-L193">View on GitHub</a>
 </div>
 
 

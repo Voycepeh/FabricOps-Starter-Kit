@@ -9,16 +9,12 @@ from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
     check_sensitive_data_rules,
     load_table_guardrail_rules,
+    observation_rows,
     resolve_pipeline_data_contract,
     resolve_catalogue_table_identity,
     write_guardrail_result_row,
     print_guardrail_result,
 )
-
-
-def _rows(value) -> list[dict[str, Any]]:
-    source = value.collect() if hasattr(value, "collect") else value
-    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in source or []]
 
 
 def check_sensitive_data(
@@ -148,9 +144,13 @@ def check_sensitive_data(
     identity = resolve_catalogue_table_identity(config, env, table_id, spark_session=spark_session, context=context)
     rules = [
         row
-        for row in _rows(
+        for row in observation_rows(
             load_table_guardrail_rules(
-            config, env, spark_session=spark_session, table_id=identity["table_id"], context=context
+                config,
+                env,
+                spark_session=spark_session,
+                table_id=identity["table_id"],
+                context=context,
             )
         )
         if str(row.get("guardrail_type") or "").strip().lower() == "sensitive_data"

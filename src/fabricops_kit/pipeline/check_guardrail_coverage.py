@@ -13,6 +13,7 @@ from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
     display_table_identity,
     load_table_guardrail_rules,
+    observation_rows,
     resolve_pipeline_data_contract,
 )
 
@@ -28,13 +29,10 @@ _LABELS = {
 }
 
 
-def _rows(value: Any) -> list[dict[str, Any]]:
-    source = value.collect() if hasattr(value, "collect") else value
-    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in source or []]
-
-
 def _rules(config: Any, env: str, table_id: str, *, spark, context) -> list[dict[str, Any]]:
-    rows = _rows(load_table_guardrail_rules(config, env, spark_session=spark, table_id=table_id, context=context))
+    rows = observation_rows(
+        load_table_guardrail_rules(config, env, spark_session=spark, table_id=table_id, context=context)
+    )
     return [row for row in rows if row.get("is_active", True) is not False]
 
 
@@ -60,7 +58,7 @@ def _label(config: Any, env: str, table_id: str, *, spark, context) -> str:
 def _current_activity_results(*, config: Any, env: str, context: Any, spark: Any, activity_id: str) -> list[dict[str, Any]]:
     from pyspark.sql import functions as F
 
-    return _rows(
+    return observation_rows(
         read_lakehouse_table(
             _GUARDRAIL_RESULTS_TABLE,
             store="Metadata",
