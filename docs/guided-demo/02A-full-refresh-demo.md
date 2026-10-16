@@ -129,11 +129,11 @@ Both Write results should show `published=True`.
 ## Inspect the saved results
 
 Verify the target tables and the recorded governance metadata.
+Open the target tables in Fabric Stores directly or use the notebook's optional inspection cell to see the dataframes 
 
 </div>
 </div>
 
-Open the target tables in Fabric or use the notebook's optional inspection cell.
 
 **Silver Lakehouse**
 

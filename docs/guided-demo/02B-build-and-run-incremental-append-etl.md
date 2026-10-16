@@ -58,30 +58,40 @@ Silver Lakehouse "demo.inventory_movement_incremental" and set "modified_datetim
 
 ![Day 1 demo day selection](../assets/2b/Day%201.png)
 
+Ocestrate Read: 
+Set a target table a read mode (incremental/full) and a Watermark Column
+
 ![Incremental Read configuration](../assets/2b/Incremental_Read.png)
+
+Day 1 first run 8 rows is read
 
 ![Incremental Read inspection](../assets/2b/Incremental_Read_inspect.png)
 
+Ocestrate Write: 
+Set a single or multiple source table and Write mode = "Append"
+
 ![Incremental Write configuration](../assets/2b/Incremental_Write.png)
+
+Day 1 first run 8 rows is written
 
 ![Incremental Write inspection](../assets/2b/Incremental_Write_Inspect.png)
 
-???+ Info How Does Incremental Load Work in FabricOps?
+## Info How Does Incremental Load Work in FabricOps?
 
-   ### FabricOps handles incremental loading through two orchestrators:
+### FabricOps handles incremental loading through two orchestrators:
 
-    1. orchestrate_read() identifies and reads only new or modified records using a watermark.
+1. orchestrate_read() identifies and reads only new or modified records using a watermark.
 
-    2. orchestrate_write() applies the selected write strategy, such as Append, and commits watermark progress only after a successful publication.
+2. orchestrate_write() applies the selected write strategy, such as Append, and commits watermark progress only after a successful publication.
 
-   ### How It Works
+### How It Works
 
-    1. Identify the source: Bronze Lakehouse demo.inventory_movements.
-    2. Identify the target: Silver Lakehouse demo.inventory_movements_incremental.
-    3. Retrieve the committed watermark for this source-to-target relationship.
-    4. Check Bronze for records where:modified_datetime > last_committed_watermark
-    5. Read only newer records, transform them, and append them to Silver.
-    6. Advance the watermark only after successful write.
+1. Identify the source: Bronze Lakehouse demo.inventory_movements.
+2. Identify the target: Silver Lakehouse demo.inventory_movements_incremental.
+3. Retrieve the committed watermark for this source-to-target relationship.
+4. Check Bronze for records where:modified_datetime > last_committed_watermark
+5. Read only newer records, transform them, and append them to Silver.
+6. Advance the watermark only after successful write.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -94,7 +104,11 @@ This runs the pipeline on day 1 data which we have already loaded so you will ex
 </div>
 </div>
 
+No new data so its empty read
+
 ![Incremental Read inspection after rerunning Day 1](../assets/2b/Incremental_Read_Day1_again.png)
+
+No new data so its empty write
 
 ![Incremental Write inspection after rerunning Day 1](../assets/2b/Incremental_Write_Day1_again.png)
 
@@ -105,58 +119,44 @@ This runs the pipeline on day 1 data which we have already loaded so you will ex
 ## Change the demo day to 2 and press run all again 
 
 For Day 2 , our underlying data has 12 rows of data in 
-Bronze Lakehouse "demo.inventory_movement" table 8 of which were already loaded into Silver Lakehouse "demo.inventory_movement_incremental" in day 1 , hence only 4 rows of data was read and appended 
+Bronze Lakehouse "demo.inventory_movement" table of which 8 were already loaded into Silver Lakehouse "demo.inventory_movement_incremental" in day 1 , hence only 4 rows of data was read and appended 
 
 </div>
 </div>
 
 ![Day 2](../assets/2b/Day 2.png)
 
+4 new rows are read based on the watermark column
 
+![Day 2 incremental read inspection](../assets/2b/Incremental_Read_Day2.png)
+
+Only this 4 rows are appended
+
+![Day 2 incremental write inspection](../assets/2b/Incremental_Write_Day2.png)
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run Day 3 in Fabric
+## Change the demo day to 3 and press run all again 
 
-Run the final scenario and inspect how the output changes.
+For Day 3, our underlying data still has 12 rows of data in 
+Bronze Lakehouse "demo.inventory_movement" table of which 12 were already loaded into Silver Lakehouse "demo.inventory_movement_incremental" in day 1 , hence only 0 rows of data was read and appended 
 
 </div>
 </div>
 
-### Change only the demo day
-
-Return to the day cell and change it to:
-
-```python
-DEMO_DAY = 3
 ```
 ![Day 3 demo run](../assets/2b/Day%203.png)
 
-Day 3 intentionally has no CSV file and adds no source records.
+No new data so its empty read
 
-### Rerun the complete notebook
+![Incremental Read inspection after rerunning Day 1](../assets/2b/Incremental_Read_Day1_again.png)
 
-Run every block again. The notebook still calls the Read and Write orchestrators; do not skip those blocks.
+No new data so its empty write
 
-You should see:
+![Incremental Write inspection after rerunning Day 1](../assets/2b/Incremental_Write_Day1_again.png)
 
-```text
-Bronze inventory rows after Day 3: 12
-```
-
-The Incremental Read returns an empty scope. The Append target remains unchanged.
-
-### Check the Day 3 output
-
-The final inspection should show:
-
-- an empty/no-change incremental scope;
-- a new persisted-target profile with `row_count = 12`; and
-- the same target row count as Day 2.
-
-*Image coming soon: Day 3 empty scope and unchanged 12-row target profile.*
 
 ### Expected result
 
@@ -188,8 +188,6 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 ### Reset the demo
 
 An Incremental demo cannot be reset by rerunning Day 1 or deleting only the Silver target. FabricOps remembers successful progress for the exact Bronze-to-Silver relationship.
-
-The safest clean reset is to run the demo in a fresh Guided Demo environment. To reset the same environment through an approved maintenance process:
 
 1. In the Bronze Lakehouse, delete `demo.inventory_movements` from the table explorer.
 2. In the Silver Lakehouse, delete `demo.inventory_movements_incremental` from the table explorer. This removes the appended business data and the successful watermark progress stored with the governed target.
