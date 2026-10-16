@@ -152,7 +152,11 @@ def test_orchestrate_write_orders_stages_and_profiles_after_write(capsys):
     assert actual["table_id"] == "target-id"
     assert write.call_args.args[0] is prepared
     assert {stage["name"] for stage in actual["orchestration_stages"]} == {"physical_target"}
-    assert "FabricOps WRITE · physical_target" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert "FabricOps WRITE · physical_target" in output
+    assert "Strategy → OVERWRITE" in output
+    assert "Target → Silver.demo.physical_target" in output
+    assert "Rows written → not measured" in output
 
 
 def test_orchestrate_write_forwards_scd_write_parameters(capsys):
