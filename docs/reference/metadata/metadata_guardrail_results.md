@@ -53,12 +53,12 @@ via `guardrail_rule_id`
 | `status` | `string` | Pipeline run status recorded with the run summary. |
 | `can_continue` | `boolean` | Metadata Guardrail Results field `can_continue`. |
 | `severity` | `string` | Severity recorded for a Guardrail result. |
-| `reason` | `string` | Human-readable reason recorded for the Guardrail outcome. |
-| `result_payload_json` | `string` | Serialized aggregate result payload written for the Guardrail outcome. |
 | `guardrail_type` | `string` | Guardrail family recorded for the row. |
 | `rule_id` | `string` | Rule identity stored by the authoring workflow. |
 | `rule_type` | `string` | Specific rule type recorded within the guardrail family. |
 | `action` | `string` | Warn or Block action applied when an authored Guardrail fails. |
+| `reason` | `string` | Human-readable reason recorded for the Guardrail outcome. |
+| `result_payload_json` | `string` | Serialized aggregate result payload written for the Guardrail outcome. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |
