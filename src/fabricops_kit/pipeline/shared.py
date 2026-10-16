@@ -3268,12 +3268,6 @@ def stop_if_failed(result) -> None:
     detail = resolved.get("message") or resolved.get("summary") or "Guardrail blocked execution."
     raise SchemaDriftError(f"Guardrail blocked execution with status: {status}. {detail}")
 
-def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
-    if rows_or_df is None:
-        return []
-    if hasattr(rows_or_df, "collect"):
-        rows_or_df = rows_or_df.collect()
-    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows_or_df]
 
 def _canonical_dq_rule_type(rule_type: Any) -> str:
     return str(rule_type or "").strip()
@@ -3590,7 +3584,7 @@ def _load_active_dq_rules(metadata_df, table_id: str, env: str | None = None, da
     latest = latest.filter(F.lower(F.coalesce(review_expr, F.lit(""))).isin("self_approved", "governance_approved", "active_pending_governance_review"))
 
     rules: list[dict[str, Any]] = []
-    for row in _coerce_rows(latest.collect()):
+    for row in observation_rows(latest):
         params_raw = row.get("rule_parameters_json") or "{}"
         try:
             params = json.loads(params_raw) if isinstance(params_raw, str) else dict(params_raw)
@@ -3748,25 +3742,6 @@ def _dq_failed_value_schema():
     ])
 
 
-def _empty_dq_failed_values(spark_session):
-    """Return an empty DataFrame with the canonical failed-values schema."""
-    return spark_session.createDataFrame([], _dq_failed_value_schema())
-
-
-def _dq_involved_column_roles(rule: Mapping[str, Any]) -> list[tuple[str, str]]:
-    """Return each involved column and its semantic role for one DQ rule."""
-    columns = [str(name) for name in rule.get("columns") or ()]
-    rule_type = str(rule.get("rule_type") or "")
-    if rule_type == "column_relationship":
-        return [(columns[0], "left"), (columns[1], "right")]
-    role = "participating" if rule_type == "uniqueness" and len(columns) > 1 else "target"
-    roles = [(name, role) for name in columns]
-    condition = str(rule.get("condition_column") or "").strip()
-    if condition and condition not in columns:
-        roles.append((condition, "condition"))
-    return roles
-
-
 def _dq_failed_values_dataframe(dataframe, rules, *, run_id: str, row_identity_columns: list[str]):
     """Return one failed rule, involved column, and source record per row."""
     _, F, _ = _spark_sql_helpers()
@@ -3786,6 +3761,16 @@ def _dq_failed_values_dataframe(dataframe, rules, *, run_id: str, row_identity_c
     source = dataframe.withColumn("_fabricops_failure_source_id", F.monotonically_increasing_id())
     frames = []
     for rule in rules:
+        columns = [str(name) for name in rule.get("columns") or ()]
+        rule_type = str(rule.get("rule_type") or "")
+        if rule_type == "column_relationship":
+            column_roles = [(columns[0], "left"), (columns[1], "right")]
+        else:
+            role = "participating" if rule_type == "uniqueness" and len(columns) > 1 else "target"
+            column_roles = [(name, role) for name in columns]
+            condition = str(rule.get("condition_column") or "").strip()
+            if condition and condition not in columns:
+                column_roles.append((condition, "condition"))
         details = F.array(*[
             F.struct(
                 F.lit(column_name).alias("column_name"),
@@ -3797,7 +3782,7 @@ def _dq_failed_values_dataframe(dataframe, rules, *, run_id: str, row_identity_c
                 ).alias("raw_value"),
                 F.lit(source_types.get(column_name, "missing")).alias("raw_value_type"),
             )
-            for column_name, column_role in _dq_involved_column_roles(rule)
+            for column_name, column_role in column_roles
         ])
         event_id = F.sha2(F.concat_ws(
             "|", F.lit(run_id), F.lit(rule["guardrail_rule_id"]),
@@ -3826,7 +3811,7 @@ def _dq_failed_values_dataframe(dataframe, rules, *, run_id: str, row_identity_c
             )
         )
     if not frames:
-        return _empty_dq_failed_values(dataframe.sparkSession)
+        return dataframe.sparkSession.createDataFrame([], _dq_failed_value_schema())
     failed_values = frames[0]
     for frame in frames[1:]:
         failed_values = failed_values.unionByName(frame)
@@ -4005,6 +3990,7 @@ def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
             .otherwise(F.lit("passed")),
         )
     )
+
 
 def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
     if any(check.get("status") == "failed" for check in checks):

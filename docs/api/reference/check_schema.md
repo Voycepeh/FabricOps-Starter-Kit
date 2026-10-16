@@ -13,7 +13,7 @@ Check observed table schema against direct or approved schema intent.
 
 `fabricops_kit/pipeline/check_schema.py:22`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L22-L228">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L22-L227">View on GitHub</a>
 </div>
 
 
