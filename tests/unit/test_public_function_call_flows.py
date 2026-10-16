@@ -396,10 +396,13 @@ def test_repository_manifest_lifecycle_authority(repository_call_flow_payload) -
     excel = next(item for item in payload["public_functions"] if item["function_name"] == "read_lakehouse_excel")
     assert excel["lifecycle_status"] == "live"
     assert excel["live_since"] == "0.1.0"
-    assert excel["release_history"] == [
-        {"version": "0.1.0", "status": "live"},
-        {"version": "0.2.0", "status": "live"},
+    expected_history = [
+        {"version": manifest["release_version"], "status": item["status"]}
+        for manifest in flows.load_release_manifests()
+        for item in manifest["functions"]
+        if item["name"] == "read_lakehouse_excel"
     ]
+    assert excel["release_history"] == expected_history
 
     assert "display_guardrail_results" not in {item["function_name"] for item in payload["public_functions"]}
 
@@ -483,7 +486,13 @@ def test_foundational_io_classification_and_lifecycle_history(repository_call_fl
     json_reader = public_by_name["read_lakehouse_json"]
     assert json_reader["lifecycle_status"] == "live"
     assert json_reader["live_since"] == "0.2.0"
-    assert json_reader["release_history"] == [{"version": "0.2.0", "status": "live"}]
+    expected_history = [
+        {"version": manifest["release_version"], "status": item["status"]}
+        for manifest in flows.load_release_manifests()
+        for item in manifest["functions"]
+        if item["name"] == "read_lakehouse_json"
+    ]
+    assert json_reader["release_history"] == expected_history
 
 
 def test_repository_type_zero_edges_never_contribute_architecture_violations(repository_call_flow_payload) -> None:

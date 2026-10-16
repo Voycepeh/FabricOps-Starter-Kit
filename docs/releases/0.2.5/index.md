@@ -61,7 +61,7 @@
 
 ### Changed
 
-- `profile_table()` now enables frequency profiling by default and uses a top-five frequency limit by default. Set `frequency_enabled=False` to disable frequency profiling.
+- `profile_table()` enables frequency profiling by default (`frequency_enabled=True`) and limits each eligible column to five ranked values by default (`frequency_top_n=5`). Set `frequency_enabled=False` to disable profiling or `frequency_top_n=None` to retain all values.
 - `setup_metadata_tables()` additively adds missing canonical metadata columns while preserving existing rows and extra columns.
 
 ### Fixed
