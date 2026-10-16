@@ -87,6 +87,7 @@ def test_orchestrate_write_orders_stages_and_profiles_after_write():
         actual = orchestrate_write(dataframe, name="target", sources=[{"table_id":"source-id"}], store="Silver", schema="demo", table_name="target", write_mode="overwrite", verbose=False)
     assert calls == ["schema", "sensitive", "drift", "dq", "coverage", "write", "profile"]
     assert actual["published"] is True
+    assert actual["dataframe"] is prepared
     assert actual["table_id"] == "target-id"
     assert write.call_args.args[0] is prepared
 
@@ -263,6 +264,7 @@ def test_validate_runs_enforce_guardrails_then_skips_write_and_profile():
     assert calls == ["schema", "sensitive", "drift", "dq", "coverage"]
     assert result["published"] is False
     assert result["validation_passed"] is True
+    assert result["dataframe"] is prepared
     assert [stage["stage"] for stage in result["orchestration_stages"]] == [
         "Schema",
         "Sensitive Data",
