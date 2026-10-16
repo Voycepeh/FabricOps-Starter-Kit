@@ -46,107 +46,73 @@ The standard Environment, Data Contract, result-storage, and inspection patterns
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run Day 1 in Fabric
+## Press Run all and run Day 1 in Fabric
 
-Establish the baseline with one complete Incremental Read, PySpark Transform, and Append Write.
+For Day 1 , we load 8 rows of data from 
+Bronze Lakehouse "demo.inventory_movement" table and load all 8 rows into 
+Silver Lakehouse "demo.inventory_movement_incremental" and set "modified_datetime" column as our watermark column 
 
 </div>
 </div>
 
-### Choose Day 1
-
-Leave the value under **1. Choose the demo day** as:
-
-```python
-DEMO_DAY = 1
-```
 
 ![Day 1 demo day selection](../assets/2b/Day%201.png)
 
-Run the cell. It validates that the selected day is supported.
+![Incremental Read configuration](../assets/2b/Incremental_Read.png)
 
-### Stage the Day 1 source
+![Incremental Read inspection](../assets/2b/Incremental_Read_inspect.png)
 
-Run the short cell under **2. Advance the Bronze source (Day 2 only)**. Day 1 needs no additional staging.
+![Incremental Write configuration](../assets/2b/Incremental_Write.png)
 
-00C has already loaded the Day 1 Bronze `demo.inventory_movements` table. The scenario cell does nothing on Day 1. On Day 2, it adds the new inventory movements to Bronze without duplicating existing `movement_id` values.
+![Incremental Write inspection](../assets/2b/Incremental_Write_Inspect.png)
 
-You should see:
+???+ Info How Does Incremental Load Work in FabricOps?
 
-![Day 1 Bronze staging output showing 8 rows](../assets/2b/Day%201%20Bronze%20staging%20output%20showing%208%20rows.png)
+   ### FabricOps handles incremental loading through two orchestrators:
 
-### Run the changed pipeline blocks
+    1. orchestrate_read() identifies and reads only new or modified records using a watermark.
 
-Run the remaining blocks through **5. Inspect**. For the initial Guided Demo run, leave the Data Contract selection unchanged.
+    2. orchestrate_write() applies the selected write strategy, such as Append, and commits watermark progress only after a successful publication.
 
-The changes from Step 2 are:
+   ### How It Works
 
-- **Governed Incremental Read:** resolves the Silver target identity, uses `modified_datetime` as the watermark, and saves the Bronze result as `sources["inventory_movements"]`.
-- **PySpark Transform:** derives `movement_date`, `quantity_in`, and `quantity_out` from the eligible rows.
-- **Governed Append Write:** appends `transformed_df` to Silver `demo.inventory_movements_incremental` and saves the result as `writes["inventory_movements_incremental"]`.
-
-On Day 1, there is no earlier successful watermark for this source-to-target relationship. The incremental scope therefore bootstraps with all eight source rows.
-
-*Image coming soon: Day 1 Incremental Read output and bootstrap scope.*
-
-*Image coming soon: transformed Day 1 inventory movements.*
-
-*Image coming soon: Day 1 Append Write output.*
-
-### Inspect the Day 1 profile
-
-Run the cell under **5. Inspect**. It uses the `profile_result` already returned by the governed Write; it does not read the Silver table again.
-
-You should see:
-
-- an incremental scope covering the initial eight rows;
-- the persisted-target profile for `demo.inventory_movements_incremental`; and
-- `row_count = 8` on its profiled columns.
-
-*Image coming soon: Day 1 incremental scope and persisted-target profile.*
+    1. Identify the source: Bronze Lakehouse demo.inventory_movements.
+    2. Identify the target: Silver Lakehouse demo.inventory_movements_incremental.
+    3. Retrieve the committed watermark for this source-to-target relationship.
+    4. Check Bronze for records where:modified_datetime > last_committed_watermark
+    5. Read only newer records, transform them, and append them to Silver.
+    6. Advance the watermark only after successful write.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run Day 2 in Fabric
+## Press Stop Session on the notebook and re-run the whole notebook again
 
-Apply the next source change and compare the resulting governed output.
+This runs the pipeline on day 1 data which we have already loaded so you will expect to see no diff read and not diff written 
 
 </div>
 </div>
 
-### Change only the demo day
+![Incremental Read inspection after rerunning Day 1](../assets/2b/Incremental_Read_Day1_again.png)
 
-Return to the day cell and change it to:
+![Incremental Write inspection after rerunning Day 1](../assets/2b/Incremental_Write_Day1_again.png)
 
-```python
-DEMO_DAY = 2
-```
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Change the demo day to 2 and press run all again 
+
+For Day 2 , our underlying data has 12 rows of data in 
+Bronze Lakehouse "demo.inventory_movement" table 8 of which were already loaded into Silver Lakehouse "demo.inventory_movement_incremental" in day 1 , hence only 4 rows of data was read and appended 
+
+</div>
+</div>
 
 ![Day 2](../assets/2b/Day 2.png)
 
-### Rerun the complete notebook
 
-Use **Run all** or run every block again from **0. Environment** through **5. Inspect**.
-
-The Bronze staging block adds the four Day 2 movements and keeps the eight existing movements by `movement_id`. You should see:
-
-```text
-Bronze inventory rows after Day 2: 12
-```
-
-The Incremental Read returns only the four rows after the successful Day 1 watermark. The Append Write adds those rows to the Silver target.
-
-### Check the Day 2 output
-
-The final inspection should show:
-
-- four newly eligible rows in the incremental scope;
-- the new persisted-target profile; and
-- `row_count = 12` on its profiled columns.
-
-*Image coming soon: Day 2 incremental scope and 12-row target profile.*
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
