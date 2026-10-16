@@ -123,5 +123,13 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
             "validation_passed": True,
         }
     write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=write_mode, load_strategy_parameters=write_parameters, source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False))
+    if verbose:
+        target = ".".join(str(part) for part in (store, schema, table_name) if part)
+        print(f"   Strategy → {write_mode.upper()}")
+        print(f"   Target → {target}")
+        columns = getattr(prepared, "columns", None)
+        if columns is not None:
+            print(f"   Input columns → {len(columns)}")
+        print("   Rows written → not measured")
     profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session))
     return {**common_results, **write_result, "dataframe": prepared, "published": True, "profile_result": profile}
