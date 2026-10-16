@@ -163,14 +163,9 @@ You should see the Write stages complete and the target publish successfully.
 
 Run the cell under **7. Inspect results**.
 
-You should see:
+Uncomment the published-target profile or Write stages in the Inspect cell to review the Day 1 result. The expected Silver target has 8 rows; the optional incremental scope shows the initial batch.
 
-- an incremental scope covering the initial eight rows;
-- `Silver rows: 8`;
-- eight movement records ordered by `modified_datetime` and `movement_id`; and
-- an inventory balance summarized by `product_id`.
-
-*Image coming soon: Day 1 Silver rows and inventory balances.*
+*Image coming soon: Day 1 governed Write profile.*
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -207,14 +202,9 @@ The Incremental Read returns only the four rows after the successful Day 1 water
 
 ### Check the Day 2 output
 
-The final inspection should show:
+Inspect the published-target profile in `writes["inventory_movements_incremental"]["profile_result"]["profile"]` and optionally the Write stages and incremental scope. The expected Silver target has 12 rows after Day 2.
 
-- four newly eligible rows in the incremental scope;
-- `Silver rows: 12`;
-- all twelve movements in the target; and
-- updated inventory balances.
-
-*Image coming soon: Day 2 incremental scope, 12 Silver rows, and updated balances.*
+*Image coming soon: Day 2 governed Write profile.*
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -252,13 +242,9 @@ The Incremental Read returns an empty scope. The Append target remains unchanged
 
 ### Check the Day 3 output
 
-The final inspection should show:
+Inspect the optional incremental scope and Write stages to confirm a no-change run. The Silver target should remain at 12 rows. A skipped Write may not produce a fresh target profile; use an earlier successful Write result or inspect the persisted target when needed.
 
-- an empty/no-change incremental scope;
-- `Silver rows: 12`; and
-- the same twelve target rows and inventory balances as Day 2.
-
-*Image coming soon: Day 3 empty scope and unchanged 12-row Silver target.*
+*Image coming soon: Day 3 no-change Write stages.*
 
 ### Expected result
 
