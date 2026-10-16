@@ -1053,6 +1053,10 @@ def widget_data_contract(
 
     def enrichment_record(level: str, kind: str, value: str, column_id: str = "") -> dict[str, Any]:
         current = state["current"]
+        contract_payload = json.loads(
+            str(current["contract"].get("contract_payload_json") or "{}")
+        )
+        table_payload = contract_payload.get("table") or {}
         rows, _ = current_rows()
         previous = next((row for row in reversed(rows) if
             str(row.get("enrichment_level") or "").lower() == level
