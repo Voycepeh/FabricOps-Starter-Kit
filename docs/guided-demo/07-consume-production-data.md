@@ -23,7 +23,7 @@ FabricOps acquires the Fabric API token from `notebookutils`; do not paste or pe
 
 ## Review the governed context
 
-Follow this part of the Guided Demo before continuing to the next activity.
+Review the approved Production table and its governance context before creating a Data Agent.
 
 </div>
 </div>
