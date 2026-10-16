@@ -106,6 +106,7 @@ No related guides documented.
 | Status | Version |
 | --- | --- |
 | Preview | 0.2.0 |
+| Preview | 0.2.5 |
 
 
 </details>

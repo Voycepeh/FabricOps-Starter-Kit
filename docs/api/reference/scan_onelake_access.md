@@ -26,9 +26,9 @@ OneLake permissions.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access_scanner/scan_onelake_access.py:157`
+`fabricops_kit/access_scanner/scan_onelake_access.py:158`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_onelake_access.py#L157-L240">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_onelake_access.py#L158-L241">View on GitHub</a>
 </div>
 
 
@@ -117,6 +117,12 @@ Raises for non-Lakehouse targets, Fabric REST authentication or permission failu
 | Contract classification | Preview public function |
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
+
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Preview | 0.2.5 |
 
 
 </details>

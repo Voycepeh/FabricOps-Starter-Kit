@@ -13,7 +13,7 @@ Create or reopen and author one agreement-free, table-centric Data Contract draf
 
 `fabricops_kit/widgets/widget_data_contract.py:525`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L525-L5384">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L525-L5397">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -118,6 +118,12 @@ No related guides documented.
 | Contract classification | Preview public function |
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
+
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Preview | 0.2.5 |
 
 
 </details>

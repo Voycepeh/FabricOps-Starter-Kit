@@ -56,12 +56,12 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 <article id="pipeline.orchestrate_read-orchestrate_read" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_read" data-callable-module="pipeline.orchestrate_read" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Run the observable standard governed source lifecycle.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_read/"><code>orchestrate_read</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run the observable standard governed source lifecycle.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.5</span><span class="reference-chip">02_pipeline</span></p>
 </article>
 <article id="pipeline.orchestrate_write-orchestrate_write" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_write" data-callable-module="pipeline.orchestrate_write" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Run the observable standard governed target lifecycle.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_write/"><code>orchestrate_write</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run the observable standard governed target lifecycle.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.5</span><span class="reference-chip">02_pipeline</span></p>
 </article>
 </div>
 </details>

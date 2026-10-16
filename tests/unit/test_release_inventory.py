@@ -245,7 +245,9 @@ def test_release_contract_pages_render_live_manifest_snapshot():
     assert ri.ROOT / "docs" / "releases" / "index.md" in paths
     assert ri.ROOT / "docs" / "releases" / version / "index.md" in paths
     assert (ri.ROOT / "docs" / "releases" / version).exists()
-    assert f"| [FabricOps Starter Kit {version}]({version}/) | 2026-09-22 |" in content
+    manifest = ri._load_manifest(ri.manifest_path(version))
+    assert manifest is not None
+    assert f"| [FabricOps Starter Kit {version}]({version}/) | {manifest['release_date']} |" in content
     assert "No completed FabricOps Starter Kit releases have been published yet." not in content
 
 
@@ -321,8 +323,10 @@ def test_release_notes_are_sourced_from_changelog():
     """Verify release notes come from the matching changelog section."""
     notes = ri.extract_changelog_notes(ri.read_package_version())
 
-    assert "Promoted `setup_metadata_tables()` to the supported Live public API." in notes
-    assert "Promoted Steward, Agreement, Catalogue, Profiled, Profiled Frequency, and Lineage metadata schemas to Live." in notes
+    assert "Promoted `orchestrate_read()` and `orchestrate_write()` to the Live public API" in notes
+    assert "`frequency_top_n=5`" in notes
+    assert "additively adds missing canonical metadata columns" in notes
+    assert "passed manual Microsoft Fabric validation" in notes
 
 
 def test_missing_release_notes_fail_generation_clearly(tmp_path):
@@ -333,11 +337,13 @@ def test_missing_release_notes_fail_generation_clearly(tmp_path):
         ri.extract_changelog_notes("9.9.9", changelog)
 
 
-def test_release_manifest_lifecycle_counts_match_v020_release():
-    """Verify maintainer-owned lifecycle classifications match the v0.2.0 release."""
+def test_release_manifest_lifecycle_counts_include_live_orchestrators():
+    """Verify v0.2.5 Live inventory includes its newly promoted orchestrators."""
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
     assert manifest is not None
-    assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 17
+    live_functions = {item["name"] for item in manifest["functions"] if item["status"] == "live"}
+    assert len(live_functions) == 19
+    assert {"orchestrate_read", "orchestrate_write"} <= live_functions
     setup = next(item for item in manifest["functions"] if item["name"] == "setup_notebook")
     assert setup["status"] == "live"
     assert setup["live_since"] == "0.1.0"
@@ -363,7 +369,10 @@ def test_release_overview_lists_live_release_with_inventory():
     assert "## Release history" in content
     assert "No completed FabricOps Starter Kit releases have been published yet." not in content
     assert "## In preparation" not in content
-    assert f"| [FabricOps Starter Kit {ri.read_package_version()}]({ri.read_package_version()}/) | 2026-09-22 |" in content
+    version = ri.read_package_version()
+    manifest = ri._load_manifest(ri.manifest_path(version))
+    assert manifest is not None
+    assert f"| [FabricOps Starter Kit {version}]({version}/) | {manifest['release_date']} |" in content
     assert "functions/read_lakehouse_table.md" not in content
 
 
@@ -453,11 +462,16 @@ def test_release_renderer_keeps_live_version_directory():
 
 def test_metadata_manifest_records_schema_since_and_fingerprint():
     """Verify metadata schemas are tied to package releases by fingerprint."""
-    manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
+    version = ri.read_package_version()
+    manifest = ri._load_manifest(ri.manifest_path(version))
     assert manifest is not None
     agreement = next(item for item in manifest["metadata_tables"] if item["name"] == "METADATA_DATA_AGREEMENT")
     assert agreement["status"] == "live"
-    assert agreement["schema_since"] == "0.2.0"
+    previous = ri._load_manifest(ri.manifest_path("0.2.0"))
+    assert previous is not None
+    prior_agreement = next(item for item in previous["metadata_tables"] if item["name"] == "METADATA_DATA_AGREEMENT")
+    expected_schema_since = version if agreement["schema_fingerprint"] != prior_agreement["schema_fingerprint"] else "0.2.0"
+    assert agreement["schema_since"] == expected_schema_since
     assert len(agreement["schema_fingerprint"]) == 64
 
 
