@@ -30,7 +30,7 @@ Run the promoted `02A_full_refresh_demo` pipeline from start to finish.
 
 
 
-Production follows the same visible lifecycle used in Development:
+Production runs the same tested workflow in the Production environment. It follows the same visible lifecycle used in Development:
 
 ```text
 Read → Transform → Write

@@ -10,7 +10,9 @@ Complete [Step 3](03-author-and-freeze-data-contract.md) and select the frozen c
 
 ## Select Validate for `curated_orders`
 
-In the Data Contract selector at the top of `02A_full_refresh_demo`:
+Use the same `02A_full_refresh_demo` notebook from Step 2A. In its Data Contract selector:
+
+The selector defaults every table to **Enforce**. Switch only the `curated_orders` target to **Validate**:
 
 </div>
 </div>
