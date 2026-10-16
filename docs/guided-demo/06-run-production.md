@@ -1,9 +1,5 @@
 # Step 6. Run the pipeline in Production
 
-**Run the promoted engineering workflow in Engineering Production, publish the governed Production output, then hand direct data access to consumers through native Microsoft Fabric permissions and interfaces.**
-
-There is no new engineering pattern in this step. The point is to execute the same tested workflow in the Production environment.
-
 ### Before you begin
 
 Complete [Step 5](05-activate-data-contract-and-promote.md) and use the promoted Production pipeline.

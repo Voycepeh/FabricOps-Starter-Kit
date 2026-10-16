@@ -1,8 +1,8 @@
 # Step 3. Author and freeze the Data Contracts
 
-**Return to `01_governance`, author the source and target contracts used by the real pipeline, then freeze the exact versions Engineering will exercise in Step 4.**
+### Before you begin
 
-Freezing creates an **immutable Data Contract** candidate for validation. It does not activate the contract for Production.
+Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the contracts.
 
 !!! warning "Enable Fabric AI Functions for the full DQ integration exercise"
     The four direct Column data quality families can be authored without AI. The remaining Business Rules are resolved from business language, so the full nine-rule integration exercise requires AI-assisted authoring.
@@ -15,10 +15,6 @@ Freezing creates an **immutable Data Contract** candidate for validation. It doe
     FabricOps reads the current notebook schedule from Microsoft Fabric using the notebook or pipeline execution identity. In the normal Guided Demo setup, the person developing the pipeline should already have **Contributor, Member, or Admin** access to the Engineering workspace. If Scheduled Refresh shows `Unavailable`, confirm that the execution identity can access the notebook and can read its schedule through the Fabric API. `Unavailable` means FabricOps could not observe the schedule; it does not mean that no schedule exists.
 
     See Microsoft's [workspace roles](https://learn.microsoft.com/en-us/fabric/fundamentals/roles-workspaces) and [List Item Schedules API](https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/list-item-schedules) for the underlying access requirements.
-
-### Before you begin
-
-Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the contracts.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">

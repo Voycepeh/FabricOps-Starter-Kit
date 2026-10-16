@@ -1,11 +1,5 @@
 # Step 7. Consume and productize governed data
 
-**Use the governed consumer handoff to turn approved Production data and its FabricOps context into useful analytics and AI consumption products.**
-
-Step 6 already completed the engineering handoff: the Production pipeline ran, governed outputs exist, and approved consumers can access them through native Fabric permissions and interfaces.
-
-Step 7 adds a consumer and analytics-engineering interface over that foundation.
-
 ### Before you begin
 
 - Run on a [Fabric capacity that supports Data Agents](https://learn.microsoft.com/fabric/data-science/data-agent-concept).

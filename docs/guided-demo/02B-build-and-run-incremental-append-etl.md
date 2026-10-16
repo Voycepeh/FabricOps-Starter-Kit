@@ -1,31 +1,24 @@
 # Step 2B. Run the Incremental Append Demo
 
-**Run the inventory pipeline three times in Microsoft Fabric to see an initial load, a new incremental batch, and a no-change run.**
-
-This demo uses a watermark on `modified_datetime` and an Append target. Run the days in order and compare the visible row counts after each complete notebook run.
-
-### Frequency profiling controls
-
-The notebook explicitly sets `frequency_enabled=True` and `frequency_top_n=5` on its `orchestrate_read()` and `orchestrate_write()` calls. This retains up to five frequency values per eligible column. For faster runs when frequency distributions are not needed, set **`frequency_enabled=False`** on the relevant orchestrator call to skip frequency profiling for **all columns** while keeping the standard statistical profile. `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating frequencies.
-
 ### Before you begin
 
 1. Download [`02B_incremental_append_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02B_incremental_append_demo.ipynb) and import it into the Engineering Development workspace.
 2. Keep `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
 3. Make sure you have already uploaded the demo files required for this demo in the previous step [Step 00B](00B-configure-environment-and-load-assets.md).
 
- Run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) first to stage Day 1. For Day 2, the notebook reads `Demo/inventory_day2.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `incremental_inventory` subfolder.
+4. Run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) first to stage Day 1. For Day 2, the notebook reads `Demo/inventory_day2.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `incremental_inventory` subfolder.
+
 ![File upload](../assets/2b/File%20Upload.png)
 
-### What you will do
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
+## The big picture
 
-Compare the Day 1 baseline with the incremental changes in subsequent runs.
+Repeat the standard Read / Transform / Write lifecycle and compare its incremental state after each run.
 
-  </div>
+</div>
 </div>
 
 | Run | What changes | Expected Silver rows |
@@ -41,15 +34,21 @@ The notebook uses these governed tables throughout:
 | Source | Bronze Lakehouse · `demo.inventory_movements` | Incremental on `modified_datetime` |
 | Target | Silver Lakehouse · `demo.inventory_movements_incremental` | Append |
 
+??? info "Frequency profiling controls"
 
-### Run the Environment block
+    The notebook sets `frequency_enabled=True` and `frequency_top_n=5` on its `orchestrate_read()` and `orchestrate_write()` calls. This retains up to five frequency values per eligible column.
+
+    For faster runs when frequency distributions are not needed, set `frequency_enabled=False` on the relevant orchestrator call. The standard statistical profile still runs. Setting `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating them.
+
+### Load the shared environment
 
 Run the two cells under **0. Environment**:
 
 ```python
 %run 00_env_config
 ```
-Then run the import cell immediately below it. 
+
+Then run the import cell immediately below it.
 
 ```python
 from pyspark.sql import functions as F
@@ -75,16 +74,19 @@ from fabricops_kit import (
 
 ## Run Day 1 in Fabric
 
+Establish the baseline with one complete Incremental Read, PySpark Transform, and Append Write.
+
+</div>
+</div>
+
+### Choose Day 1
+
 Leave the value under **1. Choose the demo day** as:
-
-</div>
-</div>
-
-
 
 ```python
 DEMO_DAY = 1
 ```
+
 ![Day 1 demo day selection](../assets/2b/Day%201.png)
 
 Run the cell. It validates that the selected day is supported.
@@ -259,6 +261,8 @@ The final inspection should show:
 *Image coming soon: Day 3 empty scope and unchanged 12-row Silver target.*
 
 ### Expected result
+
+Day 1 publishes the eight-row baseline, Day 2 appends four newly eligible rows, and Day 3 leaves the 12-row target unchanged because its incremental scope is empty.
 
 ### Data saved by the demo
 

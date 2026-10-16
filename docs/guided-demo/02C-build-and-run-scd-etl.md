@@ -1,34 +1,25 @@
 # Step 2C. Run the SCD1 and SCD2 Demo
 
-**Run three Product Master snapshots in Microsoft Fabric and compare a current-state SCD1 target with a history-preserving SCD2 target.**
-
-00C stages the Day 1 Bronze snapshot. Days 2 and 3 replace the Bronze source with a new eight-row snapshot, then the unchanged orchestrated pipeline publishes to both Silver targets. Run the days in order so you can watch the two load strategies respond to the same business changes.
-
-### Frequency profiling controls
-
-The notebook explicitly sets `frequency_enabled=True` and `frequency_top_n=5` on its `orchestrate_read()` and `orchestrate_write()` calls. This retains up to five frequency values per eligible column. For faster runs when frequency distributions are not needed, set **`frequency_enabled=False`** on the relevant orchestrator call to skip frequency profiling for **all columns** while keeping the standard statistical profile. `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating frequencies.
-
 ### Before you begin
 
 1. Download [`02C_scd_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02C_scd_demo.ipynb) and import it into the Engineering Development workspace.
 2. Keep `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
 3. Make sure you have already uploaded the demo files required for this demo in the previous step [Step 00B](00B-configure-environment-and-load-assets.md).
 
- Run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) first for Day 1. For Days 2 and 3, the notebook reads `Demo/products_day2.csv` and `Demo/products_day3.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `scd_product_master` subfolder.
+4. Run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) first for Day 1. For Days 2 and 3, the notebook reads `Demo/products_day2.csv` and `Demo/products_day3.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `scd_product_master` subfolder.
+5. Use a fresh demo state and run Day 1, then Day 2, then Day 3.
+
 ![File upload](../assets/2c/File%20Upload.png)
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
-4. Use a fresh demo state and run Day 1, then Day 2, then Day 3.
+## The big picture
 
-### What you will do
+Repeat the standard Read / Transform / Write lifecycle and compare how SCD1 and SCD2 record the same changes.
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
-
-Compare how SCD1 and SCD2 record the same product changes.
-
-  </div>
+</div>
 </div>
 
 | Run | Business change | Expected SCD1 rows | Expected SCD2 versions |
@@ -45,18 +36,13 @@ The notebook uses these governed tables throughout:
 | Current-state target | Silver Lakehouse · `demo.product_master_scd1` | SCD1 keyed by `product_id` |
 | Historical target | Silver Lakehouse · `demo.product_master_scd2` | SCD2 effective on `modified_datetime` and tracking `product_category` and `list_price` |
 
-<div class="fabricops-section-banner" markdown="1">
-<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
-<div class="fabricops-section-content" markdown="1">
+??? info "Frequency profiling controls"
 
-## Run Day 1 in Fabric
+    The notebook sets `frequency_enabled=True` and `frequency_top_n=5` on its `orchestrate_read()` and `orchestrate_write()` calls. This retains up to five frequency values per eligible column.
 
-Establish the baseline by running the complete notebook for Day 1.
+    For faster runs when frequency distributions are not needed, set `frequency_enabled=False` on the relevant orchestrator call. The standard statistical profile still runs. Setting `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating them.
 
-</div>
-</div>
-
-### Run the Environment block
+### Load the shared environment
 
 Run the two cells under **0. Environment**:
 
@@ -69,6 +55,17 @@ Then run the import cell immediately below it. The import cell provides the publ
 `00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
 
 ![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
+
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Run Day 1 in Fabric
+
+Establish the baseline with one complete Full Read, PySpark Transform, and pair of SCD Writes.
+
+</div>
+</div>
 
 ### Choose Day 1
 
@@ -268,6 +265,8 @@ The final SCD2 display shows the historical and current versions ordered by `pro
     Run Day 1 → Day 2 → Day 3. The sequence-safety block stops if an expected prior state is missing. Replaying the current day is safe because unchanged tracked values do not create another SCD2 version.
 
 ### Expected result
+
+Day 1 creates eight current records in each target, Day 2 creates the first historical SCD2 version, and Day 3 creates the second while SCD1 remains at eight current rows.
 
 ### Data saved by the demo
 

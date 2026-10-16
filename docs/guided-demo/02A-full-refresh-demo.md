@@ -14,36 +14,29 @@
 | Products | Bronze Lakehouse · `demo.products` |
 | Order History | Gold Warehouse · `demo.order_history` |
 
-### What you will do
-
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
-
-Load the shared environment, read the three sources, transform the data, and publish two targets.
-
-  </div>
-</div>
-
-1. Load the shared environment.
-2. Run the Data Contract selector.
-3. Read Orders, Products, and Order History.
-4. Build detailed orders and a customer summary with PySpark.
-5. Overwrite a Silver Lakehouse table and a Gold Warehouse table.
-6. Inspect the saved data and FabricOps metadata.
-
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run the demo in Fabric
+## The big picture
 
-Execute the governed Full Reads, PySpark transformation, and Overwrite writes.
+Follow the same notebook lifecycle as Step 2 with concrete Full Read and Overwrite examples.
 
 </div>
 </div>
 
-### Run the two cells under **0. Environment**:
+| Notebook section | What happens |
+| --- | --- |
+| Environment | Loads the shared Fabric configuration and imports the functions used by this demo. |
+| Data Contract | Selects whether each target runs without a contract, validates a frozen candidate, or enforces an active contract. |
+| Governed Read | Reads Orders, Products, and Order History in full. |
+| PySpark Transform | Produces detailed orders and a customer summary. |
+| Governed Write | Overwrites a Silver Lakehouse target and a Gold Warehouse target. |
+| Inspection | Verifies the published data and FabricOps metadata. |
+
+### Load the shared environment
+
+Run the two cells under **0. Environment**:
 
 ```python
 %run 00_env_config
@@ -54,10 +47,11 @@ Then run the import cell immediately below it.
 ```python
 from pyspark.sql import functions as F
 
-from fabricops_kit import 
-orchestrate_read, 
-orchestrate_write, 
-widget_select_data_contract
+from fabricops_kit import (
+    orchestrate_read,
+    orchestrate_write,
+    widget_select_data_contract,
+)
 ```
 
 `00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
@@ -86,14 +80,16 @@ This creates an empty dictionary for the three governed Read results. Keeping ea
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run READ 1 — Orders
+## Configure the Governed Reads
 
 Read Orders, Products, and Order History using the governed Full Read pattern.
 
 </div>
 </div>
 
-The block reads the complete Bronze `demo.orders` table and saves the result as `sources["orders"]`.
+### Run READ 1 — Orders
+
+Run **READ 1 — Orders**. The block reads the complete Bronze `demo.orders` table and saves the result as `sources["orders"]`.
 
 You should see the five Read stages complete. With no selected Data Contract, contract-backed checks show as `SKIPPED`; the Full Read still returns the Orders DataFrame and profiles it.
 
@@ -123,7 +119,7 @@ You should see the Warehouse Read complete and the governed Read-stage summary a
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run the Transform block
+## Write your PySpark Transform
 
 Transform the three input sources into the curated and customer-level outputs.
 
@@ -159,7 +155,18 @@ You should see:
 
   ![Customer-level aggregated output](../assets/02/Transform_Output_2.png)
 
-### Initialize the write results dictionary
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Configure the Governed Writes
+
+Overwrite the curated Lakehouse table and Warehouse customer summary.
+
+</div>
+</div>
+
+First, run the write results dictionary cell:
 
 ```python
 writes = {}
@@ -167,18 +174,9 @@ writes = {}
 
 This creates an empty dictionary for the governed Write results. Keeping each complete result by target name makes the publication status, orchestration stages, Guardrail results, and, when published, target profile available for inspection after the Write.
 
-<div class="fabricops-section-banner" markdown="1">
-<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
-<div class="fabricops-section-content" markdown="1">
+### Run WRITE 1 — Lakehouse Curated Orders
 
-## Run WRITE 1 — Lakehouse Curated Orders
-
-Overwrite the curated Lakehouse table and Warehouse customer summary.
-
-</div>
-</div>
-
-The block overwrites Silver Lakehouse `demo.curated_orders` with `transformed_df` and saves the result as `writes["curated_orders_lakehouse"]`.
+Run **WRITE 1 — Lakehouse Curated Orders**. The block overwrites Silver Lakehouse `demo.curated_orders` with `transformed_df` and saves the result as `writes["curated_orders_lakehouse"]`.
 
 You should see the Write stages complete and `published=True`. 
 
@@ -225,6 +223,8 @@ Open the target tables in Fabric or use the notebook's optional inspection cell.
 
 ### Expected result
 
+The three Full Reads complete, both Overwrite targets publish, and the saved tables and metadata reflect the same successful notebook run.
+
 ### Data saved by the demo
 
 | Store | Table | What was saved |
@@ -250,7 +250,7 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 | `METADATA_SOURCE_OBSERVATION` | Source-state observations associated with successful target publication where applicable. |
 | `METADATA_GUARDRAIL_RESULTS` | Guardrail evaluation results when a selected Data Contract supplies executable Guardrails. |
 
-!!!note Reset the demo to a clean data state
+!!! note "Reset the demo to a clean data state"
 
     Use these steps when you want the next run to behave like the first Full Refresh run:
 
@@ -261,10 +261,7 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
         DROP TABLE IF EXISTS demo.customer_summary;
         ```
 
-    3. This notebook does not change our sources, however if they were changed somehow, rerun [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md)
-        - Bronze Lakehouse · `demo.orders`
-        - Bronze Lakehouse · `demo.products`
-        - Gold Warehouse · `demo.order_history`
+    3. This notebook does not change its sources. If they have changed, rerun [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md) to restore Bronze `demo.orders`, Bronze `demo.products`, and Gold `demo.order_history`.
 
 **Next optional processing mode:** [Step 2B. Run the Incremental Append Demo](02B-build-and-run-incremental-append-etl.md)
 

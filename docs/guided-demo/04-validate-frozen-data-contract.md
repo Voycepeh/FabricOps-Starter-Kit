@@ -1,9 +1,5 @@
 # Step 4. Validate the frozen Data Contract
 
-**Use the same `02A_full_refresh_demo` notebook to prove the complete governed path: first every Guardrail passes, then controlled source and target mutations exercise Freshness, Schema, Source Drift, Sensitive Data, every DQ behavior, and Guardrail Coverage without publishing a validation target.**
-
-The selector defaults every table to **Enforce**. For this step, put only `curated_orders` into **Validate** mode and select the exact frozen version from Step 3.
-
 ### Before you begin
 
 Complete [Step 3](03-author-and-freeze-data-contract.md) and select the frozen contract versions.

@@ -1,9 +1,5 @@
 # Step 5. Activate the Data Contract and promote to Production
 
-**Approve the tested Data Contract in Governance, then deploy the validated engineering artifact from Development to Production.**
-
-Step 5 closes the Development loop. Governance makes the validated contract the active Production definition, and Engineering promotes the same tested pipeline through the Fabric Deployment Pipeline.
-
 ### Before you begin
 
 Complete [Step 4](04-validate-frozen-data-contract.md) and use the validated frozen contract versions.
