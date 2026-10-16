@@ -102,7 +102,16 @@ You generally do not edit the selector code. Use the displayed controls to choos
 
     The returned `CONTRACTS` object carries the table-level mode and contract identity into `orchestrate_write()`. See [`widget_select_data_contract()`](../api/reference/widget_select_data_contract.md) for the exact return contract.
 
-### Configure the Governed Read
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Configure the Governed Read
+
+Select governed sources and run Read checks before transforming the data.
+
+</div>
+</div>
 
 **Replace the source identity in the existing Read block and keep the complete result in `sources`.**
 
@@ -166,7 +175,16 @@ For Incremental reads, add `read_parameters` and `target_table_id` rather than i
 
     Checks without an applicable Data Contract or Guardrail return a skipped result rather than inventing an expectation. Incremental batches are not profiled; FabricOps instead returns the eligible scope and uses `METADATA_SOURCE_OBSERVATION` plus the governed target's successful watermark progress to manage incremental execution.
 
-### Write your PySpark Transform
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Write your PySpark Transform
+
+Implement project-specific PySpark transformations between governed boundaries.
+
+</div>
+</div>
 
 **Replace this entire cell with the business transformation your project needs.**
 
@@ -183,7 +201,16 @@ Leaving the identity selection in place is fine when the source already has the 
 
 FabricOps does not prescribe the transformation style. Keep project-owned PySpark in this section and keep the governed orchestration calls in their Read and Write sections.
 
-### Configure the Governed Write
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Configure the Governed Write
+
+Publish the transformed data through the governed Write orchestrator.
+
+</div>
+</div>
 
 **Pass the transformed DataFrame and every contributing governed Read result into the target's Write block.**
 
@@ -242,7 +269,16 @@ You can add multiple independent Write blocks and give each result a unique key 
 
     A successful Write also records the source and target pipeline participation in `METADATA_DATA_LINEAGE`. Source Observation history used by Source Drift and incremental execution is committed only through the successful write path.
 
-### Inspect selected results
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Inspect selected results
+
+Review orchestration stages, Data Quality results, and published profiles.
+
+</div>
+</div>
 
 **Uncomment only the displays that help you understand or troubleshoot the current run.**
 

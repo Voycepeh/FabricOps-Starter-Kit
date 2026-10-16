@@ -54,7 +54,16 @@ The Engineering Development workspace contains `bronze`, `silver`, `gold`, its F
 
 The Consumer workspace should contain `00_env_config` and `99_explore`. It does not need its own Fabric store for this Guided Demo.
 
-### Open all the notebooks and set the Fabric Environment
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Open all the notebooks and set the Fabric Environment
+
+Attach the shared Fabric Environment to the imported notebooks before running them.
+
+</div>
+</div>
 
 Open each imported notebook and make sure it uses the Fabric Environment created in 0A that contains the FabricOps custom library.
 

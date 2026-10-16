@@ -94,7 +94,16 @@ sources = {}
 
 This creates an empty dictionary for the three governed Read results. Keeping each complete result by name lets the Transform block use the source DataFrames and lets the Write blocks pass their governed source identities into lineage and source-aware checks.
 
-### Run READ 1 — Orders
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Run READ 1 — Orders
+
+Read Orders, Products, and Order History using the governed Full Read pattern.
+
+</div>
+</div>
 
 The block reads the complete Bronze `demo.orders` table and saves the result as `sources["orders"]`.
 
@@ -122,7 +131,16 @@ You should see the Warehouse Read complete and the governed Read-stage summary a
 
 ![Order History Full Read output](../assets/02/Read_Block_Output_3.png)
 
-### Run the Transform block
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Run the Transform block
+
+Transform the three input sources into the curated and customer-level outputs.
+
+</div>
+</div>
 
 Run the cell under **3. Transform**.
 
@@ -161,7 +179,16 @@ writes = {}
 
 This creates an empty dictionary for the governed Write results. Keeping each complete result by target name makes the publication status, orchestration stages, Guardrail results, and, when published, target profile available for inspection after the Write.
 
-### Run WRITE 1 — Lakehouse Curated Orders
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Run WRITE 1 — Lakehouse Curated Orders
+
+Overwrite the curated Lakehouse table and Warehouse customer summary.
+
+</div>
+</div>
 
 The block overwrites Silver Lakehouse `demo.curated_orders` with `transformed_df` and saves the result as `writes["curated_orders_lakehouse"]`.
 
@@ -183,7 +210,16 @@ You should see the Write stages complete and `published=True`.
 
     WRITE 1 and WRITE 2 are not one atomic transaction. If WRITE 1 succeeds and WRITE 2 fails, `demo.curated_orders` remains published. Fix the error and rerun the notebook; both targets use Overwrite, so a successful rerun replaces their contents.
 
-### Inspect the saved results
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Inspect the saved results
+
+Verify the target tables and the recorded governance metadata.
+
+</div>
+</div>
 
 Open the target tables in Fabric or use the notebook's optional inspection cell.
 
