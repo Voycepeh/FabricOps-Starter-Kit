@@ -26,13 +26,17 @@ from fabricops_kit import (
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Create the Data Stewards
 
+Use the widget to create the data producer and consumer stewards.
+
+</div>
 </div>
 
 
-Use the widget to create the data producer and consumer stewards.
+
 
 
 - The dropdown lists are configurable and come from the `00_env_config` notebook.
@@ -45,13 +49,17 @@ Use the widget to create the data producer and consumer stewards.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-pointing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Create the Data Agreement
 
+Use the Data Agreement widget to define the relationship between the accountable producer and consumer stewards, including the purpose, scope, permitted use, and validity.
+
+</div>
 </div>
 
 
-Use the Data Agreement widget to define the relationship between the accountable producer and consumer stewards, including the purpose, scope, permitted use, and validity.
+
 
 
 - Capture the supporting information and other governance context required by your organisation.

@@ -22,12 +22,16 @@ Complete [Step 0B](00B-configure-environment-and-load-assets.md) before preparin
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Read the same Orders dataset from four file formats
 
+Read the same canonical Orders dataset using CSV, JSON, Parquet, and Excel.
+
+</div>
 </div>
 
-Read the same canonical Orders dataset using CSV, JSON, Parquet, and Excel.
+
 
 ![Read CSV](../assets/00C/Read_csv.png)
 
@@ -97,13 +101,17 @@ The expected output confirms that all four file formats resolve to equivalent da
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Read and write the demo data
 
+Read the remaining retail sources and write the managed Lakehouse and Warehouse tables for 02A. The notebook also seeds the Day 1 Bronze tables for 02B and 02C.
+
+</div>
 </div>
 
 
-Read the remaining retail sources and write the managed Lakehouse and Warehouse tables for 02A. The notebook also seeds the Day 1 Bronze tables for 02B and 02C.
+
 
 
 

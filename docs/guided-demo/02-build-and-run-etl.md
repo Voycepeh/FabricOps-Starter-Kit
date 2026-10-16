@@ -28,13 +28,17 @@ The template deliberately contains placeholder table names. Read this walkthroug
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## What to do
 
+Start by understanding the shape of the notebook before changing its code.
+
+</div>
 </div>
 
 
-Start by understanding the shape of the notebook before changing its code.
+
 
 
 ### Get familiar with the notebook

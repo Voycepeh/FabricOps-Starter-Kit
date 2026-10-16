@@ -10,12 +10,16 @@ Complete [Step 0A](00A-prepare-fabric-artifacts.md) before importing and configu
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Download and import the notebooks
 
+Download the current notebook templates from the FabricOps repository:
+
+</div>
 </div>
 
-Download the current notebook templates from the FabricOps repository:
+
 
 [FabricOps notebook templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
@@ -70,13 +74,17 @@ Use the same FabricOps wheel version across the workspace-specific Environments 
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Configure `00_env_config`
 
+Open `00_env_config` and replace the example Fabric IDs with the IDs for the Fabric items you created in 0A.
+
+</div>
 </div>
 
 
-Open `00_env_config` and replace the example Fabric IDs with the IDs for the Fabric items you created in 0A.
+
 
 
 
@@ -114,12 +122,16 @@ You can rename the objects to whatever make sense, also for each environment you
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Setup the metadata tables
 
+In the Governance workspace, run the metadata setup block in `00_env_config`.
+
+</div>
 </div>
 
-In the Governance workspace, run the metadata setup block in `00_env_config`.
+
 
 ![Setup Metadata Tables](../assets/00B/00_config_metadata_tables_setup_code.png)
 
@@ -129,12 +141,16 @@ This prepares the metadata Lakehouse before `01_governance` starts creating Data
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Download the demo data
 
+Download the supplied demo files from: [FabricOps DemoData](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData)
+
+</div>
 </div>
 
-Download the supplied demo files from: [FabricOps DemoData](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData)
+
 
 Download the **entire DemoData folder**. Every retained file has an explicit Guided Demo owner:
 
@@ -148,9 +164,13 @@ Download the **entire DemoData folder**. Every retained file has an explicit Gui
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Upload the demo data
 
+Follow this part of the Guided Demo before continuing to the next activity.
+
+</div>
 </div>
 
 1. Open the **Engineering Development** workspace.

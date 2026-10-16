@@ -42,9 +42,13 @@ Load the shared environment, read the three sources, transform the data, and pub
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
 
 ## Run the demo in Fabric
 
+Execute the governed Full Reads, PySpark transformation, and Overwrite writes.
+
+</div>
 </div>
 
 ### Run the Environment block
