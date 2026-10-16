@@ -8,7 +8,7 @@ Day 1 source preparation is handled by [Step 00C](00C-prepare-demo-data-with-fab
 
 The notebook explicitly sets `frequency_enabled=True` and `frequency_top_n=5` on its `orchestrate_read()` and `orchestrate_write()` calls. This retains up to five frequency values per eligible column. For faster runs when frequency distributions are not needed, set **`frequency_enabled=False`** on the relevant orchestrator call to skip frequency profiling for **all columns** while keeping the standard statistical profile. `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating frequencies.
 
-## Before you begin
+### Before you begin
 
 1. Complete [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md).
 2. Download [`02A_full_refresh_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02A_full_refresh_demo.ipynb) and import it into the Engineering Development workspace.
@@ -22,7 +22,7 @@ The notebook explicitly sets `frequency_enabled=True` and `frequency_top_n=5` on
 | Products | Bronze Lakehouse · `demo.products` |
 | Order History | Gold Warehouse · `demo.order_history` |
 
-## What you will do
+### What you will do
 
 <div class="fabricops-mascot-callout">
   <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="FabricOps mascot" loading="lazy">
@@ -40,7 +40,12 @@ Load the shared environment, read the three sources, transform the data, and pub
 5. Overwrite a Silver Lakehouse table and a Gold Warehouse table.
 6. Inspect the saved data and FabricOps metadata.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+
 ## Run the demo in Fabric
+
+</div>
 
 ### Run the Environment block
 
@@ -190,7 +195,7 @@ Open the target tables in Fabric or use the notebook's optional inspection cell.
 
 ![Customer Summary saved in the Gold Warehouse](../assets/02/Gold_Table_WH.png)
 
-## Expected result
+### Expected result
 
 ### Data saved by the demo
 

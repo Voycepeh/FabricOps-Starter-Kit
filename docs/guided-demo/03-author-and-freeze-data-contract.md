@@ -16,20 +16,20 @@ Freezing creates an **immutable Data Contract** candidate for validation. It doe
 
     See Microsoft's [workspace roles](https://learn.microsoft.com/en-us/fabric/fundamentals/roles-workspaces) and [List Item Schedules API](https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/list-item-schedules) for the underlying access requirements.
 
-## Before you begin
+### Before you begin
 
 Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the contracts.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+
 ## Cover the whole pipeline, not only the target
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
+</div>
+
 
 Step 4 validates the complete governed path, so every participating table needs a frozen contract:
 
-  </div>
-</div>
 
 
 | Pipeline role | Table | Guardrails exercised |
@@ -57,7 +57,12 @@ For `curated_orders`, enable **Schema**, add one **Sensitive Data** treatment on
 
 For this walkthrough, keep every DQ rule **Enabled** but leave **Block on failure** off. Step 4 intentionally breaks every DQ behavior in one validation run; Warn lets FabricOps report all of them instead of stopping at the first blocking failure.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+
 ## Table
+
+</div>
 
 Open **Table** and review:
 
@@ -69,7 +74,12 @@ Open **Table** and review:
 
 Use AI suggestions where useful, then review them before applying. Profile statistics are evidence only; they do not become contract requirements unless Governance authors a rule from them.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+
 ## Columns — author the direct DQ rules
+
+</div>
 
 Open **Columns** and configure these rules for the integration exercise:
 
@@ -85,7 +95,12 @@ Keep **Block on failure** off for each rule.
 
 Whitelist and Blacklist are separate rules even though both persist using the `value_set` runtime type. The [DQ rule reference](../reference/dq-rules/index.md) maps every authoring control to its persisted rule.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+
 ## DQ Rules — exercise every Business Rule path
+
+</div>
 
 Open **DQ Rules** and resolve each requirement below. Review the proposed rule before choosing **Add DQ Rule**.
 
@@ -109,7 +124,7 @@ For each proposal:
 
 If AI resolves one of these requirements to a different rule, do not accept it just to continue the demo. Refine the business wording until the intended deterministic rule is produced.
 
-## Confirm the complete DQ contract
+### Confirm the complete DQ contract
 
 Before freezing, the contract should exercise all nine supported runtime DQ types and both Value List behaviors:
 
@@ -128,11 +143,16 @@ Before freezing, the contract should exercise all nine supported runtime DQ type
 
 This is intentionally broader than a normal contract. The Guided Demo uses it as the canonical Fabric integration exercise for the complete DQ authoring and execution path.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
+
 ## Freeze every participating contract
+
+</div>
 
 Freeze the three source contracts and the `curated_orders` target contract. Step 4 must select the exact frozen versions for all four participating tables; otherwise Guardrail Coverage correctly reports that the governed source → target path is not ready.
 
-## Manifest & Freeze
+### Manifest & Freeze
 
 Open **Manifest & Freeze** and review the complete contract, including the DQ rules above.
 
@@ -140,7 +160,7 @@ Choose **Save Data Contract** while the version is still a draft. When it is rea
 
 The frozen version is immutable and becomes the exact candidate Engineering selects in Step 4. Freezing does not activate it for Production.
 
-## Expected result
+### Expected result
 
 You now have frozen contracts for the complete demo pipeline. `curated_orders` represents all nine DQ rule types, `orders` supplies the source-side Freshness and Source Drift expectations, Schema is represented across the pipeline, and Sensitive Data treatment is configured on the governed target. Step 4 can now exercise every Guardrail stage that the orchestrators actually run.
 

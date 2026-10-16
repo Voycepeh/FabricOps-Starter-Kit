@@ -4,20 +4,20 @@
 
 The selector defaults every table to **Enforce**. For this step, put only `curated_orders` into **Validate** mode and select the exact frozen version from Step 3.
 
-## Before you begin
+### Before you begin
 
 Complete [Step 3](03-author-and-freeze-data-contract.md) and select the frozen contract versions.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
+
 ## Select Validate for `curated_orders`
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
+</div>
+
 
 In the Data Contract selector at the top of `02A_full_refresh_demo`:
 
-  </div>
-</div>
 
 
 1. leave every source table in **Enforce** mode and select its exact frozen Step 3 contract,
@@ -28,7 +28,12 @@ All participating tables need selected contracts because Guardrail Coverage chec
 
 The frozen-version picker appears only for a target in Validate mode. There is no separate contract dictionary to edit.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
+
 ## Prove the happy path first
+
+</div>
 
 Run the normal visible **Read → Transform → Write** sequence without changing `transformed_df`.
 
@@ -47,7 +52,12 @@ Confirm:
 
 This proves the contract describes the canonical target before we deliberately break it.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
+
 ## Exercise the source-side Guardrails
+
+</div>
 
 Source Guardrails are evaluated from the real source read and Source Observation metadata, so changing only `transformed_df` cannot test them. Use a controlled mutation of the Development `orders` table, then restore it from the canonical fixture.
 
@@ -90,7 +100,12 @@ Keep these rules on Warn for this run so the pipeline can reach the later target
 
 After restoration, rerun the Orders Read block so the notebook is again holding the canonical source DataFrame.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
+
 ## Build a deterministic dirty target
+
+</div>
 
 Rerun the notebook through the normal Transform cell. Immediately after that cell, add this temporary validation cell:
 
@@ -171,7 +186,7 @@ write_result = orchestrate_write(
 
 Do not change the reusable `02_pipeline` template itself; make validation mutations only in your imported 02A demo copy.
 
-## Run the dirty target with every DQ rule on Warn
+### Run the dirty target with every DQ rule on Warn
 
 Run the `curated_orders` Write block again.
 
@@ -208,7 +223,7 @@ Dirty target + Warn
 
 Inspect the rule-level checks rather than relying only on the aggregate DQ status. Each row in the matrix should have a corresponding failed/warning rule result.
 
-## Prove Sensitive Data treatment
+### Prove Sensitive Data treatment
 
 Inspect `write_result["sensitive_result"]` from the target validation. Confirm the configured `customer_id` treatment was evaluated and that the prepared DataFrame contains the treated representation.
 
@@ -216,7 +231,7 @@ Sensitive Data is intentionally different from a validation rule: valid sensitiv
 
 Also confirm the dirty target's `unexpected_target_column` produces target **Schema** warning evidence. This is separate from the source Schema exercise above and proves the Write boundary validates the DataFrame before publication.
 
-## Try Block on failure
+### Try Block on failure
 
 The walkthrough uses Warn first because a blocking rule can stop orchestration before later stages are visible.
 
@@ -233,7 +248,7 @@ The selected violation should now stop the orchestration at that Guardrail stage
 
 Do not edit a frozen version in place. Refine the draft, freeze a new immutable version, and select that version for validation.
 
-## Prove Guardrail Coverage
+### Prove Guardrail Coverage
 
 [Guardrail Coverage](../api/reference/check_guardrail_coverage.md) is not another Warn/Block rule. It is the pre-publication readiness gate that verifies every selected participant has an applicable contract and that every applicable Guardrail produced current-activity evidence.
 
@@ -243,7 +258,12 @@ For the negative exercise, temporarily deselect one participating source contrac
 
 This gate intentionally blocks rather than warns: publishing without the required Guardrail evidence would defeat the coverage check.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
+
 ## Restore the happy path before activation
+
+</div>
 
 Remove the temporary dirty-target cell or switch the Write block back to `transformed_df`, then rerun the normal target validation using the contract version you intend to activate.
 
@@ -251,7 +271,7 @@ Require a clean validation result before continuing to Step 5.
 
 Step 3's source-side exercise temporarily overwrites only the Development Bronze Orders table and explicitly restores it from Step 00C. The dirty target remains in-session only. After restoring Bronze, rerun the normal Reads, Transform, and Write validation so every Guardrail is green again.
 
-## What this proves
+### What this proves
 
 This is an integration test of the complete Fabric path, not only the individual DQ functions:
 
@@ -268,7 +288,7 @@ Data Contract UI
 
 The exercise now covers both orchestrator boundaries ([`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md)): Read-side Freshness/Schema/DQ evidence, Write-side Schema/Sensitive Data/Source Drift/DQ, and the final [Guardrail Coverage](../api/reference/check_guardrail_coverage.md) readiness gate. Source mutations are restored from the canonical fixture; target mutations remain in-session only.
 
-## Expected result
+### Expected result
 
 The frozen pipeline contracts have:
 

@@ -4,11 +4,11 @@
 
 There is no new engineering pattern in this step. The point is to execute the same tested workflow in the Production environment.
 
-## Before you begin
+### Before you begin
 
 Complete [Step 5](05-activate-data-contract-and-promote.md) and use the promoted Production pipeline.
 
-## Load the Production configuration
+### Load the Production configuration
 
 Run the Production copy of `00_env_config`:
 
@@ -18,16 +18,16 @@ Run the Production copy of `00_env_config`:
 
 The same logical store names now resolve to the Production Lakehouses, Warehouses, schemas, paths, and SQL endpoints.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="" loading="lazy">
+
 ## Run the promoted pipeline
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
+</div>
+
 
 Run the promoted `02A_full_refresh_demo` pipeline from start to finish.
 
-  </div>
-</div>
 
 
 Production follows the same visible lifecycle used in Development:
@@ -45,7 +45,12 @@ The key difference is Data Contract resolution:
 
 The same Guardrail functions therefore enforce the Production-active definition, and [`pipeline_write()`](../api/reference/pipeline_write.md) uses the active governed Processing configuration for each target.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="" loading="lazy">
+
 ## Grant direct consumer access
+
+</div>
 
 Once the governed Production output exists, consumers do not need a FabricOps exploration notebook to use it.
 
@@ -55,7 +60,7 @@ Consumers can then use the standard Fabric experience that fits their work: conn
 
 FabricOps remains relevant to the access boundary through its effective-access scanning and governance context. It does not need to own the consumer's exploration interface.
 
-## Expected result
+### Expected result
 
 Engineering Production completes the validated pipeline workflow, publishes governed Production outputs using the active Data Contract, and approved consumers can reach those outputs through native Fabric access controls and interfaces.
 

@@ -117,21 +117,36 @@ Do not describe AI suggestions as authoritative governance decisions. Keep termi
 
 ### Guided Demo page pattern
 
-Guided Demo action pages should normally follow this structure where applicable:
+Guided Demo pages use mascot banners as **real major section headings and visual section breaks**, rather than a separate heading followed by a repetitive mascot callout. This applies to `docs/guided-demo.md` and all action pages in `docs/guided-demo/`.
 
-```text
-# Step X: Action
+- Keep the existing `#` page heading and concise introduction.
+- A meaningful activity, setup resource, stakeholder handoff, demo day, or workflow phase begins with a shared `fabricops-section-banner` containing the actual `##` Markdown heading. Never repeat that heading above or beneath the banner.
+- Keep prerequisites, notebook execution cells, explanations, checks, expected results, and other smaller topics in ordinary `###` subsections or normal prose. Preserve the notebook step numbering and existing page names.
+- Use banners for narrative section breaks, **not** every instruction, screenshot, or minor technical subsection. Group coherent activities under one banner.
+- Reuse existing `docs/assets/mascots/` images on the left of the heading; keep decorative images `alt=""` because the adjacent heading is the accessible label.
+- Move useful copy from old mascot callouts into normal prose immediately after the banner. Preserve links, code, outcomes, screenshots, and original technical meaning.
+- Author the real heading inside the banner with `markdown="1"` and `md_in_html` enabled, so Material heading anchors and the table of contents continue to work.
+- Use shared `docs/stylesheets/guided-demo-banners.css` for banner appearance and responsive rules. Do not add per-page CSS or duplicate banner styles.
+- Use Material admonitions for warnings/tips and collapsibles for optional detail. Do not add a second colored box below a section banner.
 
-Short purpose or outcome.
+Example:
 
-## Before you begin
-## What to do
-## Expected result
+```md
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
 
-Previous / Next
+## Create the Data Agreement
+
+</div>
+
+Define the agreement between the producer and consumer.
+
+### Configure the agreement
+
+Follow the instructions in the governance notebook.
 ```
 
-Use additional sections only where the step genuinely needs them. Long technical explanation should sit under a descriptive subsection or collapsible block rather than forming a wall of text. Prefer putting design rationale and trade-offs next to the action they explain instead of creating a separate standalone rationale page.
+Keep previous/next navigation and the Guided Demo's established activity numbering intact.
 
 ### Maintainer page pattern
 

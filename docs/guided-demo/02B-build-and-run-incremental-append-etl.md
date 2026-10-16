@@ -8,7 +8,7 @@ This demo uses a watermark on `modified_datetime` and an Append target. Run the 
 
 The notebook explicitly sets `frequency_enabled=True` and `frequency_top_n=5` on its `orchestrate_read()` and `orchestrate_write()` calls. This retains up to five frequency values per eligible column. For faster runs when frequency distributions are not needed, set **`frequency_enabled=False`** on the relevant orchestrator call to skip frequency profiling for **all columns** while keeping the standard statistical profile. `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating frequencies.
 
-## Before you begin
+### Before you begin
 
 1. Download [`02B_incremental_append_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02B_incremental_append_demo.ipynb) and import it into the Engineering Development workspace.
 2. Keep `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
@@ -17,7 +17,7 @@ The notebook explicitly sets `frequency_enabled=True` and `frequency_top_n=5` on
  Run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) first to stage Day 1. For Day 2, the notebook reads `Demo/inventory_day2.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `incremental_inventory` subfolder.
 ![File upload](../assets/2b/File%20Upload.png)
 
-## What you will do
+### What you will do
 
 <div class="fabricops-mascot-callout">
   <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="FabricOps mascot" loading="lazy">
@@ -69,7 +69,12 @@ from fabricops_kit import (
 
 ![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+
 ## Run Day 1 in Fabric
+
+</div>
 
 Leave the value under **1. Choose the demo day** as:
 
@@ -161,7 +166,12 @@ You should see:
 
 *Image coming soon: Day 1 Silver rows and inventory balances.*
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+
 ## Run Day 2 in Fabric
+
+</div>
 
 ### Change only the demo day
 
@@ -196,7 +206,12 @@ The final inspection should show:
 
 *Image coming soon: Day 2 incremental scope, 12 Silver rows, and updated balances.*
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+
 ## Run Day 3 in Fabric
+
+</div>
 
 ### Change only the demo day
 
@@ -231,7 +246,7 @@ The final inspection should show:
 
 *Image coming soon: Day 3 empty scope and unchanged 12-row Silver target.*
 
-## Expected result
+### Expected result
 
 ### Data saved by the demo
 

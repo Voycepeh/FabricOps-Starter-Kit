@@ -128,6 +128,7 @@ extra_css:
   - stylesheets/layout-wide.css
   - stylesheets/fabric-theme.css
   - stylesheets/featured-solutions.css
+  - stylesheets/guided-demo-banners.css
   - stylesheets/workflow.css
   - stylesheets/table-controls.css
   - stylesheets/image-borders.css

@@ -8,7 +8,7 @@
 
 The notebook explicitly sets `frequency_enabled=True` and `frequency_top_n=5` on its `orchestrate_read()` and `orchestrate_write()` calls. This retains up to five frequency values per eligible column. For faster runs when frequency distributions are not needed, set **`frequency_enabled=False`** on the relevant orchestrator call to skip frequency profiling for **all columns** while keeping the standard statistical profile. `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating frequencies.
 
-## Before you begin
+### Before you begin
 
 1. Download [`02C_scd_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02C_scd_demo.ipynb) and import it into the Engineering Development workspace.
 2. Keep `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
@@ -20,7 +20,7 @@ The notebook explicitly sets `frequency_enabled=True` and `frequency_top_n=5` on
 
 4. Use a fresh demo state and run Day 1, then Day 2, then Day 3.
 
-## What you will do
+### What you will do
 
 <div class="fabricops-mascot-callout">
   <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="FabricOps mascot" loading="lazy">
@@ -45,7 +45,12 @@ The notebook uses these governed tables throughout:
 | Current-state target | Silver Lakehouse · `demo.product_master_scd1` | SCD1 keyed by `product_id` |
 | Historical target | Silver Lakehouse · `demo.product_master_scd2` | SCD2 effective on `modified_datetime` and tracking `product_category` and `list_price` |
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+
 ## Run Day 1 in Fabric
+
+</div>
 
 ### Run the Environment block
 
@@ -170,7 +175,12 @@ The first display shows one current SCD1 row per product. The second shows one c
 
 *Image coming soon: Day 1 SCD1 and SCD2 result tables.*
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+
 ## Run Day 2 in Fabric
+
+</div>
 
 ### Change only the demo day
 
@@ -204,7 +214,12 @@ In the SCD2 display, `P002` now has one historical version and one current versi
 
 *Image coming soon: Day 2 SCD1 result and the two SCD2 versions for P002.*
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+
 ## Run Day 3 in Fabric
+
+</div>
 
 ### Change only the demo day
 
@@ -240,7 +255,7 @@ The final SCD2 display shows the historical and current versions ordered by `pro
 
     Run Day 1 → Day 2 → Day 3. The sequence-safety block stops if an expected prior state is missing. Replaying the current day is safe because unchanged tracked values do not create another SCD2 version.
 
-## Expected result
+### Expected result
 
 ### Data saved by the demo
 

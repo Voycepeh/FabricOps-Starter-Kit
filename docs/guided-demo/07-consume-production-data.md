@@ -6,7 +6,7 @@ Step 6 already completed the engineering handoff: the Production pipeline ran, g
 
 Step 7 adds a consumer and analytics-engineering interface over that foundation.
 
-## Before you begin
+### Before you begin
 
 - Run on a [Fabric capacity that supports Data Agents](https://learn.microsoft.com/fabric/data-science/data-agent-concept).
 - Give the caller access to the governed Production Lakehouse or Warehouse and permission to create and configure items in the target workspace.
@@ -17,21 +17,26 @@ Step 7 adds a consumer and analytics-engineering interface over that foundation.
 FabricOps acquires the Fabric API token from `notebookutils`; do not paste or persist bearer tokens. Permission failures retain the underlying Fabric HTTP status and response details.
 
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-pointing.png" alt="" loading="lazy">
+
 ## Review the governed context
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-pointing.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
+</div>
+
 
 The consumer should be able to select approved Production table(s) and see the useful context FabricOps already captured: purpose, grain/key evidence, column meaning, business rules, Data Quality expectations, sensitivity/classification decisions, lineage, freshness, access information, and known limitations.
 
-  </div>
-</div>
 
 
 This is derived from authoritative FabricOps metadata rather than maintained again in the consumption notebook.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-pointing.png" alt="" loading="lazy">
+
 ## Create a single-table Data Agent
+
+</div>
 
 FabricOps V1 exposes a thin programmatic handoff:
 
@@ -72,13 +77,13 @@ Test and consume
 
     The single-table API is Preview. Multi-table agents, relationship authoring, product registration and overlap detection, evaluation, and automatic publication remain deliberately out of scope.
 
-## Multi-table extension
+### Multi-table extension
 
 The same handoff later supports multiple governed tables. An analytics engineer selects tables, confirms explicit relationships using deterministic evidence from FabricOps, and reuses those relationships as consumption context.
 
 That context can ground a multi-table Data Agent without turning FabricOps into a general-purpose semantic-modelling engine.
 
-## Other consumption paths
+### Other consumption paths
 
 A Data Agent is the first automated consumption accelerator, not the definition of Step 7.
 
@@ -86,7 +91,7 @@ Consumers can continue using notebooks, SQL, Lakehouses, Warehouses, and other n
 
 The maintainer-facing product direction is recorded in the [FabricOps product definition](../maintainer/product-definition.md).
 
-## Expected result
+### Expected result
 
 Approved Production data can be consumed through the documented Fabric interfaces, with FabricOps governance context available for downstream use.
 
