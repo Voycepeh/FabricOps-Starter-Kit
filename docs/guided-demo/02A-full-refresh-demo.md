@@ -20,7 +20,7 @@
 
 ## The big picture
 
-Follow the same notebook lifecycle as Step 2 with concrete Full Read and Overwrite examples.
+Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite targets.
 
 </div>
 </div>
@@ -34,47 +34,7 @@ Follow the same notebook lifecycle as Step 2 with concrete Full Read and Overwri
 | Governed Write | Overwrites a Silver Lakehouse target and a Gold Warehouse target. |
 | Inspection | Verifies the published data and FabricOps metadata. |
 
-### Load the shared environment
-
-Run the two cells under **0. Environment**:
-
-```python
-%run 00_env_config
-```
-
-Then run the import cell immediately below it.
-
-```python
-from pyspark.sql import functions as F
-
-from fabricops_kit import (
-    orchestrate_read,
-    orchestrate_write,
-    widget_select_data_contract,
-)
-```
-
-`00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
-
-![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
-
-### Run the Data Contract block
-
-```python
-CONTRACTS = widget_select_data_contract(spark_session=spark)
-```
-
-For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped, and the targets can publish in Engineering Development.
-
-![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
-
-### Initialize the source results dictionary
-
-```python
-sources = {}
-```
-
-This creates an empty dictionary for the three governed Read results. Keeping each complete result by name lets the Transform block use the source DataFrames and lets the Write blocks pass their governed source identities into lineage and source-aware checks.
+Run **0. Environment** and **1. Data Contract** as described in [Step 2](02-build-and-run-etl.md). For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped. Then initialize `sources = {}`.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -87,31 +47,21 @@ Read Orders, Products, and Order History using the governed Full Read pattern.
 </div>
 </div>
 
-### Run READ 1 — Orders
+### What changes in the Reads
 
-Run **READ 1 — Orders**. The block reads the complete Bronze `demo.orders` table and saves the result as `sources["orders"]`.
+This demo runs three governed Full Reads instead of the single example in Step 2:
 
-You should see the five Read stages complete. With no selected Data Contract, contract-backed checks show as `SKIPPED`; the Full Read still returns the Orders DataFrame and profiles it.
+| Block | Source | Saved result | Difference to notice |
+| --- | --- | --- | --- |
+| READ 1 — Orders | Bronze Lakehouse · `demo.orders` | `sources["orders"]` | Reads and profiles the complete table. |
+| READ 2 — Products | Bronze Lakehouse · `demo.products` | `sources["products"]` | Adds a second Lakehouse source to the same transform. |
+| READ 3 — Order History | Gold Warehouse · `demo.order_history` | `sources["history"]` | Pushes a `SELECT` query to the Warehouse. |
+
+Run all three blocks. Each should complete the governed Read stages; contract-backed checks show as `SKIPPED` when no Data Contract is selected.
 
 ![Orders Full Read output](../assets/02/Read_Block_Output.png)
 
-### Run READ 2 — Products
-
-Run **READ 2 — Products**.
-
-The block reads the complete Bronze `demo.products` table and saves the result as `sources["products"]`.
-
-You should see the same Read-stage summary for Products.
-
 ![Products Full Read output](../assets/02/Read_Block_Output_2.png)
-
-### Run READ 3 — Order History
-
-Run **READ 3 — Order History**.
-
-This block pushes its `SELECT` query to the Gold Warehouse, returns the selected `demo.order_history` columns, and saves the result as `sources["history"]`.
-
-You should see the Warehouse Read complete and the governed Read-stage summary appear.
 
 ![Order History Full Read output](../assets/02/Read_Block_Output_3.png)
 
@@ -126,9 +76,7 @@ Transform the three input sources into the curated and customer-level outputs.
 </div>
 </div>
 
-Run the cell under **3. Transform**.
-
-The PySpark code:
+Run **3. Transform**. Unlike the single-source example in Step 2, this transform:
 
 1. summarizes historical orders by `customer_id`;
 2. joins Orders, Products, and the history summary;
@@ -136,16 +84,7 @@ The PySpark code:
 4. creates `transformed_df` at order level; and
 5. creates `customer_summary_df` at customer level.
 
-Uncomment these lines if you want to inspect both DataFrames before publishing:
-
-```python
-# Detailed order-level transformed output that will feed WRITE 1.
-display(transformed_df)
-# Customer-level aggregated output that will feed WRITE 2.
-display(customer_summary_df)
-```
-
-You should see:
+The optional displays show:
 
 - one detailed row per current order in `transformed_df`:
 
@@ -166,29 +105,16 @@ Overwrite the curated Lakehouse table and Warehouse customer summary.
 </div>
 </div>
 
-First, run the write results dictionary cell:
+Initialize `writes = {}`, then run both Write blocks. This demo publishes two independent Overwrite targets from the same transform:
 
-```python
-writes = {}
-```
+| Block | DataFrame | Target | Saved result |
+| --- | --- | --- | --- |
+| WRITE 1 — Lakehouse Curated Orders | `transformed_df` | Silver Lakehouse · `demo.curated_orders` | `writes["curated_orders_lakehouse"]` |
+| WRITE 2 — Warehouse Customer Summary | `customer_summary_df` | Gold Warehouse · `demo.customer_summary` | `writes["customer_summary_warehouse"]` |
 
-This creates an empty dictionary for the governed Write results. Keeping each complete result by target name makes the publication status, orchestration stages, Guardrail results, and, when published, target profile available for inspection after the Write.
-
-### Run WRITE 1 — Lakehouse Curated Orders
-
-Run **WRITE 1 — Lakehouse Curated Orders**. The block overwrites Silver Lakehouse `demo.curated_orders` with `transformed_df` and saves the result as `writes["curated_orders_lakehouse"]`.
-
-You should see the Write stages complete and `published=True`. 
+Both Write results should show `published=True`.
 
 ![Curated Orders Write output](../assets/02/Write_Block_Output.png)
-
-### Run WRITE 2 — Warehouse Customer Summary
-
-Run **WRITE 2 — Warehouse Customer Summary**.
-
-The block overwrites Gold Warehouse `demo.customer_summary` with `customer_summary_df` and saves the result as `writes["customer_summary_warehouse"]`.
-
-You should see the Write stages complete and `published=True`.
 
 ![Customer Summary Write output](../assets/02/Write_Block_Output_2.png)
 

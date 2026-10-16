@@ -17,7 +17,7 @@
 
 ## The big picture
 
-Repeat the standard Read / Transform / Write lifecycle and compare how SCD1 and SCD2 record the same changes.
+Change the Step 2 Write strategy to SCD1 and SCD2, then compare how both targets record the same source changes.
 
 </div>
 </div>
@@ -42,19 +42,7 @@ The notebook uses these governed tables throughout:
 
     For faster runs when frequency distributions are not needed, set `frequency_enabled=False` on the relevant orchestrator call. The standard statistical profile still runs. Setting `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating them.
 
-### Load the shared environment
-
-Run the two cells under **0. Environment**:
-
-```python
-%run 00_env_config
-```
-
-Then run the import cell immediately below it. The import cell provides the public APIs used by that notebook, so its exact list can vary by demo.
-
-`00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
-
-![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
+The standard Environment, Data Contract, result-storage, and inspection patterns are explained in [Step 2](02-build-and-run-etl.md). This page covers only the day selection, snapshot staging, sequence safety, and SCD outcomes.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -87,94 +75,33 @@ The cell should complete without an error. Bronze now contains the complete Day 
 
 *Image coming soon: Day 1 Product Master snapshot saved in Bronze.*
 
-### Run the Data Contract block
+### Run the changed pipeline blocks
 
-Run the Data Contract cell:
+Run the remaining blocks through **5. Inspect**. For the initial Guided Demo run, leave the Data Contract selection unchanged.
 
-```python
-CONTRACTS = widget_select_data_contract(spark_session=spark)
-```
+The changes from Step 2 are:
 
-For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped, and the targets can publish in Engineering Development.
-
-If you revisit the notebook after Data Contracts exist, choose **Enforce** to allow publication after the required checks pass. Choose **Validate** to evaluate a frozen candidate without publishing the target.
-
-![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
-
-### Run the Governed Full Read
-
-First, run the source results dictionary cell:
-
-```python
-sources = {}
-```
-
-This creates an empty dictionary for the governed Read result. Keeping the complete result by name gives the Transform block access to its DataFrame and lets both Write blocks pass the same governed source identity into lineage and source-aware checks.
-
-Then run the remaining cell under **4. Governed Full Read**.
-
-The block reads all eight rows from Bronze `demo.product_master_updates` and saves the result as `sources["product_master"]`.
-
-You should see the Read stages complete and the Full Read profile the source snapshot.
+- **Governed Full Read:** reads the complete eight-row Product Master snapshot into `sources["product_master"]`.
+- **PySpark Transform:** selects the Product Master columns and casts `list_price` to double and `modified_datetime` to timestamp.
+- **Sequence safety:** does nothing on Day 1; on later days, verifies that the expected earlier SCD2 state exists before either target is updated.
+- **WRITE 1 — SCD1 current state:** keys Silver `demo.product_master_scd1` by `product_id` and keeps one current row per product.
+- **WRITE 2 — SCD2 history:** uses `modified_datetime` as the effective column and tracks changes to `product_category` and `list_price` in Silver `demo.product_master_scd2`.
 
 *Image coming soon: Day 1 Product Master Full Read output.*
 
-### Run the PySpark Transform
-
-Run the cell under **5. PySpark Transform**.
-
-The block selects the Product Master columns and casts `list_price` to double and `modified_datetime` to timestamp. The resulting `transformed_df` contains eight rows ready for both targets.
-
 *Image coming soon: transformed Day 1 Product Master DataFrame.*
-
-### Run the Sequence safety block
-
-Run the cell under **Sequence safety**.
-
-Nothing is checked on Day 1 because no earlier SCD2 state is required. The cell should complete without output.
-
-### Run WRITE 1 — SCD1 current state
-
-First, run the write results dictionary cell:
-
-```python
-writes = {}
-```
-
-This creates an empty dictionary for both governed Write results. Keeping each complete result by target name makes the publication status, orchestration stages, Guardrail results, and, when published, target profiles available for inspection.
-
-Then run **WRITE 1 — SCD1 current state**.
-
-The block publishes the eight products to Silver `demo.product_master_scd1`, keyed by `product_id`.
-
-You should see the Write stages complete successfully.
 
 *Image coming soon: Day 1 SCD1 Write output.*
 
-### Run WRITE 2 — SCD2 history
-
-Run **WRITE 2 — SCD2 history**.
-
-The block publishes the initial version of every product to Silver `demo.product_master_scd2`. It uses `modified_datetime` as the effective column and tracks changes to `product_category` and `list_price`.
-
-You should see the Write stages complete successfully.
-
 *Image coming soon: Day 1 SCD2 Write output.*
 
-### Inspect the Day 1 result
+### Inspect the Day 1 profiles
 
-Run the cell under **7. Inspect current and historical results**.
+Run the cell under **5. Inspect**. It displays the `profile_result` already returned by each governed Write; it does not read either Silver table again.
 
-You should see:
+The SCD1 and SCD2 profiles should both show `row_count = 8` on their profiled columns.
 
-```text
-SCD1 rows: 8
-SCD2 versions: 8
-```
-
-The first display shows one current SCD1 row per product. The second shows one current SCD2 version per product with `_is_current=True`.
-
-*Image coming soon: Day 1 SCD1 and SCD2 result tables.*
+*Image coming soon: Day 1 SCD1 and SCD2 target profiles.*
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -197,7 +124,7 @@ DEMO_DAY = 2
 
 ### Rerun the complete notebook
 
-Use **Run all** or run every block again from **0. Environment** through **7. Inspect current and historical results**.
+Use **Run all** or run every block again from **0. Environment** through **5. Inspect**.
 
 The notebook replaces Bronze with the complete Day 2 snapshot. The sequence-safety block confirms that the expected earlier SCD2 state exists before either target is updated.
 
@@ -208,16 +135,9 @@ Product `P002` has a new `list_price`:
 
 ### Check the Day 2 output
 
-You should see:
+The SCD1 profile should show `row_count = 8`; the SCD2 profile should show `row_count = 9`, confirming that the changed `P002` created one additional historical version.
 
-```text
-SCD1 rows: 8
-SCD2 versions: 9
-```
-
-In the SCD2 display, `P002` now has one historical version and one current version.
-
-*Image coming soon: Day 2 SCD1 result and the two SCD2 versions for P002.*
+*Image coming soon: Day 2 SCD1 and SCD2 target profiles.*
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -249,16 +169,9 @@ Product `P001` has a new `product_category`:
 
 ### Check the Day 3 output
 
-You should see:
+The SCD1 profile should show `row_count = 8`; the SCD2 profile should show `row_count = 10`, confirming that the changed `P001` created one additional historical version.
 
-```text
-SCD1 rows: 8
-SCD2 versions: 10
-```
-
-The final SCD2 display shows the historical and current versions ordered by `product_id` and `_effective_from`. Use `_effective_to` and `_is_current` to distinguish closed history from the current record.
-
-*Image coming soon: Day 3 SCD1 result and final 10-version SCD2 history.*
+*Image coming soon: Day 3 SCD1 and SCD2 target profiles.*
 
 !!! warning "Keep the days in order"
 
