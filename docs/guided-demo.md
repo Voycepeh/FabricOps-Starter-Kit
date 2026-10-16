@@ -16,12 +16,16 @@
 
     FabricOps documentation remains the source of truth for how this starter kit is designed and used.
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-pointing.png" alt="" loading="lazy">
+
 ## Foundation setup
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-pointing.png" alt="FabricOps mascot" loading="eager">
-  <div><p>Start with <strong>0A–0C</strong> to prepare your Fabric environment, configure the notebooks, and load the demo data before running the governed pipeline.</p></div>
 </div>
+
+
+Start with <strong>0A–0C</strong> to prepare your Fabric environment, configure the notebooks, and load the demo data before running the governed pipeline.
+
 
 | Setup | What you do | Why it matters |
 | --- | --- | --- |
@@ -29,12 +33,16 @@
 | [0B. Load and configure the Guided Demo assets](guided-demo/00B-configure-environment-and-load-assets.md) | Import the core notebooks, attach their Fabric Environments, configure `00_env_config`, create the metadata tables, and upload the packaged demo files to Bronze `Files/Demo`. | Every notebook can resolve the configured Fabric stores and the raw demo assets are in place. |
 | [0C. Prepare the demo data with FabricOps I/O](guided-demo/00C-prepare-demo-data-with-fabricops-io.md) | Run `00C_demo_setup` in Engineering Development to demonstrate file, Lakehouse, and Warehouse I/O and seed the original managed source tables. | The Full Refresh demo starts from real managed tables prepared through the public FabricOps I/O helpers. |
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+
 ## The seven-step FabricOps workflow
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="FabricOps mascot" loading="eager">
-  <div><p>Follow <strong>Steps 1–7</strong> from Governance through Engineering, validation, Production, and consumption. Steps <strong>2A–2C</strong> are hands-on pipeline examples within Step 2.</p></div>
 </div>
+
+
+Follow <strong>Steps 1–7</strong> from Governance through Engineering, validation, Production, and consumption. Steps <strong>2A–2C</strong> are hands-on pipeline examples within Step 2.
+
 
 
 | Step | Notebook | What you do |
