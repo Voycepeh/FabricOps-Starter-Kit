@@ -1,4 +1,4 @@
-"""Focused tests for standard pipeline orchestration."""
+﻿"""Focused tests for standard pipeline orchestration."""
 from unittest.mock import Mock, patch
 import pytest
 

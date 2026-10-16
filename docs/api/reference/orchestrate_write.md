@@ -13,7 +13,7 @@ Run the observable standard governed target lifecycle.
 
 `fabricops_kit/pipeline/orchestrate_write.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L15-L119">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L15-L127">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -96,7 +96,10 @@ Both contract modes run Schema, Sensitive Data, Source Drift, Data Quality,
 and Guardrail Coverage identically. Validate then returns without writing;
 Enforce continues through Write and persisted-target Profile. Existing
 metadata and Source Observation commit behaviour remains owned by
-``pipeline_write``. No DataFrame is displayed.
+``pipeline_write``. The returned ``dataframe`` is the prepared Write input,
+not a reread of the persisted target; Append, SCD1, and SCD2 may produce a
+different target state. No DataFrame is displayed or materialized for this
+return value.
 
 </div>
 
