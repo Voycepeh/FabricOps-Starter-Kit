@@ -53,7 +53,9 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
     Returns
     -------
     dict
-        Write identity and capability results. ``published`` is false when a
+        Write identity and capability results, including ``dataframe`` holding
+        the post-treatment input supplied to the Write stage (not a persisted
+        target reread). ``published`` is false when a
         Validate-mode contract passes without publication.
 
     Raises
@@ -103,6 +105,7 @@ def orchestrate_write(dataframe: Any, *, name: str, sources: Iterable[dict[str, 
     coverage = run("Guardrail Coverage", lambda: check_guardrail_coverage(target_table_id=target_id, source_table_ids=source_ids, spark_session=spark_session, verbose=False))
     common_results = {
         "table_id": target_id,
+        "dataframe": prepared,
         "schema_result": schema_result,
         "sensitive_result": sensitive,
         "source_drift_results": drift,
