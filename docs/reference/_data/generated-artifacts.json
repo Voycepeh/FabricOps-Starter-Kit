@@ -15,8 +15,8 @@
       "output_path": "docs/reference/_data/public-api-compatibility.json"
     },
     "public_function_call_flows_dashboard": {
-      "generated_at_sgt": "17 Oct 2026, 3:27 AM SGT",
-      "generated_at_utc": "2026-10-16T19:27:34.442200Z",
+      "generated_at_sgt": "17 Oct 2026, 5:16 AM SGT",
+      "generated_at_utc": "2026-10-16T21:16:45.008Z",
       "generator": "scripts/generate_public_function_call_flows_dashboard.py",
       "label": "Public function call-flow dashboard",
       "output_path": "docs/assets/public-function-call-flows-dashboard.html"
