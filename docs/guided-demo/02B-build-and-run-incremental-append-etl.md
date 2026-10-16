@@ -16,7 +16,7 @@
 
 ## The big picture
 
-Repeat the standard Read / Transform / Write lifecycle and compare its incremental state after each run.
+Change the Step 2 scaffold to an Incremental Read and Append Write, then compare its state across three runs.
 
 </div>
 </div>
@@ -40,33 +40,7 @@ The notebook uses these governed tables throughout:
 
     For faster runs when frequency distributions are not needed, set `frequency_enabled=False` on the relevant orchestrator call. The standard statistical profile still runs. Setting `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating them.
 
-### Load the shared environment
-
-Run the two cells under **0. Environment**:
-
-```python
-%run 00_env_config
-```
-
-Then run the import cell immediately below it.
-
-```python
-from pyspark.sql import functions as F
-
-from fabricops_kit import (
-    orchestrate_read,
-    orchestrate_write,
-    read_lakehouse_csv,
-    read_lakehouse_table,
-    resolve_table_id,
-    widget_select_data_contract,
-    write_lakehouse_table,
-)
-```
-
-`00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
-
-![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
+The standard Environment, Data Contract, result-storage, and inspection patterns are explained in [Step 2](02-build-and-run-etl.md). This page covers only the day selection, source staging, incremental scope, and resulting target state.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -101,76 +75,35 @@ You should see:
 
 ![Day 1 Bronze staging output showing 8 rows](../assets/2b/Day%201%20Bronze%20staging%20output%20showing%208%20rows.png)
 
-### Run the Data Contract block
+### Run the changed pipeline blocks
 
-Run the Data Contract cell:
+Run the remaining blocks through **5. Inspect**. For the initial Guided Demo run, leave the Data Contract selection unchanged.
 
-```python
-CONTRACTS = widget_select_data_contract(spark_session=spark)
-```
+The changes from Step 2 are:
 
-For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped, and the targets can publish in Engineering Development.
-
-
-
-![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
-
-### Run the Governed Incremental Read
-
-First, run the source results dictionary cell:
-
-```python
-sources = {}
-```
-
-This creates an empty dictionary for the governed Read result. Keeping the complete result by name gives the Transform block access to its DataFrame and gives the Write block the governed source identity needed for lineage, source-aware checks, and incremental processing.
-
-Then run the remaining cell under **4. Governed Incremental Read**.
-
-The notebook resolves the Silver target identity, reads Bronze `demo.inventory_movements` with `modified_datetime` as the watermark, and saves the result as `sources["inventory_movements"]`.
+- **Governed Incremental Read:** resolves the Silver target identity, uses `modified_datetime` as the watermark, and saves the Bronze result as `sources["inventory_movements"]`.
+- **PySpark Transform:** derives `movement_date`, `quantity_in`, and `quantity_out` from the eligible rows.
+- **Governed Append Write:** appends `transformed_df` to Silver `demo.inventory_movements_incremental` and saves the result as `writes["inventory_movements_incremental"]`.
 
 On Day 1, there is no earlier successful watermark for this source-to-target relationship. The incremental scope therefore bootstraps with all eight source rows.
 
 *Image coming soon: Day 1 Incremental Read output and bootstrap scope.*
 
-### Run the PySpark Transform
-
-Run the cell under **5. PySpark Transform**.
-
-The block creates `movement_date`, `quantity_in`, and `quantity_out` for the eight eligible movement rows. It stores the result in `transformed_df`.
-
 *Image coming soon: transformed Day 1 inventory movements.*
-
-### Run the Governed Append Write
-
-First, run the write results dictionary cell:
-
-```python
-writes = {}
-```
-
-This creates an empty dictionary for the governed Write result. Keeping the complete result by target name makes its publication status, orchestration stages, Guardrail results, and, when published, target profile available for inspection.
-
-Then run the remaining cell under **6. Governed Append Write**.
-
-The block appends the eight transformed rows to Silver `demo.inventory_movements_incremental` and saves the Write result as `writes["inventory_movements_incremental"]`.
-
-You should see the Write stages complete and the target publish successfully.
 
 *Image coming soon: Day 1 Append Write output.*
 
-### Inspect the Day 1 result
+### Inspect the Day 1 profile
 
-Run the cell under **7. Inspect results**.
+Run the cell under **5. Inspect**. It uses the `profile_result` already returned by the governed Write; it does not read the Silver table again.
 
 You should see:
 
 - an incremental scope covering the initial eight rows;
-- `Silver rows: 8`;
-- eight movement records ordered by `modified_datetime` and `movement_id`; and
-- an inventory balance summarized by `product_id`.
+- the persisted-target profile for `demo.inventory_movements_incremental`; and
+- `row_count = 8` on its profiled columns.
 
-*Image coming soon: Day 1 Silver rows and inventory balances.*
+*Image coming soon: Day 1 incremental scope and persisted-target profile.*
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -195,7 +128,7 @@ DEMO_DAY = 2
 
 ### Rerun the complete notebook
 
-Use **Run all** or run every block again from **0. Environment** through **7. Inspect results**.
+Use **Run all** or run every block again from **0. Environment** through **5. Inspect**.
 
 The Bronze staging block adds the four Day 2 movements and keeps the eight existing movements by `movement_id`. You should see:
 
@@ -210,11 +143,10 @@ The Incremental Read returns only the four rows after the successful Day 1 water
 The final inspection should show:
 
 - four newly eligible rows in the incremental scope;
-- `Silver rows: 12`;
-- all twelve movements in the target; and
-- updated inventory balances.
+- the new persisted-target profile; and
+- `row_count = 12` on its profiled columns.
 
-*Image coming soon: Day 2 incremental scope, 12 Silver rows, and updated balances.*
+*Image coming soon: Day 2 incremental scope and 12-row target profile.*
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -255,10 +187,10 @@ The Incremental Read returns an empty scope. The Append target remains unchanged
 The final inspection should show:
 
 - an empty/no-change incremental scope;
-- `Silver rows: 12`; and
-- the same twelve target rows and inventory balances as Day 2.
+- a new persisted-target profile with `row_count = 12`; and
+- the same target row count as Day 2.
 
-*Image coming soon: Day 3 empty scope and unchanged 12-row Silver target.*
+*Image coming soon: Day 3 empty scope and unchanged 12-row target profile.*
 
 ### Expected result
 

@@ -372,6 +372,7 @@ def test_02b_has_ordered_repeat_safe_incremental_append_flow():
         "read-csv",
         "contracts",
         "read-1",
+        "read-inspection",
         "transform",
         "write-1",
         "inspect",
@@ -388,6 +389,9 @@ def test_02b_has_ordered_repeat_safe_incremental_append_flow():
     assert 'write_mode="append"' in source
     assert 'sources=[sources["inventory_movements"]]' in source
     assert "should_process" not in source
+    inspect = _demo_cell("02B_incremental_append_demo.ipynb", "inspect").source
+    assert 'writes["inventory_movements_incremental"]["profile_result"]["profile"]' in inspect
+    assert "read_lakehouse_table(" not in inspect
 
 
 def test_02c_has_ordered_full_read_and_two_scd_writes():
@@ -402,6 +406,7 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
         "read-csv",
         "contracts",
         "read-1",
+        "read-inspection",
         "transform",
         "sequence-check",
         "write-1",
@@ -422,6 +427,10 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
     assert '"effective_column": "modified_datetime"' in source
     assert '"tracked_columns": ["product_category", "list_price"]' in source
     assert "allowed_existing_versions = {2: {8, 9}, 3: {9, 10}}[DEMO_DAY]" in source
+    inspect = _demo_cell("02C_scd_demo.ipynb", "inspect").source
+    assert 'writes["product_master_scd1"]["profile_result"]["profile"]' in inspect
+    assert 'writes["product_master_scd2"]["profile_result"]["profile"]' in inspect
+    assert "read_lakehouse_table(" not in inspect
     assert "| 1 | 8 | 8 |" in source
     assert "| 2 | 8 | 9 |" in source
     assert "| 3 | 8 | 10 |" in source
