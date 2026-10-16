@@ -1,0 +1,32 @@
+/* Guided Demo mascot banners serve as the section headings, not decorative callouts. */
+.md-typeset .fabricops-section-banner {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+  margin: 1.9rem 0 1.1rem;
+  padding: 0.85rem 1.2rem;
+  border: 1px solid rgba(15, 143, 131, 0.22);
+  border-radius: 0.65rem;
+  background: linear-gradient(100deg, rgba(15, 143, 131, 0.13), rgba(71, 215, 172, 0.05));
+}
+.md-typeset .fabricops-section-banner > img {
+  display: block;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin: 0;
+  object-fit: contain;
+}
+.md-typeset .fabricops-section-banner > h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.35;
+  font-weight: 700;
+  color: var(--md-default-fg-color);
+}
+.md-typeset .fabricops-section-banner > h2 .headerlink { color: var(--md-primary-fg-color); }
+@media screen and (max-width: 600px) {
+  .md-typeset .fabricops-section-banner { grid-template-columns: 3rem minmax(0, 1fr); gap: 0.65rem; padding: 0.75rem; }
+  .md-typeset .fabricops-section-banner > img { width: 3rem; height: 3rem; }
+  .md-typeset .fabricops-section-banner > h2 { font-size: 1rem; }
+}
