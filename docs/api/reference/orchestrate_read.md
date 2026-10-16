@@ -13,7 +13,7 @@ Run the observable standard governed source lifecycle.
 
 `fabricops_kit/pipeline/orchestrate_read.py:12`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L12-L87">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L12-L85">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -33,7 +33,6 @@ For profiling-related pipeline functions, the output captures the important deta
 
 ```python
 def orchestrate_read(
-    name: str,
     store: str,
     schema: str | None,
     table_name: str,
@@ -54,7 +53,7 @@ def orchestrate_read(
 
 <div class="reference-example-usage" markdown="1">
 
->>> source = orchestrate_read(name="orders", store="Bronze", schema="demo", table_name="orders")
+>>> source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 >>> orders_df = source["dataframe"]
 
 </div>
@@ -63,7 +62,6 @@ def orchestrate_read(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `name` | `str` | Yes | Notebook-facing name used in orchestration output. |
 | `store` | `str` | Yes | Configured source store key. |
 | `schema` | `str \| None` | Yes | Physical source schema. |
 | `table_name` | `str` | Yes | Physical source table name. |

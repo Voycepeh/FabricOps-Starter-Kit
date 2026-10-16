@@ -13,7 +13,7 @@ Run the observable standard governed target lifecycle.
 
 `fabricops_kit/pipeline/orchestrate_write.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L15-L121">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L15-L119">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -34,7 +34,6 @@ For profiling-related pipeline functions, the output captures the important deta
 ```python
 def orchestrate_write(
     dataframe: Any,
-    name: str,
     sources: Iterable[dict[str, Any]],
     store: str,
     schema: str | None,
@@ -56,8 +55,8 @@ def orchestrate_write(
 
 <div class="reference-example-usage" markdown="1">
 
->>> result = orchestrate_write(transformed_df, name="curated_orders", sources=[orders], store="Silver", schema="demo", table_name="curated_orders", write_mode="overwrite", contracts=CONTRACTS)
->>> result = orchestrate_write(product_mapping_df, name="product_mapping", sources=[], store="Silver", schema="demo", table_name="product_mapping", write_mode="scd1", write_parameters={"key_columns": ["product_id"]})
+>>> result = orchestrate_write(transformed_df, sources=[orders], store="Silver", schema="demo", table_name="curated_orders", write_mode="overwrite", contracts=CONTRACTS)
+>>> result = orchestrate_write(product_mapping_df, sources=[], store="Silver", schema="demo", table_name="product_mapping", write_mode="scd1", write_parameters={"key_columns": ["product_id"]})
 
 </div>
 
@@ -66,7 +65,6 @@ def orchestrate_write(
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `dataframe` | `Any` | Yes | Transformed Spark DataFrame to validate and publish. |
-| `name` | `str` | Yes | Notebook-facing target name used in orchestration output. |
 | `sources` | `Iterable[dict[str, Any]]` | Yes | Governed source results containing ``table_id``. |
 | `store` | `str` | Yes | Configured destination store key. |
 | `schema` | `str \| None` | Yes | Physical target schema. |
