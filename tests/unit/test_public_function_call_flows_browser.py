@@ -104,6 +104,7 @@ SMOKE_SCRIPT = r"""
       compatBaseline.value = 'v0.1.0'; compatTarget.value = 'v0.2.0';
       document.getElementById('compatCompare').click();
       check(document.querySelectorAll('.compatibility-record').length > 0, 'release comparison did not render');
+      check(document.querySelectorAll('#historicalResults .compatibility-record').length > 0, 'historical comparison results are not visible in their panel');
       check(document.querySelector('.compatibility-summary').textContent.includes('Potentially breaking'), 'compatibility summary is missing');
       check(document.getElementById('compatStatus').textContent.includes('source-backed'), 'source-backed status is missing');
       check(new URLSearchParams(location.search).get('baseline') === 'v0.1.0', 'baseline URL parameter was not retained');
