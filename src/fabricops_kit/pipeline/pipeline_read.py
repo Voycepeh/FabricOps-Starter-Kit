@@ -25,8 +25,19 @@ def _warehouse_incremental_query(identity: dict[str, Any], scope: dict[str, Any]
     column = str(scope["column"]).replace("]", "]]")
     if not scope["has_data"]:
         return f"SELECT * FROM [{schema}].[{table}] WHERE 1 = 0"
-    value = str(scope["after"]).replace("'", "''")
+    value = _warehouse_watermark_literal(scope["after"]).replace("'", "''")
     return f"SELECT * FROM [{schema}].[{table}] WHERE [{column}] > '{value}'"
+
+
+def _warehouse_watermark_literal(value: Any) -> str:
+    """Render canonical UTC timestamp text as a timezone-stable SQL datetime2 literal."""
+    text = str(value)
+    if text.endswith("Z"):
+        from datetime import UTC, datetime
+
+        parsed = datetime.fromisoformat(text[:-1] + "+00:00").astimezone(UTC)
+        return parsed.strftime("%Y-%m-%d %H:%M:%S.%f").rstrip("0").rstrip(".")
+    return text
 
 
 def _filter_lakehouse_incremental(dataframe: Any, scope: dict[str, Any]) -> Any:
@@ -37,7 +48,12 @@ def _filter_lakehouse_incremental(dataframe: Any, scope: dict[str, Any]) -> Any:
         return dataframe.limit(0)
     from pyspark.sql import functions as F
 
-    return dataframe.where(F.col(scope["column"]) > F.lit(scope["after"]))
+    from datetime import datetime
+
+    after = scope["after"]
+    if isinstance(after, str) and after.endswith("Z"):
+        after = datetime.fromisoformat(after[:-1] + "+00:00").replace(tzinfo=None)
+    return dataframe.where(F.col(scope["column"]) > F.lit(after))
 
 
 

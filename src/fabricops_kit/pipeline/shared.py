@@ -7,7 +7,7 @@ import json
 import ast
 import re
 import time
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from functools import reduce
 from uuid import uuid4
@@ -706,13 +706,74 @@ def _latest_source_target_observation(
     return [row for row in candidates if row.get("_committed_at") == latest_at]
 
 
-def _progress_key(value: Any) -> tuple[int, Any]:
-    """Return a stable ordering key for serialized numeric or temporal progress."""
+def _progress_key(value: Any, *, timestamp: bool = False) -> tuple[int, Any]:
+    """Return a stable ordering key for numeric, temporal, or textual progress."""
     text = str(value)
     try:
         return (0, Decimal(text))
     except InvalidOperation:
-        return (1, text)
+        try:
+            parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+        except ValueError:
+            if timestamp:
+                raise ValueError(
+                    f"Committed timestamp watermark {text!r} is ambiguous. "
+                    "Review and explicitly migrate this source-to-target history before retrying."
+                )
+            return (2, text)
+        if parsed.tzinfo is None:
+            if timestamp:
+                raise ValueError(
+                    f"Committed timestamp watermark {text!r} has no timezone. "
+                    "Review and explicitly migrate this source-to-target history before retrying."
+                )
+            return (1, text)
+        return (1, parsed.astimezone(UTC))
+
+
+def _looks_like_naive_timestamp(value: Any) -> bool:
+    """Recognize timestamp-shaped strings without assigning them a timezone."""
+    text = str(value or "")
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return False
+    return parsed.tzinfo is None and ("T" in text or (len(text) >= 19 and text[10] == " "))
+
+
+def _watermark_timestamp(value: Any) -> str:
+    """Serialize Spark-collected TimestampType values as unambiguous UTC ISO text."""
+    if isinstance(value, datetime):
+        if value.tzinfo is not None:
+            instant = value.astimezone(UTC)
+        else:
+            # Spark TimestampType collection returns a naive Python datetime whose
+            # wall time is UTC even when Spark renders it in a non-UTC session zone.
+            instant = value.replace(tzinfo=UTC)
+        return instant.isoformat(timespec="microseconds").replace("+00:00", "Z")
+    text = str(value)
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(
+            f"Timestamp watermark {text!r} is timezone-naive or invalid; "
+            "set an explicit timezone before retrying."
+        ) from exc
+    if parsed.tzinfo is None:
+        raise ValueError(
+            f"Timestamp watermark {text!r} is timezone-naive; its instant cannot be inferred."
+        )
+    return parsed.astimezone(UTC).isoformat(timespec="microseconds").replace("+00:00", "Z")
+
+
+def _compact_value(value: Any, *, timestamp: bool = False) -> str | None:
+    if value is None:
+        return None
+    if timestamp or isinstance(value, datetime):
+        return _watermark_timestamp(value)
+    if isinstance(value, date):
+        return value.isoformat()
+    return str(value)
 
 
 def _physical_target_has_activity(
@@ -867,6 +928,48 @@ def resolve_incremental_source_scope(
         raise ValueError(
             "Incremental Source Observation must use one governed watermark column."
         )
+    current_max_value = next(
+        (row.get("max_change_value") for row in current if row.get("max_change_value") is not None),
+        None,
+    )
+    timestamp_watermark = bool(first.get("watermark_type") == "timestamp") or isinstance(
+        current_max_value, datetime
+    ) or str(current_max_value or "").endswith("Z") or (
+        isinstance(current_max_value, str)
+        and len(current_max_value) >= 19
+        and current_max_value[4:5] == "-"
+        and current_max_value[7:8] == "-"
+        and current_max_value[10:11] in {"T", " "}
+        and current_max_value[13:14] == ":"
+    )
+    if timestamp_watermark:
+        for row in previous:
+            row_type = str(row.get("watermark_type") or "")
+            value = row.get("max_change_value")
+            if value is not None and row_type != "timestamp":
+                # Pre-type-marker history is classified by its shape only. An
+                # ISO wall time without an offset is ambiguous and must never
+                # be silently migrated or used as a checkpoint.
+                _progress_key(value, timestamp=True)
+                parsed = datetime.fromisoformat(str(value))
+                if parsed.tzinfo is None:
+                    raise ValueError(
+                        f"Committed timestamp watermark {value!r} has no timezone. "
+                        "Review and explicitly migrate this source-to-target history before retrying."
+                    )
+                row["max_change_value"] = _watermark_timestamp(value)
+            elif value is not None:
+                row["max_change_value"] = _watermark_timestamp(value)
+        for row in current:
+            value = row.get("max_change_value")
+            if value is not None:
+                row["max_change_value"] = _watermark_timestamp(value)
+            value = row.get("min_change_value")
+            if value is not None:
+                row["min_change_value"] = _watermark_timestamp(value)
+            value = row.get("partition_value")
+            if value is not None:
+                row["partition_value"] = _watermark_timestamp(value)
     pending = [dict(row) for row in current]
     key = (env, activity_id, source_table_id, target_table_id)
     _PENDING_SOURCE_OBSERVATIONS[key] = pending
@@ -881,8 +984,16 @@ def resolve_incremental_source_scope(
         for row in current
         if row.get("max_change_value") is not None
     ]
-    baseline = max(previous_values, key=_progress_key, default=None)
-    current_max = max(current_values, key=_progress_key, default=None)
+    baseline = max(
+        previous_values,
+        key=lambda value: _progress_key(value, timestamp=timestamp_watermark),
+        default=None,
+    )
+    current_max = max(
+        current_values,
+        key=lambda value: _progress_key(value, timestamp=timestamp_watermark),
+        default=None,
+    )
 
     if not previous:
         scope = {
@@ -4045,7 +4156,8 @@ def _warehouse_observation_query(schema: str, table_name: str, partition_column:
     )
 
 
-def _compact_rows(frame: Any) -> list[dict[str, Any]]:
+def _compact_rows(frame: Any, *, timestamp_columns: set[str] | None = None) -> list[dict[str, Any]]:
+    timestamp_columns = timestamp_columns or set()
     compact = []
     for row in frame.collect():
         value = row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
@@ -4053,11 +4165,14 @@ def _compact_rows(frame: Any) -> list[dict[str, Any]]:
         maximum = value.get("max_change_value")
         compact.append(
             {
-                "partition_value": str(value.get("partition_value", "")),
+                "partition_value": _compact_value(
+                    value.get("partition_value"), timestamp="partition_value" in timestamp_columns
+                ) or "",
+                **({"watermark_type": "timestamp"} if "max_change_value" in timestamp_columns else {}),
                 "is_present": True,
                 "row_count": int(value.get("row_count") or 0),
-                "min_change_value": None if minimum is None else str(minimum),
-                "max_change_value": None if maximum is None else str(maximum),
+                "min_change_value": _compact_value(minimum, timestamp="min_change_value" in timestamp_columns),
+                "max_change_value": _compact_value(maximum, timestamp="max_change_value" in timestamp_columns),
                 "content_fingerprint": str(value.get("content_fingerprint") or ""),
             }
         )
@@ -4116,7 +4231,20 @@ def _observe_dataframe(
             "content_fingerprint",
         )
     )
-    return _compact_rows(observed)
+    schema = {field.name: type(field.dataType).__name__ for field in frame.schema.fields}
+    timestamp_columns = set()
+    for output_name, source_name in (
+        ("partition_value", partition_column),
+        ("min_change_value", change_column),
+        ("max_change_value", change_column),
+    ):
+        if schema.get(source_name) == "TimestampType":
+            timestamp_columns.add(output_name)
+    compact = _compact_rows(observed, timestamp_columns=timestamp_columns)
+    if schema.get(change_column) == "TimestampType":
+        for row in compact:
+            row["watermark_type"] = "timestamp"
+    return compact
 
 
 def _validated_observation_identity(

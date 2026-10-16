@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from datetime import date as date_type
 from importlib import import_module
 
 import pytest
@@ -212,6 +213,69 @@ def test_lakehouse_incremental_filter_is_strictly_after_watermark(spark_session)
     assert [row["watermark"] for row in result.collect()] == [130]
 
 
+@pytest.mark.parametrize("timezone", ["UTC", "Asia/Singapore"])
+def test_timestamp_observation_uses_utc_instant_for_scope_and_metadata_round_trip(
+    spark_session, monkeypatch, timezone
+):
+    from pyspark.sql import functions as F
+
+    spark_session.conf.set("spark.sql.session.timeZone", timezone)
+    instant = datetime(2026, 10, 7, 2, 30, tzinfo=UTC)
+    frame = spark_session.createDataFrame([(instant,)], ["modified_datetime"])
+    compact = shared._observe_dataframe(frame, "modified_datetime", "modified_datetime")
+    assert compact[0]["max_change_value"] == "2026-10-07T02:30:00.000000Z"
+    assert compact[0]["partition_value"] == "2026-10-07T02:30:00.000000Z"
+
+    _configure_scope(monkeypatch, [])
+    current = Frame([{
+        **_row(target="", maximum=compact[0]["max_change_value"]),
+        "partition_value": compact[0]["partition_value"],
+        "watermark_type": "timestamp",
+        "partition_column": "modified_datetime",
+        "change_column": "modified_datetime",
+        "observation_status": "observed",
+    }])
+    result = shared.resolve_incremental_source_scope(
+        source_table_id="source-orders", target_table_id="target-a", observation=current
+    )
+    assert result["through"] == "2026-10-07T02:30:00.000000Z"
+
+    filtered = read_module._filter_lakehouse_incremental(
+        frame.withColumn("later", F.lit(1)),
+        {"type": "watermark", "has_data": True, "column": "modified_datetime",
+         "after": "2026-10-07T02:29:59.000000Z"},
+    )
+    assert filtered.count() == 1
+
+
+def test_legacy_naive_timestamp_watermark_is_rejected_for_explicit_recovery(monkeypatch):
+    _configure_scope(monkeypatch, [_row(target="target-a", maximum="2026-10-06 01:10:00")])
+    current = Frame([{
+        **_row(target="", maximum="2026-10-07T02:30:00.000000Z"),
+        "partition_column": "modified_datetime",
+        "change_column": "modified_datetime",
+        "observation_status": "observed",
+    }])
+    with pytest.raises(ValueError, match="no timezone.*explicitly migrate"):
+        shared.resolve_incremental_source_scope(
+            source_table_id="source-orders", target_table_id="target-a", observation=current
+        )
+
+
+def test_numeric_date_and_string_compaction_keep_native_values():
+    from datetime import date
+
+    compact = shared._compact_rows(Frame([
+        {"partition_value": date_type(2026, 10, 7), "row_count": 1,
+         "min_change_value": 42, "max_change_value": 42, "content_fingerprint": "x"},
+        {"partition_value": "2026-10-07", "row_count": 1,
+         "min_change_value": "batch-b", "max_change_value": "batch-b", "content_fingerprint": "y"},
+    ]))
+    assert compact[0]["partition_value"] == "2026-10-07"
+    assert compact[0]["max_change_value"] == "42"
+    assert compact[1]["max_change_value"] == "batch-b"
+
+
 def test_warehouse_incremental_query_pushes_strict_watermark_predicate():
     query = read_module._warehouse_incremental_query(
         {"schema": "demo", "table_name": "orders"},
@@ -228,6 +292,15 @@ def test_warehouse_incremental_query_pushes_strict_watermark_predicate():
         "SELECT * FROM [demo].[orders] "
         "WHERE [modified_at] > '2026-09-02 10:00:00'"
     )
+
+
+def test_warehouse_timestamp_predicate_uses_canonical_utc_instant():
+    query = read_module._warehouse_incremental_query(
+        {"schema": "demo", "table_name": "orders"},
+        {"type": "watermark", "has_data": True, "column": "modified_at",
+         "after": "2026-10-07T02:30:00.000000Z"},
+    )
+    assert query.endswith("WHERE [modified_at] > '2026-10-07 02:30:00'")
 
 
 def test_warehouse_incremental_query_short_circuits_no_new_data():
