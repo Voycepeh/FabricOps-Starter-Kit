@@ -190,7 +190,7 @@ def check_schema(
             env=env,
             run_id="",
             dataset_name="",
-            table_name=resolved_table,
+            table_name=table_name,
             store_type=store_type,
             layer=store_key,
             schema_name=schema_name,

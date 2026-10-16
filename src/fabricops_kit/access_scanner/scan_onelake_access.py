@@ -106,6 +106,7 @@ def _access_rows(mapped, *, environment_name: str, access_snapshot_id: str, audi
             access_id.alias("access_id"),
             "user_principal",
             F.col("_catalogue_table_id").alias("table_id"),
+            F.col("_catalogue_table_name").alias("table_name"),
             F.lit(environment_name).alias("environment_name"),
             F.lit("ONELAKE_PATH").alias("access_level"),
             "access_value",

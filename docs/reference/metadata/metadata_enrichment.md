@@ -1,6 +1,6 @@
 # METADATA_ENRICHMENT
 
-Store descriptive Description and Classification metadata for one exact Data Contract version; Enrichment does not enforce runtime behavior.
+Store descriptive Description and Classification metadata for one exact Data Contract version, including table and optional column names captured when written; Enrichment does not enforce runtime behavior.
 
 ## Writer functions
 
@@ -32,8 +32,8 @@ via `column_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 16 |
-| Business columns | 8 |
+| Total columns | 19 |
+| Business columns | 11 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -43,7 +43,10 @@ via `column_id`
 | `enrichment_id` | `string` | Identifier stored for `enrichment_id`. |
 | `contract_id` | `string` | Stable identifier for the contract row. |
 | `contract_version` | `integer` | Version recorded for the contract row. |
+| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `column_id` | `string` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
+| `column_name` | `string` | Column name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `enrichment_level` | `string` | Metadata Enrichment field `enrichment_level`. |
 | `enrichment_type` | `string` | Enrichment type recorded for the row. |

@@ -320,6 +320,7 @@ def persist_lineage_participation(
         {
             "lineage_id": identifier,
             "table_id": str(table_id).strip(),
+            "table_name": _CURRENT_TABLE_IDENTITIES.get(str(table_id), {}).get("table_name") or resolve_catalogue_table_identity(config, env, table_id, context=resolved_context).get("table_name"),
             "environment_name": env,
             "pipeline_role": str(pipeline_role).strip().lower(),
             **audit,
@@ -1211,6 +1212,8 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
                         )
                     },
                     "target_table_id": target_table_id,
+                    "source_table_name": _CURRENT_TABLE_IDENTITIES.get(source_table_id, {}).get("table_name") or resolve_catalogue_table_identity(config, env, source_table_id, context=context).get("table_name"),
+                    "target_table_name": _CURRENT_TABLE_IDENTITIES.get(target_table_id, {}).get("table_name") or resolve_catalogue_table_identity(config, env, target_table_id, context=context).get("table_name"),
                     "observation_status": observation_status,
                     **audit,
                 }))
@@ -1270,6 +1273,8 @@ def stage_pipeline_write_observations(success_context: Mapping[str, Any]) -> lis
                         )
                     },
                     "target_table_id": target_table_id,
+                    "source_table_name": _CURRENT_TABLE_IDENTITIES.get(source_table_id, {}).get("table_name") or resolve_catalogue_table_identity(config, env, source_table_id, context=context).get("table_name"),
+                    "target_table_name": _CURRENT_TABLE_IDENTITIES.get(target_table_id, {}).get("table_name") or resolve_catalogue_table_identity(config, env, target_table_id, context=context).get("table_name"),
                     "observation_status": observation_status,
                     **audit,
                 }))
@@ -1542,7 +1547,7 @@ def write_guardrail_result_row(
     results_table: str = "METADATA_GUARDRAIL_RESULTS",
 ) -> None:
     """Append one aggregate outcome for one exact contract and Guardrail revision."""
-    del dataset_name, table_name, store_type, layer, schema_name, guardrail_type, rule_type, rule_key, column_name
+    del dataset_name, store_type, layer, schema_name, column_name
     if spark_session is None or not hasattr(spark_session, "createDataFrame"):
         return
     guardrail_rule_id = str(result.get("guardrail_rule_id") or "").strip()
@@ -1561,11 +1566,27 @@ def write_guardrail_result_row(
         for key, value in result.items()
         if key not in {"dataframe", "support_mapping"}
     }
+    rule_context = result.get("rule_context") or {}
+    if not rule_context:
+        try:
+            rules = load_table_guardrail_rules(
+                config, env, spark_session=spark_session,
+                table_id=str(table_id or result.get("table_id") or "").strip(),
+                context={"config": config, "env": env},
+            )
+            for rule_row in _coerce_rows(rules.collect()):
+                if (str(rule_row.get("guardrail_rule_id") or "") == guardrail_rule_id
+                        and int(rule_row.get("guardrail_version") or 0) == guardrail_version):
+                    rule_context = rule_row
+                    break
+        except Exception:
+            rule_context = {}
     row = {
         "guardrail_result_id": str(uuid4()),
         "guardrail_rule_id": guardrail_rule_id,
         "guardrail_version": guardrail_version,
         "table_id": str(table_id or result.get("table_id") or "").strip(),
+        "table_name": str(table_name or "").strip(),
         "contract_id": str(contract_id or result.get("contract_id") or "").strip(),
         "contract_version": int(contract_version or result.get("contract_version") or 0),
         "execution_type": resolved_execution_type,
@@ -1574,6 +1595,10 @@ def write_guardrail_result_row(
         "status": str(result.get("status") or "not_run"),
         "can_continue": bool(result.get("can_continue", True)),
         "severity": str(result.get("severity") or "blocking"),
+        "guardrail_type": str(result.get("guardrail_type") or rule_context.get("guardrail_type") or guardrail_type or ""),
+        "rule_id": str(result.get("rule_id") or rule_context.get("rule_id") or rule_key or ""),
+        "rule_type": str(result.get("rule_type") or rule_context.get("rule_type") or rule_type or ""),
+        "action": str(result.get("action") or rule_context.get("action") or result.get("severity") or ""),
         "reason": str(result.get("reason") or result.get("message") or ""),
         "result_payload_json": json.dumps(payload, default=str, sort_keys=True, separators=(",", ":")),
         **audit,

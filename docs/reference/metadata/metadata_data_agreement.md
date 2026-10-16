@@ -29,8 +29,8 @@ via `provider_steward_id` + `recipient_steward_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 20 |
-| Business columns | 12 |
+| Total columns | 22 |
+| Business columns | 14 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -42,7 +42,9 @@ via `provider_steward_id` + `recipient_steward_id`
 | `agreement_name` | `string` | Human-readable name for the agreement. |
 | `domain` | `string` | Business domain recorded for the metadata row. |
 | `provider_steward_id` | `string` | Steward identifier recorded for the provider side of the agreement. |
+| `provider_steward_name` | `string` | Provider steward name captured when this Data Agreement version was written; later steward renames do not change it. |
 | `recipient_steward_id` | `string` | Steward identifier recorded for the recipient side of the agreement. |
+| `recipient_steward_name` | `string` | Recipient steward name captured when this Data Agreement version was written; later steward renames do not change it. |
 | `start_date` | `date` | Date stored for `start_date`. |
 | `expiry_date` | `date` | Date stored for `expiry_date`. |
 | `business_purpose` | `string` | Business purpose recorded for the agreement or access request. |

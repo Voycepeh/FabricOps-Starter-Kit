@@ -1061,8 +1061,12 @@ def widget_data_contract(
         return {
             "enrichment_id": previous.get("enrichment_id") or str(uuid.uuid4()),
             "contract_id": current["contract_id"], "contract_version": current["contract_version"],
+            "table_id": str(table_payload.get("table_id") or current["contract"].get("table_id") or ""),
+            "table_name": str(table_payload.get("table_name") or ""),
             "environment_name": env, "enrichment_level": level,
-            "column_id": column_id, "enrichment_type": kind, "value": value,
+            "column_id": column_id,
+            "column_name": next((str(item.get("column_name") or "") for item in current.get("available_columns", []) if str(item.get("column_id") or "") == column_id), "") if column_id else "",
+            "enrichment_type": kind, "value": value,
         }
 
     def guardrail_record(
@@ -1071,6 +1075,8 @@ def widget_data_contract(
         active: bool = True,
     ) -> dict[str, Any]:
         current = state["current"]
+        contract_payload = json.loads(str(current["contract"].get("contract_payload_json") or "{}"))
+        table_payload = contract_payload.get("table") or {}
         old = dict(existing or {})
         scope = (str(current["contract_id"]), int(current["contract_version"]))
         old_id = str(old.get("guardrail_rule_id") or "")
@@ -1082,7 +1088,10 @@ def widget_data_contract(
             "guardrail_rule_id": old.get("guardrail_rule_id") or str(uuid.uuid4()),
             "guardrail_version": version,
             "contract_id": current["contract_id"], "contract_version": current["contract_version"],
+            "table_id": str(table_payload.get("table_id") or current["contract"].get("table_id") or ""),
+            "table_name": str(table_payload.get("table_name") or ""),
             "environment_name": env, "column_id": column_id,
+            "column_name": next((str(item.get("column_name") or "") for item in current.get("available_columns", []) if str(item.get("column_id") or "") == column_id), "") if column_id else "",
             "guardrail_type": guardrail_type, "rule_id": old.get("rule_id") or rule_type,
             "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters),
             "action": action, "is_active": active,

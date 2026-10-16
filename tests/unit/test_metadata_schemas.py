@@ -57,13 +57,16 @@ def test_data_contract_uses_versioned_one_table_schema():
     assert "METADATA_DATA_CONTRACT_SNAPSHOT" not in CANONICAL_METADATA_TABLES
     assert schema.fieldNames() == [
         "contract_id", "contract_version", "agreement_id", "agreement_version",
-        "table_id", "environment_name", "contract_payload_json", "status", "is_active", *audit_names,
+        "table_id", "table_name", "environment_name", "contract_payload_json", "status", "is_active", *audit_names,
     ]
+    assert "provider_steward_name" in metadata_table_schema_registry()["METADATA_DATA_AGREEMENT"].fieldNames()
+    assert "recipient_steward_name" in metadata_table_schema_registry()["METADATA_DATA_AGREEMENT"].fieldNames()
     assert {"metadata_table_key", "schema_fingerprint", "approved_usage_json"}.isdisjoint(schema.fieldNames())
-    assert [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields[:9]] == [
+    assert [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields[:10]] == [
         ("contract_id", "StringType", False), ("contract_version", "IntegerType", False),
         ("agreement_id", "StringType", True), ("agreement_version", "StringType", True),
-        ("table_id", "StringType", False), ("environment_name", "StringType", False),
+        ("table_id", "StringType", False), ("table_name", "StringType", True),
+        ("environment_name", "StringType", False),
         ("contract_payload_json", "StringType", True),
         ("status", "StringType", False), ("is_active", "BooleanType", False),
     ]
@@ -101,13 +104,15 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
 def test_stage2_profile_schema_is_normalized():
     """Profile stores snapshot metrics and asset IDs without a duplicate event timestamp."""
     fields = metadata_table_schema_registry()["METADATA_DATA_PROFILED"].fieldNames()
-    assert fields[:19] == [
+    assert fields[:21] == [
         "profile_id",
         "profile_snapshot_id",
         "table_id",
         "column_id",
         "environment_name",
         "data_type",
+        "table_name",
+        "column_name",
         "row_count",
         "non_null_count",
         "null_count",
@@ -129,8 +134,6 @@ def test_stage2_profile_schema_is_normalized():
         "store_type",
         "layer",
         "schema_name",
-        "table_name",
-        "column_name",
         "schema_fingerprint",
     }.isdisjoint(fields)
     assert "_committed_at" in fields
@@ -147,6 +150,12 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
         "frequency_id",
         "profile_id",
         "profile_snapshot_id",
+        "table_id",
+        "column_id",
+        "table_name",
+        "column_name",
+        "data_type",
+        "environment_name",
         "value",
         "frequency_count",
         "frequency_percent",
@@ -155,7 +164,7 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
         "profiled_non_null_count",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
-    assert {"table_id", "column_id", "environment_name", "metadata_column_key", "profiled_at"}.isdisjoint(fields)
+    assert {"metadata_column_key", "profiled_at"}.isdisjoint(fields)
 
 
 def test_stage2_lineage_schema_uses_pipeline_language():
@@ -164,6 +173,7 @@ def test_stage2_lineage_schema_uses_pipeline_language():
     assert fields == [
         "lineage_id",
         "table_id",
+        "table_name",
         "environment_name",
         "pipeline_role",
         *[name for name, _kind, _nullable in audit_schema_fields()],
@@ -178,7 +188,9 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
     assert fields == [
         "observation_id",
         "source_table_id",
+        "source_table_name",
         "target_table_id",
+        "target_table_name",
         "environment_name",
         "partition_value",
         "row_count",
@@ -212,6 +224,7 @@ def test_guardrail_schema_uses_entity_version_and_results_capture_exact_revision
     assert guardrail[:2] == ["guardrail_rule_id", "guardrail_version"]
     assert "configuration_version" not in guardrail
     assert results[:3] == ["guardrail_result_id", "guardrail_rule_id", "guardrail_version"]
+    assert {"table_name", "guardrail_type", "rule_id", "rule_type", "action"}.issubset(results)
 
 
 def test_stage3_enrichment_schema_uses_contract_version_and_environment():
@@ -221,14 +234,16 @@ def test_stage3_enrichment_schema_uses_contract_version_and_environment():
         "enrichment_id",
         "contract_id",
         "contract_version",
+        "table_id",
+        "table_name",
         "column_id",
+        "column_name",
         "environment_name",
         "enrichment_level",
         "enrichment_type",
         "value",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
-    assert "table_id" not in fields
     assert {"metadata_id", "metadata_key", "metadata_table_key", "metadata_column_key", "enrichment_name"}.isdisjoint(fields)
 
 
@@ -240,6 +255,7 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
         "access_id",
         "user_principal",
         "table_id",
+        "table_name",
         "environment_name",
         "access_level",
         "access_value",

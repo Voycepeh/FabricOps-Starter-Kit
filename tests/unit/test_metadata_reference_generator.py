@@ -100,6 +100,7 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         assert "## Implemented schema" in page
         assert "| Column | Data type | Description |" in page
         assert "Managed by" not in page
+        assert "captured" in page.lower()
 
     catalogue_card = first_landing.split(
         'aria-label="Open METADATA_DATA_CATALOGUE schema">', 1

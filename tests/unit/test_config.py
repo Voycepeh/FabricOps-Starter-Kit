@@ -803,6 +803,62 @@ def test_profiled_frequency_validation_checks_required_columns_and_types():
         _validate_existing_metadata_schema("METADATA_DATA_PROFILED_FREQUENCY", wrong_type, schema)
 
 
+def test_setup_evolves_existing_tables_with_new_readable_identity_columns(monkeypatch):
+    """Additive setup appends missing readable identity fields and preserves old rows."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    registry = metadata_table_schema_registry()
+    evolved = []
+
+    class Frame:
+        def __init__(self, schema, columns=None):
+            self.schema = schema
+            self.columns = columns or schema.fieldNames()
+        def fieldNames(self):
+            return self.columns
+        def where(self, _expr): return self
+        def limit(self, _n): return self
+        def take(self, _n): return [object()]
+
+    class Spark:
+        def createDataFrame(self, rows, schema=None):
+            assert rows == []
+            return Frame(schema)
+
+    old_tables = {}
+    for name, schema in registry.items():
+        fields = [field for field in schema.fields if field.name not in {
+            "table_name", "column_name", "source_table_name", "target_table_name",
+            "provider_steward_name", "recipient_steward_name", "guardrail_type",
+            "rule_id", "rule_type", "action",
+        }]
+        old_tables[name] = Frame(type(schema)(fields))
+
+    def read_table(name, **_kwargs):
+        return old_tables[name]
+
+    def write_table(frame, name, **kwargs):
+        assert kwargs.get("mode") == "append"
+        assert kwargs.get("options", {}).get("mergeSchema") == "true"
+        evolved.append((name, frame.columns))
+        old_tables[name] = Frame(registry[name])
+
+    monkeypatch.setattr(setup_module, "read_lakehouse_table", read_table)
+    monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
+    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", verbose=False)
+    assert result["status"] == "ready"
+    expected_evolved = {
+        "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_DATA_PROFILED",
+        "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_DATA_LINEAGE", "METADATA_DATA_ACCESS",
+        "METADATA_ENRICHMENT", "METADATA_GUARDRAIL", "METADATA_GUARDRAIL_RESULTS",
+        "METADATA_SOURCE_OBSERVATION",
+    }
+    expected_evolved.add("METADATA_DATA_CATALOGUE")
+    assert set(name for name, _columns in evolved) == expected_evolved
+    assert all(columns for _name, columns in evolved)
+
+
 def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypatch):
     """Verify newly created metadata tables use the canonical schema registry."""
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
@@ -1285,6 +1341,7 @@ def test_lineage_schema_has_only_lineage_fields_and_canonical_audit_context():
     assert schema.fieldNames() == [
         "lineage_id",
         "table_id",
+        "table_name",
         "environment_name",
         "pipeline_role",
         *audit_names,
@@ -1314,10 +1371,11 @@ def test_metadata_audit_schema_nullability_contract():
         assert set(audit_names).issubset(fields)
 
     access_fields = [field.name for field in registry["METADATA_DATA_ACCESS"].fields]
-    assert access_fields[:7] == [
+    assert access_fields[:8] == [
         "access_id",
         "user_principal",
         "table_id",
+        "table_name",
         "environment_name",
         "access_level",
         "access_value",

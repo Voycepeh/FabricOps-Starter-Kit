@@ -1,6 +1,6 @@
 # METADATA_GUARDRAIL
 
-Define enforced Schema, Freshness, Source Drift, Data Quality, and Sensitive Data requirements with Warn or Block actions.
+Define enforced Schema, Freshness, Source Drift, Data Quality, and Sensitive Data requirements with Warn or Block actions; table_name and optional column_name capture their names when the rule is written.
 
 ## Writer functions
 
@@ -32,8 +32,8 @@ via `column_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 20 |
-| Business columns | 12 |
+| Total columns | 23 |
+| Business columns | 15 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -44,7 +44,10 @@ via `column_id`
 | `guardrail_version` | `integer` | Metadata Guardrail field `guardrail_version`. |
 | `contract_id` | `string` | Stable identifier for the contract row. |
 | `contract_version` | `integer` | Version recorded for the contract row. |
+| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `column_id` | `string` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
+| `column_name` | `string` | Column name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `guardrail_type` | `string` | Guardrail family recorded for the row. |
 | `rule_id` | `string` | Rule identity stored by the authoring workflow. |

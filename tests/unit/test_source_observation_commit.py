@@ -78,6 +78,11 @@ def _configure_commit(monkeypatch, observations=None):
     written = []
     lineage = []
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: (object(), "dev", {}))
+    monkeypatch.setattr(shared, "_CURRENT_TABLE_IDENTITIES", {
+        "source-a": {"table_name": "source_orders"},
+        "source-b": {"table_name": "source_customers"},
+        "target-x": {"table_name": "target_orders"},
+    })
     shared._CURRENT_SOURCE_OBSERVATIONS.clear()
     shared._PENDING_SOURCE_OBSERVATIONS.clear()
     shared._PENDING_SOURCE_DRIFT_OBSERVATIONS.clear()
@@ -124,6 +129,9 @@ def test_successful_write_commits_one_observation_per_source(monkeypatch):
         ("source-a", "committed"), ("source-b", "committed")
     }
     assert written == records
+    assert {(row["source_table_name"], row["target_table_name"]) for row in records} == {
+        ("source_orders", "target_orders"), ("source_customers", "target_orders")
+    }
     assert [(item["table_id"], item["pipeline_role"]) for item in lineage] == [
         ("source-a", "source"),
         ("source-b", "source"),
