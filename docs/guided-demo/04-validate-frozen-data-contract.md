@@ -66,7 +66,7 @@ This proves the contract describes the canonical target before we deliberately b
 
 ## Exercise the source-side Guardrails
 
-Follow this part of the Guided Demo before continuing to the next activity.
+Test Freshness, Schema, Source Drift, and Data Quality at the governed Read boundary.
 
 </div>
 </div>
