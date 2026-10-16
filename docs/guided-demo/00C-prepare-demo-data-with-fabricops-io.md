@@ -4,11 +4,11 @@
 
 This notebook demonstrates the FabricOps I/O helpers while preparing the shared starting data for Steps 02A, 02B, and 02C.
 
-## Before you begin
+### Before you begin
 
 Complete [Step 0B](00B-configure-environment-and-load-assets.md) before preparing the demo data.
 
-## Import the setup notebook
+### Import the setup notebook
 
 1. Download [`00C_demo_setup.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/DemoData/00C_demo_setup.ipynb) and import it into Fabric Engineering Workspace (Dev).
 
@@ -20,7 +20,12 @@ Complete [Step 0B](00B-configure-environment-and-load-assets.md) before preparin
 4. Run the first two steps in the notebook.
 ![Demo setup](../assets/00C/Demo%20Set%20Up.png)
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+
 ## Read the same Orders dataset from four file formats
+
+</div>
 
 Read the same canonical Orders dataset using CSV, JSON, Parquet, and Excel.
 
@@ -90,16 +95,16 @@ The expected output confirms that all four file formats resolve to equivalent da
 ✓ 1:1:1:1 data match
 ```
 
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
+
 ## Read and write the demo data
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="FabricOps mascot" loading="lazy">
-  <div markdown="1">
+</div>
+
 
 Read the remaining retail sources and write the managed Lakehouse and Warehouse tables for 02A. The notebook also seeds the Day 1 Bronze tables for 02B and 02C.
 
-  </div>
-</div>
 
 
 ### Orders
@@ -127,7 +132,7 @@ Read the remaining retail sources and write the managed Lakehouse and Warehouse 
     Use SQL pushdown when it materially reduces Warehouse data before Spark. For repeated heavy PySpark engineering, prefer landing the required data into Lakehouse Delta rather than repeatedly crossing the Warehouse-to-Spark boundary.
 
 
-## Expected result
+### Expected result
 
 After the notebook finishes, Engineering Development should contain the starting tables for all three Step 2 demos:
 
