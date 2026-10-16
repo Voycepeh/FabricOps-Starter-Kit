@@ -21,7 +21,10 @@ _GUARDRAIL_COLUMNS = [
     "guardrail_version",
     "contract_id",
     "contract_version",
+    "table_id",
+    "table_name",
     "column_id",
+    "column_name",
     "environment_name",
     "guardrail_type",
     "rule_id",
@@ -37,6 +40,7 @@ _RESULT_COLUMNS = [
     "guardrail_rule_id",
     "guardrail_version",
     "table_id",
+    "table_name",
     "contract_id",
     "contract_version",
     "execution_type",
@@ -45,6 +49,10 @@ _RESULT_COLUMNS = [
     "status",
     "can_continue",
     "severity",
+    "guardrail_type",
+    "rule_id",
+    "rule_type",
+    "action",
     "reason",
     "result_payload_json",
     *_AUDIT_COLUMNS,
@@ -63,7 +71,9 @@ _ROW_RESULT_COLUMNS = [
 _SOURCE_OBSERVATION_COLUMNS = [
     "observation_id",
     "source_table_id",
+    "source_table_name",
     "target_table_id",
+    "target_table_name",
     "environment_name",
     "partition_value",
     "row_count",
@@ -106,7 +116,7 @@ def test_guardrail_metadata_uses_canonical_parent_identities() -> None:
     result_fields = set(_field_names("METADATA_GUARDRAIL_RESULTS"))
 
     assert {"contract_id", "contract_version", "column_id"} <= guardrail_fields
-    assert "table_id" not in guardrail_fields
+    assert {"table_id", "table_name", "column_name"} <= guardrail_fields
     assert {"guardrail_rule_id", "guardrail_version", "table_id", "contract_id", "contract_version"} <= result_fields
     assert "column_id" not in result_fields
 
@@ -118,8 +128,6 @@ def test_obsolete_guardrail_identity_and_review_fields_are_absent() -> None:
         "metadata_table_key",
         "metadata_column_key",
         "dataset_name",
-        "table_name",
-        "column_name",
         "rule_key",
         "result_id",
         "review_status",
@@ -177,6 +185,9 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
         "is_active": True,
         "review_status": "approved",
         "table_name": "orders",
+        "table_id": "table-id",
+        "column_name": "order_id",
+        "columns": [{"column_id": "column-id", "column_name": "order_id"}],
     }
 
     row = guardrail_shared.canonical_guardrail_rule_record(source, config=framework_config(), env="dev")
@@ -185,7 +196,8 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
     assert row["guardrail_version"] == 3
     assert row["contract_id"] == "contract-id"
     assert row["contract_version"] == 2
-    assert "table_id" not in row
+    assert row["table_id"] == "table-id"
+    assert row["table_name"] == "orders"
     assert row["column_id"] == "column-id"
     assert row["rule_parameters_json"] == '{"a":1,"maximum_missing_percent":0,"treat_blank_as_missing":false,"z":2}'
     assert json.loads(row["rule_parameters_json"])["maximum_missing_percent"] == 0
@@ -193,7 +205,7 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
     assert "metadata_table_key" not in row
     assert "metadata_column_key" not in row
     assert "review_status" not in row
-    assert "table_name" not in row
+    assert row["column_name"] == "order_id"
 
 
 def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> None:
@@ -213,7 +225,7 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> 
         env="dev",
         run_id="run-1",
         dataset_name="ignored",
-        table_name="ignored",
+        table_name="orders",
         store_type="lakehouse",
         layer="raw",
         schema_name=None,
@@ -225,6 +237,10 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> 
             "status": "passed",
             "can_continue": True,
             "severity": "blocking",
+            "guardrail_type": "schema",
+            "rule_id": "schema-1",
+            "rule_type": "minimum_required",
+            "action": "Block",
             "reason": "Rule passed.",
             "expected": {"b": 2, "a": 1},
         },
@@ -241,6 +257,11 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> 
     assert row["run_id"] == "run-1"
     assert row["execution_type"] == "enforce"
     assert row["table_id"] == "table-a"
+    assert row["table_name"] == "orders"
+    assert row["guardrail_type"] == "schema"
+    assert row["rule_id"] == "schema-1"
+    assert row["rule_type"] == "minimum_required"
+    assert row["action"] == "Block"
     assert row["contract_id"] == "contract-a"
     assert row["contract_version"] == 2
     assert json.loads(row["result_payload_json"])["expected"] == {"a": 1, "b": 2}
