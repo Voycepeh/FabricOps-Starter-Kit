@@ -28,9 +28,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:1073`
+`fabricops_kit/pipeline/profile_table.py:1084`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1073-L1389">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1084-L1400">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -176,6 +176,7 @@ distinct snapshot identity.
 | Status | Version |
 | --- | --- |
 | Live | 0.2.0 |
+| Live | 0.2.5 |
 
 ### Live-critical dependencies
 

@@ -120,6 +120,7 @@ DataFrame.
 | --- | --- |
 | Live | 0.1.0 |
 | Live | 0.2.0 |
+| Live | 0.2.5 |
 
 ### Live-critical dependencies
 

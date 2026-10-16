@@ -16,6 +16,7 @@ import pytest
 import fabricops_kit
 from fabricops_kit import widgets
 from fabricops_kit.public_api import SUPPORTED_PUBLIC_API
+from scripts import generate_public_function_call_flows_json as flows
 
 pytestmark = pytest.mark.contract
 
@@ -193,10 +194,13 @@ def test_setup_notebook_lifecycle_metadata_is_live_since_v010():
 
     assert setup_row["lifecycle_status"] == "live"
     assert setup_row["live_since"] == "0.1.0"
-    assert setup_row["release_history"] == [
-        {"status": "live", "version": "0.1.0"},
-        {"status": "live", "version": "0.2.0"},
+    expected_history = [
+        {"status": item["status"], "version": manifest["release_version"]}
+        for manifest in flows.load_release_manifests()
+        for item in manifest["functions"]
+        if item["name"] == "setup_notebook"
     ]
+    assert setup_row["release_history"] == expected_history
 
 
 def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():

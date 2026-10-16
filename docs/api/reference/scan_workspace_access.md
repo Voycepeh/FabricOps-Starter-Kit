@@ -25,9 +25,9 @@ inspect the result without writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access_scanner/scan_workspace_access.py:144`
+`fabricops_kit/access_scanner/scan_workspace_access.py:145`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_workspace_access.py#L144-L227">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_workspace_access.py#L145-L228">View on GitHub</a>
 </div>
 
 
@@ -121,7 +121,7 @@ Raises for invalid targets, Fabric REST authentication or permission failures, a
 
 | Status | Version |
 | --- | --- |
-| Preview | 0.2.0 |
+| Preview | 0.2.5 |
 
 
 </details>

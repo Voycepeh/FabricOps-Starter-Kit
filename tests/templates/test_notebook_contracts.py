@@ -325,7 +325,7 @@ def test_02_pipeline_optional_inspection_stays_outside_orchestration():
     read_inspection = _cell_by_id("02_pipeline.ipynb", "read-inspection").source
     write_inspection = _cell_by_id("02_pipeline.ipynb", "write-inspection").source
     assert 'sources[inspect_source]["dataframe"].limit(10)' in read_inspection
-    assert 'writes[inspect_write]["schema_result"]' in write_inspection
+    assert 'writes[inspect_write].get("schema_result")' in write_inspection
     assert "display(" not in _cell_by_id("02_pipeline.ipynb", "read-1").source
     assert "display(" not in _cell_by_id("02_pipeline.ipynb", "write-1").source
 
@@ -368,8 +368,8 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
         )
         assert 'sources[inspect_source]["dataframe"].limit(10)' in source
         assert 'writes[inspect_write]["dataframe"].limit(10)' in source
-        assert "post-treatment" in source
-        assert "not necessarily persisted" in source or "not cumulative persisted" in source
+        assert "Persisted target profile when available" in source
+        assert 'display(writes[inspect_write]["dataframe"].limit(10))' in source
         assert all(key in source for key in expected_optional)
         inspection = "\n".join(
             cell.source
@@ -393,7 +393,7 @@ def test_02a_preserves_the_full_refresh_pipeline():
     assert 'sources=[sources["orders"], sources["products"], sources["history"]]' in source
     assert "FROM demo.order_history" in source
     assert "customer_summary_df" in source
-    assert 'display(writes[inspect_write]["schema_result"])' in source
+    assert 'display(writes[inspect_write].get("schema_result"))' in source
 
 
 def test_02b_has_ordered_repeat_safe_incremental_append_flow():
@@ -426,7 +426,8 @@ def test_02b_has_ordered_repeat_safe_incremental_append_flow():
     assert 'sources=[sources["inventory_movements"]]' in source
     assert "should_process" not in source
     inspect = _demo_cell("02B_incremental_append_demo.ipynb", "inspect").source
-    assert 'writes[inspect_write]["profile_result"]["profile"]' in inspect
+    assert 'writes[inspect_write].get("profile_result")' in inspect
+    assert 'display(writes[inspect_write]["dataframe"].limit(10))' in inspect
     assert "read_lakehouse_table(" not in inspect
 
 
@@ -462,8 +463,8 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
     assert '"effective_column": "modified_datetime"' in source
     assert '"tracked_columns": ["product_category", "list_price"]' in source
     inspect = _demo_cell("02C_scd_demo.ipynb", "inspect").source
-    assert 'writes["product_master_scd1"]["profile_result"]["profile"]' in inspect
-    assert 'writes["product_master_scd2"]["profile_result"]["profile"]' in inspect
+    assert 'writes[inspect_write].get("profile_result")' in inspect
+    assert 'display(writes[inspect_write]["dataframe"].limit(10))' in inspect
     assert "read_lakehouse_table(" not in inspect
     assert "| 1 | 8 | 8 |" in source
     assert "| 2 | 8 | 9 |" in source

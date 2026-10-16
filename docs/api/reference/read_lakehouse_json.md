@@ -130,6 +130,7 @@ does not iterate through files or eagerly validate or collect the data.
 | Status | Version |
 | --- | --- |
 | Live | 0.2.0 |
+| Live | 0.2.5 |
 
 ### Live-critical dependencies
 

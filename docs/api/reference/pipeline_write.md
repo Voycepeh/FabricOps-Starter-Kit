@@ -206,6 +206,7 @@ No related guides documented.
 | Status | Version |
 | --- | --- |
 | Live | 0.2.0 |
+| Live | 0.2.5 |
 
 ### Live-critical dependencies
 
