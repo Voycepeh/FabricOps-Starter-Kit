@@ -87,8 +87,12 @@ SMOKE_SCRIPT = r"""
       check(publicRows.length > 0 && publicRows.every(row => lifecycleValue(row) === 'live'), 'lifecycle filter failed');
       lifecycle.value = ''; lifecycle.dispatchEvent(new Event('input', {bubbles:true}));
       const signal = document.getElementById('signalFilter');
-      signal.value = 'architecture_violation'; signal.dispatchEvent(new Event('input', {bubbles:true}));
-      check(publicRows.length > 0 && publicRows.every(row => hasPublicSignal(row, 'architecture_violation')), 'signal filter failed');
+      const signalRoot = DATA.public_functions.find(row => publicSignalsForFunction(row).length > 0);
+      check(signalRoot, 'signal filter smoke-test root is missing');
+      const signalName = publicSignalsForFunction(signalRoot)[0];
+      selectPublic(signalRoot.qualified_name, {scrollToPanel:false});
+      signal.value = signalName; signal.dispatchEvent(new Event('input', {bubbles:true}));
+      check(publicRows.length > 0 && publicRows.every(row => hasPublicSignal(row, signalName)), 'signal filter failed');
       signal.value = ''; signal.dispatchEvent(new Event('input', {bubbles:true}));
 
       showWorkflow('compatibility');
