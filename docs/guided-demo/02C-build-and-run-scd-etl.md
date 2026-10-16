@@ -42,7 +42,7 @@ The notebook uses these governed tables throughout:
 
     For faster runs when frequency distributions are not needed, set `frequency_enabled=False` on the relevant orchestrator call. The standard statistical profile still runs. Setting `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating them.
 
-The standard Environment, Data Contract, result-storage, and inspection patterns are explained in [Step 2](02-build-and-run-etl.md). This page covers only the day selection, snapshot staging, sequence safety, and SCD outcomes.
+The standard Environment, Data Contract, result-storage, and inspection patterns are explained in [Step 2](02-build-and-run-etl.md). This page covers only the day selection, snapshot staging, and SCD outcomes.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -83,7 +83,6 @@ The changes from Step 2 are:
 
 - **Governed Full Read:** reads the complete eight-row Product Master snapshot into `sources["product_master"]`.
 - **PySpark Transform:** selects the Product Master columns and casts `list_price` to double and `modified_datetime` to timestamp.
-- **Sequence safety:** does nothing on Day 1; on later days, verifies that the expected earlier SCD2 state exists before either target is updated.
 - **WRITE 1 — SCD1 current state:** keys Silver `demo.product_master_scd1` by `product_id` and keeps one current row per product.
 - **WRITE 2 — SCD2 history:** uses `modified_datetime` as the effective column and tracks changes to `product_category` and `list_price` in Silver `demo.product_master_scd2`.
 
