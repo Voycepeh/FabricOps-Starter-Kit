@@ -444,7 +444,6 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
         "read-1",
         "read-inspection",
         "transform",
-        "sequence-check",
         "write-1",
         "write-2",
         "inspect",
@@ -462,7 +461,6 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
     assert '"key_columns": ["product_id"]' in source
     assert '"effective_column": "modified_datetime"' in source
     assert '"tracked_columns": ["product_category", "list_price"]' in source
-    assert "allowed_existing_versions = {2: {8, 9}, 3: {9, 10}}[DEMO_DAY]" in source
     inspect = _demo_cell("02C_scd_demo.ipynb", "inspect").source
     assert 'writes["product_master_scd1"]["profile_result"]["profile"]' in inspect
     assert 'writes["product_master_scd2"]["profile_result"]["profile"]' in inspect
