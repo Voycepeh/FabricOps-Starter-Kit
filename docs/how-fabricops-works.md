@@ -9,6 +9,8 @@
 - **Engineering Production** runs the validated pipeline with the active Data Contract. Approved consumers use the resulting data for analytics and AI.
 - **Shared Metadata** connects Governance and Engineering responsibilities throughout the lifecycle.
 
+---
+
 ## Workspace Architecture
 
 **Microsoft Fabric provides the building blocks. FabricOps provides the repeatable operating practice that connects them.**
@@ -42,6 +44,8 @@
     - **Project-Specific Consumer Workspace**
       Consumers receive approved Production access through native Fabric controls and can use the Fabric interface appropriate to their work. The planned `99_explore` notebook provides the governed handoff into analytics and AI: consumer-facing context, discovery of existing consumption products, and target-specific accelerators. Data Agent publishing is the first automated target; direct analytics and future Power BI/reporting paths reuse the same governed foundation.
 
+---
+
 ## The Governance ↔ Engineering Cycle
 
 ![FabricOps Governance and Engineering cycle](assets/fabricops-roles.png)
@@ -74,6 +78,8 @@ Engineering records observed data and profiling metadata. Governance uses that e
 
         Some Guardrails also return caller-owned row-level support DataFrames. FabricOps does not persist these automatically: `check_dq()` can return `failed_values`, while `check_sensitive_data()` can return a token `support_mapping`. See the [Metadata reference](reference/metadata.md) for the full table schemas, relationships, access metadata, and runtime-output details.
 
+---
+
 ## The 7-Step FabricOps Lifecycle
 
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
@@ -89,6 +95,8 @@ Engineering records observed data and profiling metadata. Governance uses that e
 **Steps 3 ↔ 4 repeat until the Data Contract and pipeline agree.** Activation follows validation; Production uses the active contract.
 
 [Try the lifecycle in the Guided Demo →](guided-demo.md){ .md-button .md-button--primary }
+
+---
 
 ## Data Contracts
 
@@ -145,6 +153,8 @@ In other words, **Engineering supplies what physically exists; Governance adds w
 
 [Explore Business Rules to Data Quality →](solutions/business-rules-to-data-quality.md)
 
+---
+
 ## Explore implementation details
 
 The operating model and lifecycle above provide the context. Expand the following topics for more technical detail.
@@ -176,6 +186,8 @@ The operating model and lifecycle above provide the context. Expand the followin
 
         Direct Spark access to Lakehouse Delta tables bypasses the Warehouse SQL endpoint. Power BI Direct Lake and other non-SQL access paths may also bypass Warehouse query history. Therefore, routing consumers through a Warehouse improves the opportunity for SQL activity monitoring **only when alternative access paths are appropriately restricted**.
 
+---
+
 ## Featured Solutions
 
 The operating model above is the shared foundation. These solutions apply it to specific engineering, governance, access, and consumption problems.
@@ -188,6 +200,8 @@ The operating model above is the shared foundation. These solutions apply it to 
 <a class="fabricops-solution-card" href="../solutions/effective-data-access/"><span class="fabricops-solution-status">Preview</span><strong>Scan Effective Data Access</strong><small>Resolve who can reach governed data across the Fabric permission paths visible to the identity running the scan.</small></a>
 <a class="fabricops-solution-card" href="../function-call-graph/"><span class="fabricops-solution-status">Live · Maintainer</span><strong>Explore How FabricOps Functions Work Under the Hood</strong><small>Inspect the generated public function call-flow model, callable relationships, and architecture signals.</small></a>
 </div>
+
+---
 
 ## Go deeper
 
