@@ -99,6 +99,19 @@
     6. **Run Production and grant access.** Run with Production configuration and give approved consumers access through native Fabric controls.
     7. **Consume governed data.** Use approved Production data for analytics and AI. The planned `99_explore` notebook supports the governed handoff.
 
+    ??? info "Detailed lifecycle responsibilities"
+
+        1. **Governance establishes the people and agreement context.** [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md) writes Data Steward records, and [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) writes Data Agreement records.
+        2. **Engineering Development builds the ETL and produces the governed table.** `02_pipeline` reads, transforms, writes, profiles, and records the technical context around the real table. [`profile_table()`](api/reference/profile_table.md) keeps the Data Catalogue and profiling metadata aligned with what Engineering actually produced.
+        3. **Governance authors the Data Contract for that `table_id`.** [`widget_data_contract()`](api/reference/widget_data_contract.md) brings together Enrichment, Guardrails, and the governed processing definition for the table.
+        4. **Engineering Development selects a contract version and validates the real pipeline.** [`widget_select_data_contract()`](api/reference/widget_select_data_contract.md) sets the selected contract per linked `table_id`, and the Guardrail functions execute its expectations against the real data flow.
+
+            **Steps 3 ↔ 4 are intentionally iterative.** Governance authors the next contract version; Engineering selects that immutable version and reruns the pipeline against it. If the expectation needs refinement or the implementation does not satisfy the intended rule, the flow returns to Governance for another version and then back to Engineering for another validation run. The loop continues until the governed definition and the real engineering implementation agree.
+
+        5. **Governance activates the tested definition, then Engineering promotes it to Production.** [`widget_data_contract()`](api/reference/widget_data_contract.md) links the exact Data Agreement version and tags one frozen Data Contract version as active for that `table_id`. Frozen versions stay frozen; activation does not change their governed JSON. Development can validate any frozen version. Production is strict: it must resolve exactly one frozen version with `is_active=true` for each linked `table_id`. After activation, the validated engineering artifact is deployed from Engineering Development to Engineering Production through the Fabric Deployment Pipeline.
+        6. **Engineering runs the same workflow again in Production and hands off access.** The promoted `02_pipeline` resolves Production stores through `00_env_config`, automatically resolves the active Data Contract, applies the same Read → Transform → Write pattern and Guardrail functions, and publishes the governed output. Successful writes commit the associated runtime Lineage and Source Observation state. Approved consumers then receive access through native Fabric controls and can use standard Fabric interfaces directly.
+        7. **Analytics and AI consumers receive the governed handoff through `99_explore`.** The interface exposes consumer-facing context, surfaces existing consumption products using the same or overlapping governed tables, and supports target-specific accelerators. One-shot Data Agent publishing is the first automated target; explicit reusable relationship context later extends the same pattern to multiple tables and other consumers.
+
 !!! tip "Validation is iterative"
 
     **Steps 3 ↔ 4 repeat** until the Data Contract and pipeline agree. See the [Governance ↔ Engineering Cycle](#the-governance-engineering-cycle) above for how this feedback loop works. Activate the contract only after validation; Production uses the active version.
@@ -167,19 +180,6 @@ In other words, **Engineering supplies what physically exists; Governance adds w
 ## Explore implementation details
 
 The operating model and lifecycle above provide the context. Expand the following topics for more technical detail.
-
-??? info "Detailed lifecycle responsibilities"
-
-    1. **Governance establishes the people and agreement context.** [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md) writes Data Steward records, and [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) writes Data Agreement records.
-    2. **Engineering Development builds the ETL and produces the governed table.** `02_pipeline` reads, transforms, writes, profiles, and records the technical context around the real table. [`profile_table()`](api/reference/profile_table.md) keeps the Data Catalogue and profiling metadata aligned with what Engineering actually produced.
-    3. **Governance authors the Data Contract for that `table_id`.** [`widget_data_contract()`](api/reference/widget_data_contract.md) brings together Enrichment, Guardrails, and the governed processing definition for the table.
-    4. **Engineering Development selects a contract version and validates the real pipeline.** [`widget_select_data_contract()`](api/reference/widget_select_data_contract.md) sets the selected contract per linked `table_id`, and the Guardrail functions execute its expectations against the real data flow.
-
-        **Steps 3 ↔ 4 are intentionally iterative.** Governance authors the next contract version; Engineering selects that immutable version and reruns the pipeline against it. If the expectation needs refinement or the implementation does not satisfy the intended rule, the flow returns to Governance for another version and then back to Engineering for another validation run. The loop continues until the governed definition and the real engineering implementation agree.
-
-    5. **Governance activates the tested definition, then Engineering promotes it to Production.** [`widget_data_contract()`](api/reference/widget_data_contract.md) links the exact Data Agreement version and tags one frozen Data Contract version as active for that `table_id`. Frozen versions stay frozen; activation does not change their governed JSON. Development can validate any frozen version. Production is strict: it must resolve exactly one frozen version with `is_active=true` for each linked `table_id`. After activation, the validated engineering artifact is deployed from Engineering Development to Engineering Production through the Fabric Deployment Pipeline.
-    6. **Engineering runs the same workflow again in Production and hands off access.** The promoted `02_pipeline` resolves Production stores through `00_env_config`, automatically resolves the active Data Contract, applies the same Read → Transform → Write pattern and Guardrail functions, and publishes the governed output. Successful writes commit the associated runtime Lineage and Source Observation state. Approved consumers then receive access through native Fabric controls and can use standard Fabric interfaces directly.
-    7. **Analytics and AI consumers receive the governed handoff through `99_explore`.** The interface exposes consumer-facing context, surfaces existing consumption products using the same or overlapping governed tables, and supports target-specific accelerators. One-shot Data Agent publishing is the first automated target; explicit reusable relationship context later extends the same pattern to multiple tables and other consumers.
 
 ??? info "Why use a Warehouse for Gold consumption?"
 
