@@ -1,7 +1,5 @@
 # How FabricOps works
 
-FabricOps Starter Kit helps Governance and Engineering build, validate, and run governed, quality-checked Microsoft Fabric notebook workflows.
-
 ## The Big Picture
 
 **Governance defines the expectations. Engineering validates and runs the pipeline. Consumers use approved Production data.**
@@ -10,7 +8,7 @@ FabricOps Starter Kit helps Governance and Engineering build, validate, and run 
 - **Engineering Development** builds the pipeline and tests it against a frozen Data Contract.
 - **Engineering Production** runs the validated pipeline with the active Data Contract. Approved consumers use the resulting data for analytics and AI.
 
-Shared metadata connects these responsibilities throughout the lifecycle.
+- **Shared Metadata** connects Governance and Engineering responsibilities throughout the lifecycle.
 
 ## Workspace Architecture
 
