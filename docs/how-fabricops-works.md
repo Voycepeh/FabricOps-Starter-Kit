@@ -12,90 +12,15 @@ FabricOps Starter Kit helps Governance and Engineering build, validate, and run 
 
 Shared metadata connects these responsibilities throughout the lifecycle.
 
-## The 7-Step FabricOps Lifecycle
+## Workspace Architecture
 
-[![FabricOps role workflow](assets/fabricops-role-workflow.png)](assets/fabricops-role-workflow.png)
+**Microsoft Fabric provides the building blocks. FabricOps provides the repeatable operating practice that connects them.**
 
-[Open the full-size lifecycle diagram →](assets/fabricops-role-workflow.png)
+![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
 
-1. **Establish Governance context.** Create Data Stewards and a Data Agreement.
-2. **Build the pipeline.** Engineering runs, profiles, and catalogues the data in Development.
-3. **Author and freeze the Data Contract.** Governance defines the data's meaning and rules, then freezes a version for testing.
-4. **Validate the frozen Data Contract.** Engineering tests that exact version against the pipeline.
-5. **Activate and promote.** Governance activates the tested contract; Engineering promotes the validated pipeline to Production.
-6. **Run Production and grant access.** Run with Production configuration and give approved consumers access through native Fabric controls.
-7. **Consume governed data.** Use approved Production data for analytics and AI. The planned `99_explore` notebook supports the governed handoff.
+**Governance defines the rules, Engineering develops and runs pipelines, and shared metadata connects both across Development and Production.**
 
-**Steps 3 ↔ 4 repeat until the Data Contract and pipeline agree.** Activation follows validation; Production uses the active contract.
-
-[Try the lifecycle in the Guided Demo →](guided-demo.md){ .md-button .md-button--primary }
-
-## Data Contracts
-
-**A Data Contract is a versioned definition of a governed table: what it means, how it is processed, and which rules the pipeline must check.** These rules are called Guardrails.
-
-Engineering supplies the table's observed structure; Governance adds descriptions, classifications, and expectations. Freezing makes a version immutable for testing. Activation selects the tested version for Production and links it to the exact Data Agreement version.
-
-??? info "Data Contract contents and JSON example"
-
-    **The Data Contract is the versioned, executable governance definition for one governed `table_id`.** It is assembled from the real Engineering metadata and the Governance decisions made against that asset, then stored as a single `contract_payload_json` manifest in `METADATA_DATA_CONTRACT`.
-
-    The manifest captures:
-
-    - **Contract identity and lifecycle** — `contract_id`, `contract_version`, and lifecycle status.
-    - **Table definition** — the governed `table_id`, schema/table identity, observed columns and data types from `METADATA_DATA_CATALOGUE`, plus the governed processing definition.
-    - **Enrichment** — reviewed table- and column-level descriptions, classifications, and table grain authored by Governance.
-    - **Guardrails** — the executable Schema, Freshness, Source Drift, Data Quality, and Sensitive Data expectations authored by Governance.
-
-    In other words, **Engineering supplies what physically exists; Governance adds what it means and what must be enforced.** Saving updates the mutable draft manifest. Freezing makes that version immutable. Activation selects the tested frozen version for Production and links it to the exact Data Agreement version.
-
-    ??? example "What the JSON manifest looks like"
-
-        ```json
-        {
-          "contract": {
-            "contract_id": "...",
-            "contract_version": 1,
-            "status": "frozen"
-          },
-          "table": {
-            "table_id": "...",
-            "schema_name": "demo",
-            "table_name": "orders",
-            "columns": [
-              {
-                "column_id": "...",
-                "column_name": "order_id",
-                "data_type": "string"
-              }
-            ],
-            "processing": {
-              "load_strategy": "overwrite"
-            }
-          },
-          "enrichment": {
-            "table": [],
-            "columns": []
-          },
-          "guardrails": []
-        }
-        ```
-
-        The exact manifest grows with the Enrichment, Processing, and Guardrails authored for the table. See [METADATA_DATA_CONTRACT](reference/metadata/metadata_data_contract.md) for the persisted table schema.
-
-    [Explore Sensitive Data Classification & Treatment →](solutions/ai-assisted-data-contract-authoring.md)
-
-    [Explore Business Rules to Data Quality →](solutions/business-rules-to-data-quality.md)
-
-## Explore the details
-
-Open the topic you need for the workspace layout, implementation, or a specific capability.
-
-??? info "Workspace layout and notebook responsibilities"
-
-    [![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)](assets/fabricops-operating-model-overview.png)
-
-    [Open the full-size workspace diagram →](assets/fabricops-operating-model-overview.png)
+??? info "Detailed explanation"
 
     Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environments, AI capabilities, and many other building blocks. The harder question is how a team uses those building blocks repeatedly without every project inventing a different engineering and governance pattern.
 
@@ -122,15 +47,15 @@ Open the topic you need for the workspace layout, implementation, or a specific 
     - **Project-Specific Consumer Workspace**
       Consumers receive approved Production access through native Fabric controls and can use the Fabric interface appropriate to their work. The planned `99_explore` notebook provides the governed handoff into analytics and AI: consumer-facing context, discovery of existing consumption products, and target-specific accelerators. Data Agent publishing is the first automated target; direct analytics and future Power BI/reporting paths reuse the same governed foundation.
 
-??? info "Governance and Engineering metadata handoffs"
+## The Governance ↔ Engineering Cycle
 
-    ### The Governance ↔ Engineering Cycle
+![FabricOps Governance and Engineering cycle](assets/fabricops-roles.png)
 
-    [![FabricOps Governance and Engineering cycle](assets/fabricops-roles.png)](assets/fabricops-roles.png)
+**FabricOps turns Governance and Engineering into one executable cycle around the same `table_id`.**
 
-    [Open the full-size cycle diagram →](assets/fabricops-roles.png)
+Engineering records observed data and profiling metadata. Governance uses that evidence to author a versioned Data Contract. Engineering validates it, Governance activates the approved version, and Production enforces it. **Steps repeat when changes are needed.**
 
-    **FabricOps turns Governance and Engineering into one executable cycle around the same `table_id`.**
+??? info "Detailed explanation"
 
     `02_pipeline` creates the Engineering side of the shared metadata: `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_DATA_LINEAGE`, and `METADATA_SOURCE_OBSERVATION`.
 
@@ -153,6 +78,81 @@ Open the topic you need for the workspace layout, implementation, or a specific 
         `table_id` connects the physical table, Engineering observations, and governed definition.
 
         Some Guardrails also return caller-owned row-level support DataFrames. FabricOps does not persist these automatically: `check_dq()` can return `failed_values`, while `check_sensitive_data()` can return a token `support_mapping`. See the [Metadata reference](reference/metadata.md) for the full table schemas, relationships, access metadata, and runtime-output details.
+
+## The 7-Step FabricOps Lifecycle
+
+![FabricOps role workflow](assets/fabricops-role-workflow.png)
+
+1. **Establish Governance context.** Create Data Stewards and a Data Agreement.
+2. **Build the pipeline.** Engineering runs, profiles, and catalogues the data in Development.
+3. **Author and freeze the Data Contract.** Governance defines the data's meaning and rules, then freezes a version for testing.
+4. **Validate the frozen Data Contract.** Engineering tests that exact version against the pipeline.
+5. **Activate and promote.** Governance activates the tested contract; Engineering promotes the validated pipeline to Production.
+6. **Run Production and grant access.** Run with Production configuration and give approved consumers access through native Fabric controls.
+7. **Consume governed data.** Use approved Production data for analytics and AI. The planned `99_explore` notebook supports the governed handoff.
+
+**Steps 3 ↔ 4 repeat until the Data Contract and pipeline agree.** Activation follows validation; Production uses the active contract.
+
+[Try the lifecycle in the Guided Demo →](guided-demo.md){ .md-button .md-button--primary }
+
+## Data Contracts
+
+**A Data Contract is a versioned definition of a governed table: what it means, how it is processed, and which rules the pipeline must check.** These rules are called Guardrails.
+
+Engineering supplies the table's observed structure; Governance adds descriptions, classifications, and expectations. Freezing makes a version immutable for testing. Activation selects the tested version for Production and links it to the exact Data Agreement version.
+
+**The Data Contract is the versioned, executable governance definition for one governed `table_id`.** It is assembled from the real Engineering metadata and the Governance decisions made against that asset, then stored as a single `contract_payload_json` manifest in `METADATA_DATA_CONTRACT`.
+
+The manifest captures:
+
+- **Contract identity and lifecycle** — `contract_id`, `contract_version`, and lifecycle status.
+- **Table definition** — the governed `table_id`, schema/table identity, observed columns and data types from `METADATA_DATA_CATALOGUE`, plus the governed processing definition.
+- **Enrichment** — reviewed table- and column-level descriptions, classifications, and table grain authored by Governance.
+- **Guardrails** — the executable Schema, Freshness, Source Drift, Data Quality, and Sensitive Data expectations authored by Governance.
+
+In other words, **Engineering supplies what physically exists; Governance adds what it means and what must be enforced.** Saving updates the mutable draft manifest. Freezing makes that version immutable. Activation selects the tested frozen version for Production and links it to the exact Data Agreement version.
+
+??? example "What the JSON manifest looks like"
+
+    ```json
+    {
+      "contract": {
+        "contract_id": "...",
+        "contract_version": 1,
+        "status": "frozen"
+      },
+      "table": {
+        "table_id": "...",
+        "schema_name": "demo",
+        "table_name": "orders",
+        "columns": [
+          {
+            "column_id": "...",
+            "column_name": "order_id",
+            "data_type": "string"
+          }
+        ],
+        "processing": {
+          "load_strategy": "overwrite"
+        }
+      },
+      "enrichment": {
+        "table": [],
+        "columns": []
+      },
+      "guardrails": []
+    }
+    ```
+
+    The exact manifest grows with the Enrichment, Processing, and Guardrails authored for the table. See [METADATA_DATA_CONTRACT](reference/metadata/metadata_data_contract.md) for the persisted table schema.
+
+[Explore Sensitive Data Classification & Treatment →](solutions/ai-assisted-data-contract-authoring.md)
+
+[Explore Business Rules to Data Quality →](solutions/business-rules-to-data-quality.md)
+
+## Explore implementation details
+
+The operating model and lifecycle above provide the context. Expand the following topics for more technical detail.
 
 ??? info "Detailed lifecycle responsibilities"
 
@@ -181,22 +181,18 @@ Open the topic you need for the workspace layout, implementation, or a specific 
 
         Direct Spark access to Lakehouse Delta tables bypasses the Warehouse SQL endpoint. Power BI Direct Lake and other non-SQL access paths may also bypass Warehouse query history. Therefore, routing consumers through a Warehouse improves the opportunity for SQL activity monitoring **only when alternative access paths are appropriately restricted**.
 
-??? info "Featured Solutions"
+## Featured Solutions
 
-    ### Featured Solutions
+The operating model above is the shared foundation. These solutions apply it to specific engineering, governance, access, and consumption problems.
 
-    <p class="fabricops-section-lead">
-    The operating model above is the shared foundation. Featured Solutions show how FabricOps applies that foundation to specific engineering, governance, access, and consumption problems.
-    </p>
-
-    <div class="fabricops-solution-grid">
-    <a class="fabricops-solution-card" href="../solutions/plug-and-play-data-pipelines/"><span class="fabricops-solution-status">Live</span><strong>Plug-and-Play Data Pipelines with Data Contract Enforcement</strong><small>Run a standard FabricOps pipeline pattern across Development and Production with governed boundaries around project-specific PySpark.</small></a>
-    <a class="fabricops-solution-card" href="../solutions/production-table-to-data-agent/"><span class="fabricops-solution-status">Preview</span><strong>Production Table to Data Agent</strong><small>Carry governed Production table context forward into a Microsoft Fabric Data Agent.</small></a>
-    <a class="fabricops-solution-card" href="../solutions/ai-assisted-data-contract-authoring/"><span class="fabricops-solution-status">Preview</span><strong>Direct &amp; Indirect PII Discovery &amp; Treatment with Built-in AI Suggestions</strong><small>Identify sensitive data, review suggested classifications, and apply governed treatments while keeping the final decision with a human.</small></a>
-    <a class="fabricops-solution-card" href="../solutions/business-rules-to-data-quality/"><span class="fabricops-solution-status">Preview</span><strong>Data Quality Rules from Natural Language</strong><small>Translate business requirements into reviewable Data Quality rules that FabricOps can enforce deterministically.</small></a>
-    <a class="fabricops-solution-card" href="../solutions/effective-data-access/"><span class="fabricops-solution-status">Preview</span><strong>Scan Effective Data Access</strong><small>Resolve who can reach governed data across the Fabric permission paths visible to the identity running the scan.</small></a>
-    <a class="fabricops-solution-card" href="../function-call-graph/"><span class="fabricops-solution-status">Live · Maintainer</span><strong>Explore How FabricOps Functions Work Under the Hood</strong><small>Inspect the generated public function call-flow model, callable relationships, and architecture signals.</small></a>
-    </div>
+<div class="fabricops-solution-grid">
+<a class="fabricops-solution-card" href="../solutions/plug-and-play-data-pipelines/"><span class="fabricops-solution-status">Live</span><strong>Plug-and-Play Data Pipelines with Data Contract Enforcement</strong><small>Run a standard FabricOps pipeline pattern across Development and Production with governed boundaries around project-specific PySpark.</small></a>
+<a class="fabricops-solution-card" href="../solutions/production-table-to-data-agent/"><span class="fabricops-solution-status">Preview</span><strong>Production Table to Data Agent</strong><small>Carry governed Production table context forward into a Microsoft Fabric Data Agent.</small></a>
+<a class="fabricops-solution-card" href="../solutions/ai-assisted-data-contract-authoring/"><span class="fabricops-solution-status">Preview</span><strong>Direct &amp; Indirect PII Discovery &amp; Treatment with Built-in AI Suggestions</strong><small>Identify sensitive data, review suggested classifications, and apply governed treatments while keeping the final decision with a human.</small></a>
+<a class="fabricops-solution-card" href="../solutions/business-rules-to-data-quality/"><span class="fabricops-solution-status">Preview</span><strong>Data Quality Rules from Natural Language</strong><small>Translate business requirements into reviewable Data Quality rules that FabricOps can enforce deterministically.</small></a>
+<a class="fabricops-solution-card" href="../solutions/effective-data-access/"><span class="fabricops-solution-status">Preview</span><strong>Scan Effective Data Access</strong><small>Resolve who can reach governed data across the Fabric permission paths visible to the identity running the scan.</small></a>
+<a class="fabricops-solution-card" href="../function-call-graph/"><span class="fabricops-solution-status">Live · Maintainer</span><strong>Explore How FabricOps Functions Work Under the Hood</strong><small>Inspect the generated public function call-flow model, callable relationships, and architecture signals.</small></a>
+</div>
 
 ## Go deeper
 
