@@ -52,12 +52,12 @@
 
 **FabricOps turns Governance and Engineering into one executable cycle around the same `table_id`.**
 
-1. **Engineering** records observed data and profiling metadata.
-2. **Governance** uses that evidence to author a versioned **Data Contract**.
-3. **Engineering** validates the pipeline against the frozen contract.
-4. **Governance** activates the approved contract version.
-5. **Production** enforces the active contract.
-6. **Repeat** the cycle whenever changes are needed.
+- **Engineering** records observed data and profiling metadata.
+- **Governance** uses that evidence to author a versioned **Data Contract**.
+- **Engineering** validates the pipeline against the frozen contract.
+- **Governance** activates the approved contract version.
+- **Production** enforces the active contract.
+- **Repeat** the cycle whenever changes are needed.
 
 ??? info "Detailed explanation"
 
@@ -89,15 +89,19 @@
 
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
-1. **Establish Governance context.** Create Data Stewards and a Data Agreement.
-2. **Build the pipeline.** Engineering runs, profiles, and catalogues the data in Development.
-3. **Author and freeze the Data Contract.** Governance defines the data's meaning and rules, then freezes a version for testing.
-4. **Validate the frozen Data Contract.** Engineering tests that exact version against the pipeline.
-5. **Activate and promote.** Governance activates the tested contract; Engineering promotes the validated pipeline to Production.
-6. **Run Production and grant access.** Run with Production configuration and give approved consumers access through native Fabric controls.
-7. **Consume governed data.** Use approved Production data for analytics and AI. The planned `99_explore` notebook supports the governed handoff.
+??? info "7-step lifecycle details"
 
-**Steps 3 ↔ 4 repeat until the Data Contract and pipeline agree.** Activation follows validation; Production uses the active contract.
+    1. **Establish Governance context.** Create Data Stewards and a Data Agreement.
+    2. **Build the pipeline.** Engineering runs, profiles, and catalogues the data in Development.
+    3. **Author and freeze the Data Contract.** Governance defines the data's meaning and rules, then freezes a version for testing.
+    4. **Validate the frozen Data Contract.** Engineering tests that exact version against the pipeline.
+    5. **Activate and promote.** Governance activates the tested contract; Engineering promotes the validated pipeline to Production.
+    6. **Run Production and grant access.** Run with Production configuration and give approved consumers access through native Fabric controls.
+    7. **Consume governed data.** Use approved Production data for analytics and AI. The planned `99_explore` notebook supports the governed handoff.
+
+!!! tip "Validation is iterative"
+
+    **Steps 3 ↔ 4 repeat** until the Data Contract and pipeline agree. See the [Governance ↔ Engineering Cycle](#the-governance-engineering-cycle) above for how this feedback loop works. Activate the contract only after validation; Production uses the active version.
 
 [Try the lifecycle in the Guided Demo →](guided-demo.md){ .md-button .md-button--primary }
 
