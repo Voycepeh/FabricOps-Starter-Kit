@@ -16,9 +16,7 @@ Shared metadata connects these responsibilities throughout the lifecycle.
 
 **Microsoft Fabric provides the building blocks. FabricOps provides the repeatable operating practice that connects them.**
 
-[![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)](assets/fabricops-operating-model-overview.png)
-
-[Open the full-size workspace diagram →](assets/fabricops-operating-model-overview.png)
+![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
 
 Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environments, AI capabilities, and many other building blocks. The harder question is how a team uses those building blocks repeatedly without every project inventing a different engineering and governance pattern.
 
@@ -47,9 +45,7 @@ Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environ
 
 ## The Governance ↔ Engineering Cycle
 
-[![FabricOps Governance and Engineering cycle](assets/fabricops-roles.png)](assets/fabricops-roles.png)
-
-[Open the full-size cycle diagram →](assets/fabricops-roles.png)
+![FabricOps Governance and Engineering cycle](assets/fabricops-roles.png)
 
 **FabricOps turns Governance and Engineering into one executable cycle around the same `table_id`.**
 
@@ -77,9 +73,7 @@ If the implementation or governed definition needs refinement, Governance create
 
 ## The 7-Step FabricOps Lifecycle
 
-[![FabricOps role workflow](assets/fabricops-role-workflow.png)](assets/fabricops-role-workflow.png)
-
-[Open the full-size lifecycle diagram →](assets/fabricops-role-workflow.png)
+![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
 1. **Establish Governance context.** Create Data Stewards and a Data Agreement.
 2. **Build the pipeline.** Engineering runs, profiles, and catalogues the data in Development.
