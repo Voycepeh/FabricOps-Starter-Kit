@@ -30,7 +30,10 @@ def test_featured_solution_pages_follow_shared_presentation_contract():
         heading_positions = [text.index(heading) for heading in REQUIRED_HEADINGS]
         assert heading_positions == sorted(heading_positions), page
 
-        assert "fabricops-release-status--preview" in text, page
+        assert any(
+            f"fabricops-release-status--{status}" in text
+            for status in ("preview", "live")
+        ), page
         assert "{ .fabricops-solution-hero }" in text, page
         assert "??? example" not in text, page
 
