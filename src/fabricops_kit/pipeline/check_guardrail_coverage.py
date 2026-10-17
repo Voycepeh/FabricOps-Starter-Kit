@@ -99,6 +99,40 @@ def check_guardrail_coverage(
 
     FabricOps does not require a fixed Guardrail bundle. Governance can choose
     the Guardrails appropriate to each table; Schema is a common minimal choice.
+
+    Parameters
+    ----------
+    target_table_id : str
+        Canonical identity of the target about to be published.
+    source_table_ids : list[str] or tuple[str, ...]
+        Exact governed sources feeding this target. Supply [] for a source-free target.
+    spark_session : object, optional
+        Spark session override; otherwise use the active Fabric session.
+    verbose : bool, default=True
+        Print table readiness, evaluated Guardrails, and the final decision.
+
+    Returns
+    -------
+    dict
+        ``can_continue``, ``status``, participant readiness and coverage, missing
+        results, and issues. Contract-free Development returns a skipped result.
+        Failed readiness raises rather than returning a blocking result.
+
+    Raises
+    ------
+    ValueError
+        If table identities are blank or the current Fabric activity ID is missing.
+    RuntimeError
+        If a participant lacks a required contract, applicable active Guardrail,
+        or current-activity result. Select contracts and run the applicable checks
+        before retrying publication. Metadata read errors also propagate.
+
+    Examples
+    --------
+    >>> coverage = check_guardrail_coverage(
+    ...     target_table_id=target_table_id, source_table_ids=[source["table_id"]]
+    ... )
+
     """
     target_id = str(target_table_id or "").strip()
     source_ids = list(dict.fromkeys(str(value or "").strip() for value in source_table_ids or ()))

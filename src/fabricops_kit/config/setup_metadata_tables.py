@@ -244,8 +244,8 @@ def setup_metadata_tables(
         If ``raise_on_failure=True`` and one or more metadata tables fail
         creation or validation after all tables have been processed.
 
-    Notes
-    -----
+    Maintainer Notes
+    ----------------
     Setup flow:
 
     1. Validate the supplied FabricOps configuration.

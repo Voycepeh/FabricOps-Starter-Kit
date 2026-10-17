@@ -9,40 +9,27 @@
 
 Read a CSV file from a configured Fabric-resolved path through Spark CSV.
 
-<div class="reference-docstring-intro" markdown="1">
-
-Use ``read_lakehouse_csv`` for CSV data stored under the Lakehouse
-``Files`` area. Use ``read_lakehouse_table`` for managed Delta tables
-stored under the Lakehouse ``Tables`` area.
-
-This function reads from the Lakehouse ``Files`` area, not a managed Delta
-table in the ``Tables`` area. It can resolve either a single CSV file path
-or a folder path, applies the ``header`` setting, forwards all additional
-CSV reader options directly to Spark, and returns a lazy Spark DataFrame.
-The resolved location is conceptually
-``<configured lakehouse>/Files/<relative_path>``, which FabricOps maps to
-the corresponding ABFSS path before delegating to Spark.
-
-</div>
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/io/read_lakehouse_csv.py:10`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L107">View on GitHub</a>
-</div>
-
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">00C_demo_setup</span>
 </p>
 
 ## Usage notes
 
-These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
+Use when reading a CSV file from a configured Fabric-resolved path.
 
-They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+orders_df = read_lakehouse_csv("incoming/orders.csv", inferSchema=True)
+```
+
+</div>
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -51,6 +38,7 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 ```python
 def read_lakehouse_csv(
     relative_path: str,
+    *,
     store: str='Bronze',
     spark_session=None,
     header: bool=True,
@@ -61,29 +49,32 @@ def read_lakehouse_csv(
 
 </div>
 
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
-```python
-source_df = read_lakehouse_csv("Files/inbound/student_enrolment/*.csv", store="Bronze", header=True, inferSchema=True, spark_session=spark)
-```
-
-</div>
+</details>
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `relative_path` | `str` | Yes | Relative CSV file or folder path resolved underneath the configured Lakehouse ``Files`` area. |
-| `store` | `str` | No | Logical Lakehouse store key from ``00_env_config``. It is not necessarily the literal physical Lakehouse name. |
-| `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
-| `header` | `bool` | No | Whether Spark should treat the first row as column names. When ``header=True``, the first row is used as column names. When ``header=False``, the first row is treated as data and Spark typically creates generic column names such as ``_c0``, ``_c1``, and ``_c2``. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark CSV reader options passed directly to Spark's CSV reader, such as ``inferSchema``, ``sep``, ``quote``, ``escape``, ``encoding``, ``multiLine``, ``dateFormat``, ``timestampFormat``, ``nullValue``, ``mode``, and ``recursiveFileLookup``. FabricOps does not interpret or transform these options beyond forwarding them. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `relative_path` | `str` | Yes | `—` | Relative CSV file or folder path resolved underneath the configured Lakehouse ``Files`` area. |
+| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from ``00_env_config``. It is not necessarily the literal physical Lakehouse name. |
+| `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
+| `header` | `bool` | No | `True` | Whether Spark should treat the first row as column names. When ``header=True``, the first row is used as column names. When ``header=False``, the first row is treated as data and Spark typically creates generic column names such as ``_c0``, ``_c1``, and ``_c2``. |
+| `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
+| `**options` | `—` | No | `—` | Additional Spark CSV reader options passed directly to Spark's CSV reader, such as ``inferSchema``, ``sep``, ``quote``, ``escape``, ``encoding``, ``multiLine``, ``dateFormat``, ``timestampFormat``, ``nullValue``, ``mode``, and ``recursiveFileLookup``. FabricOps does not interpret or transform these options beyond forwarding them. |
+
+</div>
 
 ## Returns
 
-Spark DataFrame representing rows parsed from the selected CSV file or files. Columns and data types depend on the supplied schema and CSV reader options.
+pyspark.sql.DataFrame
+    A lazy Spark DataFrame representing the CSV file or compatible CSV
+    files found at the resolved Lakehouse ``Files`` path. Column types
+    follow Spark CSV reader behavior and generally remain strings unless
+    schema inference or other schema handling is explicitly requested.
 
 ### Return interpretation
 
@@ -105,40 +96,18 @@ Raises ValueError for invalid file paths and configuration/Spark errors when the
 
 <div class="reference-docstring-notes" markdown="1">
 
-FabricOps resolves the configured Lakehouse Files path from
-``00_env_config`` and then delegates to Spark's CSV reader with the supplied
-options. Calling this function constructs a Spark read plan, and the file
-scan occurs when a downstream action executes, such as ``display``,
-``count``, ``collect``, or a DataFrame write. The function does not
-immediately load the complete file into notebook memory.
+The Spark DataFrame is lazy; downstream actions evaluate the read. Additional
+reader options are forwarded to Spark. Folder compatibility and malformed
+record handling follow Spark CSV options.
 
-Compact examples:
+</div>
 
-``df = read_lakehouse_csv("incoming/customers.csv", store="Bronze")``
+## Behavior and scope
 
-``df = read_lakehouse_csv("incoming/customers/", store="Bronze")``
+<div class="reference-docstring-intro" markdown="1">
 
-``df = read_lakehouse_csv("incoming/customers.csv", store="Bronze", inferSchema=True)``
-
-``df = read_lakehouse_csv("incoming/orders.csv", store="Bronze", header=True, inferSchema=True, sep=",", encoding="UTF-8", mode="PERMISSIVE")``
-
-When a folder path is supplied, Spark reads compatible CSV files from that
-path into one DataFrame according to Spark CSV reader behavior. FabricOps
-does not manually loop through or append files.
-
-The function sets the ``header`` option and forwards the caller's CSV
-options. It does not automatically infer data types. Unless the caller
-requests schema inference or another schema strategy, Spark CSV columns are
-generally read as strings. ``inferSchema=True`` can be passed through
-``**options`` when inference is desired.
-
-This function does not convert CSV data into a Delta table, write, move,
-rename, or delete source files, register metadata, profile the returned
-DataFrame, remove duplicate rows, standardize column names, infer schema
-unless requested through Spark options, validate that every CSV file in a
-folder has identical structure, apply custom malformed-record handling
-beyond the supplied Spark CSV options, or automatically cache or persist
-the returned DataFrame.
+Use for a file, folder, or wildcard path. Columns remain strings unless
+Spark schema inference or another schema strategy is requested.
 
 </div>
 
@@ -146,8 +115,16 @@ the returned DataFrame.
 
 - [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/io/read_lakehouse_csv.py:10`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L71">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

@@ -9,6 +9,115 @@
 
 Create missing FabricOps metadata tables and check existing table columns and Spark data types.
 
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">00_env_config</span>
+</p>
+
+## Usage notes
+
+Use after setup_notebook in 00_env_config to create or validate the FabricOps metadata tables required by agreement, profiling, lineage, stability, and governance workflows.
+
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT_NAME)
+```
+
+</div>
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def setup_metadata_tables(
+    *,
+    spark: Any,
+    config: FrameworkConfig | dict[str, Any],
+    env: str,
+    require_active_steward: bool=False,
+    verbose: bool=True,
+    raise_on_failure: bool=False,
+) -> dict[str, Any]:
+```
+
+</div>
+
+</details>
+
+## Parameters
+
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `spark` | `Any` | Yes | `—` | Spark session used to create empty schema DataFrames and read or write the metadata lakehouse tables. |
+| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | `—` | FabricOps configuration used to find the selected environment and its metadata lakehouse. |
+| `env` | `str` | Yes | `—` | Environment whose configured metadata lakehouse should be initialized or validated. |
+| `require_active_steward` | `bool` | No | `False` | When ``True``, raise if ``METADATA_DATA_STEWARD`` contains no active steward rows after setup. This option does not create a steward record. |
+| `verbose` | `bool` | No | `True` | Controls whether the concise per-table setup summary is printed. |
+| `raise_on_failure` | `bool` | No | `False` | When ``True``, raise a ``RuntimeError`` after processing all tables if any table failed creation or validation. |
+
+</div>
+
+## Returns
+
+dict[str, Any]
+    A dictionary summarizing the completed metadata lakehouse setup,
+    including the resolved governance and engineering metadata schemas,
+    metadata tables checked,
+    tables created, additively evolved, successfully validated, failed tables,
+    per-table messages, active steward readiness, fully qualified table
+    names, and overall setup status. Key fields are ``status``,
+    ``data_agreement``, ``governance``, ``engineering``, ``tables``,
+    ``table_results``,
+    ``metadata_schemas``, ``fully_qualified_tables``, ``created_tables``,
+    ``evolved_tables``, ``validated_tables``, ``failed_tables``,
+    ``created_or_checked_tables``,
+    ``warnings``, ``active_metadata_tables``, and
+    ``active_metadata_table_count``.
+
+    ``status`` is ``"ready"`` when no table failures occur,
+    ``"partial_failure"`` when some tables succeed and some fail, and
+    ``"failed"`` when all table operations fail. ``data_agreement``
+    summarizes steward, agreement, and contract readiness. ``governance``
+    summarizes governance-authored tables, and ``engineering`` summarizes
+    engineering-written tables. Active steward readiness depends on
+    whether active steward rows already exist.
+
+### Return interpretation
+
+Use the returned status and per-table results to confirm that the physical metadata layer is ready and to distinguish tables that were created, evolved, validated, or failed. The function does not register business datasets.
+
+## Raises / Errors
+
+ValueError
+    If the configuration is invalid, the resolved ``metadata`` target is
+    not a schema-enabled lakehouse, or ``require_active_steward=True`` and
+    no active steward rows exist after setup.
+RuntimeError
+    If ``raise_on_failure=True`` and one or more metadata tables fail
+    creation or validation after all tables have been processed.
+
+### Common failure causes
+
+- Missing, invalid, or non-schema-enabled Metadata Lakehouse configuration.
+- Spark or Fabric lakehouse context is unavailable.
+- The caller lacks permission to create or inspect metadata tables.
+- An existing canonical field has an incompatible Spark field type or a known legacy schema requires explicit migration.
+- Missing canonical fields are added automatically; nullability and field order are not validated.
+- One table can fail while later tables are still processed; raise_on_failure raises only after processing all tables.
+
+## Behavior and scope
+
 <div class="reference-docstring-intro" markdown="1">
 
 Creates missing metadata tables, additively evolves existing metadata
@@ -24,6 +133,11 @@ guardrail results.
 
 </div>
 
+## See also
+
+- [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
+- [Metadata Tables](../../reference/metadata.md)
+
 <div class="reference-source-card" markdown="1">
 **Source**
 
@@ -32,79 +146,9 @@ guardrail results.
 <a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L550">View on GitHub</a>
 </div>
 
-<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">00_env_config</span>
-</p>
 
-## Usage notes
-
-Use this during setup to create the required metadata tables in the configured metadata lakehouse using predefined Starter Kit schemas.
-
-This prepares the metadata store so downstream notebooks, widgets, lineage logging, evidence capture, and governance steps can write to the expected tables.
-
-
-## Signature
-
-<div class="reference-api-definition" markdown="1">
-
-```python
-def setup_metadata_tables(
-    spark: Any,
-    config: FrameworkConfig | dict[str, Any],
-    env: str,
-    require_active_steward: bool=False,
-    verbose: bool=True,
-    raise_on_failure: bool=False,
-) -> dict[str, Any]:
-```
-
-</div>
-
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
-```python
-setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT_NAME)
-```
-
-</div>
-
-## Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `spark` | `Any` | Yes | Spark session used to create empty schema DataFrames and read or write the metadata lakehouse tables. |
-| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | FabricOps configuration used to find the selected environment and its metadata lakehouse. |
-| `env` | `str` | Yes | Environment whose configured metadata lakehouse should be initialized or validated. |
-| `require_active_steward` | `bool` | No | When ``True``, raise if ``METADATA_DATA_STEWARD`` contains no active steward rows after setup. This option does not create a steward record. |
-| `verbose` | `bool` | No | Controls whether the concise per-table setup summary is printed. |
-| `raise_on_failure` | `bool` | No | When ``True``, raise a ``RuntimeError`` after processing all tables if any table failed creation or validation. |
-
-## Returns
-
-dict[str, Any] setup report after all managed metadata tables have been created, additively evolved, or validated, including status, metadata_schemas, fully_qualified_tables, created_tables, evolved_tables, validated_tables, failed_tables, table_results, data_agreement, governance, engineering, and active metadata counts.
-
-### Return interpretation
-
-Use the returned status and per-table results to confirm that the physical metadata layer is ready and to distinguish tables that were created, evolved, validated, or failed. The function does not register business datasets.
-
-## Raises / Errors
-
-Raises configuration, Spark, or storage errors when metadata routing or table preparation fails.
-
-### Common failure causes
-
-- Missing, invalid, or non-schema-enabled Metadata Lakehouse configuration.
-- Spark or Fabric lakehouse context is unavailable.
-- The caller lacks permission to create or inspect metadata tables.
-- An existing canonical field has an incompatible Spark field type or a known legacy schema requires explicit migration.
-- Missing canonical fields are added automatically; nullability and field order are not validated.
-- One table can fail while later tables are still processed; raise_on_failure raises only after processing all tables.
-
-## Notes
-
-<div class="reference-docstring-notes" markdown="1">
+<details class="reference-implementation-details" markdown="1">
+<summary>Maintainer architecture details</summary>
 
 Setup flow:
 
@@ -218,17 +262,6 @@ automatically create steward records, agreements, contracts, catalogue
 records, profile records, lineage events, access assignments, enrichment
 records, guardrail rules, or guardrail results; those are populated by
 their respective FabricOps workflows.
-
-</div>
-
-## See also
-
-- [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
-- [Metadata Tables](../../reference/metadata.md)
-
-
-<details>
-<summary>Maintainer architecture details</summary>
 
 ## Contract impact
 

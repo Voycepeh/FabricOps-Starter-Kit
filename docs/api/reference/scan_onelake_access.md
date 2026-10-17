@@ -8,6 +8,106 @@
 
 Scan OneLake Security roles and map Lakehouse table access to canonical FabricOps table identities.
 
+
+## Usage notes
+
+Use when you need the OneLake Security path into governed Lakehouse table access.
+
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+result = scan_onelake_access(catalogue_df, targets="Silver")
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def scan_onelake_access(
+    catalogue_df,
+    *,
+    targets: str | list[str] | tuple[str, ...],
+    environment_name: str | None=None,
+    access_snapshot_id: str | None=None,
+    access_token: str | None=None,
+    persist: bool=True,
+    context: dict[str, Any] | None=None,
+) -> dict[str, Any]:
+```
+
+</div>
+
+</details>
+
+## Parameters
+
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `catalogue_df` | `pyspark.sql.DataFrame` | Yes | `—` | Active Data Catalogue rows for the configured environment. Its Spark session is used for mapping and persistence. |
+| `targets` | `str \| list[str] \| tuple[str, ...]` | Yes | `—` | Configured Lakehouse keys whose permissions should be inventoried. |
+| `environment_name` | `str \| None` | No | `None` | Catalogue and configured-store environment; defaults to the active environment. |
+| `access_snapshot_id` | `str \| None` | No | `None` | Shared scan identifier; a new UUID is generated when omitted. |
+| `access_token` | `str \| None` | No | `None` | Fabric API token override; normally resolved from the notebook identity. |
+| `persist` | `bool` | No | `True` | Append normalized rows to METADATA_DATA_ACCESS. Use False to inspect only. |
+| `context` | `dict[str, Any] \| None` | No | `None` | FabricOps configuration and runtime context established by 00_env_config. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+result = scan_onelake_access(catalogue_df, targets="Silver", persist=False)
+display(result["access"])
+display(result["unmatched"])
+```
+
+</div>
+
+## Returns
+
+dict[str, pyspark.sql.DataFrame]
+    ``observations`` holds raw permission observations; ``access`` holds
+    normalized METADATA_DATA_ACCESS rows; ``unmatched`` holds observations
+    that could not be linked to registered tables. Review unmatched rows
+    before interpreting missing access as absence of permission.
+
+### Return interpretation
+
+Use result["access"] as the normalized OneLake table-level snapshot, result["observations"] for raw role detail, and result["unmatched"] for paths outside registered governed tables.
+
+## Raises / Errors
+
+ValueError
+    If targets are empty, invalid, or not Lakehouses. Check configured store keys.
+RuntimeError
+    If Fabric authentication, REST discovery, or safe pagination fails.
+    Spark mapping and metadata write errors also propagate; check Catalogue
+    columns and permissions on the configured metadata target.
+
+### Common failure causes
+
+- A target is not a Lakehouse.
+- The token lacks OneLake.Read.All or OneLake.ReadWrite.All.
+- A role path does not map to an active registered table.
+
+## Behavior and scope
+
 <div class="reference-docstring-intro" markdown="1">
 
 The scanner reads the Fabric dataAccessRoles REST endpoint for each configured
@@ -23,88 +123,20 @@ OneLake permissions.
 
 </div>
 
+## See also
+
+- [Metadata reference](../../reference/metadata/metadata_data_access.md)
+
 <div class="reference-source-card" markdown="1">
 **Source**
 
 `fabricops_kit/access_scanner/scan_onelake_access.py:158`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_onelake_access.py#L158-L241">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_onelake_access.py#L158-L283">View on GitHub</a>
 </div>
 
 
-## Usage notes
-
-Use for repeatable OneLake Security access inventory snapshots.
-
-Do not use for Warehouse targets or as a full effective-access resolver.
-
-Preserves explicit Entra members and automatic item-access selectors, expands supported OneLake table and schema paths to registered table_id values, and keeps unmatched Files or unknown paths visible.
-
-
-## Signature
-
-<div class="reference-api-definition" markdown="1">
-
-```python
-def scan_onelake_access(
-    catalogue_df,
-    targets: str | list[str] | tuple[str, ...],
-    environment_name: str | None=None,
-    access_snapshot_id: str | None=None,
-    access_token: str | None=None,
-    persist: bool=True,
-    context: dict[str, Any] | None=None,
-) -> dict[str, Any]:
-```
-
-</div>
-
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
-```python
-result = scan_onelake_access(catalogue_df, targets="Silver")
-```
-
-</div>
-
-## Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `catalogue_df` | `—` | Yes | Not documented yet |
-| `targets` | `str \| list[str] \| tuple[str, ...]` | Yes | Not documented yet |
-| `environment_name` | `str \| None` | No | Not documented yet |
-| `access_snapshot_id` | `str \| None` | No | Not documented yet |
-| `access_token` | `str \| None` | No | Not documented yet |
-| `persist` | `bool` | No | Not documented yet |
-| `context` | `dict[str, Any] \| None` | No | Not documented yet |
-
-## Returns
-
-Dictionary with raw OneLake observations, normalized METADATA_DATA_ACCESS rows, and unmatched paths.
-
-### Return interpretation
-
-Use result["access"] as the normalized OneLake table-level snapshot, result["observations"] for raw role detail, and result["unmatched"] for paths outside registered governed tables.
-
-## Raises / Errors
-
-Raises for non-Lakehouse targets, Fabric REST authentication or permission failures, unsafe continuation hosts, and Spark mapping or persistence failures.
-
-### Common failure causes
-
-- A target is not a Lakehouse.
-- The token lacks OneLake.Read.All or OneLake.ReadWrite.All.
-- A role path does not map to an active registered table.
-
-## See also
-
-- [Metadata reference](../../reference/metadata/metadata_data_access.md)
-
-
-<details>
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

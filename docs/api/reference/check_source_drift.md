@@ -8,29 +8,25 @@
 
 Validate source changes against one target consumption baseline using the source's governed load behaviour.
 
-<div class="reference-docstring-intro" markdown="1">
-
-Compare the current source observation with the last source observation
-successfully consumed by this target and detect source changes that violate
-the source table's governed load behaviour.
-
-</div>
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/pipeline/check_source_drift.py:17`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_drift.py#L17-L201">View on GitHub</a>
-</div>
-
 
 ## Usage notes
 
-Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
+Call explicitly during pre-write preparation after the consuming target identity is known.
 
-For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+drift_result = check_source_drift(source_table_id, target_table_id=target_table_id)
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -39,6 +35,7 @@ For profiling-related pipeline functions, the output captures the important deta
 ```python
 def check_source_drift(
     source_table_id: str,
+    *,
     target_table_id: str,
     enabled: bool=True,
     raise_on_failure: bool=False,
@@ -49,33 +46,48 @@ def check_source_drift(
 
 </div>
 
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
->>> result = check_source_drift(
-...     source_result["table_id"],
-...     target_table_id=target_table_id,
-... )
->>> result["target_table_id"] == target_table_id
-True
-
-</div>
+</details>
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `source_table_id` | `str` | Yes | Canonical governed source identity returned by :func:`pipeline_read`. |
-| `target_table_id` | `str` | Yes | Canonical governed target identity used to select the last successfully consumed Source Observation baseline. |
-| `enabled` | `bool` | No | Explicitly skip the check when ``False``. |
-| `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking result cannot continue. |
-| `spark_session` | `object` | No | Spark session to use. When omitted, FabricOps resolves the active session. |
-| `verbose` | `bool` | No | Print the concise normalized check outcome when ``True``. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `source_table_id` | `str` | Yes | `—` | Canonical governed source identity returned by :func:`pipeline_read`. |
+| `target_table_id` | `str` | Yes | `—` | Canonical governed target identity used to select the last successfully consumed Source Observation baseline. |
+| `enabled` | `bool` | No | `True` | Explicitly skip the check when ``False``. |
+| `raise_on_failure` | `bool` | No | `False` | Raise ``RuntimeError`` when a blocking result cannot continue. |
+| `spark_session` | `object` | No | `None` | Spark session to use. When omitted, FabricOps resolves the active session. |
+| `verbose` | `bool` | No | `True` | Print the concise normalized check outcome when ``True``. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+result = check_source_drift(
+    source_result["table_id"],
+    target_table_id=target_table_id,
+)
+result["target_table_id"] == target_table_id
+```
+
+```text
+True
+```
+
+</div>
 
 ## Returns
 
-First-observation, changed or unchanged, and new, changed, removed, or reappeared partition evidence.
+dict
+    Source Drift evidence for the source-to-target relationship and its
+    compatibility with the source's governed load behaviour.
 
 ## Raises / Errors
 
@@ -96,12 +108,30 @@ accepted source-to-target baseline in ``METADATA_SOURCE_OBSERVATION``.
 
 </div>
 
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+Compare the current source observation with the last source observation
+successfully consumed by this target and detect source changes that violate
+the source table's governed load behaviour.
+
+</div>
+
 ## See also
 
 No related guides documented.
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/pipeline/check_source_drift.py:17`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_drift.py#L17-L201">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

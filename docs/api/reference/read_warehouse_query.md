@@ -9,41 +9,6 @@
 
 Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.
 
-<div class="reference-docstring-intro" markdown="1">
-
-Use this instead of ``read_warehouse_table`` when filtering, projection,
-aggregation, joins, or row limits should be performed before data reaches
-Spark. The supplied SQL is pushed down to the Warehouse SQL serving engine,
-and Spark receives only the query result. Column projection and row
-filtering should be written directly in the SQL. The function accepts a
-``SELECT`` statement or a CTE beginning with ``WITH`` and ending in a
-``SELECT``, validates that the query is read-only, and does not
-automatically add filters, projections, or limits beyond what the caller
-includes in the SQL. Reads use the Fabric Warehouse Spark connector rather
-than native Delta access.
-
-``read_warehouse_table`` is equivalent to a full-table ``SELECT *`` read.
-``read_warehouse_query`` provides caller-controlled SQL pushdown. For large
-or repeated PySpark processing, save the filtered result into the
-Bronze Lakehouse as Delta and continue from ``read_lakehouse_table``.
-
-Rule-of-thumb sizing guidance: small filtered or narrow slices under
-roughly 1 million rows or 1 GB are usually acceptable for ad hoc work;
-1 million to 10 million rows or 1 to 10 GB should be benchmarked first;
-and tables over roughly 10 million rows, over 10 GB, with hundreds of
-columns, or with large text fields should be loaded incrementally into
-Lakehouse Delta before Spark transformations.
-
-</div>
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/io/read_warehouse_query.py:15`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L15-L97">View on GitHub</a>
-</div>
-
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">00C_demo_setup</span>
 </p>
@@ -52,22 +17,6 @@ Lakehouse Delta before Spark transformations.
 
 Apply selective filters, projections, joins, and aggregations in the SQL query where practical so the Warehouse processes them before rows are transferred into Spark. Avoid SELECT * for very large tables when only a subset of fields is required.
 
-
-## Signature
-
-<div class="reference-api-definition" markdown="1">
-
-```python
-def read_warehouse_query(
-    query: str,
-    store: str='warehouse',
-    spark_session=None,
-    context: dict[str, Any] | None=None,
-    **options,
-):
-```
-
-</div>
 
 ## Example usage
 
@@ -79,18 +28,49 @@ active_students_df = read_warehouse_query("SELECT student_id, programme_code, en
 
 </div>
 
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def read_warehouse_query(
+    query: str,
+    *,
+    store: str='warehouse',
+    spark_session=None,
+    context: dict[str, Any] | None=None,
+    **options,
+):
+```
+
+</div>
+
+</details>
+
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `query` | `str` | Yes | Read-only SQL ``SELECT`` statement, or a CTE beginning with ``WITH`` and ending in a ``SELECT``, to execute through the Fabric Warehouse SQL serving engine. |
-| `store` | `str` | No | Logical Warehouse store key from ``00_env_config``. |
-| `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `query` | `str` | Yes | `—` | Read-only SQL ``SELECT`` statement, or a CTE beginning with ``WITH`` and ending in a ``SELECT``, to execute through the Fabric Warehouse SQL serving engine. |
+| `store` | `str` | No | `'warehouse'` | Logical Warehouse store key from ``00_env_config``. |
+| `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
+| `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
+| `**options` | `—` | No | `—` | Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
+
+</div>
 
 ## Returns
 
-Spark DataFrame containing the rows and columns produced by the Warehouse query. The output schema is determined by the SQL projection and Warehouse result types.
+pyspark.sql.DataFrame
+    A Spark DataFrame containing exactly the rows and columns returned by
+    the supplied Warehouse SQL query.
 
 ### Return interpretation
 
@@ -124,12 +104,49 @@ Warehouse engine, and transfers only the resulting dataset to Spark.
 
 </div>
 
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+Use this instead of ``read_warehouse_table`` when filtering, projection,
+aggregation, joins, or row limits should be performed before data reaches
+Spark. The supplied SQL is pushed down to the Warehouse SQL serving engine,
+and Spark receives only the query result. Column projection and row
+filtering should be written directly in the SQL. The function accepts a
+``SELECT`` statement or a CTE beginning with ``WITH`` and ending in a
+``SELECT``, validates that the query is read-only, and does not
+automatically add filters, projections, or limits beyond what the caller
+includes in the SQL. Reads use the Fabric Warehouse Spark connector rather
+than native Delta access.
+
+``read_warehouse_table`` is equivalent to a full-table ``SELECT *`` read.
+``read_warehouse_query`` provides caller-controlled SQL pushdown. For large
+or repeated PySpark processing, save the filtered result into the
+Bronze Lakehouse as Delta and continue from ``read_lakehouse_table``.
+
+Rule-of-thumb sizing guidance: small filtered or narrow slices under
+roughly 1 million rows or 1 GB are usually acceptable for ad hoc work;
+1 million to 10 million rows or 1 to 10 GB should be benchmarked first;
+and tables over roughly 10 million rows, over 10 GB, with hundreds of
+columns, or with large text fields should be loaded incrementally into
+Lakehouse Delta before Spark transformations.
+
+</div>
+
 ## See also
 
 - [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/io/read_warehouse_query.py:15`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L15-L97">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

@@ -62,7 +62,9 @@ def check_sensitive_data(
     Raises
     ------
     RuntimeError
-        If ``dataframe`` is not a Spark DataFrame in the Fabric runtime.
+        If ``dataframe`` is not a Spark DataFrame in the Fabric runtime, or
+        ``raise_on_failure=True`` and a Block treatment fails. Inspect ``checks``
+        and the governed treatment configuration before retrying.
 
     Notes
     -----

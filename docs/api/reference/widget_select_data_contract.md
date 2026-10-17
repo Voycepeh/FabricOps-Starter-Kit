@@ -8,21 +8,25 @@
 
 Resolve current-notebook Lineage and select one immutable Data Contract independently per table.
 
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/widgets/widget_select_data_contract.py:141`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L141-L507">View on GitHub</a>
-</div>
-
 
 ## Usage notes
 
-Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
+Use after baseline Lineage exists and before governed checks so Development selects immutable versions per Source/Target table and Production resolves active versions automatically.
 
-They help users write values into the correct underlying metadata tables without manually editing those tables directly.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+selection = widget_select_data_contract()
+selection["set_mode"]("table-orders", "validate", "orders-contract", 3)
+```
+
+</div>
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -34,21 +38,20 @@ def widget_select_data_contract(*, spark_session=None, context=None)
 
 </div>
 
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
->>> selection = widget_select_data_contract()
->>> selection["set_mode"]("table-orders", "validate", "orders-contract", 3)
-
-</div>
+</details>
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `spark_session` | `object` | No | Spark session override. |
-| `context` | `dict` | No | FabricOps context normally established by ``00_env_config``. The current ``notebook_id``, optional ``workspace_id``, and environment scope Lineage. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `spark_session` | `object` | No | `None` | Spark session override. |
+| `context` | `dict` | No | `None` | FabricOps context normally established by ``00_env_config``. The current ``notebook_id``, optional ``workspace_id``, and environment scope Lineage. |
+
+</div>
 
 ## Returns
 
@@ -94,8 +97,16 @@ override. This widget never activates metadata.
 
 No related guides documented.
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/widgets/widget_select_data_contract.py:141`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L141-L507">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

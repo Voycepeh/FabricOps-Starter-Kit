@@ -8,21 +8,25 @@
 
 Apply explicit Sensitive Data treatment before a governed write.
 
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/pipeline/check_sensitive_data.py:20`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_sensitive_data.py#L20-L193">View on GitHub</a>
-</div>
-
 
 ## Usage notes
 
-Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
+Use after pipeline_write resolves target identity and before the physical governed write.
 
-For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+sensitive_result = check_sensitive_data(transformed_df, table_id=table_id, raise_on_failure=True)
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -31,6 +35,7 @@ For profiling-related pipeline functions, the output captures the important deta
 ```python
 def check_sensitive_data(
     dataframe,
+    *,
     table_id: str,
     run_id: str='',
     existing_mapping=None,
@@ -43,43 +48,59 @@ def check_sensitive_data(
 
 </div>
 
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
->>> result = check_sensitive_data(
-...     transformed_df,
-...     table_id=TARGET_TABLE_ID,
-...     raise_on_failure=True,
-... )
->>> write_result = pipeline_write(
-...     result["dataframe"],
-...     table_id=TARGET_TABLE_ID,
-... )
-
-</div>
+</details>
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `dataframe` | `pyspark.sql.DataFrame` | Yes | Prepared business rows whose governed sensitive columns must be treated. |
-| `table_id` | `str` | Yes | Canonical identity used to resolve the applicable exact Data Contract version. |
-| `run_id` | `str` | No | Pipeline run identity recorded with Guardrail summary evidence. |
-| `existing_mapping` | `pyspark.sql.DataFrame` | No | Previously persisted mappings to reuse. Rows are scoped by ``table_id`` and ``column_id``; established original-to-token assignments are preserved. |
-| `enabled` | `bool` | No | Explicitly skip the check and return the supplied DataFrame when ``False``. |
-| `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking treatment cannot continue. |
-| `spark_session` | `object` | No | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active session. |
-| `verbose` | `bool` | No | Print the concise normalized check outcome when ``True``. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `dataframe` | `pyspark.sql.DataFrame` | Yes | `—` | Prepared business rows whose governed sensitive columns must be treated. |
+| `table_id` | `str` | Yes | `—` | Canonical identity used to resolve the applicable exact Data Contract version. |
+| `run_id` | `str` | No | `''` | Pipeline run identity recorded with Guardrail summary evidence. |
+| `existing_mapping` | `pyspark.sql.DataFrame` | No | `None` | Previously persisted mappings to reuse. Rows are scoped by ``table_id`` and ``column_id``; established original-to-token assignments are preserved. |
+| `enabled` | `bool` | No | `True` | Explicitly skip the check and return the supplied DataFrame when ``False``. |
+| `raise_on_failure` | `bool` | No | `False` | Raise ``RuntimeError`` when a blocking treatment cannot continue. |
+| `spark_session` | `object` | No | `None` | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active session. |
+| `verbose` | `bool` | No | `True` | Print the concise normalized check outcome when ``True``. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+result = check_sensitive_data(
+    transformed_df,
+    table_id=TARGET_TABLE_ID,
+    raise_on_failure=True,
+)
+write_result = pipeline_write(
+    result["dataframe"],
+    table_id=TARGET_TABLE_ID,
+)
+```
+
+</div>
 
 ## Returns
 
-Treated DataFrame, optional caller-owned token mapping, sanitized checks, and continuation decision.
+dict
+    ``dataframe`` contains every successfully applied treatment;
+    ``support_mapping`` contains caller-owned token mappings, or ``None``;
+    ``checks`` contains sanitized outcomes; and ``can_continue`` is false
+    only when a Block treatment fails. No mapping is persisted automatically.
 
 ## Raises / Errors
 
 RuntimeError
-    If ``dataframe`` is not a Spark DataFrame in the Fabric runtime.
+    If ``dataframe`` is not a Spark DataFrame in the Fabric runtime, or
+    ``raise_on_failure=True`` and a Block treatment fails. Inspect ``checks``
+    and the governed treatment configuration before retrying.
 
 ## Notes
 
@@ -107,8 +128,16 @@ and are excluded from ``METADATA_GUARDRAIL_RESULTS``.
 
 No related guides documented.
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/pipeline/check_sensitive_data.py:20`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_sensitive_data.py#L20-L195">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

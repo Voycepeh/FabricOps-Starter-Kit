@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import ast
+import doctest
+import inspect
 from dataclasses import dataclass
 from datetime import UTC, datetime
 import html
@@ -427,8 +429,8 @@ def _parameter_doc_metadata(parameters_section: str) -> dict[str, dict[str, str]
         stripped = line.strip()
         if not stripped:
             continue
-        if not line.startswith(" ") and " : " in line:
-            names_part, type_part = stripped.split(" : ", 1)
+        if not line.startswith(" ") and (" : " in line or stripped.startswith(("*", "**"))):
+            names_part, _, type_part = stripped.partition(" : ")
             names = names_part.split(",")
             current = names[0].strip()
             docs[current] = {"type": type_part.strip(), "description_lines": []}
@@ -446,30 +448,37 @@ def _clean_parameter_type(type_text: str) -> str:
     cleaned = type_text.replace("``", "").strip()
     for suffix in (", optional", ", default=None", ", default = None"):
         cleaned = cleaned.replace(suffix, "")
-    return cleaned.strip()
+    return re.sub(r",\s*default\s*=.*$", "", cleaned).strip()
 
 
 def _parameter_rows_from_node(node: ast.FunctionDef | ast.AsyncFunctionDef, parameters_section: str) -> list[dict[str, str]]:
     """Return compact parameter metadata for generated callable input sections."""
     docs = _parameter_doc_metadata(parameters_section)
-    positional = [arg for arg in [*node.args.posonlyargs, *node.args.args] if arg.arg not in {"self", "cls"}]
+    positional = [*node.args.posonlyargs, *node.args.args]
     positional_required = len(positional) - len(node.args.defaults)
     rows: list[dict[str, str]] = []
 
-    def _row(arg: ast.arg, required: bool) -> dict[str, str]:
-        doc = docs.get(arg.arg, {})
+    def _row(arg: ast.arg, default: ast.expr | None, prefix: str = "") -> dict[str, str]:
+        doc = docs.get(prefix + arg.arg, docs.get(arg.arg, {}))
         annotation = ast.unparse(arg.annotation) if arg.annotation is not None else ""
         return {
-            "name": arg.arg,
-            "required": "Yes" if required else "No",
+            "name": prefix + arg.arg,
+            "required": "Yes" if default is None and not prefix else "No",
+            "default": ast.unparse(default) if default is not None else "—",
             "type": _clean_parameter_type(annotation or doc.get("type", "")),
             "description": doc.get("description", PLACEHOLDER) or PLACEHOLDER,
         }
 
     for index, arg in enumerate(positional):
-        rows.append(_row(arg, index < positional_required))
+        if arg.arg not in {"self", "cls"}:
+            default = None if index < positional_required else node.args.defaults[index - positional_required]
+            rows.append(_row(arg, default))
+    if node.args.vararg:
+        rows.append(_row(node.args.vararg, None, "*"))
     for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults):
-        rows.append(_row(arg, default is None))
+        rows.append(_row(arg, default))
+    if node.args.kwarg:
+        rows.append(_row(node.args.kwarg, None, "**"))
     return rows
 
 
@@ -1025,13 +1034,8 @@ def _usage_notes_for_public_function(
     explicit = _documented_text(metadata.get("usage_notes"))
     if explicit != PLACEHOLDER:
         return explicit
-    if function_name in usage_note_by_function:
-        return usage_note_by_function[function_name]
-    source_usage_path = _source_usage_path(source_path)
-    for prefix, note in sorted(usage_note_by_path_prefix.items(), key=lambda item: len(item[0]), reverse=True):
-        if source_usage_path.startswith(prefix):
-            return note
-    return _usage_notes_from_docstring(metadata)
+    # Function intent is more useful than repeated domain-wide boilerplate.
+    return _documented_text(metadata.get("use_when"), metadata.get("when_to_use"))
 
 
 def parse_template_flow_docs() -> list[dict[str, Any]]:
@@ -1118,14 +1122,22 @@ def _render_parameter_definitions(parameter_rows: list[dict[str, str]], paramete
     type_overrides = type_overrides or {}
     if not parameter_rows:
         return ["No parameters."]
-    lines = ["| Parameter | Type | Required | Description |", "| --- | --- | --- | --- |"]
+    lines = [
+        "Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.",
+        "",
+        '<div class="reference-input-table" markdown="1">',
+        "",
+        "| Parameter | Type | Required | Default | Description |",
+        "| --- | --- | --- | --- | --- |",
+    ]
     for row in parameter_rows:
         name = row["name"]
         required_label = "Yes" if row.get("required") == "Yes" else "No"
         type_text = _markdown_table_cell(type_overrides.get(name, row.get("type", "")).strip() or "—")
         meaning = _markdown_table_cell(parameter_overrides.get(name, row.get("description", PLACEHOLDER)))
-        lines.append(f"| `{name}` | `{type_text}` | {required_label} | {meaning} |")
-    return lines
+        default = _markdown_table_cell(row.get("default", "—"))
+        lines.append(f"| `{name}` | `{type_text}` | {required_label} | `{default}` | {meaning} |")
+    return [*lines, "", "</div>"]
 
 
 def _validate_preferred_example(short_name: str, signature: str, example: str) -> None:
@@ -1141,22 +1153,29 @@ def _validate_preferred_example(short_name: str, signature: str, example: str) -
     if not calls:
         return
 
-    keyword_only_match = re.search(rf"def {re.escape(short_name)}\(\*, (?P<body>.*)\)", signature)
-    if keyword_only_match is None:
-        return
-
-    valid_keyword_names = {
-        token.split(":", 1)[0].split("=", 1)[0].strip()
-        for token in keyword_only_match.group("body").split(",")
-        if token.strip()
-    }
+    node = ast.parse(signature + ":\n    pass").body[0]
+    parameters = []
+    args = node.args
+    positional = [*args.posonlyargs, *args.args]
+    defaults = [None] * (len(positional) - len(args.defaults)) + list(args.defaults)
+    for arg, default in zip(positional, defaults):
+        kind = inspect.Parameter.POSITIONAL_ONLY if arg in args.posonlyargs else inspect.Parameter.POSITIONAL_OR_KEYWORD
+        parameters.append(inspect.Parameter(arg.arg, kind, default=inspect.Parameter.empty if default is None else object()))
+    if args.vararg:
+        parameters.append(inspect.Parameter(args.vararg.arg, inspect.Parameter.VAR_POSITIONAL))
+    for arg, default in zip(args.kwonlyargs, args.kw_defaults):
+        parameters.append(inspect.Parameter(arg.arg, inspect.Parameter.KEYWORD_ONLY, default=inspect.Parameter.empty if default is None else object()))
+    if args.kwarg:
+        parameters.append(inspect.Parameter(args.kwarg.arg, inspect.Parameter.VAR_KEYWORD))
+    contract = inspect.Signature(parameters)
     for call in calls:
-        if call.args:
-            raise RuntimeError(f"{short_name} preferred_example must use keyword arguments for keyword-only parameters.")
-        unknown_keywords = {kw.arg for kw in call.keywords if kw.arg is not None} - valid_keyword_names
-        if unknown_keywords:
-            names = ", ".join(sorted(unknown_keywords))
-            raise RuntimeError(f"{short_name} preferred_example uses parameters not in the signature: {names}")
+        # Dynamic expansions cannot be bound statically.
+        if any(isinstance(arg, ast.Starred) for arg in call.args) or any(kw.arg is None for kw in call.keywords):
+            continue
+        try:
+            contract.bind(*[object() for arg in call.args], **{kw.arg: object() for kw in call.keywords})
+        except TypeError as exc:
+            raise RuntimeError(f"{short_name} preferred_example conflicts with its signature: {exc}") from exc
 
 
 def _render_preferred_example(short_name: str, signature: str, metadata: dict[str, Any]) -> str:
@@ -1167,17 +1186,50 @@ def _render_preferred_example(short_name: str, signature: str, metadata: dict[st
     return example
 
 
+def _format_docstring_examples(text: str) -> str:
+    """Fence REPL input as copyable Python and output as text, preserving prose."""
+    rendered: list[str] = []
+    # Existing Markdown fences are already authored and must remain untouched.
+    for index, segment in enumerate(re.split(r"(```[^\n]*\n.*?```)", text, flags=re.DOTALL)):
+        if index % 2:
+            rendered.append(segment)
+            continue
+        code: list[str] = []
+
+        def flush() -> None:
+            if code:
+                rendered.append("\n" + _code_block("\n".join(code)) + "\n\n")
+                code.clear()
+
+        for part in doctest.DocTestParser().parse(segment):
+            if isinstance(part, str):
+                if part.strip():
+                    flush()
+                    rendered.append(part.strip() + "\n\n")
+            else:
+                code.append(part.source.rstrip())
+                if part.want.strip():
+                    flush()
+                    rendered.append("```text\n" + part.want.rstrip() + "\n```\n\n")
+        flush()
+    return re.sub(r"\n{3,}", "\n\n", "".join(rendered)).strip()
+
+
 def _render_example_usage(short_name: str, signature: str, metadata: dict[str, Any], doc_examples: str) -> list[str]:
-    """Return rendered example usage, preferring docstring Examples content."""
-    if doc_examples.strip():
-        # Python REPL prompts are code, not Markdown blockquote markers.
-        if doc_examples.lstrip().startswith((">>> ", "... ")):
-            return _reference_code_block(doc_examples.strip(), class_name="reference-example-usage")
-        return _reference_markdown_block(doc_examples, class_name="reference-example-usage")
+    """Render a minimal curated call followed by useful source examples."""
     preferred_example = _render_preferred_example(short_name, signature, metadata)
+    lines: list[str] = []
     if preferred_example != PLACEHOLDER:
-        return _reference_code_block(preferred_example, class_name="reference-example-usage")
-    return ["Example usage not documented yet."]
+        lines.extend(_reference_code_block(preferred_example, class_name="reference-example-usage"))
+    if doc_examples.strip():
+        formatted = _format_docstring_examples(doc_examples)
+        sources = [item.source.strip() for item in doctest.DocTestParser().get_examples(doc_examples)]
+        # Avoid repeating the same single basic call.
+        if not lines or sources != [preferred_example.strip()]:
+            if lines:
+                lines.extend(["", "### More examples", ""])
+            lines.extend(_reference_markdown_block(formatted, class_name="reference-example-usage"))
+    return lines or ["Example usage not documented yet."]
 
 
 def _derive_template_usage_by_kind(
@@ -1755,8 +1807,6 @@ def _format_api_signature(signature: str, *, max_inline_length: int = 88) -> str
     returns = (match.group("returns") or "").strip()
     rendered_args: list[str] = []
     for arg in args:
-        if arg == "*":
-            continue
         rendered_args.append(f"    {arg},")
     suffix = f" {returns}" if returns else ""
     return "\n".join([f"{match.group('prefix')} {match.group('name')}(", *rendered_args, f"){suffix}:"])
@@ -5164,6 +5214,8 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
 def main() -> None:
     """Run the command-line workflow."""
     REFERENCE_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    before_pages = {page.name: page.read_bytes() for page in CALLABLE_REFERENCE_DIR.glob("*.md")}
+    before_index = REFERENCE_PATH.read_bytes() if REFERENCE_PATH.exists() else None
     generate_metadata_reference_pages()
     public = parse_public_exports()
     module_data = {source_module_name(p): parse_module(p) for p in source_module_paths()}
@@ -5573,12 +5625,6 @@ def main() -> None:
     # Internal reference pages are outside this generator's output contract.
     for generated_page in CALLABLE_REFERENCE_DIR.glob("*.md"):
         generated_page.unlink(missing_ok=True)
-    update_generated_artifact_metadata(
-        artifact_key="individual_function_reference_pages",
-        label="Individual function reference pages",
-        generator="scripts/generate_individual_function_reference_pages.py",
-        output_path="docs/api/reference",
-    )
     for public_flow in dashboard_public_functions:
         short_name = str(public_flow["function_name"])
         node = node_by_public_function_name.get(short_name)
@@ -5604,9 +5650,9 @@ def main() -> None:
         source_ref = github_source_url(source_path, source_start_line, source_end_line)
         parameter_rows = module_info.get("parameters", {}).get(short_name, [])
         purpose = summary or module_info["functions"].get(short_name) or module_info["classes"].get(short_name) or "No summary available."
-        rendered_returns = _documented_text(metadata.get("returns"), doc_sections.get("returns"))
+        rendered_returns = _documented_text(doc_sections.get("returns"), metadata.get("returns"))
         rendered_return_interpretation = _documented_text(metadata.get("return_interpretation"))
-        rendered_raises = _documented_text(metadata.get("raises"), doc_sections.get("raises"))
+        rendered_raises = _documented_text(doc_sections.get("raises"), metadata.get("raises"))
         rendered_common_failure_causes = _documented_text(metadata.get("common_failure_causes"))
         rendered_side_effects = _documented_text(metadata.get("side_effects"))
         def _fmt_links(items: list[str]) -> list[str]:
@@ -5660,7 +5706,7 @@ def main() -> None:
                 if doc_sections.get("notes", "")
                 else []
             )
-            usage_guidance_lines = ["## Usage notes", "", usage_notes, ""] if usage_notes else []
+            usage_guidance_lines = ["## Usage notes", "", usage_notes, ""] if usage_notes and usage_notes != PLACEHOLDER else []
             related_guide_lines = _render_related_guides(list(metadata.get("related_guides", [])))
             see_also_lines = related_guide_lines if related_guide_lines else ["## See also", "", "No related guides documented.", ""]
             rendered_example_usage = _render_example_usage(
@@ -5669,6 +5715,11 @@ def main() -> None:
                 metadata,
                 doc_sections.get("examples", ""),
             )
+            advanced_example_lines = []
+            if "### More examples" in rendered_example_usage:
+                split_at = rendered_example_usage.index("### More examples")
+                advanced_example_lines = ["## Advanced examples", "", *rendered_example_usage[split_at + 2:], ""]
+                rendered_example_usage = rendered_example_usage[:split_at]
             return_interpretation_lines = (
                 ["### Return interpretation", "", rendered_return_interpretation, ""]
                 if metadata.get("return_interpretation")
@@ -5685,16 +5736,9 @@ def main() -> None:
                 *_lifecycle_header_lines(public_flow),
                 purpose,
                 "",
-                *doc_intro_lines,
-                *_source_card_lines(source_path=source_path, source_start_line=source_start_line, source_ref=source_ref, short_name=short_name),
-                "",
                 *page_chip_lines,
                 "",
                 *usage_guidance_lines,
-                "",
-                "## Signature",
-                "",
-                *_reference_code_block(_format_api_signature(signature), class_name="reference-api-definition"),
                 "",
                 *(
                     [
@@ -5704,10 +5748,20 @@ def main() -> None:
                         "",
                     ]
                 ),
+                '<details class="reference-signature-details" markdown="1">',
+                "<summary>Signature</summary>",
+                "",
+                "## Signature",
+                "",
+                *_reference_code_block(_format_api_signature(signature), class_name="reference-api-definition"),
+                "",
+                "</details>",
+                "",
                 "## Parameters",
                 "",
                 *input_lines,
                 "",
+                *advanced_example_lines,
                 "## Returns",
                 "",
                 rendered_returns,
@@ -5719,7 +5773,10 @@ def main() -> None:
                 "",
                 *common_failure_cause_lines,
                 *notes_lines,
+                *(["## Behavior and scope", "", *doc_intro_lines] if doc_intro_lines else []),
                 *see_also_lines,
+                *_source_card_lines(source_path=source_path, source_start_line=source_start_line, source_ref=source_ref, short_name=short_name),
+                "",
             ]
         else:
             lines = [
@@ -5777,10 +5834,19 @@ def main() -> None:
                 lines.extend(["", "_No used-by or calls references detected._"])
 
         if node["exported"]:
-            lines.extend(["", "<details>", "<summary>Maintainer architecture details</summary>", "", *_contract_impact_lines(public_flow, docs_metadata=docs_metadata, public_page_names=set(public_flow_by_name)), "", "</details>"])
+            lines.extend(["", '<details class="reference-implementation-details" markdown="1">', "<summary>Maintainer architecture details</summary>", "", *([doc_sections["maintainer_notes"], ""] if doc_sections.get("maintainer_notes") else []), *_contract_impact_lines(public_flow, docs_metadata=docs_metadata, public_page_names=set(public_flow_by_name)), "", "</details>"])
             (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
         elif generate_internal_pages:
             pass
+
+    after_pages = {page.name: page.read_bytes() for page in CALLABLE_REFERENCE_DIR.glob("*.md")}
+    if before_pages != after_pages or before_index != REFERENCE_PATH.read_bytes():
+        update_generated_artifact_metadata(
+            artifact_key="individual_function_reference_pages",
+            label="Individual function reference pages",
+            generator="scripts/generate_individual_function_reference_pages.py",
+            output_path="docs/api/reference",
+        )
 
 
 if __name__ == "__main__":

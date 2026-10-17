@@ -9,39 +9,6 @@
 
 Read a table from a configured Fabric warehouse target.
 
-<div class="reference-docstring-intro" markdown="1">
-
-This is equivalent to ``SELECT * FROM schema.table_name``.
-
-Use this callable only for intentional full-table extracts such as small
-lookup tables, reference tables, smoke tests, or cases where every row and
-column is genuinely required. Prefer ``read_warehouse_query`` when
-projection, filtering, aggregation, joins, row limits, or other SQL
-pushdown should occur before data reaches Spark.
-
-``read_warehouse_table`` transfers the complete table result to Spark. For
-large or wide Warehouse tables, use ``read_warehouse_query`` so filtering
-and column projection occur in the Warehouse SQL engine before rows are
-transferred to the notebook. As a rule of thumb, small Warehouse reads are
-usually acceptable for reference or ad hoc work, such as narrow tables or
-datasets under roughly 1 million rows or 1 GB. For 1 million to 10 million
-rows, wide tables, or multi-GB data, benchmark first and prefer Lakehouse
-Delta if the data will be reused. For tens of millions of rows, hundreds
-of columns, large text columns, or tables over roughly 10 GB, copy or
-incrementally load the Warehouse data into Lakehouse Delta before Spark
-processing. Avoid a single notebook cell that pulls a very large Warehouse
-table because notebook cells can hit runtime limits.
-
-</div>
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/io/read_warehouse_table.py:10`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L91">View on GitHub</a>
-</div>
-
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">00C_demo_setup</span>
 </p>
@@ -50,23 +17,6 @@ table because notebook cells can hit runtime limits.
 
 A complete-table read may transfer a large dataset from the Warehouse into Spark. Use read_warehouse_query when the workload can be reduced through SQL projection, filtering, joins, or aggregation.
 
-
-## Signature
-
-<div class="reference-api-definition" markdown="1">
-
-```python
-def read_warehouse_table(
-    schema: str,
-    table_name: str,
-    store: str='warehouse',
-    spark_session=None,
-    context: dict[str, Any] | None=None,
-    **options,
-):
-```
-
-</div>
 
 ## Example usage
 
@@ -78,19 +28,51 @@ student_df = read_warehouse_table("dbo", "student_enrolment", store="warehouse",
 
 </div>
 
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def read_warehouse_table(
+    schema: str,
+    table_name: str,
+    *,
+    store: str='warehouse',
+    spark_session=None,
+    context: dict[str, Any] | None=None,
+    **options,
+):
+```
+
+</div>
+
+</details>
+
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `schema` | `str` | Yes | Physical Warehouse schema name for the source table. |
-| `table_name` | `str` | Yes | Physical Warehouse table name for the source table. |
-| `store` | `str` | No | Logical Warehouse configuration name from ``00_env_config``. This identifies the configured Warehouse target, while ``schema`` and ``table_name`` identify the physical Warehouse table. |
-| `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `schema` | `str` | Yes | `—` | Physical Warehouse schema name for the source table. |
+| `table_name` | `str` | Yes | `—` | Physical Warehouse table name for the source table. |
+| `store` | `str` | No | `'warehouse'` | Logical Warehouse configuration name from ``00_env_config``. This identifies the configured Warehouse target, while ``schema`` and ``table_name`` identify the physical Warehouse table. |
+| `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
+| `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
+| `**options` | `—` | No | `—` | Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
+
+</div>
 
 ## Returns
 
-Spark DataFrame containing the rows and columns of the resolved Warehouse table.
+pyspark.sql.DataFrame
+    A Spark DataFrame containing all rows and columns returned from the
+    resolved Warehouse table.
 
 ### Return interpretation
 
@@ -122,12 +104,47 @@ pushdown before Spark receives rows.
 
 </div>
 
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+This is equivalent to ``SELECT * FROM schema.table_name``.
+
+Use this callable only for intentional full-table extracts such as small
+lookup tables, reference tables, smoke tests, or cases where every row and
+column is genuinely required. Prefer ``read_warehouse_query`` when
+projection, filtering, aggregation, joins, row limits, or other SQL
+pushdown should occur before data reaches Spark.
+
+``read_warehouse_table`` transfers the complete table result to Spark. For
+large or wide Warehouse tables, use ``read_warehouse_query`` so filtering
+and column projection occur in the Warehouse SQL engine before rows are
+transferred to the notebook. As a rule of thumb, small Warehouse reads are
+usually acceptable for reference or ad hoc work, such as narrow tables or
+datasets under roughly 1 million rows or 1 GB. For 1 million to 10 million
+rows, wide tables, or multi-GB data, benchmark first and prefer Lakehouse
+Delta if the data will be reused. For tens of millions of rows, hundreds
+of columns, large text columns, or tables over roughly 10 GB, copy or
+incrementally load the Warehouse data into Lakehouse Delta before Spark
+processing. Avoid a single notebook cell that pulls a very large Warehouse
+table because notebook cells can hit runtime limits.
+
+</div>
+
 ## See also
 
 - [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/io/read_warehouse_table.py:10`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L91">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

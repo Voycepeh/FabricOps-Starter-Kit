@@ -1110,7 +1110,8 @@ def profile_table(
     Parameters
     ----------
     dataframe : pyspark.sql.DataFrame, optional
-        Exact Spark DataFrame to profile. If a governed identity is also
+        Required unless a complete governed identity is provided. With no
+        DataFrame and no identity, the call raises ValueError. If an identity is also
         supplied, FabricOps does not re-read the physical table.
     store : str, optional
         Configured physical store key. Supply with ``table_name`` and optional
@@ -1155,8 +1156,8 @@ def profile_table(
     RuntimeError
         If a governed metadata write requires unavailable Delta support.
 
-    Notes
-    -----
+    Maintainer Notes
+    ----------------
     The orchestration performs these mechanical steps:
 
     1. Validate and resolve the optional canonical governed identity.

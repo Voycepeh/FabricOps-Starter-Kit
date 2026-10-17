@@ -9,33 +9,28 @@
 
 Read JSON data from a configured Lakehouse Files path through Spark JSON.
 
-<div class="reference-docstring-intro" markdown="1">
-
-FabricOps resolves ``store`` and ``relative_path`` to the configured
-Lakehouse ``Files`` area, then delegates JSON parsing to Spark's native
-JSON reader. Use ``read_lakehouse_table`` instead for managed Delta tables
-in the Lakehouse ``Tables`` area.
-
-</div>
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/io/read_lakehouse_json.py:10`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_json.py#L10-L71">View on GitHub</a>
-</div>
-
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">00C_demo_setup</span>
 </p>
 
 ## Usage notes
 
-These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
+Use when reading JSON files or folders from a configured Lakehouse Files path.
 
-They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+df = read_lakehouse_json(relative_path="incoming/events.json", store="Bronze", multiLine=True, spark_session=spark)
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -44,6 +39,7 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 ```python
 def read_lakehouse_json(
     relative_path: str,
+    *,
     store: str='Bronze',
     spark_session=None,
     context: dict[str, Any] | None=None,
@@ -53,7 +49,25 @@ def read_lakehouse_json(
 
 </div>
 
-## Example usage
+</details>
+
+## Parameters
+
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `relative_path` | `str` | Yes | `—` | JSON file or folder path underneath the configured Lakehouse ``Files`` area. Root-level and nested paths are supported. |
+| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key configured by ``00_env_config``. |
+| `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
+| `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
+| `**options` | `—` | No | `—` | Options forwarded unchanged to Spark's JSON reader, such as ``multiLine``, ``mode``, ``columnNameOfCorruptRecord``, ``dateFormat``, ``timestampFormat``, ``encoding``, ``recursiveFileLookup``, ``pathGlobFilter``, ``primitivesAsString``, ``allowComments``, ``allowSingleQuotes``, and ``allowUnquotedFieldNames``. |
+
+</div>
+
+## Advanced examples
 
 <div class="reference-example-usage" markdown="1">
 
@@ -67,18 +81,11 @@ cache or persist the returned DataFrame.
 
 </div>
 
-## Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `relative_path` | `str` | Yes | JSON file or folder path underneath the configured Lakehouse ``Files`` area. Root-level and nested paths are supported. |
-| `store` | `str` | No | Logical Lakehouse store key configured by ``00_env_config``. |
-| `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Options forwarded unchanged to Spark's JSON reader, such as ``multiLine``, ``mode``, ``columnNameOfCorruptRecord``, ``dateFormat``, ``timestampFormat``, ``encoding``, ``recursiveFileLookup``, ``pathGlobFilter``, ``primitivesAsString``, ``allowComments``, ``allowSingleQuotes``, and ``allowUnquotedFieldNames``. |
-
 ## Returns
 
-Lazy Spark DataFrame backed by the Fabric-resolved JSON path.
+pyspark.sql.DataFrame
+    A lazy Spark DataFrame backed by the resolved JSON file or compatible
+    files in the supplied folder path.
 
 ### Return interpretation
 
@@ -106,12 +113,31 @@ does not iterate through files or eagerly validate or collect the data.
 
 </div>
 
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+FabricOps resolves ``store`` and ``relative_path`` to the configured
+Lakehouse ``Files`` area, then delegates JSON parsing to Spark's native
+JSON reader. Use ``read_lakehouse_table`` instead for managed Delta tables
+in the Lakehouse ``Tables`` area.
+
+</div>
+
 ## See also
 
 - [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/io/read_lakehouse_json.py:10`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_json.py#L10-L71">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

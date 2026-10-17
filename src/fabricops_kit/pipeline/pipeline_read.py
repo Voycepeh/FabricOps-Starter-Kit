@@ -116,7 +116,8 @@ def pipeline_read(
         form and is mutually exclusive with ``store``, ``schema``, and
         ``table_name``.
     query : str, optional
-        Read-only SQL for a configured Warehouse source. The supplied source
+        Read-only SQL for a configured Warehouse source in full mode only;
+        incremental mode rejects caller-owned SQL. The supplied source
         identity remains the governed source participant even when the result
         is a projection, filter, join, or aggregation. FabricOps does not infer
         arbitrary source identity by parsing SQL. A query may accompany either
@@ -129,6 +130,9 @@ def pipeline_read(
     read_parameters : dict, optional
         Incremental read configuration. Supports only watermark_column. If a
         Data Contract is selected, its watermark must match the requested one.
+        For incremental mode, provide ``{"watermark_column": "modified_at"}``
+        when no selected contract supplies the watermark. None is valid only
+        when the selected mode and contract provide the required configuration.
     target_table_id : str, optional
         Canonical governed target being prepared. It is accepted for both read
         modes so target flows can use one consistent call shape, and is required
@@ -167,8 +171,8 @@ def pipeline_read(
         supplied for a Lakehouse source, incremental mode has no target, or
         project-owned Warehouse SQL is combined with incremental mode.
 
-    Notes
-    -----
+    Maintainer Notes
+    ----------------
     The governed orchestration performs these mechanical steps:
 
     1. Resolve the canonical source ``table_id``.

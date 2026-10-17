@@ -9,24 +9,28 @@
 
 Run the observable standard governed source lifecycle.
 
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/pipeline/orchestrate_read.py:12`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L12-L85">View on GitHub</a>
-</div>
-
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">02_pipeline</span>
 </p>
 
 ## Usage notes
 
-Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
+Use for the normal governed Read path before project PySpark transformation.
 
-For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -34,6 +38,7 @@ For profiling-related pipeline functions, the output captures the important deta
 
 ```python
 def orchestrate_read(
+    *,
     store: str,
     schema: str | None,
     table_name: str,
@@ -50,34 +55,46 @@ def orchestrate_read(
 
 </div>
 
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
->>> source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
->>> orders_df = source["dataframe"]
-
-</div>
+</details>
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `store` | `str` | Yes | Configured source store key. |
-| `schema` | `str \| None` | Yes | Physical source schema. |
-| `table_name` | `str` | Yes | Physical source table name. |
-| `read_mode` | `str` | No | Source read behaviour forwarded to :func:`pipeline_read`. |
-| `query` | `str \| None` | No | Read-only Warehouse query forwarded to :func:`pipeline_read`. |
-| `read_parameters` | `dict[str, Any] \| None` | No | Incremental configuration, for example {"watermark_column": "modified_datetime"}. A selected Data Contract must agree with the supplied watermark. |
-| `target_table_id` | `str \| None` | No | Governed target identity required for incremental reads. |
-| `frequency_enabled` | `bool` | No | Whether to calculate frequency distributions for this table. |
-| `frequency_top_n` | `int \| None` | No | Maximum ranked frequency values per eligible column; None retains all. |
-| `spark_session` | `object` | No | Spark session used by every stage. |
-| `verbose` | `bool` | No | Print stage start, outcome, duration, and failure attribution. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `store` | `str` | Yes | `—` | Configured source store key. |
+| `schema` | `str \| None` | Yes | `—` | Physical source schema. This keyword is required; pass None for a store without schemas. |
+| `table_name` | `str` | Yes | `—` | Physical source table name. |
+| `read_mode` | `str` | No | `'full'` | Source read behaviour forwarded to :func:`pipeline_read`. |
+| `query` | `str \| None` | No | `None` | Read-only Warehouse query forwarded to :func:`pipeline_read`. |
+| `read_parameters` | `dict[str, Any] \| None` | No | `None` | Incremental configuration, for example {"watermark_column": "modified_datetime"}. A selected Data Contract must agree with the supplied watermark. Required for incremental mode when no selected contract supplies the watermark. |
+| `target_table_id` | `str \| None` | No | `None` | Governed target identity required for incremental reads. |
+| `frequency_enabled` | `bool` | No | `True` | Whether to calculate frequency distributions for this table. |
+| `frequency_top_n` | `int \| None` | No | `5` | Maximum ranked frequency values per eligible column; None retains all. |
+| `spark_session` | `object` | No | `None` | Spark session used by every stage. |
+| `verbose` | `bool` | No | `True` | Print stage start, outcome, duration, and failure attribution. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+orders_df = source["dataframe"]
+```
+
+</div>
 
 ## Returns
 
-Governed source DataFrame and table identity together with every stage result.
+dict
+    The ``pipeline_read`` result, including ``dataframe`` and ``table_id``,
+    plus capability results and ``orchestration_stages``.
 
 ## Raises / Errors
 
@@ -99,8 +116,16 @@ DataFrames are never displayed. Incremental batches are not profiled.
 
 No related guides documented.
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/pipeline/orchestrate_read.py:12`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L12-L87">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

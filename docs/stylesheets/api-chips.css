@@ -1150,8 +1150,7 @@
 /* Individual function references: consistent, readable code and parameter sections. */
 .md-typeset .reference-api-definition,
 .md-typeset .reference-example-usage {
-  border-radius: 0.7rem;
-  box-shadow: 0 0.15rem 0.5rem rgba(0, 0, 0, 0.035);
+  border-radius: 0.55rem;
 }
 
 .md-typeset .reference-api-definition .highlight pre,
@@ -1190,4 +1189,25 @@
     padding: 0.8rem;
     font-size: 0.75rem;
   }
+}
+
+/* Keep narrative examples readable while code retains its own scroll area. */
+.md-typeset .reference-example-usage > p,
+.md-typeset .reference-example-usage > ul {
+  margin: 0.75rem 0.95rem;
+}
+
+.md-typeset .reference-input-table table {
+  min-width: 48rem;
+}
+
+.md-typeset .reference-input-table code {
+  white-space: pre-wrap;
+  word-break: normal;
+}
+
+.md-typeset .reference-example-usage .highlight pre > code {
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
 }
