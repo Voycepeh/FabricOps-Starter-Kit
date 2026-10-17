@@ -52,7 +52,12 @@
 
 **FabricOps turns Governance and Engineering into one executable cycle around the same `table_id`.**
 
-Engineering records observed data and profiling metadata. Governance uses that evidence to author a versioned Data Contract. Engineering validates it, Governance activates the approved version, and Production enforces it. **Steps repeat when changes are needed.**
+1. **Engineering** records observed data and profiling metadata.
+2. **Governance** uses that evidence to author a versioned **Data Contract**.
+3. **Engineering** validates the pipeline against the frozen contract.
+4. **Governance** activates the approved contract version.
+5. **Production** enforces the active contract.
+6. **Repeat** the cycle whenever changes are needed.
 
 ??? info "Detailed explanation"
 
