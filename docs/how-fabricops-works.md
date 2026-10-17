@@ -44,6 +44,21 @@
     - **Project-Specific Consumer Workspace**
       Consumers receive approved Production access through native Fabric controls and can use the Fabric interface appropriate to their work. The planned `99_explore` notebook provides the governed handoff into analytics and AI: consumer-facing context, discovery of existing consumption products, and target-specific accelerators. Data Agent publishing is the first automated target; direct analytics and future Power BI/reporting paths reuse the same governed foundation.
 
+
+    ??? info "Why use a Warehouse for Gold consumption?"
+
+        **Bronze and Silver focus on engineering; Gold focuses on publishing trusted data for downstream use.** FabricOps supports both Lakehouse and Warehouse stores across the medallion architecture. A Fabric Warehouse is a useful Gold choice when consumers need a controlled SQL interface and query execution visibility.
+
+        A common pattern is to keep engineering workloads in governed Lakehouses and publish approved Gold tables or views through a Warehouse. Consumers receive scoped Warehouse SQL permissions rather than broad access to the underlying engineering stores. Native Fabric permissions must still be configured to prevent unintended alternate access paths through OneLake, Spark, or Lakehouse SQL endpoints.
+
+        Warehouse and Lakehouse SQL analytics endpoints expose [Query Insights](https://learn.microsoft.com/en-us/fabric/data-warehouse/query-insights), which can help administrators inspect recorded SQL requests, connection identities, execution times, and query text subject to permissions and retention. This makes SQL-based consumption more observable, but **Query Insights is query history, not a complete table-level access audit**. Identifying tables from query text requires additional interpretation, and service identities may appear instead of individual end users.
+
+        ??? info "What happens when Spark reads a Warehouse?"
+
+            A Fabric notebook can read a Warehouse through the supported Spark SQL connector, for example `spark.read.synapsesql("ConsumptionWH.dbo.sales_orders")`. The connector uses the Warehouse access path, but its generated requests and their visibility in Query Insights should be verified in the target Fabric environment. Query history does not expose subsequent PySpark transformations or the original notebook code.
+
+            Direct Spark access to Lakehouse Delta tables bypasses the Warehouse SQL endpoint. Power BI Direct Lake and other non-SQL access paths may also bypass Warehouse query history. Therefore, routing consumers through a Warehouse improves the opportunity for SQL activity monitoring **only when alternative access paths are appropriately restricted**.
+
 ---
 
 ## The Governance ↔ Engineering Cycle
@@ -181,19 +196,6 @@ In other words, **Engineering supplies what physically exists; Governance adds w
 
 The operating model and lifecycle above provide the context. Expand the following topics for more technical detail.
 
-??? info "Why use a Warehouse for Gold consumption?"
-
-    **Bronze and Silver focus on engineering; Gold focuses on publishing trusted data for downstream use.** FabricOps supports both Lakehouse and Warehouse stores across the medallion architecture. A Fabric Warehouse is a useful Gold choice when consumers need a controlled SQL interface and query execution visibility.
-
-    A common pattern is to keep engineering workloads in governed Lakehouses and publish approved Gold tables or views through a Warehouse. Consumers receive scoped Warehouse SQL permissions rather than broad access to the underlying engineering stores. Native Fabric permissions must still be configured to prevent unintended alternate access paths through OneLake, Spark, or Lakehouse SQL endpoints.
-
-    Warehouse and Lakehouse SQL analytics endpoints expose [Query Insights](https://learn.microsoft.com/en-us/fabric/data-warehouse/query-insights), which can help administrators inspect recorded SQL requests, connection identities, execution times, and query text subject to permissions and retention. This makes SQL-based consumption more observable, but **Query Insights is query history, not a complete table-level access audit**. Identifying tables from query text requires additional interpretation, and service identities may appear instead of individual end users.
-
-    ??? info "What happens when Spark reads a Warehouse?"
-
-        A Fabric notebook can read a Warehouse through the supported Spark SQL connector, for example `spark.read.synapsesql("ConsumptionWH.dbo.sales_orders")`. The connector uses the Warehouse access path, but its generated requests and their visibility in Query Insights should be verified in the target Fabric environment. Query history does not expose subsequent PySpark transformations or the original notebook code.
-
-        Direct Spark access to Lakehouse Delta tables bypasses the Warehouse SQL endpoint. Power BI Direct Lake and other non-SQL access paths may also bypass Warehouse query history. Therefore, routing consumers through a Warehouse improves the opportunity for SQL activity monitoring **only when alternative access paths are appropriately restricted**.
 
 ---
 
