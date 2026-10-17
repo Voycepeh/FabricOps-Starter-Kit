@@ -162,10 +162,6 @@ In other words, **Engineering supplies what physically exists; Governance adds w
 
     The exact manifest grows with the Enrichment, Processing, and Guardrails authored for the table. See [METADATA_DATA_CONTRACT](reference/metadata/metadata_data_contract.md) for the persisted table schema.
 
-[Explore Sensitive Data Classification & Treatment →](solutions/ai-assisted-data-contract-authoring.md)
-
-[Explore Business Rules to Data Quality →](solutions/business-rules-to-data-quality.md)
-
 ---
 
 ## Explore implementation details
