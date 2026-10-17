@@ -1146,3 +1146,48 @@
     font-size: 0.68rem;
   }
 }
+
+/* Individual function references: consistent, readable code and parameter sections. */
+.md-typeset .reference-api-definition,
+.md-typeset .reference-example-usage {
+  border-radius: 0.7rem;
+  box-shadow: 0 0.15rem 0.5rem rgba(0, 0, 0, 0.035);
+}
+
+.md-typeset .reference-api-definition .highlight pre,
+.md-typeset .reference-example-usage .highlight pre {
+  padding: 1rem 1.15rem;
+  font-size: 0.83rem;
+  line-height: 1.65;
+  white-space: pre;
+  overflow-x: auto;
+  overflow-wrap: normal;
+}
+
+.md-typeset .reference-example-usage code,
+.md-typeset .reference-api-definition code {
+  font-variant-ligatures: none;
+}
+
+.md-typeset .reference-source-card {
+  border-radius: 0.7rem;
+  padding: 0.85rem 1rem;
+}
+
+.md-typeset .reference-source-card .reference-source-link {
+  display: inline-block;
+  margin-top: 0.3rem;
+  font-weight: 600;
+}
+
+.md-typeset .reference-example-usage > blockquote {
+  margin: 0;
+}
+
+@media screen and (max-width: 760px) {
+  .md-typeset .reference-api-definition .highlight pre,
+  .md-typeset .reference-example-usage .highlight pre {
+    padding: 0.8rem;
+    font-size: 0.75rem;
+  }
+}
