@@ -1,7 +1,5 @@
 # How FabricOps works
 
-FabricOps Starter Kit helps Governance and Engineering build, validate, and run governed, quality-checked Microsoft Fabric notebook workflows.
-
 ## The Big Picture
 
 **Governance defines the expectations. Engineering validates and runs the pipeline. Consumers use approved Production data.**
@@ -9,16 +7,15 @@ FabricOps Starter Kit helps Governance and Engineering build, validate, and run 
 - **Governance** defines who is responsible for the data, what it means, and which rules it must meet.
 - **Engineering Development** builds the pipeline and tests it against a frozen Data Contract.
 - **Engineering Production** runs the validated pipeline with the active Data Contract. Approved consumers use the resulting data for analytics and AI.
+- **Shared Metadata** connects Governance and Engineering responsibilities throughout the lifecycle.
 
-Shared metadata connects these responsibilities throughout the lifecycle.
+---
 
 ## Workspace Architecture
 
 **Microsoft Fabric provides the building blocks. FabricOps provides the repeatable operating practice that connects them.**
 
 ![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
-
-**Governance defines the rules, Engineering develops and runs pipelines, and shared metadata connects both across Development and Production.**
 
 ??? info "Detailed explanation"
 
@@ -47,13 +44,35 @@ Shared metadata connects these responsibilities throughout the lifecycle.
     - **Project-Specific Consumer Workspace**
       Consumers receive approved Production access through native Fabric controls and can use the Fabric interface appropriate to their work. The planned `99_explore` notebook provides the governed handoff into analytics and AI: consumer-facing context, discovery of existing consumption products, and target-specific accelerators. Data Agent publishing is the first automated target; direct analytics and future Power BI/reporting paths reuse the same governed foundation.
 
+
+    ??? info "Why use a Warehouse for Gold consumption?"
+
+        **Bronze and Silver focus on engineering; Gold focuses on publishing trusted data for downstream use.** FabricOps supports both Lakehouse and Warehouse stores across the medallion architecture. A Fabric Warehouse is a useful Gold choice when consumers need a controlled SQL interface and query execution visibility.
+
+        A common pattern is to keep engineering workloads in governed Lakehouses and publish approved Gold tables or views through a Warehouse. Consumers receive scoped Warehouse SQL permissions rather than broad access to the underlying engineering stores. Native Fabric permissions must still be configured to prevent unintended alternate access paths through OneLake, Spark, or Lakehouse SQL endpoints.
+
+        Warehouse and Lakehouse SQL analytics endpoints expose [Query Insights](https://learn.microsoft.com/en-us/fabric/data-warehouse/query-insights), which can help administrators inspect recorded SQL requests, connection identities, execution times, and query text subject to permissions and retention. This makes SQL-based consumption more observable, but **Query Insights is query history, not a complete table-level access audit**. Identifying tables from query text requires additional interpretation, and service identities may appear instead of individual end users.
+
+        ??? info "What happens when Spark reads a Warehouse?"
+
+            A Fabric notebook can read a Warehouse through the supported Spark SQL connector, for example `spark.read.synapsesql("ConsumptionWH.dbo.sales_orders")`. The connector uses the Warehouse access path, but its generated requests and their visibility in Query Insights should be verified in the target Fabric environment. Query history does not expose subsequent PySpark transformations or the original notebook code.
+
+            Direct Spark access to Lakehouse Delta tables bypasses the Warehouse SQL endpoint. Power BI Direct Lake and other non-SQL access paths may also bypass Warehouse query history. Therefore, routing consumers through a Warehouse improves the opportunity for SQL activity monitoring **only when alternative access paths are appropriately restricted**.
+
+---
+
 ## The Governance ↔ Engineering Cycle
 
 ![FabricOps Governance and Engineering cycle](assets/fabricops-roles.png)
 
 **FabricOps turns Governance and Engineering into one executable cycle around the same `table_id`.**
 
-Engineering records observed data and profiling metadata. Governance uses that evidence to author a versioned Data Contract. Engineering validates it, Governance activates the approved version, and Production enforces it. **Steps repeat when changes are needed.**
+- **Engineering** records observed data and profiling metadata.
+- **Governance** uses that evidence to author a versioned **Data Contract**.
+- **Engineering** validates the pipeline against the frozen contract.
+- **Governance** activates the approved contract version.
+- **Production** enforces the active contract.
+- **Repeat** the cycle whenever changes are needed.
 
 ??? info "Detailed explanation"
 
@@ -79,21 +98,46 @@ Engineering records observed data and profiling metadata. Governance uses that e
 
         Some Guardrails also return caller-owned row-level support DataFrames. FabricOps does not persist these automatically: `check_dq()` can return `failed_values`, while `check_sensitive_data()` can return a token `support_mapping`. See the [Metadata reference](reference/metadata.md) for the full table schemas, relationships, access metadata, and runtime-output details.
 
+---
+
 ## The 7-Step FabricOps Lifecycle
 
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
-1. **Establish Governance context.** Create Data Stewards and a Data Agreement.
-2. **Build the pipeline.** Engineering runs, profiles, and catalogues the data in Development.
-3. **Author and freeze the Data Contract.** Governance defines the data's meaning and rules, then freezes a version for testing.
-4. **Validate the frozen Data Contract.** Engineering tests that exact version against the pipeline.
-5. **Activate and promote.** Governance activates the tested contract; Engineering promotes the validated pipeline to Production.
-6. **Run Production and grant access.** Run with Production configuration and give approved consumers access through native Fabric controls.
-7. **Consume governed data.** Use approved Production data for analytics and AI. The planned `99_explore` notebook supports the governed handoff.
+??? info "7-step lifecycle details"
 
-**Steps 3 ↔ 4 repeat until the Data Contract and pipeline agree.** Activation follows validation; Production uses the active contract.
+    1. **Establish Governance context.** Create Data Stewards and a Data Agreement.
+    2. **Build the pipeline.** Engineering runs, profiles, and catalogues the data in Development.
+    3. **Author and freeze the Data Contract.** Governance defines the data's meaning and rules, then freezes a version for testing.
+    4. **Validate the frozen Data Contract.** Engineering tests that exact version against the pipeline.
+    5. **Activate and promote.** Governance activates the tested contract; Engineering promotes the validated pipeline to Production.
+    6. **Run Production and grant access.** Run with Production configuration and give approved consumers access through native Fabric controls.
+    7. **Consume governed data.** Use approved Production data for analytics and AI. The planned `99_explore` notebook supports the governed handoff.
+
+    ??? info "Detailed lifecycle responsibilities"
+
+        1. **Governance establishes the people and agreement context.** [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md) writes Data Steward records, and [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) writes Data Agreement records.
+        2. **Engineering Development builds the ETL and produces the governed table.** `02_pipeline` reads, transforms, writes, profiles, and records the technical context around the real table. [`profile_table()`](api/reference/profile_table.md) keeps the Data Catalogue and profiling metadata aligned with what Engineering actually produced.
+        3. **Governance authors the Data Contract for that `table_id`.** [`widget_data_contract()`](api/reference/widget_data_contract.md) brings together Enrichment, Guardrails, and the governed processing definition for the table.
+        4. **Engineering Development selects a contract version and validates the real pipeline.** [`widget_select_data_contract()`](api/reference/widget_select_data_contract.md) sets the selected contract per linked `table_id`, and the Guardrail functions execute its expectations against the real data flow.
+
+            **Steps 3 ↔ 4 are intentionally iterative.** Governance authors the next contract version; Engineering selects that immutable version and reruns the pipeline against it. If the expectation needs refinement or the implementation does not satisfy the intended rule, the flow returns to Governance for another version and then back to Engineering for another validation run. The loop continues until the governed definition and the real engineering implementation agree.
+
+        5. **Governance activates the tested definition, then Engineering promotes it to Production.** [`widget_data_contract()`](api/reference/widget_data_contract.md) links the exact Data Agreement version and tags one frozen Data Contract version as active for that `table_id`. Frozen versions stay frozen; activation does not change their governed JSON. Development can validate any frozen version. Production is strict: it must resolve exactly one frozen version with `is_active=true` for each linked `table_id`. After activation, the validated engineering artifact is deployed from Engineering Development to Engineering Production through the Fabric Deployment Pipeline.
+        6. **Engineering runs the same workflow again in Production and hands off access.** The promoted `02_pipeline` resolves Production stores through `00_env_config`, automatically resolves the active Data Contract, applies the same Read → Transform → Write pattern and Guardrail functions, and publishes the governed output. Successful writes commit the associated runtime Lineage and Source Observation state. Approved consumers then receive access through native Fabric controls and can use standard Fabric interfaces directly.
+        7. **Analytics and AI consumers receive the governed handoff through `99_explore`.** The interface exposes consumer-facing context, surfaces existing consumption products using the same or overlapping governed tables, and supports target-specific accelerators. One-shot Data Agent publishing is the first automated target; explicit reusable relationship context later extends the same pattern to multiple tables and other consumers.
+
+!!! tip "Validation is iterative"
+
+    **Steps 3 ↔ 4 repeat** until the Data Contract and pipeline agree. See the [Governance ↔ Engineering Cycle](#the-governance-engineering-cycle) above for how this feedback loop works. Activate the contract only after validation; Production uses the active version.
+
+<div align="center" markdown="1">
 
 [Try the lifecycle in the Guided Demo →](guided-demo.md){ .md-button .md-button--primary }
+
+</div>
+
+---
 
 ## Data Contracts
 
@@ -146,40 +190,7 @@ In other words, **Engineering supplies what physically exists; Governance adds w
 
     The exact manifest grows with the Enrichment, Processing, and Guardrails authored for the table. See [METADATA_DATA_CONTRACT](reference/metadata/metadata_data_contract.md) for the persisted table schema.
 
-[Explore Sensitive Data Classification & Treatment →](solutions/ai-assisted-data-contract-authoring.md)
-
-[Explore Business Rules to Data Quality →](solutions/business-rules-to-data-quality.md)
-
-## Explore implementation details
-
-The operating model and lifecycle above provide the context. Expand the following topics for more technical detail.
-
-??? info "Detailed lifecycle responsibilities"
-
-    1. **Governance establishes the people and agreement context.** [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md) writes Data Steward records, and [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) writes Data Agreement records.
-    2. **Engineering Development builds the ETL and produces the governed table.** `02_pipeline` reads, transforms, writes, profiles, and records the technical context around the real table. [`profile_table()`](api/reference/profile_table.md) keeps the Data Catalogue and profiling metadata aligned with what Engineering actually produced.
-    3. **Governance authors the Data Contract for that `table_id`.** [`widget_data_contract()`](api/reference/widget_data_contract.md) brings together Enrichment, Guardrails, and the governed processing definition for the table.
-    4. **Engineering Development selects a contract version and validates the real pipeline.** [`widget_select_data_contract()`](api/reference/widget_select_data_contract.md) sets the selected contract per linked `table_id`, and the Guardrail functions execute its expectations against the real data flow.
-
-        **Steps 3 ↔ 4 are intentionally iterative.** Governance authors the next contract version; Engineering selects that immutable version and reruns the pipeline against it. If the expectation needs refinement or the implementation does not satisfy the intended rule, the flow returns to Governance for another version and then back to Engineering for another validation run. The loop continues until the governed definition and the real engineering implementation agree.
-
-    5. **Governance activates the tested definition, then Engineering promotes it to Production.** [`widget_data_contract()`](api/reference/widget_data_contract.md) links the exact Data Agreement version and tags one frozen Data Contract version as active for that `table_id`. Frozen versions stay frozen; activation does not change their governed JSON. Development can validate any frozen version. Production is strict: it must resolve exactly one frozen version with `is_active=true` for each linked `table_id`. After activation, the validated engineering artifact is deployed from Engineering Development to Engineering Production through the Fabric Deployment Pipeline.
-    6. **Engineering runs the same workflow again in Production and hands off access.** The promoted `02_pipeline` resolves Production stores through `00_env_config`, automatically resolves the active Data Contract, applies the same Read → Transform → Write pattern and Guardrail functions, and publishes the governed output. Successful writes commit the associated runtime Lineage and Source Observation state. Approved consumers then receive access through native Fabric controls and can use standard Fabric interfaces directly.
-    7. **Analytics and AI consumers receive the governed handoff through `99_explore`.** The interface exposes consumer-facing context, surfaces existing consumption products using the same or overlapping governed tables, and supports target-specific accelerators. One-shot Data Agent publishing is the first automated target; explicit reusable relationship context later extends the same pattern to multiple tables and other consumers.
-
-??? info "Why use a Warehouse for Gold consumption?"
-
-    **Bronze and Silver focus on engineering; Gold focuses on publishing trusted data for downstream use.** FabricOps supports both Lakehouse and Warehouse stores across the medallion architecture. A Fabric Warehouse is a useful Gold choice when consumers need a controlled SQL interface and query execution visibility.
-
-    A common pattern is to keep engineering workloads in governed Lakehouses and publish approved Gold tables or views through a Warehouse. Consumers receive scoped Warehouse SQL permissions rather than broad access to the underlying engineering stores. Native Fabric permissions must still be configured to prevent unintended alternate access paths through OneLake, Spark, or Lakehouse SQL endpoints.
-
-    Warehouse and Lakehouse SQL analytics endpoints expose [Query Insights](https://learn.microsoft.com/en-us/fabric/data-warehouse/query-insights), which can help administrators inspect recorded SQL requests, connection identities, execution times, and query text subject to permissions and retention. This makes SQL-based consumption more observable, but **Query Insights is query history, not a complete table-level access audit**. Identifying tables from query text requires additional interpretation, and service identities may appear instead of individual end users.
-
-    ??? info "What happens when Spark reads a Warehouse?"
-
-        A Fabric notebook can read a Warehouse through the supported Spark SQL connector, for example `spark.read.synapsesql("ConsumptionWH.dbo.sales_orders")`. The connector uses the Warehouse access path, but its generated requests and their visibility in Query Insights should be verified in the target Fabric environment. Query history does not expose subsequent PySpark transformations or the original notebook code.
-
-        Direct Spark access to Lakehouse Delta tables bypasses the Warehouse SQL endpoint. Power BI Direct Lake and other non-SQL access paths may also bypass Warehouse query history. Therefore, routing consumers through a Warehouse improves the opportunity for SQL activity monitoring **only when alternative access paths are appropriately restricted**.
+---
 
 ## Featured Solutions
 
@@ -193,6 +204,8 @@ The operating model above is the shared foundation. These solutions apply it to 
 <a class="fabricops-solution-card" href="../solutions/effective-data-access/"><span class="fabricops-solution-status">Preview</span><strong>Scan Effective Data Access</strong><small>Resolve who can reach governed data across the Fabric permission paths visible to the identity running the scan.</small></a>
 <a class="fabricops-solution-card" href="../function-call-graph/"><span class="fabricops-solution-status">Live · Maintainer</span><strong>Explore How FabricOps Functions Work Under the Hood</strong><small>Inspect the generated public function call-flow model, callable relationships, and architecture signals.</small></a>
 </div>
+
+---
 
 ## Go deeper
 
