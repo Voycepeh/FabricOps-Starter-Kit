@@ -103,7 +103,7 @@ The SCD1 profile should show `row_count = 8`; the SCD2 profile should show `row_
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Change to day 2 and run all 
+## Change to day 3 and run all 
 
 Product `P001` has a new `product_category`:
 
