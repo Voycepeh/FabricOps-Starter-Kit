@@ -103,7 +103,11 @@
 
     **Steps 3 ↔ 4 repeat** until the Data Contract and pipeline agree. See the [Governance ↔ Engineering Cycle](#the-governance-engineering-cycle) above for how this feedback loop works. Activate the contract only after validation; Production uses the active version.
 
+<div align="center" markdown="1">
+
 [Try the lifecycle in the Guided Demo →](guided-demo.md){ .md-button .md-button--primary }
+
+</div>
 
 ---
 
