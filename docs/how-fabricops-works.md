@@ -93,56 +93,54 @@ If the implementation or governed definition needs refinement, Governance create
 
 Engineering supplies the table's observed structure; Governance adds descriptions, classifications, and expectations. Freezing makes a version immutable for testing. Activation selects the tested version for Production and links it to the exact Data Agreement version.
 
-??? info "Data Contract contents and JSON example"
+**The Data Contract is the versioned, executable governance definition for one governed `table_id`.** It is assembled from the real Engineering metadata and the Governance decisions made against that asset, then stored as a single `contract_payload_json` manifest in `METADATA_DATA_CONTRACT`.
 
-    **The Data Contract is the versioned, executable governance definition for one governed `table_id`.** It is assembled from the real Engineering metadata and the Governance decisions made against that asset, then stored as a single `contract_payload_json` manifest in `METADATA_DATA_CONTRACT`.
+The manifest captures:
 
-    The manifest captures:
+- **Contract identity and lifecycle** — `contract_id`, `contract_version`, and lifecycle status.
+- **Table definition** — the governed `table_id`, schema/table identity, observed columns and data types from `METADATA_DATA_CATALOGUE`, plus the governed processing definition.
+- **Enrichment** — reviewed table- and column-level descriptions, classifications, and table grain authored by Governance.
+- **Guardrails** — the executable Schema, Freshness, Source Drift, Data Quality, and Sensitive Data expectations authored by Governance.
 
-    - **Contract identity and lifecycle** — `contract_id`, `contract_version`, and lifecycle status.
-    - **Table definition** — the governed `table_id`, schema/table identity, observed columns and data types from `METADATA_DATA_CATALOGUE`, plus the governed processing definition.
-    - **Enrichment** — reviewed table- and column-level descriptions, classifications, and table grain authored by Governance.
-    - **Guardrails** — the executable Schema, Freshness, Source Drift, Data Quality, and Sensitive Data expectations authored by Governance.
+In other words, **Engineering supplies what physically exists; Governance adds what it means and what must be enforced.** Saving updates the mutable draft manifest. Freezing makes that version immutable. Activation selects the tested frozen version for Production and links it to the exact Data Agreement version.
 
-    In other words, **Engineering supplies what physically exists; Governance adds what it means and what must be enforced.** Saving updates the mutable draft manifest. Freezing makes that version immutable. Activation selects the tested frozen version for Production and links it to the exact Data Agreement version.
+??? example "What the JSON manifest looks like"
 
-    ??? example "What the JSON manifest looks like"
-
-        ```json
-        {
-          "contract": {
-            "contract_id": "...",
-            "contract_version": 1,
-            "status": "frozen"
-          },
-          "table": {
-            "table_id": "...",
-            "schema_name": "demo",
-            "table_name": "orders",
-            "columns": [
-              {
-                "column_id": "...",
-                "column_name": "order_id",
-                "data_type": "string"
-              }
-            ],
-            "processing": {
-              "load_strategy": "overwrite"
-            }
-          },
-          "enrichment": {
-            "table": [],
-            "columns": []
-          },
-          "guardrails": []
+    ```json
+    {
+      "contract": {
+        "contract_id": "...",
+        "contract_version": 1,
+        "status": "frozen"
+      },
+      "table": {
+        "table_id": "...",
+        "schema_name": "demo",
+        "table_name": "orders",
+        "columns": [
+          {
+            "column_id": "...",
+            "column_name": "order_id",
+            "data_type": "string"
+          }
+        ],
+        "processing": {
+          "load_strategy": "overwrite"
         }
-        ```
+      },
+      "enrichment": {
+        "table": [],
+        "columns": []
+      },
+      "guardrails": []
+    }
+    ```
 
-        The exact manifest grows with the Enrichment, Processing, and Guardrails authored for the table. See [METADATA_DATA_CONTRACT](reference/metadata/metadata_data_contract.md) for the persisted table schema.
+    The exact manifest grows with the Enrichment, Processing, and Guardrails authored for the table. See [METADATA_DATA_CONTRACT](reference/metadata/metadata_data_contract.md) for the persisted table schema.
 
-    [Explore Sensitive Data Classification & Treatment →](solutions/ai-assisted-data-contract-authoring.md)
+[Explore Sensitive Data Classification & Treatment →](solutions/ai-assisted-data-contract-authoring.md)
 
-    [Explore Business Rules to Data Quality →](solutions/business-rules-to-data-quality.md)
+[Explore Business Rules to Data Quality →](solutions/business-rules-to-data-quality.md)
 
 ## Explore implementation details
 
