@@ -1170,6 +1170,9 @@ def _render_preferred_example(short_name: str, signature: str, metadata: dict[st
 def _render_example_usage(short_name: str, signature: str, metadata: dict[str, Any], doc_examples: str) -> list[str]:
     """Return rendered example usage, preferring docstring Examples content."""
     if doc_examples.strip():
+        # Python REPL prompts are code, not Markdown blockquote markers.
+        if doc_examples.lstrip().startswith((">>> ", "... ")):
+            return _reference_code_block(doc_examples.strip(), class_name="reference-example-usage")
         return _reference_markdown_block(doc_examples, class_name="reference-example-usage")
     preferred_example = _render_preferred_example(short_name, signature, metadata)
     if preferred_example != PLACEHOLDER:
