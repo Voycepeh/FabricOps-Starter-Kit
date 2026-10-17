@@ -7,7 +7,6 @@
 - **Governance** defines who is responsible for the data, what it means, and which rules it must meet.
 - **Engineering Development** builds the pipeline and tests it against a frozen Data Contract.
 - **Engineering Production** runs the validated pipeline with the active Data Contract. Approved consumers use the resulting data for analytics and AI.
-
 - **Shared Metadata** connects Governance and Engineering responsibilities throughout the lifecycle.
 
 ## Workspace Architecture
