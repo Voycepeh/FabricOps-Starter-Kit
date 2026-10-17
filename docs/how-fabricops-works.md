@@ -15,8 +15,6 @@
 
 ![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
 
-**Governance defines the rules, Engineering develops and runs pipelines, and shared metadata connects both across Development and Production.**
-
 ??? info "Detailed explanation"
 
     Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environments, AI capabilities, and many other building blocks. The harder question is how a team uses those building blocks repeatedly without every project inventing a different engineering and governance pattern.
