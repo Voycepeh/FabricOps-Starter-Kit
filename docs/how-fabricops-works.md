@@ -192,13 +192,6 @@ In other words, **Engineering supplies what physically exists; Governance adds w
 
 ---
 
-## Explore implementation details
-
-The operating model and lifecycle above provide the context. Expand the following topics for more technical detail.
-
-
----
-
 ## Featured Solutions
 
 The operating model above is the shared foundation. These solutions apply it to specific engineering, governance, access, and consumption problems.
