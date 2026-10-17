@@ -49,22 +49,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  flex-shrink: 0;
-  border-radius: 0.45rem;
-  background: color-mix(in srgb, var(--md-primary-fg-color) 5%, transparent);
-  color: var(--md-primary-fg-color);
+  width: 3.5rem;
+  height: 4rem;
 }
 
-.fabricops-home-action__icon svg {
-  width: 1.25rem;
-  height: 1.25rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.md-typeset .fabricops-home-action__icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
 }
 
 .fabricops-home-action__copy {
@@ -283,8 +279,8 @@
   }
 
   .fabricops-home-action__icon {
-    width: 2.8rem;
-    height: 2.8rem;
+    width: 3rem;
+    height: 3.5rem;
   }
 
   .fabricops-home-quicklinks {
@@ -303,7 +299,7 @@
 <div class="fabricops-home-primary">
   <a class="fabricops-home-action" href="how-fabricops-works/">
     <span class="fabricops-home-action__icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"></path><path d="M4 5.5v16M8 7h8M8 11h8"></path></svg>
+      <img src="assets/mascots/robot-neutral.png" alt="" width="1254" height="1254">
     </span>
     <span class="fabricops-home-action__copy">
       <span class="fabricops-home-action__label">How FabricOps works</span>
@@ -314,7 +310,7 @@
 
   <a class="fabricops-home-action" href="guided-demo/">
     <span class="fabricops-home-action__icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m10 8 6 4-6 4z"></path></svg>
+      <img src="assets/mascots/robot-pointing.png" alt="" width="1254" height="1254">
     </span>
     <span class="fabricops-home-action__copy">
       <span class="fabricops-home-action__label">Step-by-step Guided Demo</span>
