@@ -3430,8 +3430,11 @@ def widget_data_contract(
                 if str(rule.get("guardrail_type") or "").lower() == "schema"
             ), required_rule)
             updated = set(_parameters(current_rule).get("required_columns", []))
-            identifier = cid or str(selected.get("column_name") or "")
-            (updated.add if required.value else updated.discard)(identifier)
+            name = str(selected.get("column_name") or "")
+            if required.value:
+                updated.add(cid or name)
+            else:
+                updated.difference_update((cid, name))
             return guardrail_record(
                 "schema", "required_columns", {"required_columns": sorted(updated)},
                 existing=current_rule,

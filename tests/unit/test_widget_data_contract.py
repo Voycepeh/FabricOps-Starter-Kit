@@ -2463,6 +2463,46 @@ def test_column_selector_marks_required_columns_and_aligns_checkbox(widget_runti
     assert widget_runtime["calls"]["guardrails"] == []
 
 
+@pytest.mark.parametrize("identifiers", [["col-0"], ["column_0"], ["col-0", "column_0"]])
+def test_clearing_required_removes_id_and_name_through_save_freeze_runtime(widget_runtime, identifiers):
+    """Clearing Required removes either identifier without clearing other selections."""
+    from fabricops_kit.pipeline import shared
+
+    rule = next(row for row in widget_runtime["guardrails"] if row["guardrail_type"] == "schema")
+    rule["rule_parameters_json"] = json.dumps({"required_columns": [*identifiers, "col-1"]})
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_select"].value = "col-0"
+    assert controls["required"].value is True
+    controls["required"].value = False
+    controls["save_data_contract"].click()
+
+    payload = widget_runtime["calls"]["draft"][-1]
+    saved = next(row for row in payload["guardrails"] if row["guardrail_type"] == "schema")
+    assert saved["rule_parameters"] == {"required_columns": ["col-1"]}
+    state["_controls"]["open"].click()
+    controls = state["_controls"]
+    controls["column_select"].value = "col-0"
+    assert controls["required"].value is False
+    controls["column_select"].value = "col-1"
+    assert controls["required"].value is True
+
+    frozen = module.contracts.freeze_contract_record(
+        draft={
+            "contract_id": "contract-orders", "contract_version": 1,
+            "table_id": "orders", "status": "draft", "contract_payload_json": json.dumps(payload),
+        }, audit={},
+    )
+    rows = shared.contract_guardrail_rows(frozen, environment_name="dev", table_id="orders")
+    result = shared.schema_check_core(
+        types.SimpleNamespace(columns=["column_1"], dtypes=[("column_1", "timestamp")]),
+        rules_df=rows, table_id="orders", environment_name="dev",
+    )
+    assert result["missing_columns"] == []
+    assert result["status"] == "passed"
+    assert result["can_continue"] is True
+
+
 def test_required_schema_authors_block_and_reaches_runtime(widget_runtime):
     """Required selections save as blocking Schema intent and resolve by frozen ID."""
     from fabricops_kit.pipeline import shared
