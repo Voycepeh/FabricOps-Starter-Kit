@@ -6,7 +6,7 @@ from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
 from fabricops_kit.pipeline.profile_table import profile_table
-from fabricops_kit.pipeline.shared import _run_orchestration_stage
+from fabricops_kit.pipeline.shared import ExecutionSummary, _run_orchestration_stage
 
 
 def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = "full", query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session=None, verbose: bool = True) -> dict[str, Any]:
@@ -44,7 +44,9 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     -------
     dict
         The ``pipeline_read`` result, including ``dataframe`` and ``table_id``,
-        plus capability results and ``orchestration_stages``.
+        plus capability results and ``orchestration_stages``. ``read_metrics``
+        contains ``rows_read`` and ``columns`` (None when unavailable).
+        ``total_duration_seconds`` is the full lifecycle wall-clock duration.
 
     Raises
     ------
@@ -57,6 +59,9 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     Stages run as Read, Freshness, Schema, Data Quality, and Profile, matching
     canonical ``02_pipeline``. Skipped capability results remain skipped.
     DataFrames are never displayed. Incremental batches are not profiled.
+    With verbose=True, successful execution ends with a READ Summary on stdout.
+    Counts reuse existing profiling results; no Spark action is added for
+    reporting. An unavailable count is printed as ``Not available``.
 
     Examples
     --------
@@ -68,6 +73,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     pipeline_read, check_freshness, check_schema, check_dq, profile_table
 
     """
+    summary = ExecutionSummary("READ", verbose=verbose)
     stages = []
     if verbose:
         print(f"FabricOps READ · {table_name}")
@@ -77,11 +83,20 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         return result
     source = run(1, "Read", lambda: pipeline_read(store=store, schema=schema, table_name=table_name, read_mode=read_mode, query=query, read_parameters=read_parameters, target_table_id=target_table_id, spark_session=spark_session, verbose=False))
     reader_name = source.pop("_reader_name", None)
-    if verbose and reader_name:
-        print(f"      Physical read → {reader_name}")
+    metrics = dict(source.get("read_metrics") or {})
+    metrics.setdefault("rows_read", None)
+    columns = getattr(source["dataframe"], "columns", None)
+    metrics.setdefault("columns", len(columns) if columns is not None else None)
+    summary.details([("Physical reader", reader_name), ("Rows read", metrics["rows_read"]), ("Columns", metrics["columns"])])
     dataframe, table_id = source["dataframe"], source["table_id"]
     freshness = run(2, "Freshness", lambda: check_freshness(table_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
     schema_result = run(3, "Schema", lambda: check_schema(dataframe, table_id=table_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
     dq_result = run(4, "Data Quality", lambda: check_dq(dataframe, table_id=table_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
     profile = run(5, "Profile", lambda: profile_table(dataframe=dataframe, store=store, schema=schema, table_name=table_name, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session) if read_mode == "full" else {"status": "skipped", "reason": "Incremental batch"})
-    return {**source, "freshness_result": freshness, "schema_result": schema_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages}
+    if metrics["rows_read"] is None and read_mode == "full":
+        metrics["rows_read"] = profile.get("row_count")
+    duration = summary.finish([
+        ("Source", ".".join(str(part) for part in (store, schema, table_name) if part)),
+        ("Rows read", metrics["rows_read"]), ("Columns", metrics["columns"]),
+    ])
+    return {**source, "read_metrics": metrics, "total_duration_seconds": duration, "freshness_result": freshness, "schema_result": schema_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages}

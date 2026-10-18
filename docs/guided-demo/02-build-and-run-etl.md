@@ -259,6 +259,41 @@ The template keeps inspection outside the orchestration calls so the standard li
 
 The guarded `.get()` call is useful because a Validate-mode Write does not publish or return a persisted-target profile.
 
+With `verbose=True` (the default), every successful Read and Write ends with a summary. `total_duration_seconds` includes the complete lifecycle, including Guardrails and profiling. Inspect the same measurements programmatically:
+
+```python
+print(sources["source"]["read_metrics"])
+print(writes["target"]["write_metrics"])
+print(writes["target"]["total_duration_seconds"])
+```
+
+`rows_committed` measures this physical publication; `total_target_rows` describes the profiled persisted target. `input_rows` is a separate measure. Unmeasured values are `None` in results and `Not available` in notebook output. Reporting adds no Spark counts or target scans.
+
+??? info "Availability and retries"
+
+    Lakehouse Append and Overwrite use the exact tagged Delta commit's output-row metric, including zero-row commits. Reporting uses bounded metadata-file reads, with no extra Spark jobs. Inaccessible metadata, a concurrent later commit, an exhausted metadata-probe budget, or missing operation metrics produce `Not available`. Caller-supplied Delta `userMetadata` in writer options or Spark session configuration is preserved and disables this attribution. The lookup uses checkpoint metadata and at most 32 exact log-file probes; it never enumerates the Delta log directory.
+
+    Warehouse connector writes do not return attributable row counts. Existing SCD merges include technical audit updates, so business inserts, updates, unchanged rows, and expired versions remain unavailable unless independently measurable. A new Lakehouse SCD target uses a measured bootstrap write when supported; its inserted rows or versions are reported separately. An already-applied Append or Overwrite retry reports zero newly committed rows. Validate-only runs report `Published → No` and zero committed rows.
+
+??? tip "A summary is missing in Microsoft Fabric"
+
+    Confirm the call uses `orchestrate_read()` or `orchestrate_write()` with `verbose=True`; direct `pipeline_read()` and `pipeline_write()` calls have their own output. Summaries print to driver stdout after successful execution. A failed stage does not print a successful final summary.
+
+    Fabric runs the package installed in the notebook's Environment, which can differ from repository `main`. Check the imported package and function source in the running session:
+
+    ```python
+    import inspect
+    import fabricops_kit
+    from fabricops_kit import orchestrate_write
+
+    print(fabricops_kit.__version__)
+    print(fabricops_kit.__file__)
+    print(inspect.getsource(orchestrate_write))
+    ```
+
+    Publish the updated wheel in the correct Fabric Environment and start a fresh notebook session before importing again. A previously imported function can remain bound to old code. Check the notebook cell or activity's stdout output. The orchestrator intentionally quiets physical writer logs; this does not suppress its own summary, and changing Write mode does not restore missing summary code.
+
+
 ??? info "More useful inspection keys"
 
     The notebook also includes these focused options:

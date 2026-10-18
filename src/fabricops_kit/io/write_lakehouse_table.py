@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from .shared import (
+    DeltaCommitMetrics,
     normalize_write_mode,
     repartition_dataframe_for_write,
     resolve_configured_lakehouse_table,
@@ -282,7 +283,33 @@ def write_lakehouse_table(
     )
     normalized_mode = normalize_write_mode(mode)
     df = repartition_dataframe_for_write(df, repartition_by)
-    write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=options)
+    metrics = (context or {}).get("_fabricops_write_metrics")
+    physical_options = dict(options or {})
+    can_measure = (
+        isinstance(metrics, dict)
+        and normalized_mode in {"append", "overwrite"}
+        and not any(str(key).lower() == "usermetadata" for key in physical_options)
+    )
+    attempt = DeltaCommitMetrics() if can_measure else None
+    if attempt is not None:
+        try:
+            # Delta gives writer options precedence over this session setting.
+            # A unique string default works with both older and newer PySpark.
+            configured = df.sparkSession.conf.get("spark.databricks.delta.commitInfo.userMetadata", attempt.token)
+            if configured != attempt.token:
+                attempt = None
+        except Exception:
+            # If session metadata cannot be inspected, preserve write semantics.
+            attempt = None
+    if attempt is not None:
+        physical_options["userMetadata"] = attempt.token
+    write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=physical_options if attempt is not None else options)
+    if attempt is not None:
+        metrics["rows_committed"] = attempt.read(getattr(df, "sparkSession", None), path)
+        if metrics["rows_committed"] is not None:
+            metrics["measurement_source"] = "delta_commit"
+            if normalized_mode == "append":
+                metrics["rows_inserted"] = metrics["rows_committed"]
     if verbose and not (context or {}).get("_fabricops_suppress_io_log"):
         parts = ["Object: Lakehouse", f"Store: {store}"]
         if _schema_value:

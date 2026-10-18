@@ -132,6 +132,16 @@ RuntimeError
 - Selected frequency columns must exist. frequency_top_n limits retained values, not grouping cost.
 - Governed profiling requires configured metadata routing, write permission, and Delta support.
 
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+The result also includes ``row_count``, reused from an existing aggregate
+when available (None otherwise). No additional Spark job is run for this
+metric. It describes the profiled dataset, not rows committed by a writer.
+
+</div>
+
 ## Behavior and scope
 
 <div class="reference-docstring-intro" markdown="1">
@@ -157,9 +167,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:1084`
+`fabricops_kit/pipeline/profile_table.py:1089`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1084-L1401">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1089-L1413">View on GitHub</a>
 </div>
 
 

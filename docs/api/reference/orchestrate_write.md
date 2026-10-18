@@ -117,7 +117,12 @@ dict
     and Enforce modes. It is the Write input, not necessarily the persisted
     target after Append, SCD1, or SCD2. ``sensitive_result`` retains its
     nested ``dataframe`` result. ``published`` is false when a Validate-mode
-    contract passes without publication.
+    contract passes without publication. ``write_metrics`` retains the
+    ``pipeline_write`` measurements, with ``total_target_rows`` reused from
+    persisted-target profiling when available. It never treats prepared
+    input rows or profiled target rows as committed rows.
+    ``total_duration_seconds`` measures the complete lifecycle, including
+    Guardrails, metadata finalization, and profiling.
 
 ## Raises / Errors
 
@@ -136,7 +141,9 @@ metadata and Source Observation commit behaviour remains owned by
 ``pipeline_write``. The returned ``dataframe`` is the prepared Write input,
 not a reread of the persisted target; Append, SCD1, and SCD2 may produce a
 different target state. No DataFrame is displayed or materialized for this
-return value.
+return value. With verbose=True, every successful execution prints a final
+WRITE Summary to stdout, including Validate-only runs. Unavailable row
+metrics print as ``Not available``. Reporting adds no Spark actions.
 
 </div>
 
@@ -149,7 +156,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L15-L147">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L15-L171">View on GitHub</a>
 </div>
 
 

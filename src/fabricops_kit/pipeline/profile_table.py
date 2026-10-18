@@ -173,7 +173,7 @@ def _warehouse_percentile_query(identity: Mapping[str, Any], *, column_name: str
 
 
 def _warehouse_statistical_dataframe(
-    wide_frame: Any, columns, *, spark_session: Any, percentile_values: Mapping[str, Any] | None = None
+    wide_frame: Any, columns, *, spark_session: Any, percentile_values: Mapping[str, Any] | None = None, metrics=None
 ):
     """Reshape compact Warehouse aggregates and percentiles into canonical profile rows."""
     from pyspark.sql import types as T
@@ -186,6 +186,8 @@ def _warehouse_statistical_dataframe(
     if percentile_values:
         values.update({str(key).upper(): value for key, value in percentile_values.items()})
     row_count = int(values.get("ROW_COUNT") or 0)
+    if metrics is not None:
+        metrics["row_count"] = row_count
 
     def percent(numerator: int) -> float:
         return 0.0 if row_count == 0 else round((numerator / row_count) * 100.0, 3)
@@ -243,7 +245,7 @@ def _warehouse_frequency_query(
     return "\nUNION ALL\n".join(branches)
 
 
-def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency_columns, threshold_percent, top_n):
+def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency_columns, threshold_percent, top_n, metrics=None):
     """Calculate compact canonical profile outputs in Fabric Warehouse."""
     from fabricops_kit.pipeline.shared import FREQUENCY_PROFILE_COLUMNS, PROFILE_DATAFRAME_COLUMNS
 
@@ -277,6 +279,7 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
         profile_columns,
         spark_session=spark_session,
         percentile_values=percentile_values,
+        metrics=metrics,
     ).select(*PROFILE_DATAFRAME_COLUMNS)
     if frequency_columns is None:
         scalar = {name for name, _canonical, sql_type in profile_columns if sql_type not in _WAREHOUSE_NON_SCALAR_TYPES}
@@ -326,7 +329,7 @@ def _key_candidate_payload(columns: Sequence[str], *, row_count: int) -> dict[st
 
 
 def _spark_profile_key_candidates(
-    dataframe: Any, statistical_profile: Any
+    dataframe: Any, statistical_profile: Any, *, metrics=None
 ) -> list[dict[str, Any]]:
     """Discover the smallest null-free unique keys from all scalar Spark columns."""
     del statistical_profile
@@ -351,6 +354,8 @@ def _spark_profile_key_candidates(
     if values is None:
         return []
     row_count = int(values["__ROW_COUNT"] or 0)
+    if metrics is not None:
+        metrics["row_count"] = row_count
     if row_count <= 0:
         return []
 
@@ -1147,6 +1152,12 @@ def profile_table(
         ``profile`` rows additionally contain persisted snapshot identities
         and audit fields.
 
+    Notes
+    -----
+    The result also includes ``row_count``, reused from an existing aggregate
+    when available (None otherwise). No additional Spark job is run for this
+    metric. It describes the profiled dataset, not rows committed by a writer.
+
     Raises
     ------
     ValueError
@@ -1271,12 +1282,13 @@ def profile_table(
         spark_session = dataframe.sparkSession
     if spark_session is None:
         spark_session = get_spark_session()
+    profile_metrics = {"row_count": None}
     profile_key_candidates: list[dict[str, Any]] = []
     if warehouse_physical:
         statistical_profile, frequency_profile, warehouse_columns = _warehouse_profile_dataframes(
             identity, spark_session=spark_session, context=context,
             frequency_columns=selected_frequency_columns,
-            threshold_percent=frequency_max_distinct_percent, top_n=frequency_top_n,
+            threshold_percent=frequency_max_distinct_percent, top_n=frequency_top_n, metrics=profile_metrics,
         )
         warehouse_fields = [(name, canonical) for name, canonical, _sql_type in warehouse_columns]
         if identity is not None:
@@ -1298,7 +1310,7 @@ def profile_table(
                 dataframe, columns=selected_columns, top_n=frequency_top_n
             )
         if identity is not None:
-            profile_key_candidates = _spark_profile_key_candidates(dataframe, statistical_profile)
+            profile_key_candidates = _spark_profile_key_candidates(dataframe, statistical_profile, metrics=profile_metrics)
 
     frequency_label = "calculated" if frequency_profile is not None else "skipped; no eligible/requested columns"
     print("3. Statistical profile → calculated")
@@ -1307,7 +1319,7 @@ def profile_table(
     if identity is None:
         print("5. Metadata persistence → skipped; DataFrame-only profiling does not invent a table_id")
         print("Result → profile outputs returned; no Catalogue or profiling metadata was written.")
-        return {"profile": statistical_profile, "frequency_profile": frequency_profile}
+        return {"profile": statistical_profile, "frequency_profile": frequency_profile, **profile_metrics}
 
     profile_snapshot_id = _profile_snapshot_id(
         config=config, env=env, context=context, table_id=identity["table_id"]
@@ -1398,4 +1410,4 @@ def profile_table(
         "existing load strategy and parameters preserved"
     )
     print("Result → Profile completed and metadata saved.")
-    return {"profile": profiled_df, "frequency_profile": frequency_profile}
+    return {"profile": profiled_df, "frequency_profile": frequency_profile, **profile_metrics}

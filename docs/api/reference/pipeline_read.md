@@ -135,6 +135,9 @@ complete physical ``demo.order_history`` source table.
 ## Returns
 
 dict
+    ``read_metrics`` contains ``rows_read`` (zero for a known empty
+    incremental scope, otherwise None) and ``columns`` from schema metadata.
+    No count is triggered for reporting.
     A deliberately small result with these fields:
 
     - ``dataframe``: the Spark DataFrame returned by the selected
@@ -181,7 +184,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/pipeline_read.py:79`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L79-L426">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L79-L433">View on GitHub</a>
 </div>
 
 
