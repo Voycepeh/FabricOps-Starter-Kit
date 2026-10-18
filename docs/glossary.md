@@ -37,7 +37,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="guardrails">
 <summary><strong>Guardrails</strong> — Versioned rules that FabricOps checks during governed pipeline execution.</summary>
-<p>FabricOps Guardrails define runtime expectations such as Schema, Freshness, Source Drift, Data Quality, and Sensitive Data treatment. Each rule can be configured to warn or block when its expectation is not met.</p>
+<p>FabricOps Guardrails define runtime expectations such as Schema, Freshness, Source Drift, Data Quality, and Sensitive Data treatment. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Other rules can be configured to warn or block when their expectation is not met.</p>
 <p><strong>Also known as:</strong> guardrail</p>
 </details>
 
