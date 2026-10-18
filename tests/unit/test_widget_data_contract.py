@@ -1619,8 +1619,128 @@ def test_description_rerun_failure_replaces_stale_success(widget_runtime, monkey
 
     controls["rerun_column_description"].click()
 
-    assert "AI Functions unavailable" in controls["column_description_ai"].value
+    assert "AI suggestions unavailable" in controls["column_description_ai"].value
+    assert state["_ai_failure"] == "AI Functions unavailable"
     assert controls["accept_column_description"].disabled is True
+    assert controls["rerun_column_description"].disabled is True
+
+
+@pytest.mark.parametrize("button, service, pane", [
+    ("rerun_table_description", "suggest_enrichment", "table_description_ai"),
+    ("rerun_column_description", "suggest_enrichment", "column_description_ai"),
+    ("rerun_sensitive", "suggest_sensitive_data", "sensitive_ai"),
+    ("suggest_grain", "suggest_grain_key", "grain_ai"),
+    ("resolve_business_rule", "suggest_business_rule", "business_proposal"),
+])
+@pytest.mark.parametrize("failure", [
+    RuntimeError("This event loop is already running"),
+    ModuleNotFoundError("No module named 'synapse.ml.aifunc'"),
+])
+def test_unavailable_ai_disables_actions_and_keeps_manual_authoring(
+    widget_runtime, monkeypatch, button, service, pane, failure
+):
+    """Runtime failures disable AI throughout the session without showing internals."""
+    state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    attempts = []
+
+    def unavailable(*_args, **_kwargs):
+        attempts.append(service)
+        raise failure
+
+    monkeypatch.setattr(module, service, unavailable)
+    controls[button].click()
+
+    assert attempts == [service]
+    assert state["_ai_failure"] == str(failure)
+    assert "AI suggestions unavailable" in controls[pane].value
+    assert str(failure) not in controls[pane].value
+    for name in (
+        "open_with_ai", "rerun_table_description", "rerun_column_description",
+        "rerun_sensitive", "suggest_grain", "resolve_business_rule",
+    ):
+        assert controls[name].disabled, name
+        controls[name].click()
+    assert attempts == [service]
+    assert controls["column_description"].disabled is False
+    controls["column_description"].value = "Manual description"
+    assert not state["_validation_errors"]
+
+    successful_calls = {name: len(values) for name, values in captures.items()}
+    controls["column_select"].value = "col-1"
+    assert attempts == [service]
+    assert {name: len(values) for name, values in captures.items()} == successful_calls
+    assert controls["rerun_column_description"].disabled
+    assert controls["rerun_sensitive"].disabled
+    assert "AI suggestions unavailable" in controls["column_description_ai"].value
+
+
+@pytest.mark.parametrize("failure_action", ["resolve_business_rule", "rerun_column_description"])
+def test_unavailable_ai_clears_previous_business_generation_validation(
+    widget_runtime, monkeypatch, failure_action
+):
+    """An earlier AI response error must not block manual saves after AI becomes unavailable."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    failures = iter([ValueError("Invalid AI response"), RuntimeError("This event loop is already running")])
+
+    def unavailable(*_args, **_kwargs):
+        raise next(failures)
+
+    monkeypatch.setattr(module, "suggest_business_rule", unavailable)
+    controls["resolve_business_rule"].click()
+    assert "business_rule_ai" in state["_validation_errors"]
+    assert controls["resolve_business_rule"].disabled is False
+
+    monkeypatch.setattr(module, "suggest_enrichment", unavailable)
+    state["_validation_errors"]["business_rule"] = "Authored rule needs correction"
+    controls[failure_action].click()
+    assert controls["resolve_business_rule"].disabled
+    assert "business_rule_ai" not in state["_validation_errors"]
+    assert state["_validation_errors"]["business_rule"] == "Authored rule needs correction"
+    state["_validation_errors"].pop("business_rule")
+    controls["column_description"].value = "Manually authored description"
+    controls["save_data_contract"].click()
+    assert widget_runtime["calls"]["draft"]
+
+
+def test_unavailable_ai_during_open_stops_further_calls(widget_runtime, monkeypatch):
+    """The first runtime failure disables automatic AI work and the Open with AI action."""
+    captures = _enable_ai(widget_runtime, monkeypatch)
+    attempts = []
+
+    def unavailable(*_args, **_kwargs):
+        attempts.append("grain")
+        raise RuntimeError("This event loop is already running")
+
+    monkeypatch.setattr(module, "suggest_grain_key", unavailable)
+    state = widget_runtime["start"]()
+    state["_controls"]["open_with_ai"].click()
+    controls = state["_controls"]
+
+    assert attempts == ["grain"]
+    assert captures == {"enrichment": [], "sensitive": [], "grain": []}
+    assert state["current"] is not None
+    assert "AI suggestions unavailable" in state["message"]
+    assert "event loop" not in state["message"]
+    assert controls["open_with_ai"].disabled
+    assert controls["rerun_table_description"].disabled
+    assert controls["rerun_column_description"].disabled
+    assert controls["rerun_sensitive"].disabled
+    assert controls["resolve_business_rule"].disabled
+    assert controls["column_description"].disabled is False
+
+    controls["change_table"].click()
+    controls["open_without_ai"].click()
+    controls = state["_controls"]
+    assert state["current"] is not None
+    assert controls["open_with_ai"].disabled
+    assert controls["rerun_table_description"].disabled
+    assert controls["rerun_column_description"].disabled
+    assert controls["rerun_sensitive"].disabled
+    assert controls["column_description"].disabled is False
+    assert attempts == ["grain"]
+    assert captures == {"enrichment": [], "sensitive": [], "grain": []}
 
 
 def test_sensitive_pii_assessment_requires_reason_before_save(widget_runtime):

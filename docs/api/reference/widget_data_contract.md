@@ -99,6 +99,9 @@ Profile context remains read-only and is never added
 to the canonical payload. Scheduled Refresh is discovered read-only from Microsoft
 Fabric and remains independent of the authored Freshness expectation. Immutable
 versions are review-only.
+If the notebook runtime cannot provide AI suggestions, AI actions are disabled
+for the widget session while manual authoring remains available. Technical
+failure details are retained in the returned state rather than shown in the editor.
 When enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,
 Sensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or
 Not PII from governed metadata and profile evidence. Editable draft state remains
@@ -117,7 +120,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:525`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L525-L5400">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L525-L5446">View on GitHub</a>
 </div>
 
 

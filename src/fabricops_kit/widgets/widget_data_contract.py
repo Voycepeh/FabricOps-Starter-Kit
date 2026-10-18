@@ -562,6 +562,9 @@ def widget_data_contract(
     to the canonical payload. Scheduled Refresh is discovered read-only from Microsoft
     Fabric and remains independent of the authored Freshness expectation. Immutable
     versions are review-only.
+    If the notebook runtime cannot provide AI suggestions, AI actions are disabled
+    for the widget session while manual authoring remains available. Technical
+    failure details are retained in the returned state rather than shown in the editor.
     When enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,
     Sensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or
     Not PII from governed metadata and profile evidence. Editable draft state remains
@@ -604,6 +607,7 @@ def widget_data_contract(
         "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {},
         "_pending_enrichment": {}, "_pending_guardrails": {}, "_validation_errors": {},
         "_column_dq_selection": {}, "_selector_refreshing": False, "dirty": False,
+        "_ai_unavailable": "", "_ai_failure": "", "_ai_buttons": [],
     }
     scheduled_refresh: dict[str, Any] = {"status": "uncaptured", "schedules": []}
     state["scheduled_refresh"] = scheduled_refresh
@@ -975,6 +979,25 @@ def widget_data_contract(
         discard_data_contract=discard_data_contract_session,
         load_profile_context=load_profile_context,
     )
+    def ai_available() -> bool:
+        """Allow AI actions only while configuration and the notebook runtime permit them."""
+        return bool(ai_enrichment.get("enabled")) and not state["_ai_unavailable"]
+
+    def ai_failure_message(exc: Exception) -> str:
+        """Disable unavailable AI for this widget session and retain its diagnostic."""
+        if isinstance(exc, (RuntimeError, ImportError)):
+            state["_ai_failure"] = str(exc)
+            state["_validation_errors"].pop("business_rule_ai", None)
+            state["_ai_unavailable"] = (
+                "AI suggestions unavailable in this notebook session. Continue editing manually."
+            )
+            for button in state["_ai_buttons"]:
+                button.disabled = True
+            open_with_ai_button.disabled = True
+            ai_availability.value = f"<p>{state['_ai_unavailable']}</p>"
+            return state["_ai_unavailable"]
+        return str(exc)
+
     configured_stores = dict(getattr(getattr(config, "path_config", None), "paths", {}).get(env, {}))
     store_options = [
         (
@@ -1142,6 +1165,7 @@ def widget_data_contract(
         ai_state = state["_ai_suggestions"].setdefault(
             suggestion_scope, {"table": {}, "columns": {}}
         )
+        state["_ai_buttons"] = []
         ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
         ai_mode = state["_ai_mode"].get(suggestion_scope)
         column_names = [str(column.get("column_name") or "") for column in columns]
@@ -1204,6 +1228,7 @@ def widget_data_contract(
         table_description_ai = widgets.HTML()
         accept_table_description = widgets.Button(description="Apply", disabled=not editable)
         rerun_table_description = widgets.Button(description="Re-run", disabled=not editable)
+        state["_ai_buttons"].extend([accept_table_description, rerun_table_description])
 
         # Table grain and row key: grain is descriptive Enrichment; selected key columns
         # create one table-level uniqueness guardrail.
@@ -1255,10 +1280,11 @@ def widget_data_contract(
         suggest_grain = widgets.Button(
             description="Suggest grain",
             disabled=(
-                not editable or not ai_enrichment.get("enabled") or ai_mode != "with_ai"
+                not editable or not ai_available() or ai_mode != "with_ai"
             ),
         )
         accept_grain = widgets.Button(description="Apply", disabled=True)
+        state["_ai_buttons"].extend([suggest_grain, accept_grain])
 
         def render_grain_profile_evidence() -> None:
             if profile_key_candidates:
@@ -1285,7 +1311,7 @@ def widget_data_contract(
             )
 
         def run_grain_ai(*_args: Any) -> None:
-            if suggest_grain.disabled:
+            if suggest_grain.disabled or not ai_available():
                 return
             try:
                 render_grain_profile_evidence()
@@ -1336,10 +1362,10 @@ def widget_data_contract(
                     "</details></div>"
                 )
                 accept_grain.disabled = False
-            except (TypeError, ValueError, RuntimeError) as exc:
+            except (TypeError, ValueError, RuntimeError, ImportError) as exc:
                 ai_state["table"].pop("grain_key", None)
                 accept_grain.disabled = True
-                grain_ai.value = f"<p style='color:#a4262c'>{html.escape(str(exc))}</p>"
+                grain_ai.value = f"<p>{html.escape(ai_failure_message(exc))}</p>"
 
         def accept_grain_ai(_button: Any) -> None:
             suggestion = ai_state["table"].get("grain_key") or {}
@@ -1426,7 +1452,9 @@ def widget_data_contract(
         update_processing_controls()
 
         def render_table_ai() -> None:
-            if not ai_enrichment.get("enabled"):
+            if state["_ai_unavailable"]:
+                table_description_ai.value = f"<p>{state['_ai_unavailable']}</p>"
+            elif not ai_enrichment.get("enabled"):
                 table_description_ai.value = "<p>Disabled in 00_env_config.</p>"
             elif not editable:
                 table_description_ai.value = "<p>Not run for review-only versions.</p>"
@@ -1442,7 +1470,7 @@ def widget_data_contract(
                     "Description", ai_state["table"].get("description"), show_heading=False
                 )
             available = (
-                editable and bool(ai_enrichment.get("enabled")) and ai_mode == "with_ai"
+                editable and ai_available() and ai_mode == "with_ai"
             )
             accept_table_description.disabled = not (
                 available and ai_state["table"].get("description")
@@ -1453,7 +1481,7 @@ def widget_data_contract(
         def run_table_ai(*, force: bool = False) -> None:
             if (
                 not editable
-                or not ai_enrichment.get("enabled")
+                or not ai_available()
                 or ai_mode != "with_ai"
             ):
                 render_table_ai()
@@ -1485,8 +1513,8 @@ def widget_data_contract(
                 if previous_value and new_value != previous_value:
                     mark_all_sensitive_stale()
                 ai_errors.pop("table_enrichment", None)
-            except (TypeError, ValueError, RuntimeError) as exc:
-                message = str(exc)
+            except (TypeError, ValueError, RuntimeError, ImportError) as exc:
+                message = ai_failure_message(exc)
                 ai_state["table"]["description"] = {"error": message, "stale": False}
                 ai_errors["table_enrichment"] = message
                 set_status(f"Table AI suggestions unavailable: {message}", warning=True)
@@ -2486,6 +2514,7 @@ def widget_data_contract(
         column_description_ai = widgets.HTML()
         accept_column_description = widgets.Button(description="Apply", disabled=not editable)
         rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
+        state["_ai_buttons"].extend([accept_column_description, rerun_column_description])
         required = widgets.Checkbox(description="Required", disabled=not editable, layout=widgets.Layout(width="auto", min_width="0", margin="0"))
         required.add_class("fabricops-column-required")
         required_hint = widgets.HTML()
@@ -2613,6 +2642,7 @@ def widget_data_contract(
         sensitive_ai = widgets.HTML()
         accept_sensitive = widgets.Button(description="Apply", disabled=not editable)
         rerun_sensitive = widgets.Button(description="Re-run", disabled=not editable)
+        state["_ai_buttons"].extend([accept_sensitive, rerun_sensitive])
         sensitive_ai_actions = shared.action_row(
             widgets, [accept_sensitive, rerun_sensitive]
         )
@@ -3148,7 +3178,10 @@ def widget_data_contract(
 
         def render_column_ai(column_id: str) -> None:
             suggestions = ai_state["columns"].get(column_id, {})
-            if not ai_enrichment.get("enabled"):
+            if state["_ai_unavailable"]:
+                column_description_ai.value = f"<p>{state['_ai_unavailable']}</p>"
+                sensitive_ai.value = f"<p>{state['_ai_unavailable']}</p>"
+            elif not ai_enrichment.get("enabled"):
                 column_description_ai.value = "<p>Disabled in 00_env_config.</p>"
                 sensitive_ai.value = "<p><b>AI suggestion</b><br>Disabled in 00_env_config.</p>"
             elif not editable:
@@ -3170,7 +3203,7 @@ def widget_data_contract(
                     "Sensitive Data", suggestions.get("sensitive_data")
                 )
             available = (
-                editable and bool(ai_enrichment.get("enabled")) and ai_mode == "with_ai"
+                editable and ai_available() and ai_mode == "with_ai"
             )
             accept_column_description.disabled = not (
                 available and suggestions.get("description") and not suggestions["description"].get("error")
@@ -3196,6 +3229,9 @@ def widget_data_contract(
 
         def run_column_enrichment_ai(column_id: str, *, force: bool = False) -> None:
             suggestions = ai_state["columns"].setdefault(column_id, {})
+            if not ai_available():
+                render_column_ai(column_id)
+                return
             if not force and suggestions.get("description"):
                 render_column_ai(column_id)
                 return
@@ -3224,8 +3260,8 @@ def widget_data_contract(
                 if previous_value and new_value != previous_value:
                     mark_sensitive_stale(column_id)
                 ai_errors.pop((column_id, "enrichment"), None)
-            except (TypeError, ValueError, RuntimeError) as exc:
-                message = str(exc)
+            except (TypeError, ValueError, RuntimeError, ImportError) as exc:
+                message = ai_failure_message(exc)
                 suggestions["description"] = {"error": message, "stale": False}
                 ai_errors[(column_id, "enrichment")] = message
                 set_status(f"AI suggestions unavailable for this column: {message}", warning=True)
@@ -3235,6 +3271,9 @@ def widget_data_contract(
             column_id: str, *, force: bool = False, use_description_suggestion: bool = False
         ) -> None:
             suggestions = ai_state["columns"].setdefault(column_id, {})
+            if not ai_available():
+                render_column_ai(column_id)
+                return
             if not force and suggestions.get("sensitive_data"):
                 render_column_ai(column_id)
                 return
@@ -3284,8 +3323,8 @@ def widget_data_contract(
                     )
                 suggestions["sensitive_data"] = {**result[0], "stale": False}
                 ai_errors.pop((column_id, "sensitive_data"), None)
-            except (TypeError, ValueError, RuntimeError) as exc:
-                message = str(exc)
+            except (TypeError, ValueError, RuntimeError, ImportError) as exc:
+                message = ai_failure_message(exc)
                 suggestions["sensitive_data"] = {"error": message, "stale": False}
                 ai_errors[(column_id, "sensitive_data")] = message
                 selected_name = str(selected.get("column_name") or column_id)
@@ -3298,7 +3337,7 @@ def widget_data_contract(
         def prepare_column_ai(column_id: str) -> None:
             if (
                 not editable
-                or not ai_enrichment.get("enabled")
+                or not ai_available()
                 or ai_mode != "with_ai"
                 or not column_id
             ):
@@ -4031,10 +4070,11 @@ def widget_data_contract(
         resolve_business_rule = widgets.Button(
             description="Generate DQ Rules →",
             disabled=not (
-                editable and ai_enrichment.get("enabled") and ai_mode == "with_ai"
+                editable and ai_available() and ai_mode == "with_ai"
             ),
             button_style="primary",
         )
+        state["_ai_buttons"].append(resolve_business_rule)
         apply_business_rule = widgets.Button(
             description="Add DQ Rule", disabled=True, button_style="success"
         )
@@ -4388,6 +4428,8 @@ def widget_data_contract(
             ]
 
         def resolve_business_rule_clicked(_button: Any) -> None:
+            if not ai_available():
+                return
             try:
                 profiles = dict(runtime_context.get("column_profiles") or {})
                 context_payload = build_ai_business_rule_context({
@@ -4431,15 +4473,15 @@ def widget_data_contract(
                 business_active_saved["rule_id"] = ""
                 refresh_resolved_options()
                 hydrate_resolved_business()
-                set_validation_error("business_rule")
-            except (TypeError, ValueError, RuntimeError) as exc:
+                set_validation_error("business_rule_ai")
+            except (TypeError, ValueError, RuntimeError, ImportError) as exc:
                 business_resolved.clear()
                 refresh_resolved_options()
                 apply_business_rule.disabled = True
-                business_proposal.value = (
-                    f"<p style='color:#a4262c'>{html.escape(str(exc))}</p>"
-                )
-                set_validation_error("business_rule", exc)
+                message = ai_failure_message(exc)
+                business_proposal.value = f"<p>{html.escape(message)}</p>"
+                if not state["_ai_unavailable"]:
+                    set_validation_error("business_rule_ai", exc)
 
         def sync_column_rule(rule: Mapping[str, Any]) -> None:
             column_id = str(rule.get("column_id") or "")
@@ -5111,7 +5153,7 @@ def widget_data_contract(
     open_with_ai_button = widgets.Button(
         description="Open with AI suggestions",
         button_style="info",
-        disabled=not bool(ai_enrichment.get("enabled")),
+        disabled=not ai_available(),
         layout=widgets.Layout(width="220px"),
     )
     open_without_ai_button = widgets.Button(
@@ -5316,14 +5358,18 @@ def widget_data_contract(
             open_progress.value = ""
             set_status(
                 f"Opened Data Contract v{state['contract_version']} for {state['table_id']}"
-                + (" with AI suggestions." if with_ai else " without AI.")
+                + (
+                    f". {state['_ai_unavailable']}" if state["_ai_unavailable"]
+                    else " with AI suggestions." if with_ai else " without AI."
+                ),
+                warning=bool(state["_ai_unavailable"]),
             )
         except Exception as exc:
             open_progress.value = ""
             set_status(_format_widget_exception(exc, phase="editor render"), error=True)
         finally:
             state["_opening_with_ai"] = False
-            open_with_ai_button.disabled = not bool(ai_enrichment.get("enabled"))
+            open_with_ai_button.disabled = not ai_available()
             open_without_ai_button.disabled = False
 
     def return_to_selector(message: str) -> None:
