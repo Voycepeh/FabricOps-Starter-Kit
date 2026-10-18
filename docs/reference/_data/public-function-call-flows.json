@@ -695,50 +695,50 @@
       "architecture_classification": "capability",
       "contract_classification": "preview_public_function",
       "contract_risk": "preview",
-      "examples": "Not documented yet",
+      "examples": ">>> result = scan_onelake_access(catalogue_df, targets=\"Silver\", persist=False)\n>>> display(result[\"access\"])\n>>> display(result[\"unmatched\"])",
       "function_name": "scan_onelake_access",
       "function_type": "public_function",
       "lifecycle_status": "preview",
       "live_impact_level": "preview_only",
       "parameters": [
         {
-          "description": "Not documented yet",
+          "description": "Active Data Catalogue rows for the configured environment. Its Spark session is used for mapping and persistence.",
           "name": "catalogue_df",
           "required": "Yes",
-          "type": ""
+          "type": "pyspark.sql.DataFrame"
         },
         {
-          "description": "Not documented yet",
+          "description": "Configured Lakehouse keys whose permissions should be inventoried.",
           "name": "targets",
           "required": "Yes",
           "type": "str | list[str] | tuple[str, ...]"
         },
         {
-          "description": "Not documented yet",
+          "description": "Catalogue and configured-store environment; defaults to the active environment.",
           "name": "environment_name",
           "required": "No",
           "type": "str | None"
         },
         {
-          "description": "Not documented yet",
+          "description": "Shared scan identifier; a new UUID is generated when omitted.",
           "name": "access_snapshot_id",
           "required": "No",
           "type": "str | None"
         },
         {
-          "description": "Not documented yet",
+          "description": "Fabric API token override; normally resolved from the notebook identity.",
           "name": "access_token",
           "required": "No",
           "type": "str | None"
         },
         {
-          "description": "Not documented yet",
+          "description": "Append normalized rows to METADATA_DATA_ACCESS. Use False to inspect only.",
           "name": "persist",
           "required": "No",
           "type": "bool"
         },
         {
-          "description": "Not documented yet",
+          "description": "FabricOps configuration and runtime context established by 00_env_config.",
           "name": "context",
           "required": "No",
           "type": "dict[str, Any] | None"
@@ -746,16 +746,16 @@
       ],
       "public_import_path": "fabricops_kit.scan_onelake_access",
       "qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
-      "raises_documentation": "Not documented yet",
+      "raises_documentation": "ValueError\n    If targets are empty, invalid, or not Lakehouses. Check configured store keys.\nRuntimeError\n    If Fabric authentication, REST discovery, or safe pagination fails.\n    Spark mapping and metadata write errors also propagate; check Catalogue\n    columns and permissions on the configured metadata target.",
       "release_history": [
         {
           "status": "preview",
           "version": "0.2.5"
         }
       ],
-      "returns_documentation": "Not documented yet",
+      "returns_documentation": "dict[str, pyspark.sql.DataFrame]\n    ``observations`` holds raw permission observations; ``access`` holds\n    normalized METADATA_DATA_ACCESS rows; ``unmatched`` holds observations\n    that could not be linked to registered tables. Review unmatched rows\n    before interpreting missing access as absence of permission.",
       "signature": "def scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None=None, access_snapshot_id: str | None=None, access_token: str | None=None, persist: bool=True, context: dict[str, Any] | None=None) -> dict[str, Any]",
-      "source_end_line": 241,
+      "source_end_line": 283,
       "source_path": "src/fabricops_kit/access_scanner/scan_onelake_access.py",
       "source_start_line": 158,
       "summary": "Scan OneLake Security roles and map table access to FabricOps table IDs.",
@@ -1012,50 +1012,50 @@
       "architecture_classification": "capability",
       "contract_classification": "preview_public_function",
       "contract_risk": "preview",
-      "examples": "Not documented yet",
+      "examples": ">>> result = scan_workspace_access(catalogue_df, targets=\"Silver\", persist=False)\n>>> display(result[\"access\"])\n>>> display(result[\"unmatched\"])",
       "function_name": "scan_workspace_access",
       "function_type": "public_function",
       "lifecycle_status": "preview",
       "live_impact_level": "preview_only",
       "parameters": [
         {
-          "description": "Not documented yet",
+          "description": "Active Data Catalogue rows for the configured environment. Its Spark session is used for mapping and persistence.",
           "name": "catalogue_df",
           "required": "Yes",
-          "type": ""
+          "type": "pyspark.sql.DataFrame"
         },
         {
-          "description": "Not documented yet",
+          "description": "Configured Fabric store keys whose permissions should be inventoried.",
           "name": "targets",
           "required": "Yes",
           "type": "str | list[str] | tuple[str, ...]"
         },
         {
-          "description": "Not documented yet",
+          "description": "Catalogue and configured-store environment; defaults to the active environment.",
           "name": "environment_name",
           "required": "No",
           "type": "str | None"
         },
         {
-          "description": "Not documented yet",
+          "description": "Shared scan identifier; a new UUID is generated when omitted.",
           "name": "access_snapshot_id",
           "required": "No",
           "type": "str | None"
         },
         {
-          "description": "Not documented yet",
+          "description": "Fabric API token override; normally resolved from the notebook identity.",
           "name": "access_token",
           "required": "No",
           "type": "str | None"
         },
         {
-          "description": "Not documented yet",
+          "description": "Append normalized rows to METADATA_DATA_ACCESS. Use False to inspect only.",
           "name": "persist",
           "required": "No",
           "type": "bool"
         },
         {
-          "description": "Not documented yet",
+          "description": "FabricOps configuration and runtime context established by 00_env_config.",
           "name": "context",
           "required": "No",
           "type": "dict[str, Any] | None"
@@ -1063,16 +1063,16 @@
       ],
       "public_import_path": "fabricops_kit.scan_workspace_access",
       "qualified_name": "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
-      "raises_documentation": "Not documented yet",
+      "raises_documentation": "ValueError\n    If targets are empty, invalid. Check configured store keys.\nRuntimeError\n    If Fabric authentication, REST discovery, or safe pagination fails.\n    Spark mapping and metadata write errors also propagate; check Catalogue\n    columns and permissions on the configured metadata target.",
       "release_history": [
         {
           "status": "preview",
           "version": "0.2.5"
         }
       ],
-      "returns_documentation": "Not documented yet",
+      "returns_documentation": "dict[str, pyspark.sql.DataFrame]\n    ``observations`` holds raw permission observations; ``access`` holds\n    normalized METADATA_DATA_ACCESS rows; ``unmatched`` holds observations\n    that could not be linked to registered tables. Review unmatched rows\n    before interpreting missing access as absence of permission.",
       "signature": "def scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None=None, access_snapshot_id: str | None=None, access_token: str | None=None, persist: bool=True, context: dict[str, Any] | None=None) -> dict[str, Any]",
-      "source_end_line": 228,
+      "source_end_line": 270,
       "source_path": "src/fabricops_kit/access_scanner/scan_workspace_access.py",
       "source_start_line": 145,
       "summary": "Scan workspace roles and expand their data access across governed tables.",
@@ -2083,8 +2083,7 @@
       "source_start_line": 169,
       "summary": "Create or check the FabricOps metadata tables for one environment.",
       "supports_live_contract": true,
-      "usage": "public_flow_reachable",
-      "usage_notes": "Setup flow:\n\n1. Validate the supplied FabricOps configuration.\n2. Find the metadata lakehouse configured for the selected environment.\n3. Verify that the metadata target is a lakehouse.\n4. Resolve each table's physical schema from its canonical ownership and\n   the configured governance/engineering schema names.\n5. Load the required FabricOps table definitions.\n6. Attempt to read each required metadata table.\n7. When a table is missing, create an empty Spark DataFrame using its\n   required FabricOps table structure.\n8. Write that empty DataFrame to the metadata lakehouse using overwrite\n   mode to create the table.\n9. Read the created table again.\n10. Validate overlapping canonical column names and physical Spark data types.\n11. Add missing canonical columns with an empty Delta append using\n    ``mergeSchema=true``, then read and validate the table again.\n12. Continue processing the remaining tables when one table fails.\n13. Check whether at least one active steward record exists.\n14. Return overall, data-agreement, governance, and per-table setup\n    results.\n\n``data_agreement[\"active_steward_count\"]`` is retained for compatibility\nand reports readiness presence: ``1`` when at least one active steward\nexists and ``0`` otherwise. It is not a complete active steward population\ncount.\n\nThe canonical registry may expand in later compatible FabricOps releases.\nIn v0.2.0, metadata tables created or validated from\n``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,\n``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,\n``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,\n``METADATA_DATA_PROFILED_FREQUENCY``, ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,\n``METADATA_ENRICHMENT``, ``METADATA_GUARDRAIL``, and\n``METADATA_GUARDRAIL_RESULTS``.\n\nOf that v0.2.0 inventory, ``METADATA_DATA_CATALOGUE``,\n``METADATA_DATA_PROFILED``, ``METADATA_DATA_PROFILED_FREQUENCY``, and\n``METADATA_DATA_LINEAGE`` are Live schemas with compatibility guarantees.\nEvery other metadata schema in the registry remains Preview.\n\nDetailed table contents:\n\n- ``METADATA_DATA_STEWARD`` is a person registry storing ``steward_id``,\n  ``steward_name``, ``steward_role``, ``contact``, ``is_active``,\n  ``custom_fields_json``, and the standard audit fields. Responsibility\n  effective periods remain on ``METADATA_DATA_AGREEMENT``.\n- ``METADATA_DATA_AGREEMENT`` stores ``agreement_id``,\n  ``agreement_version``, ``agreement_name``, ``domain``,\n  ``provider_steward_id``, ``recipient_steward_id``, ``recipient``,\n  ``start_date``, ``expiry_date``, ``business_purpose``,\n  ``custom_fields_json``, and the standard audit fields.\n- ``METADATA_DATA_CONTRACT`` stores one table-centric lifecycle version.\n  A draft keeps its complete editable governed definition in\n  ``contract_payload_json``; each Save overwrites that draft JSON in place.\n  Freezing changes the version to ``frozen`` and makes its JSON immutable.\n  A later version is seeded from the previous frozen JSON. Activation keeps\n  ``status='frozen'`` and uses ``is_active`` to identify the Production\n  version while linking the exact Data Agreement version.\n- ``METADATA_DATA_CATALOGUE`` stores the current structural registry through\n  ``metadata_level``, ``table_id``, ``column_id``, ``environment_name``,\n  physical table context, ``column_name``, ``data_type``, profiling dates,\n  activation state, and the standard audit fields.\n- ``METADATA_DATA_PROFILED`` stores ``profile_id``,\n  ``profile_snapshot_id``, ``table_id``, ``column_id``,\n  ``environment_name``, ``data_type``,\n  ``row_count``, ``non_null_count``, ``null_count``, ``null_percent``,\n  ``distinct_count``, ``distinct_percent``, ``mean_value``,\n  ``stddev_value``, ``min_value``, ``percentile_25_value``,\n  ``median_value``, ``percentile_75_value``, ``max_value``,\n  and the standard audit fields.\n- ``METADATA_DATA_PROFILED_FREQUENCY`` stores frequency rows through\n  ``frequency_id``, ``profile_id``, ``profile_snapshot_id``, value, count,\n  percentage, rank, profiled row totals, and the standard audit fields.\n- ``METADATA_DATA_LINEAGE`` stores ``lineage_id``, canonical ``table_id``,\n  ``environment_name``, ``pipeline_role``, and the\n  standard audit fields.\n- ``METADATA_DATA_ACCESS`` stores access scope, role, permission,\n  approval, expiry, table and column identity, and audit information.\n- ``METADATA_ENRICHMENT`` stores exact-contract-version descriptions,\n  classifications, and audit information.\n  Enrichment has no direct ETL enforcement semantics.\n- ``METADATA_GUARDRAIL`` stores guardrail rule identity, scope,\n  parameters, Warn or Block action, lifecycle, and audit information.\n- ``METADATA_GUARDRAIL_RESULTS`` stores guardrail execution results,\n  status, continuation decision, expected and actual values, result\n  payload, and audit information.\n\nStandard audit fields are ``_committed_by``, ``_committed_at``,\n``_workspace_id``, ``_workspace_name``, ``_notebook_id``,\n``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.\n\nExisting tables are validated by canonical column name and compatible\nSpark data type. Physical Spark/Delta nullability is intentionally not\ncompared or migrated. Missing canonical columns are added automatically\nthrough an empty append with Delta ``mergeSchema=true``; existing rows and\nunrelated extra columns are preserved. Existing canonical columns with\nincompatible physical types still fail validation. The legacy\n``frequency_json`` column specifically fails ``METADATA_DATA_PROFILED``\nvalidation because that normalized-frequency change requires explicit\nmigration or recreation. Existing tables are never overwritten merely\nbecause their schema differs. Processing continues for remaining metadata\ntables, and ``raise_on_failure=True`` raises only after all tables have\nbeen processed when failures exist.\n\nA missing table is created by writing an empty Spark DataFrame with the\nrequired FabricOps table structure. This creates the metadata table structure but\ndoes not populate business metadata records. The function does not\nautomatically create steward records, agreements, contracts, catalogue\nrecords, profile records, lineage events, access assignments, enrichment\nrecords, guardrail rules, or guardrail results; those are populated by\ntheir respective FabricOps workflows."
+      "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "internal",
@@ -3763,7 +3762,7 @@
       "architecture_classification": "foundational_io",
       "contract_classification": "live_public_function",
       "contract_risk": "live",
-      "examples": "Not documented yet",
+      "examples": ">>> orders_df = read_lakehouse_csv(\"incoming/orders.csv\", inferSchema=True)",
       "function_name": "read_lakehouse_csv",
       "function_type": "public_function",
       "lifecycle_status": "live",
@@ -3820,13 +3819,13 @@
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A lazy Spark DataFrame representing the CSV file or compatible CSV\n    files found at the resolved Lakehouse ``Files`` path. Column types\n    follow Spark CSV reader behavior and generally remain strings unless\n    schema inference or other schema handling is explicitly requested.",
       "signature": "def read_lakehouse_csv(relative_path: str, *, store: str='Bronze', spark_session=None, header: bool=True, context: dict[str, Any] | None=None, **options)",
-      "source_end_line": 107,
+      "source_end_line": 71,
       "source_path": "src/fabricops_kit/io/read_lakehouse_csv.py",
       "source_start_line": 10,
-      "summary": "Resolve CSV data in a Lakehouse Files path and return a lazy Spark DataFrame.",
+      "summary": "Read CSV files from a configured Lakehouse Files location.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable",
-      "usage_notes": "FabricOps resolves the configured Lakehouse Files path from\n``00_env_config`` and then delegates to Spark's CSV reader with the supplied\noptions. Calling this function constructs a Spark read plan, and the file\nscan occurs when a downstream action executes, such as ``display``,\n``count``, ``collect``, or a DataFrame write. The function does not\nimmediately load the complete file into notebook memory.\n\nCompact examples:\n\n``df = read_lakehouse_csv(\"incoming/customers.csv\", store=\"Bronze\")``\n\n``df = read_lakehouse_csv(\"incoming/customers/\", store=\"Bronze\")``\n\n``df = read_lakehouse_csv(\"incoming/customers.csv\", store=\"Bronze\", inferSchema=True)``\n\n``df = read_lakehouse_csv(\"incoming/orders.csv\", store=\"Bronze\", header=True, inferSchema=True, sep=\",\", encoding=\"UTF-8\", mode=\"PERMISSIVE\")``\n\nWhen a folder path is supplied, Spark reads compatible CSV files from that\npath into one DataFrame according to Spark CSV reader behavior. FabricOps\ndoes not manually loop through or append files.\n\nThe function sets the ``header`` option and forwards the caller's CSV\noptions. It does not automatically infer data types. Unless the caller\nrequests schema inference or another schema strategy, Spark CSV columns are\ngenerally read as strings. ``inferSchema=True`` can be passed through\n``**options`` when inference is desired.\n\nThis function does not convert CSV data into a Delta table, write, move,\nrename, or delete source files, register metadata, profile the returned\nDataFrame, remove duplicate rows, standardize column names, infer schema\nunless requested through Spark options, validate that every CSV file in a\nfolder has identical structure, apply custom malformed-record handling\nbeyond the supplied Spark CSV options, or automatically cache or persist\nthe returned DataFrame."
+      "usage_notes": "The Spark DataFrame is lazy; downstream actions evaluate the read. Additional\nreader options are forwarded to Spark. Folder compatibility and malformed\nrecord handling follow Spark CSV options."
     },
     {
       "architecture_classification": "foundational_io",
@@ -4029,7 +4028,7 @@
       "architecture_classification": "foundational_io",
       "contract_classification": "live_public_function",
       "contract_risk": "live",
-      "examples": "Not documented yet",
+      "examples": ">>> orders_df = read_lakehouse_table(\"orders\", store=\"Bronze\", schema=\"demo\")\n>>> recent = orders_df.where(\"order_date >= '2026-01-01'\")",
       "function_name": "read_lakehouse_table",
       "function_type": "public_function",
       "inbound_source_references": [
@@ -4077,13 +4076,13 @@
       "live_since": "0.1.0",
       "parameters": [
         {
-          "description": "Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name. Omit it when ``table_id`` is supplied.",
+          "description": "Required unless table_id is supplied. Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name. Omit it when ``table_id`` is supplied.",
           "name": "table_name",
           "required": "No",
           "type": "str | None"
         },
         {
-          "description": "Canonical registered table identity. When supplied, FabricOps resolves ``table_name``, ``store``, and ``schema`` from the Catalogue.",
+          "description": "Canonical registered table identity. When supplied, FabricOps resolves ``table_name``, ``store``, and ``schema`` from the Catalogue. Do not combine with table_name, schema, or a non-default store.",
           "name": "table_id",
           "required": "No",
           "type": "str | None"
@@ -4132,13 +4131,13 @@
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A lazy Spark DataFrame representing the governed rows and all columns\n    in the resolved Lakehouse Delta table. The data is evaluated when a\n    downstream Spark action runs.",
       "signature": "def read_lakehouse_table(table_name: str | None=None, *, table_id: str | None=None, store: str='Bronze', schema: str | None=None, spark_session=None, context: dict[str, Any] | None=None, **options)",
-      "source_end_line": 122,
+      "source_end_line": 102,
       "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
       "source_start_line": 10,
-      "summary": "Resolve a configured Lakehouse Delta table and return a Spark DataFrame.",
+      "summary": "Read a configured Lakehouse Delta table as a lazy Spark DataFrame.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable",
-      "usage_notes": "FabricOps resolves the configured Lakehouse Tables path from\n``00_env_config`` and then delegates to Spark's Delta reader with any\nsupplied reader options. Filtering and column selection are applied later\nthrough normal Spark DataFrame operations. Conceptual examples:\n\n``df = read_lakehouse_table(table_name=\"orders\", store=\"Bronze\")``\n\n``df = read_lakehouse_table(table_name=\"orders\", store=\"Bronze\", schema=\"sales\")``\n\n``orders_df = read_lakehouse_table(table_name=\"sales_orders\", store=\"Bronze\")``\n\n``recent_orders_df = orders_df.select(\"order_id\", \"customer_id\", \"order_date\", \"amount\").where(\"order_date >= '2026-01-01'\")``\n\nThis function does not read through the Warehouse SQL connector, execute a\nSQL query, write or copy the table, register metadata, create the table,\nmutate the source table, or automatically cache or persist the returned\nDataFrame."
+      "usage_notes": "Use either table_name with store and optional schema, or table_id to resolve\nthe registered physical location from METADATA_DATA_CATALOGUE. Reader options\nare forwarded to Spark Delta. The call does not register or profile data."
     },
     {
       "architecture_classification": "foundational_io",
@@ -5850,7 +5849,7 @@
       "architecture_classification": "capability",
       "contract_classification": "preview_public_function",
       "contract_risk": "preview",
-      "examples": "Not documented yet",
+      "examples": ">>> coverage = check_guardrail_coverage(\n...     target_table_id=target_table_id, source_table_ids=[source[\"table_id\"]]\n... )",
       "function_name": "check_guardrail_coverage",
       "function_type": "public_function",
       "inbound_source_references": [
@@ -5862,25 +5861,25 @@
       "live_impact_level": "preview_only",
       "parameters": [
         {
-          "description": "Not documented yet",
+          "description": "Canonical identity of the target about to be published.",
           "name": "target_table_id",
           "required": "Yes",
           "type": "str"
         },
         {
-          "description": "Not documented yet",
+          "description": "Exact governed sources feeding this target. Supply [] for a source-free target.",
           "name": "source_table_ids",
           "required": "Yes",
           "type": "list[str] | tuple[str, ...]"
         },
         {
-          "description": "Not documented yet",
+          "description": "Spark session override; otherwise use the active Fabric session.",
           "name": "spark_session",
           "required": "No",
-          "type": ""
+          "type": "object, optional"
         },
         {
-          "description": "Not documented yet",
+          "description": "Print table readiness, evaluated Guardrails, and the final decision.",
           "name": "verbose",
           "required": "No",
           "type": "bool"
@@ -5888,7 +5887,7 @@
       ],
       "public_import_path": "fabricops_kit.check_guardrail_coverage",
       "qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage",
-      "raises_documentation": "Not documented yet",
+      "raises_documentation": "ValueError\n    If table identities are blank or the current Fabric activity ID is missing.\nRuntimeError\n    If a participant lacks a required contract, applicable active Guardrail,\n    or current-activity result. Select contracts and run the applicable checks\n    before retrying publication. Metadata read errors also propagate.",
       "release_history": [
         {
           "status": "preview",
@@ -5899,9 +5898,9 @@
           "version": "0.2.5"
         }
       ],
-      "returns_documentation": "Not documented yet",
+      "returns_documentation": "dict\n    ``can_continue``, ``status``, participant readiness and coverage, missing\n    results, and issues. Contract-free Development returns a skipped result.\n    Failed readiness raises rather than returning a blocking result.",
       "signature": "def check_guardrail_coverage(*, target_table_id: str, source_table_ids: list[str] | tuple[str, ...], spark_session=None, verbose: bool=True) -> dict[str, Any]",
-      "source_end_line": 284,
+      "source_end_line": 318,
       "source_path": "src/fabricops_kit/pipeline/check_guardrail_coverage.py",
       "source_start_line": 84,
       "summary": "Verify that the governed pipeline is ready to publish its target.",
@@ -6049,7 +6048,7 @@
       ],
       "public_import_path": "fabricops_kit.check_sensitive_data",
       "qualified_name": "fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data",
-      "raises_documentation": "RuntimeError\n    If ``dataframe`` is not a Spark DataFrame in the Fabric runtime.",
+      "raises_documentation": "RuntimeError\n    If ``dataframe`` is not a Spark DataFrame in the Fabric runtime, or\n    ``raise_on_failure=True`` and a Block treatment fails. Inspect ``checks``\n    and the governed treatment configuration before retrying.",
       "release_history": [
         {
           "status": "preview",
@@ -6062,7 +6061,7 @@
       ],
       "returns_documentation": "dict\n    ``dataframe`` contains every successfully applied treatment;\n    ``support_mapping`` contains caller-owned token mappings, or ``None``;\n    ``checks`` contains sanitized outcomes; and ``can_continue`` is false\n    only when a Block treatment fails. No mapping is persisted automatically.",
       "signature": "def check_sensitive_data(dataframe, *, table_id: str, run_id: str='', existing_mapping=None, enabled: bool=True, raise_on_failure: bool=False, spark_session=None, verbose: bool=True) -> dict",
-      "source_end_line": 193,
+      "source_end_line": 195,
       "source_path": "src/fabricops_kit/pipeline/check_sensitive_data.py",
       "source_start_line": 20,
       "summary": "Apply exact-contract Sensitive Data Guardrails before a governed write.",
@@ -6164,7 +6163,7 @@
           "type": "str"
         },
         {
-          "description": "Physical source schema.",
+          "description": "Physical source schema. This keyword is required; pass None for a store without schemas.",
           "name": "schema",
           "required": "Yes",
           "type": "str | None"
@@ -6188,7 +6187,7 @@
           "type": "str | None"
         },
         {
-          "description": "Incremental configuration, for example {\"watermark_column\": \"modified_datetime\"}. A selected Data Contract must agree with the supplied watermark.",
+          "description": "Incremental configuration, for example {\"watermark_column\": \"modified_datetime\"}. A selected Data Contract must agree with the supplied watermark. Required for incremental mode when no selected contract supplies the watermark.",
           "name": "read_parameters",
           "required": "No",
           "type": "dict[str, Any] | None"
@@ -6235,7 +6234,7 @@
       ],
       "returns_documentation": "dict\n    The ``pipeline_read`` result, including ``dataframe`` and ``table_id``,\n    plus capability results and ``orchestration_stages``.",
       "signature": "def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str='full', query: str | None=None, read_parameters: dict[str, Any] | None=None, target_table_id: str | None=None, frequency_enabled: bool=True, frequency_top_n: int | None=5, spark_session=None, verbose: bool=True) -> dict[str, Any]",
-      "source_end_line": 85,
+      "source_end_line": 87,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_read.py",
       "source_start_line": 12,
       "summary": "Execute the standard FabricOps governed Read lifecycle.",
@@ -6247,7 +6246,7 @@
       "architecture_classification": "standard_orchestration",
       "contract_classification": "live_public_function",
       "contract_risk": "live",
-      "examples": ">>> result = orchestrate_write(transformed_df, sources=[orders], store=\"Silver\", schema=\"demo\", table_name=\"curated_orders\", write_mode=\"overwrite\", contracts=CONTRACTS)\n>>> result = orchestrate_write(product_mapping_df, sources=[], store=\"Silver\", schema=\"demo\", table_name=\"product_mapping\", write_mode=\"scd1\", write_parameters={\"key_columns\": [\"product_id\"]})",
+      "examples": ">>> result = orchestrate_write(\n...     transformed_df, sources=[orders], store=\"Silver\", schema=\"demo\",\n...     table_name=\"curated_orders\", write_mode=\"overwrite\", contracts=CONTRACTS,\n... )\n\nDevelopment SCD1 with a source-free mapping table:\n\n>>> result = orchestrate_write(\n...     product_mapping_df, sources=[], store=\"Silver\", schema=\"demo\",\n...     table_name=\"product_mapping\", write_mode=\"scd1\",\n...     write_parameters={\"key_columns\": [\"product_id\"]},\n... )",
       "function_name": "orchestrate_write",
       "function_type": "public_function",
       "inbound_source_references": [
@@ -6264,7 +6263,7 @@
           "type": "Any"
         },
         {
-          "description": "Governed source results containing ``table_id``.",
+          "description": "Governed source results containing ``table_id``. Pass [] for a source-free target.",
           "name": "sources",
           "required": "Yes",
           "type": "Iterable[dict[str, Any]]"
@@ -6276,7 +6275,7 @@
           "type": "str"
         },
         {
-          "description": "Physical target schema.",
+          "description": "Physical target schema. This keyword is required; pass None for a store without schemas.",
           "name": "schema",
           "required": "Yes",
           "type": "str | None"
@@ -6347,7 +6346,7 @@
       ],
       "returns_documentation": "dict\n    Write identity and capability results. The top-level ``dataframe`` is\n    the prepared input after Sensitive Data treatment, in both Validate\n    and Enforce modes. It is the Write input, not necessarily the persisted\n    target after Append, SCD1, or SCD2. ``sensitive_result`` retains its\n    nested ``dataframe`` result. ``published`` is false when a Validate-mode\n    contract passes without publication.",
       "signature": "def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None=None, contracts: dict[str, Any] | None=None, repartition_by: int | None=None, frequency_enabled: bool=True, frequency_top_n: int | None=5, spark_session=None, verbose: bool=True) -> dict[str, Any]",
-      "source_end_line": 135,
+      "source_end_line": 147,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
       "source_start_line": 15,
       "summary": "Execute the standard FabricOps governed Write lifecycle.",
@@ -6486,7 +6485,7 @@
           "type": "str | None"
         },
         {
-          "description": "Read-only SQL for a configured Warehouse source. The supplied source identity remains the governed source participant even when the result is a projection, filter, join, or aggregation. FabricOps does not infer arbitrary source identity by parsing SQL. A query may accompany either physical coordinates or ``table_id`` when the resolved store is a Warehouse.",
+          "description": "Read-only SQL for a configured Warehouse source in full mode only; incremental mode rejects caller-owned SQL. The supplied source identity remains the governed source participant even when the result is a projection, filter, join, or aggregation. FabricOps does not infer arbitrary source identity by parsing SQL. A query may accompany either physical coordinates or ``table_id`` when the resolved store is a Warehouse.",
           "name": "query",
           "required": "No",
           "type": "str | None"
@@ -6498,7 +6497,7 @@
           "type": "str"
         },
         {
-          "description": "Incremental read configuration. Supports only watermark_column. If a Data Contract is selected, its watermark must match the requested one.",
+          "description": "Incremental read configuration. Supports only watermark_column. If a Data Contract is selected, its watermark must match the requested one. For incremental mode, provide ``{\"watermark_column\": \"modified_at\"}`` when no selected contract supplies the watermark. None is valid only when the selected mode and contract provide the required configuration.",
           "name": "read_parameters",
           "required": "No",
           "type": "dict[str, Any] | None"
@@ -6537,13 +6536,12 @@
       ],
       "returns_documentation": "dict\n    A deliberately small result with these fields:\n\n    - ``dataframe``: the Spark DataFrame returned by the selected\n      foundational Fabric I/O reader.\n    - ``table_id``: the canonical identity of the governed physical source.\n    - ``is_query``: whether ``dataframe`` is a custom Warehouse query\n      result rather than the complete physical table.\n    - ``has_contract``: whether an environment-selected immutable Data\n      Contract applies. The contract record itself is not exposed.\n    - ``read_mode``: the explicit source read mode.\n    - ``has_data`` and ``should_process``: whether this read contributes\n      unconsumed work. Full reads return ``True`` without triggering a count.\n    - ``scope``: a compact summary of the resolved full, bootstrap, or\n      watermark scope; no metadata rows are exposed.",
       "signature": "def pipeline_read(*, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, query: str | None=None, read_mode: str='full', read_parameters: dict[str, Any] | None=None, target_table_id: str | None=None, spark_session=None, verbose: bool=True) -> dict[str, Any]",
-      "source_end_line": 422,
+      "source_end_line": 426,
       "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
       "source_start_line": 79,
       "summary": "Read one governed pipeline source through the appropriate Fabric store.",
       "supports_live_contract": true,
-      "usage": "public_flow_reachable",
-      "usage_notes": "The governed orchestration performs these mechanical steps:\n\n1. Resolve the canonical source ``table_id``.\n2. Resolve the configured physical source identity.\n3. Infer whether that configured source is a Lakehouse or Warehouse.\n4. For incremental reads, observe the complete physical source, resolve the\n   last committed watermark for the exact target, and read rows strictly\n   after it. A missing baseline deterministically bootstraps with a complete\n   read.\n5. Select and call ``read_lakehouse_table``, ``read_warehouse_table``, or\n   framework-owned ``read_warehouse_query`` pushdown.\n6. Capture transient current-run Source Observation state without advancing\n   accepted progress. Only successful target publication commits it.\n7. Return the DataFrame, explicit ``table_id``, and small source metadata\n   required by the notebook.\n\nHigher-level governed pipeline code normally uses ``pipeline_read``.\nFoundational readers remain available for direct lower-level or\ngeneral-purpose Fabric reads that do not need pipeline orchestration.\n``pipeline_read`` orchestrates governed table sources only. Raw Lakehouse\nFiles do not have a canonical ``table_id`` and should continue to use the\nfoundational CSV, Excel, JSON, or Parquet readers directly.\n\nIncremental Warehouse reads reject caller-owned ``query`` SQL because\nFabricOps cannot safely compose arbitrary SQL with its target-specific\nprogress predicate. Source Drift remains a separate compatibility check;\nincremental scope answers only what this target has not consumed.\n\nThis function does not execute Freshness, Source Drift, Schema, DQ, or\nSensitive Data checks. It also does not profile\ndata, transform rows, or write a pipeline target. Those meaningful\nengineering decisions remain explicit in ``02_pipeline`` and the\noptional processing-mode Guided Demo scenarios.\n\nWith ``verbose=True``, a Warehouse table read reports a line such as\n``FabricOps Read \u2192 Warehouse table 'product.demo.orders' \u2192 read_warehouse_table``."
+      "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "internal",
@@ -6804,13 +6802,13 @@
           "type": "str | None"
         },
         {
-          "description": "Development-authored strategy parameters, such as key, effective, tracked, or partition columns, subject to contract validation.",
+          "description": "Development-authored strategy parameters, subject to contract validation. SCD1 requires ``key_columns``; SCD2 requires ``key_columns`` and ``effective_column`` and may specify ``tracked_columns``.",
           "name": "load_strategy_parameters",
           "required": "No",
           "type": "dict[str, Any] | None"
         },
         {
-          "description": "Canonical identities of the exact governed sources that feed this target publication. Supply identities returned by ``pipeline_read``. FabricOps requires this explicit association because activity-wide reads and Spark transformation plans cannot reliably identify which source subset produced a particular target DataFrame.",
+          "description": "Required for every call despite its None default. Use [] only for a source-free target. Canonical identities of the exact sources that feed this target publication. Supply identities returned by ``pipeline_read``. FabricOps requires this explicit association because activity-wide reads and Spark transformation plans cannot reliably identify which source subset produced a particular target DataFrame.",
           "name": "source_table_ids",
           "required": "No",
           "type": "list[str] | tuple[str, ...] | None"
@@ -6855,13 +6853,12 @@
       ],
       "returns_documentation": "dict\n    A deliberately small result containing only the canonical ``table_id``.\n    Profile the persisted target through an explicit read-back rather than\n    treating the input DataFrame as persisted state.",
       "signature": "def pipeline_write(df, *, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, load_strategy: str | None=None, load_strategy_parameters: dict[str, Any] | None=None, source_table_ids: list[str] | tuple[str, ...] | None=None, repartition_by=None, options: dict[str, Any] | None=None, spark_session=None, verbose: bool=True) -> dict[str, str]",
-      "source_end_line": 710,
+      "source_end_line": 712,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
       "source_start_line": 341,
       "summary": "Publish one governed pipeline table target through its configured Fabric store.",
       "supports_live_contract": true,
-      "usage": "public_flow_reachable",
-      "usage_notes": "The governed orchestration performs these mechanical steps:\n\n1. Resolve the canonical target ``table_id``.\n2. Resolve the configured physical target identity.\n3. Resolve the selected or active Data Contract.\n4. Resolve the governed load strategy and parameters.\n5. Resolve processing scope.\n6. Apply FabricOps target audit fields.\n7. Validate target notebook ownership.\n8. Detect whether this activity already produced target rows.\n9. Perform append/overwrite or dedicated SCD processing only when the\n   activity is not already represented in the physical target.\n10. Persist the resolved target load strategy and parameters on the\n    table-level ``METADATA_DATA_CATALOGUE`` row.\n11. Only after physical and Catalogue success, idempotently commit target\n    Lineage and accepted Source Observation/write-success metadata.\n12. Return a small publication result with no hidden profiling state.\n\nCallers do not provide a store type, manually resolve ``table_id``, choose\na Lakehouse versus Warehouse writer, construct processing scope or success\ncontext, or manually commit Lineage or Source Observation metadata. Callers\nprovide only the canonical identities of the sources that actually feed\nthis target, rather than internal read or preparation dictionaries. This\nkeeps multiple target writes in one activity exact and independent.\n\nAppend and overwrite retries use the target's persisted ``_activity_id``\nto skip an already-applied physical mutation. SCD1 and SCD2 always run\ntheir keyed change-aware merge, even when an interactive notebook reuses\nan activity ID, so new business changes are not silently suppressed.\nCatalogue processing, Lineage, and accepted Source Observation metadata are\nidempotent and replayed on every retry. Empty append, empty overwrite, and\ntrue SCD no-op operations may leave\nno activity marker; repeating those operations is safe. Changing the\nparticipating source set represents a different logical publication and\ntherefore requires a new activity rather than reuse of the current one.\nLakehouse SCD2 closes changed rows and inserts their replacement current\nversions in one Delta ``MERGE`` so an activity marker cannot represent a\npartially applied two-step history mutation. Warehouse SCD2 retains its\nexisting SQL transaction boundary.\n\nBefore physical publication, target-specific Source Observation evidence\nis durably staged with ``observation_status='observed'``. If a scheduled\nactivity terminates after target rows materialize but before finalization,\nthe next activity verifies the prior target ``_activity_id``, promotes that\nstaged evidence idempotently, and calculates incremental work from the\nrecovered committed baseline. Evidence for another target is not promoted.\n\nA first incremental append has no committed baseline and therefore reads a\ncomplete bootstrap scope. FabricOps permits that bootstrap only for a new\nor empty physical target. A populated target fails before publication so\nmissing metadata cannot silently duplicate all source rows. SCD1 and SCD2\nbootstraps continue through their existing keyed, idempotent merge paths.\n\nWith ``verbose=True``, a simple Lakehouse overwrite reports a line such as\n``FabricOps Write \u2192 Lakehouse table 'unified.demo.curated_orders' \u2192 overwrite \u2192 write_lakehouse_table``.\n\nThis function does not perform transformations, schema checks, DQ checks,\nSensitive Data Guardrails, Source Drift, or profiling. These remain\nexplicit notebook engineering and governance steps. ``pipeline_write`` publishes governed\ntable targets only. Raw Lakehouse Files do not have a canonical FabricOps\n``table_id``; direct file-output concerns, if supported in future, belong\noutside this governed table orchestration API."
+      "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "internal",
@@ -7592,7 +7589,7 @@
       "live_since": "0.2.0",
       "parameters": [
         {
-          "description": "Exact Spark DataFrame to profile. If a governed identity is also supplied, FabricOps does not re-read the physical table.",
+          "description": "Required unless a complete governed identity is provided. With no DataFrame and no identity, the call raises ValueError. If an identity is also supplied, FabricOps does not re-read the physical table.",
           "name": "dataframe",
           "required": "No",
           "type": "pyspark.sql.DataFrame, optional"
@@ -7667,13 +7664,12 @@
       ],
       "returns_documentation": "dict\n    ``profile`` contains the canonical statistical Spark DataFrame and\n    ``frequency_profile`` contains the applicable canonical frequency\n    Spark DataFrame, or ``None`` when no columns were selected. Governed\n    ``profile`` rows additionally contain persisted snapshot identities\n    and audit fields.",
       "signature": "def profile_table(*, dataframe=None, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, frequency_columns=None, frequency_enabled: bool=True, frequency_top_n: int | None=5, frequency_max_distinct_percent: float | None=80.0, spark_session=None)",
-      "source_end_line": 1400,
+      "source_end_line": 1401,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
       "source_start_line": 1084,
       "summary": "Profile a Spark DataFrame or a complete governed physical table.",
       "supports_live_contract": true,
-      "usage": "public_flow_reachable",
-      "usage_notes": "The orchestration performs these mechanical steps:\n\n1. Validate and resolve the optional canonical governed identity.\n2. Use the supplied DataFrame exactly, read a physical Lakehouse table into\n   Spark, or keep physical Warehouse aggregation in Warehouse SQL.\n3. Calculate canonical statistical metrics with the selected backend.\n4. Select eligible frequency columns and calculate exact grouped counts,\n   including null as a frequency value.\n5. When governed, create stable table and column identities, replace rows\n   in ``METADATA_DATA_PROFILED`` and\n   ``METADATA_DATA_PROFILED_FREQUENCY`` idempotently for the current\n   Fabric activity, then update\n   ``METADATA_DATA_CATALOGUE``.\n6. Return both profiling outputs. DataFrame-only mode performs no metadata\n   writes and never invents a ``table_id``.\n\nA retry in the same Fabric activity reuses the snapshot and row identities\nand replaces that snapshot rather than appending duplicates. Catalogue is\nupdated only after both profile components succeed; its table-level\n``_activity_id`` and non-null ``last_profiled_at`` identify the completed\nsnapshot for readers. A same-activity retry first clears that completion\nmarker. If a later stage fails, snapshot removal is best-effort hygiene:\nCatalogue remains authoritative even if cleanup also fails, and the\noriginal profiling error is preserved. A later activity receives a\ndistinct snapshot identity."
+      "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "capability",
@@ -11962,32 +11958,32 @@
       "architecture_classification": "capability",
       "contract_classification": "preview_public_function",
       "contract_risk": "preview",
-      "examples": "Not documented yet",
+      "examples": ">>> state = widget_activate_data_contract(spark_session=spark)",
       "function_name": "widget_activate_data_contract",
       "function_type": "widget_function",
       "lifecycle_status": "preview",
       "live_impact_level": "preview_only",
       "parameters": [
         {
-          "description": "Not documented yet",
+          "description": "Initial governed table selection; omitted or unavailable IDs select the first table with a frozen contract.",
           "name": "table_id",
           "required": "No",
           "type": "str | None"
         },
         {
-          "description": "Not documented yet",
+          "description": "Initial frozen version selection. Choose an available version in the UI.",
           "name": "contract_version",
           "required": "No",
           "type": "int | None"
         },
         {
-          "description": "Not documented yet",
+          "description": "Active Fabric Spark session override.",
           "name": "spark_session",
           "required": "No",
           "type": "Any"
         },
         {
-          "description": "Not documented yet",
+          "description": "FabricOps runtime context established by 00_env_config.",
           "name": "context",
           "required": "No",
           "type": "Any"
@@ -11995,7 +11991,7 @@
       ],
       "public_import_path": "fabricops_kit.widget_activate_data_contract",
       "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
-      "raises_documentation": "Not documented yet",
+      "raises_documentation": "ValueError\n    If an activation request fails validation. Select a frozen version with\n    successful latest Engineering validation and an eligible Data Agreement.\nRuntimeError\n    If metadata routing, reads, or activation persistence fail. Check the\n    configured metadata target and permissions. UI callbacks display failures.",
       "release_history": [
         {
           "status": "preview",
@@ -12006,9 +12002,9 @@
           "version": "0.2.5"
         }
       ],
-      "returns_documentation": "Not documented yet",
+      "returns_documentation": "dict[str, Any]\n    Rendered widget, selectors, validation state, activation action, and\n    ``refresh`` callback. Opening the widget does not activate a version.",
       "signature": "def widget_activate_data_contract(*, table_id: str | None=None, contract_version: int | None=None, spark_session: Any=None, context: Any=None) -> dict[str, Any]",
-      "source_end_line": 402,
+      "source_end_line": 434,
       "source_path": "src/fabricops_kit/widgets/widget_activate_data_contract.py",
       "source_start_line": 68,
       "summary": "Link a Data Agreement and activate one validated frozen Data Contract.",
@@ -12246,9 +12242,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._agreement_identity_text",
-      "source_end_line": 522,
+      "source_end_line": 535,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 513,
+      "source_start_line": 526,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -12263,9 +12259,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._agreement_label",
-      "source_end_line": 534,
+      "source_end_line": 547,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 530,
+      "source_start_line": 543,
       "usage": "detached"
     },
     {
@@ -12279,9 +12275,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._business_agreement_snapshot",
-      "source_end_line": 510,
+      "source_end_line": 523,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 501,
+      "source_start_line": 514,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -12302,9 +12298,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
-      "source_end_line": 647,
+      "source_end_line": 660,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 537,
+      "source_start_line": 550,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -12322,9 +12318,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._deserialize_approved_usage",
-      "source_end_line": 498,
+      "source_end_line": 511,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 491,
+      "source_start_line": 504,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -12343,9 +12339,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._deserialize_supporting_documents",
-      "source_end_line": 477,
+      "source_end_line": 490,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 468,
+      "source_start_line": 481,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -12360,9 +12356,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._generate_agreement_id",
-      "source_end_line": 452,
+      "source_end_line": 465,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 449,
+      "source_start_line": 462,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -12381,9 +12377,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._next_minor_version",
-      "source_end_line": 446,
+      "source_end_line": 459,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 444,
+      "source_start_line": 457,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -12402,9 +12398,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._parse_agreement_version",
-      "source_end_line": 441,
+      "source_end_line": 454,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 436,
+      "source_start_line": 449,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -12423,9 +12419,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._serialize_approved_usage",
-      "source_end_line": 488,
+      "source_end_line": 501,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 480,
+      "source_start_line": 493,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -12445,9 +12441,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._serialize_supporting_documents",
-      "source_end_line": 465,
+      "source_end_line": 478,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 455,
+      "source_start_line": 468,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -12465,16 +12461,16 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._steward_label",
-      "source_end_line": 527,
+      "source_end_line": 540,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 525,
+      "source_start_line": 538,
       "usage": "detached"
     },
     {
       "architecture_classification": "capability",
       "contract_classification": "live_public_function",
       "contract_risk": "live",
-      "examples": "Not documented yet",
+      "examples": ">>> state = widget_render_data_agreement(spark=spark)",
       "function_name": "widget_render_data_agreement",
       "function_type": "widget_function",
       "lifecycle_status": "live",
@@ -12496,7 +12492,7 @@
       ],
       "public_import_path": "fabricops_kit.widget_render_data_agreement",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
-      "raises_documentation": "Not documented yet",
+      "raises_documentation": "ValueError\n    If required authored fields are invalid. Complete the highlighted fields\n    before saving. Widget callbacks display validation failures.\nRuntimeError\n    If configured metadata routing or persistence fails; check the Metadata\n    store configuration and write permissions.",
       "release_history": [
         {
           "status": "preview",
@@ -12513,7 +12509,7 @@
       ],
       "returns_documentation": "dict[str, Any]\n    Stable root, section, field, document, steward, and save controls.",
       "signature": "def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
-      "source_end_line": 433,
+      "source_end_line": 446,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
       "source_start_line": 42,
       "summary": "Render a wide, single-flow data-agreement editor.",
@@ -12534,9 +12530,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
-      "source_end_line": 243,
+      "source_end_line": 256,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
-      "source_start_line": 219,
+      "source_start_line": 232,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -12551,9 +12547,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_steward._generate_steward_id",
-      "source_end_line": 211,
+      "source_end_line": 224,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
-      "source_start_line": 208,
+      "source_start_line": 221,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"
@@ -12571,16 +12567,16 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_steward._steward_label",
-      "source_end_line": 216,
+      "source_end_line": 229,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
-      "source_start_line": 214,
+      "source_start_line": 227,
       "usage": "detached"
     },
     {
       "architecture_classification": "capability",
       "contract_classification": "live_public_function",
       "contract_risk": "live",
-      "examples": "Not documented yet",
+      "examples": ">>> state = widget_render_data_steward(spark=spark)",
       "function_name": "widget_render_data_steward",
       "function_type": "widget_function",
       "lifecycle_status": "live",
@@ -12602,7 +12598,7 @@
       ],
       "public_import_path": "fabricops_kit.widget_render_data_steward",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
-      "raises_documentation": "Not documented yet",
+      "raises_documentation": "ValueError\n    If required authored fields are invalid. Complete the highlighted fields\n    before saving. Widget callbacks display validation failures.\nRuntimeError\n    If configured metadata routing or persistence fails; check the Metadata\n    store configuration and write permissions.",
       "release_history": [
         {
           "status": "preview",
@@ -12619,7 +12615,7 @@
       ],
       "returns_documentation": "dict[str, Any]\n    Rendered widget controls keyed for notebook customization.",
       "signature": "def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
-      "source_end_line": 205,
+      "source_end_line": 218,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
       "source_start_line": 35,
       "summary": "Render append-only data steward create/update maintenance.",
