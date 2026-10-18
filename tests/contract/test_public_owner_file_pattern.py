@@ -5,6 +5,8 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+from fabricops_kit.public_api import RELEASE_PUBLIC_API
+
 PACKAGE_ROOT = Path("src/fabricops_kit")
 
 FORBIDDEN_BATCH_FILENAMES = {
@@ -144,7 +146,13 @@ def test_package_init_re_exports_public_owner_functions() -> None:
         for path in package_dir.glob("*.py"):
             if path.name in SHARED_HELPER_FILENAMES:
                 continue
-            owner_public_functions.update(_public_functions(path))
+            # Non-underscore functions may also be internal orchestration stages.
+            # The lifecycle registry identifies which owner functions promise public imports.
+            registered = {
+                name.rsplit(".", 1)[-1] for name in RELEASE_PUBLIC_API
+                if name.startswith(f"fabricops_kit.{package_dir.name}.")
+            }
+            owner_public_functions.update(_public_functions(path) & registered)
 
         if not owner_public_functions and not shared_classes:
             continue

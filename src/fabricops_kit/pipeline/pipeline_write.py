@@ -1,4 +1,4 @@
-"""Public owner for governed pipeline target-write orchestration."""
+"""Internal owner for governed pipeline target-write orchestration."""
 
 from __future__ import annotations
 

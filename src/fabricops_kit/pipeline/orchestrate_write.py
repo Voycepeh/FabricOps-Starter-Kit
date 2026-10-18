@@ -12,7 +12,7 @@ from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 from fabricops_kit.pipeline.shared import ExecutionSummary, _run_orchestration_stage
 
 
-def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session=None, verbose: bool = True) -> dict[str, Any]:
+def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping=None, spark_session=None, verbose: bool = True) -> dict[str, Any]:
     """Execute the standard FabricOps governed Write lifecycle.
 
     Parameters
@@ -30,9 +30,9 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     table_name : str
         Physical target table name.
     write_mode : str
-        Notebook-facing Write mode forwarded to :func:`pipeline_write` as its governed load strategy.
+        Notebook-facing Write mode forwarded to the internal Write stage as its governed load strategy.
     write_parameters : dict, optional
-        Parameters for the selected Write mode, forwarded to :func:`pipeline_write`
+        Parameters for the selected Write mode, forwarded to the internal Write stage
         as ``load_strategy_parameters``. For example, SCD1 requires
         ``key_columns``; SCD2 requires ``key_columns`` and ``effective_column``
         and may also define ``tracked_columns``.
@@ -45,6 +45,10 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
         Whether to calculate frequency distributions for this table.
     frequency_top_n : int or None, default=5
         Maximum ranked frequency values per eligible column; None retains all.
+    existing_mapping : pyspark.sql.DataFrame, optional
+        Previously returned Sensitive Data token mappings. Existing assignments
+        are reused; the returned sensitive_result contains the support_mapping
+        for the caller to persist and supply on later runs.
     spark_session : object, optional
         Spark session used by every stage.
     verbose : bool, default=True
@@ -59,7 +63,7 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
         target after Append, SCD1, or SCD2. ``sensitive_result`` retains its
         nested ``dataframe`` result. ``published`` is false when a Validate-mode
         contract passes without publication. ``write_metrics`` retains the
-        ``pipeline_write`` measurements, with ``total_target_rows`` reused from
+        internal Write measurements, with ``total_target_rows`` reused from
         persisted-target profiling when available. It never treats prepared
         input rows or profiled target rows as committed rows.
         ``total_duration_seconds`` measures the complete lifecycle, including
@@ -77,7 +81,7 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     and Guardrail Coverage identically. Validate then returns without writing;
     Enforce continues through Write and persisted-target Profile. Existing
     metadata and Source Observation commit behaviour remains owned by
-    ``pipeline_write``. The returned ``dataframe`` is the prepared Write input,
+    the internal Write stage. The returned ``dataframe`` is the prepared Write input,
     not a reread of the persisted target; Append, SCD1, and SCD2 may produce a
     different target state. No DataFrame is displayed or materialized for this
     return value. With verbose=True, every successful execution prints a final
@@ -101,8 +105,7 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
 
     See Also
     --------
-    pipeline_write, check_schema, check_sensitive_data, check_source_drift,
-    check_dq, check_guardrail_coverage, profile_table
+    orchestrate_read, profile_table
 
     """
     summary = ExecutionSummary("WRITE", verbose=verbose)
@@ -121,11 +124,11 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
         result, record = _run_orchestration_stage(operation="WRITE", name=table_name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose)
         stages.append(record)
         return result
-    schema_result = run("Schema", lambda: check_schema(dataframe, table_id=target_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
-    sensitive = run("Sensitive Data", lambda: check_sensitive_data(dataframe, table_id=target_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
+    schema_result = run("Schema", lambda: check_schema(dataframe, table_id=target_id, spark_session=spark_session, verbose=False))
+    sensitive = run("Sensitive Data", lambda: check_sensitive_data(dataframe, table_id=target_id, existing_mapping=existing_mapping, spark_session=spark_session, verbose=False))
     prepared = sensitive["dataframe"]
-    drift = run("Source Drift", lambda: [check_source_drift(source_id, target_table_id=target_id, raise_on_failure=True, spark_session=spark_session, verbose=False) for source_id in source_ids])
-    dq_result = run("Data Quality", lambda: check_dq(prepared, table_id=target_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
+    drift = run("Source Drift", lambda: [check_source_drift(source_id, target_table_id=target_id, spark_session=spark_session, verbose=False) for source_id in source_ids])
+    dq_result = run("Data Quality", lambda: check_dq(prepared, table_id=target_id, spark_session=spark_session, verbose=False))
     coverage = run("Guardrail Coverage", lambda: check_guardrail_coverage(target_table_id=target_id, source_table_ids=source_ids, spark_session=spark_session, verbose=False))
     common_results = {
         "table_id": target_id,

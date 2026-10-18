@@ -1,4 +1,4 @@
-"""Public source freshness guardrail check."""
+"""Internal source freshness guardrail check."""
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import resolve_fabric_context

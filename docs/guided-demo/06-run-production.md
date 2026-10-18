@@ -43,7 +43,7 @@ The key difference is Data Contract resolution:
 * Development can explicitly select an eligible frozen version for validation.
 * Production automatically resolves the single active Data Contract for each governed `table_id`.
 
-The same Guardrail functions therefore enforce the Production-active definition, and [`pipeline_write()`](../api/reference/pipeline_write.md) uses the active governed Processing configuration for each target.
+The same Guardrail functions therefore enforce the Production-active definition, and [`orchestrate_write()`](../api/reference/orchestrate_write.md) uses the active governed Processing configuration for each target.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="" loading="lazy">

@@ -732,7 +732,8 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
 
     if "setup_metadata_tables" in metadata_tables:
         assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in metadata_tables
-    assert "[`pipeline_read`](../../api/reference/pipeline_read.md)" in lineage_table
+    assert "[`orchestrate_read`](../../api/reference/orchestrate_read.md)" in lineage_table
+    assert "[`orchestrate_write`](../../api/reference/orchestrate_write.md)" in lineage_table
 
 
 def test_metadata_reference_overview_renders_model_diagram() -> None:

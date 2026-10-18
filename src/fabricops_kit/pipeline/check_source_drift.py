@@ -1,4 +1,4 @@
-"""Public Source Drift Guardrail check for a source-to-target relationship."""
+"""Internal Source Drift Guardrail check for a source-to-target relationship."""
 
 import json
 

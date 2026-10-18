@@ -1,4 +1,4 @@
-"""Public preparation-first Sensitive Data Guardrail enforcement."""
+"""Internal preparation-first Sensitive Data Guardrail enforcement."""
 
 from __future__ import annotations
 
@@ -57,13 +57,13 @@ def check_sensitive_data(
         ``dataframe`` contains every successfully applied treatment;
         ``support_mapping`` contains caller-owned token mappings, or ``None``;
         ``checks`` contains sanitized outcomes; and ``can_continue`` is false
-        only when a Block treatment fails. No mapping is persisted automatically.
+        when a configured treatment fails. No mapping is persisted automatically.
 
     Raises
     ------
     RuntimeError
         If ``dataframe`` is not a Spark DataFrame in the Fabric runtime, or
-        ``raise_on_failure=True`` and a Block treatment fails. Inspect ``checks``
+        ``raise_on_failure=True`` and a treatment fails. Inspect ``checks``
         and the governed treatment configuration before retrying.
 
     Notes
@@ -79,9 +79,8 @@ def check_sensitive_data(
     labels: values below the first bin use the first label, each later bin is an
     inclusive lower boundary, and values at or above the final bin use the final
     label. Bucket does not aggregate rows. ``remove`` drops the governed column.
-    Warn failures leave the input unchanged
-    for that rule and permit continuation, while Block failures require callers
-    to stop before writing. Raw values exist only in the returned support mapping
+    Every configured treatment must succeed before publication; failures block
+    the write regardless of the saved action. Raw values exist only in the returned support mapping
     and are excluded from ``METADATA_GUARDRAIL_RESULTS``.
 
     Examples

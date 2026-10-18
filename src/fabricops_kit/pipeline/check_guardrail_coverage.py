@@ -1,4 +1,4 @@
-"""Public pre-write Guardrail lifecycle-readiness validation."""
+"""Internal pre-write Guardrail lifecycle-readiness validation."""
 
 from __future__ import annotations
 

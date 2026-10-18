@@ -383,7 +383,7 @@ Likewise, Full does not automatically mean Overwrite. A Full source can still fe
 
 ## Contract and metadata lifecycle
 
-The notebook-facing setting is `write_mode`. FabricOps resolves that public Write Mode to the governed `load_strategy` stored in processing metadata and passed to the lower-level `pipeline_write()` implementation.
+The notebook-facing setting is `write_mode`. FabricOps resolves that public Write Mode to the governed `load_strategy` stored in processing metadata and applied by the internal physical Write stage within `orchestrate_write()`.
 
 The applicable Data Contract remains authoritative for governed processing. Development can propose processing settings; selected/frozen contract validation governs Development, and the active approved contract governs Production.
 
@@ -394,8 +394,8 @@ After successful publication, FabricOps persists the resolved target processing 
 - [Plug-and-Play Data Pipelines with Data Contract Enforcement](../solutions/plug-and-play-data-pipelines.md)
 - [`orchestrate_read()`](../api/reference/orchestrate_read.md)
 - [`orchestrate_write()`](../api/reference/orchestrate_write.md)
-- [`pipeline_read()`](../api/reference/pipeline_read.md)
-- [`pipeline_write()`](../api/reference/pipeline_write.md)
+- [`orchestrate_read()`](../api/reference/orchestrate_read.md)
+- [`orchestrate_write()`](../api/reference/orchestrate_write.md)
 - [Guided Demo: Full Read Pipeline](../guided-demo/02-build-and-run-etl.md)
 - [Guided Demo: Incremental → Append](../guided-demo/02B-build-and-run-incremental-append-etl.md)
 - [Guided Demo: SCD Type 1 vs Type 2](../guided-demo/02C-build-and-run-scd-etl.md)

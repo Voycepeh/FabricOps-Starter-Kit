@@ -68,8 +68,8 @@ Required describes the Python signature. An optional parameter may still be need
 | `store` | `str` | Yes | `—` | Configured source store key. |
 | `schema` | `str \| None` | Yes | `—` | Physical source schema. This keyword is required; pass None for a store without schemas. |
 | `table_name` | `str` | Yes | `—` | Physical source table name. |
-| `read_mode` | `str` | No | `'full'` | Source read behaviour forwarded to :func:`pipeline_read`. |
-| `query` | `str \| None` | No | `None` | Read-only Warehouse query forwarded to :func:`pipeline_read`. |
+| `read_mode` | `str` | No | `'full'` | Source read behaviour forwarded to the internal Read stage. |
+| `query` | `str \| None` | No | `None` | Read-only Warehouse query forwarded to the internal Read stage. |
 | `read_parameters` | `dict[str, Any] \| None` | No | `None` | Incremental configuration, for example {"watermark_column": "modified_datetime"}. A selected Data Contract must agree with the supplied watermark. Required for incremental mode when no selected contract supplies the watermark. |
 | `target_table_id` | `str \| None` | No | `None` | Governed target identity required for incremental reads. |
 | `frequency_enabled` | `bool` | No | `True` | Whether to calculate frequency distributions for this table. |
@@ -93,7 +93,7 @@ orders_df = source["dataframe"]
 ## Returns
 
 dict
-    The ``pipeline_read`` result, including ``dataframe`` and ``table_id``,
+    The source-read result, including ``dataframe`` and ``table_id``,
     plus capability results and ``orchestration_stages``. ``read_metrics``
     contains ``rows_read`` and ``columns`` (None when unavailable).
     ``total_duration_seconds`` is the full lifecycle wall-clock duration.
@@ -142,7 +142,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 143 |
+| Live-critical dependencies | 147 |
 
 ### Release history
 
@@ -190,10 +190,14 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
+<li><code>fabricops_kit.pipeline.check_dq.check_dq</code></li>
+<li><code>fabricops_kit.pipeline.check_freshness.check_freshness</code></li>
+<li><code>fabricops_kit.pipeline.check_schema.check_schema</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._filter_lakehouse_incremental</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._resolve_requested_incremental_columns</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._warehouse_incremental_query</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._warehouse_watermark_literal</code></li>
+<li><code>fabricops_kit.pipeline.pipeline_read.pipeline_read</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._audit_literal_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._automatic_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe</code></li>

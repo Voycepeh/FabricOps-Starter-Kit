@@ -6,15 +6,18 @@ import inspect
 
 import pytest
 
-from fabricops_kit import check_dq, check_freshness, check_schema, check_sensitive_data
+from fabricops_kit.pipeline.check_dq import check_dq
+from fabricops_kit.pipeline.check_freshness import check_freshness
+from fabricops_kit.pipeline.check_schema import check_schema
+from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
 from fabricops_kit.pipeline import shared as shared_module
 from fabricops_kit.pipeline.shared import print_guardrail_result
 
 pytestmark = pytest.mark.unit
 
 
-def test_dataframe_guardrail_public_signatures_are_consistent() -> None:
-    """DataFrame checks use a DataFrame-first interface and shared controls."""
+def test_internal_guardrail_stage_controls_are_consistent() -> None:
+    """Internal DataFrame stages accept the shared runtime controls."""
     assert str(inspect.signature(check_schema)) == (
         "(dataframe=None, *, table_id: str, enabled: bool = True, "
         "raise_on_failure: bool = False, spark_session=None, verbose: bool = True) -> dict"

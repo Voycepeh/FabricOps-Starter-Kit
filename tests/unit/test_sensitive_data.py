@@ -126,11 +126,11 @@ def test_bucket_uses_open_ends_and_inclusive_lower_boundaries(monkeypatch, spark
     ("bucket", {"bins": [0, 10], "labels": ["low"]}, "double"),
     ("bucket", {"bins": [0, 10], "labels": ["low", "high"]}, "string"),
 ])
-@pytest.mark.parametrize("action,can_continue", [("Warn", True), ("Block", False)])
+@pytest.mark.parametrize("action,can_continue", [("Warn", False), ("Block", False)])
 def test_invalid_mask_or_bucket_policy_respects_action(
     monkeypatch, spark_session, treatment, parameters, column_type, action, can_continue
 ):
-    """Malformed policy and incompatible bucket input fail with Warn/Block semantics."""
+    """Malformed treatments block even when persisted intent still says Warn."""
     _runtime(monkeypatch, [_rule(treatment=treatment, action=action, parameters=parameters)], [])
     value = "not-numeric" if column_type == "string" else 1.0
     frame = spark_session.createDataFrame([(1, value)], f"id int, email {column_type}")
@@ -195,9 +195,9 @@ def test_remove_drops_only_sensitive_column(monkeypatch, spark_session):
     assert result["support_mapping"] is None
 
 
-@pytest.mark.parametrize("action,can_continue,status", [("Warn", True, "warning"), ("Block", False, "failed")])
+@pytest.mark.parametrize("action,can_continue,status", [("Warn", False, "failed"), ("Block", False, "failed")])
 def test_missing_column_respects_normalized_action(monkeypatch, spark_session, action, can_continue, status):
-    """A failed treatment never claims success and only Block stops continuation."""
+    """Every failed treatment blocks and persists the effective Block action."""
     writes = []
     _runtime(monkeypatch, [_rule(action=action, column_name="missing")], writes)
     frame = spark_session.createDataFrame([(1, "a@example.test")], ["id", "email"])
@@ -206,6 +206,9 @@ def test_missing_column_respects_normalized_action(monkeypatch, spark_session, a
     assert result["status"] == status
     assert result["dataframe"].collect() == frame.collect()
     assert writes[0]["status"] == status
+    assert writes[0]["action"] == "Block"
+    assert writes[0]["severity"] == "blocking"
+    assert writes[0]["can_continue"] is False
 
 
 def test_exact_contract_rules_are_supplied_by_canonical_resolver(monkeypatch, spark_session):

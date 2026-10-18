@@ -1,4 +1,4 @@
-"""Public governed data-quality runtime check."""
+"""Internal governed data-quality runtime check."""
 
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session

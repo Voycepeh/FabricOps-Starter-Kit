@@ -11,7 +11,8 @@ import pytest
 
 freshness = importlib.import_module("fabricops_kit.pipeline.check_freshness")
 drift = importlib.import_module("fabricops_kit.pipeline.check_source_drift")
-from fabricops_kit import check_freshness, check_source_drift
+from fabricops_kit.pipeline.check_freshness import check_freshness
+from fabricops_kit.pipeline.check_source_drift import check_source_drift
 from fabricops_kit.pipeline import shared
 
 

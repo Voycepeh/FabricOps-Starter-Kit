@@ -277,7 +277,7 @@ print(writes["target"]["total_duration_seconds"])
 
 ??? tip "A summary is missing in Microsoft Fabric"
 
-    Confirm the call uses `orchestrate_read()` or `orchestrate_write()` with `verbose=True`; direct `pipeline_read()` and `pipeline_write()` calls have their own output. Summaries print to driver stdout after successful execution. A failed stage does not print a successful final summary.
+    Confirm the call uses `orchestrate_read()` or `orchestrate_write()` with `verbose=True`; Read, Write and Guardrail stages are internal to those public orchestrators. Summaries print to driver stdout after successful execution. A failed stage does not print a successful final summary.
 
     Fabric runs the package installed in the notebook's Environment, which can differ from repository `main`. Check the imported package and function source in the running session:
 

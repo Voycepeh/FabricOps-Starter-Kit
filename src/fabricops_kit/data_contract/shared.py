@@ -551,7 +551,7 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, e
         "rule_id": str(record.get("rule_id") or "").strip(),
         "rule_type": str(record.get("rule_type") or "").strip(),
         "rule_parameters_json": json.dumps(parameters, default=str, sort_keys=True, separators=(",", ":")),
-        "action": normalize_guardrail_action(record.get("action")),
+        "action": "Block" if guardrail_type in {"schema", "sensitive_data"} else normalize_guardrail_action(record.get("action")),
         "is_active": bool(record.get("is_active", True)),
         **audit,
     }
@@ -1461,6 +1461,8 @@ def assemble_contract_payload(
     for row in guardrails:
         item = _fields(row, ("guardrail_rule_id", "guardrail_version", "contract_id", "contract_version", "column_id", "guardrail_type", "rule_id", "rule_type", "action", "severity"))
         item["is_active"] = bool(row.get("is_active", True))
+        if str(row.get("guardrail_type") or "").strip().lower() in {"schema", "sensitive_data"}:
+            item["action"] = "Block"
         parameters = _json_value(row.get("rule_parameters_json"), field="rule_parameters_json", default={})
         if not isinstance(parameters, dict):
             raise ValueError("rule_parameters_json must contain a JSON object.")

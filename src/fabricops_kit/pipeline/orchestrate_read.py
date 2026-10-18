@@ -22,9 +22,9 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     table_name : str
         Physical source table name.
     read_mode : {"full", "incremental"}, default="full"
-        Source read behaviour forwarded to :func:`pipeline_read`.
+        Source read behaviour forwarded to the internal Read stage.
     query : str, optional
-        Read-only Warehouse query forwarded to :func:`pipeline_read`.
+        Read-only Warehouse query forwarded to the internal Read stage.
     read_parameters : dict, optional
         Incremental configuration, for example {"watermark_column": "modified_datetime"}.
         A selected Data Contract must agree with the supplied watermark. Required
@@ -43,7 +43,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     Returns
     -------
     dict
-        The ``pipeline_read`` result, including ``dataframe`` and ``table_id``,
+        The source-read result, including ``dataframe`` and ``table_id``,
         plus capability results and ``orchestration_stages``. ``read_metrics``
         contains ``rows_read`` and ``columns`` (None when unavailable).
         ``total_duration_seconds`` is the full lifecycle wall-clock duration.
@@ -70,7 +70,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
 
     See Also
     --------
-    pipeline_read, check_freshness, check_schema, check_dq, profile_table
+    orchestrate_write, profile_table
 
     """
     summary = ExecutionSummary("READ", verbose=verbose)
@@ -89,9 +89,9 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     metrics.setdefault("columns", len(columns) if columns is not None else None)
     summary.details([("Physical reader", reader_name), ("Rows read", metrics["rows_read"]), ("Columns", metrics["columns"])])
     dataframe, table_id = source["dataframe"], source["table_id"]
-    freshness = run(2, "Freshness", lambda: check_freshness(table_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
-    schema_result = run(3, "Schema", lambda: check_schema(dataframe, table_id=table_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
-    dq_result = run(4, "Data Quality", lambda: check_dq(dataframe, table_id=table_id, raise_on_failure=True, spark_session=spark_session, verbose=False))
+    freshness = run(2, "Freshness", lambda: check_freshness(table_id, spark_session=spark_session, verbose=False))
+    schema_result = run(3, "Schema", lambda: check_schema(dataframe, table_id=table_id, spark_session=spark_session, verbose=False))
+    dq_result = run(4, "Data Quality", lambda: check_dq(dataframe, table_id=table_id, spark_session=spark_session, verbose=False))
     profile = run(5, "Profile", lambda: profile_table(dataframe=dataframe, store=store, schema=schema, table_name=table_name, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session) if read_mode == "full" else {"status": "skipped", "reason": "Incremental batch"})
     if metrics["rows_read"] is None and read_mode == "full":
         metrics["rows_read"] = profile.get("row_count")

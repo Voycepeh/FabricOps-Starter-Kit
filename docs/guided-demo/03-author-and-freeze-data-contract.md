@@ -49,11 +49,11 @@ widget_data_contract()
 
 The editor uses the selected table's Catalogue and latest Profile as authoring evidence.
 
-For `orders`, enable **Freshness**, **Schema**, and **Source Drift**. Use `modified_datetime` as the Freshness evidence column and keep the allowed age comfortably above the canonical baseline's normal age. Configure Source Drift for the source's normal overwrite behavior. Keep these rules on **Warn** for the first integration run.
+For `orders`, enable **Freshness**, **Schema**, and **Source Drift**. Use `modified_datetime` as the Freshness evidence column and keep the allowed age comfortably above the canonical baseline's normal age. Configure Source Drift for the source's normal overwrite behavior. Keep Freshness and Source Drift on **Warn** for the first integration run. Schema blocks missing Required columns and contracted datatype mismatches.
 
 For `products` and `order_history`, a Schema rule is sufficient for this exercise. Their purpose is to make the complete `curated_orders` source → target path Guardrail-ready without inventing unrelated business rules.
 
-For `curated_orders`, enable **Schema**, add one **Sensitive Data** treatment on `customer_id` (Mask is the easiest treatment to inspect), and author the complete DQ rules below. Keep Schema and DQ on **Warn** for the first dirty run. Sensitive Data is a treatment guardrail: the integration proof is that the treatment is actually applied before DQ/publication, not that valid sensitive data is rejected.
+For `curated_orders`, enable **Schema**, add one **Sensitive Data** treatment on `customer_id` (Mask is the easiest treatment to inspect), and author the complete DQ rules below. Keep DQ on **Warn** for the first dirty run. Schema always blocks missing Required columns and datatype mismatches; additional columns warn and continue. Sensitive Data treatment failures always block. Sensitive Data is a treatment guardrail: the integration proof is that the treatment is actually applied before DQ/publication, not that valid sensitive data is rejected.
 
 For this walkthrough, keep every DQ rule **Enabled** but leave **Block on failure** off. Step 4 intentionally breaks every DQ behavior in one validation run; Warn lets FabricOps report all of them instead of stopping at the first blocking failure.
 

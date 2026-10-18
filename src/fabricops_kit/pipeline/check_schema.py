@@ -1,4 +1,4 @@
-"""Public schema guardrail check."""
+"""Internal schema guardrail check."""
 
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_query
 

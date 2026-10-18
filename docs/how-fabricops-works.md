@@ -67,6 +67,8 @@
 
 **FabricOps turns Governance and Engineering into one executable cycle around the same `table_id`.**
 
+Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read()` and `orchestrate_write()`; those entrypoints resolve the contract, run the applicable checks and treatments, record Guardrail Results, and decide whether execution can continue. Project-owned transformations stay between Read and Write.
+
 - **Engineering** records observed data and profiling metadata.
 - **Governance** uses that evidence to author a versioned **Data Contract**.
 - **Engineering** validates the pipeline against the frozen contract.
@@ -90,13 +92,13 @@
         | --- | --- | --- |
         | Establish Governance context | [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md), [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) | `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT` |
         | Register and profile the table | [`profile_table()`](api/reference/profile_table.md) | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md) |
-        | Record pipeline state | [`pipeline_read()`](api/reference/pipeline_read.md), [`pipeline_write()`](api/reference/pipeline_write.md) | [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_SOURCE_OBSERVATION`](reference/metadata/metadata_source_observation.md) |
+        | Record pipeline state | [`orchestrate_read()`](api/reference/orchestrate_read.md), [`orchestrate_write()`](api/reference/orchestrate_write.md) | [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_SOURCE_OBSERVATION`](reference/metadata/metadata_source_observation.md) |
         | Author and activate the Data Contract | [`widget_data_contract()`](api/reference/widget_data_contract.md) | [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) |
-        | Enforce Guardrails | [`check_schema()`](api/reference/check_schema.md), [`check_freshness()`](api/reference/check_freshness.md), [`check_source_drift()`](api/reference/check_source_drift.md), [`check_dq()`](api/reference/check_dq.md), [`check_sensitive_data()`](api/reference/check_sensitive_data.md) | [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) |
+        | Enforce Guardrails | [Schema stage](api/reference/orchestrate_read.md), [Freshness stage](api/reference/orchestrate_read.md), [Source Drift stage](api/reference/orchestrate_write.md), [Data Quality stage](api/reference/orchestrate_read.md), [Sensitive Data stage](api/reference/orchestrate_write.md) | [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) |
 
         `table_id` connects the physical table, Engineering observations, and governed definition.
 
-        Some Guardrails also return caller-owned row-level support DataFrames. FabricOps does not persist these automatically: `check_dq()` can return `failed_values`, while `check_sensitive_data()` can return a token `support_mapping`. See the [Metadata reference](reference/metadata.md) for the full table schemas, relationships, access metadata, and runtime-output details.
+        Some Guardrails also return caller-owned row-level support DataFrames. FabricOps does not persist these automatically: the orchestrators return DQ `failed_values` inside `dq_result`, and Write returns token `support_mapping` inside `sensitive_result`. See the [Metadata reference](reference/metadata.md) for the full table schemas, relationships, access metadata, and runtime-output details.
 
 ---
 

@@ -1438,7 +1438,7 @@ def check_sensitive_data_rules(
     mappings = []
     checks = []
     for rule in rules:
-        action = str(rule.get("action") or "Warn").strip().title()
+        action = "Block"
         column_id = str(rule.get("column_id") or "").strip()
         column_name = str(rule.get("column_name") or "").strip()
         treatment = ""
@@ -1446,8 +1446,6 @@ def check_sensitive_data_rules(
         try:
             params = validate_sensitive_data_parameters(_parameters(rule))
             treatment = params["treatment"]
-            if action not in {"Warn", "Block"}:
-                raise ValueError("Sensitive Data action must be Warn or Block.")
             if not column_id or not column_name:
                 raise ValueError("Sensitive Data Guardrail has an unresolved column identity or invalid scope.")
             if column_name not in transformed.columns:
@@ -1472,7 +1470,7 @@ def check_sensitive_data_rules(
         except Exception:
             error = f"{treatment.title() or 'Sensitive Data'} treatment could not be applied."
         passed = not error
-        can_continue = passed or action == "Warn"
+        can_continue = passed
         check = {
             "guardrail_rule_id": str(rule.get("guardrail_rule_id") or rule.get("rule_id") or ""),
             "guardrail_version": int(rule.get("guardrail_version") or 1),
@@ -1482,9 +1480,9 @@ def check_sensitive_data_rules(
             "column_id": column_id,
             "treatment": treatment,
             "action": action,
-            "status": "passed" if passed else ("warning" if can_continue else "failed"),
+            "status": "passed" if passed else "failed",
             "can_continue": can_continue,
-            "severity": "warning" if action == "Warn" else "blocking",
+            "severity": "blocking",
             "reason": "Treatment applied." if passed else error,
         }
         checks.append(check)
@@ -2329,7 +2327,7 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
                     for column in params["required_columns"]
                 ]
         adapted.append({
-            **{name: value for name, value in raw.items() if name != "rule_parameters"},
+            **{name: value for name, value in raw.items() if name not in {"rule_parameters", "severity"}},
             "table_id": table_id,
             "column_name": column_names_by_id.get(str(raw.get("column_id") or ""), ""),
             "environment_name": environment_name,
