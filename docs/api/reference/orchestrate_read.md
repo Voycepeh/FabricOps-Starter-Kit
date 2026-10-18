@@ -94,7 +94,9 @@ orders_df = source["dataframe"]
 
 dict
     The ``pipeline_read`` result, including ``dataframe`` and ``table_id``,
-    plus capability results and ``orchestration_stages``.
+    plus capability results and ``orchestration_stages``. ``read_metrics``
+    contains ``rows_read`` and ``columns`` (None when unavailable).
+    ``total_duration_seconds`` is the full lifecycle wall-clock duration.
 
 ## Raises / Errors
 
@@ -109,6 +111,9 @@ RuntimeError
 Stages run as Read, Freshness, Schema, Data Quality, and Profile, matching
 canonical ``02_pipeline``. Skipped capability results remain skipped.
 DataFrames are never displayed. Incremental batches are not profiled.
+With verbose=True, successful execution ends with a READ Summary on stdout.
+Counts reuse existing profiling results; no Spark action is added for
+reporting. An unavailable count is printed as ``Not available``.
 
 </div>
 
@@ -121,7 +126,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:12`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L12-L87">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L12-L102">View on GitHub</a>
 </div>
 
 

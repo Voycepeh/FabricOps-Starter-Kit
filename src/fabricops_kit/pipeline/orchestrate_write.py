@@ -9,7 +9,7 @@ from fabricops_kit.pipeline.check_source_drift import check_source_drift
 from fabricops_kit.pipeline.pipeline_write import pipeline_write
 from fabricops_kit.pipeline.profile_table import profile_table
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
-from fabricops_kit.pipeline.shared import _run_orchestration_stage
+from fabricops_kit.pipeline.shared import ExecutionSummary, _run_orchestration_stage
 
 
 def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session=None, verbose: bool = True) -> dict[str, Any]:
@@ -58,7 +58,12 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
         and Enforce modes. It is the Write input, not necessarily the persisted
         target after Append, SCD1, or SCD2. ``sensitive_result`` retains its
         nested ``dataframe`` result. ``published`` is false when a Validate-mode
-        contract passes without publication.
+        contract passes without publication. ``write_metrics`` retains the
+        ``pipeline_write`` measurements, with ``total_target_rows`` reused from
+        persisted-target profiling when available. It never treats prepared
+        input rows or profiled target rows as committed rows.
+        ``total_duration_seconds`` measures the complete lifecycle, including
+        Guardrails, metadata finalization, and profiling.
 
     Raises
     ------
@@ -75,7 +80,9 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     ``pipeline_write``. The returned ``dataframe`` is the prepared Write input,
     not a reread of the persisted target; Append, SCD1, and SCD2 may produce a
     different target state. No DataFrame is displayed or materialized for this
-    return value.
+    return value. With verbose=True, every successful execution prints a final
+    WRITE Summary to stdout, including Validate-only runs. Unavailable row
+    metrics print as ``Not available``. Reporting adds no Spark actions.
 
     Examples
     --------
@@ -98,6 +105,8 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     check_dq, check_guardrail_coverage, profile_table
 
     """
+    summary = ExecutionSummary("WRITE", verbose=verbose)
+    target = ".".join(str(part) for part in (store, schema, table_name) if part)
     source_ids = [source["table_id"] for source in sources]
     target_id = resolve_table_id(store=store, schema=schema, table_name=table_name)
     contract = (contracts or {}).get("tables", {}).get(target_id) or {}
@@ -128,20 +137,35 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
         "orchestration_stages": stages,
     }
     if contract_mode == "validate":
+        columns = getattr(prepared, "columns", None)
+        metrics = {"input_columns": len(columns) if columns is not None else None, "input_rows": None, "rows_committed": 0, "total_target_rows": None,
+                   "rows_inserted": 0, "rows_updated": 0, "rows_unchanged": None,
+                   "versions_inserted": 0, "versions_expired": 0,
+                   "measurement_source": "validation_only"}
+        duration = summary.finish([("Target", target), ("Strategy", write_mode.title()), ("Published", "No"), ("Rows committed", 0)])
         return {
+            "write_metrics": metrics,
+            "strategy": write_mode,
+            "total_duration_seconds": duration,
             **common_results,
             "dataframe": prepared,
             "published": False,
             "validation_passed": True,
         }
     write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=write_mode, load_strategy_parameters=write_parameters, source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False))
-    if verbose:
-        target = ".".join(str(part) for part in (store, schema, table_name) if part)
-        print(f"   Strategy → {write_mode.upper()}")
-        print(f"   Target → {target}")
-        columns = getattr(prepared, "columns", None)
-        if columns is not None:
-            print(f"   Input columns → {len(columns)}")
-        print("   Rows written → not measured")
+    metrics = dict(write_result.get("write_metrics") or {})
+    for key in ("input_rows", "rows_committed", "total_target_rows", "rows_inserted", "rows_updated", "rows_unchanged", "versions_inserted", "versions_expired", "measurement_source"):
+        metrics.setdefault(key, None)
+    strategy = write_result.get("strategy", write_mode)
+    columns = getattr(prepared, "columns", None)
+    metrics.setdefault("input_columns", len(columns) if columns is not None else None)
+    summary.details([("Strategy", strategy.title()), ("Target", target), ("Rows committed", metrics["rows_committed"]), ("Columns", metrics["input_columns"])])
     profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session))
-    return {**common_results, **write_result, "dataframe": prepared, "published": True, "profile_result": profile}
+    metrics["total_target_rows"] = profile.get("row_count")
+    fields = [("Target", target), ("Strategy", strategy.title()), ("Published", "Yes"), ("Rows committed", metrics["rows_committed"])]
+    if strategy == "scd1":
+        fields.extend((label, metrics[key]) for label, key in (("Rows inserted", "rows_inserted"), ("Rows updated", "rows_updated"), ("Rows unchanged", "rows_unchanged")))
+    elif strategy == "scd2":
+        fields.extend((label, metrics[key]) for label, key in (("Versions inserted", "versions_inserted"), ("Versions expired", "versions_expired"), ("Rows unchanged", "rows_unchanged")))
+    duration = summary.finish(fields)
+    return {**common_results, **write_result, "write_metrics": metrics, "total_duration_seconds": duration, "dataframe": prepared, "published": True, "profile_result": profile}

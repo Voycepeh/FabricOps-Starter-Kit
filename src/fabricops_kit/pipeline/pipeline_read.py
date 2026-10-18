@@ -148,6 +148,9 @@ def pipeline_read(
     Returns
     -------
     dict
+        ``read_metrics`` contains ``rows_read`` (zero for a known empty
+        incremental scope, otherwise None) and ``columns`` from schema metadata.
+        No count is triggered for reporting.
         A deliberately small result with these fields:
 
         - ``dataframe``: the Spark DataFrame returned by the selected
@@ -402,6 +405,10 @@ def pipeline_read(
         print("Result → DataFrame returned; checks, profiling, transformations, and writes remain explicit.")
 
     return {
+        "read_metrics": {
+            "rows_read": 0 if scope.get("has_data") is False else None,
+            "columns": len(dataframe.columns) if hasattr(dataframe, "columns") else None,
+        },
         "dataframe": dataframe,
         "_reader_name": reader_name,
         "table_id": str(identity["table_id"]),

@@ -352,7 +352,7 @@ def pipeline_write(
     options: dict[str, Any] | None = None,
     spark_session=None,
     verbose: bool = True,
-) -> dict[str, str]:
+) -> dict[str, Any]:
     """Publish one governed pipeline table target through its configured Fabric store.
 
     ``pipeline_write`` is the governed pipeline-orchestration equivalent of
@@ -407,7 +407,17 @@ def pipeline_write(
     Returns
     -------
     dict
-        A deliberately small result containing only the canonical ``table_id``.
+        The canonical ``table_id``, resolved ``strategy``, and ``write_metrics``.
+        Metrics use integers when reliably measured and None otherwise:
+        ``input_rows``, ``input_columns``, ``rows_committed``, ``total_target_rows``,
+        ``rows_inserted``, ``rows_updated``, ``rows_unchanged``,
+        ``versions_inserted``, and ``versions_expired``. ``measurement_source``
+        identifies Delta commit metadata or an already-applied retry.
+        Committed rows describe this invocation's physical publication only.
+        An already-applied append/overwrite retry reports zero new commits.
+        Warehouse connector and SCD merge metrics remain unavailable: audit-only
+        updates cannot be interpreted as business changes. No reporting count,
+        target scan, or additional Spark job is performed.
         Profile the persisted target through an explicit read-back rather than
         treating the input DataFrame as persisted state.
 
@@ -565,7 +575,15 @@ def pipeline_write(
     if identity.get("schema"):
         target_parts.append(f"Schema: {identity['schema']}")
     target_parts.append(f"Table: {identity['table_name']}")
-    io_context = {**context, "_fabricops_suppress_io_log": True}
+    input_columns = getattr(df, "columns", None)
+    write_metrics = {
+        "input_columns": len(input_columns) if input_columns is not None else None,
+        "input_rows": None, "rows_committed": None, "total_target_rows": None,
+        "rows_inserted": None, "rows_updated": None, "rows_unchanged": None,
+        "versions_inserted": None, "versions_expired": None,
+        "measurement_source": None,
+    }
+    io_context = {**context, "_fabricops_suppress_io_log": True, "_fabricops_write_metrics": write_metrics}
     physical_options = dict(options or {})
     if incremental_scopes and strategy == "overwrite":
         raise ValueError(
@@ -635,6 +653,7 @@ def pipeline_write(
     )
 
     if physical_already_applied and strategy not in {"scd1", "scd2"}:
+        write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="already_applied")
         if verbose:
             print("5. Physical publication → already succeeded; resuming metadata finalization")
     elif store_kind == "lakehouse":
@@ -658,7 +677,7 @@ def pipeline_write(
                 schema=identity.get("schema"),
                 processing=physical_processing,
                 scope=scope,
-                context=context,
+                context=io_context,
             )
         else:
             raise ValueError(f"Unsupported governed load strategy {strategy!r}.")
@@ -709,4 +728,10 @@ def pipeline_write(
         print("7. Success metadata → Lineage and accepted Source Observation state committed")
         print("Result → target published; checks and profiling remain explicit notebook steps.")
 
-    return {"table_id": str(identity["table_id"])}
+    if strategy in {"scd1", "scd2"} and write_metrics["rows_committed"] is not None:
+        if strategy == "scd1":
+            write_metrics["rows_inserted"] = write_metrics["rows_committed"]
+        else:
+            write_metrics["versions_inserted"] = write_metrics["rows_committed"]
+        write_metrics["rows_updated" if strategy == "scd1" else "versions_expired"] = 0
+    return {"table_id": str(identity["table_id"]), "strategy": strategy, "write_metrics": write_metrics}

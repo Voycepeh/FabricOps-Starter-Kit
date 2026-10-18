@@ -113,7 +113,7 @@ def test_orchestrate_read_reports_selected_physical_reader(capsys):
         )
 
     assert "_reader_name" not in actual
-    assert "      Physical read → read_warehouse_table" in capsys.readouterr().out
+    assert "Physical reader → read_warehouse_table" in capsys.readouterr().out
 
 
 def test_orchestrate_read_attributes_failure_and_stops_later_stages():
@@ -154,9 +154,9 @@ def test_orchestrate_write_orders_stages_and_profiles_after_write(capsys):
     assert {stage["name"] for stage in actual["orchestration_stages"]} == {"physical_target"}
     output = capsys.readouterr().out
     assert "FabricOps WRITE · physical_target" in output
-    assert "Strategy → OVERWRITE" in output
-    assert "Target → Silver.demo.physical_target" in output
-    assert "Rows written → not measured" in output
+    assert "Strategy        → Overwrite" in output
+    assert "Target          → Silver.demo.physical_target" in output
+    assert "Rows committed  → Not available" in output
 
 
 def test_orchestrate_write_forwards_scd_write_parameters(capsys):
@@ -246,6 +246,7 @@ def test_failed_stage_output_never_reports_passed_and_marks_later_stages_not_run
     assert "[3/5] Schema ... ✗ Failed" in output
     assert "[3/5] Schema ... ✓ Passed" not in output
     assert "Later stages did not run." in output
+    assert "FabricOps READ Summary" not in output
 
 
 @pytest.mark.parametrize(
@@ -276,7 +277,7 @@ def test_orchestration_status_aggregates_multi_source_results():
     assert _orchestration_status([{"status": "passed"}, {"status": "blocked"}]) == "blocked"
 
 
-def test_validate_runs_enforce_guardrails_then_skips_write_and_profile():
+def test_validate_runs_enforce_guardrails_then_skips_write_and_profile(capsys):
     """Validate is the enforcement Guardrail path with publication omitted."""
     from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
 
@@ -323,9 +324,12 @@ def test_validate_runs_enforce_guardrails_then_skips_write_and_profile():
             table_name="target",
             write_mode="overwrite",
             contracts=contracts,
-            verbose=False,
         )
 
+    output = capsys.readouterr().out
+    assert "FabricOps WRITE Summary" in output
+    assert "Published       → No" in output
+    assert result["write_metrics"]["rows_committed"] == 0
     assert calls == ["schema", "sensitive", "drift", "dq", "coverage"]
     assert result["published"] is False
     assert result["validation_passed"] is True
@@ -380,6 +384,7 @@ def test_validate_guardrail_failure_matches_enforce_and_stops_publication(capsys
     assert "[4/5] Data Quality ... ✗ Failed" in output
     assert "[4/5] Data Quality ... ✓ Passed" not in output
     assert "Later stages did not run." in output
+    assert "FabricOps READ Summary" not in output
     assert raised.value.__cause__ is cause
     write.assert_not_called()
 

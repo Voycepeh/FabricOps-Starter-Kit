@@ -5,6 +5,7 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any, Mapping
 import re
+import json
 import tempfile
 from uuid import uuid4
 
@@ -333,6 +334,92 @@ def write_delta_path(df, path: str, *, mode: str, partition_by=None, options: di
         writer = writer.option(key, value)
     writer.save(path)
 
+
+
+class DeltaCommitMetrics:
+    """Read a tagged commit using bounded Hadoop metadata IO, never Spark jobs.
+
+    Only the latest JSON commit is inspected. Concurrent commits, inaccessible
+    logs, exhausted probe budgets, and runtimes without Hadoop access yield no
+    measurement. A unique writer option binds metrics to this physical attempt.
+    """
+
+    def __init__(self):
+        """Create an independent identity for one physical write attempt."""
+        self.token = f"fabricops-metrics:{uuid4()}"
+
+    def read(self, spark, path):
+        """Return exact WRITE output rows or None when attribution is unavailable."""
+        reader = None
+        try:
+            jvm = spark._jvm
+            log = jvm.org.apache.hadoop.fs.Path(path.rstrip("/") + "/_delta_log")
+            fs = log.getFileSystem(spark._jsc.hadoopConfiguration())
+            # Exact path probes avoid Hadoop iterators that eagerly list the
+            # entire directory. Checkpoints normally put us close to the head.
+            checkpoint = jvm.org.apache.hadoop.fs.Path(path.rstrip("/") + "/_delta_log/_last_checkpoint")
+            low = 0
+            if fs.exists(checkpoint):
+                checkpoint_reader = jvm.java.io.BufferedReader(jvm.java.io.InputStreamReader(fs.open(checkpoint), "UTF-8"))
+                try:
+                    line = checkpoint_reader.readLine()
+                    if line is None or len(line) > 65536:
+                        return None
+                    version = json.loads(str(line)).get("version")
+                    if type(version) is not int or version < 0:
+                        return None
+                    low = version
+                finally:
+                    checkpoint_reader.close()
+            base = low
+            distance = 1
+            # At most 16 exponential and 16 binary probes, regardless of log size.
+            for _ in range(16):
+                high = base + distance
+                candidate = jvm.org.apache.hadoop.fs.Path(path.rstrip("/") + f"/_delta_log/{high:020d}.json")
+                if not fs.exists(candidate):
+                    break
+                low = high
+                distance *= 2
+            else:
+                return None
+            for _ in range(16):
+                if high - low <= 1:
+                    break
+                middle = (low + high) // 2
+                candidate = jvm.org.apache.hadoop.fs.Path(path.rstrip("/") + f"/_delta_log/{middle:020d}.json")
+                if fs.exists(candidate):
+                    low = middle
+                else:
+                    high = middle
+            else:
+                return None
+            latest = jvm.org.apache.hadoop.fs.Path(path.rstrip("/") + f"/_delta_log/{low:020d}.json")
+            reader = jvm.java.io.BufferedReader(jvm.java.io.InputStreamReader(fs.open(latest), "UTF-8"))
+            # commitInfo normally precedes file actions. Bound remote reads.
+            for _ in range(64):
+                line = reader.readLine()
+                if line is None or len(line) > 65536:
+                    return None
+                info = json.loads(str(line)).get("commitInfo")
+                if info is None:
+                    continue
+                if info.get("userMetadata") != self.token or info.get("operation") != "WRITE":
+                    return None
+                value = (info.get("operationMetrics") or {}).get("numOutputRows")
+                if isinstance(value, bool) or not re.fullmatch(r"[0-9]+", str(value)):
+                    return None
+                return int(value)
+        except Exception:
+            # Observability must never turn a successful publication into failure.
+            return None
+        finally:
+            if reader is not None:
+                try:
+                    reader.close()
+                except Exception:
+                    pass
+        return None
 
 def configured_lakehouse_schema(config: Any, env: str, store: str) -> str | None:
     """Return the configured schema for a schema-enabled Lakehouse store."""
