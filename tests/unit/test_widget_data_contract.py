@@ -472,6 +472,53 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert "Unsaved changes discarded" in state["message"]
 
 
+@pytest.mark.parametrize("versions, expected", [([], "new"), ([3, 2, 1], "3")])
+def test_contract_selector_defaults_to_latest_version_or_new_draft(
+    widget_runtime, monkeypatch, versions, expected
+):
+    """Tables without versions start a draft; versioned tables default to the latest."""
+    monkeypatch.setattr(
+        module.contracts,
+        "list_contract_governance_state",
+        lambda **_kwargs: {
+            "tables": [widget_runtime["catalogue"][0]],
+            "contracts": [
+                {**widget_runtime["contract"], "contract_version": version}
+                for version in versions
+            ],
+        },
+    )
+    state = module.widget_data_contract()
+    controls = state["_controls"]
+    controls["store"].value = "Silver"
+    controls["table_search"].value = "orders"
+
+    assert controls["contract"].value == expected
+    assert state["pending_contract_version"] == (None if expected == "new" else int(expected))
+    assert [value for _label, value in controls["contract"].options] == [
+        *map(str, versions), "new"
+    ]
+    assert controls["contract_search"].options[-1] == "New draft"
+
+
+def test_initial_table_search_does_not_filter_by_selection_prompt(widget_runtime):
+    """An unselected table field leaves all registered table suggestions visible."""
+    widget_runtime["catalogue"][0].update(layer="Bronze", schema_name="demo")
+    state = module.widget_data_contract()
+    controls = state["_controls"]
+
+    assert controls["store"].value == "Bronze"
+    assert controls["schema"].value == "demo"
+    assert controls["table"].value == ""
+    assert controls["table_search"].value == ""
+    assert "orders" in controls["table_search"].options
+    assert state["pending_table_id"] is None
+
+    controls["table_search"].value = "orders"
+    assert controls["table"].value == "orders"
+    assert state["pending_table_id"] == "orders"
+
+
 def test_selector_refresh_is_atomic_after_observers_are_registered(
     widget_runtime, monkeypatch
 ):
@@ -504,6 +551,8 @@ def test_selector_refresh_is_atomic_after_observers_are_registered(
     assert state["_selector_refreshing"] is False
     assert controls["schema"].value == "ops"
     assert controls["table"].value == ""
+    assert controls["table_search"].value == ""
+    assert controls["table_search"].options == ["Select governed table", "inventory"]
     assert controls["contract"].value == "new"
     assert state["pending_table_id"] is None
     assert state["pending_contract_version"] is None

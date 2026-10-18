@@ -435,7 +435,7 @@ def render_searchable_selector(
     def _sync_visible_value() -> None:
         nonlocal syncing
         value = str(selector.value or "")
-        label_value = labels_by_value.get(value, "")
+        label_value = labels_by_value.get(value, "") if value else ""
         syncing = True
         try:
             combobox.value = label_value
