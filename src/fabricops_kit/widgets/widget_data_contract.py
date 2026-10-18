@@ -987,6 +987,7 @@ def widget_data_contract(
         """Disable unavailable AI for this widget session and retain its diagnostic."""
         if isinstance(exc, (RuntimeError, ImportError)):
             state["_ai_failure"] = str(exc)
+            state["_validation_errors"].pop("business_rule_ai", None)
             state["_ai_unavailable"] = (
                 "AI suggestions unavailable in this notebook session. Continue editing manually."
             )
@@ -4472,17 +4473,15 @@ def widget_data_contract(
                 business_active_saved["rule_id"] = ""
                 refresh_resolved_options()
                 hydrate_resolved_business()
-                set_validation_error("business_rule")
+                set_validation_error("business_rule_ai")
             except (TypeError, ValueError, RuntimeError, ImportError) as exc:
                 business_resolved.clear()
                 refresh_resolved_options()
                 apply_business_rule.disabled = True
                 message = ai_failure_message(exc)
                 business_proposal.value = f"<p>{html.escape(message)}</p>"
-                if state["_ai_unavailable"]:
-                    set_validation_error("business_rule")
-                else:
-                    set_validation_error("business_rule", exc)
+                if not state["_ai_unavailable"]:
+                    set_validation_error("business_rule_ai", exc)
 
         def sync_column_rule(rule: Mapping[str, Any]) -> None:
             column_id = str(rule.get("column_id") or "")

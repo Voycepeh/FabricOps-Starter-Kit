@@ -1675,7 +1675,10 @@ def test_unavailable_ai_disables_actions_and_keeps_manual_authoring(
     assert "AI suggestions unavailable" in controls["column_description_ai"].value
 
 
-def test_unavailable_ai_clears_previous_business_generation_validation(widget_runtime, monkeypatch):
+@pytest.mark.parametrize("failure_action", ["resolve_business_rule", "rerun_column_description"])
+def test_unavailable_ai_clears_previous_business_generation_validation(
+    widget_runtime, monkeypatch, failure_action
+):
     """An earlier AI response error must not block manual saves after AI becomes unavailable."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
@@ -1686,12 +1689,16 @@ def test_unavailable_ai_clears_previous_business_generation_validation(widget_ru
 
     monkeypatch.setattr(module, "suggest_business_rule", unavailable)
     controls["resolve_business_rule"].click()
-    assert "business_rule" in state["_validation_errors"]
+    assert "business_rule_ai" in state["_validation_errors"]
     assert controls["resolve_business_rule"].disabled is False
 
-    controls["resolve_business_rule"].click()
+    monkeypatch.setattr(module, "suggest_enrichment", unavailable)
+    state["_validation_errors"]["business_rule"] = "Authored rule needs correction"
+    controls[failure_action].click()
     assert controls["resolve_business_rule"].disabled
-    assert "business_rule" not in state["_validation_errors"]
+    assert "business_rule_ai" not in state["_validation_errors"]
+    assert state["_validation_errors"]["business_rule"] == "Authored rule needs correction"
+    state["_validation_errors"].pop("business_rule")
     controls["column_description"].value = "Manually authored description"
     controls["save_data_contract"].click()
     assert widget_runtime["calls"]["draft"]
