@@ -292,6 +292,16 @@ def write_lakehouse_table(
     )
     attempt = DeltaCommitMetrics() if can_measure else None
     if attempt is not None:
+        try:
+            # Delta gives writer options precedence over this session setting.
+            # A unique string default works with both older and newer PySpark.
+            configured = df.sparkSession.conf.get("spark.databricks.delta.commitInfo.userMetadata", attempt.token)
+            if configured != attempt.token:
+                attempt = None
+        except Exception:
+            # If session metadata cannot be inspected, preserve write semantics.
+            attempt = None
+    if attempt is not None:
         physical_options["userMetadata"] = attempt.token
     write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=physical_options if attempt is not None else options)
     if attempt is not None:

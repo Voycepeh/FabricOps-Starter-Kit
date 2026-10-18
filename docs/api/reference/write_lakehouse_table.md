@@ -325,7 +325,7 @@ make one write faster.
 
 `fabricops_kit/io/write_lakehouse_table.py:17`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L17-L308">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L17-L318">View on GitHub</a>
 </div>
 
 

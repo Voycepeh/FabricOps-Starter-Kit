@@ -271,7 +271,7 @@ print(writes["target"]["total_duration_seconds"])
 
 ??? info "Availability and retries"
 
-    Lakehouse Append and Overwrite use the exact tagged Delta commit's output-row metric, including zero-row commits. Reporting uses bounded metadata-file reads, with no extra Spark jobs. Inaccessible metadata, a concurrent later commit, a large Delta log directory, or missing operation metrics produce `Not available`. Caller-supplied Delta `userMetadata` is preserved and disables this attribution.
+    Lakehouse Append and Overwrite use the exact tagged Delta commit's output-row metric, including zero-row commits. Reporting uses bounded metadata-file reads, with no extra Spark jobs. Inaccessible metadata, a concurrent later commit, an exhausted metadata-probe budget, or missing operation metrics produce `Not available`. Caller-supplied Delta `userMetadata` in writer options or Spark session configuration is preserved and disables this attribution. The lookup uses checkpoint metadata and at most 32 exact log-file probes; it never enumerates the Delta log directory.
 
     Warehouse connector writes do not return attributable row counts. Existing SCD merges include technical audit updates, so business inserts, updates, unchanged rows, and expired versions remain unavailable unless independently measurable. A new Lakehouse SCD target uses a measured bootstrap write when supported; its inserted rows or versions are reported separately. An already-applied Append or Overwrite retry reports zero newly committed rows. Validate-only runs report `Published → No` and zero committed rows.
 

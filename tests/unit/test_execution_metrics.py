@@ -12,23 +12,34 @@ from fabricops_kit.io.shared import DeltaCommitMetrics
 from fabricops_kit.pipeline.shared import ExecutionSummary
 
 
-def _metadata_runtime(lines, *, entries=1, fail=False):
-    """Emulate only Hadoop metadata APIs; Spark actions are absent."""
+def _metadata_runtime(lines, *, latest_version=1, checkpoint_version=None, fail=False):
+    """Emulate exact Hadoop path lookups without any directory enumeration."""
     reader = Mock()
     reader.readLine.side_effect = [*lines, None]
     fs = Mock()
-    iterator = Mock()
-    iterator.hasNext.side_effect = [True] * entries + [False]
-    iterator.next.return_value.getPath.return_value.getName.return_value = "00000000000000000001.json"
-    fs.listStatusIterator.return_value = iterator
-    path = Mock()
-    path.getFileSystem.return_value = fs
+
+    class Path:
+        def __init__(self, value):
+            self.value = value
+
+        def getFileSystem(self, configuration):
+            return fs
+
+    def exists(path):
+        if path.value.endswith("_last_checkpoint"):
+            return checkpoint_version is not None
+        return int(path.value.rsplit("/", 1)[-1].removesuffix(".json")) <= latest_version
+
+    fs.exists.side_effect = OSError("metadata unavailable") if fail else exists
     jvm = Mock()
-    jvm.org.apache.hadoop.fs.Path.return_value = path
-    jvm.java.io.BufferedReader.return_value = reader
-    if fail:
-        fs.listStatusIterator.side_effect = OSError("metadata unavailable")
-    return SimpleNamespace(_jvm=jvm, _jsc=Mock()), reader
+    jvm.org.apache.hadoop.fs.Path.side_effect = Path
+    if checkpoint_version is None:
+        jvm.java.io.BufferedReader.return_value = reader
+    else:
+        checkpoint_reader = Mock()
+        checkpoint_reader.readLine.return_value = json.dumps({"version": checkpoint_version})
+        jvm.java.io.BufferedReader.side_effect = [checkpoint_reader, reader]
+    return SimpleNamespace(_jvm=jvm, _jsc=Mock(), fs=fs), reader
 
 
 @pytest.mark.parametrize("rows", [0, 8, 9000000000])
@@ -56,9 +67,11 @@ def test_unattributable_or_unsupported_delta_metrics_are_unavailable(change):
 
 
 def test_delta_metrics_bound_metadata_io_and_ignore_lookup_errors():
-    spark, reader = _metadata_runtime([], entries=257)
+    spark, reader = _metadata_runtime([], latest_version=1000000)
     assert DeltaCommitMetrics().read(spark, "/table") is None
     reader.readLine.assert_not_called()
+    spark.fs.listStatusIterator.assert_not_called()
+    assert spark.fs.exists.call_count <= 33
     spark, _ = _metadata_runtime([], fail=True)
     assert DeltaCommitMetrics().read(spark, "/table") is None
 
@@ -66,7 +79,7 @@ def test_delta_metrics_bound_metadata_io_and_ignore_lookup_errors():
 @pytest.mark.parametrize("mode,rows", [("overwrite", 8), ("append", 3), ("append", 0)])
 def test_physical_writer_reports_committed_rows_without_counting(mode, rows):
     module = import_module("fabricops_kit.io.write_lakehouse_table")
-    frame = SimpleNamespace(write=object(), sparkSession=object())
+    frame = SimpleNamespace(write=object(), sparkSession=SimpleNamespace(conf=Mock(get=Mock(side_effect=lambda key, default: default))))
     metrics = {}
     with patch.object(module, "resolve_configured_lakehouse_table", return_value=(None, "orders", "demo", "/table")), patch.object(module, "repartition_dataframe_for_write", return_value=frame), patch.object(module, "write_delta_path") as write, patch.object(DeltaCommitMetrics, "read", return_value=rows):
         result = module.write_lakehouse_table(frame, "orders", mode=mode, verbose=False, context={"_fabricops_write_metrics": metrics})
@@ -151,3 +164,39 @@ def test_caller_commit_metadata_is_preserved_without_unattributable_lookup(key):
     assert options == {key: "caller-provided"}
     assert metrics["rows_committed"] is None
     read.assert_not_called()
+
+
+@pytest.mark.parametrize("configured", ["audit-run-123", ""])
+def test_session_commit_metadata_disables_token_injection(configured):
+    module = import_module("fabricops_kit.io.write_lakehouse_table")
+    frame = SimpleNamespace(write=object(), sparkSession=SimpleNamespace(conf=Mock(get=Mock(return_value=configured))))
+    metrics = {"rows_committed": None}
+    with patch.object(module, "resolve_configured_lakehouse_table", return_value=(None, "orders", None, "/table")), patch.object(module, "repartition_dataframe_for_write", return_value=frame), patch.object(module, "write_delta_path") as write, patch.object(DeltaCommitMetrics, "read") as read:
+        module.write_lakehouse_table(frame, "orders", verbose=False, context={"_fabricops_write_metrics": metrics})
+    assert write.call_args.kwargs["options"] is None
+    frame.sparkSession.conf.set.assert_not_called()
+    read.assert_not_called()
+    assert metrics["rows_committed"] is None
+
+
+def test_unreadable_session_configuration_does_not_change_or_fail_write():
+    module = import_module("fabricops_kit.io.write_lakehouse_table")
+    frame = SimpleNamespace(write=object(), sparkSession=SimpleNamespace(conf=Mock(get=Mock(side_effect=RuntimeError("unavailable")))))
+    with patch.object(module, "resolve_configured_lakehouse_table", return_value=(None, "orders", None, "/table")), patch.object(module, "repartition_dataframe_for_write", return_value=frame), patch.object(module, "write_delta_path") as write:
+        module.write_lakehouse_table(frame, "orders", verbose=False, context={"_fabricops_write_metrics": {}})
+    assert write.call_args.kwargs["options"] is None
+
+
+@pytest.mark.parametrize("checkpoint,latest", [(None, 0), (None, 300), (1000000000, 1000000007)])
+def test_exact_path_probes_find_latest_without_listing(checkpoint, latest):
+    attempt = DeltaCommitMetrics()
+    spark, reader = _metadata_runtime([json.dumps({"commitInfo": {
+        "userMetadata": attempt.token, "operation": "WRITE",
+        "operationMetrics": {"numOutputRows": "8"},
+    }})], checkpoint_version=checkpoint, latest_version=latest)
+    assert attempt.read(spark, "/table") == 8
+    spark.fs.listStatusIterator.assert_not_called()
+    spark.fs.listStatus.assert_not_called()
+    assert spark.fs.exists.call_count <= 33  # checkpoint existence plus 32 probes
+    assert spark.fs.open.call_args.args[0].value.endswith(f"/{latest:020d}.json")
+    reader.close.assert_called_once()

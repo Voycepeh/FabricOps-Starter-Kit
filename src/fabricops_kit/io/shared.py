@@ -340,7 +340,7 @@ class DeltaCommitMetrics:
     """Read a tagged commit using bounded Hadoop metadata IO, never Spark jobs.
 
     Only the latest JSON commit is inspected. Concurrent commits, inaccessible
-    logs, large log directories, and runtimes without Hadoop access yield no
+    logs, exhausted probe budgets, and runtimes without Hadoop access yield no
     measurement. A unique writer option binds metrics to this physical attempt.
     """
 
@@ -355,21 +355,47 @@ class DeltaCommitMetrics:
             jvm = spark._jvm
             log = jvm.org.apache.hadoop.fs.Path(path.rstrip("/") + "/_delta_log")
             fs = log.getFileSystem(spark._jsc.hadoopConfiguration())
-            entries = fs.listStatusIterator(log)
-            latest = None
-            for _ in range(256):
-                if not entries.hasNext():
+            # Exact path probes avoid Hadoop iterators that eagerly list the
+            # entire directory. Checkpoints normally put us close to the head.
+            checkpoint = jvm.org.apache.hadoop.fs.Path(path.rstrip("/") + "/_delta_log/_last_checkpoint")
+            low = 0
+            if fs.exists(checkpoint):
+                checkpoint_reader = jvm.java.io.BufferedReader(jvm.java.io.InputStreamReader(fs.open(checkpoint), "UTF-8"))
+                try:
+                    line = checkpoint_reader.readLine()
+                    if line is None or len(line) > 65536:
+                        return None
+                    version = json.loads(str(line)).get("version")
+                    if type(version) is not int or version < 0:
+                        return None
+                    low = version
+                finally:
+                    checkpoint_reader.close()
+            base = low
+            distance = 1
+            # At most 16 exponential and 16 binary probes, regardless of log size.
+            for _ in range(16):
+                high = base + distance
+                candidate = jvm.org.apache.hadoop.fs.Path(path.rstrip("/") + f"/_delta_log/{high:020d}.json")
+                if not fs.exists(candidate):
                     break
-                entry = entries.next().getPath()
-                name = str(entry.getName())
-                if re.fullmatch(r"[0-9]{20}\.json", name) and (latest is None or name > latest[0]):
-                    latest = (name, entry)
+                low = high
+                distance *= 2
             else:
-                if entries.hasNext():
-                    return None
-            if latest is None:
                 return None
-            reader = jvm.java.io.BufferedReader(jvm.java.io.InputStreamReader(fs.open(latest[1]), "UTF-8"))
+            for _ in range(16):
+                if high - low <= 1:
+                    break
+                middle = (low + high) // 2
+                candidate = jvm.org.apache.hadoop.fs.Path(path.rstrip("/") + f"/_delta_log/{middle:020d}.json")
+                if fs.exists(candidate):
+                    low = middle
+                else:
+                    high = middle
+            else:
+                return None
+            latest = jvm.org.apache.hadoop.fs.Path(path.rstrip("/") + f"/_delta_log/{low:020d}.json")
+            reader = jvm.java.io.BufferedReader(jvm.java.io.InputStreamReader(fs.open(latest), "UTF-8"))
             # commitInfo normally precedes file actions. Bound remote reads.
             for _ in range(64):
                 line = reader.readLine()
