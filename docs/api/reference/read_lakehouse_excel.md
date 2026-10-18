@@ -9,41 +9,14 @@
 
 Read an Excel file from a configured Fabric-resolved path through pandas.read_excel.
 
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/io/read_lakehouse_excel.py:10`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L55">View on GitHub</a>
-</div>
-
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">00C_demo_setup</span>
 </p>
 
 ## Usage notes
 
-These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
+Use when reading .xlsx files from a configured Fabric-resolved path, especially small reference files, mapping tables, or manually maintained business inputs.
 
-They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
-
-
-## Signature
-
-<div class="reference-api-definition" markdown="1">
-
-```python
-def read_lakehouse_excel(
-    relative_path: str,
-    store: str='Bronze',
-    sheet_name=0,
-    spark_session=None,
-    context: dict[str, Any] | None=None,
-    **read_excel_kwargs,
-):
-```
-
-</div>
 
 ## Example usage
 
@@ -55,19 +28,50 @@ mapping_df = read_lakehouse_excel(relative_path="reference/faculty_mapping.xlsx"
 
 </div>
 
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def read_lakehouse_excel(
+    relative_path: str,
+    *,
+    store: str='Bronze',
+    sheet_name=0,
+    spark_session=None,
+    context: dict[str, Any] | None=None,
+    **read_excel_kwargs,
+):
+```
+
+</div>
+
+</details>
+
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `relative_path` | `str` | Yes | Excel file path resolved by the Fabric resolver. |
-| `store` | `str` | No | Logical Lakehouse store key from ``00_env_config``. |
-| `sheet_name` | `str or int, default=0` | No | Worksheet name or index to read. |
-| `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **read_excel_kwargs Additional keyword arguments passed to ``pandas.read_excel``. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `relative_path` | `str` | Yes | `—` | Excel file path resolved by the Fabric resolver. |
+| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from ``00_env_config``. |
+| `sheet_name` | `str or int` | No | `0` | Worksheet name or index to read. |
+| `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
+| `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
+| `**read_excel_kwargs` | `—` | No | `—` | Additional keyword arguments passed to ``pandas.read_excel``. |
+
+</div>
 
 ## Returns
 
-Spark DataFrame converted from the selected Excel worksheet.
+pyspark.sql.DataFrame
+    Spark DataFrame converted from the selected Excel worksheet.
 
 ### Return interpretation
 
@@ -99,8 +103,16 @@ DataFrame.
 
 - [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/io/read_lakehouse_excel.py:10`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L55">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

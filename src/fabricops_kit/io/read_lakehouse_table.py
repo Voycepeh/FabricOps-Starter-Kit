@@ -17,31 +17,20 @@ def read_lakehouse_table(
     context: dict[str, Any] | None = None,
     **options,
 ):
-    """Resolve a configured Lakehouse Delta table and return a Spark DataFrame.
+    """Read a configured Lakehouse Delta table as a lazy Spark DataFrame.
 
-    This function represents a complete read of the resolved Delta table.
-
-    The returned Spark DataFrame is lazy. Calling ``read_lakehouse_table``
-    constructs the DataFrame plan, and Spark reads data only when a downstream
-    action executes, such as ``display``, ``count``, ``collect``, or a
-    DataFrame write. Subsequent Spark transformations may still allow Delta
-    column pruning and predicate pushdown during execution.
-
-    Lakehouse Delta is the preferred source for repeated PySpark
-    transformations in FabricOps. Use this callable for managed Lakehouse
-    tables, data already stored in OneLake Delta format, and Bronze or
-    Silver data processing inside Fabric notebooks. When source data starts in
-    a Fabric Warehouse, save large or repeatedly used data into the
-    Bronze Lakehouse as Delta first, then read it with this callable.
+    Use for managed Delta tables. Apply selection and filtering with normal
+    Spark transformations; Delta can push these into the eventual scan.
 
     Parameters
     ----------
     table_name : str, optional
-        Lakehouse table name. Pass schemas with ``schema`` rather than as a
+        Required unless table_id is supplied. Lakehouse table name. Pass schemas with ``schema`` rather than as a
         qualified name. Omit it when ``table_id`` is supplied.
     table_id : str, optional
         Canonical registered table identity. When supplied, FabricOps resolves
-        ``table_name``, ``store``, and ``schema`` from the Catalogue.
+        ``table_name``, ``store``, and ``schema`` from the Catalogue. Do not
+        combine with table_name, schema, or a non-default store.
     store : str, default="Bronze"
         Logical Lakehouse store key from ``00_env_config``, such as ``bronze`` or
         ``silver``. FabricOps resolves this store key to the configured physical
@@ -69,23 +58,14 @@ def read_lakehouse_table(
 
     Notes
     -----
-    FabricOps resolves the configured Lakehouse Tables path from
-    ``00_env_config`` and then delegates to Spark's Delta reader with any
-    supplied reader options. Filtering and column selection are applied later
-    through normal Spark DataFrame operations. Conceptual examples:
+    Use either table_name with store and optional schema, or table_id to resolve
+    the registered physical location from METADATA_DATA_CATALOGUE. Reader options
+    are forwarded to Spark Delta. The call does not register or profile data.
 
-    ``df = read_lakehouse_table(table_name="orders", store="Bronze")``
-
-    ``df = read_lakehouse_table(table_name="orders", store="Bronze", schema="sales")``
-
-    ``orders_df = read_lakehouse_table(table_name="sales_orders", store="Bronze")``
-
-    ``recent_orders_df = orders_df.select("order_id", "customer_id", "order_date", "amount").where("order_date >= '2026-01-01'")``
-
-    This function does not read through the Warehouse SQL connector, execute a
-    SQL query, write or copy the table, register metadata, create the table,
-    mutate the source table, or automatically cache or persist the returned
-    DataFrame.
+    Examples
+    --------
+    >>> orders_df = read_lakehouse_table("orders", store="Bronze", schema="demo")
+    >>> recent = orders_df.where("order_date >= '2026-01-01'")
 
     """
     resolved_table_id = table_id

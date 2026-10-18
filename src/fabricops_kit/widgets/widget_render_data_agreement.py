@@ -59,6 +59,19 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     dict[str, Any]
         Stable root, section, field, document, steward, and save controls.
 
+    Raises
+    ------
+    ValueError
+        If required authored fields are invalid. Complete the highlighted fields
+        before saving. Widget callbacks display validation failures.
+    RuntimeError
+        If configured metadata routing or persistence fails; check the Metadata
+        store configuration and write permissions.
+
+    Examples
+    --------
+    >>> state = widget_render_data_agreement(spark=spark)
+
     """
     config, env, _context = resolve_fabric_context(context=context)
     widgets = require_ipywidgets()

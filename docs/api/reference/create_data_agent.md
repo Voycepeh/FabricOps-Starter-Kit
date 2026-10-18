@@ -8,19 +8,25 @@
 
 Create and configure one native Fabric Data Agent from an activated Production table.
 
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/data_agent/create_data_agent.py:8`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agent/create_data_agent.py#L8-L79">View on GitHub</a>
-</div>
-
 
 ## Usage notes
 
-Do not use for multi-table agents, relationship authoring, evaluation, or automatic publication.
+Use to create a Data Agent from one activated Production table.
 
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+result = create_data_agent(table_id, target_workspace_id=workspace_id, display_name="Governed orders")
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -31,6 +37,7 @@ def create_data_agent(
     table_id: str,
     target_workspace_id: str,
     display_name: str,
+    *,
     description: str='FabricOps governed single-table Data Agent',
     config: Any=None,
     context: Mapping[str, Any] | None=None,
@@ -42,41 +49,60 @@ def create_data_agent(
 
 </div>
 
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
->>> result = create_data_agent(
-...     "lakehouse||production||dbo||orders",
-...     target_workspace_id="00000000-0000-0000-0000-000000000000",
-...     display_name="Governed orders",
-... )
->>> result["status"]
-'configured'
-
-</div>
+</details>
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `table_id` | `str` | Yes | Canonical FabricOps identity for one activated Production table. |
-| `target_workspace_id` | `str` | Yes | Fabric workspace in which to create the Data Agent. |
-| `display_name` | `str` | Yes | Data Agent display name. |
-| `description` | `str` | No | Data Agent item description. |
-| `config` | `Any` | No | FabricOps configuration. The configured notebook value is used when omitted. |
-| `context` | `Mapping[str, Any] \| None` | No | FabricOps runtime context used to resolve configuration and Spark. |
-| `spark_session` | `Any` | No | Explicit Spark session used to read metadata. |
-| `token_provider` | `Callable[[], str]` | No | Token provider integration boundary. Defaults to Fabric ``notebookutils``. |
-| `transport` | `Callable[[str, str, Mapping[str, Any] \| None, str], FabricResponse]` | No | HTTP integration boundary, primarily for isolated testing. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `table_id` | `str` | Yes | `—` | Canonical FabricOps identity for one activated Production table. |
+| `target_workspace_id` | `str` | Yes | `—` | Fabric workspace in which to create the Data Agent. |
+| `display_name` | `str` | Yes | `—` | Data Agent display name. |
+| `description` | `str` | No | `'FabricOps governed single-table Data Agent'` | Data Agent item description. |
+| `config` | `Any` | No | `None` | FabricOps configuration. The configured notebook value is used when omitted. |
+| `context` | `Mapping[str, Any] \| None` | No | `None` | FabricOps runtime context used to resolve configuration and Spark. |
+| `spark_session` | `Any` | No | `None` | Explicit Spark session used to read metadata. |
+| `token_provider` | `Callable[[], str]` | No | `default_token_provider` | Token provider integration boundary. Defaults to Fabric ``notebookutils``. |
+| `transport` | `Callable[[str, str, Mapping[str, Any] \| None, str], FabricResponse]` | No | `http_request` | HTTP integration boundary, primarily for isolated testing. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+result = create_data_agent(
+    "lakehouse||production||dbo||orders",
+    target_workspace_id="00000000-0000-0000-0000-000000000000",
+    display_name="Governed orders",
+)
+result["status"]
+```
+
+```text
+'configured'
+```
+
+</div>
 
 ## Returns
 
-Agent and datasource identities plus useful configuration status.
+dict[str, Any]
+    Created agent and datasource identities, workspace, display name, source
+    ``table_id``, and the final useful configuration status.
 
 ## Raises / Errors
 
-Raises for invalid governed sources, authentication, permission, REST, malformed response, and LRO failures.
+ValueError
+    If inputs or governed Production source metadata are invalid.
+FabricDataAgentError
+    If authentication, permissions, a Fabric REST request, response validation,
+    or long-running operation fails. Fabric error details are retained.
 
 ## Notes
 
@@ -95,8 +121,16 @@ It does not publish the agent.
 
 No related guides documented.
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/data_agent/create_data_agent.py:8`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agent/create_data_agent.py#L8-L79">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

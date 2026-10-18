@@ -8,14 +8,6 @@
 
 Select catalogue evidence through an explicit pipeline, agreement, or explore dataset scope.
 
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/widgets/widget_view_catalogue.py:613`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_catalogue.py#L613-L750">View on GitHub</a>
-</div>
-
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">01_governance</span>
 <span class="reference-chip">99_explore</span>
@@ -23,10 +15,26 @@ Select catalogue evidence through an explicit pipeline, agreement, or explore da
 
 ## Usage notes
 
-Catalogue viewer widgets let users select governed datasets and load catalogue and profile Spark DataFrames for native Fabric notebook rendering.
+Use with mode pipeline for current-notebook lineage, agreement for selected-agreement contracts, or explore for direct current-environment browsing.
 
-They are read-only selectors and do not modify metadata.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+view = widget_view_catalogue(mode="explore", spark_session=spark)
+sorted(view["get_views"]())
+```
+
+```text
+['catalogue', 'frequency', 'guardrail_results', 'profile']
+```
+
+</div>
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -34,6 +42,7 @@ They are read-only selectors and do not modify metadata.
 
 ```python
 def widget_view_catalogue(
+    *,
     mode: str,
     agreement: dict[str, Any] | None=None,
     spark_session=None,
@@ -45,26 +54,24 @@ def widget_view_catalogue(
 
 </div>
 
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
->>> view = widget_view_catalogue(mode="explore", spark_session=spark)
->>> sorted(view["get_views"]())
-['catalogue', 'frequency', 'guardrail_results', 'profile']
-
-</div>
+</details>
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `mode` | `str` | Yes | Explicit dataset-scope strategy. No mode is inferred from other inputs. |
-| `agreement` | `dict[str, Any] \| None` | No | Agreement widget state containing the current saved agreement. Required only for ``mode="agreement"``. |
-| `spark_session` | `object` | No | Spark session override. |
-| `store` | `str` | No | Configured metadata FabricStore key. |
-| `schema` | `str \| None` | No | Metadata lakehouse schema override. |
-| `context` | `object` | No | Explicit FabricOps context used for environment and runtime identity. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `mode` | `str` | Yes | `—` | Explicit dataset-scope strategy. No mode is inferred from other inputs. |
+| `agreement` | `dict[str, Any] \| None` | No | `None` | Agreement widget state containing the current saved agreement. Required only for ``mode="agreement"``. |
+| `spark_session` | `object` | No | `None` | Spark session override. |
+| `store` | `str` | No | `'Metadata'` | Configured metadata FabricStore key. |
+| `schema` | `str \| None` | No | `None` | Metadata lakehouse schema override. |
+| `context` | `object` | No | `None` | Explicit FabricOps context used for environment and runtime identity. |
+
+</div>
 
 ## Returns
 
@@ -104,8 +111,16 @@ changing their persisted schemas.
 
 No related guides documented.
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/widgets/widget_view_catalogue.py:613`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_catalogue.py#L613-L750">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

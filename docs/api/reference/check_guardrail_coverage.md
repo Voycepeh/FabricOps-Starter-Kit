@@ -8,6 +8,100 @@
 
 Verify that every governed pipeline participant and configured Guardrail is ready before publication.
 
+
+## Usage notes
+
+Use after source and target Guardrails run and immediately before publishing a governed target.
+
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+coverage = check_guardrail_coverage(target_table_id=target_table_id, source_table_ids=source_table_ids)
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def check_guardrail_coverage(
+    *,
+    target_table_id: str,
+    source_table_ids: list[str] | tuple[str, ...],
+    spark_session=None,
+    verbose: bool=True,
+) -> dict[str, Any]:
+```
+
+</div>
+
+</details>
+
+## Parameters
+
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `target_table_id` | `str` | Yes | `—` | Canonical identity of the target about to be published. |
+| `source_table_ids` | `list[str] \| tuple[str, ...]` | Yes | `—` | Exact governed sources feeding this target. Supply [] for a source-free target. |
+| `spark_session` | `object` | No | `None` | Spark session override; otherwise use the active Fabric session. |
+| `verbose` | `bool` | No | `True` | Print table readiness, evaluated Guardrails, and the final decision. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+coverage = check_guardrail_coverage(
+    target_table_id=target_table_id, source_table_ids=[source["table_id"]]
+)
+```
+
+</div>
+
+## Returns
+
+dict
+    ``can_continue``, ``status``, participant readiness and coverage, missing
+    results, and issues. Contract-free Development returns a skipped result.
+    Failed readiness raises rather than returning a blocking result.
+
+### Return interpretation
+
+can_continue is true only when contract readiness and current-activity Guardrail coverage permit publication; Development can explicitly skip a contract-free baseline run.
+
+## Raises / Errors
+
+ValueError
+    If table identities are blank or the current Fabric activity ID is missing.
+RuntimeError
+    If a participant lacks a required contract, applicable active Guardrail,
+    or current-activity result. Select contracts and run the applicable checks
+    before retrying publication. Metadata read errors also propagate.
+
+### Common failure causes
+
+- A participating table has no selected Data Contract.
+- A selected contract has no applicable active Guardrail.
+- An applicable Guardrail has no result for the current activity.
+- The current Fabric activity identity is unavailable.
+
+## Behavior and scope
+
 <div class="reference-docstring-intro" markdown="1">
 
 Development may still perform a contract-free baseline run so Engineering
@@ -22,81 +116,20 @@ the Guardrails appropriate to each table; Schema is a common minimal choice.
 
 </div>
 
+## See also
+
+- [Pipeline Execution](../../guided-demo/02-build-and-run-etl.md)
+
 <div class="reference-source-card" markdown="1">
 **Source**
 
 `fabricops_kit/pipeline/check_guardrail_coverage.py:84`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_guardrail_coverage.py#L84-L284">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_guardrail_coverage.py#L84-L318">View on GitHub</a>
 </div>
 
 
-## Usage notes
-
-Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
-
-For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
-
-
-## Signature
-
-<div class="reference-api-definition" markdown="1">
-
-```python
-def check_guardrail_coverage(
-    target_table_id: str,
-    source_table_ids: list[str] | tuple[str, ...],
-    spark_session=None,
-    verbose: bool=True,
-) -> dict[str, Any]:
-```
-
-</div>
-
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
-```python
-coverage = check_guardrail_coverage(target_table_id=target_table_id, source_table_ids=source_table_ids)
-```
-
-</div>
-
-## Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `target_table_id` | `str` | Yes | Not documented yet |
-| `source_table_ids` | `list[str] \| tuple[str, ...]` | Yes | Not documented yet |
-| `spark_session` | `—` | No | Not documented yet |
-| `verbose` | `bool` | No | Not documented yet |
-
-## Returns
-
-Readiness, evaluated coverage, missing evaluations, issues, and the publication continuation decision.
-
-### Return interpretation
-
-can_continue is true only when contract readiness and current-activity Guardrail coverage permit publication; Development can explicitly skip a contract-free baseline run.
-
-## Raises / Errors
-
-Raises ValueError for missing canonical identities or missing Fabric activity identity.
-
-### Common failure causes
-
-- A participating table has no selected Data Contract.
-- A selected contract has no applicable active Guardrail.
-- An applicable Guardrail has no result for the current activity.
-- The current Fabric activity identity is unavailable.
-
-## See also
-
-- [Pipeline Execution](../../guided-demo/02-build-and-run-etl.md)
-
-
-<details>
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

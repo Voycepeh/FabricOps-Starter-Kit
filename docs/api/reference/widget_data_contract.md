@@ -8,24 +8,28 @@
 
 Create or reopen and author one agreement-free, table-centric Data Contract draft.
 
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/widgets/widget_data_contract.py:525`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L525-L5397">View on GitHub</a>
-</div>
-
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">01_governance</span>
 </p>
 
 ## Usage notes
 
-Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
+Use as the primary UX for preparing and freezing one governed table’s next Data Contract version.
 
-They help users write values into the correct underlying metadata tables without manually editing those tables directly.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+state = widget_data_contract(table_id="table-orders", spark_session=spark)
+state["refresh_manifest"]()
+```
+
+</div>
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -33,6 +37,7 @@ They help users write values into the correct underlying metadata tables without
 
 ```python
 def widget_data_contract(
+    *,
     table_id: str | None=None,
     contract_version: int | None=None,
     spark_session: Any=None,
@@ -42,27 +47,27 @@ def widget_data_contract(
 
 </div>
 
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
->>> state = widget_data_contract(table_id="table-orders", spark_session=spark)
->>> state["refresh_manifest"]()
-
-</div>
+</details>
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `table_id` | `str \| None` | No | Initial canonical governed table identity. If omitted, select it in the widget. |
-| `contract_version` | `int \| None` | No | Initial exact lifecycle version. If omitted, the newest version is selected. |
-| `spark_session` | `Any` | No | Active Microsoft Fabric Spark session. The configured session is used when omitted. |
-| `context` | `Any` | No | FabricOps runtime context normally established by ``00_env_config``. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `table_id` | `str \| None` | No | `None` | Initial canonical governed table identity. If omitted, select it in the widget. |
+| `contract_version` | `int \| None` | No | `None` | Initial exact lifecycle version. If omitted, the newest version is selected. |
+| `spark_session` | `Any` | No | `None` | Active Microsoft Fabric Spark session. The configured session is used when omitted. |
+| `context` | `Any` | No | `None` | FabricOps runtime context normally established by ``00_env_config``. |
+
+</div>
 
 ## Returns
 
-Exact-version state, compact controls, the displayed UI, and validation and freeze actions.
+dict
+    Current selector, editor, lifecycle state, and callable authoring actions.
 
 ### Return interpretation
 
@@ -70,7 +75,10 @@ The returned state remains pinned to the draft created or reopened for the reque
 
 ## Raises / Errors
 
-Raises validation, widget, Spark, or configured metadata routing errors.
+ValueError
+    If an identity, authored record, or lifecycle action is invalid.
+RuntimeError
+    If configured metadata routing or a lifecycle mutation fails.
 
 ### Common failure causes
 
@@ -104,8 +112,16 @@ activates, or enforces a contract; runtime Sensitive Data enforcement remains de
 
 No related guides documented.
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/widgets/widget_data_contract.py:525`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L525-L5397">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

@@ -9,33 +9,25 @@
 
 Read one governed pipeline source through its configured Fabric store.
 
-<div class="reference-docstring-intro" markdown="1">
-
-``pipeline_read`` is the governed pipeline-orchestration equivalent of the
-foundational :func:`read_lakehouse_table`, :func:`read_warehouse_table`,
-and :func:`read_warehouse_query` readers. Describe the governed source
-once; FabricOps resolves its identity and configured store, selects the
-physical reader, and returns the data needed by the notebook. Callers do
-not supply a store type, resolve a canonical table identity first, or
-choose between Lakehouse and Warehouse table readers.
-
-</div>
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/pipeline/pipeline_read.py:79`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L79-L422">View on GitHub</a>
-</div>
-
 
 ## Usage notes
 
-Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
+Use for an explicit full source read or a target-aware incremental source read.
 
-For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+source = pipeline_read(store="Bronze", schema="demo", table_name="orders")
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -43,6 +35,7 @@ For profiling-related pipeline functions, the output captures the important deta
 
 ```python
 def pipeline_read(
+    *,
     store: str | None=None,
     schema: str | None=None,
     table_name: str | None=None,
@@ -58,45 +51,80 @@ def pipeline_read(
 
 </div>
 
-## Example usage
+</details>
+
+## Parameters
+
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `store` | `str \| None` | No | `None` | Configured source store key, such as ``"source"`` or ``"product"``. Supply it with ``table_name`` and optional ``schema`` instead of ``table_id``. |
+| `schema` | `str \| None` | No | `None` | Physical source schema, when the configured store uses schemas. |
+| `table_name` | `str \| None` | No | `None` | Physical source table name. Required with ``store`` when ``table_id`` is omitted. ``store``, optional ``schema``, and ``table_name`` form one identity form. |
+| `table_id` | `str \| None` | No | `None` | Canonical registered source identity. This is the alternative identity form and is mutually exclusive with ``store``, ``schema``, and ``table_name``. |
+| `query` | `str \| None` | No | `None` | Read-only SQL for a configured Warehouse source in full mode only; incremental mode rejects caller-owned SQL. The supplied source identity remains the governed source participant even when the result is a projection, filter, join, or aggregation. FabricOps does not infer arbitrary source identity by parsing SQL. A query may accompany either physical coordinates or ``table_id`` when the resolved store is a Warehouse. |
+| `read_mode` | `str` | No | `'full'` | Explicit source read behaviour. ``full`` preserves the complete-source read. ``incremental`` resolves unconsumed work from the last Source Observation committed for this exact source-to-target relationship. |
+| `read_parameters` | `dict[str, Any] \| None` | No | `None` | Incremental read configuration. Supports only watermark_column. If a Data Contract is selected, its watermark must match the requested one. For incremental mode, provide ``{"watermark_column": "modified_at"}`` when no selected contract supplies the watermark. None is valid only when the selected mode and contract provide the required configuration. |
+| `target_table_id` | `str \| None` | No | `None` | Canonical governed target being prepared. It is accepted for both read modes so target flows can use one consistent call shape, and is required when ``read_mode="incremental"``. |
+| `spark_session` | `object` | No | `None` | Spark session forwarded to the selected foundational reader instead of relying on notebook-global ``spark``. |
+| `verbose` | `bool` | No | `True` | Whether to print one concise orchestration message showing the resolved Fabric store type, physical table identity, and selected foundational reader. This makes the hidden routing understandable without exposing workspace IDs, SQL text, contract payloads, or runtime plumbing. |
+
+</div>
+
+## Advanced examples
 
 <div class="reference-example-usage" markdown="1">
 
 Read a governed table without knowing whether ``source`` resolves to a
 Lakehouse or Warehouse:
 
->>> result = pipeline_read(
-...     store="Bronze",
-...     schema="demo",
-...     table_name="orders",
-... )
->>> orders_df = result["dataframe"]
->>> orders_table_id = result["table_id"]
+```python
+result = pipeline_read(
+    store="Bronze",
+    schema="demo",
+    table_name="orders",
+)
+orders_df = result["dataframe"]
+orders_table_id = result["table_id"]
+```
 
 Read only work not yet committed for one target:
 
->>> result = pipeline_read(
-...     store="Bronze", schema="demo", table_name="orders",
-...     read_mode="incremental", target_table_id=target_table_id,
-... )
->>> result["should_process"]
+```python
+result = pipeline_read(
+    store="Bronze", schema="demo", table_name="orders",
+    read_mode="incremental", target_table_id=target_table_id,
+)
+result["should_process"]
+```
+
+```text
 True
+```
 
 Read a governed Warehouse source through project-owned SQL:
 
->>> result = pipeline_read(
-...     store="Gold",
-...     schema="demo",
-...     table_name="order_history",
-...     query='''
-...         SELECT customer_id, COUNT(*) AS order_count
-...         FROM demo.order_history
-...         GROUP BY customer_id
-...     ''',
-... )
->>> history_df = result["dataframe"]
->>> result["is_query"]
+```python
+result = pipeline_read(
+    store="Gold",
+    schema="demo",
+    table_name="order_history",
+    query='''
+        SELECT customer_id, COUNT(*) AS order_count
+        FROM demo.order_history
+        GROUP BY customer_id
+    ''',
+)
+history_df = result["dataframe"]
+result["is_query"]
+```
+
+```text
 True
+```
 
 The query result is marked as derived so later notebook logic can use
 ``profile_table(dataframe=history_df)`` without registering it as the
@@ -104,24 +132,23 @@ complete physical ``demo.order_history`` source table.
 
 </div>
 
-## Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `store` | `str \| None` | No | Configured source store key, such as ``"source"`` or ``"product"``. Supply it with ``table_name`` and optional ``schema`` instead of ``table_id``. |
-| `schema` | `str \| None` | No | Physical source schema, when the configured store uses schemas. |
-| `table_name` | `str \| None` | No | Physical source table name. Required with ``store`` when ``table_id`` is omitted. ``store``, optional ``schema``, and ``table_name`` form one identity form. |
-| `table_id` | `str \| None` | No | Canonical registered source identity. This is the alternative identity form and is mutually exclusive with ``store``, ``schema``, and ``table_name``. |
-| `query` | `str \| None` | No | Read-only SQL for a configured Warehouse source. The supplied source identity remains the governed source participant even when the result is a projection, filter, join, or aggregation. FabricOps does not infer arbitrary source identity by parsing SQL. A query may accompany either physical coordinates or ``table_id`` when the resolved store is a Warehouse. |
-| `read_mode` | `str` | No | Explicit source read behaviour. ``full`` preserves the complete-source read. ``incremental`` resolves unconsumed work from the last Source Observation committed for this exact source-to-target relationship. |
-| `read_parameters` | `dict[str, Any] \| None` | No | Incremental read configuration. Supports only watermark_column. If a Data Contract is selected, its watermark must match the requested one. |
-| `target_table_id` | `str \| None` | No | Canonical governed target being prepared. It is accepted for both read modes so target flows can use one consistent call shape, and is required when ``read_mode="incremental"``. |
-| `spark_session` | `object` | No | Spark session forwarded to the selected foundational reader instead of relying on notebook-global ``spark``. |
-| `verbose` | `bool` | No | Whether to print one concise orchestration message showing the resolved Fabric store type, physical table identity, and selected foundational reader. This makes the hidden routing understandable without exposing workspace IDs, SQL text, contract payloads, or runtime plumbing. |
-
 ## Returns
 
-DataFrame, canonical source table_id, read mode, custom-query and contract signals, has_data/should_process, and a compact resolved scope summary.
+dict
+    A deliberately small result with these fields:
+
+    - ``dataframe``: the Spark DataFrame returned by the selected
+      foundational Fabric I/O reader.
+    - ``table_id``: the canonical identity of the governed physical source.
+    - ``is_query``: whether ``dataframe`` is a custom Warehouse query
+      result rather than the complete physical table.
+    - ``has_contract``: whether an environment-selected immutable Data
+      Contract applies. The contract record itself is not exposed.
+    - ``read_mode``: the explicit source read mode.
+    - ``has_data`` and ``should_process``: whether this read contributes
+      unconsumed work. Full reads return ``True`` without triggering a count.
+    - ``scope``: a compact summary of the resolved full, bootstrap, or
+      watermark scope; no metadata rows are exposed.
 
 ## Raises / Errors
 
@@ -131,9 +158,35 @@ ValueError
     supplied for a Lakehouse source, incremental mode has no target, or
     project-owned Warehouse SQL is combined with incremental mode.
 
-## Notes
+## Behavior and scope
 
-<div class="reference-docstring-notes" markdown="1">
+<div class="reference-docstring-intro" markdown="1">
+
+``pipeline_read`` is the governed pipeline-orchestration equivalent of the
+foundational :func:`read_lakehouse_table`, :func:`read_warehouse_table`,
+and :func:`read_warehouse_query` readers. Describe the governed source
+once; FabricOps resolves its identity and configured store, selects the
+physical reader, and returns the data needed by the notebook. Callers do
+not supply a store type, resolve a canonical table identity first, or
+choose between Lakehouse and Warehouse table readers.
+
+</div>
+
+## See also
+
+No related guides documented.
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/pipeline/pipeline_read.py:79`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L79-L426">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
+<summary>Maintainer architecture details</summary>
 
 The governed orchestration performs these mechanical steps:
 
@@ -171,16 +224,6 @@ optional processing-mode Guided Demo scenarios.
 
 With ``verbose=True``, a Warehouse table read reports a line such as
 ``FabricOps Read → Warehouse table 'product.demo.orders' → read_warehouse_table``.
-
-</div>
-
-## See also
-
-No related guides documented.
-
-
-<details>
-<summary>Maintainer architecture details</summary>
 
 ## Contract impact
 

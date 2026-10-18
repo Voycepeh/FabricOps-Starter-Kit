@@ -16,8 +16,9 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     ----------
     store : str
         Configured source store key.
-    schema : str, optional
-        Physical source schema.
+    schema : str or None
+        Physical source schema. This keyword is required; pass None for a store
+        without schemas.
     table_name : str
         Physical source table name.
     read_mode : {"full", "incremental"}, default="full"
@@ -26,7 +27,8 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         Read-only Warehouse query forwarded to :func:`pipeline_read`.
     read_parameters : dict, optional
         Incremental configuration, for example {"watermark_column": "modified_datetime"}.
-        A selected Data Contract must agree with the supplied watermark.
+        A selected Data Contract must agree with the supplied watermark. Required
+        for incremental mode when no selected contract supplies the watermark.
     target_table_id : str, optional
         Governed target identity required for incremental reads.
     frequency_enabled : bool, default=True

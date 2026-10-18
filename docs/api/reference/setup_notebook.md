@@ -9,44 +9,27 @@
 
 Shared environment setup and runtime validation for notebook templates.
 
-<div class="reference-docstring-intro" markdown="1">
-
-Validate the selected FabricOps environment and resolve the Fabric targets
-required by the notebook before downstream IO, profiling, and metadata
-functions run. The returned context contains resolved stores, runtime
-identity, startup checks, and an overall readiness status.
-
-The main value of ``setup_notebook`` is to provide an early startup
-checkpoint for the configuration and Fabric target information that
-downstream FabricOps functions rely on, including
-``read_lakehouse_table``, ``write_lakehouse_table``,
-``read_warehouse_table``, ``read_warehouse_query``, and profiling or
-metadata registration functions that resolve Fabric targets or runtime
-context. It validates and resolves the same configuration and Fabric
-targets used by downstream FabricOps functions, then returns that
-information in a reusable ``NotebookSetupContext``. It does not
-automatically inject configuration into every downstream function.
-
-</div>
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/config/setup_notebook.py:20`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L20-L225">View on GitHub</a>
-</div>
-
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">00_env_config</span>
 </p>
 
 ## Usage notes
 
-Use this in the setup notebook to capture and render the key runtime information required by downstream Starter Kit notebooks.
+Use at the start of 00_env_config or a notebook template to validate FabricOps configuration, resolve required targets, and capture runtime context before other helpers run.
 
-This helps confirm the active environment, configured stores, notebook context, and runtime values before later notebooks depend on them.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+CONTEXT = setup_notebook(CONFIG, env=ENVIRONMENT_NAME, required_targets=["Bronze", "Silver", "Gold", "Metadata"])
+```
+
+</div>
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -65,30 +48,39 @@ def setup_notebook(
 
 </div>
 
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
-```python
-CONTEXT = setup_notebook(CONFIG, env=ENVIRONMENT_NAME, required_targets=["Bronze", "Silver", "Gold", "Metadata"])
-```
-
-</div>
+</details>
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | Full FabricOps framework configuration used to resolve environments and target stores. |
-| `env` | `str` | No | Environment section selected for target resolution. |
-| `required_targets` | `list[str] \| None` | No | Logical Fabric target names the notebook requires before execution can proceed. When omitted, all stores configured for the selected environment are required. |
-| `notebook_name` | `str \| None` | No | Explicit notebook name override used for runtime metadata and naming validation. |
-| `run_id_prefix` | `str` | No | Prefix used only when no Fabric runtime run identifier is available. |
-| `local_fallback_name` | `str \| None` | No | Notebook name used only when neither ``notebook_name`` nor Fabric runtime notebook context provides one. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | `—` | Full FabricOps framework configuration used to resolve environments and target stores. |
+| `env` | `str` | No | `'Sandbox'` | Environment section selected for target resolution. |
+| `required_targets` | `list[str] \| None` | No | `None` | Logical Fabric target names the notebook requires before execution can proceed. When omitted, all stores configured for the selected environment are required. |
+| `notebook_name` | `str \| None` | No | `None` | Explicit notebook name override used for runtime metadata and naming validation. |
+| `run_id_prefix` | `str` | No | `'run'` | Prefix used only when no Fabric runtime run identifier is available. |
+| `local_fallback_name` | `str \| None` | No | `None` | Notebook name used only when neither ``notebook_name`` nor Fabric runtime notebook context provides one. |
+
+</div>
 
 ## Returns
 
-NotebookSetupContext with run_id, notebook_name, workspace_name, user_name, environment, paths, validation_results, runtime_metadata, and readiness_status.
+NotebookSetupContext
+    A ``NotebookSetupContext`` containing the selected environment,
+    resolved Fabric stores, runtime and user identity, startup validation
+    results, generated or detected run ID, and overall readiness status.
+    Returned fields are ``run_id`` (generated or detected run identifier),
+    ``notebook_name`` (resolved notebook name), ``workspace_name``
+    (resolved workspace name when available), ``user_name`` (resolved user
+    identity), ``environment`` (selected environment key), ``paths``
+    (requested target names mapped to resolved Fabric store objects),
+    ``validation_results`` (startup check results), ``runtime_metadata``
+    (best-effort runtime metadata), and ``readiness_status`` (overall
+    readiness outcome).
 
 ### Return interpretation
 
@@ -96,7 +88,9 @@ A ready context means required targets resolved and startup checks did not fail.
 
 ## Raises / Errors
 
-ValueError for invalid configuration sections, missing required paths, or unresolved required targets.
+ValueError
+    Raised when config sections are invalid or required targets cannot be
+    resolved for the selected environment.
 
 ### Common failure causes
 
@@ -171,13 +165,43 @@ readiness checks.
 
 </div>
 
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+Validate the selected FabricOps environment and resolve the Fabric targets
+required by the notebook before downstream IO, profiling, and metadata
+functions run. The returned context contains resolved stores, runtime
+identity, startup checks, and an overall readiness status.
+
+The main value of ``setup_notebook`` is to provide an early startup
+checkpoint for the configuration and Fabric target information that
+downstream FabricOps functions rely on, including
+``read_lakehouse_table``, ``write_lakehouse_table``,
+``read_warehouse_table``, ``read_warehouse_query``, and profiling or
+metadata registration functions that resolve Fabric targets or runtime
+context. It validates and resolves the same configuration and Fabric
+targets used by downstream FabricOps functions, then returns that
+information in a reusable ``NotebookSetupContext``. It does not
+automatically inject configuration into every downstream function.
+
+</div>
+
 ## See also
 
 - [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 - [Metadata Tables](../../reference/metadata.md)
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/config/setup_notebook.py:20`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L20-L225">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

@@ -382,10 +382,12 @@ def pipeline_write(
         validation applies in Development, and the active approved Data
         Contract remains authoritative in Production.
     load_strategy_parameters : dict, optional
-        Development-authored strategy parameters, such as key, effective,
-        tracked, or partition columns, subject to contract validation.
+        Development-authored strategy parameters, subject to contract validation.
+        SCD1 requires ``key_columns``; SCD2 requires ``key_columns`` and
+        ``effective_column`` and may specify ``tracked_columns``.
     source_table_ids : list[str] or tuple[str, ...], optional
-        Canonical identities of the exact governed sources that feed this
+        Required for every call despite its None default. Use [] only for a
+        source-free target. Canonical identities of the exact sources that feed this
         target publication. Supply identities returned by ``pipeline_read``.
         FabricOps requires this explicit association because activity-wide
         reads and Spark transformation plans cannot reliably identify which
@@ -418,8 +420,8 @@ def pipeline_write(
         with whole-table overwrite, or an incremental append bootstrap finds
         an already-populated target without committed source-to-target state.
 
-    Notes
-    -----
+    Maintainer Notes
+    ----------------
     The governed orchestration performs these mechanical steps:
 
     1. Resolve the canonical target ``table_id``.

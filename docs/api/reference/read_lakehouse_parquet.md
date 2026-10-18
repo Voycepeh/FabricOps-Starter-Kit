@@ -9,41 +9,27 @@
 
 Read a Parquet path from a configured Fabric-resolved path through Spark Parquet.
 
-<div class="reference-docstring-intro" markdown="1">
-
-Use ``read_lakehouse_parquet`` for Parquet files stored under the
-Lakehouse ``Files`` area. Use ``read_lakehouse_table`` for managed Delta
-tables stored under the Lakehouse ``Tables`` area.
-
-This function reads from the Lakehouse ``Files`` area, not a managed Delta
-table in the ``Tables`` area. FabricOps resolves the logical store key and
-relative path through configuration, attempts a normal Spark Parquet read
-first, forces a small Spark action to verify that the data can actually be
-decoded, falls back to a derived ``_tsus`` path when the original read
-fails, may create a converted Parquet copy with microsecond timestamp
-precision when the fallback path is missing, and returns a Spark DataFrame
-backed by either the original path or the fallback path.
-
-</div>
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/io/read_lakehouse_parquet.py:15`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_parquet.py#L15-L221">View on GitHub</a>
-</div>
-
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">00C_demo_setup</span>
 </p>
 
 ## Usage notes
 
-These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
+Use when reading a Parquet file or path from a configured Fabric lakehouse Files path.
 
-They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+orders_df = read_lakehouse_parquet("curated/orders/", spark_session=spark)
+```
+
+</div>
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -52,6 +38,7 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 ```python
 def read_lakehouse_parquet(
     relative_path: str,
+    *,
     store: str='Bronze',
     verbose: bool=True,
     spark_session=None,
@@ -62,29 +49,32 @@ def read_lakehouse_parquet(
 
 </div>
 
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
-```python
-source_df = read_lakehouse_parquet("Files/curated/student_enrolment/", store="Bronze", spark_session=spark)
-```
-
-</div>
+</details>
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `relative_path` | `str` | Yes | Parquet file path resolved underneath the configured Lakehouse ``Files`` area. Root-level files such as ``customers.parquet`` and nested paths such as ``incoming/2026/customers.parquet`` are supported. |
-| `store` | `str` | No | Logical Lakehouse store key from ``00_env_config``. |
-| `verbose` | `bool` | No | Whether to print operational progress for original path attempts, original read success or failure, ``_tsus`` path attempts, conversion attempts, and fallback success or failure. It does not change the resulting data. |
-| `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark Parquet reader options forwarded to Spark's Parquet reader for the original path read, the existing ``_tsus`` path read, and the read after conversion. Representative options include ``mergeSchema``, ``recursiveFileLookup``, ``pathGlobFilter``, ``modifiedBefore``, and ``modifiedAfter``. FabricOps does not interpret these options. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `relative_path` | `str` | Yes | `—` | Parquet file path resolved underneath the configured Lakehouse ``Files`` area. Root-level files such as ``customers.parquet`` and nested paths such as ``incoming/2026/customers.parquet`` are supported. |
+| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from ``00_env_config``. |
+| `verbose` | `bool` | No | `True` | Whether to print operational progress for original path attempts, original read success or failure, ``_tsus`` path attempts, conversion attempts, and fallback success or failure. It does not change the resulting data. |
+| `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
+| `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
+| `**options` | `—` | No | `—` | Additional Spark Parquet reader options forwarded to Spark's Parquet reader for the original path read, the existing ``_tsus`` path read, and the read after conversion. Representative options include ``mergeSchema``, ``recursiveFileLookup``, ``pathGlobFilter``, ``modifiedBefore``, and ``modifiedAfter``. FabricOps does not interpret these options. |
+
+</div>
 
 ## Returns
 
-Spark DataFrame backed by the selected Parquet file or folder. One DataFrame row represents one source record; partition columns may be added by Spark when reading partitioned folders.
+pyspark.sql.DataFrame
+    A Spark DataFrame backed by either the original resolved Parquet path
+    or the compatible ``_tsus`` fallback path. Before returning, the
+    function executes a one-row Spark action to verify that the selected
+    data can be decoded.
 
 ### Return interpretation
 
@@ -92,7 +82,9 @@ The function verifies decodability with a one-row Spark action before returning,
 
 ## Raises / Errors
 
-Raises ValueError for invalid relative paths and Spark/read errors when the Parquet path cannot be loaded.
+RuntimeError
+    When neither the original path nor the ``_tsus`` fallback path can be
+    read successfully.
 
 ### Common failure causes
 
@@ -175,12 +167,39 @@ DataFrame, or automatically cache or persist the returned DataFrame.
 
 </div>
 
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+Use ``read_lakehouse_parquet`` for Parquet files stored under the
+Lakehouse ``Files`` area. Use ``read_lakehouse_table`` for managed Delta
+tables stored under the Lakehouse ``Tables`` area.
+
+This function reads from the Lakehouse ``Files`` area, not a managed Delta
+table in the ``Tables`` area. FabricOps resolves the logical store key and
+relative path through configuration, attempts a normal Spark Parquet read
+first, forces a small Spark action to verify that the data can actually be
+decoded, falls back to a derived ``_tsus`` path when the original read
+fails, may create a converted Parquet copy with microsecond timestamp
+precision when the fallback path is missing, and returns a Spark DataFrame
+backed by either the original path or the fallback path.
+
+</div>
+
 ## See also
 
 - [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/io/read_lakehouse_parquet.py:15`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_parquet.py#L15-L221">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

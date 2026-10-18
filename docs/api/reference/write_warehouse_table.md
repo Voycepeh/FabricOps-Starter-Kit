@@ -9,36 +9,6 @@
 
 Write a DataFrame to a configured Fabric warehouse target.
 
-<div class="reference-docstring-intro" markdown="1">
-
-``write_warehouse_table`` writes a Spark DataFrame to a Fabric Warehouse
-table through the configured Warehouse write path. It supports Spark-side
-repartitioning before data is transferred so large datasets can use
-multiple Spark tasks concurrently during the write preparation and
-connector transfer stages.
-
-Warehouse repartitioning controls Spark execution only. It does not create
-physical Warehouse table partitions and is not equivalent to lakehouse
-``partition_by``.
-
-Use this when a prepared and validated Spark DataFrame must be stored in a
-Fabric Warehouse. For small datasets, the default write path is normally
-sufficient. For large datasets containing millions of rows, use
-``repartition_by`` when the DataFrame has too few partitions or when more
-balanced Spark-side write concurrency is required. Use
-``write_lakehouse_table`` when the target is a Delta table in a lakehouse
-or when physical Delta partitioning is required.
-
-</div>
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/io/write_warehouse_table.py:15`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L15-L249">View on GitHub</a>
-</div>
-
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">00C_demo_setup</span>
 </p>
@@ -47,6 +17,20 @@ or when physical Delta partitioning is required.
 
 Parallel Spark tasks within one write_warehouse_table call are not the same as several notebooks or jobs writing to the same Warehouse table concurrently. The function does not coordinate independent writers or guarantee safe simultaneous overwrite operations, and it must not be documented with lakehouse-style partition_by behaviour.
 
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+write_warehouse_table(orders_df, "dbo", "orders", mode="append")
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -57,6 +41,7 @@ def write_warehouse_table(
     df,
     schema: str,
     table_name: str,
+    *,
     store: str='warehouse',
     mode: str='append',
     repartition_by=None,
@@ -67,19 +52,42 @@ def write_warehouse_table(
 
 </div>
 
-## Example usage
+</details>
+
+## Parameters
+
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `df` | `pyspark.sql.DataFrame` | Yes | `—` | Spark DataFrame to transfer into the Warehouse. The original DataFrame object is not modified; a repartitioned DataFrame is used for the write when requested. |
+| `schema` | `str` | Yes | `—` | Warehouse schema containing the target table, such as ``dbo``. This is part of the Warehouse object identity and is unrelated to Spark schema inference. |
+| `table_name` | `str` | Yes | `—` | Warehouse table name. |
+| `store` | `str` | No | `'warehouse'` | Logical Warehouse store key from ``00_env_config``. FabricOps resolves the logical store key, workspace ID, Warehouse item ID, Warehouse database name, schema, and table name. |
+| `mode` | `str` | No | `'append'` | Requested Warehouse write behaviour passed to the Fabric Warehouse Spark connector. ``append`` adds rows and can duplicate repeated publications. ``overwrite`` requests replacement behaviour and should be treated as destructive. Other supported modes are passed through to Spark/connector semantics. |
+| `repartition_by` | `int or str or list[str] or tuple[str, ...]` | No | `None` | Optional Spark-side repartitioning applied before the Warehouse connector is invoked. A positive integer controls the number of Spark execution partitions. A column name or collection of column names redistributes records by those keys. A list or tuple beginning with a positive integer supplies both the partition count and the distribution columns. This controls Spark processing for the current write and does not configure the Warehouse table's physical design. |
+| `options` | `dict[str, Any] \| None` | No | `None` | Additional Fabric Warehouse Spark connector writer options. FabricOps sets the resolved Workspace ID and Warehouse item ID before applying caller options, then forwards caller options to the connector writer. Do not pass custom options that replace the resolved destination identity settings. |
+| `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
+
+</div>
+
+## Advanced examples
 
 <div class="reference-example-usage" markdown="1">
 
 Small dimension table without explicit repartitioning:
 
->>> write_warehouse_table(
-...     department_lookup_df,
-...     "dbo",
-...     "DIM_DEPARTMENT",
-...     store="warehouse",
-...     mode="overwrite",
-... )
+```python
+write_warehouse_table(
+    department_lookup_df,
+    "dbo",
+    "DIM_DEPARTMENT",
+    store="warehouse",
+    mode="overwrite",
+)
+```
 
 A small dimension or lookup table usually does not require repartitioning.
 Adding many partitions to a small DataFrame can increase overhead without
@@ -87,36 +95,42 @@ improving the write.
 
 Integer repartitioning for a large fact dataset:
 
->>> write_warehouse_table(
-...     large_fact_df,
-...     "dbo",
-...     "FACT_STUDENT_ENROLMENT",
-...     store="warehouse",
-...     mode="append",
-...     repartition_by=32,
-... )
+```python
+write_warehouse_table(
+    large_fact_df,
+    "dbo",
+    "FACT_STUDENT_ENROLMENT",
+    store="warehouse",
+    mode="append",
+    repartition_by=32,
+)
+```
 
 Column-based repartitioning:
 
->>> write_warehouse_table(
-...     large_fact_df,
-...     "dbo",
-...     "FACT_STUDENT_ENROLMENT",
-...     store="warehouse",
-...     mode="append",
-...     repartition_by=["academic_year", "semester"],
-... )
+```python
+write_warehouse_table(
+    large_fact_df,
+    "dbo",
+    "FACT_STUDENT_ENROLMENT",
+    store="warehouse",
+    mode="append",
+    repartition_by=["academic_year", "semester"],
+)
+```
 
 Large fact dataset pattern:
 
->>> write_warehouse_table(
-...     transaction_df,
-...     "dbo",
-...     "FACT_TRANSACTIONS",
-...     store="warehouse",
-...     mode="append",
-...     repartition_by=48,
-... )
+```python
+write_warehouse_table(
+    transaction_df,
+    "dbo",
+    "FACT_TRANSACTIONS",
+    store="warehouse",
+    mode="append",
+    repartition_by=48,
+)
+```
 
 The value ``48`` is illustrative. The correct value depends on DataFrame
 size, existing partitions, skew, executor capacity, connector behaviour,
@@ -124,22 +138,11 @@ and Warehouse ingestion limits.
 
 </div>
 
-## Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to transfer into the Warehouse. The original DataFrame object is not modified; a repartitioned DataFrame is used for the write when requested. |
-| `schema` | `str` | Yes | Warehouse schema containing the target table, such as ``dbo``. This is part of the Warehouse object identity and is unrelated to Spark schema inference. |
-| `table_name` | `str` | Yes | Warehouse table name. |
-| `store` | `str` | No | Logical Warehouse store key from ``00_env_config``. FabricOps resolves the logical store key, workspace ID, Warehouse item ID, Warehouse database name, schema, and table name. |
-| `mode` | `str` | No | Requested Warehouse write behaviour passed to the Fabric Warehouse Spark connector. ``append`` adds rows and can duplicate repeated publications. ``overwrite`` requests replacement behaviour and should be treated as destructive. Other supported modes are passed through to Spark/connector semantics. |
-| `repartition_by` | `int or str or list[str] or tuple[str, ...]` | No | Optional Spark-side repartitioning applied before the Warehouse connector is invoked. A positive integer controls the number of Spark execution partitions. A column name or collection of column names redistributes records by those keys. A list or tuple beginning with a positive integer supplies both the partition count and the distribution columns. This controls Spark processing for the current write and does not configure the Warehouse table's physical design. |
-| `options` | `dict[str, Any] \| None` | No | Additional Fabric Warehouse Spark connector writer options. FabricOps sets the resolved Workspace ID and Warehouse item ID before applying caller options, then forwards caller options to the connector writer. Do not pass custom options that replace the resolved destination identity settings. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
-
 ## Returns
 
-None. The function validates repartitioning, optionally writes a repartitioned DataFrame through the Warehouse connector, and returns after connector execution completes or raises an error.
+None
+    The function performs the Fabric Warehouse connector write before
+    returning.
 
 ### Return interpretation
 
@@ -252,12 +255,44 @@ Side effects
 
 </div>
 
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+``write_warehouse_table`` writes a Spark DataFrame to a Fabric Warehouse
+table through the configured Warehouse write path. It supports Spark-side
+repartitioning before data is transferred so large datasets can use
+multiple Spark tasks concurrently during the write preparation and
+connector transfer stages.
+
+Warehouse repartitioning controls Spark execution only. It does not create
+physical Warehouse table partitions and is not equivalent to lakehouse
+``partition_by``.
+
+Use this when a prepared and validated Spark DataFrame must be stored in a
+Fabric Warehouse. For small datasets, the default write path is normally
+sufficient. For large datasets containing millions of rows, use
+``repartition_by`` when the DataFrame has too few partitions or when more
+balanced Spark-side write concurrency is required. Use
+``write_lakehouse_table`` when the target is a Delta table in a lakehouse
+or when physical Delta partitioning is required.
+
+</div>
+
 ## See also
 
 - [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/io/write_warehouse_table.py:15`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L15-L249">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

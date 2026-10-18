@@ -9,32 +9,28 @@
 
 Publish one governed pipeline target through its configured Fabric store.
 
-<div class="reference-docstring-intro" markdown="1">
-
-``pipeline_write`` is the governed pipeline-orchestration equivalent of
-:func:`write_lakehouse_table` and :func:`write_warehouse_table`. Describe
-the governed target once; FabricOps resolves its canonical identity and
-configured store, resolves governed processing from the selected or active
-Data Contract, and selects the appropriate physical publication path. It commits
-Lineage and Source Observation metadata only after publication succeeds.
-
-</div>
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/pipeline/pipeline_write.py:341`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L341-L710">View on GitHub</a>
-</div>
-
 
 ## Usage notes
 
-Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
+Use after explicit target Guardrails to resolve governed processing and publish one table target.
 
-For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+result = pipeline_write(
+    prepared_df, store="Silver", schema="demo", table_name="orders",
+    load_strategy="overwrite", source_table_ids=[source["table_id"]],
+)
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -43,6 +39,7 @@ For profiling-related pipeline functions, the output captures the important deta
 ```python
 def pipeline_write(
     df,
+    *,
     store: str | None=None,
     schema: str | None=None,
     table_name: str | None=None,
@@ -59,50 +56,68 @@ def pipeline_write(
 
 </div>
 
-## Example usage
+</details>
+
+## Parameters
+
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `df` | `pyspark.sql.DataFrame` | Yes | `—` | Prepared target DataFrame after explicit target checks have passed. |
+| `store` | `str \| None` | No | `None` | Configured store key. Supply it with ``table_name`` and optional ``schema`` instead of ``table_id``. |
+| `schema` | `str \| None` | No | `None` | Physical target schema when the configured store uses schemas. |
+| `table_name` | `str \| None` | No | `None` | Physical target table name. Required with ``store`` when ``table_id`` is omitted. |
+| `table_id` | `str \| None` | No | `None` | Canonical registered target identity. This identity form is mutually exclusive with ``store``, ``schema``, and ``table_name``. |
+| `load_strategy` | `str \| None` | No | `None` | Development-authored processing proposal. Selected or frozen contract validation applies in Development, and the active approved Data Contract remains authoritative in Production. |
+| `load_strategy_parameters` | `dict[str, Any] \| None` | No | `None` | Development-authored strategy parameters, subject to contract validation. SCD1 requires ``key_columns``; SCD2 requires ``key_columns`` and ``effective_column`` and may specify ``tracked_columns``. |
+| `source_table_ids` | `list[str] \| tuple[str, ...] \| None` | No | `None` | Required for every call despite its None default. Use [] only for a source-free target. Canonical identities of the exact sources that feed this target publication. Supply identities returned by ``pipeline_read``. FabricOps requires this explicit association because activity-wide reads and Spark transformation plans cannot reliably identify which source subset produced a particular target DataFrame. |
+| `repartition_by` | `int or str or list[str] or tuple[str, ...]` | No | `None` | Optional Spark repartitioning passed to simple physical writes. |
+| `options` | `dict[str, Any] \| None` | No | `None` | Additional physical writer options for append or overwrite publication. |
+| `spark_session` | `object` | No | `None` | Spark session used for write-side metadata persistence. Supply the active Fabric notebook session explicitly when available. |
+| `verbose` | `bool` | No | `True` | Whether to print one concise orchestration message showing the resolved Fabric store type, physical table identity, governed strategy, and selected foundational writer or governed SCD publication path. This explains hidden routing without exposing implementation plumbing. |
+
+</div>
+
+## Advanced examples
 
 <div class="reference-example-usage" markdown="1">
 
 Publish without knowing whether ``unified`` is a Lakehouse or Warehouse:
 
->>> result = pipeline_write(
-...     prepared_df, store="Silver", schema="demo",
-...     table_name="curated_orders",
-...     source_table_ids=[orders_result["table_id"]],
-... )
->>> result["table_id"]
+```python
+result = pipeline_write(
+    prepared_df, store="Silver", schema="demo",
+    table_name="curated_orders",
+    source_table_ids=[orders_result["table_id"]],
+)
+result["table_id"]
+```
+
+```text
 'lakehouse:unified:demo:curated_orders'
+```
 
 Development may propose processing, without bypassing contract authority:
 
->>> pipeline_write(
-...     prepared_df, store="Silver", schema="demo",
-...     table_name="curated_orders", load_strategy="overwrite",
-...     source_table_ids=[orders_result["table_id"]],
-... )
+```python
+pipeline_write(
+    prepared_df, store="Silver", schema="demo",
+    table_name="curated_orders", load_strategy="overwrite",
+    source_table_ids=[orders_result["table_id"]],
+)
+```
 
 </div>
 
-## Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `df` | `pyspark.sql.DataFrame` | Yes | Prepared target DataFrame after explicit target checks have passed. |
-| `store` | `str \| None` | No | Configured store key. Supply it with ``table_name`` and optional ``schema`` instead of ``table_id``. |
-| `schema` | `str \| None` | No | Physical target schema when the configured store uses schemas. |
-| `table_name` | `str \| None` | No | Physical target table name. Required with ``store`` when ``table_id`` is omitted. |
-| `table_id` | `str \| None` | No | Canonical registered target identity. This identity form is mutually exclusive with ``store``, ``schema``, and ``table_name``. |
-| `load_strategy` | `str \| None` | No | Development-authored processing proposal. Selected or frozen contract validation applies in Development, and the active approved Data Contract remains authoritative in Production. |
-| `load_strategy_parameters` | `dict[str, Any] \| None` | No | Development-authored strategy parameters, such as key, effective, tracked, or partition columns, subject to contract validation. |
-| `source_table_ids` | `list[str] \| tuple[str, ...] \| None` | No | Canonical identities of the exact governed sources that feed this target publication. Supply identities returned by ``pipeline_read``. FabricOps requires this explicit association because activity-wide reads and Spark transformation plans cannot reliably identify which source subset produced a particular target DataFrame. |
-| `repartition_by` | `int or str or list[str] or tuple[str, ...]` | No | Optional Spark repartitioning passed to simple physical writes. |
-| `options` | `dict[str, Any] \| None` | No | Additional physical writer options for append or overwrite publication. |
-| `spark_session` | `object` | No | Spark session used for write-side metadata persistence. Supply the active Fabric notebook session explicitly when available. |
-| `verbose` | `bool` | No | Whether to print one concise orchestration message showing the resolved Fabric store type, physical table identity, governed strategy, and selected foundational writer or governed SCD publication path. This explains hidden routing without exposing implementation plumbing. |
-
 ## Returns
 
-A small result containing the canonical target table_id.
+dict
+    A deliberately small result containing only the canonical ``table_id``.
+    Profile the persisted target through an explicit read-back rather than
+    treating the input DataFrame as persisted state.
 
 ## Raises / Errors
 
@@ -113,9 +128,34 @@ ValueError
     with whole-table overwrite, or an incremental append bootstrap finds
     an already-populated target without committed source-to-target state.
 
-## Notes
+## Behavior and scope
 
-<div class="reference-docstring-notes" markdown="1">
+<div class="reference-docstring-intro" markdown="1">
+
+``pipeline_write`` is the governed pipeline-orchestration equivalent of
+:func:`write_lakehouse_table` and :func:`write_warehouse_table`. Describe
+the governed target once; FabricOps resolves its canonical identity and
+configured store, resolves governed processing from the selected or active
+Data Contract, and selects the appropriate physical publication path. It commits
+Lineage and Source Observation metadata only after publication succeeds.
+
+</div>
+
+## See also
+
+No related guides documented.
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/pipeline/pipeline_write.py:341`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L341-L712">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
+<summary>Maintainer architecture details</summary>
 
 The governed orchestration performs these mechanical steps:
 
@@ -179,16 +219,6 @@ explicit notebook engineering and governance steps. ``pipeline_write`` publishes
 table targets only. Raw Lakehouse Files do not have a canonical FabricOps
 ``table_id``; direct file-output concerns, if supported in future, belong
 outside this governed table orchestration API.
-
-</div>
-
-## See also
-
-No related guides documented.
-
-
-<details>
-<summary>Maintainer architecture details</summary>
 
 ## Contract impact
 

@@ -235,14 +235,14 @@ def test_write_io_reference_pages_render_docstring_examples(tmp_path, monkeypatc
     lakehouse_page = (tmp_path / "api" / "reference" / "write_lakehouse_table.md").read_text(encoding="utf-8")
     warehouse_page = (tmp_path / "api" / "reference" / "write_warehouse_table.md").read_text(encoding="utf-8")
 
-    lakehouse_example = _section_text(lakehouse_page, "Example usage")
+    lakehouse_example = _section_text(lakehouse_page, "Advanced examples")
     assert "COUNTRY_REGION_MAPPING" in lakehouse_example
     assert "millions of rows" in _normalize_whitespace(lakehouse_example)
     assert "repartition_by=32" in lakehouse_example
     assert 'repartition_by=["academic_year", "semester"]' in lakehouse_example
     assert 'partition_by=["academic_year"]' in lakehouse_example
 
-    warehouse_example = _section_text(warehouse_page, "Example usage")
+    warehouse_example = _section_text(warehouse_page, "Advanced examples")
     assert "DIM_DEPARTMENT" in warehouse_example
     assert "FACT_TRANSACTIONS" in warehouse_example
     assert "millions of rows" in _normalize_whitespace(warehouse_page)
@@ -287,6 +287,7 @@ def test_individual_reference_pages_ignore_global_freshness_metadata(tmp_path, m
     }
 
     assert first_pages == second_pages
+    assert len(metadata_updates) == 1, "Unchanged generation must not refresh timestamps"
     assert metadata_updates[-1]["artifact_key"] == "individual_function_reference_pages"
     manifest = json.loads((ROOT / "docs" / "reference" / "_data" / "generated-artifacts.json").read_text())
     assert "individual_function_reference_pages" in manifest["artifacts"]
@@ -359,7 +360,7 @@ def test_write_warehouse_reference_page_renders_docstring_intro_and_notes(tmp_pa
     assert "## Raises / Errors" in warehouse_page
     assert "## Usage notes" in warehouse_page
     assert "View on GitHub" in warehouse_page
-    assert "## Notes" in profile_page
+    assert "The orchestration performs these mechanical steps" in profile_page.split("<summary>Maintainer architecture details</summary>")[1]
 
 
 def test_standalone_internal_pages_are_not_generated_by_default() -> None:
@@ -377,8 +378,8 @@ def test_callable_pages_embed_title_first_collapsed_call_flow() -> None:
     for page in callable_pages:
         text = page.read_text(encoding="utf-8")
         ordered_markers = [
-            "## Signature",
             "## Example usage",
+            "## Signature",
             "## Parameters",
             "## Returns",
             "## Raises / Errors",
@@ -666,16 +667,16 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
         assert marker in text
     assert "## AI / machine-readable metadata" not in text
     assert "Machine-readable metadata / metadata details" not in text
-    assert "Use this in the setup notebook to capture and render the key runtime information" in text
-    assert "This helps confirm the active environment, configured stores, notebook context, and runtime values" in text
+    assert "Use at the start of 00_env_config" in text
+    assert "capture runtime context before other helpers run" in text
     assert "## Parameters" in text
     assert "| `config` |" in text
     assert "| Yes |" in text or "| No |" in text
     assert "## Source link" not in text
 
 
-def test_public_callable_usage_notes_are_family_standardized() -> None:
-    """Verify generated Usage notes come from path-first family defaults and overrides."""
+def test_public_callable_usage_notes_are_function_specific() -> None:
+    """Verify usage notes explain the callable rather than repeating family boilerplate."""
     io_text = (API_REFERENCE_DIR / "read_lakehouse_table.md").read_text(encoding="utf-8")
     widget_text = (API_REFERENCE_DIR / "widget_data_contract.md").read_text(encoding="utf-8")
     pipeline_text = (API_REFERENCE_DIR / "profile_table.md").read_text(encoding="utf-8")
@@ -687,11 +688,12 @@ def test_public_callable_usage_notes_are_family_standardized() -> None:
         assert "### Do not use when" not in text
         assert "### Additional context" not in text
 
-    assert "Fabric notebooks can only attach to one lakehouse or warehouse at a time" in io_text
-    assert "front-end notebook interface so users can enter metadata in a guided way" in widget_text
-    assert "standard Starter Kit pipeline flow" in pipeline_text
-    assert "profile of the data so downstream users can review the dataset consistently" in pipeline_text
-    assert "configured metadata lakehouse using predefined Starter Kit schemas" in setup_text
+    assert "managed Delta tables" in io_text
+    assert "Data Contract" in widget_text
+    assert "DataFrame profiling" in pipeline_text
+    assert "create or validate" in setup_text
+    assert "Fabric notebooks can only attach" not in io_text
+    assert "standard Starter Kit pipeline flow" not in pipeline_text
 
 
 def test_public_callable_pages_do_not_repeat_intro_as_exact_purpose() -> None:
@@ -803,7 +805,7 @@ def test_template_called_callable_parameters_render_as_api_table() -> None:
     text = (API_REFERENCE_DIR / "profile_table.md").read_text(encoding="utf-8")
     parameters = _section_text(text, "Parameters")
 
-    assert "| Parameter | Type | Required | Description |" in parameters
+    assert "| Parameter | Type | Required | Default | Description |" in parameters
     assert "| `dataframe` |" in parameters
     assert "| `frequency_columns` |" in parameters
     removed_parameter = "approximate_" + "distinct"

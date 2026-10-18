@@ -9,24 +9,31 @@
 
 Run the observable standard governed target lifecycle.
 
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/pipeline/orchestrate_write.py:15`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L15-L135">View on GitHub</a>
-</div>
-
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">02_pipeline</span>
 </p>
 
 ## Usage notes
 
-Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
+Use for the normal governed publication path after project PySpark transformation.
 
-For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+result = orchestrate_write(
+    transformed_df, sources=[source], store="Silver", schema="demo",
+    table_name="orders", write_mode="overwrite", contracts=CONTRACTS,
+)
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -35,6 +42,7 @@ For profiling-related pipeline functions, the output captures the important deta
 ```python
 def orchestrate_write(
     dataframe: Any,
+    *,
     sources: Iterable[dict[str, Any]],
     store: str,
     schema: str | None,
@@ -52,36 +60,64 @@ def orchestrate_write(
 
 </div>
 
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
->>> result = orchestrate_write(transformed_df, sources=[orders], store="Silver", schema="demo", table_name="curated_orders", write_mode="overwrite", contracts=CONTRACTS)
->>> result = orchestrate_write(product_mapping_df, sources=[], store="Silver", schema="demo", table_name="product_mapping", write_mode="scd1", write_parameters={"key_columns": ["product_id"]})
-
-</div>
+</details>
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `dataframe` | `Any` | Yes | Transformed Spark DataFrame to validate and publish. |
-| `sources` | `Iterable[dict[str, Any]]` | Yes | Governed source results containing ``table_id``. |
-| `store` | `str` | Yes | Configured destination store key. |
-| `schema` | `str \| None` | Yes | Physical target schema. |
-| `table_name` | `str` | Yes | Physical target table name. |
-| `write_mode` | `str` | Yes | Notebook-facing Write mode forwarded to :func:`pipeline_write` as its governed load strategy. |
-| `write_parameters` | `dict[str, Any] \| None` | No | Parameters for the selected Write mode, forwarded to :func:`pipeline_write` as ``load_strategy_parameters``. For example, SCD1 requires ``key_columns``; SCD2 requires ``key_columns`` and ``effective_column`` and may also define ``tracked_columns``. |
-| `contracts` | `dict[str, Any] \| None` | No | ``widget_select_data_contract`` result used to choose Validate or Enforce publication behaviour. Both modes run the same Guardrails. |
-| `repartition_by` | `int \| None` | No | Spark write partition count. |
-| `frequency_enabled` | `bool` | No | Whether to calculate frequency distributions for this table. |
-| `frequency_top_n` | `int \| None` | No | Maximum ranked frequency values per eligible column; None retains all. |
-| `spark_session` | `object` | No | Spark session used by every stage. |
-| `verbose` | `bool` | No | Print stage start, outcome, duration, and failure attribution. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `dataframe` | `Any` | Yes | `—` | Transformed Spark DataFrame to validate and publish. |
+| `sources` | `Iterable[dict[str, Any]]` | Yes | `—` | Governed source results containing ``table_id``. Pass [] for a source-free target. |
+| `store` | `str` | Yes | `—` | Configured destination store key. |
+| `schema` | `str \| None` | Yes | `—` | Physical target schema. This keyword is required; pass None for a store without schemas. |
+| `table_name` | `str` | Yes | `—` | Physical target table name. |
+| `write_mode` | `str` | Yes | `—` | Notebook-facing Write mode forwarded to :func:`pipeline_write` as its governed load strategy. |
+| `write_parameters` | `dict[str, Any] \| None` | No | `None` | Parameters for the selected Write mode, forwarded to :func:`pipeline_write` as ``load_strategy_parameters``. For example, SCD1 requires ``key_columns``; SCD2 requires ``key_columns`` and ``effective_column`` and may also define ``tracked_columns``. |
+| `contracts` | `dict[str, Any] \| None` | No | `None` | ``widget_select_data_contract`` result used to choose Validate or Enforce publication behaviour. Both modes run the same Guardrails. |
+| `repartition_by` | `int \| None` | No | `None` | Spark write partition count. |
+| `frequency_enabled` | `bool` | No | `True` | Whether to calculate frequency distributions for this table. |
+| `frequency_top_n` | `int \| None` | No | `5` | Maximum ranked frequency values per eligible column; None retains all. |
+| `spark_session` | `object` | No | `None` | Spark session used by every stage. |
+| `verbose` | `bool` | No | `True` | Print stage start, outcome, duration, and failure attribution. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+result = orchestrate_write(
+    transformed_df, sources=[orders], store="Silver", schema="demo",
+    table_name="curated_orders", write_mode="overwrite", contracts=CONTRACTS,
+)
+```
+
+Development SCD1 with a source-free mapping table:
+
+```python
+result = orchestrate_write(
+    product_mapping_df, sources=[], store="Silver", schema="demo",
+    table_name="product_mapping", write_mode="scd1",
+    write_parameters={"key_columns": ["product_id"]},
+)
+```
+
+</div>
 
 ## Returns
 
-Publication identity and every stage result, or a successful validation-only result.
+dict
+    Write identity and capability results. The top-level ``dataframe`` is
+    the prepared input after Sensitive Data treatment, in both Validate
+    and Enforce modes. It is the Write input, not necessarily the persisted
+    target after Append, SCD1, or SCD2. ``sensitive_result`` retains its
+    nested ``dataframe`` result. ``published`` is false when a Validate-mode
+    contract passes without publication.
 
 ## Raises / Errors
 
@@ -108,8 +144,16 @@ return value.
 
 No related guides documented.
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/pipeline/orchestrate_write.py:15`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L15-L147">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

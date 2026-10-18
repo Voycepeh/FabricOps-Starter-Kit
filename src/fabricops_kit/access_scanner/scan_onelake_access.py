@@ -177,6 +177,48 @@ def scan_onelake_access(
     Normalized access rows are appended to METADATA_DATA_ACCESS by default.
     Pass persist=False for an inspection-only scan. The scanner never changes
     OneLake permissions.
+
+    Parameters
+    ----------
+    catalogue_df : pyspark.sql.DataFrame
+        Active Data Catalogue rows for the configured environment. Its Spark
+        session is used for mapping and persistence.
+    targets : str or list[str] or tuple[str, ...]
+        Configured Lakehouse keys whose permissions should be inventoried.
+    environment_name : str, optional
+        Catalogue and configured-store environment; defaults to the active environment.
+    access_snapshot_id : str, optional
+        Shared scan identifier; a new UUID is generated when omitted.
+    access_token : str, optional
+        Fabric API token override; normally resolved from the notebook identity.
+    persist : bool, default=True
+        Append normalized rows to METADATA_DATA_ACCESS. Use False to inspect only.
+    context : dict[str, Any], optional
+        FabricOps configuration and runtime context established by 00_env_config.
+
+    Returns
+    -------
+    dict[str, pyspark.sql.DataFrame]
+        ``observations`` holds raw permission observations; ``access`` holds
+        normalized METADATA_DATA_ACCESS rows; ``unmatched`` holds observations
+        that could not be linked to registered tables. Review unmatched rows
+        before interpreting missing access as absence of permission.
+
+    Raises
+    ------
+    ValueError
+        If targets are empty, invalid, or not Lakehouses. Check configured store keys.
+    RuntimeError
+        If Fabric authentication, REST discovery, or safe pagination fails.
+        Spark mapping and metadata write errors also propagate; check Catalogue
+        columns and permissions on the configured metadata target.
+
+    Examples
+    --------
+    >>> result = scan_onelake_access(catalogue_df, targets="Silver", persist=False)
+    >>> display(result["access"])
+    >>> display(result["unmatched"])
+
     """
     config, active_env, runtime_context = resolve_fabric_context(context=context)
     resolved_environment = str(active_env if environment_name is None else environment_name)

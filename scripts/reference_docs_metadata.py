@@ -1037,7 +1037,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'Transformed DataFrame, target name and coordinates, governed sources, load strategy and selected contracts.',
   'returns': 'Publication identity and every stage result, or a successful validation-only result.',
   'side_effects': 'Runs target Guardrails, publishes through pipeline_write, and profiles the persisted target.',
-  'preferred_example': 'result = orchestrate_write(df, sources=[source], store="Silver", schema="demo", table_name="orders", write_mode="overwrite", contracts=CONTRACTS)',
+  'preferred_example': 'result = orchestrate_write(\n    transformed_df, sources=[source], store="Silver", schema="demo",\n    table_name="orders", write_mode="overwrite", contracts=CONTRACTS,\n)',
   'related_functions': ['pipeline_write', 'check_schema', 'check_sensitive_data', 'check_source_drift', 'check_dq', 'check_guardrail_coverage', 'profile_table']},
  {'kind': 'function',
   'module': 'pipeline.pipeline_read',
@@ -1051,7 +1051,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'Canonical source table_id or configured store, schema, and table_name; explicit read_mode; target_table_id required for incremental mode; optional full-read Warehouse query.',
   'returns': 'DataFrame, canonical source table_id, read mode, custom-query and contract signals, has_data/should_process, and a compact resolved scope summary.',
   'side_effects': 'Captures current Source Observation state for governed full reads and stages target-specific incremental state; accepted progress is committed only by successful pipeline_write publication.',
-  'preferred_example': 'read_result = pipeline_read(store="Bronze", schema="dbo", table_name="orders", read_mode="incremental", target_table_id=target_table_id)',
+  'preferred_example': 'source = pipeline_read(store="Bronze", schema="demo", table_name="orders")',
   'related_functions': ['pipeline_write', 'read_lakehouse_table', 'read_warehouse_table', 'read_warehouse_query']},
  {'kind': 'function',
   'module': 'pipeline.resolve_table_id',
@@ -1079,7 +1079,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'Prepared DataFrame, target identity or physical coordinates, exact canonical source table_ids, and optional Development processing proposal.',
   'returns': 'A small result containing the canonical target table_id.',
   'side_effects': 'Publishes the target, then commits target Lineage and accepted Source Observation state and establishes target profile context.',
-  'preferred_example': 'write_result = pipeline_write(prepared_df, store="Silver", schema="dbo", table_name="orders", source_table_ids=[orders_result["table_id"]])',
+  'preferred_example': 'result = pipeline_write(\n    prepared_df, store="Silver", schema="demo", table_name="orders",\n    load_strategy="overwrite", source_table_ids=[source["table_id"]],\n)',
   'related_functions': ['pipeline_read', 'write_lakehouse_table', 'write_warehouse_table']},
  {'kind': 'function',
   'module': 'config.setup_notebook',
@@ -1236,7 +1236,7 @@ PUBLIC_SYMBOL_DOCS = [
   'side_effects': 'Reads data only; it does not write metadata, files, or tables.',
   'fabric_context': 'Routes reads through configured FabricOps Lakehouse targets instead of an attached/default lakehouse.',
   'ai_verification': 'Verify the target, schema, and table are intended Lakehouse inputs before generating calls.',
-  'preferred_example': 'df_orders = read_lakehouse_table("orders", store="Bronze", schema=SOURCE_SCHEMA, spark_session=spark)',
+  'preferred_example': 'orders_df = read_lakehouse_table("orders", store="Bronze", schema="demo")',
   'related_functions': ['write_lakehouse_table', 'read_lakehouse_csv', 'read_warehouse_query'],
   'expanded_purpose': 'Resolves the configured Lakehouse Tables path, then delegates to Spark Delta reader with any supplied reader options.',
   'when_to_use': 'Use near the start of a notebook when Spark processing needs a full Lakehouse table DataFrame.',
@@ -1260,7 +1260,7 @@ PUBLIC_SYMBOL_DOCS = [
   'side_effects': 'Writes data to the configured Lakehouse Delta table path.',
   'fabric_context': 'Routes writes through configured FabricOps Lakehouse targets instead of an attached/default lakehouse.',
   'ai_verification': 'Verify guardrails passed, target/schema/table routing is intentional, and write mode is safe before generating calls.',
-  'preferred_example': 'write_lakehouse_table(df_orders, "orders_clean", store="Silver", schema=UNIFIED_SCHEMA, mode="overwrite")',
+  'preferred_example': 'write_lakehouse_table(orders_df, "orders_clean", store="Silver", schema="demo", mode="overwrite")',
   'related_functions': ['read_lakehouse_table', 'write_warehouse_table'],
   'expanded_purpose': 'Resolves the configured Lakehouse Tables path, then delegates to Spark Delta writer with any supplied writer options.',
   'when_to_use': 'Use after transformations and guardrail checks when the destination is a Lakehouse table.',
@@ -1288,8 +1288,7 @@ PUBLIC_SYMBOL_DOCS = [
                     'intended env name; never hardcode Fabric workspace or item identifiers.',
   'ai_verification': 'Verify relative_path is a configured Fabric-resolved file path, then check row count and schema '
                      'after reading.',
-  'preferred_example': 'df = read_lakehouse_csv('
-                       'relative_path="raw/orders/orders.csv", header=True, spark_session=spark)',
+  'preferred_example': 'orders_df = read_lakehouse_csv("incoming/orders.csv", inferSchema=True)',
   'related_functions': ['read_lakehouse_table', 'read_lakehouse_parquet', 'read_lakehouse_excel'],
   'expanded_purpose': 'Resolves the configured Lakehouse Files path, then delegates to Spark CSV reader with supplied CSV options.',
   'when_to_use': 'Use for file-based source ingestion when the source is CSV and should be '
@@ -1348,8 +1347,7 @@ PUBLIC_SYMBOL_DOCS = [
                     'intended env name; never hardcode Fabric workspace or item identifiers.',
   'ai_verification': 'Verify the file path is resolved by the Fabric resolver and check row '
                      'count/schema after reading.',
-  'preferred_example': 'df = read_lakehouse_parquet('
-                       'relative_path="raw/orders/orders.parquet", spark_session=spark)',
+  'preferred_example': 'orders_df = read_lakehouse_parquet("curated/orders/", spark_session=spark)',
   'related_functions': ['read_lakehouse_csv', 'read_lakehouse_excel', 'read_lakehouse_table'],
   'expanded_purpose': 'Resolves the configured Lakehouse Files path, then delegates to Spark Parquet reader with supplied options and timestamp fallback reads.',
   'when_to_use': 'Use for file-based source ingestion when the source is Parquet rather than a '
@@ -1479,8 +1477,7 @@ PUBLIC_SYMBOL_DOCS = [
                     'intended env name; never hardcode Fabric workspace or item identifiers.',
   'ai_verification': 'Verify guardrails passed, confirm schema/table routing from CONFIG, and '
                      'check the intended write mode before calling.',
-  'preferred_example': 'write_warehouse_table(serving_df, '
-                       'store="Warehouse", schema="dbo", table_name="orders_serving", mode="append")',
+  'preferred_example': 'write_warehouse_table(orders_df, "dbo", "orders", mode="append")',
   'related_functions': ['read_warehouse_table', 'read_warehouse_query'],
   'expanded_purpose': 'Resolves the configured Warehouse table target, optionally applies Spark repartition_by handling to control write parallelism without creating a physically partitioned Warehouse table, then delegates writes to the Fabric Warehouse Spark connector with supplied writer options.',
   'when_to_use': 'Use for target writes after guardrails pass and the configured output layer is a '
@@ -1498,25 +1495,25 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Profile a Spark DataFrame or complete governed table with one PySpark API.',
+  'summary_override': 'Profile a Spark DataFrame or complete governed table and return statistical and frequency results.',
   'symbol_name': 'profile_table',
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Profiling',
   'use_when': 'Use for non-persistent DataFrame profiling or governed table profiling and metadata persistence.',
-  'do_not_use_when': 'Do not use for Warehouse-native SQL profiling, business table writes, or Guardrail execution.',
+  'do_not_use_when': 'Do not associate a partial incremental batch with a complete-source governed profile.',
   'parameters': 'keyword-only dataframe or governed identity, plus optional frequency controls.',
-  'returns': 'Dictionary containing canonical statistical and applicable frequency Spark DataFrames.',
+  'returns': 'Dictionary with profile (statistical Spark DataFrame) and frequency_profile (frequency Spark DataFrame or None).',
   'raises': 'Raises ValueError for missing or conflicting identity inputs and invalid frequency settings.',
   'side_effects': 'Writes METADATA_DATA_CATALOGUE, METADATA_DATA_PROFILED, and METADATA_DATA_PROFILED_FREQUENCY only when governed identity is supplied.',
   'fabric_context': 'Governed mode requires 00_env_config; DataFrame-only mode does not resolve or write metadata.',
   'ai_verification': 'Verify whether persistence is intended and provide table_id explicitly when associating a supplied DataFrame with a governed table.',
-  'preferred_example': 'result = profile_table(dataframe=source_df, table_id=source_table_id)',
+  'preferred_example': 'result = profile_table(dataframe=orders_df)\nstatistical_profile = result["profile"]',
   'related_functions': ['pipeline_read', 'pipeline_write'],
-  'expanded_purpose': 'Consolidates exact PySpark statistical and frequency profiling, optional physical reads, and governed metadata registration behind one notebook-facing API.',
-  'when_to_use': 'Use with dataframe alone for exploration, identity alone for a complete governed physical table, or dataframe plus identity to persist that exact frame against the governed table.',
+  'expanded_purpose': 'Profiles an exact supplied DataFrame or complete physical table. Governed identities persist METADATA_DATA_CATALOGUE, METADATA_DATA_PROFILED, and METADATA_DATA_PROFILED_FREQUENCY; DataFrame-only calls remain in memory.',
+  'when_to_use': 'Use dataframe= for exploration without persistence, or supply governed identity to register and persist a complete table profile. Use frequency_columns=[] to skip frequency calculations.',
   'glossary_terms': ['Data Catalogue', 'Profile', 'source table', 'target table'],
-  'return_interpretation': 'profile contains statistical rows; frequency_profile contains exact ranked value frequencies or None.',
-  'common_failure_causes': ['No DataFrame or identity was supplied.', 'Identity forms conflict.', 'The configured target cannot be resolved.', 'Spark profiling or governed metadata persistence fails.'],
+  'return_interpretation': 'Use result["profile"] for statistical rows and result["frequency_profile"] for selected frequency distributions. Governed rows include snapshot identities and audit fields; DataFrame-only calls do not write metadata.',
+  'common_failure_causes': ['Supply dataframe or a complete governed identity; do not mix table_id and physical coordinates.', 'Selected frequency columns must exist. frequency_top_n limits retained values, not grouping cost.', 'Governed profiling requires configured metadata routing, write permission, and Delta support.'],
   'related_guides': [{'title': 'Pipeline Execution', 'path': '../../guided-demo/02-build-and-run-etl.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
@@ -1816,7 +1813,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "side_effects": "Constructs a Spark CSV read plan only; it does not write files, tables, or metadata.",
         "return_interpretation": "The returned DataFrame is a normal lazy Spark DataFrame until an action such as count, display, collect, or write is executed.",
         "common_failure_causes": ["The lakehouse target or Files path cannot be resolved.", "The path is missing or the caller lacks read permission.", "Malformed rows, inconsistent files in a folder, absent headers, or empty files do not match the requested Spark CSV options.", "Schema inference can produce unexpected types; an explicit schema can mismatch source values.", "Some Spark failures appear only when a downstream action evaluates the DataFrame."],
-        "preferred_example": 'source_df = read_lakehouse_csv("Files/inbound/student_enrolment/*.csv", store="Bronze", header=True, inferSchema=True, spark_session=spark)',
+        "preferred_example": 'orders_df = read_lakehouse_csv("incoming/orders.csv", inferSchema=True)',
     },
     "read_lakehouse_parquet": {
         "expanded_purpose": "Reads Parquet data from a Fabric lakehouse Files location into a Spark DataFrame while resolving the logical FabricOps lakehouse target and path. It preserves Parquet schema metadata where Spark can infer it and does not register, profile, or write a new table.",
@@ -1824,7 +1821,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "returns": "Spark DataFrame backed by the selected Parquet file or folder. One DataFrame row represents one source record; partition columns may be added by Spark when reading partitioned folders.",
         "return_interpretation": "The function verifies decodability with a one-row Spark action before returning, then downstream transformations remain normal Spark DataFrame operations.",
         "common_failure_causes": ["The path is missing, inaccessible, empty, corrupt, or not Parquet.", "Schemas are incompatible across files unless Spark options such as mergeSchema are appropriate.", "Schema merging can be expensive on large partitioned folders.", "The configured target cannot be resolved or read.", "Failures can occur during the initial validation action or later Spark evaluation."],
-        "preferred_example": 'source_df = read_lakehouse_parquet("Files/curated/student_enrolment/", store="Bronze", spark_session=spark)',
+        "preferred_example": 'orders_df = read_lakehouse_parquet("curated/orders/", spark_session=spark)',
     },
     "read_lakehouse_table": {
         "expanded_purpose": "Loads a registered lakehouse Delta table into a Spark DataFrame using FabricOps target, schema, and table-name resolution so notebooks do not hardcode fully qualified table paths.",
@@ -1832,7 +1829,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "parameters": "table_name is the logical table name, not a qualified schema.table string; store selects the configured Lakehouse; schema optionally qualifies schema-enabled lakehouses; spark_session overrides notebook global spark; context supplies reusable FabricOps config/env; reader options are passed to Spark Delta reader.",
         "returns": "Spark DataFrame containing the current rows and columns of the resolved lakehouse table. The DataFrame preserves the table Spark schema and remains lazy until an action is executed.",
         "common_failure_causes": ["The target cannot be resolved or is not a lakehouse.", "The table is not found, exists under another lakehouse or schema, or the schema argument is incorrect.", "The caller lacks read permissions or no Spark session is available.", "Spark Delta read failures may be deferred until an action evaluates the DataFrame."],
-        "preferred_example": 'catalogue_df = read_lakehouse_table("METADATA_DATA_CATALOGUE", store="Metadata", schema=METADATA_SCHEMA, spark_session=spark)',
+        "preferred_example": 'orders_df = read_lakehouse_table("orders", store="Bronze", schema="demo")',
     },
     "read_warehouse_query": {
         "expanded_purpose": "Executes caller-supplied read-only SQL against a Fabric Warehouse and returns the result as a Spark DataFrame. Filtering, joins, grouping, and projection run in the Warehouse before rows are transferred to Spark.",
@@ -1859,7 +1856,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "returns": "None. The function validates routing and write settings, optionally repartitions the DataFrame, performs the Spark Delta write, and returns after the write completes or Spark raises an error.",
         "common_failure_causes": ["Zero or negative repartition counts, unsupported repartition_by types, empty lists/tuples, non-string column values after any leading partition count, or missing repartition columns.", "Invalid partition_by columns, schema mismatch, append-versus-overwrite conflicts, or unintended destructive overwrite.", "Insufficient write permissions, concurrent writes to the same target table, partial or failed Delta commits, empty DataFrame handling, small-file risk, or Spark shuffle failure."],
         "usage_notes": "Parallel processing is Spark distributed execution over DataFrame partitions, not Python threading, multiprocessing, parallel submission of separate tables, or a separate orchestration helper. repartition_by changes Spark execution partitions for the current write; partition_by changes the persisted Delta layout.",
-        "preferred_example": 'write_lakehouse_table(enrolment_df, "STUDENT_ENROLMENT_HISTORY", store="Silver", schema=DATA_SCHEMA, mode="overwrite", repartition_by=48, partition_by=["academic_year"])',
+        "preferred_example": 'write_lakehouse_table(orders_df, "orders_clean", store="Silver", schema="demo", mode="overwrite")',
     },
     "write_warehouse_table": {
         "expanded_purpose": "Writes a Spark DataFrame to a Fabric Warehouse table through the configured Warehouse write path. Spark-side repartitioning can be applied before connector transfer so large datasets can use multiple Spark tasks concurrently; it does not create physical Warehouse table partitions.",
@@ -1868,17 +1865,17 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "returns": "None. The function validates repartitioning, optionally writes a repartitioned DataFrame through the Warehouse connector, and returns after connector execution completes or raises an error.",
         "common_failure_causes": ["Zero or negative repartition counts, missing repartition columns, unsupported repartition_by value types, empty lists/tuples, or non-string column values after any leading partition count.", "Schema or table not found, unsupported write mode, authentication or connector failure, Warehouse permission failure, or unsupported Spark-to-Warehouse type conversion.", "Connector-managed transfer or staging failure, transaction or lock conflict, empty DataFrame behaviour, large transfer timeout/resource exhaustion, or accidentally writing the original DataFrame instead of the repartitioned one."],
         "usage_notes": "Parallel Spark tasks within one write_warehouse_table call are not the same as several notebooks or jobs writing to the same Warehouse table concurrently. The function does not coordinate independent writers or guarantee safe simultaneous overwrite operations, and it must not be documented with lakehouse-style partition_by behaviour.",
-        "preferred_example": 'write_warehouse_table(transaction_df, "dbo", "FACT_TRANSACTIONS", store="warehouse", mode="append", repartition_by=48)',
+        "preferred_example": 'write_warehouse_table(orders_df, "dbo", "orders", mode="append")',
     },
 
 
     "profile_table": {
-        "expanded_purpose": "Profiles the supplied Spark DataFrame exactly as provided; saves compact summary rows to METADATA_DATA_PROFILED; reuses profile_table to replace normalized rows in METADATA_DATA_PROFILED_FREQUENCY; and updates catalogue identities through the configured metadata lakehouse.",
-        "when_to_use": "Use once for each source or target DataFrame that should produce persisted profiling evidence and catalogue identity in a pipeline run. Use profile_table alone when you only need an in-memory profile. Pass explicit frequency_columns to override the default high-cardinality safeguard, [] to disable frequency evidence, frequency_max_distinct_percent=None to disable automatic threshold filtering, or frequency_profile_df when an upstream workflow has prepared the DataFrame that frequency counts should describe.",
-        "returns": "Spark DataFrame containing one compact profiling summary row for each eligible column appended to METADATA_DATA_PROFILED, including profile_id, profile_snapshot_id, stable table_id and column_id identities, environment_name, complete-DataFrame statistics, profiling timestamp, and runtime audit fields.",
-        "return_interpretation": "The returned rows are the compact parent summaries. Flattened frequency rows are written separately to METADATA_DATA_PROFILED_FREQUENCY, link to their parent through profile_id, and share the same profile_snapshot_id; frequency and catalogue rows are side effects and are not returned.",
-        "common_failure_causes": ["profile_role must be source or target, or the configured target store kind is unsupported.", "target or table_name is blank, or a schema-enabled store has no explicit or configured schema.", "frequency_profile_df is not Spark DataFrame-like, uses an incompatible Spark session, or is missing selected frequency columns.", "The configured metadata target cannot be resolved or written.", "Requested frequency columns are missing or expensive to group; frequency_top_n limits returned values only and does not reduce grouping cost."],
-        "preferred_example": 'profiled_df = profile_table(source_df, profile_role="source", store="Bronze", schema=SOURCE_SCHEMA, table_name="student_enrolment", frequency_profile_df=profile_sample_df)',
+        "expanded_purpose": 'Profiles an exact supplied DataFrame or complete physical table. Governed identities persist METADATA_DATA_CATALOGUE, METADATA_DATA_PROFILED, and METADATA_DATA_PROFILED_FREQUENCY; DataFrame-only calls remain in memory.',
+        "when_to_use": 'Use dataframe= for exploration without persistence, or supply governed identity to register and persist a complete table profile. Use frequency_columns=[] to skip frequency calculations.',
+        "returns": 'Dictionary with profile (statistical Spark DataFrame) and frequency_profile (frequency Spark DataFrame or None).',
+        "return_interpretation": 'Use result["profile"] for statistical rows and result["frequency_profile"] for selected frequency distributions. Governed rows include snapshot identities and audit fields; DataFrame-only calls do not write metadata.',
+        "common_failure_causes": ['Supply dataframe or a complete governed identity; do not mix table_id and physical coordinates.', 'Selected frequency columns must exist. frequency_top_n limits retained values, not grouping cost.', 'Governed profiling requires configured metadata routing, write permission, and Delta support.'],
+        "preferred_example": 'result = profile_table(dataframe=orders_df)\nstatistical_profile = result["profile"]',
     },
 }
 
@@ -2074,24 +2071,11 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                      'invalid.',
                                                      'Warehouse connector support is unavailable.',
                                                      'The caller lacks write permission.']},
- 'profile_table': {'expanded_purpose': 'Builds deterministic profiles for a DataFrame, '
-                                           'including schema, row counts, nulls, distinct counts, '
-                                           'numeric statistics, and supported min/max values.',
-                       'when_to_use': 'Use during exploration, governance review, or guardrail '
-                                      'preparation when a table needs reproducible profile '
-                                      'evidence.',
+ 'profile_table': {'expanded_purpose': 'Profiles an exact supplied DataFrame or complete physical table. Governed identities persist METADATA_DATA_CATALOGUE, METADATA_DATA_PROFILED, and METADATA_DATA_PROFILED_FREQUENCY; DataFrame-only calls remain in memory.',
+                       'when_to_use': 'Use dataframe= for exploration without persistence, or supply governed identity to register and persist a complete table profile. Use frequency_columns=[] to skip frequency calculations.',
                        'glossary_terms': ['evidence', 'source data', 'target table'],
-                       'return_interpretation': 'Each returned profile row describes one table or '
-                                                'column metric. Downstream governance and '
-                                                'guardrail helpers use those rows as evidence.',
-                       'common_failure_causes': ['The DataFrame is empty or missing expected '
-                                                 'columns.',
-                                                 'Requested statistics are unsupported for a '
-                                                 'column type.',
-                                                 'Spark actions fail while computing counts or '
-                                                 'summaries.',
-                                                 'Excluded columns remove fields needed for '
-                                                 'review.']},
+                       'return_interpretation': 'Use result["profile"] for statistical rows and result["frequency_profile"] for selected frequency distributions. Governed rows include snapshot identities and audit fields; DataFrame-only calls do not write metadata.',
+                       'common_failure_causes': ['Supply dataframe or a complete governed identity; do not mix table_id and physical coordinates.', 'Selected frequency columns must exist. frequency_top_n limits retained values, not grouping cost.', 'Governed profiling requires configured metadata routing, write permission, and Delta support.']},
 
  'enforce_freshness': {'expanded_purpose': 'Checks whether the latest value in a freshness column '
                                            'is recent enough for the configured maximum lag before '

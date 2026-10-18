@@ -77,6 +77,38 @@ def widget_activate_data_contract(
     links one exact Data Agreement version and updates the active Production
     contract pointer; it never edits the immutable contract payload or deploys
     the Engineering pipeline.
+
+    Parameters
+    ----------
+    table_id : str, optional
+        Initial governed table selection; omitted or unavailable IDs select the
+        first table with a frozen contract.
+    contract_version : int, optional
+        Initial frozen version selection. Choose an available version in the UI.
+    spark_session : object, optional
+        Active Fabric Spark session override.
+    context : object, optional
+        FabricOps runtime context established by 00_env_config.
+
+    Returns
+    -------
+    dict[str, Any]
+        Rendered widget, selectors, validation state, activation action, and
+        ``refresh`` callback. Opening the widget does not activate a version.
+
+    Raises
+    ------
+    ValueError
+        If an activation request fails validation. Select a frozen version with
+        successful latest Engineering validation and an eligible Data Agreement.
+    RuntimeError
+        If metadata routing, reads, or activation persistence fail. Check the
+        configured metadata target and permissions. UI callbacks display failures.
+
+    Examples
+    --------
+    >>> state = widget_activate_data_contract(spark_session=spark)
+
     """
     from IPython import display as ip
     import ipywidgets as widgets

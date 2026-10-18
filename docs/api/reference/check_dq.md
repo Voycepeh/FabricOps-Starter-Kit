@@ -8,21 +8,25 @@
 
 Evaluate current active governed DQ rules and persist linked rule and failed-row evidence.
 
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/pipeline/check_dq.py:13`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L13-L178">View on GitHub</a>
-</div>
-
 
 ## Usage notes
 
-Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
+Use after reading source or target rows and before a governed write proceeds.
 
-For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+dq_result = check_dq(source_df, table_id=table_id, row_identity_columns=["order_id"])
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -31,6 +35,7 @@ For profiling-related pipeline functions, the output captures the important deta
 ```python
 def check_dq(
     dataframe,
+    *,
     table_id: str,
     dataset_name: str='',
     run_id: str='',
@@ -44,34 +49,58 @@ def check_dq(
 
 </div>
 
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
->>> result = check_dq(source_df, table_id="lakehouse||source||dbo||orders", row_identity_columns=["order_id"])
->>> result["can_continue"]
-True
->>> result["failed_values"].select("rule_id", "column_name", "raw_value").show()
-
-</div>
+</details>
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `dataframe` | `pyspark.sql.DataFrame` | Yes | Source or target rows to evaluate. |
-| `table_id` | `str` | Yes | Canonical identity of an active registered Catalogue table. |
-| `dataset_name` | `str` | No | Governed dataset identity used to further scope rules when supplied. |
-| `run_id` | `str` | No | Pipeline run identity persisted with summary evidence. When omitted, the current Fabric activity identity is used. |
-| `row_identity_columns` | `list[str] \| None` | No | Business-key columns used for row identity. When omitted, an existing row UUID/ID is preferred and a deterministic content hash is the fallback. |
-| `enabled` | `bool` | No | Explicitly disable this check when ``False``. Normally omit this value; FabricOps enforces the resolved pipeline Data Contract automatically. |
-| `raise_on_failure` | `bool` | No | Raise ``RuntimeError`` when a blocking DQ result cannot continue. |
-| `spark_session` | `object` | No | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active session. |
-| `verbose` | `bool` | No | Print the concise normalized check outcome when ``True``. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `dataframe` | `pyspark.sql.DataFrame` | Yes | `—` | Source or target rows to evaluate. |
+| `table_id` | `str` | Yes | `—` | Canonical identity of an active registered Catalogue table. |
+| `dataset_name` | `str` | No | `''` | Governed dataset identity used to further scope rules when supplied. |
+| `run_id` | `str` | No | `''` | Pipeline run identity persisted with summary evidence. When omitted, the current Fabric activity identity is used. |
+| `row_identity_columns` | `list[str] \| None` | No | `None` | Business-key columns used for row identity. When omitted, an existing row UUID/ID is preferred and a deterministic content hash is the fallback. |
+| `enabled` | `bool` | No | `True` | Explicitly disable this check when ``False``. Normally omit this value; FabricOps enforces the resolved pipeline Data Contract automatically. |
+| `raise_on_failure` | `bool` | No | `False` | Raise ``RuntimeError`` when a blocking DQ result cannot continue. |
+| `spark_session` | `object` | No | `None` | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active session. |
+| `verbose` | `bool` | No | `True` | Print the concise normalized check outcome when ``True``. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+result = check_dq(source_df, table_id="lakehouse||source||dbo||orders", row_identity_columns=["order_id"])
+result["can_continue"]
+```
+
+```text
+True
+```
+
+```python
+result["failed_values"].select("rule_id", "column_name", "raw_value").show()
+```
+
+</div>
 
 ## Returns
 
-Overall DQ status, continuation decision, per-rule checks, aggregate counts, and a tagged DataFrame.
+dict
+    Overall ``status`` and ``can_continue`` decision, concise ``summary``,
+    one check per evaluated rule, the original DataFrame with DQ status columns,
+    and a normalized ``failed_values`` DataFrame. Failure detail has one
+    row per failed rule, involved column, and source record, with a shared
+    ``failure_event_id``, row and rule identities, action, column role,
+    string ``raw_value``, original ``raw_value_type``, and reason. It does
+    not copy unrelated source columns. Evaluated rules also include the
+    resolved ``run_id``.
 
 ## Raises / Errors
 
@@ -99,8 +128,16 @@ Block failures prevent continuation while Warn failures do not.
 
 No related guides documented.
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/pipeline/check_dq.py:13`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L13-L178">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

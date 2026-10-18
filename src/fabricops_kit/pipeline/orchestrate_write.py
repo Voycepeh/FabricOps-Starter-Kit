@@ -20,11 +20,13 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     dataframe : object
         Transformed Spark DataFrame to validate and publish.
     sources : iterable of dict
-        Governed source results containing ``table_id``.
+        Governed source results containing ``table_id``. Pass [] for a source-free
+        target.
     store : str
         Configured destination store key.
-    schema : str, optional
-        Physical target schema.
+    schema : str or None
+        Physical target schema. This keyword is required; pass None for a store
+        without schemas.
     table_name : str
         Physical target table name.
     write_mode : str
@@ -77,8 +79,18 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
 
     Examples
     --------
-    >>> result = orchestrate_write(transformed_df, sources=[orders], store="Silver", schema="demo", table_name="curated_orders", write_mode="overwrite", contracts=CONTRACTS)
-    >>> result = orchestrate_write(product_mapping_df, sources=[], store="Silver", schema="demo", table_name="product_mapping", write_mode="scd1", write_parameters={"key_columns": ["product_id"]})
+    >>> result = orchestrate_write(
+    ...     transformed_df, sources=[orders], store="Silver", schema="demo",
+    ...     table_name="curated_orders", write_mode="overwrite", contracts=CONTRACTS,
+    ... )
+
+    Development SCD1 with a source-free mapping table:
+
+    >>> result = orchestrate_write(
+    ...     product_mapping_df, sources=[], store="Silver", schema="demo",
+    ...     table_name="product_mapping", write_mode="scd1",
+    ...     write_parameters={"key_columns": ["product_id"]},
+    ... )
 
     See Also
     --------

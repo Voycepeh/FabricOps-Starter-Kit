@@ -8,6 +8,93 @@
 
 Discover visible Fabric data items and resolve effective table access to individual users.
 
+
+## Usage notes
+
+Use when you have caller-supplied identity and group-membership mappings and need a read-only person-level Workspace, SQL, and OneLake access report.
+
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+result = scan_effective_access(identity_map_df=identity_map_df, group_membership_df=group_membership_df)
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def scan_effective_access(*, identity_map_df, group_membership_df) -> dict[str, Any]
+```
+
+</div>
+
+</details>
+
+## Parameters
+
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `identity_map_df` | `pyspark.sql.DataFrame` | Yes | `—` | Principal directory snapshot with ``object_id``, ``display_name``, ``user_principal_name``, ``principal_type``, and ``group_type``. Object IDs remain the stable join keys and readable fields are copied to the person-level result. |
+| `group_membership_df` | `pyspark.sql.DataFrame` | Yes | `—` | Caller-supplied group edges with ``group_object_id`` and ``member_object_id``. Supply transitive source edges; FabricOps performs the recursive expansion and cycle detection. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+result = scan_effective_access(
+    identity_map_df=identity_map_df,
+    group_membership_df=group_membership_df,
+)
+display(result["access"])
+display(result["coverage"])
+```
+
+</div>
+
+## Returns
+
+dict[str, pyspark.sql.DataFrame]
+    ``access`` contains consolidated person/table/surface observations,
+    explicit verification status, confirmed effective permissions, and
+    provenance. ``coverage`` contains visibility gaps, unsupported cases,
+    restrictions, contradictions, and errors.
+
+### Return interpretation
+
+Filter result["access"] to access_verification_status == "CONFIRMED" for established effective permissions; review UNVERIFIED and NOT_EFFECTIVE observations with result["coverage"].
+
+## Raises / Errors
+
+ValueError
+    If either DataFrame lacks required columns or the DataFrames belong to
+    different Spark sessions.
+
+### Common failure causes
+
+- The caller cannot list workspace role assignments or OneLake roles.
+- Direct item assignments or the SQL endpoint access mode cannot be established through supported read-only interfaces.
+- The identity or membership mapping is incomplete.
+- DefaultReader differs from its assumed baseline or a permission is restricted.
+
+## Behavior and scope
+
 <div class="reference-docstring-intro" markdown="1">
 
 The scan uses caller-scoped Workspace and Catalog Search APIs to discover
@@ -63,6 +150,10 @@ restricted instead of being presented as unrestricted table access.
 
 </div>
 
+## See also
+
+- [Scan Effective Data Access](../../solutions/effective-data-access.md)
+
 <div class="reference-source-card" markdown="1">
 **Source**
 
@@ -72,70 +163,7 @@ restricted instead of being presented as unrestricted table access.
 </div>
 
 
-## Usage notes
-
-Use for an auditable, non-persisted effective data access review based on the scopes visible to the caller.
-
-Do not treat UNVERIFIED observations or an empty access result as proof of effective access or denial; always inspect coverage.
-
-Uses caller-scoped Workspace and Catalog Search APIs to discover visible and directly shared Lakehouses, Warehouses, and tables; combines item access with Workspace, SQL, and OneLake data permissions; distinguishes SQL authorization modes; recursively expands security groups; applies denies conservatively; and preserves every contributing path.
-
-
-## Signature
-
-<div class="reference-api-definition" markdown="1">
-
-```python
-def scan_effective_access(*, identity_map_df, group_membership_df) -> dict[str, Any]
-```
-
-</div>
-
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
->>> result = scan_effective_access(
-...     identity_map_df=identity_map_df,
-...     group_membership_df=group_membership_df,
-... )
->>> display(result["access"])
->>> display(result["coverage"])
-
-</div>
-
-## Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `identity_map_df` | `pyspark.sql.DataFrame` | Yes | Principal directory snapshot with ``object_id``, ``display_name``, ``user_principal_name``, ``principal_type``, and ``group_type``. Object IDs remain the stable join keys and readable fields are copied to the person-level result. |
-| `group_membership_df` | `pyspark.sql.DataFrame` | Yes | Caller-supplied group edges with ``group_object_id`` and ``member_object_id``. Supply transitive source edges; FabricOps performs the recursive expansion and cycle detection. |
-
-## Returns
-
-Dictionary with person/table/surface observations labelled CONFIRMED, UNVERIFIED, or NOT_EFFECTIVE, plus explicit coverage limitations.
-
-### Return interpretation
-
-Filter result["access"] to access_verification_status == "CONFIRMED" for established effective permissions; review UNVERIFIED and NOT_EFFECTIVE observations with result["coverage"].
-
-## Raises / Errors
-
-Raises ValueError for invalid mapping DataFrame schemas or mismatched Spark sessions; platform discovery failures are returned in coverage.
-
-### Common failure causes
-
-- The caller cannot list workspace role assignments or OneLake roles.
-- Direct item assignments or the SQL endpoint access mode cannot be established through supported read-only interfaces.
-- The identity or membership mapping is incomplete.
-- DefaultReader differs from its assumed baseline or a permission is restricted.
-
-## See also
-
-- [Scan Effective Data Access](../../solutions/effective-data-access.md)
-
-
-<details>
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

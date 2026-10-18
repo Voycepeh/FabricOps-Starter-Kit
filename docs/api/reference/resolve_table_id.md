@@ -9,21 +9,25 @@
 
 Resolve deterministic target identity before its first Development write.
 
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/pipeline/resolve_table_id.py:7`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/resolve_table_id.py#L7-L45">View on GitHub</a>
-</div>
-
 
 ## Usage notes
 
-Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
+Use when target Guardrails need canonical target identity before the physical target exists.
 
-For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+table_id = resolve_table_id(store="Silver", schema="dbo", table_name="orders")
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -35,27 +39,39 @@ def resolve_table_id(*, store: str, schema: str | None=None, table_name: str) ->
 
 </div>
 
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
->>> table_id = resolve_table_id(
-...     store="Silver", schema="dbo", table_name="curated_orders"
-... )
-
-</div>
+</details>
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `store` | `str` | Yes | Configured FabricStore key. |
-| `schema` | `str \| None` | No | Physical schema, or ``None`` when the configured store does not use one. |
-| `table_name` | `str` | Yes | Physical table name. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `store` | `str` | Yes | `—` | Configured FabricStore key. |
+| `schema` | `str \| None` | No | `None` | Physical schema, or ``None`` when the configured store does not use one. |
+| `table_name` | `str` | Yes | `—` | Physical table name. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+table_id = resolve_table_id(
+    store="Silver", schema="dbo", table_name="curated_orders"
+)
+```
+
+</div>
 
 ## Returns
 
-Deterministic canonical table_id for the configured physical identity.
+str
+    Deterministic canonical ``table_id``. The physical table and Catalogue
+    record do not need to exist yet.
 
 ## Raises / Errors
 
@@ -66,8 +82,16 @@ ValueError
 
 No related guides documented.
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/pipeline/resolve_table_id.py:7`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/resolve_table_id.py#L7-L45">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

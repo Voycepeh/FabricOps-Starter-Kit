@@ -7,7 +7,132 @@
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
-Profile a Spark DataFrame or complete governed table with one PySpark API.
+Profile a Spark DataFrame or complete governed table and return statistical and frequency results.
+
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">99_explore</span>
+</p>
+
+## Usage notes
+
+Use for non-persistent DataFrame profiling or governed table profiling and metadata persistence.
+
+
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+result = profile_table(dataframe=orders_df)
+statistical_profile = result["profile"]
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def profile_table(
+    *,
+    dataframe=None,
+    store: str | None=None,
+    schema: str | None=None,
+    table_name: str | None=None,
+    table_id: str | None=None,
+    frequency_columns=None,
+    frequency_enabled: bool=True,
+    frequency_top_n: int | None=5,
+    frequency_max_distinct_percent: float | None=80.0,
+    spark_session=None,
+):
+```
+
+</div>
+
+</details>
+
+## Parameters
+
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `dataframe` | `pyspark.sql.DataFrame` | No | `None` | Required unless a complete governed identity is provided. With no DataFrame and no identity, the call raises ValueError. If an identity is also supplied, FabricOps does not re-read the physical table. |
+| `store` | `str \| None` | No | `None` | Configured physical store key. Supply with ``table_name`` and optional ``schema`` instead of ``table_id``. |
+| `schema` | `str \| None` | No | `None` | Physical schema when the configured store uses schemas. |
+| `table_name` | `str \| None` | No | `None` | Physical table name. Required with ``store`` when ``table_id`` is omitted. |
+| `table_id` | `str \| None` | No | `None` | Canonical governed table identity, mutually exclusive with physical coordinates. |
+| `frequency_columns` | `sequence of str` | No | `None` | Columns to frequency profile. ``None`` automatically selects eligible scalar columns; an empty sequence skips frequency profiling. |
+| `frequency_enabled` | `bool` | No | `True` | Whether to calculate frequency distributions for the table. False skips all frequency columns. |
+| `frequency_top_n` | `int \| None` | No | `5` | Ranked values to retain per frequency column. ``None`` retains all. |
+| `frequency_max_distinct_percent` | `float \| None` | No | `80.0` | Maximum distinct-per-non-null percentage for automatically selected columns. ``None`` disables the cardinality filter. |
+| `spark_session` | `object` | No | `None` | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active session. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+Profile an arbitrary DataFrame without persistence:
+
+```python
+result = profile_table(dataframe=raw_df)
+statistical_profile = result["profile"]
+frequencies = result["frequency_profile"]
+```
+
+Profile a governed complete physical table without knowing its store kind:
+
+```python
+result = profile_table(store="Bronze", schema="dbo", table_name="orders")
+```
+
+Profile a transformed DataFrame against an explicit governed identity:
+
+```python
+result = profile_table(dataframe=transformed_df, table_id=target_table_id)
+```
+
+</div>
+
+## Returns
+
+dict
+    ``profile`` contains the canonical statistical Spark DataFrame and
+    ``frequency_profile`` contains the applicable canonical frequency
+    Spark DataFrame, or ``None`` when no columns were selected. Governed
+    ``profile`` rows additionally contain persisted snapshot identities
+    and audit fields.
+
+### Return interpretation
+
+Use result["profile"] for statistical rows and result["frequency_profile"] for selected frequency distributions. Governed rows include snapshot identities and audit fields; DataFrame-only calls do not write metadata.
+
+## Raises / Errors
+
+ValueError
+    If identity inputs conflict or are incomplete, neither a DataFrame nor
+    identity is supplied, frequency settings are invalid, or the resolved
+    store is unsupported.
+RuntimeError
+    If a governed metadata write requires unavailable Delta support.
+
+### Common failure causes
+
+- Supply dataframe or a complete governed identity; do not mix table_id and physical coordinates.
+- Selected frequency columns must exist. frequency_top_n limits retained values, not grouping cost.
+- Governed profiling requires configured metadata routing, write permission, and Delta support.
+
+## Behavior and scope
 
 <div class="reference-docstring-intro" markdown="1">
 
@@ -25,104 +150,21 @@ profiled without creating an identity or writing metadata.
 
 </div>
 
+## See also
+
+- [Pipeline Execution](../../guided-demo/02-build-and-run-etl.md)
+
 <div class="reference-source-card" markdown="1">
 **Source**
 
 `fabricops_kit/pipeline/profile_table.py:1084`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1084-L1400">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1084-L1401">View on GitHub</a>
 </div>
 
-<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">99_explore</span>
-</p>
 
-## Usage notes
-
-Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
-
-For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
-
-
-## Signature
-
-<div class="reference-api-definition" markdown="1">
-
-```python
-def profile_table(
-    dataframe=None,
-    store: str | None=None,
-    schema: str | None=None,
-    table_name: str | None=None,
-    table_id: str | None=None,
-    frequency_columns=None,
-    frequency_enabled: bool=True,
-    frequency_top_n: int | None=5,
-    frequency_max_distinct_percent: float | None=80.0,
-    spark_session=None,
-):
-```
-
-</div>
-
-## Example usage
-
-<div class="reference-example-usage" markdown="1">
-
-Profile an arbitrary DataFrame without persistence:
-
->>> result = profile_table(dataframe=raw_df)
->>> statistical_profile = result["profile"]
->>> frequencies = result["frequency_profile"]
-
-Profile a governed complete physical table without knowing its store kind:
-
->>> result = profile_table(store="Bronze", schema="dbo", table_name="orders")
-
-Profile a transformed DataFrame against an explicit governed identity:
-
->>> result = profile_table(dataframe=transformed_df, table_id=target_table_id)
-
-</div>
-
-## Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `dataframe` | `pyspark.sql.DataFrame` | No | Exact Spark DataFrame to profile. If a governed identity is also supplied, FabricOps does not re-read the physical table. |
-| `store` | `str \| None` | No | Configured physical store key. Supply with ``table_name`` and optional ``schema`` instead of ``table_id``. |
-| `schema` | `str \| None` | No | Physical schema when the configured store uses schemas. |
-| `table_name` | `str \| None` | No | Physical table name. Required with ``store`` when ``table_id`` is omitted. |
-| `table_id` | `str \| None` | No | Canonical governed table identity, mutually exclusive with physical coordinates. |
-| `frequency_columns` | `sequence of str` | No | Columns to frequency profile. ``None`` automatically selects eligible scalar columns; an empty sequence skips frequency profiling. |
-| `frequency_enabled` | `bool` | No | Whether to calculate frequency distributions for the table. False skips all frequency columns. |
-| `frequency_top_n` | `int \| None` | No | Ranked values to retain per frequency column. ``None`` retains all. |
-| `frequency_max_distinct_percent` | `float \| None` | No | Maximum distinct-per-non-null percentage for automatically selected columns. ``None`` disables the cardinality filter. |
-| `spark_session` | `object` | No | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active session. |
-
-## Returns
-
-Spark DataFrame containing one compact profiling summary row for each eligible column appended to METADATA_DATA_PROFILED, including profile_id, profile_snapshot_id, stable table_id and column_id identities, environment_name, complete-DataFrame statistics, profiling timestamp, and runtime audit fields.
-
-### Return interpretation
-
-The returned rows are the compact parent summaries. Flattened frequency rows are written separately to METADATA_DATA_PROFILED_FREQUENCY, link to their parent through profile_id, and share the same profile_snapshot_id; frequency and catalogue rows are side effects and are not returned.
-
-## Raises / Errors
-
-Raises ValueError for missing or conflicting identity inputs and invalid frequency settings.
-
-### Common failure causes
-
-- profile_role must be source or target, or the configured target store kind is unsupported.
-- target or table_name is blank, or a schema-enabled store has no explicit or configured schema.
-- frequency_profile_df is not Spark DataFrame-like, uses an incompatible Spark session, or is missing selected frequency columns.
-- The configured metadata target cannot be resolved or written.
-- Requested frequency columns are missing or expensive to group; frequency_top_n limits returned values only and does not reduce grouping cost.
-
-## Notes
-
-<div class="reference-docstring-notes" markdown="1">
+<details class="reference-implementation-details" markdown="1">
+<summary>Maintainer architecture details</summary>
 
 The orchestration performs these mechanical steps:
 
@@ -149,16 +191,6 @@ marker. If a later stage fails, snapshot removal is best-effort hygiene:
 Catalogue remains authoritative even if cleanup also fails, and the
 original profiling error is preserved. A later activity receives a
 distinct snapshot identity.
-
-</div>
-
-## See also
-
-- [Pipeline Execution](../../guided-demo/02-build-and-run-etl.md)
-
-
-<details>
-<summary>Maintainer architecture details</summary>
 
 ## Contract impact
 

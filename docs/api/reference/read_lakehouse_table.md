@@ -9,43 +9,28 @@
 
 Read a Delta table from a configured Fabric lakehouse target.
 
-<div class="reference-docstring-intro" markdown="1">
-
-This function represents a complete read of the resolved Delta table.
-
-The returned Spark DataFrame is lazy. Calling ``read_lakehouse_table``
-constructs the DataFrame plan, and Spark reads data only when a downstream
-action executes, such as ``display``, ``count``, ``collect``, or a
-DataFrame write. Subsequent Spark transformations may still allow Delta
-column pruning and predicate pushdown during execution.
-
-Lakehouse Delta is the preferred source for repeated PySpark
-transformations in FabricOps. Use this callable for managed Lakehouse
-tables, data already stored in OneLake Delta format, and Bronze or
-Silver data processing inside Fabric notebooks. When source data starts in
-a Fabric Warehouse, save large or repeatedly used data into the
-Bronze Lakehouse as Delta first, then read it with this callable.
-
-</div>
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/io/read_lakehouse_table.py:10`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L10-L122">View on GitHub</a>
-</div>
-
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">00C_demo_setup</span>
 </p>
 
 ## Usage notes
 
-These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
+Use when reading managed Delta tables from configured Lakehouse Tables storage.
 
-They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+orders_df = read_lakehouse_table("orders", store="Bronze", schema="demo")
+```
+
+</div>
+
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -54,6 +39,7 @@ They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc c
 ```python
 def read_lakehouse_table(
     table_name: str | None=None,
+    *,
     table_id: str | None=None,
     store: str='Bronze',
     schema: str | None=None,
@@ -65,30 +51,43 @@ def read_lakehouse_table(
 
 </div>
 
-## Example usage
+</details>
+
+## Parameters
+
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `table_name` | `str \| None` | No | `None` | Required unless table_id is supplied. Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name. Omit it when ``table_id`` is supplied. |
+| `table_id` | `str \| None` | No | `None` | Canonical registered table identity. When supplied, FabricOps resolves ``table_name``, ``store``, and ``schema`` from the Catalogue. Do not combine with table_name, schema, or a non-default store. |
+| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from ``00_env_config``, such as ``bronze`` or ``silver``. FabricOps resolves this store key to the configured physical Lakehouse and Delta table path. |
+| `schema` | `str \| None` | No | `None` | Optional schema override for schema-enabled Lakehouses. Supply it separately from ``table_name``: use ``schema="sales"`` and ``table_name="orders"`` rather than ``table_name="sales.orders"``. This is normally omitted for Lakehouses without schemas. |
+| `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
+| `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
+| `**options` | `—` | No | `—` | Additional Spark Delta ``DataFrameReader`` options forwarded to the Delta reader. These options do not provide FabricOps-level filtering or projection. |
+
+</div>
+
+## Advanced examples
 
 <div class="reference-example-usage" markdown="1">
 
 ```python
-catalogue_df = read_lakehouse_table("METADATA_DATA_CATALOGUE", store="Metadata", schema=METADATA_SCHEMA, spark_session=spark)
+orders_df = read_lakehouse_table("orders", store="Bronze", schema="demo")
+recent = orders_df.where("order_date >= '2026-01-01'")
 ```
 
 </div>
 
-## Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `table_name` | `str \| None` | No | Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name. Omit it when ``table_id`` is supplied. |
-| `table_id` | `str \| None` | No | Canonical registered table identity. When supplied, FabricOps resolves ``table_name``, ``store``, and ``schema`` from the Catalogue. |
-| `store` | `str` | No | Logical Lakehouse store key from ``00_env_config``, such as ``bronze`` or ``silver``. FabricOps resolves this store key to the configured physical Lakehouse and Delta table path. |
-| `schema` | `str \| None` | No | Optional schema override for schema-enabled Lakehouses. Supply it separately from ``table_name``: use ``schema="sales"`` and ``table_name="orders"`` rather than ``table_name="sales.orders"``. This is normally omitted for Lakehouses without schemas. |
-| `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark Delta ``DataFrameReader`` options forwarded to the Delta reader. These options do not provide FabricOps-level filtering or projection. |
-
 ## Returns
 
-Spark DataFrame containing the current rows and columns of the resolved lakehouse table. The DataFrame preserves the table Spark schema and remains lazy until an action is executed.
+pyspark.sql.DataFrame
+    A lazy Spark DataFrame representing the governed rows and all columns
+    in the resolved Lakehouse Delta table. The data is evaluated when a
+    downstream Spark action runs.
 
 ### Return interpretation
 
@@ -109,23 +108,18 @@ Raises ValueError for unsafe names or non-lakehouse targets and RuntimeError whe
 
 <div class="reference-docstring-notes" markdown="1">
 
-FabricOps resolves the configured Lakehouse Tables path from
-``00_env_config`` and then delegates to Spark's Delta reader with any
-supplied reader options. Filtering and column selection are applied later
-through normal Spark DataFrame operations. Conceptual examples:
+Use either table_name with store and optional schema, or table_id to resolve
+the registered physical location from METADATA_DATA_CATALOGUE. Reader options
+are forwarded to Spark Delta. The call does not register or profile data.
 
-``df = read_lakehouse_table(table_name="orders", store="Bronze")``
+</div>
 
-``df = read_lakehouse_table(table_name="orders", store="Bronze", schema="sales")``
+## Behavior and scope
 
-``orders_df = read_lakehouse_table(table_name="sales_orders", store="Bronze")``
+<div class="reference-docstring-intro" markdown="1">
 
-``recent_orders_df = orders_df.select("order_id", "customer_id", "order_date", "amount").where("order_date >= '2026-01-01'")``
-
-This function does not read through the Warehouse SQL connector, execute a
-SQL query, write or copy the table, register metadata, create the table,
-mutate the source table, or automatically cache or persist the returned
-DataFrame.
+Use for managed Delta tables. Apply selection and filtering with normal
+Spark transformations; Delta can push these into the eventual scan.
 
 </div>
 
@@ -133,8 +127,16 @@ DataFrame.
 
 - [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/io/read_lakehouse_table.py:10`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L10-L102">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact

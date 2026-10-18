@@ -9,31 +9,27 @@
 
 Render the standalone data-agreement intake widget.
 
-<div class="reference-docstring-intro" markdown="1">
-
-The editor caches active data stewards, keeps one in-memory draft, and
-appends one complete agreement row only after final validation.
-
-</div>
-
-<div class="reference-source-card" markdown="1">
-**Source**
-
-`fabricops_kit/widgets/widget_render_data_agreement.py:42`
-
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L42-L433">View on GitHub</a>
-</div>
-
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">01_governance</span>
 </p>
 
 ## Usage notes
 
-Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
+Use in 01_governance after steward context exists to establish the parent governance agreement before technical Data Contracts are registered.
 
-They help users write values into the correct underlying metadata tables without manually editing those tables directly.
 
+## Example usage
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+state = widget_render_data_agreement(spark=spark)
+```
+
+</div>
+
+<details class="reference-signature-details" markdown="1">
+<summary>Signature</summary>
 
 ## Signature
 
@@ -41,6 +37,7 @@ They help users write values into the correct underlying metadata tables without
 
 ```python
 def widget_render_data_agreement(
+    *,
     spark: Any,
     context: dict[str, Any] | None=None,
 ) -> dict[str, Any]:
@@ -48,20 +45,25 @@ def widget_render_data_agreement(
 
 </div>
 
-## Example usage
-
-Example usage not documented yet.
+</details>
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `spark` | `Any` | Yes | Fabric Spark session used for initial metadata reads, explicit steward refreshes, and the final append-only write. |
-| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
+Required describes the Python signature. An optional parameter may still be needed for the selected mode or identity form; see its description. `—` means no signature default.
+
+<div class="reference-input-table" markdown="1">
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `spark` | `Any` | Yes | `—` | Fabric Spark session used for initial metadata reads, explicit steward refreshes, and the final append-only write. |
+| `context` | `dict[str, Any] \| None` | No | `None` | Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
+
+</div>
 
 ## Returns
 
-Notebook widget state or rendered widget result used to save agreement details to METADATA_DATA_AGREEMENT.
+dict[str, Any]
+    Stable root, section, field, document, steward, and save controls.
 
 ### Return interpretation
 
@@ -69,7 +71,12 @@ The rendered widget collects agreement input; downstream helpers can only use th
 
 ## Raises / Errors
 
-Raises widget, validation, or metadata routing errors when required agreement fields are missing or the metadata table cannot be written.
+ValueError
+    If required authored fields are invalid. Complete the highlighted fields
+    before saving. Widget callbacks display validation failures.
+RuntimeError
+    If configured metadata routing or persistence fails; check the Metadata
+    store configuration and write permissions.
 
 ### Common failure causes
 
@@ -78,12 +85,29 @@ Raises widget, validation, or metadata routing errors when required agreement fi
 - Agreement identifiers conflict with existing metadata.
 - The metadata target cannot be written.
 
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+The editor caches active data stewards, keeps one in-memory draft, and
+appends one complete agreement row only after final validation.
+
+</div>
+
 ## See also
 
 - [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 
+<div class="reference-source-card" markdown="1">
+**Source**
 
-<details>
+`fabricops_kit/widgets/widget_render_data_agreement.py:42`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L42-L446">View on GitHub</a>
+</div>
+
+
+<details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
 
 ## Contract impact
