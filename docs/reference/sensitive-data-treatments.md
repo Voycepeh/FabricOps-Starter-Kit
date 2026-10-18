@@ -186,6 +186,8 @@ The treatment logic is the same; publication is different.
 
 This makes Development validation representative of the treatment that will occur when the contract is activated and enforced in Production.
 
+After consuming the prepared DataFrame and persisting a returned token mapping, call its `unpersist()` method to release its cache. One returned mapping owns the cache for every tokenized column. Failed orchestration releases token caches automatically.
+
 ## Treatment failures block publication
 
 Every active Sensitive Data treatment must succeed. FabricOps records a failed treatment in `METADATA_GUARDRAIL_RESULTS` and stops `orchestrate_write()` before publication. There is no Warn/Block selector for Sensitive Data.

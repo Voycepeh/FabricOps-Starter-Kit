@@ -352,6 +352,7 @@ def pipeline_write(
     options: dict[str, Any] | None = None,
     spark_session=None,
     verbose: bool = True,
+    context=None,
 ) -> dict[str, Any]:
     """Publish one governed pipeline table target through its configured Fabric store.
 
@@ -398,6 +399,8 @@ def pipeline_write(
         Additional physical writer options for append or overwrite publication.
     spark_session : object, optional
         Spark session used for write-side metadata persistence. Supply the active Fabric notebook session explicitly when available.
+    context : dict, optional
+        Call-scoped resolved contracts, rules, and Catalogue identities.
     verbose : bool, default=True
         Whether to print one concise orchestration message showing the resolved
         Fabric store type, physical table identity, governed strategy, and
@@ -529,7 +532,7 @@ def pipeline_write(
         stage_pipeline_write_observations,
     )
 
-    config, env, context = resolve_fabric_context()
+    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
     coordinates = (store, schema, table_name)
     if table_id and any(value is not None for value in coordinates):
         raise ValueError("table_id cannot be combined with store, schema, or table_name.")

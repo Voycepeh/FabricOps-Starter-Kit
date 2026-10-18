@@ -394,8 +394,6 @@ After successful publication, FabricOps persists the resolved target processing 
 - [Plug-and-Play Data Pipelines with Data Contract Enforcement](../solutions/plug-and-play-data-pipelines.md)
 - [`orchestrate_read()`](../api/reference/orchestrate_read.md)
 - [`orchestrate_write()`](../api/reference/orchestrate_write.md)
-- [`orchestrate_read()`](../api/reference/orchestrate_read.md)
-- [`orchestrate_write()`](../api/reference/orchestrate_write.md)
 - [Guided Demo: Full Read Pipeline](../guided-demo/02-build-and-run-etl.md)
 - [Guided Demo: Incremental → Append](../guided-demo/02B-build-and-run-incremental-append-etl.md)
 - [Guided Demo: SCD Type 1 vs Type 2](../guided-demo/02C-build-and-run-scd-etl.md)

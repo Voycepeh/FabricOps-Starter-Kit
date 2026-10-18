@@ -139,7 +139,7 @@ For Incremental reads, add `read_parameters` and `target_table_id` rather than i
     4. Evaluate **Data Quality** Guardrails when defined.
     5. **Profile** the full source and store the snapshot in `METADATA_DATA_PROFILED` and, where applicable, `METADATA_DATA_PROFILED_FREQUENCY`.
 
-    Checks without an applicable Data Contract or Guardrail return a skipped result rather than inventing an expectation. Incremental batches are not profiled; FabricOps instead returns the eligible scope and uses `METADATA_SOURCE_OBSERVATION` plus the governed target's successful watermark progress to manage incremental execution.
+    Only configured Guardrails execute and appear in stage output. Without a selected Data Contract, Development prints one message and continues with Read. Absent checks retain skipped fields in the returned result for inspection. Incremental batches are not profiled; FabricOps instead returns the eligible scope and uses `METADATA_SOURCE_OBSERVATION` plus the governed target's successful watermark progress to manage incremental execution.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
@@ -217,13 +217,15 @@ writes["target"] = orchestrate_write(
 
 ??? info "Under the hood"
 
-    [`orchestrate_write()`](../api/reference/orchestrate_write.md) runs the standard pre-publication checks in this order:
+    [`orchestrate_write()`](../api/reference/orchestrate_write.md) runs the configured pre-publication checks in this order:
 
     1. **Schema**
     2. **Sensitive Data**
     3. **Source Drift**
     4. **Data Quality**
     5. **Guardrail Coverage**
+
+    Absent Guardrails do not produce individual skipped-stage messages. A contract-free Development run prints one message and proceeds to Write. Guardrail Coverage remains mandatory whenever contracts participate.
 
     With **Validate**, FabricOps returns after those checks with `published=False`; the target is not written. With **Enforce**, passing the required checks allows FabricOps to continue through **Write** and then **Profile** the persisted target in `METADATA_DATA_PROFILED` and, where applicable, `METADATA_DATA_PROFILED_FREQUENCY`.
 

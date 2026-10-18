@@ -18,81 +18,13 @@ def check_source_drift(
     source_table_id: str,
     *,
     target_table_id: str,
-    enabled: bool = True,
-    raise_on_failure: bool = False,
     spark_session=None,
     verbose: bool = True,
+    context=None,
+    execution_type="enforce",
 ) -> dict:
-    """Detect governed source drift against one target consumption baseline.
-
-    Compare the current source observation with the last source observation
-    successfully consumed by this target and detect source changes that violate
-    the source table's governed load behaviour.
-
-    Parameters
-    ----------
-    source_table_id : str
-        Canonical governed source identity returned by :func:`pipeline_read`.
-    target_table_id : str
-        Canonical governed target identity used to select the last successfully
-        consumed Source Observation baseline.
-    enabled : bool, default=True
-        Explicitly skip the check when ``False``.
-    raise_on_failure : bool, default=False
-        Raise ``RuntimeError`` when a blocking result cannot continue.
-    spark_session : object, optional
-        Spark session to use. When omitted, FabricOps resolves the active session.
-    verbose : bool, default=True
-        Print the concise normalized check outcome when ``True``.
-
-    Returns
-    -------
-    dict
-        Source Drift evidence for the source-to-target relationship and its
-        compatibility with the source's governed load behaviour.
-
-    Raises
-    ------
-    ValueError
-        If either identity, transient observation, rule, or source processing
-        definition is invalid.
-    RuntimeError
-        If metadata history cannot be read, or ``raise_on_failure=True`` and
-        the target cannot safely reconcile the observed source change.
-
-    Notes
-    -----
-    Notebook orchestration calls this function explicitly for every governed
-    source before :func:`pipeline_write`. A successful write then commits the
-    accepted source-to-target baseline in ``METADATA_SOURCE_OBSERVATION``.
-
-    Examples
-    --------
-    >>> result = check_source_drift(
-    ...     source_result["table_id"],
-    ...     target_table_id=target_table_id,
-    ... )
-    >>> result["target_table_id"] == target_table_id
-    True
-
-    See Also
-    --------
-    pipeline_read, pipeline_write
-
-    """
-    if not enabled:
-        result = {"status": "skipped", "can_continue": True, "checks": []}
-        print_guardrail_result(
-            "Source Drift",
-            result,
-            verbose=verbose,
-            source_table_id=source_table_id,
-            target_table_id=target_table_id,
-        )
-        if verbose:
-            print("  Evaluation skipped by caller; no drift comparison or evidence written.")
-        return result
-    config, env, context = resolve_fabric_context()
+    """Evaluate the resolved contract stage and return its continuation decision."""
+    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
     spark_session = get_spark_session() if spark_session is None else spark_session
     contract = resolve_pipeline_data_contract(
         config,
@@ -164,7 +96,8 @@ def check_source_drift(
         target_table_id=str(target["table_id"]),
         source_processing=source_processing,
         spark_session=spark_session,
-        raise_on_failure=False,
+        context=context,
+        execution_type=execution_type,
     )
     print_guardrail_result(
         "Source Drift",
@@ -193,9 +126,4 @@ def check_source_drift(
             f"historical={result.get('historical_changes', 0)}."
         )
         print("  Accepted baseline is committed only after pipeline_write() succeeds.")
-    if raise_on_failure and not result["can_continue"]:
-        raise RuntimeError(
-            f"A blocking Source Drift Guardrail failed for source_table_id {source_table_id!r} "
-            f"and target_table_id {target['table_id']!r}."
-        )
     return result

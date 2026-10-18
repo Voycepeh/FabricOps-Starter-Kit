@@ -26,6 +26,9 @@ def write_workflow(monkeypatch):
     monkeypatch.setattr(sensitive_module, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(sensitive_module, "resolve_pipeline_data_contract", lambda *_args, **_kwargs: {"contract_id": "contract", "contract_version": 1})
     monkeypatch.setattr(sensitive_module, "resolve_catalogue_table_identity", lambda *_args, **_kwargs: identity)
+    context = {"config": object(), "env": "dev", "_pipeline_contracts": {"target-id": {"contract_version": 1}},
+               "_pipeline_rules": {"target-id": [{"guardrail_type": kind} for kind in ("schema", "sensitive_data", "data_quality")]}}
+    monkeypatch.setattr(write_module, "prepare_pipeline_execution", lambda *_args, **_kwargs: context)
     evidence = []
     monkeypatch.setattr(shared, "write_guardrail_result_row", lambda **kwargs: evidence.append(kwargs["result"]))
     return evidence, later
@@ -119,3 +122,21 @@ def test_frozen_widget_rule_materializes_for_internal_schema_stage(spark_session
     result = shared.schema_check_core(frame, rules_df=rules_frame, table_id="target-id", environment_name="dev")
     assert result["status"] == "passed"
     assert result["can_continue"] is True
+
+
+def test_later_write_failure_releases_token_mapping(monkeypatch, spark_session, write_workflow):
+    """A publication failure cannot leak the mapping hidden by its raised exception."""
+    _evidence, later = write_workflow
+    rule = {"guardrail_rule_id": "sensitive-email", "guardrail_version": 1,
+            "contract_id": "contract", "contract_version": 1,
+            "guardrail_type": "sensitive_data", "column_id": "email-id", "column_name": "email",
+            "rule_parameters_json": '{"scope":"column","treatment":"tokenize"}',
+            "action": "Block", "is_active": True}
+    monkeypatch.setattr(sensitive_module, "load_table_guardrail_rules", lambda *_args, **_kwargs: [rule])
+    later["pipeline_write"].side_effect = ValueError("publication failed")
+    frame = spark_session.createDataFrame([("raw@example.test",)], ["email"])
+    before = spark_session.sparkContext._jsc.getPersistentRDDs().size()
+    with pytest.raises(RuntimeError, match="publication failed"):
+        orchestrate_write(frame, sources=[], store="Silver", schema="dbo", table_name="customers",
+                          write_mode="overwrite", spark_session=spark_session, verbose=False)
+    assert spark_session.sparkContext._jsc.getPersistentRDDs().size() == before

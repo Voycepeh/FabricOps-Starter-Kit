@@ -28,3 +28,7 @@ Migrate notebooks to the orchestrator calls in `templates/notebooks/02_pipeline.
 For token mapping reuse, pass the persisted mapping as `orchestrate_write(existing_mapping=...)` and retain `result["sensitive_result"]["support_mapping"]` for later runs. FabricOps never persists raw token mappings automatically.
 
 Schema presence/datatype violations and configured Sensitive Data treatment failures block. Freshness, Source Drift, and DQ retain their authored Warn/Block policies. Guardrail Coverage remains a mandatory publication-readiness gate. Foundational physical I/O and `profile_table()` remain public standalone utilities.
+
+Each orchestration call resolves its contracts and active rules once. Only applicable Guardrails execute or print stage output. A contract-free Development run prints one decision and proceeds to Read or Write; skipped result fields remain available for inspection. Validate evaluates the exact selected frozen candidate and records `execution_type="validate"` outcomes for activation.
+
+After consuming the prepared DataFrame and persisting a returned token mapping, release its cache with `result["sensitive_result"]["support_mapping"].unpersist()`. Failed orchestration releases token caches automatically.

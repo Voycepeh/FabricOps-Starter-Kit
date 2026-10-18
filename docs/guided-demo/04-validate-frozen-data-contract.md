@@ -304,7 +304,7 @@ Data Contract UI
     → Warn / Block behavior
 ```
 
-The exercise now covers both orchestrator boundaries ([`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md)): Read-side Freshness/Schema/DQ evidence, Write-side Schema/Sensitive Data/Source Drift/DQ, and the final [Guardrail Coverage](../api/reference/orchestrate_write.md) readiness gate. Source mutations are restored from the canonical fixture; target mutations remain in-session only.
+The exercise now covers both orchestrator boundaries ([`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md)): Read-side Freshness/Schema/DQ evidence, Write-side Schema/Sensitive Data/Source Drift/DQ, and the final Guardrail Coverage readiness gate. Source mutations are restored from the canonical fixture; target mutations remain in-session only.
 
 ### Expected result
 

@@ -87,6 +87,7 @@ def check_guardrail_coverage(
     source_table_ids: list[str] | tuple[str, ...],
     spark_session=None,
     verbose: bool = True,
+    context=None,
 ) -> dict[str, Any]:
     """Verify that the governed pipeline is ready to publish its target.
 
@@ -108,6 +109,8 @@ def check_guardrail_coverage(
         Exact governed sources feeding this target. Supply [] for a source-free target.
     spark_session : object, optional
         Spark session override; otherwise use the active Fabric session.
+    context : dict, optional
+        Call-scoped resolved contracts, rules, and Catalogue identities.
     verbose : bool, default=True
         Print table readiness, evaluated Guardrails, and the final decision.
 
@@ -141,7 +144,7 @@ def check_guardrail_coverage(
     if any(not value for value in source_ids):
         raise ValueError("source_table_ids must contain only non-empty canonical table_id values.")
 
-    config, env, context = resolve_fabric_context()
+    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
     spark = get_spark_session() if spark_session is None else spark_session
     is_production = str(env).strip().lower() in {"prod", "production"}
 

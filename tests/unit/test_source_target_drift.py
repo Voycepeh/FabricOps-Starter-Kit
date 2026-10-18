@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 import json
 
-import pytest
 
 from fabricops_kit.pipeline import shared
 
@@ -65,15 +64,15 @@ def test_target_baselines_are_independent_under_one_source_rule(monkeypatch):
         row(target="target-overwrite", count=1, at=NOW - timedelta(hours=1), status="drift_committed"),
     ]
     configure(monkeypatch, history)
-    with pytest.raises(RuntimeError, match="append"):
-        shared.check_source_drift_for_target(
-            source_table_id="source", target_table_id="target-append",
-            source_processing={"load_strategy": "append"},
-        )
+    append_result = shared.check_source_drift_for_target(
+        source_table_id="source", target_table_id="target-append",
+        source_processing={"load_strategy": "append"},
+    )
+    assert append_result["can_continue"] is False
+    assert append_result["target_table_id"] == "target-append"
     result = shared.check_source_drift_for_target(
         source_table_id="source", target_table_id="target-overwrite",
         source_processing={"load_strategy": "append"},
-        raise_on_failure=False,
     )
     assert result["can_continue"] is False
     assert result["target_table_id"] == "target-overwrite"

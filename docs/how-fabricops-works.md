@@ -92,9 +92,8 @@ Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read
         | --- | --- | --- |
         | Establish Governance context | [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md), [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) | `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT` |
         | Register and profile the table | [`profile_table()`](api/reference/profile_table.md) | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md) |
-        | Record pipeline state | [`orchestrate_read()`](api/reference/orchestrate_read.md), [`orchestrate_write()`](api/reference/orchestrate_write.md) | [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_SOURCE_OBSERVATION`](reference/metadata/metadata_source_observation.md) |
         | Author and activate the Data Contract | [`widget_data_contract()`](api/reference/widget_data_contract.md) | [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) |
-        | Enforce Guardrails | [Schema stage](api/reference/orchestrate_read.md), [Freshness stage](api/reference/orchestrate_read.md), [Source Drift stage](api/reference/orchestrate_write.md), [Data Quality stage](api/reference/orchestrate_read.md), [Sensitive Data stage](api/reference/orchestrate_write.md) | [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) |
+        | Execute the Data Contract and record pipeline state | [`orchestrate_read()`](api/reference/orchestrate_read.md), [`orchestrate_write()`](api/reference/orchestrate_write.md) | [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_SOURCE_OBSERVATION`](reference/metadata/metadata_source_observation.md), [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) |
 
         `table_id` connects the physical table, Engineering observations, and governed definition.
 

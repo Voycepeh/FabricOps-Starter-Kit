@@ -6,7 +6,14 @@ from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
 from fabricops_kit.pipeline.profile_table import profile_table
-from fabricops_kit.pipeline.shared import ExecutionSummary, _run_orchestration_stage
+from fabricops_kit.pipeline.shared import (
+    ExecutionSummary,
+    _run_orchestration_stage,
+    prepare_pipeline_execution,
+    pipeline_guardrail_types,
+    print_pipeline_contract,
+)
+from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 
 
 def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = "full", query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session=None, verbose: bool = True) -> dict[str, Any]:
@@ -56,8 +63,11 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
 
     Notes
     -----
-    Stages run as Read, Freshness, Schema, Data Quality, and Profile, matching
-    canonical ``02_pipeline``. Skipped capability results remain skipped.
+    Read resolves its Data Contract once, then runs only its configured
+    Freshness, Schema, and Data Quality stages before Profile, matching
+    canonical ``02_pipeline``. Absent capability fields remain skipped in the
+    returned result; orchestration_stages and stdout show executed stages only.
+    A contract-free Development run prints one concise Guardrail decision.
     DataFrames are never displayed. Incremental batches are not profiled.
     With verbose=True, successful execution ends with a READ Summary on stdout.
     Counts reuse existing profiling results; no Spark action is added for
@@ -74,14 +84,22 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
 
     """
     summary = ExecutionSummary("READ", verbose=verbose)
+    table_id = resolve_table_id(store=store, schema=schema, table_name=table_name)
+    context = prepare_pipeline_execution([table_id], spark_session=spark_session)
+    active = pipeline_guardrail_types(context, table_id)
+    labels = [("freshness", "Freshness"), ("schema", "Schema"), ("data_quality", "Data Quality")]
+    names = ["Read", *[label for kind, label in labels if kind in active]]
+    if read_mode == "full":
+        names.append("Profile")
     stages = []
     if verbose:
         print(f"FabricOps READ · {table_name}")
-    def run(index, stage, function):
-        result, record = _run_orchestration_stage(operation="READ", name=table_name, index=index, total=5, stage=stage, function=function, verbose=verbose)
+    print_pipeline_contract(context, table_id, operation="Read", guardrails=[label for kind, label in labels if kind in active], verbose=verbose)
+    def run(stage, function):
+        result, record = _run_orchestration_stage(operation="READ", name=table_name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose)
         stages.append(record)
         return result
-    source = run(1, "Read", lambda: pipeline_read(store=store, schema=schema, table_name=table_name, read_mode=read_mode, query=query, read_parameters=read_parameters, target_table_id=target_table_id, spark_session=spark_session, verbose=False))
+    source = run("Read", lambda: pipeline_read(store=store, schema=schema, table_name=table_name, read_mode=read_mode, query=query, read_parameters=read_parameters, target_table_id=target_table_id, spark_session=spark_session, verbose=False, context=context))
     reader_name = source.pop("_reader_name", None)
     metrics = dict(source.get("read_metrics") or {})
     metrics.setdefault("rows_read", None)
@@ -89,10 +107,11 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     metrics.setdefault("columns", len(columns) if columns is not None else None)
     summary.details([("Physical reader", reader_name), ("Rows read", metrics["rows_read"]), ("Columns", metrics["columns"])])
     dataframe, table_id = source["dataframe"], source["table_id"]
-    freshness = run(2, "Freshness", lambda: check_freshness(table_id, spark_session=spark_session, verbose=False))
-    schema_result = run(3, "Schema", lambda: check_schema(dataframe, table_id=table_id, spark_session=spark_session, verbose=False))
-    dq_result = run(4, "Data Quality", lambda: check_dq(dataframe, table_id=table_id, spark_session=spark_session, verbose=False))
-    profile = run(5, "Profile", lambda: profile_table(dataframe=dataframe, store=store, schema=schema, table_name=table_name, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session) if read_mode == "full" else {"status": "skipped", "reason": "Incremental batch"})
+    skipped = {"status": "skipped", "can_continue": True, "checks": []}
+    freshness = run("Freshness", lambda: check_freshness(table_id, spark_session=spark_session, verbose=False, context=context)) if "freshness" in active else dict(skipped)
+    schema_result = run("Schema", lambda: check_schema(dataframe, table_id=table_id, spark_session=spark_session, verbose=False, context=context)) if "schema" in active else dict(skipped)
+    dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, spark_session=spark_session, verbose=False, context=context)) if "data_quality" in active else dict(skipped)
+    profile = run("Profile", lambda: profile_table(dataframe=dataframe, store=store, schema=schema, table_name=table_name, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session)) if read_mode == "full" else dict(skipped, reason="Incremental batch")
     if metrics["rows_read"] is None and read_mode == "full":
         metrics["rows_read"] = profile.get("row_count")
     duration = summary.finish([

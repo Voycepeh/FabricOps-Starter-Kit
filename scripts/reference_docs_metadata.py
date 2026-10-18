@@ -1660,7 +1660,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Select notebook Data Contracts',
   'use_when': 'Use after baseline Lineage exists and before governed checks so Development selects immutable versions per Source/Target table and Production resolves active versions automatically.',
   'related_functions': ['widget_data_contract', 'orchestrate_read', 'orchestrate_write'],
-  'return_interpretation': 'Each source remains in enforce mode. Each target returns its independent enforce or validate mode and exact contract identity; the validate operation evaluates the selected frozen candidate later against the transformed target DataFrame.',
+  'return_interpretation': 'Each source remains in enforce mode. Each target returns its independent enforce or validate mode and exact contract identity; orchestrate_write evaluates that exact frozen candidate against the transformed target DataFrame and persists validate evidence before activation.',
   'expanded_purpose': 'This read-only tool discovers Source and Target table IDs from METADATA_DATA_LINEAGE for the current notebook, workspace when available, and environment. Development exposes only immutable versions; Production exposes no picker and requires exactly one active linked contract per table.',
   'common_failure_causes': ['The current notebook identity or Lineage is missing.',
                             'A discovered table has no eligible immutable version.',

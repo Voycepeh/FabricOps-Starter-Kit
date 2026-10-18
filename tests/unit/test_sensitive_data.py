@@ -217,3 +217,33 @@ def test_exact_contract_rules_are_supplied_by_canonical_resolver(monkeypatch, sp
     frame = spark_session.createDataFrame([(1, "a@example.test")], ["id", "email"])
     result = module.check_sensitive_data(frame, table_id="table-id")
     assert result["checks"][0]["contract_version"] == 3
+
+
+def test_multiple_token_columns_have_one_releasable_cache(monkeypatch, spark_session):
+    """Returned mappings release every per-column cache and retain UUID stability."""
+    writes = []
+    rules = [_rule(version=1), _rule(version=2, column_id="phone-id", column_name="phone")]
+    _runtime(monkeypatch, rules, writes)
+    frame = spark_session.createDataFrame([("a@example.test", "123"), ("b@example.test", "456")], ["email", "phone"])
+    before = spark_session.sparkContext._jsc.getPersistentRDDs().size()
+    result = module.check_sensitive_data(frame, table_id="table-id", verbose=False)
+    mapping = result["support_mapping"]
+    try:
+        assert mapping.count() == 4
+        assert len(result["dataframe"].collect()) == 2
+        assert result["dataframe"].collect() == result["dataframe"].collect()
+        assert "broadcast" not in result["dataframe"]._jdf.queryExecution().logical().toString().lower()
+    finally:
+        mapping.unpersist(blocking=True)
+    assert spark_session.sparkContext._jsc.getPersistentRDDs().size() == before
+
+
+def test_later_treatment_failure_releases_earlier_token_cache(monkeypatch, spark_session):
+    """A blocked treatment result cannot strand a mapping that no caller receives."""
+    _runtime(monkeypatch, [_rule(version=1), _rule(version=2, treatment="remove", column_id="missing-id", column_name="missing")], [])
+    frame = spark_session.createDataFrame([("a@example.test",)], ["email"])
+    before = spark_session.sparkContext._jsc.getPersistentRDDs().size()
+    result = module.check_sensitive_data(frame, table_id="table-id", verbose=False)
+    assert result["can_continue"] is False
+    assert result["support_mapping"] is None
+    assert spark_session.sparkContext._jsc.getPersistentRDDs().size() == before

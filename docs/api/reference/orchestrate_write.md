@@ -82,7 +82,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `repartition_by` | `int \| None` | No | `None` | Spark write partition count. |
 | `frequency_enabled` | `bool` | No | `True` | Whether to calculate frequency distributions for this table. |
 | `frequency_top_n` | `int \| None` | No | `5` | Maximum ranked frequency values per eligible column; None retains all. |
-| `existing_mapping` | `pyspark.sql.DataFrame` | No | `None` | Previously returned Sensitive Data token mappings. Existing assignments are reused; the returned sensitive_result contains the support_mapping for the caller to persist and supply on later runs. |
+| `existing_mapping` | `pyspark.sql.DataFrame` | No | `None` | Previously returned Sensitive Data token mappings. Existing assignments are reused; the returned sensitive_result contains the support_mapping for the caller to persist and supply on later runs. After consuming the prepared DataFrame and persisting the mapping, call its unpersist() method to release its cache. Failed orchestration releases it automatically. |
 | `spark_session` | `object` | No | `None` | Spark session used by every stage. |
 | `verbose` | `bool` | No | `True` | Print stage start, outcome, duration, and failure attribution. |
 
@@ -136,8 +136,12 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-Both contract modes run Schema, Sensitive Data, Source Drift, Data Quality,
-and Guardrail Coverage identically. Validate then returns without writing;
+Both contract modes evaluate the same configured Guardrails using contracts
+and rules resolved once per call. Absent Guardrails remain skipped in the
+result fields but are omitted from stdout and orchestration_stages.
+Contract-free Development prints one decision and proceeds to Write.
+Validate resolves the exact selected frozen candidate and records
+execution_type=validate evidence for activation, then returns without writing;
 Enforce continues through Write and persisted-target Profile. Existing
 metadata and Source Observation commit behaviour remains owned by
 the internal Write stage. The returned ``dataframe`` is the prepared Write input,
@@ -156,9 +160,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:15`
+`fabricops_kit/pipeline/orchestrate_write.py:21`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L15-L174">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L21-L210">View on GitHub</a>
 </div>
 
 
@@ -174,7 +178,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 172 |
+| Live-critical dependencies | 175 |
 
 ### Release history
 
@@ -286,7 +290,9 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_type_name</code></li>
 <li><code>fabricops_kit.pipeline.shared._actual_schema</code></li>
 <li><code>fabricops_kit.pipeline.shared._apply_bypass_post_review_warning</code></li>
+<li><code>fabricops_kit.pipeline.shared._apply_token_mapping</code></li>
 <li><code>fabricops_kit.pipeline.shared._bucket_column</code></li>
+<li><code>fabricops_kit.pipeline.shared._build_token_mapping</code></li>
 <li><code>fabricops_kit.pipeline.shared._canonical_dq_rule_type</code></li>
 <li><code>fabricops_kit.pipeline.shared._catalogue_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
@@ -320,7 +326,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._spark_sql_helpers</code></li>
 <li><code>fabricops_kit.pipeline.shared._string_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._summarize_dq_guardrail</code></li>
-<li><code>fabricops_kit.pipeline.shared._tokenize_column</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
@@ -340,7 +345,10 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.persist_lineage_participation</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>
+<li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_guardrail_result</code></li>
+<li><code>fabricops_kit.pipeline.shared.print_pipeline_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_active_data_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_data_contract_version</code></li>
@@ -356,7 +364,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.stage_pipeline_write_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>
-<li><code>fabricops_kit.widgets.shared._coerce_rows</code></li>
 </ul>
 
 

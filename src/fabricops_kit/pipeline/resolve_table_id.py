@@ -35,7 +35,7 @@ def resolve_table_id(*, store: str, schema: str | None = None, table_name: str) 
 
     See Also
     --------
-    pipeline_write, pipeline_read
+    orchestrate_write, orchestrate_read
 
     """
     config, env, _context = resolve_fabric_context()

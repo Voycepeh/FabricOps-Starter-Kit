@@ -17,12 +17,12 @@ from fabricops_kit.pipeline import shared
 
 
 def test_governed_guardrail_public_signatures_are_relationship_safe() -> None:
-    assert str(inspect.signature(check_freshness)) == (
-        "(table_id: str, *, enabled: bool = True, raise_on_failure: bool = False, spark_session=None, verbose: bool = True) -> dict"
-    )
-    assert str(inspect.signature(check_source_drift)) == (
-        "(source_table_id: str, *, target_table_id: str, enabled: bool = True, raise_on_failure: bool = False, spark_session=None, verbose: bool = True) -> dict"
-    )
+    for check in (check_freshness, check_source_drift):
+        parameters = inspect.signature(check).parameters
+        assert "enabled" not in parameters
+        assert "raise_on_failure" not in parameters
+        assert "context" in parameters
+        assert parameters["execution_type"].default == "enforce"
 
 
 def test_source_drift_resolves_source_processing(monkeypatch) -> None:
@@ -62,7 +62,8 @@ def test_source_drift_resolves_source_processing(monkeypatch) -> None:
             "target_table_id": "canonical-target-a",
             "source_processing": {"load_strategy": "append"},
             "spark_session": "spark",
-            "raise_on_failure": False,
+            "context": {},
+            "execution_type": "enforce",
         }
     ]
     assert processing_table_ids == ["canonical-source-a"]

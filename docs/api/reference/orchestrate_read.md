@@ -108,8 +108,11 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-Stages run as Read, Freshness, Schema, Data Quality, and Profile, matching
-canonical ``02_pipeline``. Skipped capability results remain skipped.
+Read resolves its Data Contract once, then runs only its configured
+Freshness, Schema, and Data Quality stages before Profile, matching
+canonical ``02_pipeline``. Absent capability fields remain skipped in the
+returned result; orchestration_stages and stdout show executed stages only.
+A contract-free Development run prints one concise Guardrail decision.
 DataFrames are never displayed. Incremental batches are not profiled.
 With verbose=True, successful execution ends with a READ Summary on stdout.
 Counts reuse existing profiling results; no Spark action is added for
@@ -124,9 +127,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_read.py:12`
+`fabricops_kit/pipeline/orchestrate_read.py:19`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L12-L102">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L19-L121">View on GitHub</a>
 </div>
 
 
@@ -142,7 +145,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 147 |
+| Live-critical dependencies | 149 |
 
 ### Release history
 
@@ -284,7 +287,10 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.get_current_freshness_evidence</code></li>
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>
+<li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_guardrail_result</code></li>
+<li><code>fabricops_kit.pipeline.shared.print_pipeline_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_active_data_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_data_contract_version</code></li>
@@ -299,7 +305,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.select_table_guardrail_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared.set_current_source_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>
-<li><code>fabricops_kit.widgets.shared._coerce_rows</code></li>
 </ul>
 
 

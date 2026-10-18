@@ -1213,7 +1213,7 @@ def profile_table(
 
     See Also
     --------
-    pipeline_read, pipeline_write, read_lakehouse_csv, read_lakehouse_excel,
+    orchestrate_read, orchestrate_write, read_lakehouse_csv, read_lakehouse_excel,
     read_lakehouse_json, read_lakehouse_parquet
 
     """
