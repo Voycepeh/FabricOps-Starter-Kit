@@ -1098,7 +1098,7 @@ def widget_data_contract(
             "column_name": next((str(item.get("column_name") or "") for item in current.get("available_columns", []) if str(item.get("column_id") or "") == column_id), "") if column_id else "",
             "guardrail_type": guardrail_type, "rule_id": old.get("rule_id") or rule_type,
             "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters),
-            "action": action, "is_active": active,
+            "action": "Block" if guardrail_type == "schema" else action, "is_active": active,
         }
 
     def render() -> None:

@@ -157,7 +157,7 @@ def widget_runtime(monkeypatch):
         {"enrichment_id": "column-classification", "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev", "enrichment_level": "column", "column_id": "col-0", "enrichment_type": "Classification", "value": "Confidential"},
     ]
     guardrails = [
-        {"guardrail_rule_id": "schema", "guardrail_version": 1, "guardrail_type": "schema", "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["col-0"]}', "action": "Warn", "is_active": True},
+        {"guardrail_rule_id": "schema", "guardrail_version": 1, "guardrail_type": "schema", "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["col-0"]}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","expected_refresh_frequency":1,"expected_refresh_unit":"days","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "mask", "rule_parameters_json": '{"scope":"column","treatment":"mask","preserve_start":0,"preserve_end":0,"mask_character":"*"}', "action": "Block", "is_active": True},
@@ -2461,6 +2461,36 @@ def test_column_selector_marks_required_columns_and_aligns_checkbox(widget_runti
     assert "fabricops-column-required" in controls["required"]._dom_classes
     assert controls["required"].layout.width == "auto"
     assert widget_runtime["calls"]["guardrails"] == []
+
+
+def test_required_schema_authors_block_and_reaches_runtime(widget_runtime):
+    """Required selections save as blocking Schema intent and resolve by frozen ID."""
+    from fabricops_kit.pipeline import shared
+
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_select"].value = "col-1"
+    controls["required"].value = True
+    controls["save_data_contract"].click()
+    payload = widget_runtime["calls"]["draft"][-1]
+    schema_rule = next(rule for rule in payload["guardrails"] if rule["guardrail_type"] == "schema")
+    assert schema_rule["rule_type"] == "required_columns"
+    assert schema_rule["action"] == "Block"
+    assert schema_rule["rule_parameters"] == {"required_columns": ["col-0", "col-1"]}
+    frozen = module.contracts.freeze_contract_record(
+        draft={
+            "contract_id": "contract-orders", "contract_version": 1,
+            "table_id": "orders", "status": "draft", "contract_payload_json": json.dumps(payload),
+        }, audit={},
+    )
+    rows = shared.contract_guardrail_rows(frozen, environment_name="dev", table_id="orders")
+    result = shared.schema_check_core(
+        types.SimpleNamespace(columns=[], dtypes=[]),
+        rules_df=rows, table_id="orders", environment_name="dev",
+    )
+    assert result["missing_columns"] == ["column_0", "column_1"]
+    assert result["status"] == "failed"
+    assert result["can_continue"] is False
 
 
 def test_table_description_matches_grain_ai_layout(widget_runtime, monkeypatch):

@@ -102,6 +102,10 @@ RuntimeError
 
 Production uses the active Data Contract. Development uses an explicitly
 selected immutable version, or safely skips when no contract is selected.
+Required selections enforce column presence, not non-null values; an empty
+selection requires no columns. Present contracted columns use frozen
+datatypes. Missing Required columns and datatype mismatches block
+continuation. Additional columns warn and permit continuation.
 
 </div>
 
@@ -114,7 +118,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/check_schema.py:22`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L22-L227">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L22-L231">View on GitHub</a>
 </div>
 
 
