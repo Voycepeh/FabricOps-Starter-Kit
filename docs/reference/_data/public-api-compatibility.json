@@ -1476,7 +1476,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, str]",
+          "signature_after": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -3176,6 +3176,18 @@
           "classification": "review_required",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
+          "reasons": [
+            "Return annotation changed: dict[str, str] to dict[str, Any]."
+          ],
+          "signature_after": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature_before": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, str]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
           "reasons": [
             "Optional parameter added: frequency_enabled.",
@@ -3230,12 +3242,12 @@
       ],
       "summary": {
         "added": 8,
-        "modified": 3,
+        "modified": 4,
         "nonbreaking": 9,
         "potentially_breaking": 1,
         "removed": 2,
-        "review_required": 3,
-        "total": 13
+        "review_required": 4,
+        "total": 14
       },
       "target": "main"
     },
@@ -4216,15 +4228,28 @@
     },
     {
       "baseline": "v0.2.5",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
+          "reasons": [
+            "Return annotation changed: dict[str, str] to dict[str, Any]."
+          ],
+          "signature_after": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
+          "signature_before": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, str]"
+        }
+      ],
       "summary": {
         "added": 0,
-        "modified": 0,
+        "modified": 1,
         "nonbreaking": 0,
         "potentially_breaking": 0,
         "removed": 0,
-        "review_required": 0,
-        "total": 0
+        "review_required": 1,
+        "total": 1
       },
       "target": "main"
     },
@@ -4594,7 +4619,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, str]"
+          "signature_before": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -4973,6 +4998,18 @@
         },
         {
           "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
+          "reasons": [
+            "Return annotation changed: dict[str, Any] to dict[str, str]."
+          ],
+          "signature_after": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, str]",
+          "signature_before": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
@@ -5030,14 +5067,41 @@
       ],
       "summary": {
         "added": 2,
-        "modified": 3,
+        "modified": 4,
         "nonbreaking": 2,
         "potentially_breaking": 2,
         "removed": 8,
-        "review_required": 9,
-        "total": 13
+        "review_required": 10,
+        "total": 14
       },
       "target": "v0.2.0"
+    },
+    {
+      "baseline": "main",
+      "changes": [
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
+          "reasons": [
+            "Return annotation changed: dict[str, Any] to dict[str, str]."
+          ],
+          "signature_after": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, str]",
+          "signature_before": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]"
+        }
+      ],
+      "summary": {
+        "added": 0,
+        "modified": 1,
+        "nonbreaking": 0,
+        "potentially_breaking": 0,
+        "removed": 0,
+        "review_required": 1,
+        "total": 1
+      },
+      "target": "v0.2.5"
     },
     {
       "baseline": "main",
@@ -5050,33 +5114,6 @@
         "removed": 0,
         "review_required": 0,
         "total": 0
-      },
-      "target": "v0.2.5"
-    },
-    {
-      "baseline": "main",
-      "changes": [
-        {
-          "change_type": "modified",
-          "classification": "review_required",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
-          "reasons": [
-            "Return annotation changed: dict[str, str] to dict[str, Any]."
-          ],
-          "signature_after": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, str]"
-        }
-      ],
-      "summary": {
-        "added": 0,
-        "modified": 1,
-        "nonbreaking": 0,
-        "potentially_breaking": 0,
-        "removed": 0,
-        "review_required": 1,
-        "total": 1
       },
       "target": "working-tree"
     },
@@ -5905,28 +5942,15 @@
     },
     {
       "baseline": "working-tree",
-      "changes": [
-        {
-          "change_type": "modified",
-          "classification": "review_required",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
-          "reasons": [
-            "Return annotation changed: dict[str, Any] to dict[str, str]."
-          ],
-          "signature_after": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, str]",
-          "signature_before": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]"
-        }
-      ],
+      "changes": [],
       "summary": {
         "added": 0,
-        "modified": 1,
+        "modified": 0,
         "nonbreaking": 0,
         "potentially_breaking": 0,
         "removed": 0,
-        "review_required": 1,
-        "total": 1
+        "review_required": 0,
+        "total": 0
       },
       "target": "main"
     }
@@ -13400,8 +13424,8 @@
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
-          "return_annotation": "dict[str, str]",
-          "signature": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, str]",
+          "return_annotation": "dict[str, Any]",
+          "signature": "pipeline_write(df, *, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, load_strategy: str | None = None, load_strategy_parameters: dict[str, Any] | None = None, source_table_ids: list[str] | tuple[str, ...] | None = None, repartition_by = None, options: dict[str, Any] | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
           "source_qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write"
         },
@@ -13769,7 +13793,7 @@
       "certainty": "certain",
       "lifecycle_source": "public_api_registry",
       "notes": [],
-      "revision": "73d7571b2db85f367f6ec182055c0abbdb329311",
+      "revision": "1ea19a7956687d163446fe74289b5b5b4addc90a",
       "source_kind": "git_branch",
       "version": "main"
     },
@@ -15950,7 +15974,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:16bb49860ef9197e4c332791cca20059efdf9f5cc7dd4914bb55f1de406deee7",
+      "source_digest": "sha256:54931625dbd95002834c5f87cd4704b8d74d4ff03b6fe8c268604fbb8d4b6fad",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

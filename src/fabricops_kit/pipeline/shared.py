@@ -2323,6 +2323,11 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
                 "columns": list(expected_schema),
                 "data_types": expected_schema,
             }
+            if "required_columns" in params:
+                params["required_columns"] = [
+                    column_names_by_id.get(str(column), str(column))
+                    for column in params["required_columns"]
+                ]
         adapted.append({
             **{name: value for name, value in raw.items() if name != "rule_parameters"},
             "table_id": table_id,
@@ -4115,6 +4120,15 @@ def schema_check_core(
         str(column): str(expected.get(column, "")) for column in selected_columns
     }
     rule_type = str(rule.get("rule_type") or "relaxed").lower()
+    if rule_type == "required_columns":
+        required_columns = set(params.get("required_columns") or [])
+        actual_columns, _ = _actual_schema(dataframe)
+        # Presence applies only to Required selections; every present contracted
+        # column still uses its frozen datatype, regardless of that selection.
+        expected_schema = {
+            column: datatype for column, datatype in expected_schema.items()
+            if column in required_columns or column in actual_columns
+        }
     resolved_preset = {
         "strict": "strict",
         "minimum_required": "allow_new_columns",
@@ -4122,17 +4136,14 @@ def schema_check_core(
         "skip": "monitor_only",
     }.get(rule_type, "allow_new_columns")
     result = _guardrail_schema_check_base(dataframe, expected_schema, preset=resolved_preset)
-    severity = str(rule.get("severity") or "blocking").lower()
-    if result.get("status") == "failed" and severity == "warning":
-        result["status"] = "warning"
-        result["can_continue"] = True
     result.update(
         guardrail_type="schema",
         guardrail_rule_id=str(rule.get("guardrail_rule_id") or ""),
         guardrail_version=int(rule.get("guardrail_version") or 1),
         rule_id=str(rule.get("rule_id") or ""),
         rule_type=rule_type,
-        severity=severity,
+        severity="blocking",
+        action="Block",
     )
     return result
 

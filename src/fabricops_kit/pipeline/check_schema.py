@@ -67,6 +67,10 @@ def check_schema(
     -----
     Production uses the active Data Contract. Development uses an explicitly
     selected immutable version, or safely skips when no contract is selected.
+    Required selections enforce column presence, not non-null values; an empty
+    selection requires no columns. Present contracted columns use frozen
+    datatypes. Missing Required columns and datatype mismatches block
+    continuation. Additional columns warn and permit continuation.
 
     Examples
     --------

@@ -1098,7 +1098,7 @@ def widget_data_contract(
             "column_name": next((str(item.get("column_name") or "") for item in current.get("available_columns", []) if str(item.get("column_id") or "") == column_id), "") if column_id else "",
             "guardrail_type": guardrail_type, "rule_id": old.get("rule_id") or rule_type,
             "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters),
-            "action": action, "is_active": active,
+            "action": "Block" if guardrail_type == "schema" else action, "is_active": active,
         }
 
     def render() -> None:
@@ -3430,8 +3430,11 @@ def widget_data_contract(
                 if str(rule.get("guardrail_type") or "").lower() == "schema"
             ), required_rule)
             updated = set(_parameters(current_rule).get("required_columns", []))
-            identifier = cid or str(selected.get("column_name") or "")
-            (updated.add if required.value else updated.discard)(identifier)
+            name = str(selected.get("column_name") or "")
+            if required.value:
+                updated.add(cid or name)
+            else:
+                updated.difference_update((cid, name))
             return guardrail_record(
                 "schema", "required_columns", {"required_columns": sorted(updated)},
                 existing=current_rule,
