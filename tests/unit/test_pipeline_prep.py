@@ -395,7 +395,9 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
         spark_session=spark,
     )
 
-    assert result == {"table_id": identity["table_id"]}
+    assert result["table_id"] == identity["table_id"]
+    assert result["strategy"] == strategy
+    assert result["write_metrics"]["rows_committed"] is None
     assert persisted[0]["spark_session"] is spark
     assert persisted[0]["scheduled_refresh"] == {"status": "not_configured", "schedules": []}
     assert events[0] == writer
@@ -741,6 +743,8 @@ def test_pipeline_write_retry_uses_activity_marker_and_replays_metadata(
     def publish(*_args, **_kwargs):
         physical.append(strategy)
         marker["present"] = True
+        if strategy in {"append", "overwrite"}:
+            _kwargs["context"]["_fabricops_write_metrics"].update(rows_committed=8, measurement_source="delta_commit")
 
     monkeypatch.setattr(io_package, "write_lakehouse_table", publish)
     monkeypatch.setattr(shared_module, "execute_lakehouse_processing", publish)
@@ -763,9 +767,10 @@ def test_pipeline_write_retry_uses_activity_marker_and_replays_metadata(
     write_module.pipeline_write(
         frame, table_id=identity["table_id"], source_table_ids=["source-a"], verbose=False
     )
-    write_module.pipeline_write(
+    retried = write_module.pipeline_write(
         frame, table_id=identity["table_id"], source_table_ids=["source-a"], verbose=False
     )
+    assert retried["write_metrics"]["rows_committed"] == (None if strategy in {"scd1", "scd2"} else 0)
 
     expected_merges = 3 if strategy in {"scd1", "scd2"} else 1
     assert physical == [strategy] * expected_merges
@@ -959,7 +964,8 @@ def test_scd_reconciles_changes_even_when_activity_already_exists(monkeypatch, s
     result = write_module.pipeline_write(
         Frame(), table_id="target", source_table_ids=["source"], verbose=False
     )
-    assert result == {"table_id": "target"}
+    assert result["table_id"] == "target"
+    assert result["write_metrics"]["rows_committed"] is None
     assert events == [strategy]
 
 
@@ -973,6 +979,57 @@ def test_non_scd_retry_still_skips_existing_activity(monkeypatch, strategy):
         lambda *_args, **_kwargs: pytest.fail("already applied physical write repeated"),
     )
     monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda _value: None)
-    assert write_module.pipeline_write(
+    result = write_module.pipeline_write(
         object(), table_id="target", source_table_ids=["source"], verbose=False
-    ) == {"table_id": "target"}
+    )
+    assert result["table_id"] == "target"
+    assert result["write_metrics"]["rows_committed"] == 0
+    assert result["write_metrics"]["measurement_source"] == "already_applied"
+
+
+@pytest.mark.parametrize("has_data,committed", [(True, 3), (False, 0)])
+def test_incremental_append_preserves_physical_commit_metrics(monkeypatch, has_data, committed):
+    """Incremental scopes never replace measured writer rows with source counts."""
+    _patch_write(monkeypatch, strategy="append")
+    monkeypatch.setattr(write_module, "incremental_publication_scopes", lambda **kwargs: {
+        "source": {"first_run": False, "has_data": has_data, "row_count": 100},
+    })
+    monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
+
+    def publish(*args, **kwargs):
+        kwargs["context"]["_fabricops_write_metrics"].update(
+            rows_committed=committed, rows_inserted=committed, measurement_source="delta_commit"
+        )
+
+    monkeypatch.setattr(io_package, "write_lakehouse_table", publish)
+    result = write_module.pipeline_write(object(), table_id="target", source_table_ids=["source"], verbose=False)
+    assert result["write_metrics"]["rows_committed"] == committed
+    assert result["write_metrics"]["input_rows"] is None
+
+
+@pytest.mark.parametrize("strategy", ["scd1", "scd2"])
+def test_scd_bootstrap_reports_only_measured_insertions(monkeypatch, spark_session, strategy):
+    """New-target physical bootstrap metrics have no updates or expired versions."""
+    _patch_write(monkeypatch, strategy=strategy)
+    processing = {"load_strategy": strategy, "key_columns": ["id"], "effective_column": "effective_at"}
+    monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *args, **kwargs: processing)
+    monkeypatch.setattr(write_module, "_physical_processing_definition", lambda value: value)
+    monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
+
+    def bootstrap(*args, **kwargs):
+        kwargs["context"]["_fabricops_write_metrics"].update(rows_committed=8, measurement_source="delta_commit")
+
+    monkeypatch.setattr(shared_module, "execute_lakehouse_processing", bootstrap)
+
+    class Frame:
+        schema = {"effective_at": type("Field", (), {"dataType": "timestamp"})()}
+
+        def withColumn(self, *args):
+            return self
+
+    result = write_module.pipeline_write(Frame(), table_id="target", source_table_ids=["source"], verbose=False)
+    metrics = result["write_metrics"]
+    assert metrics["rows_committed"] == 8
+    assert metrics["rows_inserted" if strategy == "scd1" else "versions_inserted"] == 8
+    assert metrics["rows_updated" if strategy == "scd1" else "versions_expired"] == 0
+    assert metrics["rows_unchanged"] is None

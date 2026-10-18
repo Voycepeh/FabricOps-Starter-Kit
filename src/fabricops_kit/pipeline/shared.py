@@ -4447,3 +4447,28 @@ def capture_source_observation(
     if incremental_columns is not None:
         return capture_columns(*incremental_columns)
     return drift_observation
+
+
+class ExecutionSummary:
+    """Format notebook summaries without materializing any DataFrame."""
+
+    def __init__(self, operation, *, verbose):
+        """Start the lifecycle wall clock independently of rounded stage durations."""
+        self.operation = operation
+        self.verbose = verbose
+        self.started = time.perf_counter()
+
+    def details(self, fields):
+        """Print aligned, explicit unavailable values to notebook stdout."""
+        if self.verbose:
+            for label, value in fields:
+                print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not available'}")
+
+    def finish(self, fields):
+        """Print successful completion and return elapsed wall-clock seconds."""
+        elapsed = round(max(0.01, time.perf_counter() - self.started), 2)
+        if self.verbose:
+            print(f"\nFabricOps {self.operation} Summary")
+            for label, value in [*fields, ("Total duration", f"{elapsed:.2f}s")]:
+                print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not available'}")
+        return elapsed

@@ -39,7 +39,7 @@ def test_dataframe_only_profiles_without_metadata_writes_and_prints(spark_sessio
 
     result = profile_table(dataframe=source, frequency_columns=["status"])
 
-    assert set(result) == {"profile", "frequency_profile"}
+    assert set(result) == {"profile", "frequency_profile", "row_count"}
     assert _rows(result["profile"])["amount"]["ROW_COUNT"] == 3
     frequency = result["frequency_profile"].collect()
     assert {(row.VALUE, row.FREQUENCY_COUNT) for row in frequency} == {(None, 1), ("A", 2)}
@@ -167,6 +167,7 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
 
     result = profile_table(table_id=identity["table_id"], frequency_columns=["status"], frequency_top_n=2)
 
+    assert result["row_count"] == 3
     assert _rows(result["profile"])["amount"]["NULL_COUNT"] == 1
     assert {(row.VALUE, row.FREQUENCY_RANK) for row in result["frequency_profile"].collect()} == {("A", 1), (None, 2)}
     assert len(queries) == 5

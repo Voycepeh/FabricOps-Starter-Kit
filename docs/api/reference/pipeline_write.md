@@ -51,7 +51,7 @@ def pipeline_write(
     options: dict[str, Any] | None=None,
     spark_session=None,
     verbose: bool=True,
-) -> dict[str, str]:
+) -> dict[str, Any]:
 ```
 
 </div>
@@ -115,7 +115,17 @@ pipeline_write(
 ## Returns
 
 dict
-    A deliberately small result containing only the canonical ``table_id``.
+    The canonical ``table_id``, resolved ``strategy``, and ``write_metrics``.
+    Metrics use integers when reliably measured and None otherwise:
+    ``input_rows``, ``input_columns``, ``rows_committed``, ``total_target_rows``,
+    ``rows_inserted``, ``rows_updated``, ``rows_unchanged``,
+    ``versions_inserted``, and ``versions_expired``. ``measurement_source``
+    identifies Delta commit metadata or an already-applied retry.
+    Committed rows describe this invocation's physical publication only.
+    An already-applied append/overwrite retry reports zero new commits.
+    Warehouse connector and SCD merge metrics remain unavailable: audit-only
+    updates cannot be interpreted as business changes. No reporting count,
+    target scan, or additional Spark job is performed.
     Profile the persisted target through an explicit read-back rather than
     treating the input DataFrame as persisted state.
 
@@ -150,7 +160,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/pipeline_write.py:341`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L341-L712">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py#L341-L737">View on GitHub</a>
 </div>
 
 

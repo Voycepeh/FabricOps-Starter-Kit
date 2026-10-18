@@ -5,6 +5,7 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any, Mapping
 import re
+import json
 import tempfile
 from uuid import uuid4
 
@@ -333,6 +334,66 @@ def write_delta_path(df, path: str, *, mode: str, partition_by=None, options: di
         writer = writer.option(key, value)
     writer.save(path)
 
+
+
+class DeltaCommitMetrics:
+    """Read a tagged commit using bounded Hadoop metadata IO, never Spark jobs.
+
+    Only the latest JSON commit is inspected. Concurrent commits, inaccessible
+    logs, large log directories, and runtimes without Hadoop access yield no
+    measurement. A unique writer option binds metrics to this physical attempt.
+    """
+
+    def __init__(self):
+        """Create an independent identity for one physical write attempt."""
+        self.token = f"fabricops-metrics:{uuid4()}"
+
+    def read(self, spark, path):
+        """Return exact WRITE output rows or None when attribution is unavailable."""
+        reader = None
+        try:
+            jvm = spark._jvm
+            log = jvm.org.apache.hadoop.fs.Path(path.rstrip("/") + "/_delta_log")
+            fs = log.getFileSystem(spark._jsc.hadoopConfiguration())
+            entries = fs.listStatusIterator(log)
+            latest = None
+            for _ in range(256):
+                if not entries.hasNext():
+                    break
+                entry = entries.next().getPath()
+                name = str(entry.getName())
+                if re.fullmatch(r"[0-9]{20}\.json", name) and (latest is None or name > latest[0]):
+                    latest = (name, entry)
+            else:
+                if entries.hasNext():
+                    return None
+            if latest is None:
+                return None
+            reader = jvm.java.io.BufferedReader(jvm.java.io.InputStreamReader(fs.open(latest[1]), "UTF-8"))
+            # commitInfo normally precedes file actions. Bound remote reads.
+            for _ in range(64):
+                line = reader.readLine()
+                if line is None or len(line) > 65536:
+                    return None
+                info = json.loads(str(line)).get("commitInfo")
+                if info is None:
+                    continue
+                if info.get("userMetadata") != self.token or info.get("operation") != "WRITE":
+                    return None
+                value = (info.get("operationMetrics") or {}).get("numOutputRows")
+                if isinstance(value, bool) or not re.fullmatch(r"[0-9]+", str(value)):
+                    return None
+                return int(value)
+        except Exception:
+            # Observability must never turn a successful publication into failure.
+            return None
+        finally:
+            if reader is not None:
+                try:
+                    reader.close()
+                except Exception:
+                    pass
+        return None
 
 def configured_lakehouse_schema(config: Any, env: str, store: str) -> str | None:
     """Return the configured schema for a schema-enabled Lakehouse store."""
