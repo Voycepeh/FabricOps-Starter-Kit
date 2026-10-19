@@ -198,14 +198,16 @@ Freeze the three source contracts and the `curated_orders` target contract. Step
 
 Open **Manifest & Freeze** and review the complete contract, including the DQ rules above.
 
+If a column disappears from the Catalogue, its inherited definitions remain visible for review. In the **Table** workspace, review the unavailable definitions and choose **Remove unavailable definitions** to stage their removal. Correct any remaining references, such as Grain keys, before saving. Frozen versions remain unchanged. If another session freezes the draft before Save or Freeze completes, the operation reports a conflict and retains pending edits.
+
 Choose **Save Data Contract** while the version is still a draft. When it is ready for Engineering validation, choose **Freeze**.
 
-`METADATA_DATA_CONTRACT.contract_payload_json` is the single source of authored table and column Enrichment and all six Guardrail types. Grain description is descriptive Enrichment; key selection and optional enforcement are stored as the Grain Guardrail in the same payload. Save replaces the draft payload, Freeze makes that exact version immutable, and the next draft inherits the previous frozen definition. Runtime checks, exports, and Guardrail Coverage resolve the selected payload; actual evaluations remain in `METADATA_GUARDRAIL_RESULTS`.
+`METADATA_DATA_CONTRACT.contract_payload_json` is the single source of authored table and column Enrichment and the configured Guardrails. Read supports five Guardrails: Schema, Grain, Freshness, Source Drift, and Data Quality. Write supports four: Schema, Grain, Data Quality, and Sensitive Data. Grain description is descriptive Enrichment; key selection and optional enforcement are stored as the Grain Guardrail in the same payload. Save replaces the draft payload, Freeze makes that exact version immutable, and the next draft inherits the previous frozen definition. Runtime checks, exports, and Guardrail Coverage resolve the selected payload; actual evaluations remain in `METADATA_GUARDRAIL_RESULTS`.
 
 The frozen version is an immutable data contract and becomes the exact candidate Engineering selects in Step 4. Freezing does not activate it for Production.
 
 ??? warning "Upgrading from separate definition tables"
-    This is a breaking storage change. Setup no longer creates or requires
+    These governance features are Preview. Setup no longer creates or requires
     `METADATA_ENRICHMENT` or `METADATA_GUARDRAIL`, and standalone definition
     readers/writers have been removed. Existing physical tables are left intact.
 
@@ -244,7 +246,8 @@ The frozen version is an immutable data contract and becomes the exact candidate
     Definitions already represented in their exact payload need no new version.
     Side-table-only definitions are copied into a new inactive, agreement-free
     draft seeded from the latest frozen version, with all definition ownership
-    rebound to the new version. A provenance fingerprint makes repeat runs of the
+    rebound to the new version. Missing Enrichment IDs receive stable distinct IDs
+    so each field survives subsequent saves. A provenance fingerprint makes repeat runs of the
     same source records a no-op. Missing old tables count as empty; other read
     failures propagate. A changed snapshot requires a new dry-run review.
 

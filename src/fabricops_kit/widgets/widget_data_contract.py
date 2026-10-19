@@ -1169,6 +1169,50 @@ def widget_data_contract(
                 str(column.get("column_name") or "").casefold(),
             ),
         )
+        resolution_controls = ()
+        available_ids = {str(column.get("column_id") or "") for column in columns}
+        unresolved = [
+            item for item in [*enrichments, *guardrails]
+            if item.get("column_id") and str(item["column_id"]) not in available_ids
+        ]
+        state["_controls"]["remove_unavailable_definitions"] = None
+        if editable and unresolved:
+            names_by_id = {
+                str(item.get("column_id") or ""): str(item.get("column_name") or item.get("column_id"))
+                for item in current.get("catalogue_rows", []) if item.get("column_id")
+            }
+            details = "<br>".join(html.escape(
+                f"{names_by_id.get(str(item['column_id']), str(item['column_id']))}: "
+                f"{item.get('enrichment_type') or item.get('guardrail_type')} "
+                f"{item.get('value') or item.get('rule_type') or ''}"
+            ) for item in unresolved)
+            notice = widgets.HTML(
+                "<p><strong>Definitions reference unavailable columns.</strong> "
+                "Review them before removing them from this draft. "
+                "The frozen version is unchanged.</p>" + details
+            )
+            remove_unavailable = widgets.Button(description="Remove unavailable definitions")
+
+            def remove_unavailable_clicked(_button: Any) -> None:
+                scope = (str(current["contract_id"]), int(current["contract_version"]))
+                for field, pending_key in (("enrichment", "_pending_enrichment"), ("guardrails", "_pending_guardrails")):
+                    current[field] = [
+                        item for item in current.get(field, [])
+                        if not item.get("column_id") or str(item["column_id"]) in available_ids
+                    ]
+                    pending = state[pending_key].get(scope, {})
+                    state[pending_key][scope] = {
+                        key: item for key, item in pending.items()
+                        if not item.get("column_id") or str(item["column_id"]) in available_ids
+                    }
+                state["dirty"] = True
+                refresh_manifest()
+                render()
+                set_status("Unavailable column definitions removed from the draft. Save to keep this change.")
+
+            remove_unavailable.on_click(remove_unavailable_clicked)
+            state["_controls"]["remove_unavailable_definitions"] = remove_unavailable
+            resolution_controls = (notice, remove_unavailable)
         table = next((item for item in current.get("catalogue_rows", []) if not item.get("column_id")), {})
         if not table:
             table = (state.get("manifest") or {}).get("table", {})
@@ -2112,7 +2156,7 @@ def widget_data_contract(
 .fabricops-grain-fields .widget-label { width:auto !important; min-width:0 !important; }
 }
 </style>""")
-        table_left = (table_summary, sidebar_style, guardrail_sidebar, table_exit_row, table_exit_confirm)
+        table_left = (*resolution_controls, table_summary, sidebar_style, guardrail_sidebar, table_exit_row, table_exit_confirm)
 
         sidebar_groups = {}
         sidebar_rule_buttons = {}

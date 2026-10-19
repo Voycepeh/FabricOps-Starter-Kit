@@ -298,7 +298,9 @@ def contract_processing_source(record: Mapping[str, Any]) -> str:
     return str(payload["table"].get("processing_source") or "default").strip() or "default"
 
 
-def validate_contract_definitions(payload: Mapping[str, Any]) -> None:
+def validate_contract_definitions(
+    payload: Mapping[str, Any], *, allow_unresolved_columns: bool = False
+) -> None:
     """Reject malformed or competing authored definitions without changing the payload.
 
     Empty lists explicitly mean no definitions. Disabled Guardrails retain their
@@ -326,7 +328,7 @@ def validate_contract_definitions(payload: Mapping[str, Any]) -> None:
             kind, column_id = row.get("enrichment_type"), str(row.get("column_id") or "")
             if row.get("enrichment_level") != level or kind not in ENRICHMENT_TYPES_BY_LEVEL[level]:
                 raise ValueError(f"Unsupported descriptive Enrichment in {group}: {kind!r}.")
-            if (level == "column" and column_id not in column_ids) or (level == "table" and column_id):
+            if (level == "column" and (not column_id or (column_id not in column_ids and not allow_unresolved_columns))) or (level == "table" and column_id):
                 raise ValueError(f"Enrichment column_id {column_id!r} does not match its payload scope.")
             key = (level, column_id, kind)
             if key in seen:
@@ -358,20 +360,21 @@ def validate_contract_definitions(payload: Mapping[str, Any]) -> None:
             raise ValueError(f"Guardrail {key!r} action must be Warn or Block.")
         if rule.get("guardrail_type") in {"schema", "sensitive_data"} and rule["action"] != "Block":
             raise ValueError(f"Guardrail {key!r} requires Block action.")
-        if rule.get("column_id") and str(rule["column_id"]) not in column_ids:
+        if rule.get("column_id") and str(rule["column_id"]) not in column_ids and not allow_unresolved_columns:
             raise ValueError(f"Guardrail {key!r} references a column outside the Data Contract.")
         if rule.get("guardrail_type") == "sensitive_data":
             if not rule.get("column_id"):
                 raise ValueError("Sensitive Data requires column_id.")
             validate_sensitive_data_parameters(rule["rule_parameters"])
-    validate_grain_contract(json.loads(json.dumps(payload)))
+    validate_grain_contract(json.loads(json.dumps(payload)), allow_unresolved_columns=allow_unresolved_columns)
 
 
 def _payload_authoring_rows(
-    payload: Mapping[str, Any], *, contract_id: str, contract_version: int, environment_name: str
+    payload: Mapping[str, Any], *, contract_id: str, contract_version: int, environment_name: str,
+    allow_unresolved_columns: bool = False,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Convert one draft payload into the row shapes used by the authoring widget."""
-    validate_contract_definitions(payload)
+    validate_contract_definitions(payload, allow_unresolved_columns=allow_unresolved_columns)
     enrichment_doc = payload.get("enrichment")
     enrichment_items = [
         *list((enrichment_doc or {}).get("table") or []),
@@ -401,6 +404,33 @@ def _payload_authoring_rows(
         row["is_active"] = bool(item.get("is_active", True))
         guardrail_rows.append(row)
     return enrichment_rows, guardrail_rows
+
+
+def _confirm_contract_mutation(
+    expected: Mapping[str, Any], *, config: Any, env: str, spark_session: Any,
+    context: Mapping[str, Any], store: str, schema: str | None,
+) -> dict[str, Any]:
+    """Reject skipped or superseded mutations before the widget clears pending edits."""
+    matches = contract_version_records(
+        _scoped_rows(
+            read_lakehouse_table(
+                DATA_CONTRACT_TABLE, store=store, schema=schema,
+                spark_session=spark_session, context=context,
+            ),
+            f"contract_id = {_sql_literal(expected['contract_id'])}",
+            f"contract_version = {int(expected['contract_version'])}",
+            f"environment_name = {_sql_literal(env)}",
+        ),
+        contract_id=expected["contract_id"], contract_version=expected["contract_version"],
+        environment_name=env,
+    )
+    fields = ("status", "contract_payload_json", "_activity_id", "_committed_at")
+    if len(matches) != 1 or any(matches[0].get(name) != expected.get(name) for name in fields):
+        raise RuntimeError(
+            "Data Contract changed in another session or the draft no longer exists. "
+            "Your pending edits are retained; reload the current version before retrying."
+        )
+    return matches[0]
 
 
 def save_contract_draft(
@@ -479,7 +509,10 @@ def save_contract_draft(
         .whenMatchedUpdateAll(condition="target.status = 'draft'")
         .execute()
     )
-    return updated
+    return _confirm_contract_mutation(
+        updated, config=config, env=env, spark_session=spark_session,
+        context=runtime_context, store=store, schema=schema,
+    )
 
 def _json_safe(value: Any) -> Any:
     """Convert Spark-compatible scalar values into JSON-compatible values."""
@@ -730,6 +763,7 @@ def get_contract_authoring_state(
         contract_id=identity,
         contract_version=version,
         environment_name=env,
+        allow_unresolved_columns=str(draft.get("status") or "").lower() == "draft",
     )
     state = {
         "contract": dict(draft),
@@ -1273,7 +1307,7 @@ def build_enrichment_records(
     return built
 
 
-def validate_grain_contract(payload):
+def validate_grain_contract(payload, *, allow_unresolved_columns=False):
     """Reject invalid or competing Grain definitions before saving or freezing."""
     grains = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") == "grain"]
     if len(grains) > 1:
@@ -1283,7 +1317,7 @@ def validate_grain_contract(payload):
         if rule.get("column_id") or rule.get("rule_type") != "uniqueness":
             raise ValueError("Grain requires a table-level uniqueness rule.")
         parameters = validate_grain_parameters(rule.get("rule_parameters", {}), active=rule.get("is_active", True))
-        if set(parameters["columns"]) - names:
+        if set(parameters["columns"]) - names and not allow_unresolved_columns:
             raise ValueError("Grain references columns outside the Data Contract.")
         rule["rule_parameters"] = parameters
         rule["action"] = normalize_guardrail_action(rule.get("action") or "Block")
@@ -1532,6 +1566,10 @@ def freeze_contract(
         )
         .whenMatchedUpdateAll(condition="target.status = 'draft'")
         .execute()
+    )
+    frozen = _confirm_contract_mutation(
+        frozen, config=config, env=env, spark_session=spark_session,
+        context=runtime_context, store=store, schema=schema,
     )
     frozen_payload = _json_value(
         frozen.get("contract_payload_json"), field="contract_payload_json", default={}

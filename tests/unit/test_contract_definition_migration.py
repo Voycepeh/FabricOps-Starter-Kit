@@ -3,6 +3,8 @@
 from copy import deepcopy
 import json
 from types import SimpleNamespace
+import sys
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -202,7 +204,8 @@ def test_missing_or_malformed_definitions_cannot_be_frozen(field, value):
         contracts.freeze_contract_record(draft=_contract(payload), audit={})
 
 
-def test_new_draft_inherits_frozen_definitions_without_reading_side_tables(monkeypatch):
+@pytest.mark.parametrize("column_available", [True, False])
+def test_new_draft_inherits_frozen_definitions_without_reading_side_tables(monkeypatch, column_available):
     """New draft creation deep-copies all definitions and rebinds only the new version."""
     identity = contracts.contract_lifecycle_id("orders", "dev")
     payload = _payload()
@@ -219,6 +222,8 @@ def test_new_draft_inherits_frozen_definitions_without_reading_side_tables(monke
             {"table_id": "orders", "column_id": "id", "column_name": "order_id", "data_type": "int", "metadata_level": "column", "environment_name": "dev", "is_active": True},
         ],
     }
+    if not column_available:
+        tables["METADATA_DATA_CATALOGUE"][1]["is_active"] = False
     monkeypatch.setattr(contracts, "read_lakehouse_table", lambda name, **_kwargs: tables[name])
     monkeypatch.setattr(contracts, "coerce_metadata_row_types", lambda _name, row: row)
     monkeypatch.setattr(contracts, "build_runtime_audit_fields", lambda **_kwargs: {})
@@ -227,6 +232,13 @@ def test_new_draft_inherits_frozen_definitions_without_reading_side_tables(monke
     spark = SimpleNamespace(createDataFrame=lambda rows, schema: rows)
     draft = contracts.create_contract_draft(table_id="orders", config={}, env="dev", spark_session=spark)
     copied = json.loads(draft["contract_payload_json"])
+    state = contracts.get_contract_authoring_state(
+        config={}, env="dev", spark_session=spark, contract_id=identity, contract_version=2, contract=draft,
+    )
+    assert state["enrichment"] and state["guardrails"]
+    if not column_available:
+        with pytest.raises(ValueError, match="payload scope"):
+            contracts.freeze_contract_record(draft=draft, audit={})
     assert frozen == before
     assert len(writes) == 1 and draft["contract_version"] == 2
     assert copied["enrichment"]["table"][0]["value"] == "One row per order"
@@ -278,3 +290,69 @@ def test_widget_assembly_preserves_migration_provenance():
         catalogue_rows=[{"table_id": "orders", "table_name": "orders", "metadata_level": "table", "environment_name": "dev", "is_active": True}],
     )
     assert assembled["definition_migration"] == payload["definition_migration"]
+
+
+@pytest.mark.parametrize("missing_id", [None, ""])
+def test_migrated_missing_enrichment_ids_survive_save_and_freeze(missing_id):
+    """Nullable legacy identifiers become stable distinct identities before draft creation."""
+    side = [_enrichment(enrichment_id=missing_id), _enrichment(enrichment_id=missing_id, enrichment_type="Classification", value="Public")]
+    report = _plan(enrichment=side)
+    draft = report["drafts"][0]
+    payload = json.loads(draft["contract_payload_json"])
+    rows = [{**item, "environment_name": "dev"} for item in payload["enrichment"]["table"]]
+    ids = [item["enrichment_id"] for item in rows]
+    assert all(ids) and len(set(ids)) == 2
+    assert report["drafts"] == _plan(enrichment=side)["drafts"]
+    assembled, _ = contracts.assemble_contract_payload(
+        draft=draft, catalogue_rows=[{"table_id": "orders", "table_name": "orders", "metadata_level": "table", "environment_name": "dev"}],
+        enrichment_rows=rows, guardrail_rows=[], environment_name="dev",
+    )
+    frozen = contracts.freeze_contract_record(draft={**draft, "contract_payload_json": json.dumps(assembled)}, audit={})
+    assert len(json.loads(frozen["contract_payload_json"])["enrichment"]["table"]) == 2
+
+
+@pytest.mark.parametrize("operation", ["save", "freeze"])
+@pytest.mark.parametrize("persisted_status", ["draft", "frozen", "missing"])
+def test_contract_mutations_confirm_persistence_before_reporting_success(monkeypatch, operation, persisted_status):
+    """A conditional Delta no-op must reject stale Save/Freeze and leave storage unchanged."""
+    from fabricops_kit.io import shared as io
+
+    payload = _payload()
+    payload["contract"]["status"] = "draft"
+    draft = _contract(payload)
+    persisted = deepcopy(draft)
+    persisted["status"] = persisted_status
+    if persisted_status == "frozen":
+        frozen_payload = deepcopy(payload)
+        frozen_payload["contract"]["status"] = "frozen"
+        persisted["contract_payload_json"] = json.dumps(frozen_payload)
+    original = deepcopy(persisted)
+    frames = []
+    frame = MagicMock()
+    frame.alias.return_value = frame
+    def create(rows, schema):
+        frames[:] = rows
+        return frame
+    delta = MagicMock()
+    merge = delta.forPath.return_value.alias.return_value.merge.return_value
+    def execute():
+        if persisted_status == "draft":
+            persisted.clear()
+            persisted.update(frames[0])
+    merge.whenMatchedUpdateAll.return_value.execute.side_effect = execute
+    monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=delta))
+    monkeypatch.setattr(io, "resolve_configured_lakehouse_table", lambda *a, **k: (None, None, None, "path"))
+    monkeypatch.setattr(contracts, "build_runtime_audit_fields", lambda **k: {"_activity_id": "this-save"})
+    monkeypatch.setattr(contracts, "coerce_metadata_row_types", lambda name, row: row)
+    monkeypatch.setattr(contracts, "read_lakehouse_table", lambda *a, **k: [] if persisted_status == "missing" else [persisted])
+    args = dict(draft=draft, config={}, env="dev", spark_session=SimpleNamespace(createDataFrame=create))
+    def invoke():
+        return contracts.save_contract_draft(**args, payload=payload) if operation == "save" else contracts.freeze_contract(**args)
+    if persisted_status == "draft":
+        result = invoke()
+        assert (result if operation == "save" else result["contract"]) == persisted
+    else:
+        with pytest.raises(RuntimeError, match="pending edits are retained"):
+            invoke()
+        assert persisted == original
+    assert merge.whenMatchedUpdateAll.call_args.kwargs["condition"] == "target.status = 'draft'"

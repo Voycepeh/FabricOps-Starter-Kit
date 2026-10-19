@@ -115,6 +115,7 @@ def test_save_freeze_runtime_preserves_selections(monkeypatch, required):
     monkeypatch.setattr(contracts, "build_runtime_audit_fields", lambda **_kwargs: {})
     monkeypatch.setattr(io_shared, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "mock-path"))
     config = framework_config()
+    monkeypatch.setattr(contracts, "read_lakehouse_table", lambda *_a, **_k: [spark.createDataFrame.call_args.args[0][0]])
     saved = contracts.save_contract_draft(
         draft=draft, payload=payload, config=config, env="dev", spark_session=spark,
     )

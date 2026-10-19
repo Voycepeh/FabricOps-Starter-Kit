@@ -9,6 +9,7 @@ from __future__ import annotations
 from copy import deepcopy
 import hashlib
 import json
+import uuid
 from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
@@ -37,6 +38,12 @@ def _definition(row: dict, *, guardrail: bool) -> dict:
     )
     result = {name: row.get(name) for name in names}
     result["column_id"] = str(row.get("column_id") or "")
+    if not guardrail and not str(result.get("enrichment_id") or "").strip():
+        result["enrichment_id"] = str(uuid.uuid5(
+            uuid.NAMESPACE_URL,
+            _json([row.get("environment_name"), row.get("contract_id"),
+                   row.get("enrichment_level"), result["column_id"], row.get("enrichment_type")]),
+        ))
     if guardrail:
         result["is_active"] = row.get("is_active", True)
         parameters = row.get("rule_parameters", {})
