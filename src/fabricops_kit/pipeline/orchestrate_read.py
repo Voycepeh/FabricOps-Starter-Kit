@@ -2,6 +2,7 @@
 from __future__ import annotations
 from typing import Any
 from fabricops_kit.pipeline.check_dq import check_dq
+from fabricops_kit.pipeline.check_grain import check_grain
 from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
@@ -64,10 +65,13 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     Notes
     -----
     Read resolves its Data Contract once, then runs only its configured
-    Freshness, Schema, and Data Quality stages before Profile, matching
+    Freshness, Schema, Grain, and Data Quality stages before Profile, matching
     canonical ``02_pipeline``. Absent capability fields remain skipped in the
     returned result; orchestration_stages and stdout show executed stages only.
     A contract-free Development run prints one concise Guardrail decision.
+    Grain checks only the returned rows (the incremental batch in incremental mode),
+    using the configured physical row key; SCD2 history requires a version-aware
+    key, such as business key plus effective timestamp.
     DataFrames are never displayed. Incremental batches are not profiled.
     With verbose=True, successful execution ends with a READ Summary on stdout.
     Counts reuse existing profiling results; no Spark action is added for
@@ -87,7 +91,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     table_id = resolve_table_id(store=store, schema=schema, table_name=table_name)
     context = prepare_pipeline_execution([table_id], spark_session=spark_session)
     active = pipeline_guardrail_types(context, table_id)
-    labels = [("freshness", "Freshness"), ("schema", "Schema"), ("data_quality", "Data Quality")]
+    labels = [("freshness", "Freshness"), ("schema", "Schema"), ("grain", "Grain"), ("data_quality", "Data Quality")]
     names = ["Read", *[label for kind, label in labels if kind in active]]
     if read_mode == "full":
         names.append("Profile")
@@ -110,6 +114,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     skipped = {"status": "skipped", "can_continue": True, "checks": []}
     freshness = run("Freshness", lambda: check_freshness(table_id, spark_session=spark_session, verbose=False, context=context)) if "freshness" in active else dict(skipped)
     schema_result = run("Schema", lambda: check_schema(dataframe, table_id=table_id, spark_session=spark_session, verbose=False, context=context)) if "schema" in active else dict(skipped)
+    grain_result = run("Grain", lambda: check_grain(dataframe, table_id=table_id, scope="read_full" if read_mode == "full" else "read_incremental_batch", spark_session=spark_session, verbose=False, context=context)) if "grain" in active else dict(skipped)
     dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, spark_session=spark_session, verbose=False, context=context)) if "data_quality" in active else dict(skipped)
     profile = run("Profile", lambda: profile_table(dataframe=dataframe, store=store, schema=schema, table_name=table_name, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session)) if read_mode == "full" else dict(skipped, reason="Incremental batch")
     if metrics["rows_read"] is None and read_mode == "full":
@@ -118,4 +123,4 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         ("Source", ".".join(str(part) for part in (store, schema, table_name) if part)),
         ("Rows read", metrics["rows_read"]), ("Columns", metrics["columns"]),
     ])
-    return {**source, "read_metrics": metrics, "total_duration_seconds": duration, "freshness_result": freshness, "schema_result": schema_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages}
+    return {**source, "read_metrics": metrics, "total_duration_seconds": duration, "freshness_result": freshness, "schema_result": schema_result, "grain_result": grain_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages}

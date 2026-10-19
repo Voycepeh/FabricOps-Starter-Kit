@@ -34,15 +34,26 @@ def _catalogue_rows(count: int = 2) -> list[dict]:
 @pytest.fixture
 def widget_runtime(monkeypatch):
     """Provide mutable canonical service state behind the real ipywidgets controls."""
+    models = {}
     class Layout(types.SimpleNamespace):
-        pass
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            models[id(self)] = self
+            self.closed = False
+
+        def close(self):
+            self.closed = True
+            models.pop(id(self), None)
 
     class Widget:
         def __init__(self, value=None, options=(), description="", disabled=False, layout=None, **kwargs):
+            models[id(self)] = self
+            self.closed = False
             self._observers = []
             self._dom_classes = []
             self.description = description
             self.placeholder = kwargs.get("placeholder", "")
+            self.tooltip = kwargs.get("tooltip", "")
             self.disabled = disabled
             self.layout = layout or Layout()
             self.style = kwargs.get("style", {})
@@ -83,6 +94,10 @@ def widget_runtime(monkeypatch):
         def add_class(self, name):
             self._dom_classes.append(name)
 
+        def close(self):
+            self.closed = True
+            models.pop(id(self), None)
+
     class Dropdown(Widget):
         @Widget.value.setter
         def value(self, value):
@@ -120,7 +135,7 @@ def widget_runtime(monkeypatch):
     ipywidgets = types.SimpleNamespace(
         Layout=lambda **kwargs: Layout(**kwargs), HTML=Widget, Text=Widget, Textarea=Widget,
         Dropdown=Dropdown, Combobox=Widget, Checkbox=Widget, Select=Widget, SelectMultiple=Widget,
-        ToggleButtons=Widget,
+        ToggleButtons=Widget, ToggleButton=Widget,
         Button=Button, VBox=Box, HBox=Box, GridBox=Box, Tab=Tab,
     )
     catalogue = _catalogue_rows()
@@ -349,7 +364,7 @@ def widget_runtime(monkeypatch):
         return state
 
     return {
-        "start": start, "open": open_widget,
+        "start": start, "open": open_widget, "models": models,
         "calls": calls, "contract": contract, "catalogue": catalogue,
         "enrichment": enrichment, "guardrails": guardrails, "schedule": schedule,
         "ai_enrichment": ai_enrichment,
@@ -673,128 +688,65 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert "Daily · 08:00 · Asia/Singapore" in table_summary
 
 
-def test_existing_table_uniqueness_hydrates_row_key(widget_runtime):
-    """Hydrate an existing table-level uniqueness rule into Grain & Row Key."""
+def test_existing_grain_hydrates_row_key(widget_runtime):
+    """Grain owns its selected key and policy independently of DQ."""
     widget_runtime["guardrails"].append({
-        "guardrail_rule_id": "row-key",
-        "guardrail_version": 1,
-        "guardrail_type": "data_quality",
-        "column_id": "",
-        "rule_type": "uniqueness",
-        "rule_parameters_json": '{"columns":["column_0","column_1"]}',
-        "action": "Block",
-        "is_active": True,
-        "contract_id": "contract-orders",
-        "contract_version": 1,
-        "environment_name": "dev",
+        "guardrail_rule_id": "grain", "guardrail_version": 1, "guardrail_type": "grain",
+        "column_id": "", "rule_type": "uniqueness", "rule_parameters_json": '{"columns":["column_0","column_1"]}',
+        "action": "Warn", "is_active": True, "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev",
     })
-
-    state = widget_runtime["open"]()
-    controls = state["_controls"]
-
+    controls = widget_runtime["open"]()["_controls"]
     assert tuple(controls["row_key_columns"].value) == ("column_0", "column_1")
-    assert controls["row_key_block"].value is True
+    assert controls["grain_enabled"].value is True
+    assert controls["grain_policy"].value == "Warn"
 
 
-def test_row_key_changes_reuse_one_table_uniqueness_rule(widget_runtime):
-    """Changing Grain & Row Key mutates one logical uniqueness Guardrail."""
+def test_grain_changes_reuse_one_rule_and_never_enable_implicitly(widget_runtime):
+    """Description and key edits retain inactive metadata until explicit enablement."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-
+    controls["table_grain"].value = "One row per key combination"
+    assert not any(r.get("guardrail_type") == "grain" for r in state["current"]["guardrails"])
     controls["row_key_columns"].value = ("column_0",)
-    first_rules = [
-        rule for rule in state["current"]["guardrails"]
-        if rule.get("guardrail_type") == "data_quality"
-        and rule.get("rule_type") == "uniqueness"
-        and not rule.get("column_id")
-    ]
-    assert len(first_rules) == 1
-    rule_id = first_rules[0]["guardrail_rule_id"]
-
-    controls["row_key_columns"].value = ("column_1",)
+    def grains():
+        return [r for r in state["current"]["guardrails"] if r.get("guardrail_type") == "grain"]
+    assert len(grains()) == 1
+    rule_id = grains()[0]["guardrail_rule_id"]
+    assert grains()[0]["is_active"] is False
+    controls["grain_enabled"].value = True
+    assert controls["grain_policy"].value == "Block"
+    controls["grain_policy"].value = "Warn"
     controls["row_key_columns"].value = ("column_0", "column_1")
-
-    row_key_rules = [
-        rule for rule in state["current"]["guardrails"]
-        if rule.get("guardrail_type") == "data_quality"
-        and rule.get("rule_type") == "uniqueness"
-        and not rule.get("column_id")
-    ]
-    assert len(row_key_rules) == 1
-    assert row_key_rules[0]["guardrail_rule_id"] == rule_id
-    assert json.loads(row_key_rules[0]["rule_parameters_json"]) == {
-        "columns": ["column_0", "column_1"]
-    }
-    assert row_key_rules[0]["is_active"] is True
-
-    controls["row_key_columns"].value = ()
-    row_key_rules = [
-        rule for rule in state["current"]["guardrails"]
-        if rule.get("guardrail_type") == "data_quality"
-        and rule.get("rule_type") == "uniqueness"
-        and not rule.get("column_id")
-    ]
-    assert len(row_key_rules) == 1
-    assert row_key_rules[0]["guardrail_rule_id"] == rule_id
-    assert json.loads(row_key_rules[0]["rule_parameters_json"]) == {
-        "columns": ["column_0", "column_1"]
-    }
-    assert row_key_rules[0]["is_active"] is False
+    controls["grain_enabled"].value = False
+    assert len(grains()) == 1
+    assert grains()[0]["guardrail_rule_id"] == rule_id
+    assert json.loads(grains()[0]["rule_parameters_json"]) == {"columns": ["column_0", "column_1"]}
+    controls["save_data_contract"].click()
+    reopened_state = widget_runtime["open"]()
+    reopened = reopened_state["_controls"]
+    assert reopened["grain_enabled"].value is False
+    assert reopened["grain_policy"].value == "Warn"
+    assert reopened["row_key_columns"].value == ("column_0", "column_1")
+    assert reopened["table_grain"].value == "One row per key combination"
+    reopened["grain_enabled"].value = True
+    assert reopened["grain_policy"].value == "Block"
+    assert not any(r.get("guardrail_type") == "data_quality" and r.get("rule_type") == "uniqueness" for r in reopened_state["current"]["guardrails"])
 
 
-def test_inactive_row_key_hydrates_as_unselected(widget_runtime):
-    """A cleared persisted row key stays cleared when the widget is reopened."""
-    widget_runtime["guardrails"].append({
-        "guardrail_rule_id": "row-key-disabled",
-        "guardrail_version": 1,
-        "guardrail_type": "data_quality",
-        "column_id": "",
-        "rule_type": "uniqueness",
-        "rule_parameters_json": '{"columns":["column_0"]}',
-        "action": "Block",
-        "is_active": False,
-        "contract_id": "contract-orders",
-        "contract_version": 1,
-        "environment_name": "dev",
-    })
-
-    state = widget_runtime["open"]()
-    assert tuple(state["_controls"]["row_key_columns"].value) == ()
-
-
-def test_row_key_change_cleans_legacy_duplicate_table_uniqueness(widget_runtime):
-    """The Grain row-key editor owns one table-level uniqueness rule."""
-    for rule_id, columns in (
-        ("row-key-a", ["column_0"]),
-        ("row-key-b", ["column_1"]),
-    ):
+def test_general_table_uniqueness_is_not_reinterpreted_as_grain(widget_runtime):
+    """Existing DQ rules retain their ownership; no compatibility migration is inferred."""
+    for rule_id, columns in (("dq-key-a", ["column_0"]), ("dq-key-b", ["column_1"])):
         widget_runtime["guardrails"].append({
-            "guardrail_rule_id": rule_id,
-            "guardrail_version": 1,
-            "guardrail_type": "data_quality",
-            "column_id": "",
-            "rule_type": "uniqueness",
-            "rule_parameters_json": json.dumps({"columns": columns}),
-            "action": "Block",
-            "is_active": True,
-            "contract_id": "contract-orders",
-            "contract_version": 1,
-            "environment_name": "dev",
+            "guardrail_rule_id": rule_id, "guardrail_version": 1, "guardrail_type": "data_quality",
+            "column_id": "", "rule_type": "uniqueness", "rule_parameters_json": json.dumps({"columns": columns}),
+            "action": "Block", "is_active": True, "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev",
         })
-
     state = widget_runtime["open"]()
-    state["_controls"]["row_key_columns"].value = ("column_0", "column_1")
-
-    row_key_rules = [
-        rule for rule in state["current"]["guardrails"]
-        if rule.get("guardrail_type") == "data_quality"
-        and rule.get("rule_type") == "uniqueness"
-        and not rule.get("column_id")
-    ]
-    assert len(row_key_rules) == 1
-    assert json.loads(row_key_rules[0]["rule_parameters_json"]) == {
-        "columns": ["column_0", "column_1"]
-    }
+    controls = state["_controls"]
+    assert controls["row_key_columns"].value == ()
+    assert controls["grain_enabled"].value is False
+    controls["row_key_columns"].value = ("column_0", "column_1")
+    assert len([r for r in state["current"]["guardrails"] if r.get("rule_type") == "uniqueness" and r.get("guardrail_type") == "data_quality"]) == 2
 
 
 def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
@@ -806,7 +758,7 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     controls["table_classification"].value = "Restricted"
     controls["table_grain"].value = "One row per order"
     controls["row_key_columns"].value = ("column_0",)
-    controls["row_key_block"].value = True
+    controls["grain_enabled"].value = True
 
     freshness = controls["table_guardrails"]["freshness"]
     freshness["enabled"].value = True
@@ -851,7 +803,7 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     assert hydrated["table_classification"].value == "Restricted"
     assert hydrated["table_grain"].value == "One row per order"
     assert tuple(hydrated["row_key_columns"].value) == ("column_0",)
-    assert hydrated["row_key_block"].value is True
+    assert hydrated["grain_enabled"].value is True
 
     reopened_freshness = hydrated["table_guardrails"]["freshness"]
     assert reopened_freshness["enabled"].value is True
@@ -934,7 +886,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     ]
 
     grain_section = controls["right_pane"].children[0]
-    assert grain_section.children[1] is controls["row_key_block"]
+    assert grain_section.children[1].children == (controls["grain_enabled"], controls["grain_policy"])
     assert len(grain_section.children[3].children) == 1
     assert controls["table_grain"].layout.max_width == "560px"
 
@@ -1285,7 +1237,7 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert controls["selector_panel"].layout.display == "none"
     assert controls["editor_shell"].layout.display == ""
     grain_section = controls["right_pane"].children[0]
-    assert grain_section.children[1] is controls["row_key_block"]
+    assert grain_section.children[1].children == (controls["grain_enabled"], controls["grain_policy"])
     assert grain_section.children[3].layout.grid_template_columns == (
         "minmax(0, 68fr) minmax(240px, 32fr)"
     )
@@ -1393,7 +1345,7 @@ def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_
     table_summary = controls["left_pane"].children[0].value
     assert "Load strategy" in table_summary
     assert "SCD1" in table_summary
-    assert "Data Quality</span><span style='font-size:12px;'>Disabled</span>" in table_summary
+    assert "data_quality" not in controls["sidebar_rule_buttons"]
 
     monkeypatch.setattr(
         module,
@@ -1417,8 +1369,7 @@ def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_
 
     controls["top_nav"].value = "Table"
     table_summary = controls["left_pane"].children[0].value
-    assert "Data Quality" in table_summary
-    assert "Data Quality</span><span style='font-size:12px;color:#0f6cbd;'>Enabled</span>" in table_summary
+    assert "data_quality" in controls["sidebar_rule_buttons"]
 
 
 def test_business_rule_delete_requires_confirmation_and_stages_removal(
@@ -2794,12 +2745,9 @@ def test_guardrail_summary_tracks_working_controls_before_save(widget_runtime):
     """The Table summary reflects working Guardrail state before persistence."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    summary = controls["left_pane"].children[0]
-
-    assert "Freshness" in summary.value
+    assert "freshness" in controls["sidebar_rule_buttons"]
     controls["table_guardrails"]["freshness"]["enabled"].value = False
-    assert "Freshness" in summary.value
-    assert "Disabled" in summary.value
+    assert "freshness" not in controls["sidebar_rule_buttons"]
     assert widget_runtime["calls"]["guardrails"] == []
 
 
@@ -2952,3 +2900,218 @@ def test_widget_exception_diagnostic_includes_phase_type_and_source_location():
     assert "ValueError: Invalid selection: value not found" in message
     assert "Location:" in message
     assert "fail() line" in message
+
+def _sidebar_text(widget):
+    titles = getattr(widget, "titles", {})
+    return str(getattr(widget, "value", "") or "") + str(getattr(widget, "description", "") or "") + " ".join(titles.values()) + " ".join(_sidebar_text(child) for child in getattr(widget, "children", ()))
+
+
+def test_sidebar_paths_shared_rules_details_and_editor_navigation(widget_runtime):
+    """Both paths show one underlying configuration and navigate to the existing editors."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["table_grain"].value = "One row per combination"
+    controls["row_key_columns"].value = ("column_0", "column_1")
+    controls["grain_enabled"].value = True
+    read = _sidebar_text(controls["sidebar_groups"]["read"])
+    write = _sidebar_text(controls["sidebar_groups"]["write"])
+    assert "When this table is read" in read and "orchestrate_read()" in read
+    assert "Before this table is written" in write and "orchestrate_write()" in write
+    assert "Freshness" in read and "Freshness" not in write
+    assert "Source Drift" not in read and "Source Drift" in write
+    assert "Sensitive Data · 1 treatment" not in read and "Sensitive Data · 1 treatment" in write
+    assert "orders → consuming target" in write
+    for content in (read, write):
+        assert "Grain · column_0 + column_1 · Block" in content
+        assert "One row per combination" in content
+        assert "Schema · 1 required column" in content
+        assert "column_0: long" in content and "column_1: timestamp" in content
+        assert "additional columns Warn" in content
+        assert "Data Quality · 3 rules across 2 columns" in content
+        assert "Maximum missing percent" in content
+        assert "Operator" in content
+    assert "treatment must succeed" in write
+    assert "Passed" not in write and "Skipped" not in write
+    sidebar = _sidebar_text(controls["guardrail_sidebar"])
+    assert "publication requirement" in sidebar and "has not run validation" in sidebar
+    assert "Disabled" not in sidebar and "Profile" not in sidebar
+    controls["grain_policy"].value = "Warn"
+    for group in controls["sidebar_groups"].values():
+        assert "Grain · column_0 + column_1 · Warn" in _sidebar_text(group)
+    assert len([r for r in state["current"]["guardrails"] if r.get("guardrail_type") == "grain"]) == 1
+    controls["sidebar_rule_buttons"]["grain"][0].click()
+    assert controls["top_nav"].value == "Table"
+    assert controls["right_pane"].children[0].children[1].children[0] is controls["grain_enabled"]
+    controls["configure_guardrails"].click()
+    assert len(controls["right_pane"].children) == 5
+    controls["sidebar_rule_buttons"]["schema"][0].click()
+    assert controls["top_nav"].value == "Column"
+    assert controls["column_select"].value == "col-0"
+    table_rule = next(button for button in controls["sidebar_rule_buttons"]["data_quality"] if "column relationship" in button.description)
+    table_rule.click()
+    assert controls["top_nav"].value == "Business Rules"
+    assert controls["business_saved"].value == "advanced"
+    assert widget_runtime["calls"]["draft"] == []
+
+
+def test_sidebar_unsaved_parameters_types_counts_and_reopen(widget_runtime):
+    """Live staging updates details and counts without waiting for Save."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_select"].value = "col-0"
+    completeness = controls["dq_family_controls"]["completeness"]
+    completeness["parameters"][0].value = "17"
+    completeness["block"].value = True
+    content = _sidebar_text(controls["sidebar_groups"]["write"])
+    assert "Maximum missing percent:</b> 17.0" in content
+    assert "Policy:</b> Block" in content
+    controls["required"].value = False
+    assert "Schema · 0 required columns" in _sidebar_text(controls["sidebar_groups"]["read"])
+    controls["grain_enabled"].value = True
+    controls["save_data_contract"].click()
+    assert "Grain" in state["_validation_errors"]["table.row_key"]
+    assert widget_runtime["calls"]["draft"] == []
+    controls["row_key_columns"].value = ("column_0",)
+    controls["save_data_contract"].click()
+    reopened = widget_runtime["open"]()["_controls"]
+    assert "Maximum missing percent:</b> 17.0" in _sidebar_text(reopened["sidebar_groups"]["write"])
+    assert "Grain · column_0 · Block" in _sidebar_text(reopened["sidebar_groups"]["read"])
+
+
+def test_sidebar_state_is_replaced_when_another_table_is_opened(widget_runtime, monkeypatch):
+    """Switch tables in one widget without carrying rules or navigation callbacks."""
+    other_catalogue = [{**row, "table_id": "inventory", "table_name": "inventory"} for row in widget_runtime["catalogue"]]
+    payload = json.loads(widget_runtime["contract"]["contract_payload_json"])
+    payload["table"]["table_id"] = "inventory"
+    other_contract = {**widget_runtime["contract"], "contract_id": "contract-inventory", "table_id": "inventory", "contract_payload_json": json.dumps(payload)}
+    original_review = module.contracts.get_contract_review_state
+    def review(**kwargs):
+        if kwargs["contract_id"] != "contract-inventory":
+            return original_review(**kwargs)
+        return {"contract": other_contract, "contract_id": "contract-inventory", "contract_version": 1,
+                "table_id": "inventory", "environment_name": "dev", "catalogue_rows": other_catalogue,
+                "available_columns": other_catalogue[1:], "enrichment": [], "guardrails": []}
+    monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
+    monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kw: {
+        "tables": [widget_runtime["catalogue"][0], other_catalogue[0]],
+        "contracts": [widget_runtime["contract"], other_contract],
+    })
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["table_grain"].value = "Old grain"
+    controls["row_key_columns"].value = ("column_0",)
+    controls["grain_enabled"].value = True
+    first_sidebar = controls["guardrail_sidebar"]
+    controls["change_table"].click()
+    controls["confirm_exit_discard"].click()
+    controls["table"].value = "inventory"
+    controls["open"].click()
+    controls = state["_controls"]
+    assert state["table_id"] == "inventory", state["message"]
+    assert controls["grain_enabled"].value is False
+    assert controls["row_key_columns"].value == ()
+    assert "Grain ·" not in _sidebar_text(controls["guardrail_sidebar"])
+    assert "Old grain" not in _sidebar_text(controls["guardrail_sidebar"])
+    assert first_sidebar is not controls["guardrail_sidebar"]
+    controls["row_key_columns"].value = ("column_1",)
+    controls["grain_enabled"].value = True
+    assert "Grain · column_1 · Block" in _sidebar_text(controls["guardrail_sidebar"])
+    controls["sidebar_rule_buttons"]["grain"][0].click()
+    assert controls["right_pane"].children[0].children[1].children[0] is controls["grain_enabled"]
+    assert "inventory" in controls["left_pane"].children[0].value
+
+
+def test_sidebar_expand_controls_preserve_state_during_live_updates(widget_runtime):
+    """Native toggle controls expose named expansion state and retain it across edits."""
+    controls = widget_runtime["open"]()["_controls"]
+    read = controls["sidebar_groups"]["read"]
+    header, body = read.children
+    assert header.description == "When this table is read · Collapse" and header.value is True
+    header.value = False
+    assert body.layout.display == "none"
+    controls["table_classification"].value = "Restricted"
+    read = controls["sidebar_groups"]["read"]
+    assert read.children[0].value is False
+    assert read.children[0].tooltip == "Expand When this table is read"
+    read.children[0].value = True
+    schema = next(section for section in read.children[1].children[1:] if section.children[0].description.startswith("Schema"))
+    schema.children[0].value = True
+    assert schema.children[1].layout.display == ""
+    assert schema.children[0].tooltip.startswith("Collapse Schema")
+
+
+def test_configure_route_exposes_existing_unconfigured_editors(widget_runtime):
+    """Quiet configuration navigation includes inactive options without inventing rules."""
+    widget_runtime["guardrails"][:] = []
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    assert controls["configure_options"].layout.display == "none"
+    controls["configure_guardrails"].click()
+    assert controls["configure_options"].layout.display == ""
+    assert set(controls["configure_guardrail_buttons"]) == {"schema", "grain", "data_quality", "sensitive_data", "freshness", "source_drift"}
+    controls["configure_guardrail_buttons"]["sensitive_data"].click()
+    assert controls["top_nav"].value == "Column"
+    assert controls["column_select"].value == "col-0"
+    controls["configure_guardrail_buttons"]["grain"].click()
+    assert controls["top_nav"].value == "Table"
+    assert controls["right_pane"].children[0].children[1].children[0] is controls["grain_enabled"]
+    assert not state["current"]["guardrails"]
+
+
+def test_sidebar_static_freshness_describes_expectation_without_claiming_execution(widget_runtime):
+    """Static Freshness remains configured but does not imply timestamp-age evaluation."""
+    controls = widget_runtime["open"]()["_controls"]
+    controls["table_guardrails"]["freshness"]["parameters"][0].value = "static"
+    read = _sidebar_text(controls["sidebar_groups"]["read"])
+    assert "No refresh expected" in read
+    assert "no age validation" in read
+    assert "latest timestamp relative to run time" not in read
+    assert "Passed" not in read and "Skipped" not in read
+
+
+@pytest.mark.parametrize("finish", ["select_key", "disable_grain"])
+def test_correcting_incomplete_grain_clears_only_its_own_errors(widget_runtime, finish):
+    """An unfinished Grain key must not attach errors to unrelated valid edits."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["grain_enabled"].value = True
+    controls["table_grain"].value = "One row per order"
+    controls["table_description"].value = "New description while choosing a key"
+    controls["required"].value = False
+    assert set(state["_validation_errors"]) == {"table.row_key"}
+    assert widget_runtime["calls"]["draft"] == []
+    if finish == "select_key":
+        controls["row_key_columns"].value = ("column_0",)
+    else:
+        controls["grain_enabled"].value = False
+    assert state["_validation_errors"] == {}
+    controls["save_data_contract"].click()
+    assert len(widget_runtime["calls"]["draft"]) == 1
+
+
+def test_sidebar_releases_replaced_models_and_preserves_configuration_controls(widget_runtime):
+    """Live edits keep the number of open sidebar widgets and layouts bounded."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["row_key_columns"].value = ("column_0",)
+    controls["grain_enabled"].value = True
+    before = len(widget_runtime["models"])
+    original_groups = list(controls["sidebar_groups"].values())
+    for index in range(20):
+        controls["table_grain"].value = "A" * (index + 1)
+        assert len(widget_runtime["models"]) == before
+    assert all(group.closed and group.layout.closed for group in original_groups)
+    assert not controls["configure_guardrails"].closed
+    controls["configure_guardrails"].click()
+    controls["configure_guardrail_buttons"]["grain"].click()
+    assert controls["top_nav"].value == "Table"
+    assert not controls["sidebar_groups"]["read"].closed
+
+
+def test_sidebar_skips_rebuilding_unchanged_configuration(widget_runtime):
+    """Description edits unrelated to active checks do not recreate the sidebar."""
+    controls = widget_runtime["open"]()["_controls"]
+    group = controls["sidebar_groups"]["read"]
+    controls["table_description"].value = "Only descriptive Enrichment changed"
+    assert controls["sidebar_groups"]["read"] is group
+    assert not group.closed

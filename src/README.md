@@ -23,11 +23,11 @@ Use `orchestrate_read()` and `orchestrate_write()` for governed pipeline executi
 
 The standalone `pipeline_read()`, `pipeline_write()`, `check_schema()`, `check_freshness()`, `check_source_drift()`, `check_dq()`, `check_sensitive_data()`, and `check_guardrail_coverage()` entrypoints have been removed from the public API. Their owner modules contain internal implementation stages; they are not supported notebook imports. This intentionally removes the former Live `pipeline_read()` and `pipeline_write()` API contracts without compatibility aliases.
 
-Migrate notebooks to the orchestrator calls in `templates/notebooks/02_pipeline.ipynb`. Keep transformations between Read and Write. Read check results come back under `freshness_result`, `schema_result`, and `dq_result`; Write also returns `sensitive_result`, `source_drift_results`, and `coverage_result`. Blocking stages stop later stages before publication. Development without a selected contract retains its existing baseline behavior.
+Migrate notebooks to the orchestrator calls in `templates/notebooks/02_pipeline.ipynb`. Keep transformations between Read and Write. Read check results come back under `freshness_result`, `schema_result`, `grain_result`, and `dq_result`; Write also returns `sensitive_result`, `source_drift_results`, and `coverage_result`. Blocking stages stop later stages before publication. Development without a selected contract retains its existing baseline behavior.
 
 For token mapping reuse, pass the persisted mapping as `orchestrate_write(existing_mapping=...)` and retain `result["sensitive_result"]["support_mapping"]` for later runs. FabricOps never persists raw token mappings automatically.
 
-Schema presence/datatype violations and configured Sensitive Data treatment failures block. Freshness, Source Drift, and DQ retain their authored Warn/Block policies. Guardrail Coverage remains a mandatory publication-readiness gate. Foundational physical I/O and `profile_table()` remain public standalone utilities.
+Schema presence/datatype violations and configured Sensitive Data treatment failures block. Grain, Freshness, Source Drift, and DQ retain their authored Warn/Block policies. Guardrail Coverage remains a mandatory publication-readiness gate. Foundational physical I/O and `profile_table()` remain public standalone utilities.
 
 Each orchestration call resolves its contracts and active rules once. Only applicable Guardrails execute or print stage output. A contract-free Development run prints one decision and proceeds to Read or Write; skipped result fields remain available for inspection. Validate evaluates the exact selected frozen candidate and records `execution_type="validate"` outcomes for activation.
 

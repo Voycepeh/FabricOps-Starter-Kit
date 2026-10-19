@@ -98,7 +98,10 @@ or manually saved processing remains editable until the draft is frozen.
 Profile context remains read-only and is never added
 to the canonical payload. Scheduled Refresh is discovered read-only from Microsoft
 Fabric and remains independent of the authored Freshness expectation. Immutable
-versions are review-only.
+versions are review-only. Grain description, selected key combination, and
+optional enforcement are independent. Enabling Grain defaults to Block.
+The sidebar shows the shared configured rules for Read and Write; it does
+not execute validation. Rule buttons open the existing authoring controls.
 If the notebook runtime cannot provide AI suggestions, AI actions are disabled
 for the widget session while manual authoring remains available. Technical
 failure details are retained in the returned state rather than shown in the editor.
@@ -120,7 +123,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:525`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L525-L5435">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L525-L5590">View on GitHub</a>
 </div>
 
 

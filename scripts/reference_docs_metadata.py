@@ -237,7 +237,7 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_GUARDRAIL": {
-        "purpose": "Define enforced Guardrails: Schema violations and configured Sensitive Data treatment failures block; Freshness, Source Drift, and Data Quality retain Warn/Block actions. Authored names are captured in table_name and optional column_name.",
+        "purpose": "Define enforced Guardrails: Schema violations and configured Sensitive Data treatment failures block; Grain, Freshness, Source Drift, and Data Quality retain Warn/Block actions. Authored names are captured in table_name and optional column_name.",
         "grain": "One configured Guardrail rule revision for one exact Data Contract version and optional column identity.",
         "primary_key": ["guardrail_rule_id", "guardrail_version"],
         "foreign_keys": [
@@ -1610,7 +1610,7 @@ PUBLIC_SYMBOL_DOCS = [
   'raises': 'Raises validation, widget, Spark, or configured metadata routing errors.',
   'related_functions': ['widget_select_data_contract'],
   'expanded_purpose': 'Provides one four-tab governance experience for table and column authoring, Advanced rules, canonical manifest review, freezing, and activation.',
-  'when_to_use': 'Use after Engineering registers a table to create or reopen its agreement-free draft and author descriptive Enrichment plus normalized Schema, Freshness, Source Drift, Data Quality, and Sensitive Data Guardrails.',
+  'when_to_use': 'Use after Engineering registers a table to create or reopen its agreement-free draft and author descriptive Enrichment plus normalized Schema, Grain, Freshness, Source Drift, Data Quality, and Sensitive Data Guardrails.',
   'do_not_use_when': 'Do not use for pipeline-time immutable contract selection; use widget_select_data_contract.',
   'glossary_terms': ['data contract', 'guardrails', 'enrichment', 'metadata lakehouse'],
   'return_interpretation': 'The returned state remains pinned to the draft created or reopened for the requested table_id and active environment; saves delegate to contract-authoring services.',

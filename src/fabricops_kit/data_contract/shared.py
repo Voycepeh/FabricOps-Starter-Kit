@@ -22,12 +22,12 @@ from fabricops_kit.config.metadata_schemas import (
     metadata_table_schema_registry,
 )
 from fabricops_kit.data_contract.scheduled_refresh import canonical_scheduled_refresh
-from fabricops_kit.pipeline.shared import validated_processing
+from fabricops_kit.pipeline.shared import validated_processing, validate_grain_parameters
 
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
 GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
-GUARDRAIL_TYPES = frozenset({"schema", "freshness", "source_drift", "data_quality", "sensitive_data"})
+GUARDRAIL_TYPES = frozenset({"schema", "grain", "freshness", "source_drift", "data_quality", "sensitive_data"})
 GUARDRAIL_ACTIONS = frozenset({"Warn", "Block"})
 SENSITIVE_DATA_TREATMENTS = frozenset({"tokenize", "mask", "bucket", "remove"})
 ENRICHMENT_TYPES_BY_LEVEL = {
@@ -370,6 +370,7 @@ def save_contract_draft(
         dict(canonical["table"].get("processing") or {})
     )
 
+    validate_grain_contract(canonical)
     runtime_context = {
         "config": config, "env": env, **dict(context or {}),
         "_fabricops_suppress_io_log": True,
@@ -508,7 +509,7 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, e
     guardrail_type = str(record.get("guardrail_type") or "").strip().casefold().replace(" ", "_")
     if guardrail_type not in GUARDRAIL_TYPES:
         raise ValueError(
-            "guardrail_type must be Schema, Freshness, Source Drift, Data Quality, or Sensitive Data."
+            "guardrail_type must be Schema, Grain, Freshness, Source Drift, Data Quality, or Sensitive Data."
         )
     raw_parameters = record.get("rule_parameters_json") or "{}"
     try:
@@ -517,6 +518,10 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, e
         raise ValueError("rule_parameters_json must contain a JSON object.") from exc
     if not isinstance(parameters, dict):
         raise ValueError("rule_parameters_json must contain a JSON object.")
+    if guardrail_type == "grain":
+        if record.get("column_id") or record.get("rule_type") != "uniqueness":
+            raise ValueError("Grain requires a table-level uniqueness rule.")
+        parameters = validate_grain_parameters(parameters, active=record.get("is_active", True))
     column_id = str(record.get("column_id") or "").strip()
     if guardrail_type == "sensitive_data":
         if not column_id:
@@ -551,7 +556,7 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, e
         "rule_id": str(record.get("rule_id") or "").strip(),
         "rule_type": str(record.get("rule_type") or "").strip(),
         "rule_parameters_json": json.dumps(parameters, default=str, sort_keys=True, separators=(",", ":")),
-        "action": "Block" if guardrail_type in {"schema", "sensitive_data"} else normalize_guardrail_action(record.get("action")),
+        "action": "Block" if guardrail_type in {"schema", "sensitive_data"} else normalize_guardrail_action(record.get("action") or ("Block" if guardrail_type == "grain" else "Warn")),
         "is_active": bool(record.get("is_active", True)),
         **audit,
     }
@@ -1342,6 +1347,22 @@ def validate_contract_draft(
     }
 
 
+def validate_grain_contract(payload):
+    """Reject invalid or competing Grain definitions before saving or freezing."""
+    grains = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") == "grain"]
+    if len(grains) > 1:
+        raise ValueError("A Data Contract has one Grain definition.")
+    names = {column["column_name"] for column in payload.get("table", {}).get("columns", [])}
+    for rule in grains:
+        if rule.get("column_id") or rule.get("rule_type") != "uniqueness":
+            raise ValueError("Grain requires a table-level uniqueness rule.")
+        parameters = validate_grain_parameters(rule.get("rule_parameters", {}), active=rule.get("is_active", True))
+        if set(parameters["columns"]) - names:
+            raise ValueError("Grain references columns outside the Data Contract.")
+        rule["rule_parameters"] = parameters
+        rule["action"] = normalize_guardrail_action(rule.get("action") or "Block")
+
+
 def freeze_contract_record(
     *, draft: Mapping[str, Any], audit: Mapping[str, Any]
 ) -> dict[str, Any]:
@@ -1355,6 +1376,7 @@ def freeze_contract_record(
     if not isinstance(payload, dict):
         raise ValueError("Save the Data Contract draft before freezing it.")
     payload = json.loads(json.dumps(payload))
+    validate_grain_contract(payload)
     payload["contract"] = {
         "contract_id": str(draft["contract_id"]),
         "contract_version": int(draft["contract_version"]),
@@ -1376,8 +1398,13 @@ def assemble_contract_payload(
     tables: Mapping[str, Any],
     environment_name: str,
     scheduled_refresh: Mapping[str, Any] | None = None,
+    allow_incomplete_grain: bool = False,
 ) -> tuple[dict[str, Any], list[str]]:
-    """Assemble the canonical immutable payload for one exact Data Contract draft."""
+    """Assemble one exact Data Contract draft, validating Grain by default.
+
+    Editable widget previews may retain incomplete Grain. Saving and freezing
+    always validate it, independently of this preview option.
+    """
     contract_id, contract_version = validate_contract_identity(
         draft.get("contract_id"), draft.get("contract_version")
     )
@@ -1505,6 +1532,8 @@ def assemble_contract_payload(
         },
         "guardrails": guardrail_docs,
     }
+    if not allow_incomplete_grain:
+        validate_grain_contract(payload)
     warnings = []
     if not any(row.get("enrichment_type") == "Description" and not row.get("column_id") for row in enrichment_docs):
         warnings.append("Table description is missing.")

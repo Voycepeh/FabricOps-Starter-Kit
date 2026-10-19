@@ -18,11 +18,12 @@ from fabricops_kit.pipeline.shared import (
 )
 
 _GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
-_SOURCE_GUARDRAILS = {"freshness", "schema", "data_quality", "source_drift"}
-_TARGET_GUARDRAILS = {"schema", "sensitive_data", "data_quality"}
+_SOURCE_GUARDRAILS = {"freshness", "schema", "grain", "data_quality", "source_drift"}
+_TARGET_GUARDRAILS = {"schema", "grain", "sensitive_data", "data_quality"}
 _LABELS = {
     "freshness": "Freshness",
     "schema": "Schema",
+    "grain": "Grain",
     "data_quality": "Data Quality",
     "source_drift": "Source Drift",
     "sensitive_data": "Sensitive Data",
@@ -263,6 +264,22 @@ def check_guardrail_coverage(
                     and str(_payload(row).get("target_table_id") or "").strip() == target_id
                 ]
                 scope = "source_target"
+            if guardrail_type == "grain":
+                # A source-read result cannot stand in for prepared Write input.
+                expected_scopes = {"read_full", "read_incremental_batch"} if scope == "source" else {"write_prepared_input"}
+                contract = item["contract"] or {}
+                contract_version = int(contract.get("contract_version") or 0)
+                guardrail_version = int(rule.get("guardrail_version") or 1)
+                matches = [
+                    row for row in matches
+                    if contract_version > 0 and contract.get("contract_id")
+                    and _payload(row).get("validation_scope") in expected_scopes
+                    and str(row.get("table_id") or "") == item["table_id"]
+                    and str(row.get("guardrail_type") or "").lower() == "grain"
+                    and str(row.get("contract_id") or "") == str(contract.get("contract_id") or "")
+                    and row.get("contract_version") == contract_version
+                    and row.get("guardrail_version") == guardrail_version
+                ]
             coverage.append({
                 "scope": scope,
                 "table_name": item["table_name"],

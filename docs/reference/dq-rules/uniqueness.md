@@ -4,7 +4,7 @@
 
 **Columns → Column data quality → Uniqueness**
 
-This is a directly authored column rule. The UI lets Governance set the minimum unique percentage; use 100% for strict uniqueness. Composite grain can also resolve to a table-level uniqueness rule. It is persisted as `rule_type: uniqueness`.
+This is a directly authored column rule. The UI lets Governance set the minimum unique percentage; use 100% for strict uniqueness. Table-level composite DQ rules can also use this rule type. It is persisted as `guardrail_type: data_quality`, `rule_type: uniqueness`. Declared table Grain is a separate optional Guardrail; see [Grain enforcement](../../guided-demo/03-author-and-freeze-data-contract.md#grain-enforcement-and-the-orchestration-sidebar).
 
 ## What this rule does
 
@@ -14,7 +14,7 @@ For a single column, you can require strict uniqueness or allow a minimum unique
 
 ## When to use it
 
-Use for single-column uniqueness checks or composite business grain.
+Use for independent single-column or composite DQ uniqueness expectations. Author the table's declared row identity in Grain & Row Key.
 
 ## Data applicability
 
@@ -38,7 +38,7 @@ columns: ["product_id"]
 minimum_unique_percent: 95
 ```
 
-Composite row-key uniqueness remains strict by default:
+Composite DQ uniqueness remains strict by default:
 
 ```yaml
 rule_type: uniqueness

@@ -2,6 +2,7 @@
 from __future__ import annotations
 from typing import Any, Iterable
 from fabricops_kit.pipeline.check_dq import check_dq
+from fabricops_kit.pipeline.check_grain import check_grain
 from fabricops_kit.pipeline.check_guardrail_coverage import check_guardrail_coverage
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
@@ -95,7 +96,11 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     metadata and Source Observation commit behaviour remains owned by
     the internal Write stage. The returned ``dataframe`` is the prepared Write input,
     not a reread of the persisted target; Append, SCD1, and SCD2 may produce a
-    different target state. No DataFrame is displayed or materialized for this
+    different target state. Grain checks the prepared input after Sensitive Data
+    treatment for every strategy; it does not check existing target rows or
+    guarantee resulting-table uniqueness for Append, SCD1, or SCD2. SCD strategies
+    retain their separate business-key requirements. Use a version-aware Grain
+    key for SCD2 history. No DataFrame is displayed or materialized for this
     return value. With verbose=True, every successful execution prints a final
     WRITE Summary to stdout, including Validate-only runs. Unavailable row
     metrics print as ``Not available``. Reporting adds no Spark actions.
@@ -137,6 +142,8 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
         names.append("Sensitive Data")
     if drift_ids:
         names.append("Source Drift")
+    if "grain" in active:
+        names.append("Grain")
     if "data_quality" in active:
         names.append("Data Quality")
     if governed:
@@ -159,6 +166,7 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
             sensitive = run("Sensitive Data", lambda: check_sensitive_data(dataframe, table_id=target_id, existing_mapping=existing_mapping, spark_session=spark_session, verbose=False, context=context, execution_type=contract_mode))
         prepared = sensitive["dataframe"]
         drift = run("Source Drift", lambda: [check_source_drift(source_id, target_table_id=target_id, spark_session=spark_session, verbose=False, context=context, execution_type=contract_mode) if source_id in drift_ids else dict(skipped) for source_id in source_ids]) if drift_ids else [dict(skipped) for _ in source_ids]
+        grain_result = run("Grain", lambda: check_grain(prepared, table_id=target_id, scope="write_prepared_input", spark_session=spark_session, verbose=False, context=context, execution_type=contract_mode)) if "grain" in active else dict(skipped)
         dq_result = run("Data Quality", lambda: check_dq(prepared, table_id=target_id, spark_session=spark_session, verbose=False, context=context, execution_type=contract_mode)) if "data_quality" in active else dict(skipped)
         coverage = run("Guardrail Coverage", lambda: check_guardrail_coverage(target_table_id=target_id, source_table_ids=source_ids, spark_session=spark_session, verbose=False, context=context)) if governed else dict(skipped)
         common_results = {
@@ -166,6 +174,7 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
             "schema_result": schema_result,
             "sensitive_result": sensitive,
             "source_drift_results": drift,
+            "grain_result": grain_result,
             "dq_result": dq_result,
             "coverage_result": coverage,
             "orchestration_stages": stages,

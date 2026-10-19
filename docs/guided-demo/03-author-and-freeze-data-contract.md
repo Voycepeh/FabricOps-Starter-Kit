@@ -71,12 +71,38 @@ Open **Table** and review:
 
 
 * Description and Classification
-* Grain & Row Key — use `order_id`
+* Grain & Row Key — describe one row and select `order_id`; leave **Enforce Grain** off for this exercise, which separately demonstrates DQ Uniqueness.
 * Processing
 * Freshness, when applicable
 * Source Drift, when applicable
 
 Use AI suggestions where useful, then review them before applying. Profile statistics are evidence only; they do not become contract requirements unless Governance authors a rule from them.
+
+### Grain enforcement and the orchestration sidebar
+
+**Grain is a singular table Guardrail, independent of Data Quality.** The description remains table Enrichment; selected key columns and enforcement policy are separate choices. Selecting a profiled key or entering a description does not enable enforcement. **Enforce Grain** defaults to **Block** when enabled; choose **Warn** to record violations and continue. Turn it off to retain the description and keys without runtime validation or required Grain Results.
+
+A composite key is unique as a combination. Any SQL null in any key component fails that row; blank strings are ordinary values. All rows sharing a duplicate combination fail. An empty input passes only with a valid configured key and all configured columns present. Missing columns, duplicate/blank key names, unknown contract columns, and invalid configuration cannot pass; invalid configuration blocks even under Warn. No duplicate DQ Uniqueness rule is created for declared Grain. Existing authored DQ Uniqueness rules remain independent rules.
+
+| Boundary or strategy | Grain validation scope |
+| --- | --- |
+| Full Read | The returned DataFrame, including any query restriction. |
+| Incremental Read | The returned incremental batch only. |
+| Overwrite | Prepared Write input after Sensitive Data treatment; these rows replace the target. |
+| Append | Prepared incoming rows only; collisions with existing target rows are not checked. |
+| SCD1 | Prepared incoming rows only; existing target uniqueness is not established. Existing strategy business-key checks still apply. |
+| SCD2 | Prepared incoming rows only. On full Read, history needs a version-aware row key such as business key plus effective timestamp. Business keys may repeat across history; Grain does not change SCD2 merge keys or restrict Read to current rows. |
+
+??? info "Resulting-table uniqueness is outside this validation scope"
+
+    Grain does not read existing targets or simulate merges. Append, SCD1, and SCD2 can therefore produce a different table state from the checked input. Resulting-table uniqueness would require strategy-specific validation and concurrency handling beyond this change. Configure physical row Grain appropriately; a business key alone is not a unique physical row key for SCD2 history. Existing SCD processing still requires unique incoming business keys.
+
+The sidebar groups configured rules under **When this table is read** (`orchestrate_read()`: Freshness, Schema, Grain, Data Quality) and **Before this table is written** (`orchestrate_write()`: Schema, Sensitive Data, Source Drift, Grain, Data Quality). Source Drift belongs to the source → consuming target relationship and runs during that target's Write orchestration. The same Schema, Grain, and DQ configuration applies to both paths; there are no separate Read/Write policies.
+
+Expand a Guardrail to inspect its columns, rules, parameters, and policy, then click a rule to open its existing editor. **Configure guardrails** reveals routes to the existing editors, including unconfigured options; **Column** and **Business Rules** also expose their authoring controls. Documented but unenforced Grain remains in **Grain & Row Key**, outside the active checks. Summaries update as edits are staged, before Save.
+
+**Warn/Block is policy, not an execution result.** The sidebar does not execute validation. `METADATA_GUARDRAIL_RESULTS` records actual Grain evaluations with `guardrail_type=grain`, the exact contract version, continuation decision, counts, and validation scope. Guardrail Coverage requires applicable Read and Write Grain Results for the current activity before publication; it is a publication requirement rather than an authorable rule. Sensitive Data treatments must succeed before continuation. Profiling supplies observations and suggestions, not Guardrails.
+
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
