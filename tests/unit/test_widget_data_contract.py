@@ -34,11 +34,21 @@ def _catalogue_rows(count: int = 2) -> list[dict]:
 @pytest.fixture
 def widget_runtime(monkeypatch):
     """Provide mutable canonical service state behind the real ipywidgets controls."""
+    models = {}
     class Layout(types.SimpleNamespace):
-        pass
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            models[id(self)] = self
+            self.closed = False
+
+        def close(self):
+            self.closed = True
+            models.pop(id(self), None)
 
     class Widget:
         def __init__(self, value=None, options=(), description="", disabled=False, layout=None, **kwargs):
+            models[id(self)] = self
+            self.closed = False
             self._observers = []
             self._dom_classes = []
             self.description = description
@@ -83,6 +93,10 @@ def widget_runtime(monkeypatch):
 
         def add_class(self, name):
             self._dom_classes.append(name)
+
+        def close(self):
+            self.closed = True
+            models.pop(id(self), None)
 
     class Dropdown(Widget):
         @Widget.value.setter
@@ -350,7 +364,7 @@ def widget_runtime(monkeypatch):
         return state
 
     return {
-        "start": start, "open": open_widget,
+        "start": start, "open": open_widget, "models": models,
         "calls": calls, "contract": contract, "catalogue": catalogue,
         "enrichment": enrichment, "guardrails": guardrails, "schedule": schedule,
         "ai_enrichment": ai_enrichment,
@@ -3053,3 +3067,51 @@ def test_sidebar_static_freshness_describes_expectation_without_claiming_executi
     assert "no age validation" in read
     assert "latest timestamp relative to run time" not in read
     assert "Passed" not in read and "Skipped" not in read
+
+
+@pytest.mark.parametrize("finish", ["select_key", "disable_grain"])
+def test_correcting_incomplete_grain_clears_only_its_own_errors(widget_runtime, finish):
+    """An unfinished Grain key must not attach errors to unrelated valid edits."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["grain_enabled"].value = True
+    controls["table_grain"].value = "One row per order"
+    controls["table_description"].value = "New description while choosing a key"
+    controls["required"].value = False
+    assert set(state["_validation_errors"]) == {"table.row_key"}
+    assert widget_runtime["calls"]["draft"] == []
+    if finish == "select_key":
+        controls["row_key_columns"].value = ("column_0",)
+    else:
+        controls["grain_enabled"].value = False
+    assert state["_validation_errors"] == {}
+    controls["save_data_contract"].click()
+    assert len(widget_runtime["calls"]["draft"]) == 1
+
+
+def test_sidebar_releases_replaced_models_and_preserves_configuration_controls(widget_runtime):
+    """Live edits keep the number of open sidebar widgets and layouts bounded."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["row_key_columns"].value = ("column_0",)
+    controls["grain_enabled"].value = True
+    before = len(widget_runtime["models"])
+    original_groups = list(controls["sidebar_groups"].values())
+    for index in range(20):
+        controls["table_grain"].value = "A" * (index + 1)
+        assert len(widget_runtime["models"]) == before
+    assert all(group.closed and group.layout.closed for group in original_groups)
+    assert not controls["configure_guardrails"].closed
+    controls["configure_guardrails"].click()
+    controls["configure_guardrail_buttons"]["grain"].click()
+    assert controls["top_nav"].value == "Table"
+    assert not controls["sidebar_groups"]["read"].closed
+
+
+def test_sidebar_skips_rebuilding_unchanged_configuration(widget_runtime):
+    """Description edits unrelated to active checks do not recreate the sidebar."""
+    controls = widget_runtime["open"]()["_controls"]
+    group = controls["sidebar_groups"]["read"]
+    controls["table_description"].value = "Only descriptive Enrichment changed"
+    assert controls["sidebar_groups"]["read"] is group
+    assert not group.closed

@@ -267,7 +267,19 @@ def check_guardrail_coverage(
             if guardrail_type == "grain":
                 # A source-read result cannot stand in for prepared Write input.
                 expected_scopes = {"read_full", "read_incremental_batch"} if scope == "source" else {"write_prepared_input"}
-                matches = [row for row in matches if _payload(row).get("validation_scope") in expected_scopes]
+                contract = item["contract"] or {}
+                contract_version = int(contract.get("contract_version") or 0)
+                guardrail_version = int(rule.get("guardrail_version") or 1)
+                matches = [
+                    row for row in matches
+                    if contract_version > 0 and contract.get("contract_id")
+                    and _payload(row).get("validation_scope") in expected_scopes
+                    and str(row.get("table_id") or "") == item["table_id"]
+                    and str(row.get("guardrail_type") or "").lower() == "grain"
+                    and str(row.get("contract_id") or "") == str(contract.get("contract_id") or "")
+                    and row.get("contract_version") == contract_version
+                    and row.get("guardrail_version") == guardrail_version
+                ]
             coverage.append({
                 "scope": scope,
                 "table_name": item["table_name"],

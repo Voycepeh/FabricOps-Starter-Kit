@@ -282,9 +282,12 @@ def test_source_drift_evidence_is_scoped_to_the_target(monkeypatch):
 def test_grain_requires_evidence_for_each_applicable_boundary(monkeypatch, source_scope, target_scope, passes):
     """Grain is independently applicable and Read cannot satisfy target validation."""
     import json
-    _patch_runtime(monkeypatch, contracts={"source": {"contract_id": "c1"}, "target": {"contract_id": "c2"}},
-                   rules={"source": [_rule("source-grain", "grain")], "target": [_rule("target-grain", "grain")]},
-                   evidence=[{"guardrail_rule_id": name + "-grain", "result_payload_json": json.dumps({"validation_scope": scope})} for name, scope in [("source", source_scope), ("target", target_scope)]])
+    _patch_runtime(monkeypatch, contracts={"source": {"contract_id": "c1", "contract_version": 1}, "target": {"contract_id": "c2", "contract_version": 1}},
+                   rules={"source": [{**_rule("source-grain", "grain"), "guardrail_version": 1}], "target": [{**_rule("target-grain", "grain"), "guardrail_version": 1}]},
+                   evidence=[{"guardrail_rule_id": name + "-grain", "guardrail_type": "grain", "table_id": name,
+                              "guardrail_version": 1, "contract_id": contract_id, "contract_version": 1,
+                              "result_payload_json": json.dumps({"validation_scope": scope})}
+                             for name, scope, contract_id in [("source", source_scope, "c1"), ("target", target_scope, "c2")]])
     if passes:
         result = coverage_module.check_guardrail_coverage(target_table_id="target", source_table_ids=["source"], verbose=False)
         assert len(result["coverage"]) == 2
@@ -292,3 +295,20 @@ def test_grain_requires_evidence_for_each_applicable_boundary(monkeypatch, sourc
     else:
         with pytest.raises(RuntimeError, match="Grain not evaluated"):
             coverage_module.check_guardrail_coverage(target_table_id="target", source_table_ids=["source"], verbose=False)
+
+
+@pytest.mark.parametrize("participant", ["source", "target"])
+@pytest.mark.parametrize("field,value", [("contract_id", "other-contract"), ("contract_version", 1), ("guardrail_version", 1), ("table_id", "other-table"), ("guardrail_type", "data_quality"), ("contract_version", None)])
+def test_grain_coverage_rejects_evidence_for_another_exact_definition(monkeypatch, participant, field, value):
+    """Stable rule IDs cannot reuse evidence after changing contract or rule revision."""
+    import json
+    contracts = {name: {"contract_id": name + "-contract", "contract_version": 2} for name in ("source", "target")}
+    rules = {name: [{**_rule(name + "-grain", "grain"), "guardrail_version": 2}] for name in contracts}
+    evidence = [{"guardrail_rule_id": name + "-grain", "guardrail_version": 2, "guardrail_type": "grain",
+                 "table_id": name, "contract_id": name + "-contract", "contract_version": 2,
+                 "result_payload_json": json.dumps({"validation_scope": "read_full" if name == "source" else "write_prepared_input"})}
+                for name in contracts]
+    evidence[0 if participant == "source" else 1][field] = value
+    _patch_runtime(monkeypatch, contracts=contracts, rules=rules, evidence=evidence)
+    with pytest.raises(RuntimeError, match=participant + " / Grain not evaluated"):
+        coverage_module.check_guardrail_coverage(target_table_id="target", source_table_ids=["source"], verbose=False)

@@ -183,3 +183,40 @@ def test_missing_prepared_key_records_failure_even_warn(contract_runtime, spark_
     assert [row["guardrail_type"] for row in writes] == ["sensitive_data", "grain"]
     assert writes[-1]["can_continue"] is False
     assert writes[-1]["status"] == "failed"
+
+
+def test_incomplete_grain_preview_cannot_be_saved_frozen_or_enforced():
+    """Editable previews retain unfinished keys without weakening authoritative validation."""
+    draft = {"contract_id": "c", "contract_version": 1, "table_id": "t", "environment_name": "dev", "status": "draft",
+             "contract_payload_json": json.dumps({"table": {"processing": {"load_strategy": "overwrite"}}})}
+    tables = {
+        "METADATA_DATA_CATALOGUE": [
+            {"table_id": "t", "environment_name": "dev", "metadata_level": "table", "table_name": "orders"},
+            {"table_id": "t", "environment_name": "dev", "metadata_level": "column", "column_id": "id", "column_name": "id", "data_type": "bigint"},
+        ],
+        "METADATA_ENRICHMENT": [],
+        "METADATA_GUARDRAIL": [{**_rule([]), "contract_id": "c", "contract_version": 1, "environment_name": "dev"}],
+    }
+    with pytest.raises(ValueError, match="Enforced Grain requires"):
+        contracts.assemble_contract_payload(draft=draft, tables=tables, environment_name="dev")
+    preview, _ = contracts.assemble_contract_payload(draft=draft, tables=tables, environment_name="dev", allow_incomplete_grain=True)
+    assert preview["guardrails"][0]["rule_parameters"]["columns"] == []
+    with pytest.raises(ValueError, match="Enforced Grain requires"):
+        contracts.save_contract_draft(draft=draft, payload=preview, config=object(), env="dev", spark_session=object())
+    with pytest.raises(ValueError, match="Enforced Grain requires"):
+        contracts.freeze_contract_record(draft={**draft, "contract_payload_json": json.dumps(preview)}, audit={})
+    with pytest.raises(ValueError, match="Enforced Grain requires"):
+        contract_guardrail_rows({"contract_payload": preview}, environment_name="dev", table_id="t")
+
+
+def test_grain_only_validation_satisfies_exact_coverage(contract_runtime, spark_session):
+    """Persisted real Grain Results satisfy the tightened matcher without a coverage stub."""
+    _grain_contract(contract_runtime)
+    selection, _context, _payload, _frozen, writes, _reads = contract_runtime
+    module = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
+    frame = spark_session.createDataFrame([(1, "a"), (2, "b")], ["id", "email"])
+    result = module.orchestrate_write(frame, sources=[], store="Silver", schema="dbo", table_name="target", write_mode="overwrite", contracts=selection, spark_session=spark_session, verbose=False)
+    assert result["validation_passed"]
+    assert result["coverage_result"]["coverage"][0]["evaluated"]
+    assert result["coverage_result"]["coverage"][0]["guardrail_type"] == "grain"
+    assert len(writes) == 1 and writes[0]["contract_version"] == 2

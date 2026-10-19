@@ -3199,7 +3199,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.shared.assemble_contract_payload",
-      "source_end_line": 1539,
+      "source_end_line": 1545,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
       "source_start_line": 1395,
       "usage": "public_flow_reachable"
@@ -3369,9 +3369,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.shared.freeze_contract",
-      "source_end_line": 1602,
+      "source_end_line": 1608,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 1542,
+      "source_start_line": 1548,
       "usage": "public_flow_reachable"
     },
     {
@@ -5691,7 +5691,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage",
-      "source_end_line": 326,
+      "source_end_line": 338,
       "source_path": "src/fabricops_kit/pipeline/check_guardrail_coverage.py",
       "source_start_line": 85,
       "supports_live_contract": true,
@@ -11688,7 +11688,7 @@
       ],
       "returns_documentation": "dict\n    Current selector, editor, lifecycle state, and callable authoring actions.",
       "signature": "def widget_data_contract(*, table_id: str | None=None, contract_version: int | None=None, spark_session: Any=None, context: Any=None) -> dict[str, Any]",
-      "source_end_line": 5553,
+      "source_end_line": 5590,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
       "source_start_line": 525,
       "summary": "Open the unified governance authoring and lifecycle experience for Data Contracts.",

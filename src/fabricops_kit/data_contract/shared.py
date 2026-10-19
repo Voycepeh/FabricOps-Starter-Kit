@@ -1398,8 +1398,13 @@ def assemble_contract_payload(
     tables: Mapping[str, Any],
     environment_name: str,
     scheduled_refresh: Mapping[str, Any] | None = None,
+    allow_incomplete_grain: bool = False,
 ) -> tuple[dict[str, Any], list[str]]:
-    """Assemble the canonical immutable payload for one exact Data Contract draft."""
+    """Assemble one exact Data Contract draft, validating Grain by default.
+
+    Editable widget previews may retain incomplete Grain. Saving and freezing
+    always validate it, independently of this preview option.
+    """
     contract_id, contract_version = validate_contract_identity(
         draft.get("contract_id"), draft.get("contract_version")
     )
@@ -1527,7 +1532,8 @@ def assemble_contract_payload(
         },
         "guardrails": guardrail_docs,
     }
-    validate_grain_contract(payload)
+    if not allow_incomplete_grain:
+        validate_grain_contract(payload)
     warnings = []
     if not any(row.get("enrichment_type") == "Description" and not row.get("column_id") for row in enrichment_docs):
         warnings.append("Table description is missing.")

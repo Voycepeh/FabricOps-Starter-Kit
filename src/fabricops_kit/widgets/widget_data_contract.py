@@ -720,6 +720,7 @@ def widget_data_contract(
                 },
                 environment_name=env,
                 scheduled_refresh=contract_schedule,
+                allow_incomplete_grain=True,
             )
             state["manifest_warnings"] = warnings
         else:
@@ -1135,6 +1136,9 @@ def widget_data_contract(
     def render() -> None:
         current = state.get("current")
         state.pop("_refresh_guardrail_sidebar", None)
+        dispose_sidebar = state.pop("_dispose_guardrail_sidebar", None)
+        if callable(dispose_sidebar):
+            dispose_sidebar()
         view_content.clear()
         state["_controls"].update({
             "table": table_control, "contract": contract_control,
@@ -2115,6 +2119,7 @@ def widget_data_contract(
         sidebar_groups = {}
         sidebar_rule_buttons = {}
         expanded_guardrails = {}
+        sidebar_snapshot = {"signature": None}
 
         def navigate_guardrail(kind, rule=None):
             rule = rule or {}
@@ -2154,6 +2159,29 @@ def widget_data_contract(
             apply_view()
         configure_guardrails.on_click(configure_guardrails_clicked)
 
+        def close_sidebar_widgets(nodes, *, keep_configuration=False):
+            retained = (configure_guardrails, configure_options) if keep_configuration else ()
+            seen = set()
+            def close_owned(widget):
+                if widget is None or id(widget) in seen or any(widget is item for item in retained):
+                    return
+                seen.add(id(widget))
+                for child in getattr(widget, "children", ()):
+                    close_owned(child)
+                # Layout and Style models have their own widget comms.
+                close_owned(getattr(widget, "layout", None))
+                close_owned(getattr(widget, "style", None))
+                close = getattr(widget, "close", None)
+                if callable(close):
+                    close()
+            for node in nodes:
+                close_owned(node)
+
+        def dispose_guardrail_sidebar():
+            close_sidebar_widgets([guardrail_sidebar])
+
+        state["_dispose_guardrail_sidebar"] = dispose_guardrail_sidebar
+
         def expandable_guardrail(title, content, key, *, default=False):
             expanded = expanded_guardrails.get(key, default)
             toggle = widgets.ToggleButton(
@@ -2179,6 +2207,13 @@ def widget_data_contract(
             payload_columns = json.loads(str(current["contract"].get("contract_payload_json") or "{}")).get("table", {}).get("columns", [])
             types = {str(c.get("column_name")): str(c.get("data_type")) for c in payload_columns}
             types = {str(c.get("column_name")): types.get(str(c.get("column_name")), str(c.get("data_type") or "")) for c in columns}
+            signature = json.dumps({
+                "rules": active, "types": types,
+                "grain_description": table_grain.value if any(rule.get("guardrail_type") == "grain" for rule in active) else "",
+            }, sort_keys=True, default=str)
+            if signature == sidebar_snapshot["signature"]:
+                return
+            previous = guardrail_sidebar.children
             labels = {"schema": "Schema", "grain": "Grain", "data_quality": "Data Quality", "sensitive_data": "Sensitive Data", "freshness": "Freshness", "source_drift": "Source Drift"}
             sidebar_rule_buttons.clear()
 
@@ -2253,6 +2288,8 @@ def widget_data_contract(
                 widgets.HTML("<div class='fabricops-guardrail-detail'><b>Guardrail Coverage · publication requirement</b><br>Before publication, every participating table needs a selected Data Contract, an applicable active Guardrail, and current-activity results for each applicable rule. Source Drift belongs to the source → target relationship. These are configured policies; this sidebar has not run validation.</div>"),
                 configure_guardrails, configure_options,
             )
+            sidebar_snapshot["signature"] = signature
+            close_sidebar_widgets(previous, keep_configuration=True)
 
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
             freshness_controls = table_rules["freshness"]
