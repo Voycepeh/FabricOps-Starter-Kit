@@ -103,7 +103,7 @@ SMOKE_SCRIPT = r"""
         fixtureChange('preview_break','Preview','Live','potentially_breaking'),
         fixtureChange('preview_removed','Preview',null,'review_required','removed'),
         fixtureChange('compatible_live','Live','Live','nonbreaking'),
-        fixtureChange('review_live','Live','Live','review_required'),
+        {...fixtureChange('review_live','Live','Live','review_required'),signature_before:'demo(value, /, *, flag = None)',signature_after:'demo(value, *, flag = None)'},
         fixtureChange('new_live',null,'Live','nonbreaking','added'),
         fixtureChange('unreleased_preview',null,'Preview','nonbreaking','added'),
         fixtureChange('old_discontinued','Discontinued','Live','nonbreaking'),
@@ -120,6 +120,8 @@ SMOKE_SCRIPT = r"""
       check(!usedText.includes('new_live') && !usedText.includes('unreleased_preview') && !usedText.includes('old_discontinued') && !usedText.includes('unknown'), 'excluded functions appeared');
       check(document.querySelectorAll('#compatResults details:not([open])').length === 6, 'function details should start collapsed');
       check(usedText.includes('Reason for compatible_live'), 'brief function reasons missing');
+      check(usedText.includes('demo(value, /, *, flag = None)') && usedText.includes('demo(value, *, flag = None)'), 'exact released and main signatures must preserve parameter kinds');
+      check(getComputedStyle(document.querySelector('#compatResults pre')).whiteSpace === 'pre-wrap', 'long signatures must wrap on mobile');
       renderReleaseImpact([]);
       check(document.getElementById('releaseBreakingResults').textContent === 'No breaking Live/Public function changes found.', 'empty Live question message incorrect');
       compareMainImpact();
@@ -143,6 +145,7 @@ SMOKE_SCRIPT = r"""
       check(new URLSearchParams(location.search).get('compatLifecycle') === 'Live', 'lifecycle URL parameter was not retained');
       document.getElementById('releaseImpactTab').click();
       check(currentCompatComparison.target === 'main', 'history comparison leaked into release view');
+      check(!['baseline','compare','compatLifecycle'].some(key=>new URLSearchParams(location.search).has(key)), 'historical URL parameters must be cleared on return to release view');
       check(document.querySelectorAll('#compatResults article').length === expectedRelease.used.length, 'release view not restored after history');
       showWorkflow('architecture');
 
