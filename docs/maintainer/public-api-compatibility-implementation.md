@@ -31,6 +31,8 @@ Each API record contains its registry-qualified name, lifecycle, extraction cert
 
 Do not edit the JSON manually. Regenerate it after a package-source or generator change, then run the generator again and confirm that it produces no diff.
 
+Normal generation refreshes the baseline from the current `origin/main` (or local `main`). To reproduce an existing snapshot, pass `--main-ref <recorded-commit-sha>`. Generated-artifact validation reads that SHA from the committed JSON and pins only the historical main baseline; it still regenerates the working-tree snapshot and all comparisons from current package source. This keeps PR and post-merge validation reproducible when `main` advances, while retaining stale-source detection. A validation run does not refresh the baseline or the dashboard HTML.
+
 ## Historical extraction and uncertainty
 
 When a tag contains `src/fabricops_kit/public_api.py`, its literal lifecycle tuples are authoritative. A registry entry that cannot be resolved to exactly one top-level source function stays visible with an extraction error and makes the snapshot uncertain.

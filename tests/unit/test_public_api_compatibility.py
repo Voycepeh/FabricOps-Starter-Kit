@@ -254,3 +254,34 @@ def test_payload_generation_is_byte_deterministic(tmp_path) -> None:
     compatibility.write_payload(second, tags=("v0.1.0", "v0.2.0"))
 
     assert first.read_bytes() == second.read_bytes()
+
+
+def test_pinned_main_survives_merge_but_working_tree_remains_checked(tmp_path, monkeypatch) -> None:
+    """Reproduce the pre-merge baseline while detecting current source changes."""
+    import subprocess
+
+    def git(*args):  # noqa: ANN002, ANN202
+        return subprocess.run(["git", *args], cwd=tmp_path, check=True, text=True, capture_output=True).stdout.strip()
+
+    git("init", "-b", "main")
+    git("config", "user.email", "test@example.com")
+    git("config", "user.name", "Test")
+    package = tmp_path / "src/fabricops_kit"
+    package.mkdir(parents=True)
+    source = package / "__init__.py"
+    source.write_text("def demo(value):\n    return value\n__all__ = ['demo']\n", encoding="utf-8")
+    git("add", ".")
+    git("commit", "-m", "baseline")
+    baseline = git("rev-parse", "HEAD")
+    monkeypatch.setattr(compatibility, "ROOT", tmp_path)
+    before = compatibility.build_payload(tags=(), main_ref=baseline)
+    git("commit", "--allow-empty", "-m", "squash merge")
+    assert git("rev-parse", "HEAD") != baseline
+    assert compatibility.build_payload(tags=(), main_ref=baseline) == before
+    assert compatibility.build_payload(tags=()) != before
+
+    source.write_text("def demo(value, required):\n    return value\n__all__ = ['demo']\n", encoding="utf-8")
+    after = compatibility.build_payload(tags=(), main_ref=baseline)
+    assert after != before
+    assert after["snapshots"][0] == before["snapshots"][0]
+    assert after["snapshots"][-1]["source_digest"] != before["snapshots"][-1]["source_digest"]

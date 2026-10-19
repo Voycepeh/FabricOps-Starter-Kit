@@ -179,7 +179,19 @@ def run_check(check: ArtifactCheck) -> int:
     env = os.environ.copy()
     env["PYTHONPATH"] = "src"
     env["FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS"] = "1"
-    subprocess.run(check.command, cwd=ROOT, env=env, check=True)
+    command = check.command
+    if check is COMPATIBILITY_CHECK:
+        # main moves when a PR merges; reproduce the committed historical baseline
+        # while still extracting and checking the current package working tree.
+        committed = subprocess.run(
+            ["git", "show", f"HEAD:{check.diff_paths[0]}"], cwd=ROOT, check=True, text=True, capture_output=True
+        )
+        snapshots = json.loads(committed.stdout)["snapshots"]
+        revision = next(snapshot["revision"] for snapshot in snapshots if snapshot["version"] == "main")
+        if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
+            raise ValueError("The committed compatibility snapshot must record an exact main commit SHA.")
+        command = (*command, "--main-ref", revision)
+    subprocess.run(command, cwd=ROOT, env=env, check=True)
     restore_generated_metadata_and_page_timestamps(update_reference_pages=check is REFERENCE_CHECK)
     diff = subprocess.run(["git", "diff", "--exit-code", "--", *check.diff_paths], cwd=ROOT, check=False)
     return diff.returncode
