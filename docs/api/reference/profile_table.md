@@ -45,6 +45,9 @@ def profile_table(
     schema: str | None=None,
     table_name: str | None=None,
     table_id: str | None=None,
+    grain_discovery_enabled: bool=True,
+    grain_discovery_max_columns: int=3,
+    grain_discovery_max_candidates: int=8,
     frequency_columns=None,
     frequency_enabled: bool=True,
     frequency_top_n: int | None=5,
@@ -70,8 +73,11 @@ Required describes the Python signature. An optional parameter may still be need
 | `schema` | `str \| None` | No | `None` | Physical schema when the configured store uses schemas. |
 | `table_name` | `str \| None` | No | `None` | Physical table name. Required with ``store`` when ``table_id`` is omitted. |
 | `table_id` | `str \| None` | No | `None` | Canonical governed table identity, mutually exclusive with physical coordinates. |
+| `grain_discovery_enabled` | `bool` | No | `True` | Whether to discover candidate Grain keys for a governed table. False skips discovery queries and preserves saved Catalogue candidates. The caller controls when to enable discovery; no scheduling is applied. This option does not disable contract Grain checks. DataFrame-only profiling does not discover or persist candidates. |
+| `grain_discovery_max_columns` | `int` | No | `3` | Maximum columns in a candidate key. 1 checks single columns only; 2 also checks pairs. Must be a positive integer. Wider searches can be costly. |
+| `grain_discovery_max_candidates` | `int` | No | `8` | Maximum candidate keys to retain at the smallest valid key width. Must be a positive integer. Discovery stops after enough keys are found; this limit does not cap work when no valid key exists. |
 | `frequency_columns` | `sequence of str` | No | `None` | Columns to frequency profile. ``None`` automatically selects eligible scalar columns; an empty sequence skips frequency profiling. |
-| `frequency_enabled` | `bool` | No | `True` | Whether to calculate frequency distributions for the table. False skips all frequency columns. |
+| `frequency_enabled` | `bool` | No | `True` | Whether to calculate frequency distributions for this call. False skips all frequency columns. The caller controls when to enable frequency profiling. |
 | `frequency_top_n` | `int \| None` | No | `5` | Ranked values to retain per frequency column. ``None`` retains all. |
 | `frequency_max_distinct_percent` | `float \| None` | No | `80.0` | Maximum distinct-per-non-null percentage for automatically selected columns. ``None`` disables the cardinality filter. |
 | `spark_session` | `object` | No | `None` | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active session. |
@@ -102,6 +108,24 @@ Profile a transformed DataFrame against an explicit governed identity:
 result = profile_table(dataframe=transformed_df, table_id=target_table_id)
 ```
 
+Limit discovery to single columns and pairs, retaining up to two candidates:
+
+```python
+result = profile_table(
+    table_id=target_table_id,
+    grain_discovery_max_columns=2, grain_discovery_max_candidates=2,
+)
+```
+
+Refresh statistics while retaining saved key candidates and skipping frequency:
+
+```python
+result = profile_table(
+    table_id=target_table_id,
+    grain_discovery_enabled=False, frequency_enabled=False,
+)
+```
+
 </div>
 
 ## Returns
@@ -121,7 +145,7 @@ Use result["profile"] for statistical rows and result["frequency_profile"] for s
 
 ValueError
     If identity inputs conflict or are incomplete, neither a DataFrame nor
-    identity is supplied, frequency settings are invalid, or the resolved
+    identity is supplied, frequency settings or discovery limits are invalid, or the resolved
     store is unsupported.
 RuntimeError
     If a governed metadata write requires unavailable Delta support.
@@ -167,9 +191,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:1089`
+`fabricops_kit/pipeline/profile_table.py:1095`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1089-L1413">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1095-L1463">View on GitHub</a>
 </div>
 
 

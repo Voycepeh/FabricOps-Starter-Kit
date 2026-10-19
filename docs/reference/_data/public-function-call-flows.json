@@ -5862,7 +5862,7 @@
       "architecture_classification": "standard_orchestration",
       "contract_classification": "live_public_function",
       "contract_risk": "live",
-      "examples": ">>> source = orchestrate_read(store=\"Bronze\", schema=\"demo\", table_name=\"orders\")\n>>> orders_df = source[\"dataframe\"]",
+      "examples": ">>> source = orchestrate_read(store=\"Bronze\", schema=\"demo\", table_name=\"orders\")\n>>> orders_df = source[\"dataframe\"]\n\nDiscovery and frequency switches apply only when the lifecycle runs Profile.\nPass ``grain_discovery_enabled=False, frequency_enabled=False`` on routine\ncalls and enable either option on calls chosen by your own scheduler.",
       "function_name": "orchestrate_read",
       "function_type": "public_function",
       "inbound_source_references": [
@@ -5915,7 +5915,25 @@
           "type": "str | None"
         },
         {
-          "description": "Whether to calculate frequency distributions for this table.",
+          "description": "Whether Profile discovers candidate Grain keys for this call. False skips discovery and preserves saved candidates; contract Grain checks still run.",
+          "name": "grain_discovery_enabled",
+          "required": "No",
+          "type": "bool"
+        },
+        {
+          "description": "Maximum columns in a candidate key. 1 checks single columns only; 2 also checks pairs. Must be a positive integer. Wider searches can be costly.",
+          "name": "grain_discovery_max_columns",
+          "required": "No",
+          "type": "int"
+        },
+        {
+          "description": "Maximum candidate keys to retain at the smallest valid key width. Must be a positive integer. Discovery stops after enough keys are found; this limit does not cap work when no valid key exists.",
+          "name": "grain_discovery_max_candidates",
+          "required": "No",
+          "type": "int"
+        },
+        {
+          "description": "Whether Profile calculates frequency distributions for this call. The caller controls when to enable discovery and frequency profiling.",
           "name": "frequency_enabled",
           "required": "No",
           "type": "bool"
@@ -5941,7 +5959,7 @@
       ],
       "public_import_path": "fabricops_kit.orchestrate_read",
       "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
-      "raises_documentation": "RuntimeError\n    If a stage fails. Its name is reported and the original exception is\n    retained as ``__cause__``.",
+      "raises_documentation": "ValueError\n    If a discovery limit is not a positive integer; checked before any stage runs.\nRuntimeError\n    If a stage fails. Its name is reported and the original exception is\n    retained as ``__cause__``.",
       "release_history": [
         {
           "status": "live",
@@ -5949,8 +5967,8 @@
         }
       ],
       "returns_documentation": "dict\n    The source-read result, including ``dataframe`` and ``table_id``,\n    plus capability results and ``orchestration_stages``. ``read_metrics``\n    contains ``rows_read`` and ``columns`` (None when unavailable).\n    ``total_duration_seconds`` is the full lifecycle wall-clock duration.",
-      "signature": "def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str='full', query: str | None=None, read_parameters: dict[str, Any] | None=None, target_table_id: str | None=None, frequency_enabled: bool=True, frequency_top_n: int | None=5, spark_session=None, verbose: bool=True) -> dict[str, Any]",
-      "source_end_line": 136,
+      "signature": "def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str='full', query: str | None=None, read_parameters: dict[str, Any] | None=None, target_table_id: str | None=None, grain_discovery_enabled: bool=True, grain_discovery_max_columns: int=3, grain_discovery_max_candidates: int=8, frequency_enabled: bool=True, frequency_top_n: int | None=5, spark_session=None, verbose: bool=True) -> dict[str, Any]",
+      "source_end_line": 159,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_read.py",
       "source_start_line": 20,
       "summary": "Execute the standard FabricOps governed Read lifecycle.",
@@ -5962,7 +5980,7 @@
       "architecture_classification": "standard_orchestration",
       "contract_classification": "live_public_function",
       "contract_risk": "live",
-      "examples": ">>> result = orchestrate_write(\n...     transformed_df, sources=[orders], store=\"Silver\", schema=\"demo\",\n...     table_name=\"curated_orders\", write_mode=\"overwrite\", contracts=CONTRACTS,\n... )\n\nDevelopment SCD1 with a source-free mapping table:\n\n>>> result = orchestrate_write(\n...     product_mapping_df, sources=[], store=\"Silver\", schema=\"demo\",\n...     table_name=\"product_mapping\", write_mode=\"scd1\",\n...     write_parameters={\"key_columns\": [\"product_id\"]},\n... )",
+      "examples": ">>> result = orchestrate_write(\n...     transformed_df, sources=[orders], store=\"Silver\", schema=\"demo\",\n...     table_name=\"curated_orders\", write_mode=\"overwrite\", contracts=CONTRACTS,\n... )\n\nDevelopment SCD1 with a source-free mapping table:\n\n>>> result = orchestrate_write(\n...     product_mapping_df, sources=[], store=\"Silver\", schema=\"demo\",\n...     table_name=\"product_mapping\", write_mode=\"scd1\",\n...     write_parameters={\"key_columns\": [\"product_id\"]},\n... )\n\nDiscovery and frequency switches apply only when the lifecycle runs Profile.\nPass ``grain_discovery_enabled=False, frequency_enabled=False`` on routine\ncalls and enable either option on calls chosen by your own scheduler.",
       "function_name": "orchestrate_write",
       "function_type": "public_function",
       "inbound_source_references": [
@@ -6027,7 +6045,25 @@
           "type": "int | None"
         },
         {
-          "description": "Whether to calculate frequency distributions for this table.",
+          "description": "Whether Profile discovers candidate Grain keys for this call. False skips discovery and preserves saved candidates; contract Grain checks still run.",
+          "name": "grain_discovery_enabled",
+          "required": "No",
+          "type": "bool"
+        },
+        {
+          "description": "Maximum columns in a candidate key. 1 checks single columns only; 2 also checks pairs. Must be a positive integer. Wider searches can be costly.",
+          "name": "grain_discovery_max_columns",
+          "required": "No",
+          "type": "int"
+        },
+        {
+          "description": "Maximum candidate keys to retain at the smallest valid key width. Must be a positive integer. Discovery stops after enough keys are found; this limit does not cap work when no valid key exists.",
+          "name": "grain_discovery_max_candidates",
+          "required": "No",
+          "type": "int"
+        },
+        {
+          "description": "Whether Profile calculates frequency distributions for this call. The caller controls when to enable discovery and frequency profiling.",
           "name": "frequency_enabled",
           "required": "No",
           "type": "bool"
@@ -6059,7 +6095,7 @@
       ],
       "public_import_path": "fabricops_kit.orchestrate_write",
       "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
-      "raises_documentation": "RuntimeError\n    If any stage fails. Its name is reported and the original exception is\n    retained as ``__cause__``.",
+      "raises_documentation": "ValueError\n    If a discovery limit is not a positive integer; checked before any stage runs.\nRuntimeError\n    If any stage fails. Its name is reported and the original exception is\n    retained as ``__cause__``.",
       "release_history": [
         {
           "status": "live",
@@ -6067,8 +6103,8 @@
         }
       ],
       "returns_documentation": "dict\n    Write identity and capability results. The top-level ``dataframe`` is\n    the prepared input after Sensitive Data treatment, in both Validate\n    and Enforce modes. It is the Write input, not necessarily the persisted\n    target after Append, SCD1, or SCD2. ``sensitive_result`` retains its\n    nested ``dataframe`` result. ``published`` is false when a Validate-mode\n    contract passes without publication. ``write_metrics`` retains the\n    internal Write measurements, with ``total_target_rows`` reused from\n    persisted-target profiling when available. It never treats prepared\n    input rows or profiled target rows as committed rows.\n    ``total_duration_seconds`` measures the complete lifecycle, including\n    Guardrails, metadata finalization, and profiling.",
-      "signature": "def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None=None, contracts: dict[str, Any] | None=None, repartition_by: int | None=None, frequency_enabled: bool=True, frequency_top_n: int | None=5, existing_mapping=None, spark_session=None, verbose: bool=True) -> dict[str, Any]",
-      "source_end_line": 223,
+      "signature": "def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None=None, contracts: dict[str, Any] | None=None, repartition_by: int | None=None, grain_discovery_enabled: bool=True, grain_discovery_max_columns: int=3, grain_discovery_max_candidates: int=8, frequency_enabled: bool=True, frequency_top_n: int | None=5, existing_mapping=None, spark_session=None, verbose: bool=True) -> dict[str, Any]",
+      "source_end_line": 246,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
       "source_start_line": 23,
       "summary": "Execute the standard FabricOps governed Write lifecycle.",
@@ -6391,9 +6427,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._audit_literal_columns",
-      "source_end_line": 685,
+      "source_end_line": 689,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 671,
+      "source_start_line": 675,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6414,9 +6450,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._automatic_frequency_columns",
-      "source_end_line": 657,
+      "source_end_line": 661,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 643,
+      "source_start_line": 647,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6439,9 +6475,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe",
-      "source_end_line": 748,
+      "source_end_line": 752,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 688,
+      "source_start_line": 692,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6463,9 +6499,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._catalogue_dataframe_from_profiled",
-      "source_end_line": 1008,
+      "source_end_line": 1012,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 920,
+      "source_start_line": 924,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6487,9 +6523,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._delete_profile_snapshot",
-      "source_end_line": 870,
+      "source_end_line": 874,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 856,
+      "source_start_line": 860,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6511,9 +6547,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe",
-      "source_end_line": 796,
+      "source_end_line": 800,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 751,
+      "source_start_line": 755,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6535,7 +6571,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._key_candidate_evidence",
-      "source_end_line": 316,
+      "source_end_line": 317,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
       "source_start_line": 307,
       "supports_live_contract": true,
@@ -6557,9 +6593,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._key_candidate_payload",
-      "source_end_line": 328,
+      "source_end_line": 329,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 319,
+      "source_start_line": 320,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6579,9 +6615,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.pipeline.profile_table._normalize_choice",
-      "source_end_line": 523,
+      "source_end_line": 527,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 517,
+      "source_start_line": 521,
       "usage": "detached"
     },
     {
@@ -6596,9 +6632,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.pipeline.profile_table._processing_definition",
-      "source_end_line": 570,
+      "source_end_line": 574,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 526,
+      "source_start_line": 530,
       "usage": "unused"
     },
     {
@@ -6615,9 +6651,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._profile_snapshot_id",
-      "source_end_line": 917,
+      "source_end_line": 921,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 912,
+      "source_start_line": 916,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6639,9 +6675,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._replace_frequency_rows",
-      "source_end_line": 853,
+      "source_end_line": 857,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 828,
+      "source_start_line": 832,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6664,9 +6700,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._replace_snapshot_rows",
-      "source_end_line": 825,
+      "source_end_line": 829,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 799,
+      "source_start_line": 803,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6686,9 +6722,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.pipeline.profile_table._require_non_empty_string",
-      "source_end_line": 514,
+      "source_end_line": 518,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 510,
+      "source_start_line": 514,
       "usage": "detached"
     },
     {
@@ -6702,9 +6738,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._scalar_frequency_columns",
-      "source_end_line": 640,
+      "source_end_line": 644,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 631,
+      "source_start_line": 635,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6727,9 +6763,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._selected_frequency_columns",
-      "source_end_line": 668,
+      "source_end_line": 672,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 660,
+      "source_start_line": 664,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6751,9 +6787,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._spark_profile_key_candidates",
-      "source_end_line": 395,
+      "source_end_line": 397,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 331,
+      "source_start_line": 332,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6823,9 +6859,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._stage_catalogue_profile_retry",
-      "source_end_line": 909,
+      "source_end_line": 913,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 873,
+      "source_start_line": 877,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6847,9 +6883,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._upsert_catalogue_identities",
-      "source_end_line": 1086,
+      "source_end_line": 1092,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 1011,
+      "source_start_line": 1015,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6869,9 +6905,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.pipeline.profile_table._validate_frequency_profile_dataframe",
-      "source_end_line": 628,
+      "source_end_line": 632,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 613,
+      "source_start_line": 617,
       "usage": "unused"
     },
     {
@@ -6886,9 +6922,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.pipeline.profile_table._validate_processing_columns",
-      "source_end_line": 587,
+      "source_end_line": 591,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 573,
+      "source_start_line": 577,
       "usage": "unused"
     },
     {
@@ -6903,9 +6939,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.pipeline.profile_table._validate_resolved_identity",
-      "source_end_line": 610,
+      "source_end_line": 614,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 590,
+      "source_start_line": 594,
       "usage": "unused"
     },
     {
@@ -7013,9 +7049,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.profile_table._warehouse_profile_key_candidates",
-      "source_end_line": 508,
+      "source_end_line": 512,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 398,
+      "source_start_line": 400,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -7093,7 +7129,7 @@
       "architecture_classification": "capability",
       "contract_classification": "live_public_function",
       "contract_risk": "live",
-      "examples": "Profile an arbitrary DataFrame without persistence:\n\n>>> result = profile_table(dataframe=raw_df)\n>>> statistical_profile = result[\"profile\"]\n>>> frequencies = result[\"frequency_profile\"]\n\nProfile a governed complete physical table without knowing its store kind:\n\n>>> result = profile_table(store=\"Bronze\", schema=\"dbo\", table_name=\"orders\")\n\nProfile a transformed DataFrame against an explicit governed identity:\n\n>>> result = profile_table(dataframe=transformed_df, table_id=target_table_id)",
+      "examples": "Profile an arbitrary DataFrame without persistence:\n\n>>> result = profile_table(dataframe=raw_df)\n>>> statistical_profile = result[\"profile\"]\n>>> frequencies = result[\"frequency_profile\"]\n\nProfile a governed complete physical table without knowing its store kind:\n\n>>> result = profile_table(store=\"Bronze\", schema=\"dbo\", table_name=\"orders\")\n\nProfile a transformed DataFrame against an explicit governed identity:\n\n>>> result = profile_table(dataframe=transformed_df, table_id=target_table_id)\n\nLimit discovery to single columns and pairs, retaining up to two candidates:\n\n>>> result = profile_table(\n...     table_id=target_table_id,\n...     grain_discovery_max_columns=2, grain_discovery_max_candidates=2,\n... )\n\nRefresh statistics while retaining saved key candidates and skipping frequency:\n\n>>> result = profile_table(\n...     table_id=target_table_id,\n...     grain_discovery_enabled=False, frequency_enabled=False,\n... )",
       "function_name": "profile_table",
       "function_type": "public_function",
       "inbound_source_references": [
@@ -7138,13 +7174,31 @@
           "type": "str | None"
         },
         {
+          "description": "Whether to discover candidate Grain keys for a governed table. False skips discovery queries and preserves saved Catalogue candidates. The caller controls when to enable discovery; no scheduling is applied. This option does not disable contract Grain checks. DataFrame-only profiling does not discover or persist candidates.",
+          "name": "grain_discovery_enabled",
+          "required": "No",
+          "type": "bool"
+        },
+        {
+          "description": "Maximum columns in a candidate key. 1 checks single columns only; 2 also checks pairs. Must be a positive integer. Wider searches can be costly.",
+          "name": "grain_discovery_max_columns",
+          "required": "No",
+          "type": "int"
+        },
+        {
+          "description": "Maximum candidate keys to retain at the smallest valid key width. Must be a positive integer. Discovery stops after enough keys are found; this limit does not cap work when no valid key exists.",
+          "name": "grain_discovery_max_candidates",
+          "required": "No",
+          "type": "int"
+        },
+        {
           "description": "Columns to frequency profile. ``None`` automatically selects eligible scalar columns; an empty sequence skips frequency profiling.",
           "name": "frequency_columns",
           "required": "No",
           "type": "sequence of str, optional"
         },
         {
-          "description": "Whether to calculate frequency distributions for the table. False skips all frequency columns.",
+          "description": "Whether to calculate frequency distributions for this call. False skips all frequency columns. The caller controls when to enable frequency profiling.",
           "name": "frequency_enabled",
           "required": "No",
           "type": "bool"
@@ -7170,7 +7224,7 @@
       ],
       "public_import_path": "fabricops_kit.profile_table",
       "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
-      "raises_documentation": "ValueError\n    If identity inputs conflict or are incomplete, neither a DataFrame nor\n    identity is supplied, frequency settings are invalid, or the resolved\n    store is unsupported.\nRuntimeError\n    If a governed metadata write requires unavailable Delta support.",
+      "raises_documentation": "ValueError\n    If identity inputs conflict or are incomplete, neither a DataFrame nor\n    identity is supplied, frequency settings or discovery limits are invalid, or the resolved\n    store is unsupported.\nRuntimeError\n    If a governed metadata write requires unavailable Delta support.",
       "release_history": [
         {
           "status": "live",
@@ -7182,10 +7236,10 @@
         }
       ],
       "returns_documentation": "dict\n    ``profile`` contains the canonical statistical Spark DataFrame and\n    ``frequency_profile`` contains the applicable canonical frequency\n    Spark DataFrame, or ``None`` when no columns were selected. Governed\n    ``profile`` rows additionally contain persisted snapshot identities\n    and audit fields.",
-      "signature": "def profile_table(*, dataframe=None, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, frequency_columns=None, frequency_enabled: bool=True, frequency_top_n: int | None=5, frequency_max_distinct_percent: float | None=80.0, spark_session=None)",
-      "source_end_line": 1413,
+      "signature": "def profile_table(*, dataframe=None, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, grain_discovery_enabled: bool=True, grain_discovery_max_columns: int=3, grain_discovery_max_candidates: int=8, frequency_columns=None, frequency_enabled: bool=True, frequency_top_n: int | None=5, frequency_max_distinct_percent: float | None=80.0, spark_session=None)",
+      "source_end_line": 1463,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
-      "source_start_line": 1089,
+      "source_start_line": 1095,
       "summary": "Profile a Spark DataFrame or a complete governed physical table.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable",

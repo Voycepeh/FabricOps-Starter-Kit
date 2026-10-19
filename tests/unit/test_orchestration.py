@@ -438,3 +438,34 @@ def test_orchestration_stage_duration_is_two_decimal_seconds_with_minimum():
         )
 
     assert record["duration_seconds"] == 1.23
+
+
+@pytest.mark.parametrize("operation", ["read", "write"])
+@pytest.mark.parametrize("grain_discovery_enabled,frequency_enabled", [(False, True), (True, False), (False, False)])
+def test_orchestrators_forward_independent_profile_controls(
+    monkeypatch, operation, grain_discovery_enabled, frequency_enabled
+):
+    """Caller flags reach Profile without disabling contract Grain enforcement."""
+    module = importlib.import_module(f"fabricops_kit.pipeline.orchestrate_{operation}")
+    monkeypatch.setattr(module, "pipeline_guardrail_types", lambda *a: {"grain"})
+    grain = Mock(return_value={"status": "passed", "can_continue": True})
+    monkeypatch.setattr(module, "check_grain", grain)
+    profile = Mock(return_value={"row_count": 2})
+    monkeypatch.setattr(module, "profile_table", profile)
+    kwargs = dict(store="Silver", schema="dbo", table_name="orders", verbose=False,
+                  grain_discovery_enabled=grain_discovery_enabled, grain_discovery_max_columns=2,
+                  grain_discovery_max_candidates=1, frequency_enabled=frequency_enabled)
+    if operation == "read":
+        monkeypatch.setattr(module, "pipeline_read", Mock(return_value={"dataframe": object(), "table_id": "source-id"}))
+        result = module.orchestrate_read(**kwargs)
+    else:
+        monkeypatch.setattr(module, "resolve_table_id", lambda **k: "target-id")
+        monkeypatch.setattr(module, "pipeline_write", Mock(return_value={"table_id": "target-id"}))
+        monkeypatch.setattr(module, "check_guardrail_coverage", Mock(return_value={"status": "passed"}))
+        result = module.orchestrate_write(object(), sources=[], write_mode="overwrite", **kwargs)
+    assert profile.call_args.kwargs["grain_discovery_enabled"] is grain_discovery_enabled
+    assert profile.call_args.kwargs["frequency_enabled"] is frequency_enabled
+    assert profile.call_args.kwargs["grain_discovery_max_columns"] == 2
+    assert profile.call_args.kwargs["grain_discovery_max_candidates"] == 1
+    grain.assert_called_once()
+    assert result["grain_result"]["status"] == "passed"
