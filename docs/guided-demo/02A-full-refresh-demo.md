@@ -28,13 +28,13 @@ Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite 
 | Notebook section | What happens |
 | --- | --- |
 | Environment | Loads the shared Fabric configuration and imports the functions used by this demo. |
-| Data Contract | Selects whether each target runs without a contract, validates a frozen candidate, or enforces an active contract. |
+| Data Contract | Selects Validate or Enforce for each target; the initial Development run can proceed before any contract exists. |
 | Governed Read | Reads Orders, Products, and Order History in full. |
 | PySpark Transform | Produces detailed orders and a customer summary. |
 | Governed Write | Overwrites a Silver Lakehouse target and a Gold Warehouse target. |
 | Inspection | Verifies the published data and FabricOps metadata. |
 
-Run **0. Environment** and **1. Data Contract** as described in [Step 2](02-build-and-run-etl.md). For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped. Then initialize `sources = {}`.
+Run **0. Environment** and **1. Data Contract** as described in [Step 2](02-build-and-run-etl.md). For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. The orchestrators print one contract-free decision; skipped check fields remain in the returned dictionaries. Then initialize `sources = {}`.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -57,7 +57,7 @@ This demo runs three governed Full Reads instead of the single example in Step 2
 | READ 2 — Products | Bronze Lakehouse · `demo.products` | `sources["products"]` | Adds a second Lakehouse source to the same transform. |
 | READ 3 — Order History | Gold Warehouse · `demo.order_history` | `sources["history"]` | Pushes a `SELECT` query to the Warehouse. |
 
-Run all three blocks. Each should complete the governed Read stages; contract-backed checks show as `SKIPPED` when no Data Contract is selected.
+Run all three blocks. Each should complete the governed Read stages; individual Guardrail stages are omitted when no Data Contract is selected.
 
 ![Orders Full Read output](../assets/02/Read_Block_Output.png)
 
