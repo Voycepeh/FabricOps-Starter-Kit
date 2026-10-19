@@ -251,8 +251,8 @@ def test_runtime_audit_fields_support_explicit_non_fabric_context():
         "_metadata_lakehouse_name",
         "_activity_id",
     ]
-    assert audit["_committed_at"].isoformat() == "2026-07-08T12:00:00+08:00"
-    assert audit["_committed_at"].utcoffset().total_seconds() == 8 * 60 * 60
+    assert audit["_committed_at"].isoformat() == "2026-07-08T04:00:00+00:00"
+    assert audit["_committed_at"].utcoffset().total_seconds() == 0
     assert audit["_metadata_lakehouse_name"] == "test_metadata"
 
 

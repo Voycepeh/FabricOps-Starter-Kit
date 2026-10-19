@@ -184,7 +184,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 179 |
+| Live-critical dependencies | 181 |
 
 ### Release history
 
@@ -216,6 +216,8 @@ No related guides documented.
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.is_table_not_found_error</code></li>
+<li><code>fabricops_kit.config.shared.metadata_timestamp_sort_key</code></li>
+<li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>

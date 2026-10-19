@@ -675,7 +675,7 @@ def _audit_literal_columns(*, config: Any, env: str, runtime_context: dict[str, 
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
     return {
         "_committed_by": F.lit(audit["_committed_by"]).cast("string"),
-        "_committed_at": F.lit(audit["_committed_at"]).cast("timestamp"),
+        "_committed_at": F.lit(audit["_committed_at"]).cast("timestamp_ltz"),
         "_workspace_id": F.lit(audit["_workspace_id"]).cast("string"),
         "_workspace_name": F.lit(audit["_workspace_name"]).cast("string"),
         "_notebook_id": F.lit(audit["_notebook_id"]).cast("string"),

@@ -38,10 +38,14 @@ def _warehouse_incremental_query(identity: dict[str, Any], scope: dict[str, Any]
 def _warehouse_watermark_literal(value: Any) -> str:
     """Render canonical UTC timestamp text as a timezone-stable SQL datetime2 literal."""
     text = str(value)
-    if text.endswith("Z"):
-        from datetime import UTC, datetime
+    from datetime import UTC, datetime
 
-        parsed = datetime.fromisoformat(text[:-1] + "+00:00").astimezone(UTC)
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return text
+    if parsed.tzinfo is not None:
+        parsed = parsed.astimezone(UTC)
         return parsed.strftime("%Y-%m-%d %H:%M:%S.%f").rstrip("0").rstrip(".")
     return text
 
@@ -55,18 +59,31 @@ def _filter_lakehouse_incremental(dataframe: Any, scope: dict[str, Any]) -> Any:
     from datetime import datetime
 
     column = F.col(scope["column"])
+    column_type = type(dataframe.schema[scope["column"]].dataType).__name__
+    timestamp_ntz = column_type == "TimestampNTZType"
+
+    def _bound(value: Any) -> Any:
+        if timestamp_ntz:
+            # NTZ is a wall clock. Never let Spark cast an instant using the
+            # session zone before comparing it with this column.
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+            if parsed.tzinfo is not None:
+                raise ValueError("TimestampNTZ watermark must not contain a timezone; review source history.")
+            return F.lit(parsed.isoformat()).cast("timestamp_ntz")
+        if column_type == "TimestampType" and isinstance(value, str):
+            value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if value.tzinfo is None:
+                raise ValueError("Timestamp watermark must contain a timezone; review source history.")
+        return F.lit(value)
+
     through = scope["through"]
     if through is None:
         return dataframe.where(column.isNull())
-    if isinstance(through, str) and through.endswith("Z"):
-        through = datetime.fromisoformat(through[:-1] + "+00:00")
-    upper = column <= F.lit(through)
+    upper = column <= _bound(through)
     after = scope.get("after")
     if after is None:
         return dataframe.where(upper | column.isNull())
-    if isinstance(after, str) and after.endswith("Z"):
-        after = datetime.fromisoformat(after[:-1] + "+00:00")
-    return dataframe.where((column > F.lit(after)) & upper)
+    return dataframe.where((column > _bound(after)) & upper)
 
 
 

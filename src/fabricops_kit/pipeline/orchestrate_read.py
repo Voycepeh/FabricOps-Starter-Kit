@@ -74,7 +74,10 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     key, such as business key plus effective timestamp.
     Incremental batches include only rows after the accepted watermark and at
     or below the upper watermark observed for this run. Bootstrap reads use
-    the same upper bound and retain null-watermark rows. Later arrivals above
+    the same upper bound and retain null-watermark rows. Timestamp instants use
+    canonical UTC checkpoints; TimestampNTZ checkpoints retain wall-clock time
+    without attaching a timezone. Dates retain calendar-date semantics.
+    Later arrivals above
     that bound wait for the next run. This bounds progress, but does not make
     concurrent source updates a transactional snapshot.
     Incremental progress captures one aggregate summary per source, including

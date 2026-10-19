@@ -255,10 +255,25 @@ def validate_select_query(query: str) -> str:
         raise ValueError("query must be one SELECT statement or a CTE ending in SELECT.")
     forbidden = {
         "INSERT", "UPDATE", "DELETE", "MERGE", "INTO", "EXEC", "EXECUTE", "CREATE", "ALTER", "DROP",
-        "TRUNCATE", "GRANT", "DENY", "REVOKE", "BACKUP", "RESTORE", "DBCC", "BULK", "KILL", "USE",
+        "TRUNCATE", "GRANT", "DENY", "REVOKE", "BACKUP", "RESTORE", "DBCC", "KILL",
         "DECLARE", "SET", "BEGIN", "COMMIT", "ROLLBACK", "WAITFOR", "NEXT VALUE FOR",
     }
     quoted = {TokenType.STRING, TokenType.NATIONAL_STRING, TokenType.IDENTIFIER}
+    # Fabric read-only syntax includes OPENROWSET(BULK ...) and OPTION(USE
+    # HINT(...)). Permit these keywords only in their owning call's parentheses.
+    calls = []
+    previous = ""
+    for token in tokens:
+        if token.token_type == TokenType.L_PAREN:
+            calls.append(previous)
+        elif token.token_type == TokenType.R_PAREN:
+            if calls:
+                calls.pop()
+        elif token.token_type not in quoted:
+            word = token.text.upper()
+            if (word == "BULK" and (not calls or calls[-1] != "OPENROWSET")) or (word == "USE" and (not calls or calls[-1] != "OPTION")):
+                raise ValueError("query must be one read-only SELECT.")
+        previous = token.text.upper()
     words = [word for token in tokens if token.token_type not in quoted for word in token.text.upper().split()]
     if any(token.token_type in {TokenType.SEMICOLON, TokenType.COMMAND} for token in tokens) or forbidden.intersection(words) or "NEXT VALUE FOR" in " ".join(words):
         raise ValueError("query must be one read-only SELECT; mutations and sequence advancement are not supported.")

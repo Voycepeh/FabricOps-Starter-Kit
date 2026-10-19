@@ -718,7 +718,7 @@ def _latest_by_key(rows: Any, key: str) -> list[dict[str, Any]]:
     latest: dict[str, dict[str, Any]] = {}
     for row in _coerce_row_dicts(rows):
         value = str(row.get(key) or "").strip()
-        if value and (value not in latest or str(row.get("_committed_at") or "") >= str(latest[value].get("_committed_at") or "")):
+        if value and (value not in latest or config_shared.metadata_timestamp_sort_key(row.get("_committed_at")) >= config_shared.metadata_timestamp_sort_key(latest[value].get("_committed_at"))):
             latest[value] = row
     return sorted(latest.values(), key=lambda row: str(row.get(key) or "").lower())
 
@@ -800,7 +800,7 @@ def latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
     def _agreement_sort_key(row: dict[str, Any]) -> tuple[Any, ...]:
         return (
             _parse_agreement_version(row.get("agreement_version")),
-            str(row.get("_committed_at") or ""),
+            config_shared.metadata_timestamp_sort_key(row.get("_committed_at")),
             str(row.get("agreement_name") or ""),
             str(row.get("agreement_id") or ""),
         )
@@ -936,7 +936,7 @@ def latest_rule(
     matches.sort(
         key=lambda row: (
             int(row.get("guardrail_version") or 0),
-            str(row.get("_committed_at") or ""),
+            config_shared.metadata_timestamp_sort_key(row.get("_committed_at")),
         ),
         reverse=True,
     )

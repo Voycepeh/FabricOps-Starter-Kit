@@ -118,7 +118,10 @@ using the configured physical row key; SCD2 history requires a version-aware
 key, such as business key plus effective timestamp.
 Incremental batches include only rows after the accepted watermark and at
 or below the upper watermark observed for this run. Bootstrap reads use
-the same upper bound and retain null-watermark rows. Later arrivals above
+the same upper bound and retain null-watermark rows. Timestamp instants use
+canonical UTC checkpoints; TimestampNTZ checkpoints retain wall-clock time
+without attaching a timezone. Dates retain calendar-date semantics.
+Later arrivals above
 that bound wait for the next run. This bounds progress, but does not make
 concurrent source updates a transactional snapshot.
 Incremental progress captures one aggregate summary per source, including
@@ -139,7 +142,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:20`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L20-L133">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L20-L136">View on GitHub</a>
 </div>
 
 
@@ -155,7 +158,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 153 |
+| Live-critical dependencies | 155 |
 
 ### Release history
 
@@ -187,6 +190,8 @@ No related guides documented.
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.is_table_not_found_error</code></li>
+<li><code>fabricops_kit.config.shared.metadata_timestamp_sort_key</code></li>
+<li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>

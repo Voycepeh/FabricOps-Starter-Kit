@@ -110,7 +110,7 @@ RuntimeError
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 45 |
+| Live-critical dependencies | 47 |
 
 ### Release history
 
@@ -141,6 +141,8 @@ RuntimeError
 <li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.metadata_timestamp_sort_key</code></li>
+<li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.widgets.shared._coerce_row_dicts</code></li>
