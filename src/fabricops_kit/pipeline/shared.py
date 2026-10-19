@@ -90,9 +90,10 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
 
 
 from fabricops_kit.config.shared import (
-    get_audit_timezone,
     get_current_audit_timestamp,
     is_table_not_found_error,
+    metadata_timestamp_sort_key,
+    normalize_audit_datetime,
     resolve_fabric_context,
 )
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, write_lakehouse_table
@@ -551,7 +552,7 @@ def _profile_percent_expr(numerator, denominator):
 def build_profile_dataframe(df, *, exclude_columns=None):
     """Return structural and statistical profile rows for a Spark DataFrame."""
     from pyspark.sql import functions as F
-    from pyspark.sql.types import DateType, NumericType, StringType, TimestampType
+    from pyspark.sql.types import DateType, NumericType, StringType, TimestampNTZType, TimestampType
 
     eligible_columns = resolve_profiled_columns(df, exclude_columns=exclude_columns)
     if not eligible_columns:
@@ -577,7 +578,7 @@ def build_profile_dataframe(df, *, exclude_columns=None):
                 F.percentile(col, [0.25, 0.5, 0.75]).alias(f"{prefix}PERCENTILES"),
                 F.max(col).cast("string").alias(f"{prefix}MAX_VALUE"),
             ])
-        elif isinstance(data_type, DateType | TimestampType | StringType):
+        elif isinstance(data_type, DateType | TimestampType | TimestampNTZType | StringType):
             agg_exprs.extend([
                 F.min(col).cast("string").alias(f"{prefix}MIN_VALUE"),
                 F.max(col).cast("string").alias(f"{prefix}MAX_VALUE"),
@@ -593,7 +594,7 @@ def build_profile_dataframe(df, *, exclude_columns=None):
         null_count = F.coalesce(F.col(f"{prefix}NULL_COUNT"), F.lit(0)).cast("long")
         distinct_count = F.coalesce(F.col(f"{prefix}DISTINCT_COUNT"), F.lit(0)).cast("long")
         percentile = F.col(f"{prefix}PERCENTILES") if isinstance(data_type, NumericType) else None
-        supports_min_max = isinstance(data_type, NumericType | DateType | TimestampType | StringType)
+        supports_min_max = isinstance(data_type, NumericType | DateType | TimestampType | TimestampNTZType | StringType)
         rows.append(agg_df.select(
             F.lit(column_name).alias("COLUMN_NAME"),
             F.lit(data_type.simpleString()).alias("DATA_TYPE"),
@@ -703,8 +704,8 @@ def _latest_source_target_observation(
         and str(row.get("environment_name") or "") == environment_name
         and str(row.get("observation_status") or "") == "committed"
     ]
-    latest_at = max((row.get("_committed_at") for row in candidates), default=None)
-    return [row for row in candidates if row.get("_committed_at") == latest_at]
+    latest_at = max((metadata_timestamp_sort_key(row.get("_committed_at")) for row in candidates), default=None)
+    return [row for row in candidates if metadata_timestamp_sort_key(row.get("_committed_at")) == latest_at]
 
 
 def _progress_key(value: Any, *, timestamp: bool = False) -> tuple[int, Any]:
@@ -748,9 +749,9 @@ def _watermark_timestamp(value: Any) -> str:
         if value.tzinfo is not None:
             instant = value.astimezone(UTC)
         else:
-            # Spark TimestampType collection returns a naive Python datetime whose
-            # wall time is UTC even when Spark renders it in a non-UTC session zone.
-            instant = value.replace(tzinfo=UTC)
+            # PySpark collects TimestampType in the Python process's local zone,
+            # independently of spark.sql.session.timeZone.
+            instant = value.astimezone(UTC)
         return instant.isoformat(timespec="microseconds").replace("+00:00", "Z")
     text = str(value)
     try:
@@ -767,9 +768,11 @@ def _watermark_timestamp(value: Any) -> str:
     return parsed.astimezone(UTC).isoformat(timespec="microseconds").replace("+00:00", "Z")
 
 
-def _compact_value(value: Any, *, timestamp: bool = False) -> str | None:
+def _compact_value(value: Any, *, timestamp: bool = False, timestamp_ntz: bool = False) -> str | None:
     if value is None:
         return None
+    if timestamp_ntz:
+        return value.isoformat(timespec="microseconds") if isinstance(value, datetime) else str(value)
     if timestamp or isinstance(value, datetime):
         return _watermark_timestamp(value)
     if isinstance(value, date):
@@ -933,7 +936,12 @@ def resolve_incremental_source_scope(
         (row.get("max_change_value") for row in current if row.get("max_change_value") is not None),
         None,
     )
-    timestamp_watermark = bool(first.get("watermark_type") == "timestamp") or isinstance(
+    if first.get("watermark_type") == "timestamp_ntz":
+        for row in [*current, *previous]:
+            value = row.get("max_change_value")
+            if value is not None and datetime.fromisoformat(str(value)).tzinfo is not None:
+                raise ValueError("TimestampNTZ history contains a timezone; explicitly migrate this source-to-target history before retrying.")
+    timestamp_watermark = first.get("watermark_type") != "timestamp_ntz" and (bool(first.get("watermark_type") == "timestamp") or isinstance(
         current_max_value, datetime
     ) or str(current_max_value or "").endswith("Z") or (
         isinstance(current_max_value, str)
@@ -942,7 +950,7 @@ def resolve_incremental_source_scope(
         and current_max_value[7:8] == "-"
         and current_max_value[10:11] in {"T", " "}
         and current_max_value[13:14] == ":"
-    )
+    ))
     if timestamp_watermark:
         for row in previous:
             row_type = str(row.get("watermark_type") or "")
@@ -969,9 +977,10 @@ def resolve_incremental_source_scope(
             if value is not None:
                 row["min_change_value"] = _watermark_timestamp(value)
             value = row.get("partition_value")
-            if value is not None:
+            if value not in (None, ""):
                 row["partition_value"] = _watermark_timestamp(value)
-    pending = [dict(row) for row in current]
+    has_rows = any(int(row.get("row_count") or 0) > 0 for row in current)
+    pending = [dict(row) for row in current] if has_rows else []
     key = (env, activity_id, source_table_id, target_table_id)
     _PENDING_SOURCE_OBSERVATIONS[key] = pending
 
@@ -1000,7 +1009,7 @@ def resolve_incremental_source_scope(
         scope = {
             "type": "full",
             "first_run": True,
-            "has_data": True,
+            "has_data": has_rows,
             "column": change_column,
             "through": current_max,
         }
@@ -1008,8 +1017,9 @@ def resolve_incremental_source_scope(
         scope = {
             "type": "watermark",
             "first_run": False,
-            "has_data": baseline is None
-            or (current_max is not None and _progress_key(current_max) > _progress_key(baseline)),
+            "has_data": has_rows and (
+                baseline is None or (current_max is not None and _progress_key(current_max) > _progress_key(baseline))
+            ),
             "column": change_column,
             "after": baseline,
             "through": current_max,
@@ -1184,8 +1194,8 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     source_table_ids = [str(value).strip() for value in success_context.get("source_table_ids") or ()]
     activity_id = str(success_context.get("activity_id") or "").strip()
     notebook_name = str(success_context.get("notebook_name") or "").strip()
-    if not target_table_id or not source_table_ids or not activity_id or not notebook_name:
-        raise ValueError("success_context is missing target, source, activity, or logical notebook identity.")
+    if not target_table_id or not activity_id or not notebook_name:
+        raise ValueError("success_context is missing target, activity, or logical notebook identity.")
 
     config, env, context = resolve_fabric_context(context=success_context.get("context"))
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
@@ -1251,8 +1261,8 @@ def stage_pipeline_write_observations(success_context: Mapping[str, Any]) -> lis
     source_table_ids = [str(value).strip() for value in success_context.get("source_table_ids") or ()]
     activity_id = str(success_context.get("activity_id") or "").strip()
     notebook_name = str(success_context.get("notebook_name") or "").strip()
-    if not target_table_id or not source_table_ids or not activity_id or not notebook_name:
-        raise ValueError("success_context is missing target, source, activity, or logical notebook identity.")
+    if not target_table_id or not activity_id or not notebook_name:
+        raise ValueError("success_context is missing target, activity, or logical notebook identity.")
     config, env, context = resolve_fabric_context(context=success_context.get("context"))
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     audit["_activity_id"] = activity_id
@@ -2080,7 +2090,7 @@ def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name:
         candidates.append(row)
     if not candidates:
         return None
-    candidates.sort(key=lambda row: (int(_catalogue_value(row, "configuration_version") or 0), _string_value(_catalogue_value(row, "approved_at", "created_at", "_committed_at"))), reverse=True)
+    candidates.sort(key=lambda row: (int(_catalogue_value(row, "configuration_version") or 0), metadata_timestamp_sort_key(_catalogue_value(row, "approved_at", "created_at", "_committed_at"))), reverse=True)
     return candidates[0]
 
 def _contract_payload(row: dict[str, Any]) -> dict[str, Any]:
@@ -2728,6 +2738,8 @@ def execute_lakehouse_processing(
 
     _store, _table, _schema, path = resolve_configured_lakehouse_table(store, table_name, schema, context=context)
     keys = list(processing["key_columns"])
+    if persisted_df.where(reduce(lambda a, b: a | b, [F.col(key).isNull() for key in keys])).limit(1).count():
+        raise ValueError("Incoming target scope contains null business keys.")
     duplicate = persisted_df.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count()
     if duplicate:
         raise ValueError("Incoming target scope contains duplicate business keys.")
@@ -3218,13 +3230,21 @@ def _row_to_dict(row) -> dict:
 
 
 
-def _max_column_value(dataframe, column_name: str):
+def _max_column_value(dataframe, column_name: str, *, config=None):
     if dataframe is None or not column_name:
         return None
     if hasattr(dataframe, "agg"):
         from pyspark.sql import functions as F
 
-        rows = dataframe.agg(F.max(F.col(column_name)).alias("latest_value")).collect()
+        aggregate = dataframe.agg(F.max(F.col(column_name)).alias("latest_value"))
+        schema = getattr(aggregate, "schema", None)
+        kind = type(schema["latest_value"].dataType).__name__ if schema is not None else ""
+        if kind == "TimestampType":
+            # Avoid interpreting collected naive datetime values as author input.
+            rows = aggregate.select(F.unix_micros("latest_value").alias("latest_value")).collect()
+            micros = rows[0]["latest_value"] if rows else None
+            return datetime(1970, 1, 1, tzinfo=UTC) + timedelta(microseconds=micros) if micros is not None else None
+        rows = aggregate.collect()
         if not rows:
             return None
         row = rows[0]
@@ -3248,6 +3268,9 @@ def _max_column_value(dataframe, column_name: str):
             else:
                 values.append(getattr(row, column_name, None))
     values = [value for value in values if value not in (None, "")]
+    temporal = [_coerce_datetime(value, config) for value in values]
+    if temporal and all(value is not None for value in temporal):
+        return values[max(range(len(values)), key=lambda index: temporal[index].astimezone(UTC))]
     return max(values) if values else None
 
 def _coerce_date(value) -> date | None:
@@ -3269,17 +3292,12 @@ def _coerce_date(value) -> date | None:
     except ValueError:
         return None
 
-def _coerce_datetime(value) -> datetime | None:
-    """Return a timezone-naive comparison datetime for freshness values."""
+def _coerce_datetime(value, config=None) -> datetime | None:
+    """Preserve offsets and interpret date/naive freshness values in the audit zone."""
     if value in (None, ""):
         return None
-    if isinstance(value, datetime):
-        return value.replace(tzinfo=None) if value.tzinfo else value
-    if isinstance(value, date):
-        return datetime.combine(value, datetime.min.time())
     try:
-        parsed = datetime.fromisoformat(str(value).strip().replace("Z", "+00:00"))
-        return parsed.replace(tzinfo=None) if parsed.tzinfo else parsed
+        return normalize_audit_datetime(value, config)
     except ValueError:
         return None
 
@@ -3299,6 +3317,7 @@ def freshness_check_core(
     table_name: str = "",
     environment_name: str = "",
     table_id: str = "",
+    config: Any = None,
 ) -> dict:
     """Enforce that a DataFrame contains recent enough data.
 
@@ -3315,7 +3334,8 @@ def freshness_check_core(
     severity : {"blocking", "warning"}, default="blocking"
         Whether stale data blocks continuation or returns a non-blocking warning.
     reference_date : date, datetime, str, optional
-        Date used as "today" for comparison. Defaults to the current local date.
+        Reference time. Defaults to the configured audit clock. Offsets preserve
+        instants; dates and timezone-free values use the configured audit zone.
     rules_df : DataFrame or iterable of mappings, optional
         Approved freshness rules used instead of direct arguments.
     dataset_name : str, optional
@@ -3326,6 +3346,8 @@ def freshness_check_core(
         Environment identity used to select an approved rule.
     table_id : str, optional
         Canonical table identity used to select an approved rule.
+    config : FrameworkConfig or dict, optional
+        Audit timezone for the reference clock and timezone-free inputs.
 
     Returns
     -------
@@ -3412,17 +3434,19 @@ def freshness_check_core(
         raise ValueError("max_lag_days must be greater than or equal to zero")
     base_result["freshness_max_lag_days"] = lag_days
 
-    reference = _coerce_datetime(reference_date) if reference_date is not None else datetime.now()
+    reference = _coerce_datetime(reference_date, config) if reference_date is not None else datetime.fromisoformat(get_current_audit_timestamp(config, drop_microseconds=False))
     if reference is None:
         raise ValueError("reference_date must be a date, datetime, or ISO date string")
+    reference = reference.astimezone(UTC)
     required_min = reference - timedelta(seconds=max_age_seconds) if max_age_seconds is not None else reference - timedelta(days=lag_days)
-    latest_raw = _max_column_value(dataframe, column)
-    latest_date = _coerce_datetime(latest_raw)
-    latest_display = _coerce_datetime(latest_raw).isoformat() if max_age_seconds is not None and _coerce_datetime(latest_raw) else _iso_date_value(latest_raw)
-    required_display = required_min.isoformat() if max_age_seconds is not None else required_min.date().isoformat()
+    latest_raw = _max_column_value(dataframe, column, config=config)
+    latest_date = _coerce_datetime(latest_raw, config)
+    latest_display = latest_date.isoformat() if max_age_seconds is not None and latest_date else _iso_date_value(latest_raw)
+    required_local = normalize_audit_datetime(required_min, config)
+    required_display = required_local.isoformat() if max_age_seconds is not None else required_local.date().isoformat()
     base_result.update(latest_value=latest_display, required_min_value=required_display)
 
-    if latest_date is not None and latest_date >= required_min:
+    if latest_date is not None and latest_date.astimezone(UTC) >= required_min:
         message = "Freshness check passed."
         base_result.update(
             status="passed",
@@ -4280,7 +4304,7 @@ def _select_rule(
     candidates.sort(
         key=lambda row: (
             int(row.get("guardrail_version") or 0),
-            str(row.get("_committed_at") or ""),
+            metadata_timestamp_sort_key(row.get("_committed_at")),
         ),
         reverse=True,
     )
@@ -4355,7 +4379,13 @@ def _identifier(value: str | None, label: str) -> str:
     return text
 
 
-def _warehouse_observation_query(schema: str, table_name: str, partition_column: str, change_column: str) -> str:
+def _warehouse_observation_query(schema: str, table_name: str, partition_column: str, change_column: str, *, watermark_only: bool = False) -> str:
+    if watermark_only:
+        return (
+            f"SELECT MAX([{change_column}]) AS partition_value, COUNT_BIG(*) AS row_count, "
+            f"MIN([{change_column}]) AS min_change_value, MAX([{change_column}]) AS max_change_value, "
+            f"CAST('' AS varchar(64)) AS content_fingerprint FROM [{schema}].[{table_name}]"
+        )
     return (
         "SELECT\n"
         f"  [{partition_column}] AS partition_value,\n"
@@ -4376,6 +4406,9 @@ def _warehouse_observation_query(schema: str, table_name: str, partition_column:
 
 def _compact_rows(frame: Any, *, timestamp_columns: set[str] | None = None) -> list[dict[str, Any]]:
     timestamp_columns = timestamp_columns or set()
+    schema = {field.name: type(field.dataType).__name__ for field in getattr(getattr(frame, "schema", None), "fields", ())}
+    timestamp_columns = timestamp_columns | {name for name, kind in schema.items() if kind == "TimestampType"}
+    ntz_columns = {name for name, kind in schema.items() if kind == "TimestampNTZType"}
     compact = []
     for row in frame.collect():
         value = row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
@@ -4384,13 +4417,15 @@ def _compact_rows(frame: Any, *, timestamp_columns: set[str] | None = None) -> l
         compact.append(
             {
                 "partition_value": _compact_value(
-                    value.get("partition_value"), timestamp="partition_value" in timestamp_columns
+                    value.get("partition_value"), timestamp="partition_value" in timestamp_columns,
+                    timestamp_ntz="partition_value" in ntz_columns,
                 ) or "",
                 **({"watermark_type": "timestamp"} if "max_change_value" in timestamp_columns else {}),
-                "is_present": True,
+                **({"watermark_type": "timestamp_ntz"} if "max_change_value" in ntz_columns else {}),
+                "is_present": int(value.get("row_count") or 0) > 0,
                 "row_count": int(value.get("row_count") or 0),
-                "min_change_value": _compact_value(minimum, timestamp="min_change_value" in timestamp_columns),
-                "max_change_value": _compact_value(maximum, timestamp="max_change_value" in timestamp_columns),
+                "min_change_value": _compact_value(minimum, timestamp="min_change_value" in timestamp_columns, timestamp_ntz="min_change_value" in ntz_columns),
+                "max_change_value": _compact_value(maximum, timestamp="max_change_value" in timestamp_columns, timestamp_ntz="max_change_value" in ntz_columns),
                 "content_fingerprint": str(value.get("content_fingerprint") or ""),
             }
         )
@@ -4406,6 +4441,7 @@ def _observe_lakehouse(
     *,
     spark_session: Any,
     context: dict[str, Any],
+    watermark_only: bool = False,
 ) -> list[dict[str, Any]]:
     from pyspark.sql import functions as F
 
@@ -4416,13 +4452,36 @@ def _observe_lakehouse(
         spark_session=spark_session,
         context=context,
     )
-    return _observe_dataframe(frame, partition_column, change_column)
+    return _observe_dataframe(frame, partition_column, change_column, watermark_only=watermark_only)
 
 
 def _observe_dataframe(
-    frame: Any, partition_column: str, change_column: str
+    frame: Any, partition_column: str, change_column: str, *, watermark_only: bool = False
 ) -> list[dict[str, Any]]:
     """Aggregate an already-read source DataFrame into observation rows."""
+    from pyspark.sql import functions as F
+
+    if watermark_only:
+        observed = frame.agg(
+            F.max(F.col(change_column)).alias("partition_value"),
+            F.count(F.lit(1)).alias("row_count"),
+            F.min(F.col(change_column)).alias("min_change_value"),
+            F.max(F.col(change_column)).alias("max_change_value"),
+        ).select(
+            "partition_value", "row_count",
+            "min_change_value", "max_change_value", F.lit("").alias("content_fingerprint"),
+        )
+    else:
+        observed = _observe_partition_dataframe(frame, partition_column, change_column)
+    schema = {field.name: type(field.dataType).__name__ for field in frame.schema.fields}
+    timestamp_columns = {"min_change_value", "max_change_value"} if schema.get(change_column) == "TimestampType" else set()
+    if schema.get(partition_column) == "TimestampType":
+        timestamp_columns.add("partition_value")
+    return _compact_rows(observed, timestamp_columns=timestamp_columns)
+
+
+def _observe_partition_dataframe(frame: Any, partition_column: str, change_column: str) -> Any:
+    """Keep Source Drift fingerprints separate from incremental progress aggregates."""
     from pyspark.sql import functions as F
 
     row_columns = sorted(frame.columns)
@@ -4430,7 +4489,7 @@ def _observe_dataframe(
         "_fabricops_content_hash",
         F.sha2(F.to_json(F.struct(*[F.col(name) for name in row_columns])), 256),
     )
-    observed = (
+    return (
         with_fingerprint.groupBy(partition_column)
         .agg(
             F.count(F.lit(1)).alias("row_count"),
@@ -4449,20 +4508,6 @@ def _observe_dataframe(
             "content_fingerprint",
         )
     )
-    schema = {field.name: type(field.dataType).__name__ for field in frame.schema.fields}
-    timestamp_columns = set()
-    for output_name, source_name in (
-        ("partition_value", partition_column),
-        ("min_change_value", change_column),
-        ("max_change_value", change_column),
-    ):
-        if schema.get(source_name) == "TimestampType":
-            timestamp_columns.add(output_name)
-    compact = _compact_rows(observed, timestamp_columns=timestamp_columns)
-    if schema.get(change_column) == "TimestampType":
-        for row in compact:
-            row["watermark_type"] = "timestamp"
-    return compact
 
 
 def _validated_observation_identity(
@@ -4591,17 +4636,17 @@ def capture_source_observation(
             "_activity_id": str(audit["_activity_id"]),
         }
 
-    def capture_columns(partition_column: str, change_column: str) -> Any:
+    def capture_columns(partition_column: str, change_column: str, *, watermark_only: bool = False) -> Any:
         observation_columns = {partition_column, change_column}
         if dataframe is not None and observation_columns <= set(
             getattr(dataframe, "columns", ())
         ):
-            current = _observe_dataframe(dataframe, partition_column, change_column)
+            current = _observe_dataframe(dataframe, partition_column, change_column, watermark_only=watermark_only)
         elif source_type == "warehouse":
             current = _compact_rows(
                 read_warehouse_query(
                     _warehouse_observation_query(
-                        schema_value, table_value, partition_column, change_column
+                        schema_value, table_value, partition_column, change_column, watermark_only=watermark_only
                     ),
                     store=store_key,
                     spark_session=spark,
@@ -4617,6 +4662,7 @@ def capture_source_observation(
                 change_column,
                 spark_session=spark,
                 context=context,
+                watermark_only=watermark_only,
             )
         observation_id = str(uuid4())
         values = [
@@ -4638,7 +4684,15 @@ def capture_source_observation(
             }
             for row in current
         ]
-        return spark.createDataFrame(values)
+        from pyspark.sql.types import StringType, StructField, StructType
+
+        observation_schema = StructType([
+            *metadata_table_schema_registry()[OBSERVATION_TABLE].fields,
+            StructField("partition_column", StringType(), False),
+            StructField("change_column", StringType(), False),
+            StructField("watermark_type", StringType(), True),
+        ])
+        return spark.createDataFrame(values, schema=observation_schema)
 
     drift_observation = None
     if drift_rule is not None:
@@ -4652,7 +4706,7 @@ def capture_source_observation(
             observation=drift_observation,
         )
     if incremental_columns is not None:
-        return capture_columns(*incremental_columns)
+        return capture_columns(*incremental_columns, watermark_only=True)
     return drift_observation
 
 

@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import ast
 from contextlib import redirect_stderr, redirect_stdout
-from datetime import datetime, timezone
 from io import StringIO
 import importlib
 import json
 from typing import Any
 
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
+from fabricops_kit.config.shared import metadata_timestamp_sort_key
 from fabricops_kit.data_contract.shared import (
     normalize_guardrail_action,
     validate_sensitive_data_parameters,
@@ -733,18 +733,6 @@ def _rows(value: Any) -> list[dict[str, Any]]:
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in (source or [])]
 
 
-def _sort_timestamp(value: Any) -> tuple[int, Any]:
-    """Return a deterministic sort value for metadata timestamps."""
-    text = str(value or "").strip().replace("Z", "+00:00")
-    try:
-        parsed = value if isinstance(value, datetime) else datetime.fromisoformat(text)
-        if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=timezone.utc)
-        return 1, parsed.timestamp()
-    except (TypeError, ValueError):
-        return 0, text
-
-
 def catalogue_table_options(catalogue_rows: Any, *, environment_name: str) -> list[dict[str, str]]:
     """Return current table-level Catalogue options for one environment."""
     latest: dict[str, dict[str, Any]] = {}
@@ -756,7 +744,7 @@ def catalogue_table_options(catalogue_rows: Any, *, environment_name: str) -> li
         table_id = str(row.get("table_id") or "").strip()
         if not table_id:
             continue
-        order = (_sort_timestamp(row.get("last_profiled_at")), str(row.get("_activity_id") or ""))
+        order = (metadata_timestamp_sort_key(row.get("last_profiled_at")), str(row.get("_activity_id") or ""))
         current = latest.get(table_id)
         if current is None or order > current["_sort_key"]:
             latest[table_id] = {**row, "_sort_key": order}
@@ -788,7 +776,7 @@ def latest_enrichment_values(rows: Any, *, environment_name: str) -> dict[tuple[
             continue
         key = (level, contract_id, contract_version, column_id, enrichment_type)
         order = (
-            _sort_timestamp(row.get("_committed_at")),
+            metadata_timestamp_sort_key(row.get("_committed_at")),
             str(row.get("_activity_id") or ""),
             str(row.get("enrichment_id") or ""),
         )
@@ -840,7 +828,7 @@ def catalogue_table_browser_state(
         raise ValueError(f"Catalogue table identity {table_id!r} has no table-level row in environment {environment_name!r}.")
     table_row = max(
         table_rows,
-        key=lambda row: (_sort_timestamp(row.get("last_profiled_at")), str(row.get("_activity_id") or "")),
+        key=lambda row: (metadata_timestamp_sort_key(row.get("last_profiled_at")), str(row.get("_activity_id") or "")),
     )
     columns: list[dict[str, Any]] = []
     latest_columns: dict[str, dict[str, Any]] = {}
@@ -850,7 +838,7 @@ def catalogue_table_browser_state(
         column_id = str(row.get("column_id") or "").strip()
         if not column_id:
             continue
-        order = (_sort_timestamp(row.get("last_profiled_at")), str(row.get("_activity_id") or ""))
+        order = (metadata_timestamp_sort_key(row.get("last_profiled_at")), str(row.get("_activity_id") or ""))
         current = latest_columns.get(column_id)
         if current is None or order > current["_sort_key"]:
             latest_columns[column_id] = {**row, "_sort_key": order}

@@ -675,7 +675,7 @@ def _audit_literal_columns(*, config: Any, env: str, runtime_context: dict[str, 
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
     return {
         "_committed_by": F.lit(audit["_committed_by"]).cast("string"),
-        "_committed_at": F.lit(audit["_committed_at"]).cast("timestamp"),
+        "_committed_at": F.lit(audit["_committed_at"]).cast("timestamp_ltz"),
         "_workspace_id": F.lit(audit["_workspace_id"]).cast("string"),
         "_workspace_name": F.lit(audit["_workspace_name"]).cast("string"),
         "_notebook_id": F.lit(audit["_notebook_id"]).cast("string"),
@@ -1244,7 +1244,7 @@ def profile_table(
     if table_id is not None or has_coordinates:
         config, env, context = resolve_fabric_context()
         if table_id is not None:
-            identity = resolve_catalogue_table_identity(config, env, table_id, context=context)
+            identity = resolve_catalogue_table_identity(config, env, table_id, spark_session=spark_session, context=context)
         else:
             identity = resolve_physical_table_identity(
                 config, env, store=store, schema=schema, table_name=table_name
@@ -1260,7 +1260,7 @@ def profile_table(
         )
         if dataframe is None:
             if store_kind == "lakehouse":
-                dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context=context)
+                dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), spark_session=spark_session, context=context)
                 profile_input_label = "complete persisted Lakehouse table"
             else:
                 warehouse_physical = True

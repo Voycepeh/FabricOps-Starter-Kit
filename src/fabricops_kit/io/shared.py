@@ -238,12 +238,63 @@ def validate_dataframe_writer(df) -> None:
 
 
 def validate_select_query(query: str) -> str:
-    """Validate and normalize SQL suitable for Warehouse pushdown."""
+    """Accept one SELECT/CTE, rejecting mutation tokens outside quoted values."""
+    from sqlglot import Dialect, errors
+    from sqlglot.tokens import TokenType
+
     sql = str(query or "").strip()
     if not sql:
         raise ValueError("query must be a non-empty SQL SELECT statement.")
-    if not sql.lower().lstrip().startswith(("select", "with")):
-        raise ValueError("query must be a SELECT statement or a CTE ending in a SELECT statement.")
+    try:
+        tokens = Dialect.get_or_raise("tsql").tokenize(sql)
+    except errors.TokenError as exc:
+        raise ValueError("query must be a valid read-only SQL SELECT statement.") from exc
+    if tokens and tokens[-1].token_type == TokenType.SEMICOLON:
+        tokens.pop()
+    if not tokens or tokens[0].token_type not in {TokenType.SELECT, TokenType.WITH}:
+        raise ValueError("query must be one SELECT statement or a CTE ending in SELECT.")
+    forbidden = {
+        "INSERT", "UPDATE", "DELETE", "MERGE", "INTO", "EXEC", "EXECUTE", "CREATE", "ALTER", "DROP",
+        "TRUNCATE", "GRANT", "DENY", "REVOKE", "BACKUP", "RESTORE", "DBCC", "KILL",
+        "DECLARE", "SET", "BEGIN", "COMMIT", "ROLLBACK", "WAITFOR", "NEXT VALUE FOR",
+    }
+    quoted = {TokenType.STRING, TokenType.NATIONAL_STRING, TokenType.IDENTIFIER}
+    # Fabric read-only syntax includes OPENROWSET(BULK ...) and OPTION(USE
+    # HINT(...)). Permit these keywords only in their owning call's parentheses.
+    calls = []
+    previous = ""
+    for token in tokens:
+        if token.token_type == TokenType.L_PAREN:
+            calls.append(previous)
+        elif token.token_type == TokenType.R_PAREN:
+            if calls:
+                calls.pop()
+        elif token.token_type not in quoted:
+            word = token.text.upper()
+            if (word == "BULK" and (not calls or calls[-1] != "OPENROWSET")) or (word == "USE" and (not calls or calls[-1] != "OPTION")):
+                raise ValueError("query must be one read-only SELECT.")
+        previous = token.text.upper()
+    words = [word for token in tokens if token.token_type not in quoted for word in token.text.upper().split()]
+    if any(token.token_type in {TokenType.SEMICOLON, TokenType.COMMAND} for token in tokens) or forbidden.intersection(words) or "NEXT VALUE FOR" in " ".join(words):
+        raise ValueError("query must be one read-only SELECT; mutations and sequence advancement are not supported.")
+    depth, selects, set_operand = 0, 0, False
+    for token in tokens:
+        kind = token.token_type
+        if kind == TokenType.L_PAREN:
+            if depth == 0:
+                set_operand = False
+            depth += 1
+        elif kind == TokenType.R_PAREN:
+            depth -= 1
+        elif depth == 0 and kind in {TokenType.UNION, TokenType.INTERSECT, TokenType.EXCEPT}:
+            set_operand = True
+        elif depth == 0 and kind == TokenType.SELECT:
+            if selects and not set_operand:
+                raise ValueError("query must contain only one read-only query.")
+            selects += 1
+            set_operand = False
+    if not selects:
+        raise ValueError("A CTE must end in a SELECT query.")
     return sql
 
 
@@ -547,6 +598,10 @@ def execute_warehouse_processing(
     missing = sorted(set(keys) - set(columns))
     if missing:
         raise ValueError(f"Incoming Warehouse SCD data is missing key columns: {', '.join(missing)}.")
+    from functools import reduce
+
+    if df.where(reduce(lambda a, b: a | b, [F.col(key).isNull() for key in keys])).limit(1).count():
+        raise ValueError("Incoming target scope contains null business keys.")
     if df.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count():
         raise ValueError("Incoming target scope contains duplicate business keys.")
     tracked: list[str] = []
@@ -686,7 +741,12 @@ def read_excel_file(spark_obj, lakehouse_path: str, *, sheet_name, read_excel_kw
     with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_file:
         temp_file.write(bytearray(content))
         temp_file_path = temp_file.name
-    pandas_df = _load_pandas().read_excel(temp_file_path, sheet_name=sheet_name, **read_excel_kwargs)
+    try:
+        pandas_df = _load_pandas().read_excel(temp_file_path, sheet_name=sheet_name, **read_excel_kwargs)
+    finally:
+        from pathlib import Path
+
+        Path(temp_file_path).unlink(missing_ok=True)
     return spark_obj.createDataFrame(pandas_df)
 
 

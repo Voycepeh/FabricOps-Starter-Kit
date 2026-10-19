@@ -72,6 +72,16 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     Grain checks only the returned rows (the incremental batch in incremental mode),
     using the configured physical row key; SCD2 history requires a version-aware
     key, such as business key plus effective timestamp.
+    Incremental batches include only rows after the accepted watermark and at
+    or below the upper watermark observed for this run. Bootstrap reads use
+    the same upper bound and retain null-watermark rows. Timestamp instants use
+    canonical UTC checkpoints; TimestampNTZ checkpoints retain wall-clock time
+    without attaching a timezone. Dates retain calendar-date semantics.
+    Later arrivals above
+    that bound wait for the next run. This bounds progress, but does not make
+    concurrent source updates a transactional snapshot.
+    Incremental progress captures one aggregate summary per source, including
+    empty-source evidence; Source Drift fingerprints remain independent.
     DataFrames are never displayed. Incremental batches are not profiled.
     With verbose=True, successful execution ends with a READ Summary on stdout.
     Counts reuse existing profiling results; no Spark action is added for

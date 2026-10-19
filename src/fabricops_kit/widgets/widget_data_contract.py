@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Any, Mapping
 
-from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.config.shared import metadata_timestamp_sort_key, resolve_fabric_context
 from fabricops_kit.data_contract import shared as contracts
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.widgets import shared
@@ -123,13 +123,13 @@ def _latest(rows: list[dict[str, Any]], *identity: str) -> list[dict[str, Any]]:
         key = tuple(str(row.get(name) or "") for name in identity)
         rank = (
             int(row.get("guardrail_version") or 0),
-            str(row.get("_committed_at") or ""),
+            metadata_timestamp_sort_key(row.get("_committed_at")),
             str(row.get("_activity_id") or ""),
         )
         previous = selected.get(key)
         previous_rank = (
             int(previous.get("guardrail_version") or 0),
-            str(previous.get("_committed_at") or ""),
+            metadata_timestamp_sort_key(previous.get("_committed_at")),
             str(previous.get("_activity_id") or ""),
         ) if previous else None
         if previous_rank is None or rank >= previous_rank:

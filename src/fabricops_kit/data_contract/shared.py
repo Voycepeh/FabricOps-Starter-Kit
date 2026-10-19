@@ -16,6 +16,7 @@ from typing import Any
 import uuid
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
+from fabricops_kit.config.shared import metadata_timestamp_sort_key
 from fabricops_kit.config.metadata_schemas import (
     coerce_metadata_row_types,
     metadata_table_physical_schema,
@@ -264,10 +265,10 @@ def _latest(rows: Iterable[Mapping[str, Any]], identity: tuple[str, ...]) -> lis
     for value in rows:
         row = dict(value)
         key = tuple(str(row.get(field) or "") for field in identity)
-        rank = (str(row.get("_committed_at") or ""), str(row.get("_activity_id") or ""))
+        rank = (metadata_timestamp_sort_key(row.get("_committed_at")), str(row.get("_activity_id") or ""))
         current = selected.get(key)
         current_rank = (
-            (str(current.get("_committed_at") or ""), str(current.get("_activity_id") or ""))
+            (metadata_timestamp_sort_key(current.get("_committed_at")), str(current.get("_activity_id") or ""))
             if current else None
         )
         if current_rank is None or rank > current_rank:
@@ -896,7 +897,7 @@ def get_table_runtime_context(
     latest_profile_row = max(
         profiled,
         key=lambda row: (
-            str(row.get("_committed_at") or ""),
+            metadata_timestamp_sort_key(row.get("_committed_at")),
             str(row.get("_activity_id") or ""),
             str(row.get("profile_snapshot_id") or ""),
         ),
@@ -927,8 +928,8 @@ def get_table_runtime_context(
                 row for row in profiled
                 if str(row.get("environment_name") or "")
                 == str(latest_profile_row.get("environment_name") or "")
-                and str(row.get("_committed_at") or "")
-                == str(latest_profile_row.get("_committed_at") or "")
+                and metadata_timestamp_sort_key(row.get("_committed_at"))
+                == metadata_timestamp_sort_key(latest_profile_row.get("_committed_at"))
                 and str(row.get("_activity_id") or "")
                 == str(latest_profile_row.get("_activity_id") or "")
             ]
@@ -999,9 +1000,9 @@ def get_table_runtime_context(
         environment_name = str(row.get("environment_name") or "").strip()
         key = (environment_name, relationship, pipeline_name)
         previous = grouped.get(key)
-        rank = (str(row.get("_committed_at") or ""), str(row.get("_activity_id") or ""))
+        rank = (metadata_timestamp_sort_key(row.get("_committed_at")), str(row.get("_activity_id") or ""))
         previous_rank = (
-            str(previous.get("last_seen") or ""),
+            metadata_timestamp_sort_key(previous.get("last_seen")),
             str(previous.get("_activity_id") or ""),
         ) if previous else None
         if previous_rank is None or rank >= previous_rank:
@@ -1068,7 +1069,7 @@ def get_column_profile_context(
 
     latest = max(
         candidates,
-        key=lambda row: str(row.get("profiled_at") or row.get("_committed_at") or ""),
+        key=lambda row: metadata_timestamp_sort_key(row.get("profiled_at") or row.get("_committed_at")),
     )
     snapshot = latest.get("profile_id") or latest.get("profile_snapshot_id")
     try:

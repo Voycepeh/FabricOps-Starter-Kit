@@ -37,7 +37,7 @@ def test_missing_current_observation_requires_orchestrate_read() -> None:
 
 def test_capture_reuses_pipeline_read_dataframe_without_rescanning(monkeypatch) -> None:
     class Spark:
-        def createDataFrame(self, rows):  # noqa: N802
+        def createDataFrame(self, rows, schema=None):  # noqa: N802
             return list(rows)
 
     dataframe = type("Frame", (), {"columns": ["partition", "changed", "value"]})()
@@ -58,7 +58,7 @@ def test_capture_reuses_pipeline_read_dataframe_without_rescanning(monkeypatch) 
         else None,
     )
     monkeypatch.setattr(shared, "resolve_source_drift_observation_columns", lambda rule: ("partition", "changed"))
-    monkeypatch.setattr(shared, "_observe_dataframe", lambda frame, *args: [{
+    monkeypatch.setattr(shared, "_observe_dataframe", lambda frame, *args, **kwargs: [{
         "partition_value": "p", "row_count": 1, "min_change_value": "1",
         "max_change_value": "1", "content_fingerprint": "hash", "is_present": True,
     }])
@@ -74,7 +74,7 @@ def test_capture_reuses_pipeline_read_dataframe_without_rescanning(monkeypatch) 
 def test_incremental_observation_allows_new_source_without_catalogue_or_contract(monkeypatch) -> None:
     """Physical pipeline identity is enough for watermark progress without guardrails."""
     class Spark:
-        def createDataFrame(self, rows):  # noqa: N802
+        def createDataFrame(self, rows, schema=None):  # noqa: N802
             return list(rows)
 
     identity = {
@@ -98,7 +98,7 @@ def test_incremental_observation_allows_new_source_without_catalogue_or_contract
         "_activity_id": "run", "_committed_at": "2026-10-11T00:00:00+00:00",
     })
     monkeypatch.setattr(shared, "coerce_metadata_row_types", lambda table, row: row)
-    monkeypatch.setattr(shared, "_observe_dataframe", lambda *args: [{
+    monkeypatch.setattr(shared, "_observe_dataframe", lambda *args, **kwargs: [{
         "partition_value": "2026-10-11", "row_count": 2,
         "min_change_value": "2026-10-11", "max_change_value": "2026-10-11",
         "content_fingerprint": "hash", "is_present": True,

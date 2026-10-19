@@ -197,7 +197,7 @@ def test_incremental_observation_requires_governed_watermark():
 
 
 def test_lakehouse_incremental_filter_is_strictly_after_watermark(spark_session):
-    dataframe = spark_session.createDataFrame([(100,), (120,), (130,)], ["watermark"])
+    dataframe = spark_session.createDataFrame([(100,), (120,), (130,), (140,)], ["watermark"])
 
     result = read_module._filter_lakehouse_incremental(
         dataframe,
@@ -207,6 +207,7 @@ def test_lakehouse_incremental_filter_is_strictly_after_watermark(spark_session)
             "has_data": True,
             "column": "watermark",
             "after": "120",
+            "through": "130",
         },
     )
 
@@ -243,7 +244,8 @@ def test_timestamp_observation_uses_utc_instant_for_scope_and_metadata_round_tri
     filtered = read_module._filter_lakehouse_incremental(
         frame.withColumn("later", F.lit(1)),
         {"type": "watermark", "has_data": True, "column": "modified_datetime",
-         "after": "2026-10-07T02:29:59.000000Z"},
+         "after": "2026-10-07T02:29:59.000000Z",
+         "through": "2026-10-07T02:30:00.000000Z"},
     )
     assert filtered.count() == 1
 
@@ -285,12 +287,14 @@ def test_warehouse_incremental_query_pushes_strict_watermark_predicate():
             "has_data": True,
             "column": "modified_at",
             "after": "2026-09-02 10:00:00",
+            "through": "2026-09-03 10:00:00",
         },
     )
 
     assert query == (
         "SELECT * FROM [demo].[orders] "
-        "WHERE [modified_at] > '2026-09-02 10:00:00'"
+        "WHERE [modified_at] > '2026-09-02 10:00:00' "
+        "AND [modified_at] <= '2026-09-03 10:00:00'"
     )
 
 
@@ -298,9 +302,10 @@ def test_warehouse_timestamp_predicate_uses_canonical_utc_instant():
     query = read_module._warehouse_incremental_query(
         {"schema": "demo", "table_name": "orders"},
         {"type": "watermark", "has_data": True, "column": "modified_at",
-         "after": "2026-10-07T02:30:00.000000Z"},
+         "after": "2026-10-07T02:30:00.000000Z",
+         "through": "2026-10-07T02:31:00.000000Z"},
     )
-    assert query.endswith("WHERE [modified_at] > '2026-10-07 02:30:00'")
+    assert query.endswith("WHERE [modified_at] > '2026-10-07 02:30:00' AND [modified_at] <= '2026-10-07 02:31:00'")
 
 
 def test_warehouse_incremental_query_short_circuits_no_new_data():
@@ -316,6 +321,77 @@ def test_warehouse_incremental_query_short_circuits_no_new_data():
     )
 
     assert query == "SELECT * FROM [demo].[orders] WHERE 1 = 0"
+
+
+@pytest.mark.parametrize("bootstrap", [False, True])
+def test_warehouse_arrivals_after_observation_wait_for_next_batch(bootstrap):
+    """Execute the generated numeric predicates after a new row arrives."""
+    import sqlite3
+
+    identity = {"schema": "main", "table_name": "orders"}
+    scope = {"type": "full" if bootstrap else "watermark", "has_data": True,
+             "column": "watermark", "through": "200"}
+    if not bootstrap:
+        scope["after"] = "100"
+    with sqlite3.connect(":memory:") as connection:
+        connection.execute("CREATE TABLE orders (watermark INTEGER)")
+        connection.executemany("INSERT INTO orders VALUES (?)", [(None,), (100,), (150,), (200,), (250,)])
+        first = connection.execute(read_module._warehouse_incremental_query(identity, scope)).fetchall()
+        second = connection.execute(read_module._warehouse_incremental_query(identity, {
+            "type": "watermark", "has_data": True, "column": "watermark",
+            "after": "200", "through": "250",
+        })).fetchall()
+    assert set(first) == ({(None,), (100,), (150,), (200,)} if bootstrap else {(150,), (200,)})
+    assert second == [(250,)]
+    assert not set(first).intersection(second)
+
+
+@pytest.mark.parametrize("bootstrap", [False, True])
+def test_lakehouse_arrivals_after_observation_wait_for_next_batch(spark_session, bootstrap):
+    """Bootstrap and incremental scopes both respect their observed upper bound."""
+    frame = spark_session.createDataFrame([(None,), (100,), (150,), (200,), (250,)], "watermark long")
+    scope = {"type": "full" if bootstrap else "watermark", "has_data": True,
+             "column": "watermark", "through": "200"}
+    if not bootstrap:
+        scope["after"] = "100"
+    first = {row.watermark for row in read_module._filter_lakehouse_incremental(frame, scope).collect()}
+    second = {row.watermark for row in read_module._filter_lakehouse_incremental(frame, {
+        "type": "watermark", "has_data": True, "column": "watermark", "after": "200", "through": "250",
+    }).collect()}
+    assert first == ({None, 100, 150, 200} if bootstrap else {150, 200})
+    assert second == {250}
+    assert not first.intersection(second)
+
+
+def test_null_only_bootstrap_does_not_consume_later_non_null_arrivals(spark_session):
+    """No observed non-null maximum must not become an unbounded bootstrap."""
+    scope = {"type": "full", "has_data": True, "column": "watermark", "through": None}
+    frame = spark_session.createDataFrame([(None,), (100,)], "watermark long")
+    assert [row.watermark for row in read_module._filter_lakehouse_incremental(frame, scope).collect()] == [None]
+    sql = read_module._warehouse_incremental_query({"schema": "demo", "table_name": "orders"}, scope)
+    assert sql.endswith("WHERE [watermark] IS NULL")
+
+
+@pytest.mark.parametrize("timezone", ["UTC", "Asia/Singapore"])
+def test_timestamp_upper_and_lower_bounds_are_utc_instants(spark_session, timezone):
+    """A session timezone must not move either edge of the observed interval."""
+    from datetime import timedelta
+
+    previous_timezone = spark_session.conf.get("spark.sql.session.timeZone")
+    try:
+        spark_session.conf.set("spark.sql.session.timeZone", timezone)
+        upper = datetime(2026, 10, 7, 2, 30, tzinfo=UTC)
+        frame = spark_session.createDataFrame([
+            (upper - timedelta(seconds=1),), (upper,), (upper + timedelta(seconds=1),),
+        ], ["modified_at"])
+        result = read_module._filter_lakehouse_incremental(frame, {
+            "type": "watermark", "has_data": True, "column": "modified_at",
+            "after": "2026-10-07T02:29:59.000000Z", "through": "2026-10-07T02:30:00.000000Z",
+        })
+        assert result.count() == 1
+        assert result.first().modified_at == upper.replace(tzinfo=None)
+    finally:
+        spark_session.conf.set("spark.sql.session.timeZone", previous_timezone)
 
 
 def test_same_source_resolves_isolated_target_watermarks(monkeypatch):
@@ -451,6 +527,7 @@ def test_incremental_read_parameters_override_missing_catalogue_watermark(monkey
                         lambda **kwargs: captured.append(kwargs) or "observation")
     monkeypatch.setattr(read_module, "resolve_incremental_source_scope",
                         lambda **kwargs: {"type": "full", "first_run": True, "has_data": True})
+    monkeypatch.setattr(read_module, "_filter_lakehouse_incremental", lambda frame, scope: frame)
     result = read_module.pipeline_read(
         table_id="source-orders",
         read_mode="incremental",

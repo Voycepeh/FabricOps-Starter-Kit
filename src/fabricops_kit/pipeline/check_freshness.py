@@ -84,6 +84,7 @@ def check_freshness(
     if str(freshness_rule.get("rule_type") or "").strip().lower() == "skip":
         result = freshness_check_core(
             [],
+            config=config,
             rules_df=rules_df,
             environment_name=env,
             table_id=table_id,
@@ -109,6 +110,7 @@ def check_freshness(
     freshness_column = str(evidence["freshness_column"])
     result = freshness_check_core(
         [{freshness_column: evidence.get("latest_value")}],
+        config=config,
         rules_df=rules_df,
         environment_name=env,
         table_id=table_id,

@@ -7,7 +7,7 @@ import json
 from typing import Any, Mapping
 
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
-from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.config.shared import metadata_timestamp_sort_key, resolve_fabric_context
 from fabricops_kit.data_contract import shared as contracts
 from fabricops_kit.io import read_lakehouse_table
 from fabricops_kit.io.shared import get_spark_session
@@ -37,11 +37,11 @@ def _latest_validation(
     if not matches:
         return {"validated": False, "run_id": "", "rows": [], "blocked": 0, "warnings": 0}
 
-    run_rank: dict[str, tuple[str, str]] = {}
+    run_rank: dict[str, tuple[Any, str]] = {}
     for row in matches:
         run_id = str(row.get("run_id") or "")
-        rank = (str(row.get("_committed_at") or ""), str(row.get("_activity_id") or ""))
-        run_rank[run_id] = max(run_rank.get(run_id, ("", "")), rank)
+        rank = (metadata_timestamp_sort_key(row.get("_committed_at")), str(row.get("_activity_id") or ""))
+        run_rank[run_id] = max(run_rank.get(run_id, (metadata_timestamp_sort_key(None), "")), rank)
     latest_run = max(run_rank, key=run_rank.get)
     latest_rows = [row for row in matches if str(row.get("run_id") or "") == latest_run]
 
@@ -62,8 +62,8 @@ def _latest_validation(
         return (isinstance(payload, dict) and payload.get("validation_complete") is True
                 and row.get("can_continue") is True and str(row.get("status") or "").casefold() in {"passed", "pass"})
 
-    latest_rank = max((str(row.get("_committed_at") or ""), str(row.get("_activity_id") or "")) for row in latest_rows)
-    completed = any(complete(row) and (str(row.get("_committed_at") or ""), str(row.get("_activity_id") or "")) >= latest_rank for row in latest_rows)
+    latest_rank = max((metadata_timestamp_sort_key(row.get("_committed_at")), str(row.get("_activity_id") or "")) for row in latest_rows)
+    completed = any(complete(row) and (metadata_timestamp_sort_key(row.get("_committed_at")), str(row.get("_activity_id") or "")) >= latest_rank for row in latest_rows)
     blocked = sum(blocking(row) for row in latest_rows)
     warnings = sum(
         str(row.get("status") or "").casefold() in {"warn", "warning"}

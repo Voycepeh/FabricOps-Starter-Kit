@@ -61,6 +61,12 @@ def read_warehouse_query(
         Additional Fabric Warehouse Spark connector reader options. Required
         Fabric connector options are always set from ``00_env_config``.
 
+    Raises
+    ------
+    ValueError
+        If SQL is not one SELECT/CTE, contains mutation keywords outside quoted
+        text or identifiers, advances a sequence, or has multiple statements.
+
     Returns
     -------
     pyspark.sql.DataFrame

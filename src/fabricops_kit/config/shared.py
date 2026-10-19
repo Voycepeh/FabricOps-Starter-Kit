@@ -8,7 +8,7 @@ import json
 
 from copy import deepcopy
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 import re
 from typing import Any
@@ -219,8 +219,36 @@ def get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> 
     """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
     if timezone_name is not None:
         return _validate_audit_timezone(timezone_name)
-    value = getattr(config, "audit_timezone", None) if config is not None else None
+    value = config.get("audit_timezone") if isinstance(config, dict) else getattr(config, "audit_timezone", None)
     return _validate_audit_timezone(value)
+
+
+def normalize_audit_datetime(value: Any, config: Any = None) -> datetime:
+    """Preserve instants; interpret timezone-free author input in the configured zone.
+
+    Spark TimestampType collection is a separate boundary: its naive Python
+    datetimes represent the Python process's local zone, not the audit zone.
+    TimestampNTZ and DateType business values must retain their own semantics.
+    """
+    parsed = value if isinstance(value, datetime) else datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    zone = ZoneInfo(get_audit_timezone(config))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=zone)
+        # Reject nonexistent wall times instead of silently changing the instant.
+        if parsed.astimezone(UTC).astimezone(zone).replace(tzinfo=None) != parsed.replace(tzinfo=None):
+            raise ValueError("Timestamp falls in a daylight-saving gap; provide an explicit UTC offset.")
+        if parsed.replace(fold=0).utcoffset() != parsed.replace(fold=1).utcoffset():
+            raise ValueError("Timestamp is ambiguous during daylight-saving overlap; provide an explicit UTC offset.")
+    return parsed.astimezone(zone)
+
+
+def metadata_timestamp_sort_key(value: Any) -> tuple[int, Any]:
+    """Order metadata by instant, including Spark-collected local datetimes."""
+    try:
+        parsed = value.astimezone(UTC) if isinstance(value, datetime) else normalize_audit_datetime(value)
+        return 1, parsed.astimezone(UTC)
+    except (TypeError, ValueError):
+        return 0, str(value or "")
 
 
 def get_current_audit_timestamp(

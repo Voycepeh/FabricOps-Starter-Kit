@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from .shared import get_current_audit_timestamp, get_store, resolve_runtime_context
+from .shared import get_current_audit_timestamp, get_store, normalize_audit_datetime, resolve_runtime_context
 
 
 def _audit_timestamp_value(config: Any = None) -> datetime:
@@ -87,6 +87,9 @@ def build_runtime_audit_fields(
         Output keys for metadata Lakehouse and Fabric activity audit values.
     committed_by, committed_at, metadata_lakehouse_name : str, optional
         Deterministic audit overrides for local tests and controlled writers.
+        Timestamp offsets preserve the instant and are rendered in the configured
+        audit timezone. Timezone-free overrides use that timezone; daylight-saving
+        gaps and overlaps require an explicit offset.
     runtime_context : dict[str, Any], optional
         Values merged over Fabric runtime context, primarily for tests or
         controlled notebook overrides.
@@ -110,10 +113,8 @@ def build_runtime_audit_fields(
 
     if committed_at is None:
         timestamp_value = _audit_timestamp_value(config=config)
-    elif isinstance(committed_at, datetime):
-        timestamp_value = committed_at
     else:
-        timestamp_value = datetime.fromisoformat(str(committed_at))
+        timestamp_value = normalize_audit_datetime(committed_at, config)
 
     resolved_metadata_lakehouse = metadata_lakehouse_name
     if not _valid_audit_value(resolved_metadata_lakehouse) and config is not None and env is not None:

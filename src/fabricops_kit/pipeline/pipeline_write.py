@@ -280,7 +280,7 @@ def _target_has_activity(
 
 def _source_table_ids(values: list[str] | tuple[str, ...] | None) -> list[str]:
     """Return unique canonical source identities explicitly owned by this target."""
-    if not isinstance(values, list | tuple) or not values:
+    if not isinstance(values, list | tuple):
         raise ValueError(
             "source_table_ids must identify the governed sources that feed this target. "
             "FabricOps does not infer source ownership from activity-wide reads or Spark plans."
