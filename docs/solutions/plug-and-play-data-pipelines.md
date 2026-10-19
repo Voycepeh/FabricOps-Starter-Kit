@@ -112,7 +112,7 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
 
     ![What happens at the FabricOps Read and Write boundaries](../assets/pipeline-boundaries-implementation.svg){ .fabricops-solution-diagram }
 
-    The Read boundary resolves the governed table and runs Freshness, Schema, and DQ checks before the DataFrame reaches the project-owned PySpark transformation. Full reads also produce full dataset profiling as part of the Read orchestration without making Profile another inline guardrail stage. The Write boundary applies pre-publication guardrails before writing, then performs full dataset profiling on the published table and records lineage.
+    The Read boundary resolves the governed table and runs four applicable checks: Freshness, Schema, Grain, and Data Quality before the DataFrame reaches the project-owned PySpark transformation. Full reads also produce full dataset profiling as part of the Read orchestration without making Profile another inline guardrail stage. The Write boundary runs five applicable checks: Schema, Sensitive Data, Source Drift on participating sources, Grain, and Data Quality, followed by Guardrail Coverage before writing, then performs full dataset profiling on the published table and records lineage.
 
     The orchestrators provide the stable framework boundary. Read modes, Write modes, validation behaviour, and deployment are documented separately so this page can stay focused on the overall solution.
 

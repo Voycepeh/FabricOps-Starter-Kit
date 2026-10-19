@@ -21,40 +21,6 @@ def test_exact_contract_version_and_environment_isolation():
     ) == [rows[1]]
 
 
-def test_exact_contract_read_pushes_scope_before_collect(monkeypatch):
-    """Exact contract reads apply lazy Spark predicates before collecting metadata."""
-    class Frame:
-        def __init__(self, rows):
-            self.rows = rows
-            self.predicates = []
-
-        def where(self, predicate):
-            self.predicates.append(predicate)
-            return self
-
-        def collect(self):
-            return self.rows
-
-    frame = Frame([{
-        "contract_id": "c", "contract_version": 2,
-        "environment_name": "dev", "value": "owned",
-    }])
-    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
-    monkeypatch.setattr(service, "read_lakehouse_table", lambda *_args, **_kwargs: frame)
-
-    rows = service.read_contract_records(
-        service.ENRICHMENT_TABLE, config=object(), env="dev",
-        spark_session=object(), contract_id="c", contract_version=2,
-    )
-
-    assert rows == [frame.rows[0]]
-    assert frame.predicates == [
-        "contract_id = 'c'",
-        "contract_version = 2",
-        "environment_name = 'dev'",
-    ]
-
-
 def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
     """Create one agreement-free table draft and reopen it without version churn."""
     catalogue = [{
@@ -179,31 +145,6 @@ def test_enrichment_build_preserves_exact_owner_and_column(monkeypatch):
         service.build_enrichment_records([{**rows[0], "environment_name": "prod"}], env="dev")
 
 
-def test_draft_validation_returns_only_owned_governance_rows():
-    """Draft state excludes other versions and environments."""
-    draft = {"contract_id": "c", "contract_version": 2, "agreement_id": None, "agreement_version": None, "table_id": "t", "environment_name": "dev", "status": "draft"}
-    catalogue = [{"table_id": "t", "environment_name": "dev", "metadata_level": "table"}]
-    enrichment = [
-        {"contract_id": "c", "contract_version": 2, "environment_name": "dev", "enrichment_level": "table", "enrichment_type": "Description"},
-        {"contract_id": "c", "contract_version": 1, "environment_name": "dev", "enrichment_level": "table", "enrichment_type": "Description"},
-    ]
-    guardrails = [
-        {"contract_id": "c", "contract_version": 2, "environment_name": "dev"},
-        {"contract_id": "c", "contract_version": 2, "environment_name": "prod"},
-    ]
-    state = service.validate_contract_draft(
-        draft, catalogue_rows=catalogue, enrichment_rows=enrichment,
-        guardrail_rows=guardrails, environment_name="dev",
-    )
-    assert state["enrichment"] == [enrichment[0]]
-    assert state["guardrails"] == [guardrails[0]]
-    with pytest.raises(ValueError, match="draft"):
-        service.validate_contract_draft(
-            {**draft, "status": "frozen"}, catalogue_rows=catalogue,
-            enrichment_rows=[], guardrail_rows=[], environment_name="dev",
-        )
-
-
 def test_authoring_state_resolves_contract_identity_in_requested_environment(monkeypatch):
     """The same contract identity in another environment cannot leak into state."""
     contracts = [
@@ -232,8 +173,8 @@ def test_authoring_state_resolves_contract_identity_in_requested_environment(mon
             {"table_id": "dev-t", "environment_name": "dev", "metadata_level": "table"},
             {"table_id": "prod-t", "environment_name": "prod", "metadata_level": "table"},
         ],
-        service.ENRICHMENT_TABLE: [],
-        service.GUARDRAIL_TABLE: [],
+        "enrichment": [],
+        "guardrails": [],
     }
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
     monkeypatch.setattr(service, "read_lakehouse_table", lambda table, **_kwargs: tables[table])
@@ -245,16 +186,6 @@ def test_authoring_state_resolves_contract_identity_in_requested_environment(mon
 
     assert state["contract"]["agreement_id"] is None
     assert state["table_id"] == "dev-t"
-
-
-def test_draft_environment_must_match_authoring_environment():
-    """Draft validation rejects cross-environment contract rows explicitly."""
-    draft = {"contract_id": "c", "contract_version": 1, "agreement_id": None, "agreement_version": None, "table_id": "t", "environment_name": "prod", "status": "draft"}
-    with pytest.raises(ValueError, match="environment_name"):
-        service.validate_contract_draft(
-            draft, catalogue_rows=[], enrichment_rows=[], guardrail_rows=[],
-            environment_name="dev",
-        )
 
 
 def test_table_grain_is_canonical_enrichment():
@@ -275,20 +206,6 @@ def test_table_grain_is_canonical_enrichment():
     assert len(rows) == 1
     assert rows[0]["enrichment_type"] == "Grain"
     assert rows[0]["value"] == "One row per order"
-
-
-def test_guardrail_save_uses_metadata_target(monkeypatch):
-    """Guardrail persistence routes through the metadata target."""
-    writes = []
-    monkeypatch.setattr(service, "canonical_guardrail_rule_record", lambda row, **kwargs: dict(row))
-    monkeypatch.setattr(service, "coerce_metadata_row_types", lambda _table, row: row)
-    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
-    monkeypatch.setattr(service, "write_lakehouse_table", lambda *args, **kwargs: writes.append((args, kwargs)))
-    spark = type("Spark", (), {"createDataFrame": lambda self, rows: rows})()
-    record = {"contract_id": "c", "contract_version": 2, "environment_name": "dev"}
-    assert service.save_guardrails([record], config=object(), env="dev", spark_session=spark) == [record]
-    assert writes[0][1]["store"] == "Metadata"
-    assert writes[0][1]["schema"] == "governance"
 
 
 def test_freeze_record_locks_saved_payload_without_version_churn():
@@ -463,8 +380,8 @@ def test_contract_payload_captures_normalized_scheduled_refresh_snapshot():
             "schema_name": "sales", "table_name": "orders", "load_strategy": "append",
             "load_strategy_parameters_json": "{}", "is_active": True,
         }],
-        service.ENRICHMENT_TABLE: [],
-        service.GUARDRAIL_TABLE: [],
+        "enrichment": [],
+        "guardrails": [],
     }
     schedule = {
         "status": "configured",
@@ -475,7 +392,7 @@ def test_contract_payload_captures_normalized_scheduled_refresh_snapshot():
     }
 
     payload, _warnings = service.assemble_contract_payload(
-        draft=draft, tables=tables, environment_name="dev",
+        draft=draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"], enrichment_rows=tables["enrichment"], guardrail_rows=tables["guardrails"], environment_name="dev",
         scheduled_refresh=schedule,
     )
 
@@ -639,7 +556,6 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
     }
 
 
-
 @pytest.mark.parametrize("guardrail_type", ["schema", "sensitive_data"])
 def test_saved_manifest_uses_block_for_mandatory_guardrails(guardrail_type):
     """Inherited Warn rows cannot reintroduce optional mandatory protections on save."""
@@ -656,10 +572,7 @@ def test_saved_manifest_uses_block_for_mandatory_guardrails(guardrail_type):
         "action": "Warn", "is_active": True,
     }
     payload, _warnings = service.assemble_contract_payload(
-        draft=draft, environment_name="dev", tables={
-            "METADATA_DATA_CATALOGUE": [{"table_id": "orders", "metadata_level": "table", "environment_name": "dev", "is_active": True}],
-            service.ENRICHMENT_TABLE: [], service.GUARDRAIL_TABLE: [rule],
-        },
+        draft=draft, environment_name="dev", catalogue_rows=[{"table_id": "orders", "metadata_level": "table", "environment_name": "dev", "is_active": True}], enrichment_rows=[], guardrail_rows=[rule],
     )
     assert payload["guardrails"][0]["action"] == "Block"
     assert rule["action"] == "Warn"

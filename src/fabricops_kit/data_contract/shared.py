@@ -25,8 +25,6 @@ from fabricops_kit.data_contract.scheduled_refresh import canonical_scheduled_re
 from fabricops_kit.pipeline.shared import validated_processing, validate_grain_parameters
 
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
-ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
-GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
 GUARDRAIL_TYPES = frozenset({"schema", "grain", "freshness", "source_drift", "data_quality", "sensitive_data"})
 GUARDRAIL_ACTIONS = frozenset({"Warn", "Block"})
 SENSITIVE_DATA_TREATMENTS = frozenset({"tokenize", "mask", "bucket", "remove"})
@@ -34,11 +32,6 @@ ENRICHMENT_TYPES_BY_LEVEL = {
     "table": frozenset({"Description", "Classification", "Grain"}),
     "column": frozenset({"Description", "Classification"}),
 }
-CONTRACT_SOURCE_TABLES = (
-    "METADATA_DATA_CATALOGUE",
-    ENRICHMENT_TABLE,
-    GUARDRAIL_TABLE,
-)
 _CONTRACT_NAMESPACE = uuid.UUID("8383c7ec-23f5-4ad8-92ea-0871045c310c")
 
 
@@ -116,6 +109,10 @@ def create_contract_draft(
         _json_value(previous.get("contract_payload_json"), field="contract_payload_json", default=None)
         if previous else None
     )
+    if previous is not None:
+        if not isinstance(previous_payload, dict):
+            raise ValueError("Previous frozen Data Contract has no valid canonical payload.")
+        validate_contract_definitions(previous_payload)
     seed = json.loads(json.dumps(previous_payload)) if isinstance(previous_payload, dict) else {}
     previous_columns = {
         str(item.get("column_id") or ""): dict(item)
@@ -301,11 +298,84 @@ def contract_processing_source(record: Mapping[str, Any]) -> str:
     return str(payload["table"].get("processing_source") or "default").strip() or "default"
 
 
+def validate_contract_definitions(
+    payload: Mapping[str, Any], *, allow_unresolved_columns: bool = False
+) -> None:
+    """Reject malformed or competing authored definitions without changing the payload.
+
+    Empty lists explicitly mean no definitions. Disabled Guardrails retain their
+    configuration but are not executed. Grain may keep an empty key selection
+    only while disabled.
+    """
+    enrichment = payload.get("enrichment")
+    if not isinstance(enrichment, dict):
+        raise ValueError("Data Contract enrichment must be an object with table and columns lists.")
+    table = payload.get("table")
+    if not isinstance(table, dict):
+        raise ValueError("Data Contract table must be an object.")
+    columns = table.get("columns", [])
+    if not isinstance(columns, list) or any(not isinstance(item, dict) for item in columns):
+        raise ValueError("Data Contract table.columns must be a list of objects.")
+    column_ids = {str(item.get("column_id") or "") for item in columns}
+    seen = set()
+    for group, level in (("table", "table"), ("columns", "column")):
+        rows = enrichment.get(group)
+        if not isinstance(rows, list):
+            raise ValueError(f"Data Contract enrichment.{group} must be a list.")
+        for row in rows:
+            if not isinstance(row, dict):
+                raise ValueError(f"Data Contract enrichment.{group} contains a non-object definition.")
+            kind, column_id = row.get("enrichment_type"), str(row.get("column_id") or "")
+            if row.get("enrichment_level") != level or kind not in ENRICHMENT_TYPES_BY_LEVEL[level]:
+                raise ValueError(f"Unsupported descriptive Enrichment in {group}: {kind!r}.")
+            if (level == "column" and (not column_id or (column_id not in column_ids and not allow_unresolved_columns))) or (level == "table" and column_id):
+                raise ValueError(f"Enrichment column_id {column_id!r} does not match its payload scope.")
+            key = (level, column_id, kind)
+            if key in seen:
+                raise ValueError(f"Competing Enrichment definitions for {key!r}.")
+            seen.add(key)
+    rules = payload.get("guardrails")
+    if not isinstance(rules, list):
+        raise ValueError("Data Contract guardrails must be a list.")
+    seen = set()
+    active_policies = set()
+    for rule in rules:
+        if not isinstance(rule, dict) or rule.get("guardrail_type") not in GUARDRAIL_TYPES:
+            raise ValueError("Data Contract contains an unsupported Guardrail definition.")
+        if not isinstance(rule.get("rule_parameters"), dict):
+            raise ValueError("Guardrail rule_parameters must be an object.")
+        if not isinstance(rule.get("is_active", True), bool):
+            raise ValueError("Guardrail is_active must be a boolean.")
+        key = rule.get("guardrail_rule_id")
+        if not key or key in seen:
+            raise ValueError(f"Missing or competing Guardrail rule identity {key!r}.")
+        seen.add(key)
+        kind = rule["guardrail_type"]
+        if kind in {"schema", "freshness", "source_drift", "sensitive_data"} and rule.get("is_active", True):
+            policy = (kind, str(rule.get("column_id") or ""))
+            if policy in active_policies:
+                raise ValueError(f"Competing active Guardrails for {policy!r}.")
+            active_policies.add(policy)
+        if rule.get("action") not in GUARDRAIL_ACTIONS:
+            raise ValueError(f"Guardrail {key!r} action must be Warn or Block.")
+        if rule.get("guardrail_type") in {"schema", "sensitive_data"} and rule["action"] != "Block":
+            raise ValueError(f"Guardrail {key!r} requires Block action.")
+        if rule.get("column_id") and str(rule["column_id"]) not in column_ids and not allow_unresolved_columns:
+            raise ValueError(f"Guardrail {key!r} references a column outside the Data Contract.")
+        if rule.get("guardrail_type") == "sensitive_data":
+            if not rule.get("column_id"):
+                raise ValueError("Sensitive Data requires column_id.")
+            validate_sensitive_data_parameters(rule["rule_parameters"])
+    validate_grain_contract(json.loads(json.dumps(payload)), allow_unresolved_columns=allow_unresolved_columns)
+
+
 def _payload_authoring_rows(
-    payload: Mapping[str, Any], *, contract_id: str, contract_version: int, environment_name: str
+    payload: Mapping[str, Any], *, contract_id: str, contract_version: int, environment_name: str,
+    allow_unresolved_columns: bool = False,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Convert one draft payload into the row shapes used by the authoring widget."""
-    enrichment_doc = payload.get("enrichment") if isinstance(payload, Mapping) else {}
+    validate_contract_definitions(payload, allow_unresolved_columns=allow_unresolved_columns)
+    enrichment_doc = payload.get("enrichment")
     enrichment_items = [
         *list((enrichment_doc or {}).get("table") or []),
         *list((enrichment_doc or {}).get("columns") or []),
@@ -334,6 +404,33 @@ def _payload_authoring_rows(
         row["is_active"] = bool(item.get("is_active", True))
         guardrail_rows.append(row)
     return enrichment_rows, guardrail_rows
+
+
+def _confirm_contract_mutation(
+    expected: Mapping[str, Any], *, config: Any, env: str, spark_session: Any,
+    context: Mapping[str, Any], store: str, schema: str | None,
+) -> dict[str, Any]:
+    """Reject skipped or superseded mutations before the widget clears pending edits."""
+    matches = contract_version_records(
+        _scoped_rows(
+            read_lakehouse_table(
+                DATA_CONTRACT_TABLE, store=store, schema=schema,
+                spark_session=spark_session, context=context,
+            ),
+            f"contract_id = {_sql_literal(expected['contract_id'])}",
+            f"contract_version = {int(expected['contract_version'])}",
+            f"environment_name = {_sql_literal(env)}",
+        ),
+        contract_id=expected["contract_id"], contract_version=expected["contract_version"],
+        environment_name=env,
+    )
+    fields = ("status", "contract_payload_json", "_activity_id", "_committed_at")
+    if len(matches) != 1 or any(matches[0].get(name) != expected.get(name) for name in fields):
+        raise RuntimeError(
+            "Data Contract changed in another session or the draft no longer exists. "
+            "Your pending edits are retained; reload the current version before retrying."
+        )
+    return matches[0]
 
 
 def save_contract_draft(
@@ -370,6 +467,7 @@ def save_contract_draft(
         dict(canonical["table"].get("processing") or {})
     )
 
+    validate_contract_definitions(canonical)
     validate_grain_contract(canonical)
     runtime_context = {
         "config": config, "env": env, **dict(context or {}),
@@ -408,10 +506,13 @@ def save_contract_draft(
             "AND target.contract_version = source.contract_version "
             "AND target.environment_name = source.environment_name",
         )
-        .whenMatchedUpdateAll()
+        .whenMatchedUpdateAll(condition="target.status = 'draft'")
         .execute()
     )
-    return updated
+    return _confirm_contract_mutation(
+        updated, config=config, env=env, spark_session=spark_session,
+        context=runtime_context, store=store, schema=schema,
+    )
 
 def _json_safe(value: Any) -> Any:
     """Convert Spark-compatible scalar values into JSON-compatible values."""
@@ -562,7 +663,6 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, e
     }
 
 
-
 def contract_version_records(
     rows: Any,
     *,
@@ -583,56 +683,6 @@ def contract_version_records(
     ]
 
 
-def read_contract_records(
-    table_name: str,
-    *,
-    config: Any,
-    env: str,
-    spark_session: Any,
-    contract_id: str,
-    contract_version: int,
-) -> list[dict[str, Any]]:
-    """Read exact-version governance records through the configured metadata target."""
-    identity, version = validate_contract_identity(contract_id, contract_version)
-    frame = read_lakehouse_table(
-        table_name,
-        store="Metadata",
-        schema=metadata_table_physical_schema(config, table_name),
-        context=_metadata_io_context(config, env),
-        spark_session=spark_session,
-    )
-    return contract_version_records(
-        _scoped_rows(
-            frame,
-            f"contract_id = {_sql_literal(identity)}",
-            f"contract_version = {version}",
-            f"environment_name = {_sql_literal(env)}",
-        ),
-        contract_id=identity,
-        contract_version=version,
-        environment_name=env,
-    )
-
-
-def read_all_enrichment(*, config: Any, env: str, spark_session: Any) -> list[dict[str, Any]]:
-    """Read all Enrichment rows in one configured authoring environment."""
-    try:
-        frame = read_lakehouse_table(
-            ENRICHMENT_TABLE, store="Metadata",
-            schema=metadata_table_physical_schema(config, ENRICHMENT_TABLE),
-            context=_metadata_io_context(config, env), spark_session=spark_session,
-        )
-    except Exception as exc:
-        message = str(exc).lower()
-        if any(marker in message for marker in ("not found", "does not exist", "path does not exist")):
-            return []
-        raise
-    return canonical_enrichment_state(
-        row for row in row_dicts(frame)
-        if str(row.get("environment_name") or "") == str(env)
-    )
-
-
 def canonical_enrichment_state(rows: Any) -> list[dict[str, Any]]:
     """Return only descriptive Enrichment rows supported by the canonical model."""
     canonical = []
@@ -647,8 +697,6 @@ def canonical_enrichment_state(rows: Any) -> list[dict[str, Any]]:
         if enrichment_type is not None:
             canonical.append({**row, "enrichment_type": enrichment_type})
     return canonical
-
-
 
 
 def get_contract_authoring_state(
@@ -715,6 +763,7 @@ def get_contract_authoring_state(
         contract_id=identity,
         contract_version=version,
         environment_name=env,
+        allow_unresolved_columns=str(draft.get("status") or "").lower() == "draft",
     )
     state = {
         "contract": dict(draft),
@@ -811,29 +860,6 @@ def get_contract_review_state(
         "enrichment": [*payload.get("enrichment", {}).get("table", []), *payload.get("enrichment", {}).get("columns", [])],
         "guardrails": payload.get("guardrails", []),
     }
-
-
-def build_contract_manifest(
-    *, draft: Mapping[str, Any], config: Any, env: str, spark_session: Any,
-    scheduled_refresh: Mapping[str, Any] | None = None,
-) -> tuple[dict[str, Any], list[str]]:
-    """Build the exact canonical payload used by :func:`freeze_contract` without persisting it."""
-    tables = {
-        name: row_dicts(read_lakehouse_table(
-            name, store="Metadata", schema=metadata_table_physical_schema(config, name),
-            spark_session=spark_session, context=_metadata_io_context(config, env),
-        )) for name in CONTRACT_SOURCE_TABLES
-    }
-    validate_contract_draft(
-        draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"],
-        enrichment_rows=tables[ENRICHMENT_TABLE], guardrail_rows=tables[GUARDRAIL_TABLE],
-        environment_name=env,
-    )
-    return assemble_contract_payload(
-        draft=draft, tables=tables, environment_name=env,
-        scheduled_refresh=scheduled_refresh,
-    )
-
 
 
 def get_table_runtime_context(
@@ -1281,73 +1307,7 @@ def build_enrichment_records(
     return built
 
 
-def save_enrichment(records: list[dict[str, Any]], *, config: Any, env: str, spark_session: Any) -> list[dict[str, Any]]:
-    """Validate and append Enrichment through the configured metadata target."""
-    canonical = build_enrichment_records(records, config=config, env=env)
-    if canonical:
-        write_lakehouse_table(
-            spark_session.createDataFrame(
-                [coerce_metadata_row_types(ENRICHMENT_TABLE, row) for row in canonical],
-                schema=metadata_table_schema_registry()[ENRICHMENT_TABLE],
-            ), ENRICHMENT_TABLE, store="Metadata",
-            schema=metadata_table_physical_schema(config, ENRICHMENT_TABLE),
-            context=_metadata_io_context(config, env), mode="append",
-        )
-    return canonical
-
-
-
-def save_guardrails(records: list[dict[str, Any]], *, config: Any, env: str, spark_session: Any) -> list[dict[str, Any]]:
-    """Validate and append exact-version Guardrail records."""
-    canonical = [canonical_guardrail_rule_record(row, config=config, env=env) for row in records]
-    for row in canonical:
-        validate_contract_identity(row.get("contract_id"), row.get("contract_version"))
-        if str(row.get("environment_name") or "") != str(env):
-            raise ValueError("Guardrail environment_name must match the authoring environment.")
-    if canonical:
-        write_lakehouse_table(
-            spark_session.createDataFrame([coerce_metadata_row_types(GUARDRAIL_TABLE, row) for row in canonical]),
-            GUARDRAIL_TABLE, store="Metadata",
-            schema=metadata_table_physical_schema(config, GUARDRAIL_TABLE),
-            context=_metadata_io_context(config, env), mode="append",
-        )
-    return canonical
-
-
-
-def validate_contract_draft(
-    draft: Mapping[str, Any], *, catalogue_rows: Any, enrichment_rows: Any, guardrail_rows: Any, environment_name: str
-) -> dict[str, Any]:
-    """Validate structural completeness and return exact-version authoring state."""
-    contract_id, version = validate_contract_identity(draft.get("contract_id"), draft.get("contract_version"))
-    draft_environment = str(draft.get("environment_name") or "").strip()
-    if draft_environment != str(environment_name):
-        raise ValueError(
-            "The draft environment_name must match the contract authoring environment."
-        )
-    if str(draft.get("status") or "").lower() != "draft":
-        raise ValueError("Only a draft Data Contract version can be authored or frozen.")
-    table_id = str(draft.get("table_id") or "").strip()
-    if not table_id:
-        raise ValueError("A draft requires one governed table_id.")
-    if draft.get("agreement_id") not in (None, "") or draft.get("agreement_version") not in (None, ""):
-        raise ValueError("Draft Data Contracts cannot be linked to a Data Agreement before activation.")
-    catalogue = [row for row in row_dicts(catalogue_rows) if str(row.get("environment_name") or "") == environment_name and str(row.get("table_id") or "") == table_id]
-    if not any(str(row.get("metadata_level") or "").lower() == "table" for row in catalogue):
-        raise ValueError("The draft table_id has no table-level Catalogue row in the authoring environment.")
-    return {
-        "contract": dict(draft), "contract_id": contract_id, "contract_version": version,
-        "table_id": table_id, "environment_name": environment_name,
-        "catalogue_rows": catalogue,
-        "enrichment": canonical_enrichment_state(contract_version_records(
-            enrichment_rows, contract_id=contract_id, contract_version=version,
-            environment_name=environment_name,
-        )),
-        "guardrails": contract_version_records(guardrail_rows, contract_id=contract_id, contract_version=version, environment_name=environment_name),
-    }
-
-
-def validate_grain_contract(payload):
+def validate_grain_contract(payload, *, allow_unresolved_columns=False):
     """Reject invalid or competing Grain definitions before saving or freezing."""
     grains = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") == "grain"]
     if len(grains) > 1:
@@ -1357,7 +1317,7 @@ def validate_grain_contract(payload):
         if rule.get("column_id") or rule.get("rule_type") != "uniqueness":
             raise ValueError("Grain requires a table-level uniqueness rule.")
         parameters = validate_grain_parameters(rule.get("rule_parameters", {}), active=rule.get("is_active", True))
-        if set(parameters["columns"]) - names:
+        if set(parameters["columns"]) - names and not allow_unresolved_columns:
             raise ValueError("Grain references columns outside the Data Contract.")
         rule["rule_parameters"] = parameters
         rule["action"] = normalize_guardrail_action(rule.get("action") or "Block")
@@ -1376,6 +1336,7 @@ def freeze_contract_record(
     if not isinstance(payload, dict):
         raise ValueError("Save the Data Contract draft before freezing it.")
     payload = json.loads(json.dumps(payload))
+    validate_contract_definitions(payload)
     validate_grain_contract(payload)
     payload["contract"] = {
         "contract_id": str(draft["contract_id"]),
@@ -1395,7 +1356,9 @@ def freeze_contract_record(
 def assemble_contract_payload(
     *,
     draft: Mapping[str, Any],
-    tables: Mapping[str, Any],
+    catalogue_rows: Any,
+    enrichment_rows: Any,
+    guardrail_rows: Any,
     environment_name: str,
     scheduled_refresh: Mapping[str, Any] | None = None,
     allow_incomplete_grain: bool = False,
@@ -1410,7 +1373,7 @@ def assemble_contract_payload(
     )
     table_id = str(draft.get("table_id") or "")
     catalogue = [
-        row for row in row_dicts(tables["METADATA_DATA_CATALOGUE"])
+        row for row in row_dicts(catalogue_rows)
         if str(row.get("table_id") or "") == table_id
         and str(row.get("environment_name") or "") == environment_name
         and row.get("is_active") is not False
@@ -1473,7 +1436,7 @@ def assemble_contract_payload(
         )
 
     enrichment = _latest(
-        canonical_enrichment_state(row for row in row_dicts(tables[ENRICHMENT_TABLE]) if owned(row)),
+        canonical_enrichment_state(row for row in row_dicts(enrichment_rows) if owned(row)),
         ("enrichment_id",),
     )
     enrichment_docs = [
@@ -1481,7 +1444,7 @@ def assemble_contract_payload(
         for row in enrichment
     ]
     guardrails = _latest(
-        [row for row in row_dicts(tables[GUARDRAIL_TABLE]) if owned(row)],
+        [row for row in row_dicts(guardrail_rows) if owned(row)],
         ("guardrail_rule_id",),
     )
     guardrail_docs = []
@@ -1510,6 +1473,7 @@ def assemble_contract_payload(
     if not processing:
         raise ValueError("Data Contract draft must define a load strategy before it can be frozen.")
     payload = {
+        **({"definition_migration": draft_payload["definition_migration"]} if "definition_migration" in draft_payload else {}),
         "contract": {
             "contract_id": contract_id,
             "contract_version": contract_version,
@@ -1597,10 +1561,15 @@ def freeze_contract(
         .merge(
             frame.alias("source"),
             "target.contract_id = source.contract_id AND "
-            "target.contract_version = source.contract_version",
+            "target.contract_version = source.contract_version AND "
+            "target.environment_name = source.environment_name",
         )
-        .whenMatchedUpdateAll()
+        .whenMatchedUpdateAll(condition="target.status = 'draft'")
         .execute()
+    )
+    frozen = _confirm_contract_mutation(
+        frozen, config=config, env=env, spark_session=spark_session,
+        context=runtime_context, store=store, schema=schema,
     )
     frozen_payload = _json_value(
         frozen.get("contract_payload_json"), field="contract_payload_json", default={}

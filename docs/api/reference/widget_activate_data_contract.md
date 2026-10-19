@@ -91,8 +91,10 @@ RuntimeError
 <div class="reference-docstring-intro" markdown="1">
 
 Only frozen versions are selectable. The exact selected version must have a
-successful latest Engineering validation run in METADATA_GUARDRAIL_RESULTS
-with execution_type='validate' before activation is enabled. Activation
+successful latest completed Engineering validation run in METADATA_GUARDRAIL_RESULTS
+with execution_type='validate' before activation is enabled. The completion
+record is written for each participating source and target only after all
+checks and Guardrail Coverage pass; isolated or partial check results do not qualify. Activation
 links one exact Data Agreement version and updates the active Production
 contract pointer; it never edits the immutable contract payload or deploys
 the Engineering pipeline.
@@ -106,9 +108,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_activate_data_contract.py:68`
+`fabricops_kit/widgets/widget_activate_data_contract.py:81`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_data_contract.py#L68-L434">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_data_contract.py#L81-L449">View on GitHub</a>
 </div>
 
 

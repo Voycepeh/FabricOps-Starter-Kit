@@ -426,7 +426,6 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
         assert store == "Metadata"
         assert schema == ("governance" if table_name in {
             "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT",
-            "METADATA_ENRICHMENT", "METADATA_GUARDRAIL",
         } else "engineering")
         assert context["env"] == "dev"
         if table_name not in spark.tables:
@@ -851,7 +850,7 @@ def test_setup_evolves_existing_tables_with_new_readable_identity_columns(monkey
     expected_evolved = {
         "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_DATA_PROFILED",
         "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_DATA_LINEAGE", "METADATA_DATA_ACCESS",
-        "METADATA_ENRICHMENT", "METADATA_GUARDRAIL", "METADATA_GUARDRAIL_RESULTS",
+        "METADATA_GUARDRAIL_RESULTS",
         "METADATA_SOURCE_OBSERVATION",
     }
     expected_evolved.add("METADATA_DATA_CATALOGUE")

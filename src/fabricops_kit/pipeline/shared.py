@@ -1558,6 +1558,46 @@ def check_sensitive_data_rules(
         raise
 
 
+def record_contract_validation(*, context, target_table_id, coverage, spark_session):
+    """Append completed-validation evidence for each exact covered contract version.
+
+    This is a runtime completion record, not an authorable Guardrail. It is
+    written only after all configured checks and Coverage have succeeded, so
+    source-only Read checks and target checks share one complete validation run.
+    """
+    if (coverage.get("status") != "passed" or not coverage.get("can_continue")
+            or not coverage.get("coverage") or not coverage.get("readiness")
+            or any(not item.get("evaluated") for item in coverage["coverage"])
+            or any(not item.get("ready") for item in coverage["readiness"])):
+        return
+    config, env = context["config"], context["env"]
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    for table_id, contract in context["_pipeline_contracts"].items():
+        if contract is None:
+            continue
+        identity = (context.get("_pipeline_identities") or {}).get(table_id) or {}
+        result = {
+            "guardrail_rule_id": f"{contract['contract_id']}:v{contract['contract_version']}:validation-complete",
+            "guardrail_version": 1,
+            "guardrail_type": "guardrail_coverage",
+            "rule_type": "contract_validation",
+            "rule_id": "contract_validation",
+            "validation_complete": True,
+            "target_table_id": target_table_id,
+            "status": "passed", "can_continue": True, "severity": "blocking", "action": "Block",
+            "coverage": coverage,
+            "rule_context": {"rule_type": "contract_validation", "action": "Block"},
+        }
+        write_guardrail_result_row(
+            spark_session=spark_session, config=config, env=env, run_id=str(audit["_activity_id"]),
+            dataset_name="", table_name=str(identity.get("table_name") or contract.get("table_name") or ""),
+            store_type="", layer="", table_id=table_id,
+            contract_id=contract["contract_id"], contract_version=contract["contract_version"],
+            execution_type="validate", guardrail_type="guardrail_coverage", rule_type="contract_validation",
+            result=result, context=context,
+        )
+
+
 def write_guardrail_result_row(
     *,
     spark_session: Any,
@@ -1661,7 +1701,6 @@ _ACTIVE_RULE_REVIEW_STATUSES = {"authored", "self_approved", "governance_approve
 
 _BYPASS_POST_REVIEW_WARNING = "Rule is active through approval bypass and requires governance post-review."
 
-GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
 
 
 

@@ -60,7 +60,7 @@ Then run the import cell immediately below it. The import cell provides the publ
 CONTRACTS = widget_select_data_contract(spark_session=spark)
 ```
 
-For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. Contract-backed checks will return as skipped, and the targets can publish in Engineering Development.
+For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. The orchestrators print one contract-free decision and omit individual Guardrail stages; skipped fields remain in the returned dictionaries. The targets can publish in Engineering Development.
 
 ![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
@@ -109,7 +109,7 @@ sources["source"] = source
 
 | Parameter | What you normally change |
 | --- | --- |
-| `name` | A short notebook-facing name for this source. Use the same key in `sources`. |
+| `sources` dictionary key | A short notebook-facing name for this source; this is not an `orchestrate_read()` parameter. |
 | `store` | The configured source store, such as `Bronze`. |
 | `schema` | The physical source schema. |
 | `table_name` | The physical source table. Replace `source_table`. |
@@ -136,8 +136,9 @@ For Incremental reads, add `read_parameters` and `target_table_id` rather than i
     1. **Read** the configured source.
     2. Evaluate the **Freshness** Guardrail when one applies.
     3. Check the **Schema** when a governed expectation applies.
-    4. Evaluate **Data Quality** Guardrails when defined.
-    5. **Profile** the full source and store the snapshot in `METADATA_DATA_PROFILED` and, where applicable, `METADATA_DATA_PROFILED_FREQUENCY`.
+    4. Evaluate **Grain** when enforcement is enabled.
+    5. Evaluate **Data Quality** Guardrails when defined.
+    6. **Profile** the full source and store the snapshot in `METADATA_DATA_PROFILED` and, where applicable, `METADATA_DATA_PROFILED_FREQUENCY`.
 
     Only configured Guardrails execute and appear in stage output. Without a selected Data Contract, Development prints one message and continues with Read. Absent checks retain skipped fields in the returned result for inspection. Incremental batches are not profiled; FabricOps instead returns the eligible scope and uses `METADATA_SOURCE_OBSERVATION` plus the governed target's successful watermark progress to manage incremental execution.
 
@@ -221,9 +222,10 @@ writes["target"] = orchestrate_write(
 
     1. **Schema**
     2. **Sensitive Data**
-    3. **Source Drift**
-    4. **Data Quality**
-    5. **Guardrail Coverage**
+    3. **Source Drift** on participating sources
+    4. **Grain** on the prepared target input
+    5. **Data Quality**
+    6. **Guardrail Coverage**
 
     Absent Guardrails do not produce individual skipped-stage messages. A contract-free Development run prints one message and proceeds to Write. Guardrail Coverage remains mandatory whenever contracts participate.
 
@@ -298,15 +300,17 @@ print(writes["target"]["total_duration_seconds"])
 
 ??? info "More useful inspection keys"
 
-    The notebook also includes these focused options:
+    Use these focused inspection options:
 
     ```python
     # Incremental Read scope.
     # display(sources["source"]["scope"])
 
-    # Write-side Schema and Source Drift results.
+    # Write-side Schema, Source Drift, and Grain results.
     # display(writes["target"]["schema_result"])
     # display(writes["target"]["source_drift_results"])
+    # display(sources["source"]["grain_result"])
+    # display(writes["target"]["grain_result"])
     ```
 
     The complete result contracts are documented on the [`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md) reference pages.

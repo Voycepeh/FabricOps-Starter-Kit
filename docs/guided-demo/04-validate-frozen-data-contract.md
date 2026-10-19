@@ -28,7 +28,9 @@ The selector defaults every table to **Enforce**. Switch only the `curated_order
 
 All participating tables need selected contracts because Guardrail Coverage checks the complete source → target relationship once any contract is selected.
 
-The frozen-version picker appears only for a target in Validate mode. There is no separate contract dictionary to edit.
+In Development, sources show a frozen-version picker while remaining in **Enforce** mode; activation is not required to select a frozen source candidate. Targets show their frozen-version picker in **Validate** mode. Production resolves active frozen versions automatically. There is no separate contract dictionary to edit.
+
+After all Read/Write checks and Guardrail Coverage pass, the validation run appends a completion record for each participating exact contract version to `METADATA_GUARDRAIL_RESULTS`. These runtime completion records have `guardrail_type=guardrail_coverage` and `rule_type=contract_validation`; they are not another authorable Guardrail or a new metadata table. They enable activation for sources as well as targets. Partial check results do not enable activation.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
@@ -51,7 +53,7 @@ Confirm:
 
 - `published=False`
 - `validation_passed=True`
-- Freshness, Schema, Source Drift, Sensitive Data, Data Quality, and Guardrail Coverage all report successful evidence where applicable
+- Freshness, Schema, Source Drift, Sensitive Data, Data Quality, and Guardrail Coverage all permit continuation where applicable; Grain is skipped until explicitly enabled
 - the configured `customer_id` Sensitive Data treatment is applied in the prepared DataFrame
 - every DQ check is passed
 - the physical Write stage was not reached
@@ -64,14 +66,18 @@ This proves the contract describes the canonical target before we deliberately b
 
 ## Exercise the source-side Guardrails
 
-Test Freshness, Schema, Source Drift, and Data Quality at the governed Read boundary.
+Test Freshness and Schema at the governed Read boundary, then inspect Source Drift during target Write validation.
 
 </div>
 </div>
 
 Source Guardrails are evaluated from the real source read and Source Observation metadata, so changing only `transformed_df` cannot test them. Use a controlled mutation of the Development `orders` table, then restore it from the canonical fixture.
 
-Before changing anything, the happy-path run above establishes the accepted source → target baseline used by Source Drift.
+The happy-path Validate run does **not** commit an accepted source → target baseline. Source Drift compares against `drift_committed` Source Observation history from a successful Enforce publication. Without that history, expect `first_observation=True` and `status=baseline_created`; this permits continuation but does not demonstrate a historical comparison.
+
+??? info "Exercise historical Source Drift after the first accepted publication"
+
+    After Step 5 activates the tested versions, run the clean **Development** pipeline in Enforce mode once to publish `curated_orders` and commit its accepted source observations. Then select Validate for that target and repeat the controlled Development source mutation below. Do not mutate Production sources. Validate compares against the accepted baseline without advancing it. Restore the canonical source and rerun clean validation afterward.
 
 Create a temporary dirty copy of the Development Orders source with two deliberate changes:
 
@@ -101,7 +107,9 @@ Expected source-side evidence:
 | --- | --- | --- |
 | Freshness | latest `modified_datetime` exceeds the governed maximum age | Warn/fail evidence |
 | Schema | `unexpected_demo_column` is not in the frozen schema | Warning; execution continues |
-| Source Drift | current Orders observation differs from the last successfully consumed baseline | changed/drift evidence |
+| Source Drift | current Orders observation differs from a committed baseline for this source → target | change details in the Write result; `baseline_created` if no accepted baseline exists |
+
+Inspect `write_result["source_drift_results"]` after the target validation. Overwrite can reconcile historical mutation, so change details can coexist with a passing result. Append cannot reconcile historical mutation; its configured Warn/Block policy determines continuation. See [Read & Write Modes](../reference/read-and-load-strategies.md).
 
 Keep Freshness and Source Drift on Warn for this run so the pipeline can reach the later target checks. Schema permits additional columns automatically; missing Required columns or wrong contracted datatypes would block.
 
@@ -245,6 +253,19 @@ Sensitive Data is intentionally different from a validation rule: valid sensitiv
 
 Also confirm the dirty target's `unexpected_target_column` produces target **Schema** warning evidence. This is separate from the source Schema exercise above and proves the Write boundary validates the DataFrame before publication.
 
+### Exercise Grain independently of DQ Uniqueness
+
+The main walkthrough leaves Grain enforcement off so the broad DQ exercise can report every rule. To cover Grain as well:
+
+1. Create new drafts for `orders` and `curated_orders`, select `order_id` in **Grain & Row Key**, and enable **Enforce Grain** with **Warn**. Keep the existing DQ Uniqueness rule; it is independent.
+2. Save, freeze, and select those exact new versions, leaving `orders` in Enforce and `curated_orders` in Validate.
+3. Run the clean Reads, Transform, and target validation. Inspect `sources["orders"]["grain_result"]` and `write_result["grain_result"]`; both should pass.
+4. For the Read check, use a temporary Development Orders copy that changes `O0002` to `O0001`, then rerun the Orders Read. Duplicate key rows should produce Grain warnings. Restore Orders from Step 00C immediately and rerun all clean Reads and Transform.
+5. For the Write check, use the dirty-target cell above, which duplicates `order_id`. Reassign `transformed_df` to that dirty DataFrame as shown, then rerun only the target validation. Inspect the separate Grain and DQ results; Warn permits both to be collected without publishing.
+6. Choose Block in a new draft to demonstrate a Grain failure stopping execution before DQ. A null key also fails Grain; missing or invalid key configuration blocks even with Warn. Restore the clean transform and validate the exact version intended for activation afterward.
+
+Grain checks the returned Read batch or prepared Write input. It does not prove uniqueness against an existing Append or SCD target. See [Step 3's Grain scope table](03-author-and-freeze-data-contract.md#grain-enforcement-and-the-orchestration-sidebar).
+
 ### Try Block on failure
 
 The walkthrough uses Warn first because a blocking rule can stop orchestration before later stages are visible.
@@ -268,7 +289,7 @@ Do not edit a frozen version in place. Refine the draft, freeze a new immutable 
 
 The normal complete run should return `coverage_result.status == "passed"`.
 
-For the negative exercise, temporarily deselect one participating source contract (or disable its only applicable Guardrail) and rerun the target validation. Guardrail Coverage should stop the orchestration with a clear missing-contract/no-applicable-guardrail or not-evaluated reason. Restore the selection immediately afterward.
+For the negative exercise before activation, temporarily clear one participating source's frozen-version selection, then rerun all Reads and the target validation. Use a source with no active contract fallback: clearing a Development candidate does not disable an already active version. Guardrail Coverage should stop the orchestration with a missing-contract or not-evaluated reason. Restore the exact selection and rerun the complete validation afterward.
 
 This gate intentionally blocks rather than warns: publishing without the required Guardrail evidence would defeat the coverage check.
 
@@ -287,7 +308,18 @@ Remove the temporary dirty-target cell or switch the Write block back to `transf
 
 Require a clean validation result before continuing to Step 5.
 
-Step 3's source-side exercise temporarily overwrites only the Development Bronze Orders table and explicitly restores it from Step 00C. The dirty target remains in-session only. After restoring Bronze, rerun the normal Reads, Transform, and Write validation so every Guardrail is green again.
+This step's source-side exercise temporarily overwrites only the Development Bronze Orders table and explicitly restores it from Step 00C. The dirty target remains in-session only. After restoring Bronze, rerun the normal Reads, Transform, and Write validation so every configured Guardrail permits continuation again.
+
+### Validate the second target separately
+
+The Full Refresh notebook also writes `customer_summary`. Its Validate run must complete before promoting the full notebook:
+
+1. Select the frozen `customer_summary` contract from Step 3 in **Validate**, retaining the same exact three source versions.
+2. Run the environment/selection cells, all three Reads, and the clean Transform to recreate `customer_summary_df`.
+3. Initialize `writes = {}`, skip **WRITE 1 — Lakehouse Curated Orders**, and execute **WRITE 2 — Warehouse Customer Summary** directly. Running WRITE 1 in Validate would exit the notebook before WRITE 2.
+4. Confirm `write_result["validation_passed"]` is true and `write_result["published"]` is false. This target and its participating source versions now have completed validation records.
+
+No template changes are needed: run the appropriate cells in the imported demo copy. Keep both target versions and all three source versions recorded for Step 5. If a source version changes, rerun validation for both targets with that source version.
 
 ### What this proves
 
@@ -304,20 +336,21 @@ Data Contract UI
     → Warn / Block behavior
 ```
 
-The exercise now covers both orchestrator boundaries ([`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md)): Read-side Freshness/Schema/DQ evidence, Write-side Schema/Sensitive Data/Source Drift/DQ, and the final Guardrail Coverage readiness gate. Source mutations are restored from the canonical fixture; target mutations remain in-session only.
+The exercise covers both orchestrator boundaries ([`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md)): four applicable Read checks (Freshness, Schema, Grain, Data Quality), five applicable Write checks (Schema, Sensitive Data, Source Drift, Grain, Data Quality), and Guardrail Coverage. Only configured checks run; the focused Grain exercise enables Grain explicitly. Source mutations are restored from the canonical fixture; target mutations remain in-session only.
 
 ### Expected result
 
 The frozen pipeline contracts have:
 
 1. passed against the canonical sources and targets,
-2. detected deliberate Freshness, Schema, and Source Drift conditions,
+2. detected deliberate Freshness and Schema conditions, and recorded Source Drift change details where a committed baseline exists,
 3. applied the configured Sensitive Data treatment,
 4. detected every deliberately broken DQ behavior in the dirty target,
 5. demonstrated that Warn allows broad failure evidence collection,
 6. demonstrated that a selected Block rule stops orchestration,
 7. demonstrated Guardrail Coverage both passing and rejecting an incomplete governed pipeline,
-8. passed again on the fully restored happy path before activation.
+8. passed again on the fully restored happy path before activation,
+9. completed separate validation for both `curated_orders` and `customer_summary`, plus Grain checks when enabled.
 
 No validation run publishes the target.
 

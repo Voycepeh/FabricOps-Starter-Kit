@@ -622,10 +622,10 @@ def test_canonical_metadata_read_uses_ownership_schema_over_explicit_schema():
     spark = _Spark()
 
     io.read_lakehouse_table(
-        "METADATA_GUARDRAIL", store="Metadata", schema="METADATA", spark_session=spark, context=context
+        "METADATA_DATA_CONTRACT", store="Metadata", schema="METADATA", spark_session=spark, context=context
     )
 
-    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/governance/METADATA_GUARDRAIL"
+    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/governance/METADATA_DATA_CONTRACT"
     assert ("load", expected_path) in spark.read.calls
     assert spark.table_calls == []
 
@@ -638,7 +638,7 @@ def test_canonical_metadata_write_uses_ownership_schema_over_explicit_schema():
 
     io.write_lakehouse_table(
         frame,
-        "METADATA_GUARDRAIL",
+        "METADATA_DATA_CONTRACT",
         store="Metadata",
         schema="METADATA",
         mode="overwrite",
@@ -647,7 +647,7 @@ def test_canonical_metadata_write_uses_ownership_schema_over_explicit_schema():
         context=context,
     )
 
-    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/governance/METADATA_GUARDRAIL"
+    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/governance/METADATA_DATA_CONTRACT"
     assert ("save", expected_path) in frame.write.calls
     assert not any(call[0] == "saveAsTable" for call in frame.write.calls)
 
@@ -662,7 +662,7 @@ def test_schema_enabled_target_still_uses_canonical_metadata_ownership_schema():
     io.read_lakehouse_table("orders", store="Bronze", schema="src", spark_session=spark, context=context)
     io.write_lakehouse_table(
         frame,
-        "METADATA_GUARDRAIL",
+        "METADATA_DATA_CONTRACT",
         store="Metadata",
         schema="meta",
         mode="overwrite",
@@ -676,7 +676,7 @@ def test_schema_enabled_target_still_uses_canonical_metadata_ownership_schema():
     ) in spark.read.calls
     assert (
         "save",
-        "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/governance/METADATA_GUARDRAIL",
+        "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/governance/METADATA_DATA_CONTRACT",
     ) in frame.write.calls
 
 

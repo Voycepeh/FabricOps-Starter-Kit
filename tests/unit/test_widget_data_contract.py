@@ -237,21 +237,6 @@ def widget_runtime(monkeypatch):
             "guardrails": [{**row, "rule_parameters": module._parameters(row)} for row in guardrails if row.get("is_active", True)],
         }
 
-    def save_enrichment(records, **_kwargs):
-        calls["enrichment"].append(records)
-        for record in records:
-            enrichment[:] = [row for row in enrichment if row.get("enrichment_id") != record.get("enrichment_id")]
-            if str(record.get("value") or "").strip():
-                enrichment.append(dict(record))
-        return records
-
-    def save_guardrails(records, **_kwargs):
-        calls["guardrails"].append(records)
-        for record in records:
-            guardrails[:] = [row for row in guardrails if row.get("guardrail_rule_id") != record.get("guardrail_rule_id")]
-            guardrails.append(dict(record))
-        return records
-
     def save_contract_draft(*, draft, payload, **_kwargs):
         saved_payload = json.loads(json.dumps(payload))
         calls["draft"].append(saved_payload)
@@ -311,9 +296,6 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: ipywidgets)
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kwargs: {"tables": [catalogue[0]], "contracts": [contract]})
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
-    monkeypatch.setattr(module.contracts, "build_contract_manifest", lambda **_kwargs: (manifest(), []))
-    monkeypatch.setattr(module.contracts, "save_enrichment", save_enrichment)
-    monkeypatch.setattr(module.contracts, "save_guardrails", save_guardrails)
     monkeypatch.setattr(module.contracts, "save_contract_draft", save_contract_draft)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
     monkeypatch.setattr(module.contracts, "activate_contract_version", activate_contract_version)
@@ -3115,3 +3097,44 @@ def test_sidebar_skips_rebuilding_unchanged_configuration(widget_runtime):
     controls["table_description"].value = "Only descriptive Enrichment changed"
     assert controls["sidebar_groups"]["read"] is group
     assert not group.closed
+
+
+
+def test_removed_column_definitions_are_reviewed_and_explicitly_removed(widget_runtime):
+    """Opening a draft preserves unavailable definitions until Governance removes them."""
+    widget_runtime["enrichment"].append({
+        "enrichment_id": "removed-description", "contract_id": "contract-orders", "contract_version": 1,
+        "environment_name": "dev", "enrichment_level": "column", "column_id": "removed-column",
+        "enrichment_type": "Description", "value": "Keep this until reviewed",
+    })
+    widget_runtime["guardrails"].append({
+        "guardrail_rule_id": "removed-sensitive", "guardrail_version": 1,
+        "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev",
+        "guardrail_type": "sensitive_data", "column_id": "removed-column", "rule_type": "remove",
+        "rule_parameters_json": '{"scope":"column","treatment":"remove"}', "action": "Block", "is_active": True,
+    })
+    state = widget_runtime["open"]()
+    assert any(item.get("column_id") == "removed-column" for item in state["current"]["guardrails"])
+    assert any(item.get("column_id") == "removed-column" for item in state["current"]["enrichment"])
+    assert not state["dirty"]
+    state["_controls"]["remove_unavailable_definitions"].click()
+    assert state["dirty"]
+    assert not any(item.get("column_id") == "removed-column" for item in state["current"]["enrichment"])
+    state["save_data_contract"]()
+    saved = json.loads(widget_runtime["contract"]["contract_payload_json"])
+    assert not any(item.get("column_id") == "removed-column" for item in saved["enrichment"]["columns"])
+    assert not any(item.get("column_id") == "removed-column" for item in saved["guardrails"])
+
+
+def test_rejected_save_retains_pending_widget_edits(widget_runtime, monkeypatch):
+    """A stale Save never clears edits or reports that the draft was saved."""
+    state = widget_runtime["open"]()
+    state["_controls"]["table_description"].value = "Unsaved description"
+    def reject(**kwargs):
+        raise RuntimeError("Data Contract changed in another session. Your pending edits are retained.")
+    monkeypatch.setattr(module.contracts, "save_contract_draft", reject)
+    with pytest.raises(RuntimeError, match="pending edits are retained"):
+        state["save_data_contract"]()
+    assert state["dirty"]
+    assert state["_pending_enrichment"]
+    assert any(item.get("value") == "Unsaved description" for item in state["current"]["enrichment"])

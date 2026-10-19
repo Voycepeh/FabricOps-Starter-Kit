@@ -109,11 +109,9 @@ METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metad
 - **Governance** stores authored governance definitions.
 - **Engineering** stores technical observations, profiling, lineage, access observations, and runtime results.
 
-`table_id` is the canonical bridge for the same governed data asset across both schemas. `contract_id` and `contract_version` identify its governed definition, with Enrichment and Guardrails belonging to that exact Data Contract version."""
+`table_id` is the canonical bridge for the same governed data asset across both schemas. `contract_id` and `contract_version` identify its governed definition, with descriptive Enrichment and executable Guardrails stored only in `METADATA_DATA_CONTRACT.contract_payload_json` for that exact version.
 
-METADATA_REFERENCE_MODEL_DIAGRAM = "![FabricOps metadata model](../assets/fabricops-metadata-model.png)"
-
-METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = "The diagram above shows the current implemented metadata tables and relationships."
+`METADATA_DATA_CONTRACT` is the physical table. `contract_payload_json` is a string column in each version row containing the JSON definition; it is not another table. One row represents a governed table's contract version in its authoring environment."""
 
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
@@ -124,10 +122,29 @@ METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "The contract answers: Exactly what data will be delivered, in what structure, at what quality, and how reliably?"
 )
 
-METADATA_REFERENCE_MODEL_DIAGRAM = "![FabricOps metadata model](../assets/fabricops-metadata-model.png)"
+METADATA_REFERENCE_MODEL_DIAGRAM = """```mermaid
+flowchart TB
+    subgraph Governance
+        steward["METADATA_DATA_STEWARD"] --> agreement["METADATA_DATA_AGREEMENT"]
+        agreement --> contract["METADATA_DATA_CONTRACT<br/>contract_payload_json: string column<br/>Enrichment + Guardrails"]
+    end
+    subgraph Engineering
+        catalogue["METADATA_DATA_CATALOGUE"] --> profiled["METADATA_DATA_PROFILED"]
+        profiled --> frequency["METADATA_DATA_PROFILED_FREQUENCY"]
+        catalogue --> lineage["METADATA_DATA_LINEAGE"]
+        catalogue --> access["METADATA_DATA_ACCESS"]
+        catalogue --> observation["METADATA_SOURCE_OBSERVATION"]
+        results["METADATA_GUARDRAIL_RESULTS"]
+    end
+    catalogue --> contract
+    contract --> results
+```"""
 
 METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
-    "The diagram above shows the current implemented metadata tables and relationships."
+    "The current registry contains 10 physical metadata tables, reduced from 12. "
+    "Enrichment and Guardrail definitions are inside the Data Contract payload; "
+    "their separate definition tables and schema pages are removed. "
+    "Execution results remain separate. Setup does not delete existing Lakehouse tables."
 )
 
 METADATA_TABLE_MODELS = {
@@ -154,7 +171,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_CONTRACT": {
-        "purpose": "Own one table-centric governed definition in a single versioned JSON payload; table_name captures the table name at this contract write, alongside stable table_id, and may differ after a later rename.",
+        "purpose": "Own descriptive Enrichment and executable Guardrails in the single authoritative contract_payload_json for one table-centric governed definition; table_name captures the table name at this contract write, alongside stable table_id, and may differ after a later rename.",
         "grain": "One Data Contract lifecycle version for one governed table; the draft payload is overwritten on Save, becomes immutable when frozen, and is selected for Production through is_active.",
         "primary_key": ["contract_id", "contract_version"],
         "foreign_keys": [
@@ -216,17 +233,6 @@ METADATA_TABLE_MODELS = {
         ],
         "relationships": [],
     },
-    "METADATA_ENRICHMENT": {
-        "purpose": "Store descriptive Description and Classification metadata for one exact Data Contract version, including table and optional column names captured when written; Enrichment does not enforce runtime behavior.",
-        "grain": "One appended enrichment value for one exact Data Contract version and optional column identity.",
-        "primary_key": ["enrichment_id"],
-        "foreign_keys": [
-            {"local_field": "contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Enrichment belongs to one exact governed Data Contract version; its table is resolved through that contract's table_id."},
-            {"local_field": "contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "contract_version prevents enrichment from leaking between versions of a stable contract_id."},
-            {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level enrichment retains the Catalogue column identity; table-level enrichment leaves column_id empty."},
-        ],
-        "relationships": [],
-    },
     "METADATA_DATA_ACCESS": {
         "purpose": "See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.",
         "grain": "One observed access grant for one principal or access selector and one governed table within one access snapshot.",
@@ -236,25 +242,13 @@ METADATA_TABLE_MODELS = {
         ],
         "relationships": [],
     },
-    "METADATA_GUARDRAIL": {
-        "purpose": "Define enforced Guardrails: Schema violations and configured Sensitive Data treatment failures block; Grain, Freshness, Source Drift, and Data Quality retain Warn/Block actions. Authored names are captured in table_name and optional column_name.",
-        "grain": "One configured Guardrail rule revision for one exact Data Contract version and optional column identity.",
-        "primary_key": ["guardrail_rule_id", "guardrail_version"],
-        "foreign_keys": [
-            {"local_field": "contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Guardrail rules belong to one exact governed Data Contract version; the governed table is resolved through that contract's table_id."},
-            {"local_field": "contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "contract_version prevents rules from leaking between versions of a stable contract_id."},
-            {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level Guardrail rules reference the Catalogue column through column_id; table-level rules leave column_id empty."},
-        ],
-        "relationships": [
-            {"cardinality": "1:N", "statement": "One Guardrail revision can produce many Guardrail Results across pipeline runs through guardrail_rule_id and guardrail_version."},
-        ],
-    },
     "METADATA_GUARDRAIL_RESULTS": {
-        "purpose": "Store aggregate enforce and validate Guardrail summaries, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.",
+        "purpose": "Store aggregate enforce and validate Guardrail summaries and completed pipeline-validation records for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.",
         "grain": "One Guardrail outcome for one exact Data Contract version in one enforce or validate execution.",
         "primary_key": ["guardrail_result_id"],
         "foreign_keys": [
-            {"local_field": "guardrail_rule_id", "referenced_table": "METADATA_GUARDRAIL", "referenced_field": "guardrail_rule_id", "cardinality": "N:1", "statement": "Many runtime outcomes can come from one configured Guardrail rule."},
+            {"local_field": "contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Together with contract_version, identifies the immutable payload containing the evaluated guardrail_rule_id and guardrail_version."},
+            {"local_field": "contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "Results retain the exact evaluated contract version and rule revision even after a new draft is authored."},
         ],
         "relationships": [],
     },
@@ -269,9 +263,7 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
     "METADATA_DATA_LINEAGE",
-    "METADATA_ENRICHMENT",
     "METADATA_DATA_ACCESS",
-    "METADATA_GUARDRAIL",
     "METADATA_GUARDRAIL_RESULTS",
 ]
 
@@ -343,7 +335,7 @@ METADATA_COLUMN_OWNERS = {
         ],
     },
     "METADATA_DATA_CONTRACT": {
-        "__default__": ["fabricops_kit.widgets.widget_data_contract.widget_data_contract", "fabricops_kit.data_contract.shared.freeze_contract"],
+        "__default__": ["fabricops_kit.widgets.widget_data_contract.widget_data_contract", "fabricops_kit.data_contract.shared.create_contract_draft", "fabricops_kit.data_contract.shared.save_contract_draft", "fabricops_kit.data_contract.shared.freeze_contract", "fabricops_kit.data_contract.shared.activate_contract_version", "fabricops_kit.data_contract.migration.migrate_contract_definitions"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
     "METADATA_DATA_CATALOGUE": {
@@ -475,46 +467,6 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.access_scanner.scan_onelake_access._access_rows",
             "fabricops_kit.access_scanner.scan_sql_access._scan_targets",
         ],
-    },
-    "METADATA_ENRICHMENT": {
-        "__default__": [
-            "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
-            "fabricops_kit.data_contract.shared.build_enrichment_records",
-        ],
-        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "enrichment_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "contract_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "contract_version": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "column_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "table_id": ["fabricops_kit.data_contract.shared.build_enrichment_records"],
-        "table_name": ["fabricops_kit.data_contract.shared.build_enrichment_records"],
-        "column_name": ["fabricops_kit.data_contract.shared.build_enrichment_records"],
-        "environment_name": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "enrichment_level": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "enrichment_type": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "value": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-    },
-    "METADATA_GUARDRAIL": {
-        "__default__": [
-            "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
-            "fabricops_kit.data_contract.shared.canonical_guardrail_rule_record",
-        ],
-        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "guardrail_rule_id": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
-        "guardrail_version": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
-        "contract_id": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
-        "contract_version": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
-        "table_id": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
-        "table_name": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
-        "column_id": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
-        "column_name": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
-        "environment_name": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
-        "guardrail_type": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
-        "rule_id": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
-        "rule_type": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
-        "rule_parameters_json": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
-        "action": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
-        "is_active": ["fabricops_kit.data_contract.shared.canonical_guardrail_rule_record"],
     },
     "METADATA_GUARDRAIL_RESULTS": {
         "__default__": [
@@ -1584,7 +1536,7 @@ PUBLIC_SYMBOL_DOCS = [
   'related_functions': [],
   'expanded_purpose': 'Evaluates freshness using a metadata-backed guardrail rule so active '
                       'freshness intent from governance is enforced during pipeline execution.',
-  'when_to_use': 'Use in 02_pipeline when active freshness rules from METADATA_GUARDRAIL '
+  'when_to_use': 'Use in 02_pipeline when active freshness rules from the Data Contract payload '
                  'should determine the freshness column and maximum lag.',
   'do_not_use_when': 'Do not use to create or review freshness rules; use the guardrail authoring '
                      'and governance review widgets for lifecycle changes.',
@@ -2056,7 +2008,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                 'guardrail rule so active freshness intent from '
                                                 'governance is enforced during pipeline execution.',
                             'when_to_use': 'Use in 02_pipeline when active freshness rules from '
-                                           'METADATA_GUARDRAIL should determine the '
+                                           'the Data Contract payload should determine the '
                                            'freshness column and maximum lag.',
                             'do_not_use_when': 'Do not use to create or review freshness rules; '
                                                'use the guardrail authoring and governance review '

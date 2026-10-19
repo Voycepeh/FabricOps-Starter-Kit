@@ -141,7 +141,8 @@ and rules resolved once per call. Absent Guardrails remain skipped in the
 result fields but are omitted from stdout and orchestration_stages.
 Contract-free Development prints one decision and proceeds to Write.
 Validate resolves the exact selected frozen candidate and records
-execution_type=validate evidence for activation, then returns without writing;
+execution_type=validate evidence for activation, including a completion
+record for every covered contract after Guardrail Coverage passes, then returns without writing;
 Enforce continues through Write and persisted-target Profile. Existing
 metadata and Source Observation commit behaviour remains owned by
 the internal Write stage. The returned ``dataframe`` is the prepared Write input,
@@ -164,9 +165,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:22`
+`fabricops_kit/pipeline/orchestrate_write.py:23`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L22-L219">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L23-L222">View on GitHub</a>
 </div>
 
 
@@ -182,7 +183,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 178 |
+| Live-critical dependencies | 179 |
 
 ### Release history
 
@@ -355,6 +356,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_guardrail_result</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_pipeline_contract</code></li>
+<li><code>fabricops_kit.pipeline.shared.record_contract_validation</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_active_data_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_data_contract_version</code></li>

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" role="img" aria-labelledby="pipeline-boundaries-title pipeline-boundaries-desc">
 <title id="pipeline-boundaries-title">What happens at the FabricOps Read and Write boundaries</title>
-<desc id="pipeline-boundaries-desc">A governed Data Contract enters the Read boundary, which performs Freshness, Schema, and Data Quality checks before project-owned PySpark. The Write boundary then performs Schema, Sensitive Data, Source Drift, Data Quality, and Guardrail Coverage checks before publishing. Full dataset profiling is recorded around both governed boundaries and lineage is recorded on write.</desc>
+<desc id="pipeline-boundaries-desc">A governed Data Contract enters the Read boundary, which performs four checks: Freshness, Schema, Grain, and Data Quality before project-owned PySpark. The Write boundary then performs five checks: Schema, Sensitive Data, Source Drift, Grain, and Data Quality, followed by Guardrail Coverage before publishing. Full dataset profiling is recorded around both governed boundaries and lineage is recorded on write.</desc>
 <defs>
   <marker id="pipeline-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
     <path d="M0,0 L8,4 L0,8 Z" fill="#667085"/>
@@ -32,9 +32,9 @@
 <path class="line" d="M432 214 H472"/>
 <path class="accent" d="M656 214 H696"/>
 <path class="line" d="M880 214 H920"/>
-<path class="dash" d="M340 274 V338 H300"/>
-<path class="dash" d="M788 274 V338 H748"/>
-<path class="dash" d="M1012 274 V338 H972"/>
+<path class="dash" d="M340 302 V360 H300"/>
+<path class="dash" d="M788 340 V360 H748"/>
+<path class="dash" d="M1012 274 V360 H972"/>
 
 <g>
   <rect x="48" y="154" width="160" height="120" rx="6" class="soft"/>
@@ -45,12 +45,13 @@
 </g>
 
 <g>
-  <rect x="248" y="142" width="184" height="144" rx="6" class="box"/>
-  <text x="268" y="168" class="eyebrow">READ BOUNDARY</text>
+  <rect x="248" y="142" width="184" height="160" rx="6" class="box"/>
+  <text x="268" y="168" class="eyebrow">READ · 4 CHECKS</text>
   <text x="268" y="197" class="mono">orchestrate_read()</text>
-  <text x="268" y="224" class="body">✓ Freshness</text>
-  <text x="268" y="246" class="body">✓ Schema</text>
-  <text x="268" y="268" class="body">✓ Data Quality</text>
+  <text x="268" y="224" class="body">1. Freshness</text>
+  <text x="268" y="246" class="body">2. Schema</text>
+  <text x="268" y="268" class="body">3. Grain</text>
+  <text x="268" y="290" class="body">4. Data Quality</text>
 </g>
 
 <g>
@@ -62,13 +63,15 @@
 </g>
 
 <g>
-  <rect x="696" y="126" width="184" height="176" rx="6" class="box"/>
-  <text x="716" y="152" class="eyebrow">WRITE BOUNDARY</text>
+  <rect x="696" y="126" width="184" height="214" rx="6" class="box"/>
+  <text x="716" y="152" class="eyebrow">WRITE · 5 + COVERAGE</text>
   <text x="716" y="181" class="mono">orchestrate_write()</text>
-  <text x="716" y="208" class="body">✓ Schema</text>
-  <text x="716" y="230" class="body">✓ Sensitive Data</text>
-  <text x="716" y="252" class="body">✓ Source Drift + DQ</text>
-  <text x="716" y="274" class="body">✓ Guardrail Coverage</text>
+  <text x="716" y="208" class="body">1. Schema</text>
+  <text x="716" y="230" class="body">2. Sensitive Data</text>
+  <text x="716" y="252" class="body">3. Source Drift</text>
+  <text x="716" y="274" class="body">4. Grain</text>
+  <text x="716" y="296" class="body">5. Data Quality</text>
+  <text x="716" y="318" class="body">Coverage gate</text>
 </g>
 
 <g>
@@ -80,24 +83,24 @@
 </g>
 
 <g>
-  <rect x="212" y="338" width="176" height="92" rx="6" class="soft"/>
-  <text x="232" y="364" class="eyebrow">PROFILE</text>
-  <text x="232" y="392" class="name">Full dataset</text>
-  <text x="232" y="414" class="body">profiling on full reads</text>
+  <rect x="212" y="360" width="176" height="92" rx="6" class="soft"/>
+  <text x="232" y="386" class="eyebrow">PROFILE</text>
+  <text x="232" y="414" class="name">Full dataset</text>
+  <text x="232" y="436" class="body">profiling on full reads</text>
 </g>
 
 <g>
-  <rect x="660" y="338" width="176" height="92" rx="6" class="soft"/>
-  <text x="680" y="364" class="eyebrow">LINEAGE</text>
-  <text x="680" y="392" class="name">Write evidence</text>
-  <text x="680" y="414" class="body">source → target recorded</text>
+  <rect x="660" y="360" width="176" height="92" rx="6" class="soft"/>
+  <text x="680" y="386" class="eyebrow">LINEAGE</text>
+  <text x="680" y="414" class="name">Write evidence</text>
+  <text x="680" y="436" class="body">source → target recorded</text>
 </g>
 
 <g>
-  <rect x="884" y="338" width="176" height="92" rx="6" class="soft"/>
-  <text x="904" y="364" class="eyebrow">PROFILE</text>
-  <text x="904" y="392" class="name">Published table</text>
-  <text x="904" y="414" class="body">full dataset profiling</text>
+  <rect x="884" y="360" width="176" height="92" rx="6" class="soft"/>
+  <text x="904" y="386" class="eyebrow">PROFILE</text>
+  <text x="904" y="414" class="name">Published table</text>
+  <text x="904" y="436" class="body">full dataset profiling</text>
 </g>
 
 <text x="48" y="484" class="body">The transformation is the focal point; FabricOps standardises the governed boundaries around it.</text>

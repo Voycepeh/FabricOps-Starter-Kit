@@ -263,3 +263,16 @@ def test_production_multiple_active_contracts_fail_with_context(monkeypatch):
     monkeypatch.setattr(module, "resolve_notebook_lineage_tables", lambda **_kwargs: ([('Target', 'table-a')], {"notebook_name": "02_pipeline"}))
     with pytest.raises(RuntimeError, match="multiple active"):
         module.widget_select_data_contract(context=context)
+
+
+
+def test_development_source_selects_frozen_candidate_before_activation(monkeypatch):
+    """Frozen source candidates can be exercised without an active Production pointer."""
+    source = _row(3)
+    context, state = _render(monkeypatch, [source], pairs=[("Source", "table-a")])
+    state["set_mode"]("table-a", "enforce", "contract-table-a", 3)
+    assert state["tables"]["table-a"]["mode"] == "enforce"
+    assert context["data_contract_overrides"]["table-a"] == {"contract_id": "contract-table-a", "contract_version": 3}
+    assert source["is_active"] is False
+    with pytest.raises(ValueError, match="not available"):
+        state["set_mode"]("table-a", "enforce", "contract-table-a", 99)

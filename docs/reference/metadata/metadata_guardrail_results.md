@@ -1,6 +1,6 @@
 # METADATA_GUARDRAIL_RESULTS
 
-Store aggregate enforce and validate Guardrail summaries, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.
+Store aggregate enforce and validate Guardrail summaries and completed pipeline-validation records for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.
 
 ## Writer functions
 
@@ -24,8 +24,8 @@ Store aggregate enforce and validate Guardrail summaries, captured table name, r
 
 **Relationships:**
 
-`METADATA_GUARDRAIL` **(N → 1)**
-via `guardrail_rule_id`
+`METADATA_DATA_CONTRACT` **(N → 1)**
+via `contract_id` + `contract_version`
 
 ## Column summary
 
@@ -40,13 +40,13 @@ via `guardrail_rule_id`
 | Column | Data type | Description |
 | --- | --- | --- |
 | `guardrail_result_id` | `string` | Stable identifier for the aggregate Guardrail result row. |
-| `guardrail_rule_id` | `string` | Stable identifier for the guardrail rule row. |
+| `guardrail_rule_id` | `string` | Stable authored Guardrail identifier, or the synthetic completion-record identifier when rule_type is contract_validation. |
 | `guardrail_version` | `integer` | Metadata Guardrail Results field `guardrail_version`. |
 | `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `contract_id` | `string` | Stable identifier for the contract row. |
 | `contract_version` | `integer` | Version recorded for the contract row. |
-| `execution_type` | `string` | Whether the Guardrail outcome came from enforce or validate contract execution. |
+| `execution_type` | `string` | Whether the runtime record came from enforce or validate contract execution. Completed pipeline-validation records use validate and require all checks plus Guardrail Coverage to pass. |
 | `run_id` | `string` | Identifier stored for `run_id`. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `status` | `string` | Pipeline run status recorded with the run summary. |

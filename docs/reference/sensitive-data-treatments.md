@@ -215,5 +215,5 @@ The final target profile is also based on the successfully published treated tar
 - [Plug-and-Play Data Pipelines with Data Contract Enforcement](../solutions/plug-and-play-data-pipelines.md)
 - [Read & Write Modes](read-and-load-strategies.md)
 - [Sensitive Data stage](../api/reference/orchestrate_write.md)
-- [Guardrail metadata](metadata/metadata_guardrail.md)
+- [Data Contract payload](metadata/metadata_data_contract.md)
 - [Guardrail Results](metadata/metadata_guardrail_results.md)

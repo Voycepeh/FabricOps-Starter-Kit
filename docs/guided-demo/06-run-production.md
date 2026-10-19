@@ -45,6 +45,14 @@ The key difference is Data Contract resolution:
 
 The same Guardrail functions therefore enforce the Production-active definition, and [`orchestrate_write()`](../api/reference/orchestrate_write.md) uses the active governed Processing configuration for each target.
 
+Confirm both target Write blocks run in **Enforce** mode. A Development Validate selection must not be carried into Production; Production does not accept candidate validation overrides. All three sources and both targets need the active frozen versions prepared in Step 5.
+
+### Check the two independent publications
+
+Confirm both `writes["curated_orders_lakehouse"]["published"]` and `writes["customer_summary_warehouse"]["published"]` are true. Review the applicable Guardrail Results and inspect the persisted target values, including the configured Sensitive Data treatment on `curated_orders`.
+
+If a contract is missing or more than one version is active, return to Governance and correct the selection for that exact `table_id`; do not bypass enforcement or create a Production draft to continue. If a blocking Guardrail fails, resolve the data or implementation issue and rerun. The two Writes are independent: if the second fails, the first target may already be published. See [Step 2A's publication boundary](02A-full-refresh-demo.md#configure-the-governed-writes).
+
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">

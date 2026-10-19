@@ -273,16 +273,13 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
     """Verify guardrail schemas keep rules/results and use catalogue profile evidence."""
     schemas = metadata_schemas.metadata_table_schema_registry()
 
-    assert governance_authoring.GUARDRAIL_TABLE in schemas
+    assert "METADATA_GUARDRAIL" not in schemas
     assert governance_authoring.GUARDRAIL_RESULTS_TABLE in schemas
     assert "METADATA_GUARDRAIL_PROFILES" not in schemas
     assert "METADATA_GUARDRAIL_BASELINE_EVENTS" not in schemas
     assert not hasattr(governance, "GUARDRAIL_BASELINE_EVENT_TYPES")
     assert ["schema", "freshness", "profile_behavior", "dq"] == ["schema", "freshness", "profile_behavior", "dq"]
     assert not hasattr(governance_authoring, "GUARDRAIL_REVIEW_STATUSES")
-    assert {"guardrail_rule_id", "contract_id", "contract_version", "column_id", "guardrail_type", "rule_parameters_json", "is_active"}.issubset(
-        set(schemas[governance_authoring.GUARDRAIL_TABLE].fieldNames())
-    )
     catalogue_fields = set(schemas[governance_authoring.CATALOGUE_TABLE].fieldNames())
     profiled_fields = set(schemas["METADATA_DATA_PROFILED"].fieldNames())
     frequency_fields = set(schemas["METADATA_DATA_PROFILED_FREQUENCY"].fieldNames())
