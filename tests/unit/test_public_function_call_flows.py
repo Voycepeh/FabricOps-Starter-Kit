@@ -1049,6 +1049,14 @@ def test_dashboard_uses_generated_release_compatibility_contract(tmp_path: Path)
     assert "Potentially breaking" in html
     assert "Review required" in html
     assert 'id="releaseImpactPanel"' in html
+    assert "No breaking Live/Public function changes found." in html
+    assert "Will this release change functions users already use?" in html
+    assert 'id="releaseUsedCount"' in html
+    assert 'id="releaseLifecycle"' not in html
+    assert 'id="releaseChangeType"' not in html
+    assert 'id="releaseRiskSort"' not in html
+    assert 'id="releaseImpactSummary"' not in html
+
     assert 'id="historicalImpactPanel"' in html
     assert "Current production release" in html
     assert "main (current source)" in html

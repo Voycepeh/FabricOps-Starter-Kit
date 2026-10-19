@@ -55,7 +55,14 @@ The highest-risk finding wins for a modified callable. Static comparison cannot 
 
 ## Dashboard behavior
 
-The dashboard loads the generated companion JSON beside the unchanged v4 call-flow contract. Its primary release-impact view compares the latest production release tag with the exact `main` commit, leads with Public and Preview counts, and sorts potentially breaking and review-required changes first. Signature details are collapsed until requested. The separate historical mode compares release tags. The working-tree snapshot remains available in the data contract for source inspection but is not presented as `main`. The compatibility artifact generation time is shown so maintainers can identify stale snapshots.
+The dashboard loads the generated companion JSON beside the v4 call-flow contract. Both release questions compare the latest production release tag with the exact `main` commit. Selection uses `lifecycle_before`, so a released Live function stays in scope even if main demotes or removes it:
+
+- **If I release main now, which Live/Public functions will break?** includes only removed or modified functions that were Live in production and classified potentially breaking. An empty result says “No breaking Live/Public function changes found.”
+- **Will this release change functions users already use?** includes removed or modified functions that were Live or Preview in production. Display labels map `potentially_breaking` to **Breaking**, `nonbreaking` to **Compatible**, and `review_required` to **Needs review**.
+
+These are selection and presentation changes; compatibility rules are unchanged. In particular, Preview removals still require review, default and annotation changes still require review, and Compatible describes the static contract comparison rather than proving behavioral equivalence. New functions, functions first exposed on main, Discontinued functions, and Unknown lifecycle records are excluded from both release summaries. Each function shows a brief reason and collapsed details with all findings and the exact released and main signatures. Counts belong to each question; there are no additional release totals or filters.
+
+The separate historical mode compares release tags and retains its lifecycle filter and full change inventory. Returning to the release view always reloads production → main and clears historical URL parameters so a refresh preserves the release view. The working-tree snapshot remains available in the data contract for source inspection but is not presented as `main`. The compatibility artifact generation time is shown so maintainers can identify stale snapshots.
 
 If the companion contract or a selected comparison is missing, the dashboard reports the missing generated data. It does not display an empty comparison as compatible.
 

@@ -285,3 +285,41 @@ def test_pinned_main_survives_merge_but_working_tree_remains_checked(tmp_path, m
     assert after != before
     assert after["snapshots"][0] == before["snapshots"][0]
     assert after["snapshots"][-1]["source_digest"] != before["snapshots"][-1]["source_digest"]
+
+
+def test_release_baseline_retains_live_and_preview_removals_and_signature_changes() -> None:
+    """Released lifecycle and signatures remain authoritative after changes on main."""
+    baseline = compatibility.build_snapshot(
+        version="v1.0.0", revision="released", source_kind="git_tag",
+        sources={
+            "src/fabricops_kit/public_api.py": (
+                'SUPPORTED_PUBLIC_API = ("fabricops_kit.example.removed", "fabricops_kit.example.demoted")\n'
+                'PREVIEW_PUBLIC_API = ("fabricops_kit.example.preview",)\n'
+            ),
+            "src/fabricops_kit/example.py": (
+                "def removed(value): pass\ndef demoted(value): pass\ndef preview(value): pass\n"
+            ),
+        },
+    )
+    target = compatibility.build_snapshot(
+        version="main", revision="proposed", source_kind="git_branch",
+        sources={
+            "src/fabricops_kit/public_api.py": (
+                'SUPPORTED_PUBLIC_API = ("fabricops_kit.example.preview", "fabricops_kit.example.new")\n'
+                'PREVIEW_PUBLIC_API = ("fabricops_kit.example.demoted",)\n'
+            ),
+            "src/fabricops_kit/example.py": (
+                "def demoted(value): pass\ndef preview(value, required): pass\ndef new(): pass\n"
+            ),
+        },
+    )
+    changes = {row["qualified_name"].split(".")[-1]: row
+               for row in compatibility.compare_snapshots(baseline, target)["changes"]}
+    assert changes["removed"]["classification"] == "potentially_breaking"
+    assert changes["removed"]["lifecycle_before"] == "Live"
+    assert changes["demoted"]["lifecycle_before"] == "Live"
+    assert changes["demoted"]["classification"] == "potentially_breaking"
+    assert changes["preview"]["lifecycle_before"] == "Preview"
+    assert changes["preview"]["classification"] == "potentially_breaking"
+    assert "Required parameter added: required." in changes["preview"]["reasons"]
+    assert changes["new"]["lifecycle_before"] is None
