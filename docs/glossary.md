@@ -31,13 +31,13 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="enrichment">
 <summary><strong>Enrichment</strong> — Descriptive business and governance metadata added to a governed table or column.</summary>
-<p>FabricOps Enrichment stores descriptions and information classifications for a Data Contract version. It adds context but does not enforce pipeline behaviour; runtime requirements belong in Guardrails.</p>
+<p>FabricOps Enrichment stores descriptions, Grain description, and information classifications inside METADATA_DATA_CONTRACT.contract_payload_json for an exact Data Contract version. It adds context but does not enforce pipeline behaviour; runtime requirements belong in Guardrails.</p>
 <p><strong>Also known as:</strong> metadata enrichment, enrich metadata</p>
 </details>
 
 <details id="guardrails">
 <summary><strong>Guardrails</strong> — Versioned rules that FabricOps checks during governed pipeline execution.</summary>
-<p>FabricOps Guardrails define runtime expectations such as Schema, Grain, Freshness, Source Drift, Data Quality, and Sensitive Data treatment. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Grain, Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.</p>
+<p>FabricOps Guardrails are executable definitions inside METADATA_DATA_CONTRACT.contract_payload_json for an exact version. They define runtime expectations such as Schema, Grain, Freshness, Source Drift, Data Quality, and Sensitive Data treatment. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Grain, Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.</p>
 <p><strong>Also known as:</strong> guardrail</p>
 </details>
 

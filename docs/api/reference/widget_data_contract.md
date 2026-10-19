@@ -123,7 +123,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:525`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L525-L5590">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L525-L5588">View on GitHub</a>
 </div>
 
 

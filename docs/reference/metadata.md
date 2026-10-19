@@ -7,9 +7,9 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
 - **Governance** stores authored governance definitions.
 - **Engineering** stores technical observations, profiling, lineage, access observations, and runtime results.
 
-`table_id` is the canonical bridge for the same governed data asset across both schemas. `contract_id` and `contract_version` identify its governed definition, with Enrichment and Guardrails belonging to that exact Data Contract version.
+`table_id` is the canonical bridge for the same governed data asset across both schemas. `contract_id` and `contract_version` identify its governed definition, with descriptive Enrichment and executable Guardrails stored only in `METADATA_DATA_CONTRACT.contract_payload_json` for that exact version.
 
-The diagram above shows the current implemented metadata tables and relationships.
+The illustration predates payload-only definitions. The table cards below describe the current implemented schemas; Enrichment and Guardrails now belong inside the Data Contract payload.
 
 ## Metadata tables
 
@@ -104,7 +104,7 @@ The diagram above shows the current implemented metadata tables and relationship
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Own one table-centric governed definition in a single versioned JSON payload; table_name captures the table name at this contract write, alongside stable table_id, and may differ after a later rename.</span>
+  <span class="metadata-table-card__purpose">Own descriptive Enrichment and executable Guardrails in the single authoritative contract_payload_json for one table-centric governed definition; table_name captures the table name at this contract write, alongside stable table_id, and may differ after a later rename.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One Data Contract lifecycle version for one governed table; the draft payload is overwritten on Save, becomes immutable when frozen, and is selected for Production through is_active.</span>
@@ -130,13 +130,7 @@ The diagram above shows the current implemented metadata tables and relationship
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
-        <code>METADATA_ENRICHMENT</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_GUARDRAIL</code>
+        <code>METADATA_GUARDRAIL_RESULTS</code>
       </span>
     </span>
   </span>
@@ -187,19 +181,7 @@ The diagram above shows the current implemented metadata tables and relationship
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
-        <code>METADATA_ENRICHMENT</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
         <code>METADATA_DATA_ACCESS</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_GUARDRAIL</code>
       </span>
     </span>
   </span>
@@ -318,39 +300,6 @@ The diagram above shows the current implemented metadata tables and relationship
     </span>
   </span>
 </a>
-<a class="metadata-table-card metadata-table-card--governance" href="metadata_enrichment/" aria-label="Open METADATA_ENRICHMENT schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__identity">
-      <span class="metadata-table-card__title">METADATA_ENRICHMENT</span>
-      <span class="metadata-table-card__schema">governance</span>
-    </span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">Store descriptive Description and Classification metadata for one exact Data Contract version, including table and optional column names captured when written; Enrichment does not enforce runtime behavior.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One appended enrichment value for one exact Data Contract version and optional column identity.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>enrichment_id</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CONTRACT</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CATALOGUE</code>
-      </span>
-    </span>
-  </span>
-</a>
 <a class="metadata-table-card metadata-table-card--engineering" href="metadata_data_access/" aria-label="Open METADATA_DATA_ACCESS schema">
   <span class="metadata-table-card__header">
     <span class="metadata-table-card__identity">
@@ -378,45 +327,6 @@ The diagram above shows the current implemented metadata tables and relationship
     </span>
   </span>
 </a>
-<a class="metadata-table-card metadata-table-card--governance" href="metadata_guardrail/" aria-label="Open METADATA_GUARDRAIL schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__identity">
-      <span class="metadata-table-card__title">METADATA_GUARDRAIL</span>
-      <span class="metadata-table-card__schema">governance</span>
-    </span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">Define enforced Guardrails: Schema violations and configured Sensitive Data treatment failures block; Grain, Freshness, Source Drift, and Data Quality retain Warn/Block actions. Authored names are captured in table_name and optional column_name.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One configured Guardrail rule revision for one exact Data Contract version and optional column identity.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>guardrail_rule_id</code> <span class="metadata-table-card__key-separator">+</span> <code>guardrail_version</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CONTRACT</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CATALOGUE</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_GUARDRAIL_RESULTS</code>
-      </span>
-    </span>
-  </span>
-</a>
 <a class="metadata-table-card metadata-table-card--engineering" href="metadata_guardrail_results/" aria-label="Open METADATA_GUARDRAIL_RESULTS schema">
   <span class="metadata-table-card__header">
     <span class="metadata-table-card__identity">
@@ -439,7 +349,7 @@ The diagram above shows the current implemented metadata tables and relationship
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">N → 1</span>
       <span class="metadata-table-card__relationship-list">
-        <code>METADATA_GUARDRAIL</code>
+        <code>METADATA_DATA_CONTRACT</code>
       </span>
     </span>
   </span>

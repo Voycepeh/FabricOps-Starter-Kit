@@ -105,18 +105,15 @@ def _audit() -> dict[str, object]:
 
 def test_guardrail_metadata_tables_have_exact_stage4a_columns() -> None:
     """Lock the exact physical columns of all three normalized Guardrail tables."""
-    assert _field_names("METADATA_GUARDRAIL") == _GUARDRAIL_COLUMNS
+    assert "METADATA_GUARDRAIL" not in metadata_table_schema_registry()
     assert _field_names("METADATA_GUARDRAIL_RESULTS") == _RESULT_COLUMNS
     assert "METADATA_GUARDRAIL_ROW_RESULTS" not in metadata_table_schema_registry()
 
 
 def test_guardrail_metadata_uses_canonical_parent_identities() -> None:
     """Verify each metadata layer stores only the relational identity it owns."""
-    guardrail_fields = set(_field_names("METADATA_GUARDRAIL"))
     result_fields = set(_field_names("METADATA_GUARDRAIL_RESULTS"))
 
-    assert {"contract_id", "contract_version", "column_id"} <= guardrail_fields
-    assert {"table_id", "table_name", "column_name"} <= guardrail_fields
     assert {"guardrail_rule_id", "guardrail_version", "table_id", "contract_id", "contract_version"} <= result_fields
     assert "column_id" not in result_fields
 
@@ -149,7 +146,6 @@ def test_obsolete_guardrail_identity_and_review_fields_are_absent() -> None:
         "created_by_role",
     }
     for table_name in (
-        "METADATA_GUARDRAIL",
         "METADATA_GUARDRAIL_RESULTS",
     ):
         assert obsolete.isdisjoint(_field_names(table_name))
@@ -159,7 +155,6 @@ def test_standard_eight_audit_fields_are_present_on_all_guardrail_tables() -> No
     """Verify every normalized Guardrail table ends with the standard audit contract."""
     assert len(_AUDIT_COLUMNS) == 8
     for table_name in (
-        "METADATA_GUARDRAIL",
         "METADATA_GUARDRAIL_RESULTS",
     ):
         assert _field_names(table_name)[-8:] == _AUDIT_COLUMNS

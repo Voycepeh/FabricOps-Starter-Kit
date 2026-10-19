@@ -123,7 +123,7 @@ In the Governance workspace, run the metadata setup block in `00_env_config`.
 
 ![Setup Metadata Tables](../assets/00B/00_config_metadata_tables_setup_code.png)
 
-This prepares the metadata Lakehouse before `01_governance` starts creating Data Stewards, Data Agreements, and later Data Contracts.
+This prepares the metadata Lakehouse before `01_governance` starts creating Data Stewards, Data Agreements, and later Data Contracts. Authored Enrichment and Guardrails live in `METADATA_DATA_CONTRACT.contract_payload_json`; separate definition tables are no longer setup requirements. Existing installations should follow the [report-first migration instructions](03-author-and-freeze-data-contract.md#manifest-freeze) before resuming authoring. Setup never deletes old physical tables.
 
 ![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
 

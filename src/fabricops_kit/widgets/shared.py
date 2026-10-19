@@ -556,8 +556,6 @@ WIDGET_CONFIG_DEFAULTS = {"data_steward_widget": {"visible_columns": DATA_STEWAR
 FIELD_LABELS = {"steward_id": "Steward ID", "provider_steward_id": "Provider Data Steward", "recipient_steward_id": "Recipient Data Steward", "steward_name": "Steward Name", "steward_role": "Steward Role", "contact": "Contact", "effective_from": "Effective From", "effective_to": "Effective To", "is_active": "Is Active", "agreement_name": "Agreement Name", "domain": "Domain", "start_date": "Start Date", "expiry_date": "Expiry Date", "business_purpose": "Business Purpose"}
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
-ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
-GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
@@ -593,7 +591,6 @@ def pipeline_active_context() -> PipelineRunContext | None:
 
 
 _SELECTED_AGREEMENT: dict[str, Any] | None = None
-
 
 
 def serialize_custom_fields(values: dict[str, Any] | None) -> str:
@@ -883,7 +880,6 @@ def enrichment_control_options(config: Any) -> tuple[list[str], list[dict[str, A
     return sensitivity, context_fields, classification_fields
 
 
-
 # Governance readiness and policy helpers migrated from the retired mixed governance module.
 
 
@@ -904,9 +900,6 @@ def dataset_label(row: dict[str, Any], role: str | None = None) -> str:
         if str(row.get(field) or "").strip()
     ) or str(row.get("table_id") or "")
     return f"[{role}] {location}" if role else location
-
-
-
 
 
 # ---------------------------------------------------------------------------
@@ -1125,243 +1118,3 @@ def sensitive_data_record_from_selection(
         guardrail_version=guardrail_version,
         is_active=is_active,
     )
-
-
-def _guardrail_coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
-    if rows_or_df is None:
-        return []
-    if hasattr(rows_or_df, "collect"):
-        rows_or_df = rows_or_df.collect()
-    return [
-        row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
-        for row in rows_or_df
-    ]
-
-def read_metadata_table_or_empty(
-    config: Any,
-    env: str,
-    table_name: str,
-    *,
-    spark_session: Any,
-) -> list[dict[str, Any]]:
-    """Read a metadata table and return row dictionaries, or an empty list if absent."""
-    try:
-        frame = read_lakehouse_table(
-            table_name,
-            store="Metadata",
-            schema=metadata_table_physical_schema(config, table_name),
-            context={"config": config, "env": env},
-            spark_session=spark_session,
-        )
-    except Exception as exc:
-        if is_table_not_found_error(exc):
-            return []
-        raise
-    return _guardrail_coerce_rows(frame)
-
-def load_guardrail_authoring_targets(
-    config: Any,
-    env: str,
-    *,
-    spark_session: Any,
-    widgets: Any,
-    on_change: Any | None = None,
-) -> tuple[dict[str, Any], Any, dict[str, Any]]:
-    """Resolve independently selectable profiled targets through normalized Catalogue IDs."""
-    catalogue = read_metadata_table_or_empty(
-        config, env, CATALOGUE_TABLE, spark_session=spark_session
-    )
-    profiles = read_metadata_table_or_empty(
-        config, env, PROFILED_TABLE, spark_session=spark_session
-    )
-    rules = read_metadata_table_or_empty(
-        config, env, GUARDRAIL_TABLE, spark_session=spark_session
-    )
-    contracts = read_metadata_table_or_empty(
-        config, env, DATA_CONTRACT_TABLE, spark_session=spark_session
-    )
-    enrichment = read_metadata_table_or_empty(
-        config, env, "METADATA_ENRICHMENT", spark_session=spark_session
-    )
-    if not catalogue or not profiles:
-        raise ValueError("No profiled Catalogue table is available for Guardrail authoring.")
-
-    table_rows = {
-        str(row.get("table_id") or ""): dict(row)
-        for row in catalogue
-        if str(row.get("environment_name") or env) == env
-        and str(row.get("metadata_level") or "").lower() == "table"
-        and str(row.get("table_id") or "").strip()
-    }
-    profile_table_ids = {
-        table_id
-        for table_id, table in table_rows.items()
-        if table.get("last_profiled_at") is not None
-        and any(
-            str(row.get("environment_name") or env) == env
-            and str(row.get("table_id") or "") == table_id
-            and str(row.get("_activity_id") or "") == str(table.get("_activity_id") or "")
-            for row in profiles
-        )
-    }
-    selectable_ids = sorted(set(table_rows) & profile_table_ids)
-    latest_contracts: dict[str, dict[str, Any]] = {}
-    for row in contracts:
-        if str(row.get("status") or "").lower() != "draft":
-            continue
-        table_id = str(row.get("table_id") or "")
-        if table_id not in selectable_ids:
-            continue
-        current = latest_contracts.get(table_id)
-        if current is None or int(row.get("contract_version") or 0) > int(current.get("contract_version") or 0):
-            latest_contracts[table_id] = dict(row)
-    selectable_ids = [table_id for table_id in selectable_ids if table_id in latest_contracts]
-    if not selectable_ids:
-        raise ValueError("No profiled Catalogue table has a Data Contract version available for Guardrail authoring.")
-    def label(table_id: str) -> str:
-        row = table_rows[table_id]
-        location = " / ".join(
-            value
-            for value in (
-                str(row.get("store_type") or ""),
-                str(row.get("layer") or ""),
-                str(row.get("schema_name") or ""),
-                str(row.get("table_name") or ""),
-            )
-            if value
-        )
-        return location or table_id
-
-    target = widgets.Dropdown(
-        options=[(label(table_id), table_id) for table_id in selectable_ids],
-        **widget_common(widgets, "Profiled table"),
-    )
-    summary = widgets.HTML()
-    state: dict[str, Any] = {}
-
-    def refresh(*_: Any) -> None:
-        table_id = str(target.value or "")
-        table = table_rows[table_id]
-        table_profiles = [
-            dict(row)
-            for row in profiles
-            if str(row.get("environment_name") or env) == env
-            and str(row.get("table_id") or "") == table_id
-            and table.get("last_profiled_at") is not None
-            and str(row.get("_activity_id") or "") == str(table.get("_activity_id") or "")
-        ]
-        latest = max(
-            table_profiles,
-            key=lambda row: (
-                str(row.get("_committed_at") or ""),
-                str(row.get("profile_snapshot_id") or ""),
-            ),
-        )
-        snapshot_id = str(latest.get("profile_snapshot_id") or "")
-        if snapshot_id:
-            snapshot = [
-                row
-                for row in table_profiles
-                if str(row.get("profile_snapshot_id") or "") == snapshot_id
-            ]
-        else:
-            latest_at = str(latest.get("_committed_at") or "")
-            snapshot = [
-                row
-                for row in table_profiles
-                if str(row.get("_committed_at") or "") == latest_at
-            ]
-
-        catalogue_columns = {
-            str(row.get("column_id") or ""): dict(row)
-            for row in catalogue
-            if str(row.get("environment_name") or env) == env
-            and str(row.get("table_id") or "") == table_id
-            and str(row.get("metadata_level") or "").lower() == "column"
-            and str(row.get("column_id") or "").strip()
-        }
-        evidence = []
-        contract_id = str(latest_contracts[table_id].get("contract_id") or "")
-        contract_version = int(latest_contracts[table_id].get("contract_version") or 0)
-        enrichment_values: dict[tuple[str, str], str] = {}
-        for row in enrichment:
-            if (
-                str(row.get("contract_id") or "") == contract_id
-                and int(row.get("contract_version") or 0) == contract_version
-                and str(row.get("environment_name") or env) == env
-            ):
-                enrichment_values[(
-                    str(row.get("column_id") or ""),
-                    str(row.get("enrichment_type") or ""),
-                )] = str(row.get("value") or "")
-        for profile in snapshot:
-            column_id = str(profile.get("column_id") or "")
-            catalogue_column = catalogue_columns.get(column_id)
-            if not catalogue_column:
-                continue
-            column_name = str(catalogue_column.get("column_name") or "").strip()
-            if not column_name:
-                continue
-            evidence.append(
-                {
-                    "table_id": table_id,
-                    "column_id": column_id,
-                    "column_name": column_name,
-                    "data_type": str(profile.get("data_type") or ""),
-                    "profile_id": str(profile.get("profile_id") or ""),
-                    "profile_snapshot_id": snapshot_id,
-                    "_committed_at": profile.get("_committed_at"),
-                    **{
-                        name: profile.get(name)
-                        for name in (
-                            "row_count", "non_null_count", "null_count", "null_percent",
-                            "distinct_count", "distinct_percent", "min_value", "max_value",
-                        )
-                        if profile.get(name) is not None
-                    },
-                    "description": enrichment_values.get((column_id, "Description"), ""),
-                    "classification": enrichment_values.get((column_id, "Classification"), ""),
-                }
-            )
-        evidence.sort(key=lambda row: row["column_name"].casefold())
-        if not evidence:
-            raise ValueError(
-                "The selected profile snapshot has no columns that resolve to Catalogue column IDs."
-            )
-        existing_rules = [
-            dict(row)
-            for row in rules
-            if str(row.get("environment_name") or env) == env
-            and str(row.get("contract_id") or "") == str(latest_contracts[table_id].get("contract_id") or "")
-            and int(row.get("contract_version") or 0) == int(latest_contracts[table_id].get("contract_version") or 0)
-        ]
-        state.clear()
-        state.update(
-            {
-                "environment_name": env,
-                "table_id": table_id,
-                "contract_id": str(latest_contracts[table_id]["contract_id"]),
-                "contract_version": int(latest_contracts[table_id]["contract_version"]),
-                "table_name": str(table.get("table_name") or ""),
-                "store_type": str(table.get("store_type") or ""),
-                "layer": str(table.get("layer") or ""),
-                "schema_name": str(table.get("schema_name") or ""),
-                "profile_snapshot_id": snapshot_id,
-                "columns": [row["column_name"] for row in evidence],
-                "column_ids": {
-                    row["column_name"]: row["column_id"] for row in evidence
-                },
-                "catalogue_profile_rows": evidence,
-                "existing_rules": existing_rules,
-            }
-        )
-        summary.value = (
-            f"<b>Columns:</b> {len(evidence)} · <b>Existing rules:</b> {len(existing_rules)} · "
-            f"<b>table_id:</b> <code>{table_id}</code>"
-        )
-        if on_change is not None:
-            on_change(state)
-
-    target.observe(refresh, names="value")
-    refresh()
-    return state, target, {"target_summary": summary, "refresh_target": refresh}

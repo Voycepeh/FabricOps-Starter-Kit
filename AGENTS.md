@@ -19,8 +19,7 @@ Canonical operating guide for Codex and agent contributions in this repository. 
   - `METADATA_DATA_PROFILED` stores profile metrics for registered table and column snapshots.
   - `METADATA_DATA_PROFILED_FREQUENCY` stores frequency-distribution rows linked to profile snapshots where applicable.
   - `METADATA_DATA_LINEAGE` stores registered source/target pipeline participation.
-  - `METADATA_ENRICHMENT` stores authored business and governance enrichment.
-  - `METADATA_GUARDRAIL` stores authored executable Guardrail rules.
+  - `METADATA_DATA_CONTRACT.contract_payload_json` stores authored descriptive Enrichment and executable Guardrails for one exact contract version; frozen payloads are immutable.
   - `METADATA_GUARDRAIL_RESULTS` stores Guardrail evaluation results and continuation decisions.
   - `METADATA_GUARDRAIL_ROW_RESULTS` stores row-level failures linked to Guardrail Results where applicable.
   - `METADATA_SOURCE_OBSERVATION` stores source-state evidence and history used by incremental execution; successful watermark progress is stored on governed targets.

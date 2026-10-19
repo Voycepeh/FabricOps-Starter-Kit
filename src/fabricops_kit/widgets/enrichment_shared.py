@@ -17,7 +17,6 @@ from fabricops_kit.data_contract.shared import (
 )
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
-ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
 _PROFILE_CONTEXT_FIELDS = (
     "row_count", "non_null_count", "null_count", "null_percent",
     "distinct_count", "distinct_percent", "mean_value", "stddev_value",
@@ -892,7 +891,6 @@ def catalogue_table_browser_state(
 
 __all__ = [
     "CATALOGUE_TABLE",
-    "ENRICHMENT_TABLE",
     "catalogue_table_browser_state",
     "catalogue_table_options",
     "build_ai_enrichment_context",

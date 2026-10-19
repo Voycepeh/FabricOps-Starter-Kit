@@ -42,7 +42,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "Descriptive business and governance metadata added to a governed table or column.",
-    "long_definition": "FabricOps Enrichment stores descriptions and information classifications for a Data Contract version. It adds context but does not enforce pipeline behaviour; runtime requirements belong in Guardrails.",
+    "long_definition": "FabricOps Enrichment stores descriptions, Grain description, and information classifications inside METADATA_DATA_CONTRACT.contract_payload_json for an exact Data Contract version. It adds context but does not enforce pipeline behaviour; runtime requirements belong in Guardrails.",
     "preferred_usage": "Use enrichment for business and governance information added to the Data Catalogue.",
     "avoid_usage": "metadata enrichment when enrichment is sufficient"
   },
@@ -54,7 +54,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "Versioned rules that FabricOps checks during governed pipeline execution.",
-    "long_definition": "FabricOps Guardrails define runtime expectations such as Schema, Grain, Freshness, Source Drift, Data Quality, and Sensitive Data treatment. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Grain, Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.",
+    "long_definition": "FabricOps Guardrails are executable definitions inside METADATA_DATA_CONTRACT.contract_payload_json for an exact version. They define runtime expectations such as Schema, Grain, Freshness, Source Drift, Data Quality, and Sensitive Data treatment. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Grain, Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.",
     "preferred_usage": "Use guardrails for the governed rules FabricOps evaluates; use singular only for grammar.",
     "avoid_usage": "generic policy when a FabricOps Guardrail is meant"
   },

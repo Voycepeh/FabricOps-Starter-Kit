@@ -28,8 +28,6 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_DATA_PROFILED_FREQUENCY": "engineering",
         "METADATA_DATA_LINEAGE": "engineering",
         "METADATA_DATA_ACCESS": "engineering",
-        "METADATA_ENRICHMENT": "governance",
-        "METADATA_GUARDRAIL": "governance",
         "METADATA_GUARDRAIL_RESULTS": "engineering",
         "METADATA_SOURCE_OBSERVATION": "engineering",
     }
@@ -44,7 +42,7 @@ def test_physical_schema_resolution_uses_framework_ownership_config():
         governance_metadata_schema = "approved"
         engineering_metadata_schema = "observed"
 
-    assert metadata_table_physical_schema(Config(), "METADATA_ENRICHMENT") == "approved"
+    assert metadata_table_physical_schema(Config(), "METADATA_DATA_CONTRACT") == "approved"
     assert metadata_table_physical_schema(Config(), "METADATA_SOURCE_OBSERVATION") == "observed"
 
 
@@ -215,36 +213,8 @@ def test_source_consumption_is_not_a_separate_metadata_table():
     assert "METADATA_SOURCE_CONSUMPTION" not in metadata_table_schema_registry()
 
 
-def test_guardrail_schema_uses_entity_version_and_results_capture_exact_revision():
-    """One Guardrail revision is identified by rule ID plus guardrail_version."""
-    registry = metadata_table_schema_registry()
-    guardrail = registry["METADATA_GUARDRAIL"].fieldNames()
-    results = registry["METADATA_GUARDRAIL_RESULTS"].fieldNames()
-
-    assert guardrail[:2] == ["guardrail_rule_id", "guardrail_version"]
-    assert "configuration_version" not in guardrail
-    assert results[:3] == ["guardrail_result_id", "guardrail_rule_id", "guardrail_version"]
-    assert {"table_name", "guardrail_type", "rule_id", "rule_type", "action"}.issubset(results)
 
 
-def test_stage3_enrichment_schema_uses_contract_version_and_environment():
-    """Enrichment belongs to an exact governed contract version."""
-    fields = metadata_table_schema_registry()["METADATA_ENRICHMENT"].fieldNames()
-    assert fields == [
-        "enrichment_id",
-        "contract_id",
-        "contract_version",
-        "table_id",
-        "table_name",
-        "column_id",
-        "column_name",
-        "environment_name",
-        "enrichment_level",
-        "enrichment_type",
-        "value",
-        *[name for name, _kind, _nullable in audit_schema_fields()],
-    ]
-    assert {"metadata_id", "metadata_key", "metadata_table_key", "metadata_column_key", "enrichment_name"}.isdisjoint(fields)
 
 
 def test_stage3_data_access_schema_records_observed_sql_permissions():
@@ -300,3 +270,16 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
         "approved_at",
         "notes",
     }.isdisjoint(fields)
+
+
+def test_definition_tables_are_retired_but_results_remain():
+    """Setup owns contract payloads and execution results, with no side definitions."""
+    registry = metadata_table_schema_registry()
+    for table in ("METADATA_ENRICHMENT", "METADATA_GUARDRAIL"):
+        assert table not in registry
+        assert table not in CANONICAL_METADATA_TABLES
+        with pytest.raises(ValueError, match="Unknown canonical"):
+            metadata_table_owner(table)
+    results = registry["METADATA_GUARDRAIL_RESULTS"].fieldNames()
+    assert results[:3] == ["guardrail_result_id", "guardrail_rule_id", "guardrail_version"]
+    assert {"contract_id", "contract_version", "result_payload_json"} <= set(results)

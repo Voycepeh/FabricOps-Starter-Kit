@@ -107,13 +107,11 @@ def test_frozen_widget_rule_materializes_for_internal_schema_stage(spark_session
             "environment_name": "dev", "column_id": "", "guardrail_type": "schema", "rule_id": "required_columns",
             "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["email-id"]}', "action": "Block"}
     payload, _warnings = contracts.assemble_contract_payload(
-        draft=draft, environment_name="dev", tables={
-            "METADATA_DATA_CATALOGUE": [
+        draft=draft, environment_name="dev", catalogue_rows=[
                 {"table_id": "target-id", "metadata_level": "table", "environment_name": "dev"},
                 {"table_id": "target-id", "metadata_level": "column", "environment_name": "dev",
                  "column_id": "email-id", "column_name": "email", "data_type": "string"},
-            ], contracts.ENRICHMENT_TABLE: [], contracts.GUARDRAIL_TABLE: [rule],
-        },
+            ], enrichment_rows=[], guardrail_rows=[rule],
     )
     frozen = contracts.freeze_contract_record(draft={**draft, "contract_payload_json": json.dumps(payload)}, audit={})
     rows = shared.contract_guardrail_rows(frozen, environment_name="dev", table_id="target-id")

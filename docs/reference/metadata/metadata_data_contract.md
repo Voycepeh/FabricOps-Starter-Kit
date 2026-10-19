@@ -1,6 +1,6 @@
 # METADATA_DATA_CONTRACT
 
-Own one table-centric governed definition in a single versioned JSON payload; table_name captures the table name at this contract write, alongside stable table_id, and may differ after a later rename.
+Own descriptive Enrichment and executable Guardrails in the single authoritative contract_payload_json for one table-centric governed definition; table_name captures the table name at this contract write, alongside stable table_id, and may differ after a later rename.
 
 ## Writer functions
 

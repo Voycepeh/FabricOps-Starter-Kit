@@ -24,8 +24,8 @@ Store aggregate enforce and validate Guardrail summaries, captured table name, r
 
 **Relationships:**
 
-`METADATA_GUARDRAIL` **(N → 1)**
-via `guardrail_rule_id`
+`METADATA_DATA_CONTRACT` **(N → 1)**
+via `contract_id` + `contract_version`
 
 ## Column summary
 

@@ -1661,7 +1661,6 @@ _ACTIVE_RULE_REVIEW_STATUSES = {"authored", "self_approved", "governance_approve
 
 _BYPASS_POST_REVIEW_WARNING = "Rule is active through approval bypass and requires governance post-review."
 
-GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
 
 
 

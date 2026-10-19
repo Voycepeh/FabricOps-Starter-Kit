@@ -32,6 +32,7 @@ def frozen_contract(required):
                 {"column_id": "col-note", "column_name": "note", "data_type": "string"},
             ],
         },
+        "enrichment": {"table": [], "columns": []},
         "guardrails": [{
             "guardrail_rule_id": "schema-orders", "guardrail_version": 2,
             "guardrail_type": "schema", "rule_id": "required_columns",

@@ -76,7 +76,7 @@ FabricOps separates the parts that need human judgement from the parts AI can ac
 
     Once the reviewed Data Contract is frozen, validated, and activated, FabricOps uses those approved decisions when the pipeline writes the data. For example, a column approved for masking is masked before the governed output is published. The AI is not asked to make the decision again during pipeline execution.
 
-    For the canonical persisted schema and treatment behaviour, use [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md), [METADATA_GUARDRAIL](../reference/metadata/metadata_guardrail.md), and [Sensitive Data Treatments](../reference/sensitive-data-treatments.md).
+    For the canonical persisted schema and treatment behaviour, use [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md), and [Sensitive Data Treatments](../reference/sensitive-data-treatments.md).
 
 ## Example
 

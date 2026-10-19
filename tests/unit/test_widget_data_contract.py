@@ -237,21 +237,6 @@ def widget_runtime(monkeypatch):
             "guardrails": [{**row, "rule_parameters": module._parameters(row)} for row in guardrails if row.get("is_active", True)],
         }
 
-    def save_enrichment(records, **_kwargs):
-        calls["enrichment"].append(records)
-        for record in records:
-            enrichment[:] = [row for row in enrichment if row.get("enrichment_id") != record.get("enrichment_id")]
-            if str(record.get("value") or "").strip():
-                enrichment.append(dict(record))
-        return records
-
-    def save_guardrails(records, **_kwargs):
-        calls["guardrails"].append(records)
-        for record in records:
-            guardrails[:] = [row for row in guardrails if row.get("guardrail_rule_id") != record.get("guardrail_rule_id")]
-            guardrails.append(dict(record))
-        return records
-
     def save_contract_draft(*, draft, payload, **_kwargs):
         saved_payload = json.loads(json.dumps(payload))
         calls["draft"].append(saved_payload)
@@ -311,9 +296,6 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: ipywidgets)
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kwargs: {"tables": [catalogue[0]], "contracts": [contract]})
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
-    monkeypatch.setattr(module.contracts, "build_contract_manifest", lambda **_kwargs: (manifest(), []))
-    monkeypatch.setattr(module.contracts, "save_enrichment", save_enrichment)
-    monkeypatch.setattr(module.contracts, "save_guardrails", save_guardrails)
     monkeypatch.setattr(module.contracts, "save_contract_draft", save_contract_draft)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
     monkeypatch.setattr(module.contracts, "activate_contract_version", activate_contract_version)

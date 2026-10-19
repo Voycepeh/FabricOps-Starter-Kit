@@ -58,12 +58,8 @@ def test_assembled_frozen_runtime_round_trip(active):
     """Inactive keys and descriptions survive assembly and freezing without active rules."""
     draft = {"contract_id": "c", "contract_version": 2, "table_id": "t", "environment_name": "dev", "status": "draft", "contract_payload_json": json.dumps({"table": {"processing": {"load_strategy": "append"}}})}
     rule = {**_rule(active=active), "contract_id": "c", "contract_version": 2, "environment_name": "dev"}
-    payload, _warnings = contracts.assemble_contract_payload(draft=draft, environment_name="dev", tables={
-        "METADATA_DATA_CATALOGUE": [{"table_id": "t", "environment_name": "dev", "metadata_level": "table", "table_name": "history"}, *[
-            {"table_id": "t", "environment_name": "dev", "metadata_level": "column", "column_id": name, "column_name": name, "data_type": "bigint"} for name in ("id", "version")]],
-        "METADATA_ENRICHMENT": [{"enrichment_id": "description", "contract_id": "c", "contract_version": 2, "environment_name": "dev", "enrichment_level": "table", "enrichment_type": "Grain", "value": "One row per version"}],
-        "METADATA_GUARDRAIL": [rule],
-    })
+    payload, _warnings = contracts.assemble_contract_payload(draft=draft, environment_name="dev", catalogue_rows=[{"table_id": "t", "environment_name": "dev", "metadata_level": "table", "table_name": "history"}, *[
+            {"table_id": "t", "environment_name": "dev", "metadata_level": "column", "column_id": name, "column_name": name, "data_type": "bigint"} for name in ("id", "version")]], enrichment_rows=[{"enrichment_id": "description", "contract_id": "c", "contract_version": 2, "environment_name": "dev", "enrichment_level": "table", "enrichment_type": "Grain", "value": "One row per version"}], guardrail_rows=[rule])
     frozen = contracts.freeze_contract_record(draft={**draft, "contract_payload_json": json.dumps(payload)}, audit={})
     frozen_payload = json.loads(frozen["contract_payload_json"])
     assert frozen_payload["guardrails"][0]["action"] == "Block"
@@ -194,12 +190,12 @@ def test_incomplete_grain_preview_cannot_be_saved_frozen_or_enforced():
             {"table_id": "t", "environment_name": "dev", "metadata_level": "table", "table_name": "orders"},
             {"table_id": "t", "environment_name": "dev", "metadata_level": "column", "column_id": "id", "column_name": "id", "data_type": "bigint"},
         ],
-        "METADATA_ENRICHMENT": [],
-        "METADATA_GUARDRAIL": [{**_rule([]), "contract_id": "c", "contract_version": 1, "environment_name": "dev"}],
+        "enrichment": [],
+        "guardrails": [{**_rule([]), "contract_id": "c", "contract_version": 1, "environment_name": "dev"}],
     }
     with pytest.raises(ValueError, match="Enforced Grain requires"):
-        contracts.assemble_contract_payload(draft=draft, tables=tables, environment_name="dev")
-    preview, _ = contracts.assemble_contract_payload(draft=draft, tables=tables, environment_name="dev", allow_incomplete_grain=True)
+        contracts.assemble_contract_payload(draft=draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"], enrichment_rows=tables["enrichment"], guardrail_rows=tables["guardrails"], environment_name="dev")
+    preview, _ = contracts.assemble_contract_payload(draft=draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"], enrichment_rows=tables["enrichment"], guardrail_rows=tables["guardrails"], environment_name="dev", allow_incomplete_grain=True)
     assert preview["guardrails"][0]["rule_parameters"]["columns"] == []
     with pytest.raises(ValueError, match="Enforced Grain requires"):
         contracts.save_contract_draft(draft=draft, payload=preview, config=object(), env="dev", spark_session=object())

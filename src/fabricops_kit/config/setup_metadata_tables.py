@@ -273,16 +273,14 @@ def setup_metadata_tables(
     exists and ``0`` otherwise. It is not a complete active steward population
     count.
 
-    The canonical registry may expand in later compatible FabricOps releases.
-    In v0.2.0, metadata tables created or validated from
+    The current metadata tables created or validated from
     ``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
     ``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,
     ``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
     ``METADATA_DATA_PROFILED_FREQUENCY``, ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
-    ``METADATA_ENRICHMENT``, ``METADATA_GUARDRAIL``, and
-    ``METADATA_GUARDRAIL_RESULTS``.
+    ``METADATA_GUARDRAIL_RESULTS``, and ``METADATA_SOURCE_OBSERVATION``.
 
-    Of that v0.2.0 inventory, ``METADATA_DATA_CATALOGUE``,
+    Of that inventory, ``METADATA_DATA_CATALOGUE``,
     ``METADATA_DATA_PROFILED``, ``METADATA_DATA_PROFILED_FREQUENCY``, and
     ``METADATA_DATA_LINEAGE`` are Live schemas with compatibility guarantees.
     Every other metadata schema in the registry remains Preview.
@@ -300,7 +298,9 @@ def setup_metadata_tables(
       ``custom_fields_json``, and the standard audit fields.
     - ``METADATA_DATA_CONTRACT`` stores one table-centric lifecycle version.
       A draft keeps its complete editable governed definition in
-      ``contract_payload_json``; each Save overwrites that draft JSON in place.
+      ``contract_payload_json``, including descriptive Enrichment and executable
+      Guardrails; each Save overwrites that draft JSON in place.
+      Separate definition tables are neither required nor deleted by setup.
       Freezing changes the version to ``frozen`` and makes its JSON immutable.
       A later version is seeded from the previous frozen JSON. Activation keeps
       ``status='frozen'`` and uses ``is_active`` to identify the Production
@@ -325,11 +325,6 @@ def setup_metadata_tables(
       standard audit fields.
     - ``METADATA_DATA_ACCESS`` stores access scope, role, permission,
       approval, expiry, table and column identity, and audit information.
-    - ``METADATA_ENRICHMENT`` stores exact-contract-version descriptions,
-      classifications, and audit information.
-      Enrichment has no direct ETL enforcement semantics.
-    - ``METADATA_GUARDRAIL`` stores guardrail rule identity, scope,
-      parameters, Warn or Block action, lifecycle, and audit information.
     - ``METADATA_GUARDRAIL_RESULTS`` stores guardrail execution results,
       status, continuation decision, expected and actual values, result
       payload, and audit information.

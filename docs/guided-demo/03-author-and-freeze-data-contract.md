@@ -200,7 +200,65 @@ Open **Manifest & Freeze** and review the complete contract, including the DQ ru
 
 Choose **Save Data Contract** while the version is still a draft. When it is ready for Engineering validation, choose **Freeze**.
 
+`METADATA_DATA_CONTRACT.contract_payload_json` is the single source of authored table and column Enrichment and all six Guardrail types. Grain description is descriptive Enrichment; key selection and optional enforcement are stored as the Grain Guardrail in the same payload. Save replaces the draft payload, Freeze makes that exact version immutable, and the next draft inherits the previous frozen definition. Runtime checks, exports, and Guardrail Coverage resolve the selected payload; actual evaluations remain in `METADATA_GUARDRAIL_RESULTS`.
+
 The frozen version is an immutable data contract and becomes the exact candidate Engineering selects in Step 4. Freezing does not activate it for Production.
+
+??? warning "Upgrading from separate definition tables"
+    This is a breaking storage change. Setup no longer creates or requires
+    `METADATA_ENRICHMENT` or `METADATA_GUARDRAIL`, and standalone definition
+    readers/writers have been removed. Existing physical tables are left intact.
+
+    Before resuming Governance authoring, pause authoring and legacy definition
+    writers, back up the contract and old definition tables, and run the explicit
+    maintenance operation in the configured metadata environment:
+
+    ```python
+    from fabricops_kit.data_contract.migration import migrate_contract_definitions
+
+    report = migrate_contract_definitions(config=CONFIG, env=ENV, spark_session=spark)
+    report["conflicts"], report["drafts"]
+    ```
+
+    Supply the active configuration object and environment from `00_env_config`
+    in place of `CONFIG` and `ENV`. The default is report-only. Review all proposed
+    drafts and conflicts, then apply the exact reviewed snapshot while writers
+    remain paused:
+
+    ```python
+    result = migrate_contract_definitions(
+        config=CONFIG, env=ENV, spark_session=spark, dry_run=False,
+        reviewed_snapshot=report["snapshot_fingerprint"], authoring_paused=True,
+    )
+    ```
+
+    Any conflict blocks every write and identifies the contract, source version,
+    rule or Enrichment field, and disagreeing values. Orphans, malformed payloads,
+    unsupported definitions, conflicts between old versions and the newest frozen
+    definition, and existing drafts requiring a merge must be resolved explicitly;
+    finish or discard an open draft before retrying. The migration does not guess
+    a parent, choose conflicting values, or rewrite a frozen payload. Blank or
+    malformed historical payloads require recovery from an authoritative backup
+    before this operation can proceed.
+
+    Definitions already represented in their exact payload need no new version.
+    Side-table-only definitions are copied into a new inactive, agreement-free
+    draft seeded from the latest frozen version, with all definition ownership
+    rebound to the new version. A provenance fingerprint makes repeat runs of the
+    same source records a no-op. Missing old tables count as empty; other read
+    failures propagate. A changed snapshot requires a new dry-run review.
+
+    The paused-writer requirement is operational: this maintenance operation does
+    not acquire a distributed lock. Apply appends all proposed drafts in one write
+    to `METADATA_DATA_CONTRACT`; it never activates them. Review, save, freeze,
+    validate, and activate each candidate through the normal lifecycle before use.
+    Existing Production execution continues to use its exact frozen version.
+
+    Only after verifying the report, exported definitions, new drafts, and
+    consumers should you manually remove the old physical tables if desired.
+    Never remove `METADATA_GUARDRAIL_RESULTS` or other execution-history tables.
+    Historical release manifests retain the schemas shipped in those releases;
+    they do not define the current setup inventory.
 
 ### Expected result
 

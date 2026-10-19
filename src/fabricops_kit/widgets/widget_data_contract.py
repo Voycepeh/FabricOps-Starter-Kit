@@ -713,11 +713,9 @@ def widget_data_contract(
         if str(current["contract"].get("status") or "").lower() == "draft":
             payload, warnings = contracts.assemble_contract_payload(
                 draft=current["contract"],
-                tables={
-                    "METADATA_DATA_CATALOGUE": current.get("catalogue_rows", []),
-                    contracts.ENRICHMENT_TABLE: current.get("enrichment", []),
-                    contracts.GUARDRAIL_TABLE: current.get("guardrails", []),
-                },
+                catalogue_rows=current.get("catalogue_rows", []),
+                enrichment_rows=current.get("enrichment", []),
+                guardrail_rows=current.get("guardrails", []),
                 environment_name=env,
                 scheduled_refresh=contract_schedule,
                 allow_incomplete_grain=True,
