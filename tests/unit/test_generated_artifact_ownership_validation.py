@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
+
+import pytest
 
 import scripts.validate_generated_artifact_ownership as validation
 
@@ -108,9 +111,47 @@ def test_stale_public_call_flow_json_fails_validation(monkeypatch) -> None:
     def fake_run(command, **kwargs):  # noqa: ANN001, ANN202
         if command[:3] == ["git", "diff", "--exit-code"]:
             return completed
-        return subprocess.CompletedProcess(args=command, returncode=0)
+        return subprocess.CompletedProcess(
+            args=command,
+            returncode=0,
+            stdout=json.dumps({"snapshots": [{"version": "main", "revision": "a" * 40}]}),
+        )
 
     monkeypatch.setattr(validation.subprocess, "run", fake_run)
     monkeypatch.setattr(validation, "restore_generated_metadata_and_page_timestamps", lambda **kwargs: None)
 
     assert validation.validate(["src/fabricops_kit/__init__.py"]) == 1
+
+
+@pytest.mark.parametrize("diff_status", [0, 1])
+def test_compatibility_validation_pins_committed_baseline_and_checks_diff(monkeypatch, diff_status) -> None:
+    """A moving main baseline is pinned without suppressing stale artifact failures."""
+    commands = []
+
+    def fake_run(command, **kwargs):  # noqa: ANN001, ANN202
+        commands.append(command)
+        if command[:2] == ["git", "show"]:
+            return subprocess.CompletedProcess(
+                command, 0, stdout=json.dumps({"snapshots": [{"version": "main", "revision": "b" * 40}]})
+            )
+        return subprocess.CompletedProcess(command, diff_status if command[:2] == ["git", "diff"] else 0)
+
+    monkeypatch.setattr(validation.subprocess, "run", fake_run)
+    monkeypatch.setattr(validation, "restore_generated_metadata_and_page_timestamps", lambda **kwargs: None)
+
+    assert validation.run_check(validation.COMPATIBILITY_CHECK) == diff_status
+    assert commands[0] == ["git", "show", "HEAD:docs/reference/_data/public-api-compatibility.json"]
+    assert commands[1] == (*validation.COMPATIBILITY_CHECK.command, "--main-ref", "b" * 40)
+
+
+def test_compatibility_validation_rejects_non_commit_baseline(monkeypatch) -> None:
+    """The recorded baseline cannot be a moving ref or a command option."""
+    monkeypatch.setattr(
+        validation.subprocess,
+        "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(
+            args, 0, stdout=json.dumps({"snapshots": [{"version": "main", "revision": "origin/main"}]})
+        ),
+    )
+    with pytest.raises(ValueError, match="exact main commit SHA"):
+        validation.run_check(validation.COMPATIBILITY_CHECK)

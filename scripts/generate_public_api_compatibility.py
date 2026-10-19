@@ -584,7 +584,7 @@ def _source_digest(sources: Mapping[str, str]) -> str:
     return f"sha256:{digest.hexdigest()}"
 
 
-def build_payload(tags: Iterable[str] | None = None) -> dict[str, Any]:
+def build_payload(tags: Iterable[str] | None = None, *, main_ref: str | None = None) -> dict[str, Any]:
     """Build snapshots and all independently selectable comparisons."""
     selected_tags = tuple(tags) if tags is not None else _release_tags()
     snapshots: list[dict[str, Any]] = []
@@ -598,13 +598,14 @@ def build_payload(tags: Iterable[str] | None = None) -> dict[str, Any]:
                 sources=_sources_from_git(tag),
             )
         )
-    try:
-        _run_git("rev-parse", "origin/main^{commit}")
-        main_ref = "origin/main"
-    except subprocess.CalledProcessError:
-        main_ref = "main"
+    if main_ref is None:
+        try:
+            _run_git("rev-parse", "origin/main^{commit}")
+            main_ref = "origin/main"
+        except subprocess.CalledProcessError:
+            main_ref = "main"
     main_revision = _run_git("rev-parse", f"{main_ref}^{{commit}}").strip()
-    main_sources = _sources_from_git(main_ref)
+    main_sources = _sources_from_git(main_revision)
     snapshots.append(
         build_snapshot(
             version="main",
@@ -645,9 +646,11 @@ def build_payload(tags: Iterable[str] | None = None) -> dict[str, Any]:
     }
 
 
-def write_payload(output_path: Path = OUTPUT_PATH, tags: Iterable[str] | None = None) -> dict[str, Any]:
+def write_payload(
+    output_path: Path = OUTPUT_PATH, tags: Iterable[str] | None = None, *, main_ref: str | None = None
+) -> dict[str, Any]:
     """Write the deterministic compatibility payload."""
-    payload = build_payload(tags)
+    payload = build_payload(tags, main_ref=main_ref)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     if output_path == OUTPUT_PATH:
@@ -665,8 +668,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=OUTPUT_PATH)
     parser.add_argument("--tag", action="append", dest="tags", help="Limit generation to one or more tags.")
+    parser.add_argument("--main-ref", help="Exact baseline revision for reproducing a recorded main snapshot.")
     args = parser.parse_args(argv)
-    write_payload(args.output, args.tags)
+    write_payload(args.output, args.tags, main_ref=args.main_ref)
     return 0
 
 
