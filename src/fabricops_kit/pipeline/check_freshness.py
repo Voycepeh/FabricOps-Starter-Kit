@@ -1,4 +1,4 @@
-"""Public source freshness guardrail check."""
+"""Internal source freshness guardrail check."""
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import resolve_fabric_context
@@ -20,59 +20,13 @@ from fabricops_kit.pipeline.shared import (
 def check_freshness(
     table_id: str,
     *,
-    enabled: bool = True,
-    raise_on_failure: bool = False,
     spark_session=None,
     verbose: bool = True,
+    context=None,
+    execution_type="enforce",
 ) -> dict:
-    """Check whether a source satisfies configured freshness intent.
-    
-    Parameters
-    ----------
-    table_id : str
-        Canonical governed source identity returned by :func:`pipeline_read`.
-    enabled : bool, default=True
-        Explicitly disable this check when ``False``. Normally omit this value;
-        FabricOps enforces the resolved pipeline Data Contract automatically.
-    raise_on_failure : bool, default=False
-        Raise ``RuntimeError`` when a blocking freshness result cannot continue.
-    spark_session : object, optional
-        Spark session to use. When omitted, FabricOps resolves the active session.
-    verbose : bool, default=True
-        Print the concise normalized check outcome when ``True``.
-    
-    Returns
-    -------
-    dict
-        Structured freshness evidence and continuation decision. Governed
-        observation checks append the outcome to ``METADATA_GUARDRAIL_RESULTS``.
-
-    Raises
-    ------
-    ValueError
-        If the observation or configured freshness rule is invalid.
-    RuntimeError
-        If ``raise_on_failure=True`` and a blocking freshness result cannot
-        continue.
-
-    Notes
-    -----
-    Production resolves expectations from the active Data Contract. Development
-    uses an explicitly selected immutable version, or safely skips when none is
-    selected.
-    
-    Examples
-    --------
-    >>> result = check_freshness(source_result["table_id"])
-
-    """
-    if not enabled:
-        result = {"status": "skipped", "can_continue": True, "checks": []}
-        print_guardrail_result("Freshness", result, verbose=verbose, table_id=table_id)
-        if verbose:
-            print("  Evaluation skipped by caller; no freshness rule evaluated or evidence written.")
-        return result
-    config, env, context = resolve_fabric_context()
+    """Evaluate the resolved contract stage and return its continuation decision."""
+    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
     requested_table_id = str(table_id).strip()
     contract = resolve_pipeline_data_contract(
         config,
@@ -181,6 +135,8 @@ def check_freshness(
             table_id=table_id,
             contract_id=str(freshness_rule.get("contract_id") or ""),
             contract_version=int(freshness_rule.get("contract_version") or 0),
+            execution_type=execution_type,
+            context=context,
         )
     print_guardrail_result(
         "Freshness",
@@ -202,6 +158,4 @@ def check_freshness(
             f"latest observed={result.get('latest_value')}, required minimum={result.get('required_min_value')}."
         )
         print("  Evidence appended to METADATA_GUARDRAIL_RESULTS.")
-    if raise_on_failure and not result["can_continue"]:
-        raise RuntimeError(f"A blocking freshness Guardrail failed for table_id {table_id!r}.")
     return result

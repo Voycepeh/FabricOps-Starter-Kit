@@ -4,14 +4,13 @@ Store aggregate enforce and validate Guardrail summaries, captured table name, r
 
 ## Writer functions
 
-* [`check_dq`](../../api/reference/check_dq.md)
-* [`check_freshness`](../../api/reference/check_freshness.md)
-* [`check_schema`](../../api/reference/check_schema.md)
-* [`check_source_drift`](../../api/reference/check_source_drift.md)
+* [`orchestrate_read`](../../api/reference/orchestrate_read.md)
+* [`orchestrate_write`](../../api/reference/orchestrate_write.md)
 
 ## Used in Workflow Template
 
-* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Source guardrails
+* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Standard Read orchestration
+* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Standard Write orchestration
 
 ## Model
 

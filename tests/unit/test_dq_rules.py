@@ -34,12 +34,9 @@ def test_check_dq_passes_development_contract_context_to_runtime(monkeypatch):
     assert captured["context"] is context
 
 
-def test_check_dq_can_skip_contract_io_and_raise_on_block(monkeypatch):
-    """Notebook validation mode removes result-list orchestration."""
+def test_internal_dq_returns_blocking_decision_to_orchestration(monkeypatch):
+    """The stage returns its decision; orchestration owns stopping."""
     module = importlib.import_module("fabricops_kit.pipeline.check_dq")
-    assert module.check_dq(object(), table_id="orders", enabled=False) == {
-        "status": "skipped", "can_continue": True, "checks": [],
-    }
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(module, "resolve_pipeline_data_contract", lambda *args, **kwargs: {"contract_id": "contract-a"})
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *_args, **_kwargs: {
@@ -47,8 +44,9 @@ def test_check_dq_can_skip_contract_io_and_raise_on_block(monkeypatch):
         "schema": "sales", "table_name": "orders",
     })
     monkeypatch.setattr(module, "check_dq_runtime", lambda *_args, **_kwargs: {"can_continue": False})
-    with pytest.raises(RuntimeError, match="blocking DQ Guardrail"):
-        module.check_dq(object(), table_id="orders", raise_on_failure=True, spark_session=object())
+    result = module.check_dq(object(), table_id="orders", spark_session=object())
+    assert result["can_continue"] is False
+
 
 
 def test_check_dq_skips_when_development_has_no_selected_contract(monkeypatch):
@@ -60,7 +58,7 @@ def test_check_dq_skips_when_development_has_no_selected_contract(monkeypatch):
         module, "check_dq_runtime",
         lambda *args, **kwargs: pytest.fail("DQ must not run without a selected Development contract"),
     )
-    result = module.check_dq(object(), table_id="orders", raise_on_failure=True, spark_session=object())
+    result = module.check_dq(object(), table_id="orders", spark_session=object())
     assert result["status"] == "skipped"
     assert result["can_continue"] is True
     assert result["environment_name"] == "dev"

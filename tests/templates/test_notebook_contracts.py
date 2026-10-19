@@ -211,7 +211,7 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "same `02A_full_refresh_demo` notebook" in step_4
     assert "do not edit a frozen version in place" in normalized["step_4"]
     assert "defaults every table to **enforce**" in normalized["step_4"]
-    assert "pipeline_write()" in normalized["step_4"]
+    assert "the physical write stage was not reached" in normalized["step_4"]
     assert "is never reached" in normalized["step_4"]
 
     assert "# step 5. activate the data contract and promote to production" in normalized["step_5"]

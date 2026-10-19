@@ -407,7 +407,8 @@ def test_repository_manifest_lifecycle_authority(repository_call_flow_payload) -
     assert "display_guardrail_results" not in {item["function_name"] for item in payload["public_functions"]}
 
     manifest = flows.load_release_manifests()[-1]
-    expected_live = sum(1 for item in manifest["functions"] if item["status"] == "live")
+    current_names = {item["function_name"] for item in payload["public_functions"]}
+    expected_live = sum(1 for item in manifest["functions"] if item["status"] == "live" and item["name"] in current_names)
     assert payload["release_contract"]["live_public_function_count"] == expected_live
 
 

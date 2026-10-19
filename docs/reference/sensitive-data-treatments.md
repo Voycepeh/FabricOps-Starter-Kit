@@ -126,9 +126,9 @@ Input DataFrame
 
     ### Token mapping ownership
 
-    FabricOps returns the original-to-token relationship as `support_mapping`, but **does not persist it automatically**.
+    FabricOps returns the original-to-token relationship as `result["sensitive_result"]["support_mapping"]`, but **does not persist it automatically**.
 
-    To keep tokens stable across runs, the project must persist the mapping appropriately and provide it back to [`check_sensitive_data()`](../api/reference/check_sensitive_data.md) as `existing_mapping`.
+    To keep tokens stable across runs, the project must persist the mapping appropriately and provide it back to [Sensitive Data stage](../api/reference/orchestrate_write.md) as `existing_mapping`.
 
     Raw original values are excluded from `METADATA_GUARDRAIL_RESULTS`; they exist in the returned support mapping.
 
@@ -186,16 +186,13 @@ The treatment logic is the same; publication is different.
 
 This makes Development validation representative of the treatment that will occur when the contract is activated and enforced in Production.
 
-## Warn and Block
+After consuming the prepared DataFrame and persisting a returned token mapping, call its `unpersist()` method to release its cache. One returned mapping owns the cache for every tokenized column. Failed orchestration releases token caches automatically.
 
-Warn and Block apply when a treatment **cannot be applied**. The mere presence of sensitive data is not itself a failed Sensitive Data Guardrail.
+## Treatment failures block publication
 
-| Action | Treatment failure behavior |
-| --- | --- |
-| **Warn** | Record the failure, leave the input unchanged for that rule, and allow execution to continue. |
-| **Block** | Record the failure and stop the governed write path. |
+Every active Sensitive Data treatment must succeed. FabricOps records a failed treatment in `METADATA_GUARDRAIL_RESULTS` and stops `orchestrate_write()` before publication. There is no Warn/Block selector for Sensitive Data.
 
-A successfully applied treatment is a passing Sensitive Data Guardrail result.
+A successfully applied treatment produces a passing result. Classification Enrichment alone does not activate a treatment.
 
 ## Downstream implications
 
@@ -217,6 +214,6 @@ The final target profile is also based on the successfully published treated tar
 - [AI-assisted Data Contract Authoring](../solutions/ai-assisted-data-contract-authoring.md)
 - [Plug-and-Play Data Pipelines with Data Contract Enforcement](../solutions/plug-and-play-data-pipelines.md)
 - [Read & Write Modes](read-and-load-strategies.md)
-- [`check_sensitive_data()`](../api/reference/check_sensitive_data.md)
+- [Sensitive Data stage](../api/reference/orchestrate_write.md)
 - [Guardrail metadata](metadata/metadata_guardrail.md)
 - [Guardrail Results](metadata/metadata_guardrail_results.md)

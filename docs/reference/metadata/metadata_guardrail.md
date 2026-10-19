@@ -1,6 +1,6 @@
 # METADATA_GUARDRAIL
 
-Define enforced Schema, Freshness, Source Drift, Data Quality, and Sensitive Data requirements with Warn or Block actions; table_name and optional column_name capture their names when the rule is written.
+Define enforced Guardrails: Schema violations and configured Sensitive Data treatment failures block; Freshness, Source Drift, and Data Quality retain Warn/Block actions. Authored names are captured in table_name and optional column_name.
 
 ## Writer functions
 

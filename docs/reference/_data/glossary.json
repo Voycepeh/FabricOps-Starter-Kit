@@ -54,7 +54,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "Versioned rules that FabricOps checks during governed pipeline execution.",
-    "long_definition": "FabricOps Guardrails define runtime expectations such as Schema, Freshness, Source Drift, Data Quality, and Sensitive Data treatment. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Other rules can be configured to warn or block when their expectation is not met.",
+    "long_definition": "FabricOps Guardrails define runtime expectations such as Schema, Freshness, Source Drift, Data Quality, and Sensitive Data treatment. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.",
     "preferred_usage": "Use guardrails for the governed rules FabricOps evaluates; use singular only for grammar.",
     "avoid_usage": "generic policy when a FabricOps Guardrail is meant"
   },
@@ -79,7 +79,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "Evaluating active Guardrails during a pipeline run and applying their configured action.",
-    "long_definition": "FabricOps enforcement runs the relevant Guardrails at read or write boundaries. A failed rule can warn or block according to its configuration.",
+    "long_definition": "FabricOps orchestrate_read() and orchestrate_write() resolve the selected Data Contract and run its Guardrails at the relevant boundary. Schema violations and Sensitive Data treatment failures block; Freshness, Source Drift, and Data Quality follow their saved Warn or Block action. Guardrail Coverage gates publication.",
     "preferred_usage": "Use enforcement for applying active Guardrails during execution.",
     "avoid_usage": "validation when the runtime action on a Guardrail result is meant"
   },
@@ -91,7 +91,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "The outcome of a Guardrail evaluation during a pipeline run.",
-    "long_definition": "FabricOps returns the evaluated rule outcome and resulting status or pipeline decision so the caller can inspect what passed, warned, or blocked.",
+    "long_definition": "FabricOps persists summary outcomes in METADATA_GUARDRAIL_RESULTS and returns stage results through orchestrate_read() and orchestrate_write(), so Engineering can inspect what passed, warned, or blocked.",
     "preferred_usage": "Use guardrail result for the recorded outcome of a FabricOps Guardrail evaluation.",
     "avoid_usage": "rule result"
   },
@@ -166,29 +166,29 @@
     "source_url": "https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/list-item-schedules"
   },
   {
-    "id": "pipeline-write",
-    "term": "pipeline_write",
+    "id": "orchestrate-write",
+    "term": "orchestrate_write",
     "aliases": [
       "governed write",
       "write orchestrator"
     ],
     "category": "FabricOps concepts",
     "short_definition": "The FabricOps orchestrator for validating and writing one governed target.",
-    "long_definition": "pipeline_write() runs the applicable write-side checks, applies the governed load strategy, writes the target through FabricOps I/O, and records the resulting metadata only after the write succeeds.",
-    "preferred_usage": "Use pipeline_write when referring to the public governed write orchestrator.",
+    "long_definition": "orchestrate_write() runs the applicable write-side checks, applies the governed load strategy, writes the target through FabricOps I/O, and records the resulting metadata only after the write succeeds.",
+    "preferred_usage": "Use orchestrate_write when referring to the public governed write orchestrator.",
     "avoid_usage": "a raw write helper"
   },
   {
-    "id": "pipeline-read",
-    "term": "pipeline_read",
+    "id": "orchestrate-read",
+    "term": "orchestrate_read",
     "aliases": [
       "governed read",
       "read orchestrator"
     ],
     "category": "FabricOps concepts",
     "short_definition": "The FabricOps orchestrator for reading a source and running the configured read-side governance checks.",
-    "long_definition": "pipeline_read() resolves the source, reads it through the appropriate FabricOps I/O path, and runs the applicable read-side checks before returning data and inspection outputs to the notebook.",
-    "preferred_usage": "Use pipeline_read when referring to the public governed read orchestrator.",
+    "long_definition": "orchestrate_read() resolves the source, reads it through the appropriate FabricOps I/O path, and runs the applicable read-side checks before returning data and inspection outputs to the notebook.",
+    "preferred_usage": "Use orchestrate_read when referring to the public governed read orchestrator.",
     "avoid_usage": "a raw read helper"
   },
   {

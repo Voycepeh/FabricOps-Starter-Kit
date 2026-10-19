@@ -1,4 +1,4 @@
-"""Public owner for governed pipeline source-read orchestration."""
+"""Internal owner for governed pipeline source-read orchestration."""
 
 from __future__ import annotations
 
@@ -88,6 +88,7 @@ def pipeline_read(
     target_table_id: str | None = None,
     spark_session=None,
     verbose: bool = True,
+    context=None,
 ) -> dict[str, Any]:
     """Read one governed pipeline source through the appropriate Fabric store.
 
@@ -139,6 +140,8 @@ def pipeline_read(
         when ``read_mode="incremental"``.
     spark_session : object, optional
         Spark session forwarded to the selected foundational reader instead of relying on notebook-global ``spark``.
+    context : dict, optional
+        Call-scoped resolved contracts, rules, and Catalogue identities.
     verbose : bool, default=True
         Whether to print one concise orchestration message showing the resolved
         Fabric store type, physical table identity, and selected foundational
@@ -285,7 +288,7 @@ def pipeline_read(
     if not table_id and (store is None or table_name is None):
         raise ValueError("Provide table_id or both store and table_name.")
 
-    config, env, context = resolve_fabric_context()
+    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
     if table_id:
         identity = resolve_catalogue_table_identity(config, env, table_id, context=context)
     else:

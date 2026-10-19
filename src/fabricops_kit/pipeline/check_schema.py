@@ -1,4 +1,4 @@
-"""Public schema guardrail check."""
+"""Internal schema guardrail check."""
 
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_query
 
@@ -23,69 +23,13 @@ def check_schema(
     dataframe=None,
     *,
     table_id: str,
-    enabled: bool = True,
-    raise_on_failure: bool = False,
     spark_session=None,
     verbose: bool = True,
+    context=None,
+    execution_type="enforce",
 ) -> dict:
-    """Check a persisted or supplied schema against configured schema intent.
-
-    Parameters
-    ----------
-    dataframe : DataFrame, optional
-        Incoming DataFrame whose schema should be checked. When omitted, the
-        schema of the configured physical table is checked.
-    table_id : str
-        Canonical identity of an active registered Catalogue table.
-    enabled : bool, default=True
-        Explicitly disable this check when ``False``. Normally omit this value;
-        FabricOps enforces the resolved pipeline Data Contract automatically.
-    raise_on_failure : bool, default=False
-        Raise ``RuntimeError`` when a blocking schema result cannot continue.
-    spark_session : object, optional
-        Spark session to use. When omitted, FabricOps resolves the active session.
-    verbose : bool, default=True
-        Print the concise normalized check outcome when ``True``.
-
-    Returns
-    -------
-    dict
-        Structured guardrail status, continuation decision, checks, and schema
-        differences. Governed configured-table checks append the outcome to
-        ``METADATA_GUARDRAIL_RESULTS``.
-
-    Raises
-    ------
-    ValueError
-        If the target is unsupported or no active approved Schema guardrail
-        exists for the resolved table.
-    RuntimeError
-        If ``raise_on_failure=True`` and a blocking schema result cannot
-        continue.
-
-    Notes
-    -----
-    Production uses the active Data Contract. Development uses an explicitly
-    selected immutable version, or safely skips when no contract is selected.
-    Required selections enforce column presence, not non-null values; an empty
-    selection requires no columns. Present contracted columns use frozen
-    datatypes. Missing Required columns and datatype mismatches block
-    continuation. Additional columns warn and permit continuation.
-
-    Examples
-    --------
-    >>> result = check_schema(table_id="lakehouse||source||dbo||orders")
-    >>> result["can_continue"]
-    True
-
-    """
-    if not enabled:
-        result = {"status": "skipped", "can_continue": True, "checks": []}
-        print_guardrail_result("Schema", result, verbose=verbose, table_id=table_id)
-        if verbose:
-            print("  Evaluation skipped by caller; no schema rule evaluated or evidence written.")
-        return result
-    config, env, context = resolve_fabric_context()
+    """Evaluate the resolved contract stage and return its continuation decision."""
+    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
     spark = get_spark_session() if spark_session is None else spark_session
     contract = resolve_pipeline_data_contract(
         config,
@@ -203,7 +147,8 @@ def check_schema(
         table_id=table_id,
         contract_id=str(contract.get("contract_id") or ""),
         contract_version=int(contract.get("contract_version") or 0),
-        execution_type="enforce",
+        execution_type=execution_type,
+        context=context,
     )
     print_guardrail_result(
         "Schema",
@@ -226,6 +171,4 @@ def check_schema(
             f"datatype={len(result.get('datatype_mismatches') or [])}."
         )
         print("  Evidence appended to METADATA_GUARDRAIL_RESULTS.")
-    if raise_on_failure and not result["can_continue"]:
-        raise RuntimeError(f"A blocking schema Guardrail failed for table_id {identity['table_id']!r}.")
     return result

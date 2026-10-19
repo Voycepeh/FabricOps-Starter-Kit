@@ -1,7 +1,21 @@
 """Focused tests for standard pipeline orchestration."""
 from unittest.mock import Mock, patch
 import pytest
+import importlib
 
+
+
+@pytest.fixture(autouse=True)
+def planned_stages(monkeypatch):
+    """Isolate stage ordering from metadata planning; integration tests exercise planning."""
+    def prepare(table_ids, **_kwargs):
+        return {"config": object(), "env": "dev",
+                "_pipeline_contracts": {tid: {"contract_version": 1} for tid in table_ids},
+                "_pipeline_rules": {tid: [{"guardrail_type": kind} for kind in
+                    ("schema", "freshness", "sensitive_data", "data_quality", "source_drift")] for tid in table_ids}}
+    monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_read"), "prepare_pipeline_execution", prepare)
+    monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_write"), "prepare_pipeline_execution", prepare)
+    monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_read"), "resolve_table_id", lambda **_kwargs: "source-id")
 
 def test_orchestrate_read_orders_stages_and_preserves_source(capsys):
     """Read stages run in order and retain source identity."""

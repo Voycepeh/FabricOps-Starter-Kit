@@ -53,6 +53,7 @@ def orchestrate_write(
     repartition_by: int | None=None,
     frequency_enabled: bool=True,
     frequency_top_n: int | None=5,
+    existing_mapping=None,
     spark_session=None,
     verbose: bool=True,
 ) -> dict[str, Any]:
@@ -75,12 +76,13 @@ Required describes the Python signature. An optional parameter may still be need
 | `store` | `str` | Yes | `—` | Configured destination store key. |
 | `schema` | `str \| None` | Yes | `—` | Physical target schema. This keyword is required; pass None for a store without schemas. |
 | `table_name` | `str` | Yes | `—` | Physical target table name. |
-| `write_mode` | `str` | Yes | `—` | Notebook-facing Write mode forwarded to :func:`pipeline_write` as its governed load strategy. |
-| `write_parameters` | `dict[str, Any] \| None` | No | `None` | Parameters for the selected Write mode, forwarded to :func:`pipeline_write` as ``load_strategy_parameters``. For example, SCD1 requires ``key_columns``; SCD2 requires ``key_columns`` and ``effective_column`` and may also define ``tracked_columns``. |
+| `write_mode` | `str` | Yes | `—` | Notebook-facing Write mode forwarded to the internal Write stage as its governed load strategy. |
+| `write_parameters` | `dict[str, Any] \| None` | No | `None` | Parameters for the selected Write mode, forwarded to the internal Write stage as ``load_strategy_parameters``. For example, SCD1 requires ``key_columns``; SCD2 requires ``key_columns`` and ``effective_column`` and may also define ``tracked_columns``. |
 | `contracts` | `dict[str, Any] \| None` | No | `None` | ``widget_select_data_contract`` result used to choose Validate or Enforce publication behaviour. Both modes run the same Guardrails. |
 | `repartition_by` | `int \| None` | No | `None` | Spark write partition count. |
 | `frequency_enabled` | `bool` | No | `True` | Whether to calculate frequency distributions for this table. |
 | `frequency_top_n` | `int \| None` | No | `5` | Maximum ranked frequency values per eligible column; None retains all. |
+| `existing_mapping` | `pyspark.sql.DataFrame` | No | `None` | Previously returned Sensitive Data token mappings. Existing assignments are reused; the returned sensitive_result contains the support_mapping for the caller to persist and supply on later runs. After consuming the prepared DataFrame and persisting the mapping, call its unpersist() method to release its cache. Failed orchestration releases it automatically. |
 | `spark_session` | `object` | No | `None` | Spark session used by every stage. |
 | `verbose` | `bool` | No | `True` | Print stage start, outcome, duration, and failure attribution. |
 
@@ -118,7 +120,7 @@ dict
     target after Append, SCD1, or SCD2. ``sensitive_result`` retains its
     nested ``dataframe`` result. ``published`` is false when a Validate-mode
     contract passes without publication. ``write_metrics`` retains the
-    ``pipeline_write`` measurements, with ``total_target_rows`` reused from
+    internal Write measurements, with ``total_target_rows`` reused from
     persisted-target profiling when available. It never treats prepared
     input rows or profiled target rows as committed rows.
     ``total_duration_seconds`` measures the complete lifecycle, including
@@ -134,11 +136,15 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-Both contract modes run Schema, Sensitive Data, Source Drift, Data Quality,
-and Guardrail Coverage identically. Validate then returns without writing;
+Both contract modes evaluate the same configured Guardrails using contracts
+and rules resolved once per call. Absent Guardrails remain skipped in the
+result fields but are omitted from stdout and orchestration_stages.
+Contract-free Development prints one decision and proceeds to Write.
+Validate resolves the exact selected frozen candidate and records
+execution_type=validate evidence for activation, then returns without writing;
 Enforce continues through Write and persisted-target Profile. Existing
 metadata and Source Observation commit behaviour remains owned by
-``pipeline_write``. The returned ``dataframe`` is the prepared Write input,
+the internal Write stage. The returned ``dataframe`` is the prepared Write input,
 not a reread of the persisted target; Append, SCD1, and SCD2 may produce a
 different target state. No DataFrame is displayed or materialized for this
 return value. With verbose=True, every successful execution prints a final
@@ -154,9 +160,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:15`
+`fabricops_kit/pipeline/orchestrate_write.py:21`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L15-L171">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L21-L210">View on GitHub</a>
 </div>
 
 
@@ -172,7 +178,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 166 |
+| Live-critical dependencies | 175 |
 
 ### Release history
 
@@ -236,11 +242,16 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.write_warehouse_synapsesql</code></li>
+<li><code>fabricops_kit.pipeline.check_dq.check_dq</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._contract</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._current_activity_results</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._label</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._payload</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._rules</code></li>
+<li><code>fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage</code></li>
+<li><code>fabricops_kit.pipeline.check_schema.check_schema</code></li>
+<li><code>fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data</code></li>
+<li><code>fabricops_kit.pipeline.check_source_drift.check_source_drift</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._persist_target_processing</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._physical_processing_definition</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._source_table_ids</code></li>
@@ -250,6 +261,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.pipeline_write._warehouse_target_exists</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._write_scope</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._writer_scheduled_refresh</code></li>
+<li><code>fabricops_kit.pipeline.pipeline_write.pipeline_write</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._audit_literal_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._automatic_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe</code></li>
@@ -278,7 +290,9 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_type_name</code></li>
 <li><code>fabricops_kit.pipeline.shared._actual_schema</code></li>
 <li><code>fabricops_kit.pipeline.shared._apply_bypass_post_review_warning</code></li>
+<li><code>fabricops_kit.pipeline.shared._apply_token_mapping</code></li>
 <li><code>fabricops_kit.pipeline.shared._bucket_column</code></li>
+<li><code>fabricops_kit.pipeline.shared._build_token_mapping</code></li>
 <li><code>fabricops_kit.pipeline.shared._canonical_dq_rule_type</code></li>
 <li><code>fabricops_kit.pipeline.shared._catalogue_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
@@ -312,7 +326,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._spark_sql_helpers</code></li>
 <li><code>fabricops_kit.pipeline.shared._string_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._summarize_dq_guardrail</code></li>
-<li><code>fabricops_kit.pipeline.shared._tokenize_column</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
@@ -332,7 +345,10 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.persist_lineage_participation</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>
+<li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_guardrail_result</code></li>
+<li><code>fabricops_kit.pipeline.shared.print_pipeline_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_active_data_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_data_contract_version</code></li>
@@ -348,7 +364,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.stage_pipeline_write_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>
-<li><code>fabricops_kit.widgets.shared._coerce_rows</code></li>
 </ul>
 
 

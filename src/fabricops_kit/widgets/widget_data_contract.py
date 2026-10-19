@@ -1121,7 +1121,7 @@ def widget_data_contract(
             "column_name": next((str(item.get("column_name") or "") for item in current.get("available_columns", []) if str(item.get("column_id") or "") == column_id), "") if column_id else "",
             "guardrail_type": guardrail_type, "rule_id": old.get("rule_id") or rule_type,
             "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters),
-            "action": "Block" if guardrail_type == "schema" else action, "is_active": active,
+            "action": "Block" if guardrail_type in {"schema", "sensitive_data"} else action, "is_active": active,
         }
 
     def render() -> None:
@@ -2540,7 +2540,6 @@ def widget_data_contract(
             sensitive_field.layout.width = "100%"
             sensitive_field.layout.min_width = "0"
             sensitive_field.layout.max_width = "722px"
-        sensitive_block = widgets.Checkbox(description="Block on failure", disabled=not editable)
         sensitive_rule_preview = widgets.HTML()
         mask_start = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve start"))
         mask_end = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve end"))
@@ -2693,7 +2692,6 @@ def widget_data_contract(
                 "pii_type": pii_type.value,
                 "pii_reason": pii_reason.value,
                 "sensitive_treatment": sensitive_treatment.value,
-                "sensitive_block": sensitive_block.value,
                 "mask_start": mask_start.value,
                 "mask_end": mask_end.value,
                 "mask_character": mask_character.value,
@@ -2863,7 +2861,6 @@ def widget_data_contract(
                     table_name=str(table.get("table_name") or ""),
                     column_name=str(selected.get("column_name") or ""),
                 )
-                sensitive_block.value = str(sensitive.get("action") or "Warn") == "Block"
                 mask_start.value = str(sensitive_parameters.get("preserve_start", 0))
                 mask_end.value = str(sensitive_parameters.get("preserve_end", 0))
                 mask_character.value = str(sensitive_parameters.get("mask_character") or "*")
@@ -2891,7 +2888,6 @@ def widget_data_contract(
                         pending["sensitive_treatment"],
                         fallback="tokenize",
                     )
-                    sensitive_block.value = pending["sensitive_block"]
                     mask_start.value = pending["mask_start"]
                     mask_end.value = pending["mask_end"]
                     mask_character.value = pending["mask_character"]
@@ -2979,11 +2975,7 @@ def widget_data_contract(
                 return
             pii_label = PII_LABELS.get(pii_value, pii_value)
             treatment = str(sensitive_treatment.value or "")
-            action = (
-                "Block the pipeline run on failure."
-                if sensitive_block.value
-                else "Do not block the pipeline run on failure."
-            )
+            action = "Treatment failure stops the write."
             detail = ""
             if treatment == "mask":
                 detail = (
@@ -3023,7 +3015,7 @@ def widget_data_contract(
             )
 
         for sensitive_control in (
-            sensitive_enabled, pii_type, pii_reason, sensitive_treatment, sensitive_block,
+            sensitive_enabled, pii_type, pii_reason, sensitive_treatment,
             mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
         ):
             sensitive_control.observe(refresh_sensitive_rule_preview, names="value")
@@ -3084,7 +3076,6 @@ def widget_data_contract(
             if not is_pii:
                 sensitive_enabled.value = False
             sensitive_treatment.disabled = not editable or not is_pii
-            sensitive_block.disabled = not editable or not is_pii
             update_sensitive_fields()
 
         pii_type.observe(update_pii_fields, names="value")
@@ -3359,7 +3350,6 @@ def widget_data_contract(
             pii_reason.value = str(suggestion["reason"])
             sensitive_enabled.value = suggestion["pii_type"] != "none"
             sensitive_treatment.value = str(suggestion.get("treatment") or "mask")
-            sensitive_block.value = str(suggestion.get("action") or "Warn") == "Block"
             parameters = suggestion.get("parameters", {})
             mask_start.value = str(parameters.get("preserve_start", 0))
             mask_end.value = str(parameters.get("preserve_end", 0))
@@ -3537,7 +3527,7 @@ def widget_data_contract(
                 })
             return guardrail_record(
                 "sensitive_data", str(sensitive_treatment.value), parameters, column_id=cid,
-                action="Block" if sensitive_block.value else "Warn",
+                action="Block",
                 existing=existing, active=sensitive_enabled.value,
             )
 
@@ -3556,7 +3546,7 @@ def widget_data_contract(
                 set_validation_error(key)
                 mark_column_hydrated(
                     "sensitive_enabled", "pii_type", "pii_reason", "sensitive_treatment",
-                    "sensitive_block", "mask_start", "mask_end", "mask_character",
+                    "mask_start", "mask_end", "mask_character",
                     "bucket_bins", "bucket_labels",
                 )
             except (TypeError, ValueError, RuntimeError) as exc:
@@ -3662,7 +3652,7 @@ def widget_data_contract(
             control.observe(sync_column_enrichment, names="value")
         required.observe(sync_required, names="value")
         for control in (
-            sensitive_enabled, pii_type, pii_reason, sensitive_treatment, sensitive_block,
+            sensitive_enabled, pii_type, pii_reason, sensitive_treatment,
             mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
         ):
             control.observe(sync_sensitive, names="value")
@@ -3985,7 +3975,6 @@ def widget_data_contract(
                 ),
                 header_controls=[
                     sensitive_enabled,
-                    sensitive_block,
                 ],
                 primary_children=[
                     sensitive_primary,
@@ -5108,7 +5097,7 @@ def widget_data_contract(
             "pii_type": pii_type, "pii_reason": pii_reason,
             "sensitive_ai": sensitive_ai, "accept_sensitive": accept_sensitive,
             "rerun_sensitive": rerun_sensitive,
-            "sensitive_block": sensitive_block, "mask_start": mask_start,
+            "mask_start": mask_start,
             "mask_end": mask_end, "mask_character": mask_character,
             "bucket_bins": bucket_bins, "bucket_labels": bucket_labels,
             "dq_family_controls": dq_family_controls,

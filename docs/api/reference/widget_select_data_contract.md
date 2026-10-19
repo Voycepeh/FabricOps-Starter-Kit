@@ -57,12 +57,13 @@ Required describes the Python signature. An optional parameter may still be need
 
 dict
     Notebook scope, role-preserving table states, table-scoped execution
-    modes and contract identities, controls, a ``set_mode`` callable, and
-    a ``validate`` operation that evaluates the selected target candidate.
+    modes and contract identities, controls, and a ``set_mode`` callable. Pass
+    this selection to ``orchestrate_write`` to evaluate the exact target
+    candidate and choose validation-only or enforcing publication.
 
 ### Return interpretation
 
-Each source remains in enforce mode. Each target returns its independent enforce or validate mode and exact contract identity; the validate operation evaluates the selected frozen candidate later against the transformed target DataFrame.
+Each source remains in enforce mode. Each target returns its independent enforce or validate mode and exact contract identity; orchestrate_write evaluates that exact frozen candidate against the transformed target DataFrame and persists validate evidence before activation.
 
 ## Raises / Errors
 
@@ -100,9 +101,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_select_data_contract.py:141`
+`fabricops_kit/widgets/widget_select_data_contract.py:140`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L141-L507">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L140-L486">View on GitHub</a>
 </div>
 
 

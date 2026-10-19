@@ -5,7 +5,9 @@ from __future__ import annotations
 import inspect
 import fabricops_kit
 
-from fabricops_kit import check_source_drift, check_freshness, profile_table
+from fabricops_kit import profile_table
+from fabricops_kit.pipeline.check_source_drift import check_source_drift
+from fabricops_kit.pipeline.check_freshness import check_freshness
 
 
 def _assert_numpy_parameter_contract(function) -> None:
@@ -19,20 +21,16 @@ def _assert_numpy_parameter_contract(function) -> None:
         )
 
 
-def test_live_observation_checks_keep_their_supported_public_signatures() -> None:
-    """Protect the explicitly governed observation-check signatures."""
-    assert str(inspect.signature(check_freshness)) == (
-        "(table_id: str, *, enabled: bool = True, raise_on_failure: bool = False, spark_session=None, verbose: bool = True) -> dict"
-    )
-    assert str(inspect.signature(check_source_drift)) == (
-        "(source_table_id: str, *, target_table_id: str, enabled: bool = True, raise_on_failure: bool = False, spark_session=None, verbose: bool = True) -> dict"
-    )
-    assert not hasattr(fabricops_kit, "observe_table")
-    assert not hasattr(fabricops_kit, "check_changes")
-    assert not hasattr(fabricops_kit, "check_source_stability")
+def test_orchestrators_are_the_public_pipeline_execution_entrypoints() -> None:
+    """Standalone execution stages and checks have no supported root imports."""
+    assert callable(fabricops_kit.orchestrate_read)
+    assert callable(fabricops_kit.orchestrate_write)
+    for name in ("pipeline_read", "pipeline_write", "check_freshness", "check_schema",
+                 "check_dq", "check_source_drift", "check_sensitive_data", "check_guardrail_coverage"):
+        assert not hasattr(fabricops_kit, name)
 
 
-def test_stage2_touched_public_functions_keep_complete_numpy_parameter_docs() -> None:
-    """Prevent metadata refactors from collapsing established public API documentation."""
-    for function in (check_source_drift, check_freshness, profile_table):
+def test_public_orchestrators_keep_complete_numpy_parameter_docs() -> None:
+    """Every public workflow parameter remains documented, including token mapping reuse."""
+    for function in (fabricops_kit.orchestrate_read, fabricops_kit.orchestrate_write, profile_table):
         _assert_numpy_parameter_contract(function)

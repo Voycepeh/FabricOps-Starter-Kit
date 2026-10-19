@@ -132,8 +132,7 @@ def test_save_freeze_runtime_preserves_selections(monkeypatch, required):
 
 
 @pytest.mark.parametrize("difference", ["matching", "missing", "datatype", "additional"])
-@pytest.mark.parametrize("raise_on_failure", [False, True])
-def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, difference, raise_on_failure):
+def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, difference):
     """Run real resolution, adapter, evaluator and result writer beneath check_schema."""
     module = importlib.import_module("fabricops_kit.pipeline.check_schema")
     config = framework_config()
@@ -163,13 +162,8 @@ def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, differ
         "additional": [("id", "bigint"), ("extra", "string")],
     }[difference])
     blocking = difference in {"missing", "datatype"}
-    arguments = dict(dataframe=dataframe, table_id="orders", spark_session=spark, verbose=False, raise_on_failure=raise_on_failure)
-    if raise_on_failure and blocking:
-        with pytest.raises(RuntimeError, match="blocking schema"):
-            module.check_schema(**arguments)
-        result = json.loads(writes[0][0].rows[0]["result_payload_json"])
-    else:
-        result = module.check_schema(**arguments)
+    arguments = dict(dataframe=dataframe, table_id="orders", spark_session=spark, verbose=False)
+    result = module.check_schema(**arguments)
     assert len(writes) == 1
     frame, table, routing = writes[0]
     persisted = frame.rows[0]

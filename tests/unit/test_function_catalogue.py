@@ -151,47 +151,32 @@ def test_format_specific_io_and_internal_guardrails_are_not_root_exported() -> N
     assert {"stop_if_failed", "write_catalogue_evidence"}.isdisjoint(root_exports)
 
 
-def test_guardrail_coverage_is_public_and_stop_if_failed_is_internal() -> None:
-    """Keep workflow coverage public without exposing the shared stop helper."""
+def test_pipeline_execution_and_checks_are_internal() -> None:
+    """Only orchestrators expose pipeline execution in the public catalogue."""
     import fabricops_kit
     from fabricops_kit import pipeline
-    from fabricops_kit.public_api import PREVIEW_PUBLIC_API
+    from fabricops_kit.public_api import RELEASE_PUBLIC_API
 
-    coverage_qualified_name = (
-        "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage"
-    )
-    assert coverage_qualified_name in PREVIEW_PUBLIC_API
-    assert "check_guardrail_coverage" in fabricops_kit.__all__
-    assert "check_guardrail_coverage" in pipeline.__all__
-    assert fabricops_kit.check_guardrail_coverage is pipeline.check_guardrail_coverage
-
-    assert "stop_if_failed" not in fabricops_kit.__all__
-    assert "stop_if_failed" not in pipeline.__all__
-    assert not hasattr(pipeline, "stop_if_failed")
-
-
-def test_guardrail_coverage_preview_lifecycle_matches_generated_contract() -> None:
-    """Keep the Preview registry aligned with the generated public inventory."""
-    data = json.loads(
-        (ROOT / "docs" / "reference" / "_data" / "public-function-call-flows.json").read_text(
-            encoding="utf-8"
-        )
-    )
-    public_qns = {str(row["qualified_name"]) for row in data["public_analysis"]}
-    public_by_name = {row["function_name"]: row for row in data["functions"] if row["qualified_name"] in public_qns}
-
-    assert public_by_name["check_guardrail_coverage"]["lifecycle_status"] == "preview"
-    assert "stop_if_failed" not in public_by_name
+    removed = {
+        "check_schema", "check_freshness", "check_source_drift", "check_dq",
+        "check_sensitive_data", "check_guardrail_coverage", "pipeline_read", "pipeline_write",
+    }
+    assert removed.isdisjoint(fabricops_kit.__all__)
+    assert removed.isdisjoint(pipeline.__all__)
+    assert removed.isdisjoint(name.rsplit(".", 1)[-1] for name in RELEASE_PUBLIC_API)
+    assert all(not hasattr(fabricops_kit, name) for name in removed)
+    assert {"orchestrate_read", "orchestrate_write"} <= set(pipeline.__all__)
+    data = json.loads((ROOT / "docs/reference/_data/public-function-call-flows.json").read_text())
+    public = {row["qualified_name"].rsplit(".", 1)[-1] for row in data["public_analysis"]}
+    assert removed.isdisjoint(public)
 
 
-def test_sensitive_data_reference_uses_public_failure_behavior() -> None:
-    """Keep the public example independent of the internal stop helper."""
-    page = (ROOT / "docs" / "api" / "reference" / "check_sensitive_data.md").read_text(
-        encoding="utf-8"
-    )
-
-    assert "raise_on_failure=True" in page
-    assert "stop_if_failed" not in page
+def test_sensitive_data_reference_uses_orchestration() -> None:
+    """Token mappings and treatment outcomes stay accessible through orchestration."""
+    page = (ROOT / "docs/api/reference/orchestrate_write.md").read_text()
+    assert "existing_mapping" in page
+    assert "sensitive_result" in page
+    assert not (ROOT / "docs/api/reference/check_sensitive_data.md").exists()
 
 
 def test_retired_function_taxonomy_audit_is_removed() -> None:

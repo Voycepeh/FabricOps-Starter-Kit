@@ -6,25 +6,23 @@ import inspect
 
 import pytest
 
-from fabricops_kit import check_dq, check_freshness, check_schema, check_sensitive_data
+from fabricops_kit.pipeline.check_dq import check_dq
+from fabricops_kit.pipeline.check_schema import check_schema
+from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
 from fabricops_kit.pipeline import shared as shared_module
 from fabricops_kit.pipeline.shared import print_guardrail_result
 
 pytestmark = pytest.mark.unit
 
 
-def test_dataframe_guardrail_public_signatures_are_consistent() -> None:
-    """DataFrame checks use a DataFrame-first interface and shared controls."""
-    assert str(inspect.signature(check_schema)) == (
-        "(dataframe=None, *, table_id: str, enabled: bool = True, "
-        "raise_on_failure: bool = False, spark_session=None, verbose: bool = True) -> dict"
-    )
-    assert "dataframe" == next(iter(inspect.signature(check_dq).parameters))
-    assert "dataframe" == next(iter(inspect.signature(check_sensitive_data).parameters))
-    for check in (check_dq, check_sensitive_data):
+def test_internal_guardrail_stage_controls_are_consistent() -> None:
+    """Internal DataFrame stages accept the shared runtime controls."""
+    for check in (check_schema, check_dq, check_sensitive_data):
         parameters = inspect.signature(check).parameters
-        assert parameters["enabled"].default is True
-        assert parameters["raise_on_failure"].default is False
+        assert "enabled" not in parameters
+        assert "raise_on_failure" not in parameters
+        assert parameters["context"].default is None
+        assert parameters["execution_type"].default == "enforce"
         assert parameters["verbose"].default is True
 
 
@@ -113,10 +111,3 @@ def test_guardrail_formatter_verbose_false_suppresses_output(capsys) -> None:
         target_table_id="unified.demo.curated_orders",
     )
     assert capsys.readouterr().out == ""
-
-
-def test_disabled_freshness_prints_skipped(capsys) -> None:
-    """Disabled public checks return and report SKIPPED without runtime setup."""
-    result = check_freshness("source.demo.orders", enabled=False)
-    assert result["status"] == "skipped"
-    assert "Result SKIPPED" in capsys.readouterr().out

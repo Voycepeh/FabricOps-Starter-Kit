@@ -8,7 +8,7 @@ Need the complete implementation-level dependency graph? Use the [Call Flow Dash
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">34</strong>
+    <strong class="reference-kpi-value">26</strong>
     <span class="reference-kpi-title">Public functions</span>
     <p class="reference-kpi-note">Notebook-facing Starter Kit functions.</p>
   </section>
@@ -18,14 +18,14 @@ Need the complete implementation-level dependency graph? Use the [Call Flow Dash
 
 ## Find a function
 
-Use the finder below to search 34 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
+Use the finder below to search 26 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
 
 <div class="callable-finder" data-callable-finder>
   <label class="callable-finder-label" for="callable-finder-input">Search public functions</label>
   <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">
   <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, starter path, usage source, or description.</p>
   <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">lineage</span> <span class="callable-finder-chip">guardrail</span></p>
-  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 34 public functions.</p>
+  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 26 public functions.</p>
   <p class="callable-finder-empty" data-callable-finder-empty hidden>No public functions match your search.</p>
 </div>
 
@@ -34,9 +34,9 @@ Use the finder below to search 34 public functions. Config classes stay out of t
 
     Maintainer inventory metrics:
 
-    - Source Python files count: 51
-    - Total callables: 609
-    - Supporting functions: 270
+    - Source Python files count: 50
+    - Total callables: 612
+    - Supporting functions: 281
     - Private helpers to review: 298
 
     - [Function Call Graph](../function-call-graph.md): explanatory page for the v4 normalized public-function call-flow architecture contract.
@@ -67,49 +67,9 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 </details>
 
 <details class="reference-function-group" data-callable-group="pipeline-capabilities" data-default-open="false">
-<summary><span class="reference-function-group-title">Pipeline &amp; Guardrail Capabilities</span><span class="reference-function-group-meta">10 functions · Compose directly when needed</span></summary>
-<p class="reference-function-group-description">Governed reads, writes, profiling, Data Quality, schema, freshness, Sensitive Data, Source Drift, and coverage checks.</p>
+<summary><span class="reference-function-group-title">Profiling &amp; Table Identity</span><span class="reference-function-group-meta">2 functions · Standalone metadata utilities</span></summary>
+<p class="reference-function-group-description">Profile registered tables and resolve canonical table identities. Pipeline execution and Guardrails belong to the orchestrators.</p>
 <div class="reference-catalogue-list">
-<article id="pipeline.check_dq-check_dq" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_dq" data-callable-module="pipeline" data-function-type="public-starter-kit" data-callable-purpose="Evaluate current active governed DQ rules and persist linked rule and failed-row evidence.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/check_dq/"><code>check_dq</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Evaluate current active governed DQ rules and persist linked rule and failed-row evidence.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
-</article>
-<article id="pipeline.check_freshness-check_freshness" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_freshness" data-callable-module="pipeline" data-function-type="public-starter-kit" data-callable-purpose="Check whether source timing satisfies direct or approved freshness intent.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/check_freshness/"><code>check_freshness</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Check whether source timing satisfies direct or approved freshness intent.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
-</article>
-<article id="pipeline.check_guardrail_coverage-check_guardrail_coverage" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_guardrail_coverage" data-callable-module="pipeline.check_guardrail_coverage" data-function-type="public-starter-kit" data-callable-purpose="Verify that every governed pipeline participant and configured Guardrail is ready before publication.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/check_guardrail_coverage/"><code>check_guardrail_coverage</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Verify that every governed pipeline participant and configured Guardrail is ready before publication.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
-</article>
-<article id="pipeline.check_schema-check_schema" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_schema" data-callable-module="pipeline" data-function-type="public-starter-kit" data-callable-purpose="Check observed table schema against direct or approved schema intent.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/check_schema/"><code>check_schema</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Check observed table schema against direct or approved schema intent.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
-</article>
-<article id="pipeline.check_sensitive_data-check_sensitive_data" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_sensitive_data" data-callable-module="pipeline.check_sensitive_data" data-function-type="public-starter-kit" data-callable-purpose="Apply explicit Sensitive Data treatment before a governed write.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/check_sensitive_data/"><code>check_sensitive_data</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Apply explicit Sensitive Data treatment before a governed write.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
-</article>
-<article id="pipeline.check_source_drift-check_source_drift" class="reference-catalogue-item" data-callable-row="true" data-callable-name="check_source_drift" data-callable-module="pipeline" data-function-type="public-starter-kit" data-callable-purpose="Validate source changes against one target consumption baseline using the source's governed load behaviour.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/check_source_drift/"><code>check_source_drift</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Validate source changes against one target consumption baseline using the source's governed load behaviour.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
-</article>
-<article id="pipeline.pipeline_read-pipeline_read" class="reference-catalogue-item" data-callable-row="true" data-callable-name="pipeline_read" data-callable-module="pipeline.pipeline_read" data-function-type="public-starter-kit" data-callable-purpose="Read one governed pipeline source through its configured Fabric store.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/pipeline_read/"><code>pipeline_read</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Read one governed pipeline source through its configured Fabric store.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span></p>
-</article>
-<article id="pipeline.pipeline_write-pipeline_write" class="reference-catalogue-item" data-callable-row="true" data-callable-name="pipeline_write" data-callable-module="pipeline.pipeline_write" data-function-type="public-starter-kit" data-callable-purpose="Publish one governed pipeline target through its configured Fabric store.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/pipeline_write/"><code>pipeline_write</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Publish one governed pipeline target through its configured Fabric store.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span></p>
-</article>
 <article id="pipeline.profile_table-profile_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="profile_table" data-callable-module="pipeline" data-callable-starter-path="99_explore" data-callable-usage-source="99_explore" data-function-type="public-starter-kit" data-callable-purpose="Profile a Spark DataFrame or complete governed table and return statistical and frequency results.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/profile_table/"><code>profile_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Profile a Spark DataFrame or complete governed table and return statistical and frequency results.</p>

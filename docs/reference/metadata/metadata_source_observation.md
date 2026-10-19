@@ -4,11 +4,13 @@ Store source evidence observed by one logical pipeline for one governed target, 
 
 ## Writer functions
 
-No public writer function is traced in the current implementation.
+* [`orchestrate_read`](../../api/reference/orchestrate_read.md)
+* [`orchestrate_write`](../../api/reference/orchestrate_write.md)
 
 ## Used in Workflow Template
 
-No starter template or solution is traced for the public writer functions.
+* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Standard Read orchestration
+* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Standard Write orchestration
 
 ## Model
 

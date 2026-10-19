@@ -374,7 +374,7 @@ def test_guardrail_service_normalizes_all_supported_types_and_actions(
     )
 
     assert row["guardrail_type"] == guardrail_type
-    assert row["action"] == action
+    assert row["action"] == ("Block" if guardrail_type in {"schema", "sensitive_data"} else action)
     assert row["contract_id"] == "contract"
     assert row["contract_version"] == 2
     assert row["table_name"] == "orders"
@@ -416,7 +416,7 @@ def test_sensitive_data_guardrail_requires_column_scope_and_exact_contract(
     )
     assert (row["contract_id"], row["contract_version"]) == ("contract", 2)
     assert row["column_id"] == "email-id"
-    assert row["action"] == action
+    assert row["action"] == "Block"
 
 
 @pytest.mark.parametrize("parameters", [
@@ -638,3 +638,28 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
         ("PROD", "Reader", "04_reporting", "2026-09-26T02:30:00"),
     }
 
+
+
+@pytest.mark.parametrize("guardrail_type", ["schema", "sensitive_data"])
+def test_saved_manifest_uses_block_for_mandatory_guardrails(guardrail_type):
+    """Inherited Warn rows cannot reintroduce optional mandatory protections on save."""
+    draft = {
+        "contract_id": "contract", "contract_version": 1, "table_id": "orders",
+        "environment_name": "dev", "status": "draft",
+        "contract_payload_json": json.dumps({"table": {"processing": {"load_strategy": "overwrite"}}}),
+    }
+    rule = {
+        "guardrail_rule_id": "rule", "guardrail_version": 1,
+        "contract_id": "contract", "contract_version": 1, "environment_name": "dev",
+        "guardrail_type": guardrail_type, "rule_type": "required_columns" if guardrail_type == "schema" else "tokenize",
+        "rule_parameters_json": json.dumps({"required_columns": []} if guardrail_type == "schema" else {"scope": "column", "treatment": "tokenize"}),
+        "action": "Warn", "is_active": True,
+    }
+    payload, _warnings = service.assemble_contract_payload(
+        draft=draft, environment_name="dev", tables={
+            "METADATA_DATA_CATALOGUE": [{"table_id": "orders", "metadata_level": "table", "environment_name": "dev", "is_active": True}],
+            service.ENRICHMENT_TABLE: [], service.GUARDRAIL_TABLE: [rule],
+        },
+    )
+    assert payload["guardrails"][0]["action"] == "Block"
+    assert rule["action"] == "Warn"

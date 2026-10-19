@@ -37,19 +37,19 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="guardrails">
 <summary><strong>Guardrails</strong> — Versioned rules that FabricOps checks during governed pipeline execution.</summary>
-<p>FabricOps Guardrails define runtime expectations such as Schema, Freshness, Source Drift, Data Quality, and Sensitive Data treatment. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Other rules can be configured to warn or block when their expectation is not met.</p>
+<p>FabricOps Guardrails define runtime expectations such as Schema, Freshness, Source Drift, Data Quality, and Sensitive Data treatment. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.</p>
 <p><strong>Also known as:</strong> guardrail</p>
 </details>
 
 <details id="enforcement">
 <summary><strong>Enforcement</strong> — Evaluating active Guardrails during a pipeline run and applying their configured action.</summary>
-<p>FabricOps enforcement runs the relevant Guardrails at read or write boundaries. A failed rule can warn or block according to its configuration.</p>
+<p>FabricOps orchestrate_read() and orchestrate_write() resolve the selected Data Contract and run its Guardrails at the relevant boundary. Schema violations and Sensitive Data treatment failures block; Freshness, Source Drift, and Data Quality follow their saved Warn or Block action. Guardrail Coverage gates publication.</p>
 <p><strong>Also known as:</strong> runtime enforcement, enforce</p>
 </details>
 
 <details id="guardrail-result">
 <summary><strong>Guardrail Result</strong> — The outcome of a Guardrail evaluation during a pipeline run.</summary>
-<p>FabricOps returns the evaluated rule outcome and resulting status or pipeline decision so the caller can inspect what passed, warned, or blocked.</p>
+<p>FabricOps persists summary outcomes in METADATA_GUARDRAIL_RESULTS and returns stage results through orchestrate_read() and orchestrate_write(), so Engineering can inspect what passed, warned, or blocked.</p>
 <p><strong>Also known as:</strong> guardrail results</p>
 </details>
 
@@ -110,15 +110,15 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p><strong>Also known as:</strong> row grain</p>
 </details>
 
-<details id="pipeline-read">
-<summary><strong>pipeline_read()</strong> — The FabricOps orchestrator for reading a source and running the configured read-side governance checks.</summary>
-<p>pipeline_read() resolves the source, reads it through the appropriate FabricOps I/O path, and runs the applicable read-side checks before returning data and inspection outputs to the notebook.</p>
+<details id="orchestrate-read">
+<summary><strong>orchestrate_read()</strong> — The FabricOps orchestrator for reading a source and running the configured read-side governance checks.</summary>
+<p>orchestrate_read() resolves the source, reads it through the appropriate FabricOps I/O path, and runs the applicable read-side checks before returning data and inspection outputs to the notebook.</p>
 <p><strong>Also known as:</strong> governed read, read orchestrator</p>
 </details>
 
-<details id="pipeline-write">
-<summary><strong>pipeline_write()</strong> — The FabricOps orchestrator for validating and writing one governed target.</summary>
-<p>pipeline_write() runs the applicable write-side checks, applies the governed load strategy, writes the target through FabricOps I/O, and records the resulting metadata only after the write succeeds.</p>
+<details id="orchestrate-write">
+<summary><strong>orchestrate_write()</strong> — The FabricOps orchestrator for validating and writing one governed target.</summary>
+<p>orchestrate_write() runs the applicable write-side checks, applies the governed load strategy, writes the target through FabricOps I/O, and records the resulting metadata only after the write succeeds.</p>
 <p><strong>Also known as:</strong> governed write, write orchestrator</p>
 </details>
 

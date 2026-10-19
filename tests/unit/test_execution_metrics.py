@@ -114,8 +114,9 @@ def test_summary_duration_is_wall_clock_and_unknown_values_are_explicit(capsys):
 
 
 @pytest.mark.parametrize("mode", ["overwrite", "append", "scd1", "scd2"])
-def test_write_summary_keeps_profile_total_separate_from_committed(mode, capsys):
+def test_write_summary_keeps_profile_total_separate_from_committed(mode, capsys, monkeypatch):
     module = import_module("fabricops_kit.pipeline.orchestrate_write")
+    monkeypatch.setattr(module, "prepare_pipeline_execution", lambda *_args, **_kwargs: {"_pipeline_contracts": {"target": None}, "_pipeline_rules": {"target": []}})
     frame = SimpleNamespace(columns=["id", "value"])
     with ExitStack() as stack:
         for name in ("resolve_table_id", "check_schema", "check_source_drift", "check_dq", "check_guardrail_coverage"):
@@ -138,8 +139,10 @@ def test_write_summary_keeps_profile_total_separate_from_committed(mode, capsys)
 
 
 @pytest.mark.parametrize("incremental,rows", [(False, 8), (True, 0), (True, None)])
-def test_read_summary_reuses_profile_only_for_full_scope(incremental, rows, capsys):
+def test_read_summary_reuses_profile_only_for_full_scope(incremental, rows, capsys, monkeypatch):
     module = import_module("fabricops_kit.pipeline.orchestrate_read")
+    monkeypatch.setattr(module, "resolve_table_id", lambda **_kwargs: "source")
+    monkeypatch.setattr(module, "prepare_pipeline_execution", lambda *_args, **_kwargs: {"_pipeline_contracts": {"source": None}, "_pipeline_rules": {"source": []}})
     source = {"dataframe": SimpleNamespace(columns=["id"]), "table_id": "source", "read_metrics": {"rows_read": rows if incremental else None}, "_reader_name": "read_warehouse_query"}
     with ExitStack() as stack:
         stack.enter_context(patch.object(module, "pipeline_read", return_value=source))

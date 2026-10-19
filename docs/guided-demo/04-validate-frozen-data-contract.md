@@ -45,7 +45,7 @@ Run the normal visible **Read → Transform → Write** sequence without changin
 
 The `curated_orders` Write block evaluates the frozen contract but does not publish the target.
 
-Validate returns `published=False` and `validation_passed=True` when the frozen contract passes. This provides validation evidence before the business target can be written under Enforce. The notebook exits after the successful validation gate, so [`pipeline_write()`](../api/reference/pipeline_write.md) is never reached and the second Write block is intentionally not reached on this run.
+Validate returns `published=False` and `validation_passed=True` when the frozen contract passes. This provides validation evidence before the business target can be written under Enforce. The notebook exits after the successful validation gate, so the internal publication stage is never reached and the second Write block is intentionally not reached on this run.
 
 Confirm:
 
@@ -54,7 +54,7 @@ Confirm:
 - Freshness, Schema, Source Drift, Sensitive Data, Data Quality, and Guardrail Coverage all report successful evidence where applicable
 - the configured `customer_id` Sensitive Data treatment is applied in the prepared DataFrame
 - every DQ check is passed
-- `pipeline_write()` was not reached
+- the physical Write stage was not reached
 
 This proves the contract describes the canonical target before we deliberately break it.
 
@@ -100,10 +100,10 @@ Expected source-side evidence:
 | Guardrail | Deliberate condition | Expected |
 | --- | --- | --- |
 | Freshness | latest `modified_datetime` exceeds the governed maximum age | Warn/fail evidence |
-| Schema | `unexpected_demo_column` is not in the frozen schema | Warn/fail evidence |
+| Schema | `unexpected_demo_column` is not in the frozen schema | Warning; execution continues |
 | Source Drift | current Orders observation differs from the last successfully consumed baseline | changed/drift evidence |
 
-Keep these rules on Warn for this run so the pipeline can reach the later target checks.
+Keep Freshness and Source Drift on Warn for this run so the pipeline can reach the later target checks. Schema permits additional columns automatically; missing Required columns or wrong contracted datatypes would block.
 
 !!! warning "Restore the canonical source immediately after the source test"
     Rerun Step 00C's canonical Orders load before continuing. Do not carry the dirty Bronze source into later demo steps. The mutation is intentionally confined to Development and the canonical CSV remains unchanged.
@@ -241,7 +241,7 @@ Inspect the rule-level checks rather than relying only on the aggregate DQ statu
 
 Inspect `write_result["sensitive_result"]` from the target validation. Confirm the configured `customer_id` treatment was evaluated and that the prepared DataFrame contains the treated representation.
 
-Sensitive Data is intentionally different from a validation rule: valid sensitive values are **transformed**, not failed merely because they exist. A treatment failure can Warn or Block, but manufacturing an invalid treatment configuration is not a useful data-quality scenario.
+Sensitive Data is intentionally different from a validation rule: valid sensitive values are **transformed**, not failed merely because they exist. A failed treatment always blocks publication; the same treatment behavior runs in Validate and Enforce modes.
 
 Also confirm the dirty target's `unexpected_target_column` produces target **Schema** warning evidence. This is separate from the source Schema exercise above and proves the Write boundary validates the DataFrame before publication.
 
@@ -253,7 +253,7 @@ To prove enforcement:
 
 1. return to `01_governance`,
 2. create/refine a new contract version,
-3. turn **Block on failure** on for any one of the deliberately failing Freshness, Schema, or DQ rules,
+3. turn **Block on failure** on for any one of the deliberately failing Freshness or DQ rules,
 4. save and freeze the new version,
 5. select that version for the relevant table,
 6. rerun its dirty path.
@@ -264,7 +264,7 @@ Do not edit a frozen version in place. Refine the draft, freeze a new immutable 
 
 ### Prove Guardrail Coverage
 
-[Guardrail Coverage](../api/reference/check_guardrail_coverage.md) is not another Warn/Block rule. It is the pre-publication readiness gate that verifies every selected participant has an applicable contract and that every applicable Guardrail produced current-activity evidence.
+[Guardrail Coverage](../api/reference/orchestrate_write.md) is not another Warn/Block rule. It is the pre-publication readiness gate that verifies every selected participant has an applicable contract and that every applicable Guardrail produced current-activity evidence.
 
 The normal complete run should return `coverage_result.status == "passed"`.
 
@@ -304,7 +304,7 @@ Data Contract UI
     → Warn / Block behavior
 ```
 
-The exercise now covers both orchestrator boundaries ([`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md)): Read-side Freshness/Schema/DQ evidence, Write-side Schema/Sensitive Data/Source Drift/DQ, and the final [Guardrail Coverage](../api/reference/check_guardrail_coverage.md) readiness gate. Source mutations are restored from the canonical fixture; target mutations remain in-session only.
+The exercise now covers both orchestrator boundaries ([`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md)): Read-side Freshness/Schema/DQ evidence, Write-side Schema/Sensitive Data/Source Drift/DQ, and the final Guardrail Coverage readiness gate. Source mutations are restored from the canonical fixture; target mutations remain in-session only.
 
 ### Expected result
 

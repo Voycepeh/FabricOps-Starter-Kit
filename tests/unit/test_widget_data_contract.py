@@ -835,7 +835,6 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     controls["mask_end"].value = "2"
     controls["mask_character"].value = "#"
     controls["sensitive_enabled"].value = True
-    controls["sensitive_block"].value = True
 
     completeness = controls["dq_family_controls"]["completeness"]
     completeness["enabled"].value = True
@@ -878,7 +877,7 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     assert hydrated["mask_end"].value == "2"
     assert hydrated["mask_character"].value == "#"
     assert hydrated["sensitive_enabled"].value is True
-    assert hydrated["sensitive_block"].value is True
+    assert "sensitive_block" not in hydrated
 
     reopened_completeness = hydrated["dq_family_controls"]["completeness"]
     assert reopened_completeness["enabled"].value is True
@@ -1542,7 +1541,7 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     controls["accept_sensitive"].click()
     assert controls["pii_type"].value == "direct"
     assert controls["sensitive_treatment"].value == "mask"
-    assert controls["sensitive_block"].value is True
+    assert "sensitive_block" not in controls
     assert controls["column_description"].value == description
     assert controls["column_classification"].value == "Confidential"
     assert controls["required"].value is False

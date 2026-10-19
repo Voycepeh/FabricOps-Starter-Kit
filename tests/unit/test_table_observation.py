@@ -28,8 +28,8 @@ def test_current_observations_are_tracked_independently_by_table_id() -> None:
     ) == [{"source": "b"}]
 
 
-def test_missing_current_observation_requires_pipeline_read() -> None:
-    with pytest.raises(ValueError, match=r"call pipeline_read\(\) first"):
+def test_missing_current_observation_requires_orchestrate_read() -> None:
+    with pytest.raises(ValueError, match=r"call orchestrate_read\(\) first"):
         shared.get_current_source_observation(
             environment_name="dev", activity_id="missing", table_id="source-a"
         )
