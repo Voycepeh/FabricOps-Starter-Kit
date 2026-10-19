@@ -737,19 +737,23 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
 
 
 def test_metadata_reference_overview_renders_model_diagram() -> None:
-    """The current model shows only registered physical tables and labels the JSON column."""
+    """The current model uses the illustration and describes the implemented payload column."""
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
 
-    text = (ROOT / "docs" / "reference" / "metadata.md").read_text(encoding="utf-8")
-    diagram = text.split("```mermaid", 1)[1].split("```", 1)[0]
+    page = ROOT / "docs" / "reference" / "metadata.md"
+    text = page.read_text(encoding="utf-8")
+    image_reference = "../assets/fabricops-metadata-model.png"
+    assert (page.parent / image_reference).resolve().is_file()
+    assert image_reference in text
+    assert "one-to-many Data Contract to Guardrail Results relationship" in text
+    assert "```mermaid" not in text
     assert len(CANONICAL_METADATA_TABLES) == 10
-    assert all(name in diagram for name in CANONICAL_METADATA_TABLES)
-    assert "METADATA_ENRICHMENT" not in diagram
-    assert re.search(r"\bMETADATA_GUARDRAIL\b", diagram) is None
-    assert "contract_payload_json: string column" in diagram
-    assert "fabricops-metadata-model.png" not in text
-    assert "10 physical metadata tables, reduced from 12" in text
-    assert text.index("```mermaid") < text.index('<div class="metadata-table-grid">')
+    assert all(name in text for name in CANONICAL_METADATA_TABLES)
+    assert "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column" in text
+    assert "containing authored Guardrails and Enrichment" in text
+    assert "reduced from" not in text
+    assert "migration" not in text.casefold()
+    assert text.index(image_reference) < text.index('<div class="metadata-table-grid">')
 
 
 def test_template_function_map_page_stays_removed() -> None:
