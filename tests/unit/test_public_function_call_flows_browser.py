@@ -96,6 +96,35 @@ SMOKE_SCRIPT = r"""
       signal.value = ''; signal.dispatchEvent(new Event('input', {bubbles:true}));
 
       showWorkflow('compatibility');
+      const fixtureChange = (name, before, after, classification, change_type='modified') => ({qualified_name:name,lifecycle_before:before,lifecycle_after:after,classification,change_type,signature_before:'demo(value)',signature_after:after?'demo(value, option = None)':null,reasons:['Reason for '+name]});
+      const releaseFixture = [
+        fixtureChange('removed_live','Live',null,'potentially_breaking','removed'),
+        fixtureChange('demoted_live','Live','Preview','potentially_breaking'),
+        fixtureChange('preview_break','Preview','Live','potentially_breaking'),
+        fixtureChange('preview_removed','Preview',null,'review_required','removed'),
+        fixtureChange('compatible_live','Live','Live','nonbreaking'),
+        fixtureChange('review_live','Live','Live','review_required'),
+        fixtureChange('new_live',null,'Live','nonbreaking','added'),
+        fixtureChange('unreleased_preview',null,'Preview','nonbreaking','added'),
+        fixtureChange('old_discontinued','Discontinued','Live','nonbreaking'),
+        fixtureChange('unknown','Unknown','Live','review_required')
+      ];
+      renderReleaseImpact(releaseFixture);
+      const breakingText = document.getElementById('releaseBreakingResults').textContent;
+      const usedText = document.getElementById('compatResults').textContent;
+      check(document.querySelectorAll('#releaseBreakingResults article').length === 2, 'Live question must use released lifecycle');
+      check(breakingText.includes('removed_live') && breakingText.includes('demoted_live') && !breakingText.includes('preview_break'), 'Live question selected incorrect functions');
+      check(document.querySelectorAll('#compatResults article').length === 6, 'used-functions question selected incorrect functions');
+      check(usedText.includes('preview_removed') && usedText.includes('preview_break'), 'released Preview changes missing');
+      check(['Breaking','Compatible','Needs review'].every(label=>usedText.includes(label)), 'release status labels missing');
+      check(!usedText.includes('new_live') && !usedText.includes('unreleased_preview') && !usedText.includes('old_discontinued') && !usedText.includes('unknown'), 'excluded functions appeared');
+      check(document.querySelectorAll('#compatResults details:not([open])').length === 6, 'function details should start collapsed');
+      check(usedText.includes('Reason for compatible_live'), 'brief function reasons missing');
+      renderReleaseImpact([]);
+      check(document.getElementById('releaseBreakingResults').textContent === 'No breaking Live/Public function changes found.', 'empty Live question message incorrect');
+      compareMainImpact();
+      const expectedRelease = releaseQuestionChanges(currentCompatComparison.changes);
+      check(document.querySelectorAll('#compatResults article').length === expectedRelease.used.length, 'production to main comparison not rendered');
       const compatBaseline = document.getElementById('compatBaseline');
       const compatTarget = document.getElementById('compatTarget');
       check([...compatBaseline.options].some(option => option.value === 'v0.1.0'), 'v0.1.0 baseline option is missing');
@@ -112,6 +141,9 @@ SMOKE_SCRIPT = r"""
       const compatLifecycle = document.getElementById('compatLifecycle');
       compatLifecycle.value = 'Live'; compatLifecycle.dispatchEvent(new Event('change', {bubbles:true}));
       check(new URLSearchParams(location.search).get('compatLifecycle') === 'Live', 'lifecycle URL parameter was not retained');
+      document.getElementById('releaseImpactTab').click();
+      check(currentCompatComparison.target === 'main', 'history comparison leaked into release view');
+      check(document.querySelectorAll('#compatResults article').length === expectedRelease.used.length, 'release view not restored after history');
       showWorkflow('architecture');
 
       selectPublic(recursiveRoot.qualified_name, {scrollToPanel:false});
