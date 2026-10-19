@@ -418,7 +418,7 @@ def test_dq_authored_action_controls_runtime_continuation(
         "rule_id": "required", "rule_type": "completeness", "columns": ["value"],
         "maximum_missing_percent": 0, "treat_blank_as_missing": False, "severity": action,
     }])[0]
-    check = shared._run_dq_guardrail_checks(dataframe, "orders", [rule])[0]
+    check = shared._evaluate_dq_rules(dataframe, "orders", [rule])["checks"][0]
     result = shared._summarize_dq_guardrail([check])
     details = shared._dq_failed_values_dataframe(
         dataframe, [rule], run_id="run-action", row_identity_columns=[]
@@ -442,4 +442,4 @@ def test_dq_missing_column_raises_configuration_error(spark_session):
     }])[0]
 
     with pytest.raises(ValueError, match="missing column"):
-        shared._run_dq_guardrail_checks(dataframe, "customers", [rule])
+        shared._evaluate_dq_rules(dataframe, "customers", [rule])["checks"]

@@ -152,6 +152,12 @@ Both contract modes evaluate the same configured Guardrails using contracts
 and rules resolved once per call. Absent Guardrails remain skipped in the
 result fields but are omitted from stdout and orchestration_stages.
 Contract-free Development prints one decision and proceeds to Write.
+Data Quality uses native Spark expressions over the prepared input after
+Sensitive Data treatment. ``dq_result["dataframe"]`` adds row status and
+failed rule IDs; these tags are not automatically added to the published
+target. Rule summaries are appended to ``METADATA_GUARDRAIL_RESULTS``;
+``dq_result["failed_values"]`` remains a lazy, caller-owned detail DataFrame.
+Later actions on either DQ DataFrame can repeat Spark computation.
 Validate resolves the exact selected frozen candidate and records
 execution_type=validate evidence for activation, including a completion
 record for every covered contract after Guardrail Coverage passes, then returns without writing;
@@ -180,7 +186,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:23`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L23-L246">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L23-L252">View on GitHub</a>
 </div>
 
 
@@ -196,7 +202,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 181 |
+| Live-critical dependencies | 183 |
 
 ### Release history
 
@@ -320,10 +326,13 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._custom_expression_column</code></li>
 <li><code>fabricops_kit.pipeline.shared._custom_expression_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._custom_expression_tree</code></li>
+<li><code>fabricops_kit.pipeline.shared._dq_checks_from_counts</code></li>
+<li><code>fabricops_kit.pipeline.shared._dq_empty_failed_values</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_failed_expression</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_failed_value_schema</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_failed_values_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_tagged_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared._evaluate_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared._guardrail_schema_check_base</code></li>
 <li><code>fabricops_kit.pipeline.shared._is_active_guardrail_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared._load_active_dq_rules</code></li>
@@ -340,7 +349,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared._rule_review_status</code></li>
-<li><code>fabricops_kit.pipeline.shared._run_dq_guardrail_checks</code></li>
 <li><code>fabricops_kit.pipeline.shared._run_orchestration_stage</code></li>
 <li><code>fabricops_kit.pipeline.shared._select_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared._select_table_guardrail_rule</code></li>

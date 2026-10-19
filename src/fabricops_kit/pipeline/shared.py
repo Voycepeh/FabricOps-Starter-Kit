@@ -3883,7 +3883,13 @@ def check_dq_runtime(
     contract_version: int = 0,
     execution_type: str = "enforce",
 ) -> dict[str, Any]:
-    """Evaluate governed DQ rules, persist summaries, and return failed values."""
+    """Evaluate native Spark DQ flags, persist rule summaries, and return details.
+
+    Rule metrics, row status tags, and failed values share one evaluation plan.
+    Raw failed values are returned lazily, never persisted automatically. No
+    rows are dropped. Passing percentage tolerances suppress row failures for
+    that rule, preserving the existing authored threshold semantics.
+    """
     if execution_type not in {"enforce", "validate"}:
         raise ValueError("execution_type must be 'enforce' or 'validate'.")
     spark_session = getattr(dataframe, "sparkSession", None)
@@ -3906,18 +3912,13 @@ def check_dq_runtime(
         if isinstance(metadata_df, list) and not metadata_df
         else _load_active_dq_rules(metadata_df, table_id, env=env, dataset_name=dataset_name or None)
     )
-    checks = _run_dq_guardrail_checks(dataframe, table_name, rules) if rules else []
+    evaluation = _evaluate_dq_rules(dataframe, table_name, rules)
+    checks = evaluation["checks"]
     result = _summarize_dq_guardrail(checks)
-    result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
-    total_count = checks[0]["total_count"] if checks else int(dataframe.count())
+    result["dataframe"] = _dq_tagged_dataframe(dataframe, rules, evaluation=evaluation)
+    total_count = evaluation["total_count"]
     failed_rule_count = sum(not check["passed"] for check in checks)
-    failed_row_count = 0
-    if rules:
-        _, F, _ = _spark_sql_helpers()
-        any_failure = F.lit(False)
-        for rule in rules:
-            any_failure = any_failure | _dq_failed_expression(dataframe, rule)
-        failed_row_count = int(dataframe.filter(any_failure).count())
+    failed_row_count = evaluation["failed_row_count"]
     result["summary"] = {
         "DQ_STATUS": result["status"],
         "DQ_RULE_COUNT": len(checks),
@@ -3929,7 +3930,7 @@ def check_dq_runtime(
         "DQ_CHECKED_AT": get_current_audit_timestamp(config=config, drop_microseconds=False),
     }
     if not rules:
-        result["failed_values"] = spark_session.createDataFrame([], _dq_failed_value_schema())
+        result["failed_values"] = _dq_empty_failed_values(spark_session)
         return result
 
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
@@ -3971,7 +3972,7 @@ def check_dq_runtime(
     )
 
     result["failed_values"] = _dq_failed_values_dataframe(
-        dataframe, rules, run_id=resolved_run_id, row_identity_columns=identities,
+        dataframe, rules, run_id=resolved_run_id, row_identity_columns=identities, evaluation=evaluation,
     )
     return result
 
@@ -3991,9 +3992,19 @@ def _dq_failed_value_schema():
     ])
 
 
-def _dq_failed_values_dataframe(dataframe, rules, *, run_id: str, row_identity_columns: list[str]):
-    """Return one failed rule, involved column, and source record per row."""
+def _dq_empty_failed_values(spark_session):
+    """Build canonical empty details without starting a Python Spark worker."""
     _, F, _ = _spark_sql_helpers()
+    return spark_session.range(0).select(*[
+        F.lit(None if field.nullable else "").cast(field.dataType).alias(field.name)
+        for field in _dq_failed_value_schema()
+    ])
+
+
+def _dq_failed_values_dataframe(dataframe, rules, *, run_id: str, row_identity_columns: list[str], evaluation=None):
+    """Expand shared failure flags into details using native Spark expressions."""
+    _, F, _ = _spark_sql_helpers()
+    evaluation = evaluation if evaluation is not None else _evaluate_dq_rules(dataframe, "", rules)
     source_columns = list(dataframe.columns)
     source_types = dict(dataframe.dtypes)
     if row_identity_columns:
@@ -4007,9 +4018,12 @@ def _dq_failed_values_dataframe(dataframe, rules, *, run_id: str, row_identity_c
             {"ignoreNullFields": "false"},
         )
         row_identity = F.sha2(canonical_row, 256)
-    source = dataframe.withColumn("_fabricops_failure_source_id", F.monotonically_increasing_id())
-    frames = []
-    for rule in rules:
+    source = evaluation["frame"]
+    source_id = F.monotonically_increasing_id()
+    events = []
+    for rule, flag in zip(rules, evaluation["flags"], strict=True):
+        if flag is None:
+            continue
         columns = [str(name) for name in rule.get("columns") or ()]
         rule_type = str(rule.get("rule_type") or "")
         if rule_type == "column_relationship":
@@ -4025,7 +4039,7 @@ def _dq_failed_values_dataframe(dataframe, rules, *, run_id: str, row_identity_c
                 F.lit(column_name).alias("column_name"),
                 F.lit(column_role).alias("column_role"),
                 (
-                    F.col(column_name).cast("string")
+                    F.when(F.col(flag), F.col(column_name).cast("string"))
                     if column_name in source_types
                     else F.lit(None).cast("string")
                 ).alias("raw_value"),
@@ -4035,41 +4049,36 @@ def _dq_failed_values_dataframe(dataframe, rules, *, run_id: str, row_identity_c
         ])
         event_id = F.sha2(F.concat_ws(
             "|", F.lit(run_id), F.lit(rule["guardrail_rule_id"]),
-            F.col("_fabricops_failure_source_id").cast("string"),
+            source_id.cast("string"),
         ), 256)
         reason = f"Row failed {rule['rule_type']} rule {rule['rule_id']}."
         action = "Block" if rule["severity"] == "error" else "Warn"
-        evaluated = source.withColumn(
-            "_fabricops_dq_failed", _dq_failed_expression(source, rule)
+        events.append(F.struct(
+            F.col(flag).alias("failed"),
+            F.coalesce(event_id, F.lit("")).alias("failure_event_id"),
+            F.lit(run_id).alias("run_id"),
+            F.coalesce(row_identity, F.lit("")).alias("row_identity"),
+            F.lit(rule["guardrail_rule_id"]).alias("guardrail_rule_id"),
+            F.lit(rule["rule_id"]).alias("rule_id"),
+            F.lit(rule["rule_type"]).alias("rule_type"), F.lit(action).alias("action"),
+            details.alias("details"), F.lit(reason).alias("failure_reason"),
+        ))
+    if not events:
+        return _dq_empty_failed_values(dataframe.sparkSession)
+    # Filter the array before exploding so passing rows/rules emit no detail rows.
+    return (
+        source.select(F.explode(F.filter(F.array(*events), lambda event: event["failed"])).alias("event"))
+        .select("event.*")
+        .select("*", F.explode("details").alias("detail"))
+        .select(
+            "failure_event_id", "run_id", "row_identity", "guardrail_rule_id",
+            "rule_id", "rule_type", "action", "detail.column_name",
+            "detail.column_role", "detail.raw_value", "detail.raw_value_type", "failure_reason",
         )
-        frames.append(
-            evaluated.filter(F.col("_fabricops_dq_failed"))
-            .select(
-                event_id.alias("failure_event_id"), F.lit(run_id).alias("run_id"),
-                row_identity.alias("row_identity"),
-                F.lit(rule["guardrail_rule_id"]).alias("guardrail_rule_id"),
-                F.lit(rule["rule_id"]).alias("rule_id"),
-                F.lit(rule["rule_type"]).alias("rule_type"), F.lit(action).alias("action"),
-                F.explode(details).alias("detail"), F.lit(reason).alias("failure_reason"),
-            )
-            .select(
-                "failure_event_id", "run_id", "row_identity", "guardrail_rule_id",
-                "rule_id", "rule_type", "action", "detail.column_name",
-                "detail.column_role", "detail.raw_value", "detail.raw_value_type",
-                "failure_reason",
-            )
-        )
-    if not frames:
-        return dataframe.sparkSession.createDataFrame([], _dq_failed_value_schema())
-    failed_values = frames[0]
-    for frame in frames[1:]:
-        failed_values = failed_values.unionByName(frame)
-    return dataframe.sparkSession.createDataFrame(
-        failed_values.rdd, _dq_failed_value_schema()
-    )
+    ).to(_dq_failed_value_schema())
 
 def _dq_failed_expression(df, rule: dict[str, Any]):
-    """Build a Spark boolean expression identifying rows that fail one DQ rule."""
+    """Build a raw row predicate without Spark actions or percentage gating."""
     _, F, Window = _spark_sql_helpers()
     rule = _validate_dq_rules([dict(rule)])[0]
     rtype = str(rule["rule_type"])
@@ -4097,22 +4106,11 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
         return left <= right
 
     if rtype == "completeness":
-        total = int(df.count())
-        missing = empty_string(col_name) if rule["treat_blank_as_missing"] else F.col(col_name).isNull()
-        missing_count = int(df.filter(missing).count()) if total else 0
-        failed = missing if total and ((missing_count / total) * 100) > float(rule["maximum_missing_percent"]) else F.lit(False)
+        failed = empty_string(col_name) if rule["treat_blank_as_missing"] else F.col(col_name).isNull()
     elif rtype == "uniqueness":
-        total = int(df.count())
-        distinct_count = int(df.select(*[F.col(c) for c in cols]).distinct().count()) if total else 0
-        unique_percent = ((distinct_count / total) * 100) if total else 100.0
-        duplicate = F.count(F.lit(1)).over(
-            Window.partitionBy(*[F.col(c) for c in cols])
+        failed = F.count(F.lit(1)).over(
+            Window.partitionBy(*[F.col(c) for c in sorted(set(cols))])
         ) > F.lit(1)
-        failed = (
-            duplicate
-            if unique_percent < float(rule.get("minimum_unique_percent", 100))
-            else F.lit(False)
-        )
     elif rtype == "value_set":
         contained = F.col(col_name).isin(list(rule["values"]))
         failed = F.col(col_name).isNotNull() & (contained if rule["mode"] == "block" else ~contained)
@@ -4168,21 +4166,108 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
         raise ValueError(f"Unsupported rule_type: {rtype}")
     return F.coalesce(failed, F.lit(False))
 
-def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Run DQ rules and return notebook guardrail check dictionaries."""
-    _, F, _ = _spark_sql_helpers()
+def _evaluate_dq_rules(df, table_name: str, rules: list[dict[str, Any]]) -> dict[str, Any]:
+    """Evaluate shared native Spark flags and reuse their metrics for every DQ output.
+
+    Strict rules need one aggregation, independent of rule count. Permissive
+    thresholds can require a second aggregation for the exact union of failed
+    rows. Only that path caches the narrow flag projection, with scoped cleanup.
+    Returned DataFrames stay lazy and caller actions may evaluate them again.
+    """
+    _, F, Window = _spark_sql_helpers()
     _validate_dq_rules(rules)
-    predicates = [F.when(_dq_failed_expression(df, rule), 1).otherwise(0).alias(f"__failed_{index}")
-                  for index, rule in enumerate(rules)]
-    failed = df.select(*predicates)
-    # Evaluate window predicates (Uniqueness) in the projection before summing.
-    counts = failed.agg(F.count(F.lit(1)).alias("__total"),
-                        *[F.sum(F.col(f"__failed_{index}")).alias(f"__failed_{index}") for index in range(len(rules))]).first()
+    if not rules:
+        return {"frame": df, "flags": [], "checks": [], "total_count": int(df.count()), "failed_row_count": 0}
+    prefix = "_fabricops_dq_"
+    while any(name.startswith(prefix) for name in df.columns):
+        prefix += "_"
+    expressions, rule_flags, shared_flags, distinct_flags = [], [], {}, {}
+    # Identity, action, and thresholds change reporting/decisions, not row predicates.
+    reporting_fields = {
+        "rule_id", "guardrail_rule_id", "guardrail_version", "rule_key", "severity",
+        "description", "is_active", "review_status", "maximum_missing_percent", "minimum_unique_percent",
+    }
+    for rule in rules:
+        parameters = {key: value for key, value in rule.items() if key not in reporting_fields}
+        if rule["rule_type"] == "uniqueness":
+            parameters["columns"] = sorted(set(rule["columns"]))
+        signature = json.dumps(parameters, default=lambda value: {
+            "python_type": f"{type(value).__module__}.{type(value).__qualname__}", "value": str(value),
+        }, sort_keys=True)
+        if signature not in shared_flags:
+            name = f"{prefix}failed_{len(shared_flags)}"
+            shared_flags[signature] = name
+            expressions.append(_dq_failed_expression(df, rule).alias(name))
+        rule_flags.append(shared_flags[signature])
+        if rule["rule_type"] == "uniqueness":
+            keys = tuple(sorted(set(rule["columns"])))
+            if keys not in distinct_flags:
+                name = f"{prefix}distinct_{len(distinct_flags)}"
+                distinct_flags[keys] = name
+                window = Window.partitionBy(*[F.col(key) for key in keys]).orderBy(F.lit(1))
+                expressions.append((F.row_number().over(window) == 1).alias(name))
+    evaluated = df.select("*", *expressions)
+    flags = list(shared_flags.values())
+    metrics = evaluated.select(*flags, *distinct_flags.values())
+    permissive = any(
+        (rule["rule_type"] == "completeness" and rule["maximum_missing_percent"] > 0)
+        or (rule["rule_type"] == "uniqueness" and rule["minimum_unique_percent"] < 100)
+        for rule in rules
+    )
+    # With at most two flags the union is either known already or one rule's count.
+    cached = permissive and len(flags) > 2
+    if cached:
+        from pyspark import StorageLevel
+
+        metrics = metrics.persist(StorageLevel.MEMORY_AND_DISK)
+
+    def any_failure(names):
+        return reduce(lambda left, right: left | right, [F.col(name) for name in names], F.lit(False))
+
+    def failure_count(predicate):
+        return F.sum(F.when(predicate, 1).otherwise(0))
+
+    try:
+        counts = metrics.agg(
+            F.count(F.lit(1)).alias("__total"),
+            *[failure_count(F.col(name)).alias(name) for name in [*flags, *distinct_flags.values()]],
+            failure_count(any_failure(flags)).alias("__any_failed"),
+        ).first()
+        result = _dq_checks_from_counts(table_name, rules, rule_flags, distinct_flags, counts)
+        active_flags = list(dict.fromkeys(name for name, check in zip(rule_flags, result, strict=True) if not check["passed"]))
+        if not active_flags:
+            failed_rows = 0
+        elif len(active_flags) == 1:
+            failed_rows = int(counts[active_flags[0]] or 0)
+        elif all(name in active_flags or not counts[name] for name in flags):
+            failed_rows = int(counts["__any_failed"] or 0)
+        else:
+            failed_rows = int(metrics.agg(failure_count(any_failure(active_flags)).alias("failed")).first()["failed"] or 0)
+    finally:
+        if cached:
+            metrics.unpersist()
+    return {
+        "frame": evaluated,
+        "flags": [name if not check["passed"] else None for name, check in zip(rule_flags, result, strict=True)],
+        "checks": result, "total_count": int(counts["__total"]), "failed_row_count": failed_rows,
+    }
+
+
+def _dq_checks_from_counts(table_name, rules, rule_flags, distinct_flags, counts):
+    """Apply authored percentage thresholds to shared exact Spark metrics."""
     total = int(counts["__total"])
     checks: list[dict[str, Any]] = []
-    dataframe_columns = set(getattr(df, "columns", []))
-    for index, rule in enumerate(rules):
-        failed_count = int(counts[f"__failed_{index}"] or 0)
+    for rule, flag in zip(rules, rule_flags, strict=True):
+        failed_count = int(counts[flag] or 0)
+        if rule["rule_type"] == "completeness":
+            if not total or (failed_count / total) * 100 <= rule["maximum_missing_percent"]:
+                failed_count = 0
+        elif rule["rule_type"] == "uniqueness":
+            key = tuple(sorted(set(rule["columns"])))
+            distinct = int(counts[distinct_flags[key]] or 0)
+            unique_percent = (distinct / total) * 100 if total else 100.0
+            if unique_percent >= rule["minimum_unique_percent"]:
+                failed_count = 0
         severity = _normalize_dq_severity(rule.get("severity"))
         columns = [str(column) for column in rule.get("columns", [])]
         check_status = "passed" if failed_count <= 0 else ("failed" if severity == "error" else "warning")
@@ -4200,30 +4285,30 @@ def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -
             "failed_percent": float(round((failed_count / total) * 100, 4)) if total else 0.0,
             "description": str(rule.get("description") or ""),
         }
-        missing_columns = [column for column in columns if column not in dataframe_columns]
-        if missing_columns:
-            check["missing_columns"] = missing_columns
         checks.append(check)
     return checks
 
-def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
+
+def _dq_tagged_dataframe(df, rules: list[dict[str, Any]], *, evaluation=None):
     """Return the full DataFrame tagged with failed DQ rule IDs and row status."""
     _, F, _ = _spark_sql_helpers()
-    sorted_rules = sorted(rules or [], key=lambda rule: str(rule.get("rule_id") or ""))
+    evaluation = evaluation if evaluation is not None else _evaluate_dq_rules(df, "", rules)
+    evaluated = evaluation["frame"]
+    sorted_rules = sorted(zip(rules, evaluation["flags"], strict=True), key=lambda pair: str(pair[0].get("rule_id") or ""))
     failed_rule_columns = [
-        F.when(_dq_failed_expression(df, rule), F.lit(str(rule.get("rule_id") or "")))
-        for rule in sorted_rules
+        F.when(F.col(flag), F.lit(str(rule.get("rule_id") or "")))
+        for rule, flag in sorted_rules if flag is not None
     ]
     failed_rules = F.concat_ws(",", *failed_rule_columns) if failed_rule_columns else F.lit("")
     error_failures = [
-        F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0))
-        for rule in sorted_rules
-        if _normalize_dq_severity(rule.get("severity")) == "error"
+        F.when(F.col(flag), F.lit(1)).otherwise(F.lit(0))
+        for rule, flag in sorted_rules
+        if flag is not None and _normalize_dq_severity(rule.get("severity")) == "error"
     ]
     warning_failures = [
-        F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0))
-        for rule in sorted_rules
-        if _normalize_dq_severity(rule.get("severity")) != "error"
+        F.when(F.col(flag), F.lit(1)).otherwise(F.lit(0))
+        for rule, flag in sorted_rules
+        if flag is not None and _normalize_dq_severity(rule.get("severity")) != "error"
     ]
     error_count = error_failures[0] if error_failures else F.lit(0)
     for failure in error_failures[1:]:
@@ -4232,13 +4317,16 @@ def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
     for failure in warning_failures[1:]:
         warning_count = warning_count + failure
     return (
-        df.withColumn("_dq_failed_rules", failed_rules)
+        evaluated.withColumn("_dq_failed_rules", failed_rules)
         .withColumn(
             "_dq_check_status",
             F.when(error_count > F.lit(0), F.lit("failed"))
             .when(warning_count > F.lit(0), F.lit("warning"))
             .otherwise(F.lit("passed")),
-        )
+        ).select(*[
+            F.col("`" + name.replace("`", "``") + "`")
+            for name in dict.fromkeys([*df.columns, "_dq_failed_rules", "_dq_check_status"])
+        ])
     )
 
 

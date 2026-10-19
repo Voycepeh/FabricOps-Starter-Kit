@@ -82,6 +82,12 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     canonical ``02_pipeline``. Absent capability fields remain skipped in the
     returned result; orchestration_stages and stdout show executed stages only.
     A contract-free Development run prints one concise Guardrail decision.
+    Data Quality uses native Spark expressions over the returned batch. Its
+    ``dq_result["dataframe"]`` adds ``_dq_check_status`` and ``_dq_failed_rules``;
+    the top-level DataFrame keeps its source columns. Rule summaries are
+    appended to ``METADATA_GUARDRAIL_RESULTS``. ``dq_result["failed_values"]``
+    is a lazy, caller-owned detail DataFrame and is not persisted automatically.
+    Later actions on either DQ DataFrame can repeat Spark computation.
     Grain checks only the returned rows (the incremental batch in incremental mode),
     using the configured physical row key; SCD2 history requires a version-aware
     key, such as business key plus effective timestamp.
