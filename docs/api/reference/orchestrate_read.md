@@ -46,6 +46,9 @@ def orchestrate_read(
     query: str | None=None,
     read_parameters: dict[str, Any] | None=None,
     target_table_id: str | None=None,
+    grain_discovery_enabled: bool=True,
+    grain_discovery_max_columns: int=3,
+    grain_discovery_max_candidates: int=8,
     frequency_enabled: bool=True,
     frequency_top_n: int | None=5,
     spark_session=None,
@@ -72,7 +75,10 @@ Required describes the Python signature. An optional parameter may still be need
 | `query` | `str \| None` | No | `None` | Read-only Warehouse query forwarded to the internal Read stage. |
 | `read_parameters` | `dict[str, Any] \| None` | No | `None` | Incremental configuration, for example {"watermark_column": "modified_datetime"}. A selected Data Contract must agree with the supplied watermark. Required for incremental mode when no selected contract supplies the watermark. |
 | `target_table_id` | `str \| None` | No | `None` | Governed target identity required for incremental reads. |
-| `frequency_enabled` | `bool` | No | `True` | Whether to calculate frequency distributions for this table. |
+| `grain_discovery_enabled` | `bool` | No | `True` | Whether Profile discovers candidate Grain keys for this call. False skips discovery and preserves saved candidates; contract Grain checks still run. |
+| `grain_discovery_max_columns` | `int` | No | `3` | Maximum columns in a candidate key. 1 checks single columns only; 2 also checks pairs. Must be a positive integer. Wider searches can be costly. |
+| `grain_discovery_max_candidates` | `int` | No | `8` | Maximum candidate keys to retain at the smallest valid key width. Must be a positive integer. Discovery stops after enough keys are found; this limit does not cap work when no valid key exists. |
+| `frequency_enabled` | `bool` | No | `True` | Whether Profile calculates frequency distributions for this call. The caller controls when to enable discovery and frequency profiling. |
 | `frequency_top_n` | `int \| None` | No | `5` | Maximum ranked frequency values per eligible column; None retains all. |
 | `spark_session` | `object` | No | `None` | Spark session used by every stage. |
 | `verbose` | `bool` | No | `True` | Print stage start, outcome, duration, and failure attribution. |
@@ -88,6 +94,10 @@ source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 orders_df = source["dataframe"]
 ```
 
+Discovery and frequency switches apply only when the lifecycle runs Profile.
+Pass ``grain_discovery_enabled=False, frequency_enabled=False`` on routine
+calls and enable either option on calls chosen by your own scheduler.
+
 </div>
 
 ## Returns
@@ -100,6 +110,8 @@ dict
 
 ## Raises / Errors
 
+ValueError
+    If a discovery limit is not a positive integer; checked before any stage runs.
 RuntimeError
     If a stage fails. Its name is reported and the original exception is
     retained as ``__cause__``.
@@ -142,7 +154,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:20`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L20-L136">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L20-L159">View on GitHub</a>
 </div>
 
 

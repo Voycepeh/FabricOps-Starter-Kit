@@ -112,9 +112,80 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
 
     ![What happens at the FabricOps Read and Write boundaries](../assets/pipeline-boundaries-implementation.svg){ .fabricops-solution-diagram }
 
-    The Read boundary resolves the governed table and runs four applicable checks: Freshness, Schema, Grain, and Data Quality before the DataFrame reaches the project-owned PySpark transformation. Full reads also produce full dataset profiling as part of the Read orchestration without making Profile another inline guardrail stage. The Write boundary runs five applicable checks: Schema, Sensitive Data, Source Drift on participating sources, Grain, and Data Quality, followed by Guardrail Coverage before writing, then performs full dataset profiling on the published table and records lineage.
+    ### Read side
 
-    The orchestrators provide the stable framework boundary. Read modes, Write modes, validation behaviour, and deployment are documented separately so this page can stay focused on the overall solution.
+    **`orchestrate_read()` checks the source before returning its DataFrame to your PySpark transformation.**
+
+    1. Resolve the table and its Data Contract, then read the requested rows.
+    2. Run the configured Freshness, Schema, Grain, and Data Quality checks.
+    3. On a Full read, profile the returned dataset. Incremental batches skip Profile.
+
+    The Grain check covers the returned rows: the full read result or the incremental batch. It does not compare an incremental batch with historical rows.
+
+    ### Write side
+
+    **`orchestrate_write()` checks the prepared input before publishing the target.**
+
+    1. Run configured Schema and Sensitive Data checks, then Source Drift checks for participating sources.
+    2. Check Grain and Data Quality after Sensitive Data treatment, then check Guardrail Coverage for governed publication.
+    3. In Enforce mode, publish through the selected Write strategy, record lineage in `METADATA_DATA_LINEAGE`, and profile the complete persisted target.
+
+    Validate mode runs the checks and records validation results without publishing or profiling the target. The Grain check covers prepared input; it does not guarantee resulting-table uniqueness for Append or SCD strategies.
+
+    ### Both sides
+
+    - **Contract enforcement:** configured checks produce `METADATA_GUARDRAIL_RESULTS`. Discovering possible keys is separate from enforcing the contract's selected Grain key.
+    - **Profiling:** when the lifecycle reaches Profile, `profile_table()` calculates statistics and can also calculate frequency distributions and discover candidate Grain keys.
+    - **Caller controls:** Read and Write accept the same profiling switches and discovery limits. Your notebook or external scheduler chooses when to enable them; FabricOps does not apply a discovery schedule.
+
+??? info "How frequency profiling and Grain discovery work"
+
+    ### Frequency distributions
+
+    **Frequency answers “which values occur most often in this column?”** FabricOps groups values, counts occurrences, and ranks them. Null can appear as a frequency value.
+
+    Automatic selection uses eligible scalar columns and skips columns whose distinct-per-non-null percentage exceeds 80% by default. `frequency_top_n=5` retains the five highest-ranked values per selected column; `None` retains all. Top N limits retained output, but exact frequencies still require grouped counts across the input data.
+
+    Statistics are saved in `METADATA_DATA_PROFILED`; frequency rows are saved in `METADATA_DATA_PROFILED_FREQUENCY` and linked to the profile snapshot. Turning frequency off skips its calculations for that call. Existing snapshots from earlier activities remain available.
+
+    ### Grain key discovery
+
+    **Discovery answers “which column or combination uniquely identifies every row in this dataset?”** It uses exact data checks, without AI or column-name guesses.
+
+    1. Check eligible scalar columns for nulls and exact distinct counts. If single-column keys exist, return those candidates.
+    2. Otherwise test combinations of null-free columns, starting with pairs and widening up to `grain_discovery_max_columns`.
+    3. Stop at the smallest width with valid keys, retaining up to `grain_discovery_max_candidates` suggestions.
+
+    Candidates are stored in the table row's `METADATA_DATA_CATALOGUE.profile_key_candidates_json` for contract authoring. Governance reviews and chooses the intended Grain key. A unique combination in today's data is a candidate for that decision, not a guarantee about future data.
+
+    ### Where the compute runs
+
+    **The orchestrators invoke profiling; the data engine performs the calculations.** Supplied DataFrames and physical Lakehouse tables use PySpark. Complete physical Warehouse tables use SQL pushdown, including frequency and key-discovery queries.
+
+    Each composite-key test performs an exact distinct-count operation. With 20 eligible null-free columns and no single-column key, a search through triples can require 190 pair checks and 1,140 triple checks. Large inputs can add scans and shuffles; deterministic discovery can still be expensive. The candidate limit helps when keys are found but does not cap the search when none qualify.
+
+    ### Choose when to run each calculation
+
+    Both orchestrators and `profile_table()` accept these controls:
+
+    ```python
+    source = orchestrate_read(
+        store="Bronze", schema="demo", table_name="orders",
+        grain_discovery_enabled=True,
+        grain_discovery_max_columns=3,
+        grain_discovery_max_candidates=8,
+        frequency_enabled=True,
+        frequency_top_n=5,
+    )
+    ```
+
+    - **First run or meaningful data changes:** enable discovery to refresh candidate keys. A maximum of `1` checks singles only; `2` also checks pairs.
+    - **Routine runs:** set `grain_discovery_enabled=False` to skip discovery and preserve saved candidates. Independently set `frequency_enabled=False` to skip frequency calculations.
+    - **After the Data Contract is defined:** discovery can stay off until you choose to revisit the key. Configured Grain checks still validate the contract's key on each applicable Read or Write call.
+
+    These switches leave statistical profiling enabled whenever the lifecycle runs Profile. Incremental Read and Validate-only Write do not run Profile, regardless of the switches. Scheduling belongs to the caller.
+
+    See [`profile_table()`](../api/reference/profile_table.md) for exact parameters, direct column selection, and persistence behavior.
 
 ## Example
 
@@ -137,4 +208,6 @@ For implementation details:
 - [Guided Demo Step 2](../guided-demo/02-build-and-run-etl.md) — build and run the canonical pipeline.
 - [Guided Demo Step 4](../guided-demo/04-validate-frozen-data-contract.md) — validate the frozen Data Contract against the pipeline.
 - [Guided Demo Step 5](../guided-demo/05-activate-data-contract-and-promote.md) — activate the contract and promote the pipeline to Production.
+- [`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md) — lifecycle stages and per-call profiling controls.
+- [`profile_table()`](../api/reference/profile_table.md) — statistical profiling, frequency distributions, and Grain discovery limits.
 - [Function Reference](../reference/index.md) — lower-level FabricOps APIs and orchestrators.

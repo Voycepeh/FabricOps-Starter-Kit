@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import importlib
 import inspect
+import json
+from unittest.mock import Mock
 
 import pytest
 
@@ -21,7 +23,7 @@ def test_profile_table_public_signature_and_removed_symbols():
 
     assert str(inspect.signature(profile_table)) == (
         "(*, dataframe=None, store: 'str | None' = None, schema: 'str | None' = None, "
-        "table_name: 'str | None' = None, table_id: 'str | None' = None, frequency_columns=None, "
+        "table_name: 'str | None' = None, table_id: 'str | None' = None, grain_discovery_enabled: 'bool' = True, grain_discovery_max_columns: 'int' = 3, grain_discovery_max_candidates: 'int' = 8, frequency_columns=None, "
         "frequency_enabled: 'bool' = True, frequency_top_n: 'int | None' = 5, frequency_max_distinct_percent: 'float | None' = 80.0, "
         "spark_session=None)"
     )
@@ -523,6 +525,9 @@ def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
         catalogue_df=Catalogue(), config={}, env="dev", spark_session=object()
     )
 
+    assert updates[0]["profile_key_candidates_json"] == (
+        "coalesce(source.profile_key_candidates_json, target.profile_key_candidates_json)"
+    )
     assert updates[0]["load_strategy"] == "coalesce(source.load_strategy, target.load_strategy)"
     assert updates[0]["load_strategy_parameters_json"] == (
         "coalesce(source.load_strategy_parameters_json, target.load_strategy_parameters_json)"
@@ -722,6 +727,9 @@ def test_profile_table_frequency_top_n_defaults_to_five():
     for function in (profile_table, orchestrate_read, orchestrate_write):
         assert inspect.signature(function).parameters["frequency_top_n"].default == 5
         assert inspect.signature(function).parameters["frequency_enabled"].default is True
+        assert inspect.signature(function).parameters["grain_discovery_enabled"].default is True
+        assert inspect.signature(function).parameters["grain_discovery_max_columns"].default == 3
+        assert inspect.signature(function).parameters["grain_discovery_max_candidates"].default == 8
 
 
 def test_profile_table_frequency_disabled_skips_column_selection():
@@ -730,3 +738,156 @@ def test_profile_table_frequency_disabled_skips_column_selection():
     from fabricops_kit.pipeline.profile_table import profile_table
 
     assert "frequency_enabled" in inspect.signature(profile_table).parameters
+
+
+@pytest.mark.parametrize("backend", ["lakehouse", "warehouse"])
+@pytest.mark.parametrize("frequency_enabled", [False, True])
+def test_grain_discovery_can_be_disabled_and_reenabled_independently(
+    monkeypatch, backend, frequency_enabled
+):
+    """Skip discovery work while retaining candidates and ordinary profiling."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    identity = {"table_id": "table-id", "store": "source", "schema": "dbo",
+                "table_name": "orders", "store_kind": backend}
+    frame, profile = Mock(), Mock()
+    profile.cache.return_value = profile
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: ({}, "dev", {}))
+    monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *a, **k: dict(identity))
+    monkeypatch.setattr(module, "build_profile_dataframe", Mock(return_value=profile))
+    selection = Mock(side_effect=lambda df, stats, columns, threshold: ["status"] if columns is None else columns)
+    monkeypatch.setattr(module, "_selected_frequency_columns", selection)
+    frequency = Mock(return_value=Mock())
+    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
+    warehouse = Mock(return_value=(profile, None, [("id", "long", "bigint")]))
+    monkeypatch.setattr(module, "_warehouse_profile_dataframes", warehouse)
+    candidates = [{"columns": ["id"], "row_count": 2}]
+    spark_discovery, warehouse_discovery = Mock(return_value=candidates), Mock(return_value=candidates)
+    monkeypatch.setattr(module, "_spark_profile_key_candidates", spark_discovery)
+    monkeypatch.setattr(module, "_warehouse_profile_key_candidates", warehouse_discovery)
+    monkeypatch.setattr(module, "_canonical_profiled_dataframe", lambda *a, **k: profile)
+    monkeypatch.setattr(module, "_profile_snapshot_id", lambda **k: "snapshot")
+    for name in ("_stage_catalogue_profile_retry", "_replace_snapshot_rows",
+                 "_replace_frequency_rows", "_frequency_metadata_dataframe", "_upsert_catalogue_identities"):
+        monkeypatch.setattr(module, name, Mock())
+    catalogue = Mock()
+    monkeypatch.setattr(module, "_catalogue_dataframe_from_profiled", catalogue)
+    discovery = warehouse_discovery if backend == "warehouse" else spark_discovery
+    kwargs = {} if backend == "warehouse" else {"dataframe": frame}
+    for enabled in (True, False, True):
+        discovery.reset_mock()
+        result = profile_table(table_id="table-id", spark_session=object(),
+                               grain_discovery_enabled=enabled, grain_discovery_max_columns=2,
+                               grain_discovery_max_candidates=1, frequency_enabled=frequency_enabled, **kwargs)
+        assert result["profile"] is profile
+        assert discovery.call_count == int(enabled)
+        evidence = catalogue.call_args.kwargs["profile_key_candidates_json"]
+        if enabled:
+            assert json.loads(evidence)["candidates"] == candidates
+            assert json.loads(evidence)["status"] == "resolved"
+            assert json.loads(evidence)["max_combination_width"] == 2
+            assert discovery.call_args.kwargs["max_columns"] == 2
+            assert discovery.call_args.kwargs["max_candidates"] == 1
+        else:
+            assert evidence is None  # Catalogue merge preserves the previous result.
+    if backend == "warehouse":
+        assert warehouse.call_args.kwargs["frequency_columns"] == (None if frequency_enabled else [])
+        spark_discovery.assert_not_called()
+    else:
+        assert frequency.call_count == (3 if frequency_enabled else 0)
+        warehouse_discovery.assert_not_called()
+
+
+@pytest.mark.parametrize("max_columns", [1, 2, 3])
+def test_spark_discovery_respects_maximum_key_width(spark_session, max_columns):
+    """A triple-only key stays unresolved when the caller limits the search to pairs."""
+    from itertools import product
+
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    frame = spark_session.createDataFrame(list(product(range(2), repeat=3)), ["a", "b", "c"])
+    candidates = module._spark_profile_key_candidates(frame, None, max_columns=max_columns)
+    assert [candidate["columns"] for candidate in candidates] == ([["a", "b", "c"]] if max_columns == 3 else [])
+
+
+@pytest.mark.parametrize("single_column_keys", [False, True])
+def test_spark_discovery_respects_candidate_limit(spark_session, single_column_keys):
+    """Limit suggestions for both single and composite keys at the smallest valid width."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    rows = [(0, 0, 0), (1, 1, 1)] if single_column_keys else [(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)]
+    frame = spark_session.createDataFrame(rows, ["a", "b", "c"])
+    candidates = module._spark_profile_key_candidates(frame, None, max_candidates=1)
+    assert len(candidates) == 1
+    assert candidates[0]["columns"] == (["a"] if single_column_keys else ["a", "b"])
+
+
+@pytest.mark.parametrize("max_columns,expected_queries", [(1, 1), (2, 4), (3, 5)])
+def test_warehouse_discovery_respects_maximum_key_width(monkeypatch, max_columns, expected_queries):
+    """Do not issue SQL for combinations wider than the caller's limit."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    summary = {"ROW_COUNT": 8, **{f"C{i}_{metric}": value for i in range(3)
+               for metric, value in [("NON_NULL_COUNT", 8), ("DISTINCT_COUNT", 2)]}}
+    responses = [summary, *[{"DISTINCT_COUNT": 4}] * 3, {"DISTINCT_COUNT": 8}]
+    query = Mock(side_effect=[Mock(collect=Mock(return_value=[row])) for row in responses])
+    monkeypatch.setattr(module, "read_warehouse_query", query)
+    candidates = module._warehouse_profile_key_candidates(
+        {"store": "Gold", "schema": "dbo", "table_name": "orders"}, None,
+        spark_session=object(), context={}, warehouse_columns=[(col, "long", "bigint") for col in "abc"],
+        max_columns=max_columns,
+    )
+    assert query.call_count == expected_queries
+    assert [candidate["columns"] for candidate in candidates] == ([["a", "b", "c"]] if max_columns == 3 else [])
+
+
+@pytest.mark.parametrize("single_column_keys", [False, True])
+def test_warehouse_discovery_stops_after_candidate_limit(monkeypatch, single_column_keys):
+    """Stop querying once enough valid smallest-width candidates have been found."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    summary = {"ROW_COUNT": 4, **{f"C{i}_{metric}": value for i in range(3)
+               for metric, value in [("NON_NULL_COUNT", 4), ("DISTINCT_COUNT", 4 if single_column_keys else 2)]}}
+    responses = [summary] if single_column_keys else [summary, {"DISTINCT_COUNT": 4}]
+    query = Mock(side_effect=[Mock(collect=Mock(return_value=[row])) for row in responses])
+    monkeypatch.setattr(module, "read_warehouse_query", query)
+    candidates = module._warehouse_profile_key_candidates(
+        {"store": "Gold", "schema": "dbo", "table_name": "orders"}, None,
+        spark_session=object(), context={}, warehouse_columns=[(col, "long", "bigint") for col in "abc"],
+        max_columns=3, max_candidates=1,
+    )
+    assert len(candidates) == 1
+    assert candidates[0]["columns"] == (["a"] if single_column_keys else ["a", "b"])
+    assert query.call_count == len(responses)
+
+
+@pytest.mark.parametrize("entrypoint", ["profile_table", "orchestrate_read", "orchestrate_write"])
+@pytest.mark.parametrize("parameter", ["grain_discovery_max_columns", "grain_discovery_max_candidates"])
+@pytest.mark.parametrize("value", [0, -1, True, 1.5, "2", None])
+def test_discovery_limits_are_validated_before_any_work(monkeypatch, entrypoint, parameter, value):
+    """Reject invalid limits even when discovery is disabled, before metadata or data I/O."""
+    module = importlib.import_module(f"fabricops_kit.pipeline.{entrypoint}")
+    boundary = "resolve_fabric_context" if entrypoint == "profile_table" else "prepare_pipeline_execution"
+    prepare = Mock(side_effect=AssertionError("must validate before work"))
+    monkeypatch.setattr(module, boundary, prepare)
+    kwargs = dict(store="Silver", schema="dbo", table_name="orders", grain_discovery_enabled=False)
+    if entrypoint == "orchestrate_write":
+        kwargs.update(dataframe=object(), sources=[], write_mode="overwrite")
+    with pytest.raises(ValueError, match=f"{parameter} must be a positive integer"):
+        getattr(module, entrypoint)(**kwargs, **{parameter: value})
+    prepare.assert_not_called()
+
+
+@pytest.mark.parametrize("max_columns,expected_count", [(3, 0), (4, 1)])
+def test_warehouse_discovery_can_search_beyond_previous_width_limit(monkeypatch, max_columns, expected_count):
+    """A caller can explicitly opt into a four-column search."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    summary = {"ROW_COUNT": 16, **{f"C{i}_{metric}": value for i in range(4)
+               for metric, value in [("NON_NULL_COUNT", 16), ("DISTINCT_COUNT", 2)]}}
+    responses = [summary, *[{"DISTINCT_COUNT": 4}] * 6, *[{"DISTINCT_COUNT": 8}] * 4, {"DISTINCT_COUNT": 16}]
+    query = Mock(side_effect=[Mock(collect=Mock(return_value=[row])) for row in responses])
+    monkeypatch.setattr(module, "read_warehouse_query", query)
+    candidates = module._warehouse_profile_key_candidates(
+        {"store": "Gold", "schema": "dbo", "table_name": "orders"}, None,
+        spark_session=object(), context={}, warehouse_columns=[(col, "long", "bigint") for col in "abcd"],
+        max_columns=max_columns,
+    )
+    assert len(candidates) == expected_count
+    assert query.call_count == 11 + expected_count
+    if candidates:
+        assert candidates[0]["columns"] == ["a", "b", "c", "d"]

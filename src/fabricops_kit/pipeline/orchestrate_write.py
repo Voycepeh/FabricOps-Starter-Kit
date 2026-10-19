@@ -20,7 +20,7 @@ from fabricops_kit.pipeline.shared import (
 )
 
 
-def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping=None, spark_session=None, verbose: bool = True) -> dict[str, Any]:
+def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping=None, spark_session=None, verbose: bool = True) -> dict[str, Any]:
     """Execute the standard FabricOps governed Write lifecycle.
 
     Parameters
@@ -49,8 +49,19 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
         Enforce publication behaviour. Both modes run the same Guardrails.
     repartition_by : int, optional
         Spark write partition count.
+    grain_discovery_enabled : bool, default=True
+        Whether Profile discovers candidate Grain keys for this call. False skips
+        discovery and preserves saved candidates; contract Grain checks still run.
+    grain_discovery_max_columns : int, default=3
+        Maximum columns in a candidate key. 1 checks single columns only; 2
+        also checks pairs. Must be a positive integer. Wider searches can be costly.
+    grain_discovery_max_candidates : int, default=8
+        Maximum candidate keys to retain at the smallest valid key width.
+        Must be a positive integer. Discovery stops after enough keys are found;
+        this limit does not cap work when no valid key exists.
     frequency_enabled : bool, default=True
-        Whether to calculate frequency distributions for this table.
+        Whether Profile calculates frequency distributions for this call.
+        The caller controls when to enable discovery and frequency profiling.
     frequency_top_n : int or None, default=5
         Maximum ranked frequency values per eligible column; None retains all.
     existing_mapping : pyspark.sql.DataFrame, optional
@@ -81,6 +92,8 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
 
     Raises
     ------
+    ValueError
+        If a discovery limit is not a positive integer; checked before any stage runs.
     RuntimeError
         If any stage fails. Its name is reported and the original exception is
         retained as ``__cause__``.
@@ -123,11 +136,21 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     ...     write_parameters={"key_columns": ["product_id"]},
     ... )
 
+    Discovery and frequency switches apply only when the lifecycle runs Profile.
+    Pass ``grain_discovery_enabled=False, frequency_enabled=False`` on routine
+    calls and enable either option on calls chosen by your own scheduler.
+
     See Also
     --------
     orchestrate_read, profile_table
 
     """
+    for name, value in (
+        ("grain_discovery_max_columns", grain_discovery_max_columns),
+        ("grain_discovery_max_candidates", grain_discovery_max_candidates),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+            raise ValueError(f"{name} must be a positive integer.")
     summary = ExecutionSummary("WRITE", verbose=verbose)
     target = ".".join(str(part) for part in (store, schema, table_name) if part)
     source_ids = [source["table_id"] for source in sources]
@@ -207,7 +230,7 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
         columns = getattr(prepared, "columns", None)
         metrics.setdefault("input_columns", len(columns) if columns is not None else None)
         summary.details([("Strategy", strategy.title()), ("Target", target), ("Rows committed", metrics["rows_committed"]), ("Columns", metrics["input_columns"])])
-        profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session))
+        profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], grain_discovery_enabled=grain_discovery_enabled, grain_discovery_max_columns=grain_discovery_max_columns, grain_discovery_max_candidates=grain_discovery_max_candidates, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session))
         metrics["total_target_rows"] = profile.get("row_count")
         fields = [("Target", target), ("Strategy", strategy.title()), ("Published", "Yes"), ("Rows committed", metrics["rows_committed"])]
         if strategy == "scd1":

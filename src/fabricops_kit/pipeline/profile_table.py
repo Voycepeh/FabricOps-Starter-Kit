@@ -305,13 +305,14 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
 
 
 def _key_candidate_evidence(
-    candidates: Sequence[Mapping[str, Any]], *, evaluated: bool = True
+    candidates: Sequence[Mapping[str, Any]], *, evaluated: bool = True,
+    max_columns: int = _KEY_CANDIDATE_MAX_SIZE
 ) -> dict[str, Any]:
     """Return one explicit table-level key-discovery evidence envelope."""
     values = [dict(candidate) for candidate in candidates]
     return {
         "status": "resolved" if values else ("unresolved" if evaluated else "not_evaluated"),
-        "max_combination_width": _KEY_CANDIDATE_MAX_SIZE if evaluated else 0,
+        "max_combination_width": max_columns if evaluated else 0,
         "candidates": values,
     }
 
@@ -329,7 +330,8 @@ def _key_candidate_payload(columns: Sequence[str], *, row_count: int) -> dict[st
 
 
 def _spark_profile_key_candidates(
-    dataframe: Any, statistical_profile: Any, *, metrics=None
+    dataframe: Any, statistical_profile: Any, *, metrics=None,
+    max_columns: int = _KEY_CANDIDATE_MAX_SIZE, max_candidates: int = _KEY_CANDIDATE_MAX_RESULTS
 ) -> list[dict[str, Any]]:
     """Discover the smallest null-free unique keys from all scalar Spark columns."""
     del statistical_profile
@@ -380,15 +382,15 @@ def _spark_profile_key_candidates(
         if int(row["distinct_count"]) == row_count
     ]
     if singles:
-        return singles[:_KEY_CANDIDATE_MAX_RESULTS]
+        return singles[:max_candidates]
 
     candidate_columns = [str(row["column_name"]) for row in rows]
-    for size in range(2, min(_KEY_CANDIDATE_MAX_SIZE, len(candidate_columns)) + 1):
+    for size in range(2, min(max_columns, len(candidate_columns)) + 1):
         matches = []
         for columns in combinations(candidate_columns, size):
             if int(dataframe.select(*columns).dropDuplicates().count()) == row_count:
                 matches.append(_key_candidate_payload(columns, row_count=row_count))
-                if len(matches) >= _KEY_CANDIDATE_MAX_RESULTS:
+                if len(matches) >= max_candidates:
                     break
         if matches:
             return matches
@@ -402,6 +404,8 @@ def _warehouse_profile_key_candidates(
     spark_session: Any,
     context: dict[str, Any],
     warehouse_columns: Sequence[tuple[str, str, str]] | None = None,
+    max_columns: int = _KEY_CANDIDATE_MAX_SIZE,
+    max_candidates: int = _KEY_CANDIDATE_MAX_RESULTS,
 ) -> list[dict[str, Any]]:
     """Discover the smallest null-free unique keys from all scalar Warehouse columns."""
     del statistical_profile
@@ -473,10 +477,10 @@ def _warehouse_profile_key_candidates(
         if int(row["distinct_count"]) == row_count
     ]
     if singles:
-        return singles[:_KEY_CANDIDATE_MAX_RESULTS]
+        return singles[:max_candidates]
 
     candidate_columns = [str(row["column_name"]) for row in rows]
-    for size in range(2, min(_KEY_CANDIDATE_MAX_SIZE, len(candidate_columns)) + 1):
+    for size in range(2, min(max_columns, len(candidate_columns)) + 1):
         matches = []
         for columns in combinations(candidate_columns, size):
             projected = ", ".join(_sql_identifier(column) for column in columns)
@@ -501,7 +505,7 @@ def _warehouse_profile_key_candidates(
                 )
                 if distinct_count == row_count:
                     matches.append(_key_candidate_payload(columns, row_count=row_count))
-                    if len(matches) >= _KEY_CANDIDATE_MAX_RESULTS:
+                    if len(matches) >= max_candidates:
                         break
         if matches:
             return matches
@@ -1061,7 +1065,9 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
                 "scheduled_refresh_json": (
                     "coalesce(source.scheduled_refresh_json, target.scheduled_refresh_json)"
                 ),
-                "profile_key_candidates_json": "source.profile_key_candidates_json",
+                "profile_key_candidates_json": (
+                    "coalesce(source.profile_key_candidates_json, target.profile_key_candidates_json)"
+                ),
                 "last_profiled_at": "source.last_profiled_at",
                 "is_active": "true",
                 "_committed_by": "source._committed_by",
@@ -1093,6 +1099,9 @@ def profile_table(
     schema: str | None = None,
     table_name: str | None = None,
     table_id: str | None = None,
+    grain_discovery_enabled: bool = True,
+    grain_discovery_max_columns: int = 3,
+    grain_discovery_max_candidates: int = 8,
     frequency_columns=None,
     frequency_enabled: bool = True, frequency_top_n: int | None = 5,
     frequency_max_distinct_percent: float | None = 80.0,
@@ -1129,11 +1138,25 @@ def profile_table(
     table_id : str, optional
         Canonical governed table identity, mutually exclusive with physical
         coordinates.
+    grain_discovery_enabled : bool, default=True
+        Whether to discover candidate Grain keys for a governed table. False
+        skips discovery queries and preserves saved Catalogue candidates.
+        The caller controls when to enable discovery; no scheduling is applied.
+        This option does not disable contract Grain checks. DataFrame-only
+        profiling does not discover or persist candidates.
+    grain_discovery_max_columns : int, default=3
+        Maximum columns in a candidate key. 1 checks single columns only; 2
+        also checks pairs. Must be a positive integer. Wider searches can be costly.
+    grain_discovery_max_candidates : int, default=8
+        Maximum candidate keys to retain at the smallest valid key width.
+        Must be a positive integer. Discovery stops after enough keys are found;
+        this limit does not cap work when no valid key exists.
     frequency_columns : sequence of str, optional
         Columns to frequency profile. ``None`` automatically selects eligible
         scalar columns; an empty sequence skips frequency profiling.
     frequency_enabled : bool, default=True
-        Whether to calculate frequency distributions for the table. False skips all frequency columns.
+        Whether to calculate frequency distributions for this call. False skips all
+        frequency columns. The caller controls when to enable frequency profiling.
     frequency_top_n : int or None, default=5
         Ranked values to retain per frequency column. ``None`` retains all.
     frequency_max_distinct_percent : float or None, default=80.0
@@ -1162,7 +1185,7 @@ def profile_table(
     ------
     ValueError
         If identity inputs conflict or are incomplete, neither a DataFrame nor
-        identity is supplied, frequency settings are invalid, or the resolved
+        identity is supplied, frequency settings or discovery limits are invalid, or the resolved
         store is unsupported.
     RuntimeError
         If a governed metadata write requires unavailable Delta support.
@@ -1211,12 +1234,32 @@ def profile_table(
 
     >>> result = profile_table(dataframe=transformed_df, table_id=target_table_id)
 
+    Limit discovery to single columns and pairs, retaining up to two candidates:
+
+    >>> result = profile_table(
+    ...     table_id=target_table_id,
+    ...     grain_discovery_max_columns=2, grain_discovery_max_candidates=2,
+    ... )
+
+    Refresh statistics while retaining saved key candidates and skipping frequency:
+
+    >>> result = profile_table(
+    ...     table_id=target_table_id,
+    ...     grain_discovery_enabled=False, frequency_enabled=False,
+    ... )
+
     See Also
     --------
     orchestrate_read, orchestrate_write, read_lakehouse_csv, read_lakehouse_excel,
     read_lakehouse_json, read_lakehouse_parquet
 
     """
+    for name, value in (
+        ("grain_discovery_max_columns", grain_discovery_max_columns),
+        ("grain_discovery_max_candidates", grain_discovery_max_candidates),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+            raise ValueError(f"{name} must be a positive integer.")
     coordinates = (store, schema, table_name)
     has_coordinates = any(value is not None for value in coordinates)
     if table_id is not None and has_coordinates:
@@ -1291,13 +1334,15 @@ def profile_table(
             threshold_percent=frequency_max_distinct_percent, top_n=frequency_top_n, metrics=profile_metrics,
         )
         warehouse_fields = [(name, canonical) for name, canonical, _sql_type in warehouse_columns]
-        if identity is not None:
+        if identity is not None and grain_discovery_enabled:
             profile_key_candidates = _warehouse_profile_key_candidates(
                 identity,
                 statistical_profile,
                 spark_session=spark_session,
                 context=context,
                 warehouse_columns=warehouse_columns,
+                max_columns=grain_discovery_max_columns,
+                max_candidates=grain_discovery_max_candidates,
             )
     else:
         statistical_profile = build_profile_dataframe(dataframe)
@@ -1309,9 +1354,14 @@ def profile_table(
             frequency_profile = build_frequency_distribution_dataframe(
                 dataframe, columns=selected_columns, top_n=frequency_top_n
             )
-        if identity is not None:
-            profile_key_candidates = _spark_profile_key_candidates(dataframe, statistical_profile, metrics=profile_metrics)
+        if identity is not None and grain_discovery_enabled:
+            profile_key_candidates = _spark_profile_key_candidates(
+                dataframe, statistical_profile, metrics=profile_metrics,
+                max_columns=grain_discovery_max_columns, max_candidates=grain_discovery_max_candidates,
+            )
 
+    if identity is not None:
+        print("   Grain discovery → " + ("calculated" if grain_discovery_enabled else "disabled; saved candidates preserved"))
     frequency_label = "calculated" if frequency_profile is not None else "skipped; no eligible/requested columns"
     print("3. Statistical profile → calculated")
     print(f"4. Frequency profile → {frequency_label}")
@@ -1381,11 +1431,11 @@ def profile_table(
             writer_notebook_name=None,
             scheduled_refresh_json=None,
             profile_key_candidates_json=json.dumps(
-                _key_candidate_evidence(profile_key_candidates),
+                _key_candidate_evidence(profile_key_candidates, max_columns=grain_discovery_max_columns),
                 sort_keys=True,
                 separators=(",", ":"),
                 ensure_ascii=False,
-            ),
+            ) if grain_discovery_enabled else None,
             source_fields=warehouse_fields,
         )
         _upsert_catalogue_identities(
