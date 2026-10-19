@@ -78,7 +78,9 @@ The returned DataFrame contains the query result from the warehouse SQL serving 
 
 ## Raises / Errors
 
-Raises ValueError for blank or non-SELECT SQL and RuntimeError when the Fabric connector is unavailable.
+ValueError
+    If SQL is not one SELECT/CTE, contains mutation keywords outside quoted
+    text or identifiers, advances a sequence, or has multiple statements.
 
 ### Common failure causes
 
@@ -142,7 +144,7 @@ Lakehouse Delta before Spark transformations.
 
 `fabricops_kit/io/read_warehouse_query.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L15-L97">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L15-L103">View on GitHub</a>
 </div>
 
 

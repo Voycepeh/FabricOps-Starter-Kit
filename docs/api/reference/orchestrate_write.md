@@ -150,7 +150,8 @@ not a reread of the persisted target; Append, SCD1, and SCD2 may produce a
 different target state. Grain checks the prepared input after Sensitive Data
 treatment for every strategy; it does not check existing target rows or
 guarantee resulting-table uniqueness for Append, SCD1, or SCD2. SCD strategies
-retain their separate business-key requirements. Use a version-aware Grain
+retain their separate business-key requirements and reject null business-key
+components before staging or merging. Use a version-aware Grain
 key for SCD2 history. No DataFrame is displayed or materialized for this
 return value. With verbose=True, every successful execution prints a final
 WRITE Summary to stdout, including Validate-only runs. Unavailable row
@@ -167,7 +168,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:23`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L23-L222">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L23-L223">View on GitHub</a>
 </div>
 
 

@@ -20,13 +20,19 @@ def _warehouse_incremental_query(identity: dict[str, Any], scope: dict[str, Any]
     """Build framework-owned SQL pushdown for one resolved incremental scope."""
     schema = str(identity["schema"]).replace("]", "]]")
     table = str(identity["table_name"]).replace("]", "]]")
-    if scope["type"] == "full":
-        return f"SELECT * FROM [{schema}].[{table}]"
+    query = f"SELECT * FROM [{schema}].[{table}]"
+    if scope.get("has_data") is False:
+        return f"{query} WHERE 1 = 0"
     column = str(scope["column"]).replace("]", "]]")
-    if not scope["has_data"]:
-        return f"SELECT * FROM [{schema}].[{table}] WHERE 1 = 0"
-    value = _warehouse_watermark_literal(scope["after"]).replace("'", "''")
-    return f"SELECT * FROM [{schema}].[{table}] WHERE [{column}] > '{value}'"
+    through = scope["through"]
+    if through is None:
+        return f"{query} WHERE [{column}] IS NULL"
+    upper = _warehouse_watermark_literal(through).replace("'", "''")
+    after = scope.get("after")
+    if after is None:
+        return f"{query} WHERE ([{column}] <= '{upper}' OR [{column}] IS NULL)"
+    lower = _warehouse_watermark_literal(after).replace("'", "''")
+    return f"{query} WHERE [{column}] > '{lower}' AND [{column}] <= '{upper}'"
 
 
 def _warehouse_watermark_literal(value: Any) -> str:
@@ -42,18 +48,25 @@ def _warehouse_watermark_literal(value: Any) -> str:
 
 def _filter_lakehouse_incremental(dataframe: Any, scope: dict[str, Any]) -> Any:
     """Apply a resolved incremental scope while preserving Spark pushdown."""
-    if scope["type"] == "full":
-        return dataframe
-    if not scope["has_data"]:
+    if scope.get("has_data") is False:
         return dataframe.limit(0)
     from pyspark.sql import functions as F
 
     from datetime import datetime
 
-    after = scope["after"]
+    column = F.col(scope["column"])
+    through = scope["through"]
+    if through is None:
+        return dataframe.where(column.isNull())
+    if isinstance(through, str) and through.endswith("Z"):
+        through = datetime.fromisoformat(through[:-1] + "+00:00")
+    upper = column <= F.lit(through)
+    after = scope.get("after")
+    if after is None:
+        return dataframe.where(upper | column.isNull())
     if isinstance(after, str) and after.endswith("Z"):
-        after = datetime.fromisoformat(after[:-1] + "+00:00").replace(tzinfo=None)
-    return dataframe.where(F.col(scope["column"]) > F.lit(after))
+        after = datetime.fromisoformat(after[:-1] + "+00:00")
+    return dataframe.where((column > F.lit(after)) & upper)
 
 
 
@@ -186,8 +199,9 @@ def pipeline_read(
     3. Infer whether that configured source is a Lakehouse or Warehouse.
     4. For incremental reads, observe the complete physical source, resolve the
        last committed watermark for the exact target, and read rows strictly
-       after it. A missing baseline deterministically bootstraps with a complete
-       read.
+       after it and at or below the observed upper watermark. A missing baseline
+       bootstraps through that same observed upper bound, retaining null-watermark
+       rows. Rows arriving above the observed bound wait for the next run.
     5. Select and call ``read_lakehouse_table``, ``read_warehouse_table``, or
        framework-owned ``read_warehouse_query`` pushdown.
     6. Capture transient current-run Source Observation state without advancing

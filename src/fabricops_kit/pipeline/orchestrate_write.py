@@ -101,7 +101,8 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     different target state. Grain checks the prepared input after Sensitive Data
     treatment for every strategy; it does not check existing target rows or
     guarantee resulting-table uniqueness for Append, SCD1, or SCD2. SCD strategies
-    retain their separate business-key requirements. Use a version-aware Grain
+    retain their separate business-key requirements and reject null business-key
+    components before staging or merging. Use a version-aware Grain
     key for SCD2 history. No DataFrame is displayed or materialized for this
     return value. With verbose=True, every successful execution prints a final
     WRITE Summary to stdout, including Validate-only runs. Unavailable row

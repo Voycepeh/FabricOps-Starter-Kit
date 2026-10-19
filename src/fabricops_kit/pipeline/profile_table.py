@@ -1244,7 +1244,7 @@ def profile_table(
     if table_id is not None or has_coordinates:
         config, env, context = resolve_fabric_context()
         if table_id is not None:
-            identity = resolve_catalogue_table_identity(config, env, table_id, context=context)
+            identity = resolve_catalogue_table_identity(config, env, table_id, spark_session=spark_session, context=context)
         else:
             identity = resolve_physical_table_identity(
                 config, env, store=store, schema=schema, table_name=table_name
@@ -1260,7 +1260,7 @@ def profile_table(
         )
         if dataframe is None:
             if store_kind == "lakehouse":
-                dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context=context)
+                dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), spark_session=spark_session, context=context)
                 profile_input_label = "complete persisted Lakehouse table"
             else:
                 warehouse_physical = True

@@ -969,9 +969,10 @@ def resolve_incremental_source_scope(
             if value is not None:
                 row["min_change_value"] = _watermark_timestamp(value)
             value = row.get("partition_value")
-            if value is not None:
+            if value not in (None, ""):
                 row["partition_value"] = _watermark_timestamp(value)
-    pending = [dict(row) for row in current]
+    has_rows = any(int(row.get("row_count") or 0) > 0 for row in current)
+    pending = [dict(row) for row in current] if has_rows else []
     key = (env, activity_id, source_table_id, target_table_id)
     _PENDING_SOURCE_OBSERVATIONS[key] = pending
 
@@ -1000,7 +1001,7 @@ def resolve_incremental_source_scope(
         scope = {
             "type": "full",
             "first_run": True,
-            "has_data": True,
+            "has_data": has_rows,
             "column": change_column,
             "through": current_max,
         }
@@ -1008,8 +1009,9 @@ def resolve_incremental_source_scope(
         scope = {
             "type": "watermark",
             "first_run": False,
-            "has_data": baseline is None
-            or (current_max is not None and _progress_key(current_max) > _progress_key(baseline)),
+            "has_data": has_rows and (
+                baseline is None or (current_max is not None and _progress_key(current_max) > _progress_key(baseline))
+            ),
             "column": change_column,
             "after": baseline,
             "through": current_max,
@@ -1184,8 +1186,8 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     source_table_ids = [str(value).strip() for value in success_context.get("source_table_ids") or ()]
     activity_id = str(success_context.get("activity_id") or "").strip()
     notebook_name = str(success_context.get("notebook_name") or "").strip()
-    if not target_table_id or not source_table_ids or not activity_id or not notebook_name:
-        raise ValueError("success_context is missing target, source, activity, or logical notebook identity.")
+    if not target_table_id or not activity_id or not notebook_name:
+        raise ValueError("success_context is missing target, activity, or logical notebook identity.")
 
     config, env, context = resolve_fabric_context(context=success_context.get("context"))
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
@@ -1251,8 +1253,8 @@ def stage_pipeline_write_observations(success_context: Mapping[str, Any]) -> lis
     source_table_ids = [str(value).strip() for value in success_context.get("source_table_ids") or ()]
     activity_id = str(success_context.get("activity_id") or "").strip()
     notebook_name = str(success_context.get("notebook_name") or "").strip()
-    if not target_table_id or not source_table_ids or not activity_id or not notebook_name:
-        raise ValueError("success_context is missing target, source, activity, or logical notebook identity.")
+    if not target_table_id or not activity_id or not notebook_name:
+        raise ValueError("success_context is missing target, activity, or logical notebook identity.")
     config, env, context = resolve_fabric_context(context=success_context.get("context"))
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     audit["_activity_id"] = activity_id
@@ -2728,6 +2730,8 @@ def execute_lakehouse_processing(
 
     _store, _table, _schema, path = resolve_configured_lakehouse_table(store, table_name, schema, context=context)
     keys = list(processing["key_columns"])
+    if persisted_df.where(reduce(lambda a, b: a | b, [F.col(key).isNull() for key in keys])).limit(1).count():
+        raise ValueError("Incoming target scope contains null business keys.")
     duplicate = persisted_df.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count()
     if duplicate:
         raise ValueError("Incoming target scope contains duplicate business keys.")
@@ -4355,7 +4359,13 @@ def _identifier(value: str | None, label: str) -> str:
     return text
 
 
-def _warehouse_observation_query(schema: str, table_name: str, partition_column: str, change_column: str) -> str:
+def _warehouse_observation_query(schema: str, table_name: str, partition_column: str, change_column: str, *, watermark_only: bool = False) -> str:
+    if watermark_only:
+        return (
+            f"SELECT MAX([{change_column}]) AS partition_value, COUNT_BIG(*) AS row_count, "
+            f"MIN([{change_column}]) AS min_change_value, MAX([{change_column}]) AS max_change_value, "
+            f"CAST('' AS varchar(64)) AS content_fingerprint FROM [{schema}].[{table_name}]"
+        )
     return (
         "SELECT\n"
         f"  [{partition_column}] AS partition_value,\n"
@@ -4387,7 +4397,7 @@ def _compact_rows(frame: Any, *, timestamp_columns: set[str] | None = None) -> l
                     value.get("partition_value"), timestamp="partition_value" in timestamp_columns
                 ) or "",
                 **({"watermark_type": "timestamp"} if "max_change_value" in timestamp_columns else {}),
-                "is_present": True,
+                "is_present": int(value.get("row_count") or 0) > 0,
                 "row_count": int(value.get("row_count") or 0),
                 "min_change_value": _compact_value(minimum, timestamp="min_change_value" in timestamp_columns),
                 "max_change_value": _compact_value(maximum, timestamp="max_change_value" in timestamp_columns),
@@ -4406,6 +4416,7 @@ def _observe_lakehouse(
     *,
     spark_session: Any,
     context: dict[str, Any],
+    watermark_only: bool = False,
 ) -> list[dict[str, Any]]:
     from pyspark.sql import functions as F
 
@@ -4416,13 +4427,36 @@ def _observe_lakehouse(
         spark_session=spark_session,
         context=context,
     )
-    return _observe_dataframe(frame, partition_column, change_column)
+    return _observe_dataframe(frame, partition_column, change_column, watermark_only=watermark_only)
 
 
 def _observe_dataframe(
-    frame: Any, partition_column: str, change_column: str
+    frame: Any, partition_column: str, change_column: str, *, watermark_only: bool = False
 ) -> list[dict[str, Any]]:
     """Aggregate an already-read source DataFrame into observation rows."""
+    from pyspark.sql import functions as F
+
+    if watermark_only:
+        observed = frame.agg(
+            F.max(F.col(change_column)).alias("partition_value"),
+            F.count(F.lit(1)).alias("row_count"),
+            F.min(F.col(change_column)).alias("min_change_value"),
+            F.max(F.col(change_column)).alias("max_change_value"),
+        ).select(
+            "partition_value", "row_count",
+            "min_change_value", "max_change_value", F.lit("").alias("content_fingerprint"),
+        )
+    else:
+        observed = _observe_partition_dataframe(frame, partition_column, change_column)
+    schema = {field.name: type(field.dataType).__name__ for field in frame.schema.fields}
+    timestamp_columns = {"min_change_value", "max_change_value"} if schema.get(change_column) == "TimestampType" else set()
+    if schema.get(partition_column) == "TimestampType":
+        timestamp_columns.add("partition_value")
+    return _compact_rows(observed, timestamp_columns=timestamp_columns)
+
+
+def _observe_partition_dataframe(frame: Any, partition_column: str, change_column: str) -> Any:
+    """Keep Source Drift fingerprints separate from incremental progress aggregates."""
     from pyspark.sql import functions as F
 
     row_columns = sorted(frame.columns)
@@ -4430,7 +4464,7 @@ def _observe_dataframe(
         "_fabricops_content_hash",
         F.sha2(F.to_json(F.struct(*[F.col(name) for name in row_columns])), 256),
     )
-    observed = (
+    return (
         with_fingerprint.groupBy(partition_column)
         .agg(
             F.count(F.lit(1)).alias("row_count"),
@@ -4449,20 +4483,6 @@ def _observe_dataframe(
             "content_fingerprint",
         )
     )
-    schema = {field.name: type(field.dataType).__name__ for field in frame.schema.fields}
-    timestamp_columns = set()
-    for output_name, source_name in (
-        ("partition_value", partition_column),
-        ("min_change_value", change_column),
-        ("max_change_value", change_column),
-    ):
-        if schema.get(source_name) == "TimestampType":
-            timestamp_columns.add(output_name)
-    compact = _compact_rows(observed, timestamp_columns=timestamp_columns)
-    if schema.get(change_column) == "TimestampType":
-        for row in compact:
-            row["watermark_type"] = "timestamp"
-    return compact
 
 
 def _validated_observation_identity(
@@ -4591,17 +4611,17 @@ def capture_source_observation(
             "_activity_id": str(audit["_activity_id"]),
         }
 
-    def capture_columns(partition_column: str, change_column: str) -> Any:
+    def capture_columns(partition_column: str, change_column: str, *, watermark_only: bool = False) -> Any:
         observation_columns = {partition_column, change_column}
         if dataframe is not None and observation_columns <= set(
             getattr(dataframe, "columns", ())
         ):
-            current = _observe_dataframe(dataframe, partition_column, change_column)
+            current = _observe_dataframe(dataframe, partition_column, change_column, watermark_only=watermark_only)
         elif source_type == "warehouse":
             current = _compact_rows(
                 read_warehouse_query(
                     _warehouse_observation_query(
-                        schema_value, table_value, partition_column, change_column
+                        schema_value, table_value, partition_column, change_column, watermark_only=watermark_only
                     ),
                     store=store_key,
                     spark_session=spark,
@@ -4617,6 +4637,7 @@ def capture_source_observation(
                 change_column,
                 spark_session=spark,
                 context=context,
+                watermark_only=watermark_only,
             )
         observation_id = str(uuid4())
         values = [
@@ -4638,7 +4659,15 @@ def capture_source_observation(
             }
             for row in current
         ]
-        return spark.createDataFrame(values)
+        from pyspark.sql.types import StringType, StructField, StructType
+
+        observation_schema = StructType([
+            *metadata_table_schema_registry()[OBSERVATION_TABLE].fields,
+            StructField("partition_column", StringType(), False),
+            StructField("change_column", StringType(), False),
+            StructField("watermark_type", StringType(), True),
+        ])
+        return spark.createDataFrame(values, schema=observation_schema)
 
     drift_observation = None
     if drift_rule is not None:
@@ -4652,7 +4681,7 @@ def capture_source_observation(
             observation=drift_observation,
         )
     if incremental_columns is not None:
-        return capture_columns(*incremental_columns)
+        return capture_columns(*incremental_columns, watermark_only=True)
     return drift_observation
 
 

@@ -95,7 +95,8 @@ Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors 
 FabricOps resolves the configured Lakehouse Files path from
 ``00_env_config``, reads the workbook binary through Spark, parses it with
 ``pandas.read_excel``, and converts the pandas DataFrame back to a Spark
-DataFrame.
+DataFrame. The temporary local workbook is deleted after parsing, including
+when parsing raises an error.
 
 </div>
 
@@ -108,7 +109,7 @@ DataFrame.
 
 `fabricops_kit/io/read_lakehouse_excel.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L55">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L56">View on GitHub</a>
 </div>
 
 

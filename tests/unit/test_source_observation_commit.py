@@ -139,6 +139,18 @@ def test_successful_write_commits_one_observation_per_source(monkeypatch):
     ]
 
 
+def test_source_free_write_finalizes_target_lineage_without_source_observations(monkeypatch):
+    """The documented source-free target must finalize without invented sources."""
+    from fabricops_kit.pipeline.pipeline_write import _source_table_ids
+
+    assert _source_table_ids([]) == []
+    written, lineage = _configure_commit(monkeypatch)
+    assert shared.stage_pipeline_write_observations(_context(sources=())) == []
+    assert shared.commit_pipeline_write_success(_context(sources=())) == []
+    assert written == []
+    assert [(item["table_id"], item["pipeline_role"]) for item in lineage] == [("target-x", "target")]
+
+
 def test_write_stages_target_specific_observation_before_publication(monkeypatch):
     written, lineage = _configure_commit(monkeypatch, [_observation("source-a")])
 

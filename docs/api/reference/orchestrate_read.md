@@ -116,6 +116,13 @@ A contract-free Development run prints one concise Guardrail decision.
 Grain checks only the returned rows (the incremental batch in incremental mode),
 using the configured physical row key; SCD2 history requires a version-aware
 key, such as business key plus effective timestamp.
+Incremental batches include only rows after the accepted watermark and at
+or below the upper watermark observed for this run. Bootstrap reads use
+the same upper bound and retain null-watermark rows. Later arrivals above
+that bound wait for the next run. This bounds progress, but does not make
+concurrent source updates a transactional snapshot.
+Incremental progress captures one aggregate summary per source, including
+empty-source evidence; Source Drift fingerprints remain independent.
 DataFrames are never displayed. Incremental batches are not profiled.
 With verbose=True, successful execution ends with a READ Summary on stdout.
 Counts reuse existing profiling results; no Spark action is added for
@@ -132,7 +139,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:20`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L20-L126">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L20-L133">View on GitHub</a>
 </div>
 
 
@@ -148,7 +155,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 152 |
+| Live-critical dependencies | 153 |
 
 ### Release history
 
@@ -259,6 +266,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._normalize_dq_severity</code></li>
 <li><code>fabricops_kit.pipeline.shared._observe_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._observe_lakehouse</code></li>
+<li><code>fabricops_kit.pipeline.shared._observe_partition_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._orchestration_status</code></li>
 <li><code>fabricops_kit.pipeline.shared._parse_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared._parse_rule_parameters</code></li>

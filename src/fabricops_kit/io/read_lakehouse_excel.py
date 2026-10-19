@@ -43,7 +43,8 @@ def read_lakehouse_excel(
     FabricOps resolves the configured Lakehouse Files path from
     ``00_env_config``, reads the workbook binary through Spark, parses it with
     ``pandas.read_excel``, and converts the pandas DataFrame back to a Spark
-    DataFrame.
+    DataFrame. The temporary local workbook is deleted after parsing, including
+    when parsing raises an error.
 
     """
     _store, _relative_path, lakehouse_path = resolve_configured_file_path(store, relative_path, context=context)
