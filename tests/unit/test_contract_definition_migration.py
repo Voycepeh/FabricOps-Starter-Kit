@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from fabricops_kit.data_contract import migration
+from fabricops_kit.data_contract import migrate_contract_definitions as migration
 from fabricops_kit.data_contract import shared as contracts
 from fabricops_kit.pipeline import shared as runtime
 
@@ -54,7 +54,7 @@ def _rule(kind="schema", **changes):
 
 
 def _plan(rows=None, enrichment=None, guardrails=None):
-    return migration.plan_contract_definition_migration(
+    return migration._plan_contract_definition_migration(
         contract_rows=rows if rows is not None else [_contract()],
         enrichment_rows=enrichment or [], guardrail_rows=guardrails or [], environment_name="dev",
     )

@@ -216,7 +216,7 @@ The frozen version is an immutable data contract and becomes the exact candidate
     maintenance operation in the configured metadata environment:
 
     ```python
-    from fabricops_kit.data_contract.migration import migrate_contract_definitions
+    from fabricops_kit.data_contract.migrate_contract_definitions import migrate_contract_definitions
 
     report = migrate_contract_definitions(config=CONFIG, env=ENV, spark_session=spark)
     report["conflicts"], report["drafts"]

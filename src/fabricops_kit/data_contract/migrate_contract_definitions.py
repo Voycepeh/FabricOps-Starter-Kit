@@ -71,7 +71,7 @@ def _differences(left: Any, right: Any, prefix: str = "") -> list[tuple[str, Any
     return [] if left == right else [(prefix, left, right)]
 
 
-def plan_contract_definition_migration(
+def _plan_contract_definition_migration(
     *, contract_rows: Any, enrichment_rows: Any, guardrail_rows: Any, environment_name: str,
 ) -> dict[str, Any]:
     """Return proposed draft rows and exact conflicts without performing any IO.
@@ -242,7 +242,7 @@ def migrate_contract_definitions(
                 raise
             values = []
         snapshots.append(values)
-    report = plan_contract_definition_migration(
+    report = _plan_contract_definition_migration(
         contract_rows=snapshots[0], enrichment_rows=snapshots[1], guardrail_rows=snapshots[2], environment_name=env,
     )
     report["applied"] = False
