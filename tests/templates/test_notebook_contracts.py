@@ -499,7 +499,9 @@ def test_guided_demo_preserves_initial_unselected_flow_and_optional_target_valid
 
     assert "there is no Data Contract yet" in step_2a
     assert "leave the selection unchanged" in step_2a
-    assert "Contract-backed checks will return as skipped" in step_2a
+    assert "one contract-free decision" in step_2a
+    assert "skipped check fields remain in the returned dictionaries" in step_2a
+    assert "individual Guardrail stages are omitted" in step_2a
     assert "leave every source table in **Enforce** mode" in step_4
     assert "choose **Validate** only for the target" in step_4
     assert "Validate returns `published=False` and `validation_passed=True`" in step_4
