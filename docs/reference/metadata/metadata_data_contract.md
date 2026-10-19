@@ -47,7 +47,7 @@ via `table_id`
 | `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
-| `contract_payload_json` | `string` | Serialized governed Data Contract definition; mutable while draft and immutable once frozen. |
+| `contract_payload_json` | `string` | String column containing the JSON definition for this exact table/contract version and authoring environment, including Enrichment, Guardrails, and Processing; editable while draft and immutable once frozen. This is not a separate physical table. |
 | `status` | `string` | Pipeline run status recorded with the run summary. |
 | `is_active` | `boolean` | Whether the row is currently active. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |

@@ -28,7 +28,9 @@ The selector defaults every table to **Enforce**. Switch only the `curated_order
 
 All participating tables need selected contracts because Guardrail Coverage checks the complete source → target relationship once any contract is selected.
 
-The frozen-version picker appears only for a target in Validate mode. There is no separate contract dictionary to edit.
+In Development, sources show a frozen-version picker while remaining in **Enforce** mode; activation is not required to select a frozen source candidate. Targets show their frozen-version picker in **Validate** mode. Production resolves active frozen versions automatically. There is no separate contract dictionary to edit.
+
+After all Read/Write checks and Guardrail Coverage pass, the validation run appends a completion record for each participating exact contract version to `METADATA_GUARDRAIL_RESULTS`. These runtime completion records have `guardrail_type=guardrail_coverage` and `rule_type=contract_validation`; they are not another authorable Guardrail or a new metadata table. They enable activation for sources as well as targets. Partial check results do not enable activation.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">

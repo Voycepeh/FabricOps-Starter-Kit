@@ -87,8 +87,9 @@ RuntimeError
 
 Every Lineage-linked source remains in ``enforce`` mode. Each target can
 independently use ``enforce`` or ``validate``. Enforce resolves the
-environment's enforceable contract without showing a version picker;
-Production requires exactly one frozen version tagged active. Target validation exposes
+selected frozen source contract in Development, using an explicit source
+version picker even before activation. Production requires exactly one
+frozen version tagged active and does not accept candidate overrides. Target validation exposes
 frozen candidates and never installs the candidate as an enforcement
 override. This widget never activates metadata.
 
@@ -103,7 +104,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_select_data_contract.py:140`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L140-L486">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L140-L508">View on GitHub</a>
 </div>
 
 

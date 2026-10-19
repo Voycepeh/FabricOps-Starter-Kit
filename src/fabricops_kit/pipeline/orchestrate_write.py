@@ -16,6 +16,7 @@ from fabricops_kit.pipeline.shared import (
     prepare_pipeline_execution,
     pipeline_guardrail_types,
     print_pipeline_contract,
+    record_contract_validation,
 )
 
 
@@ -91,7 +92,8 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     result fields but are omitted from stdout and orchestration_stages.
     Contract-free Development prints one decision and proceeds to Write.
     Validate resolves the exact selected frozen candidate and records
-    execution_type=validate evidence for activation, then returns without writing;
+    execution_type=validate evidence for activation, including a completion
+    record for every covered contract after Guardrail Coverage passes, then returns without writing;
     Enforce continues through Write and persisted-target Profile. Existing
     metadata and Source Observation commit behaviour remains owned by
     the internal Write stage. The returned ``dataframe`` is the prepared Write input,
@@ -180,6 +182,7 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
             "orchestration_stages": stages,
         }
         if contract_mode == "validate":
+            record_contract_validation(context=context, target_table_id=target_id, coverage=coverage, spark_session=spark_session)
             columns = getattr(prepared, "columns", None)
             metrics = {"input_columns": len(columns) if columns is not None else None, "input_rows": None, "rows_committed": 0, "total_target_rows": None,
                        "rows_inserted": 0, "rows_updated": 0, "rows_unchanged": None,

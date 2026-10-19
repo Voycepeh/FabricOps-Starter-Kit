@@ -85,7 +85,8 @@ def test_widget_candidate_is_evaluated_and_produces_activation_evidence(contract
     assert result["validation_passed"] is True
     assert result["published"] is False
     assert result["dataframe"].first().email == "****************"
-    assert len(writes) == 3
+    assert len(writes) == 4
+    assert writes[-1]["rule_type"] == "contract_validation"
     assert {row["execution_type"] for row in writes} == {"validate"}
     assert {row["contract_id"] for row in writes} == {"contract-target"}
     assert {row["contract_version"] for row in writes} == {2}
@@ -127,7 +128,8 @@ def test_schema_only_contract_prints_only_applicable_check(contract_runtime, spa
     output = capsys.readouterr().out
     assert "Checking Schema." in output
     assert all(name not in output for name in ["Sensitive Data", "Data Quality", "Freshness", "Skipped"])
-    assert len(writes) == 1
+    assert len(writes) == 2
+    assert writes[-1]["guardrail_type"] == "guardrail_coverage"
     assert reads["METADATA_DATA_CONTRACT"] == 1
 
 

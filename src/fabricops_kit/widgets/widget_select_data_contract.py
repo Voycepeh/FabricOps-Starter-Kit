@@ -169,8 +169,9 @@ def widget_select_data_contract(*, spark_session=None, context=None):
     -----
     Every Lineage-linked source remains in ``enforce`` mode. Each target can
     independently use ``enforce`` or ``validate``. Enforce resolves the
-    environment's enforceable contract without showing a version picker;
-    Production requires exactly one frozen version tagged active. Target validation exposes
+    selected frozen source contract in Development, using an explicit source
+    version picker even before activation. Production requires exactly one
+    frozen version tagged active and does not accept candidate overrides. Target validation exposes
     frozen candidates and never installs the candidate as an enforcement
     override. This widget never activates metadata.
 
@@ -330,6 +331,15 @@ def widget_select_data_contract(*, spark_session=None, context=None):
             raise ValueError("Validate mode is available for pipeline target tables only.")
         table_state = state["tables"][table_id]
         if normalized_mode == "enforce":
+            if contract_id is not None or contract_version is not None:
+                if env == "prod":
+                    raise ValueError("Production enforces its active frozen contract; candidate overrides are Development-only.")
+                candidates = [row for row in table_state["versions"]
+                              if str(row.get("contract_id") or "") == str(contract_id or "")
+                              and int(row.get("contract_version") or 0) == int(contract_version or 0)]
+                if not candidates:
+                    raise ValueError("Selected frozen Data Contract version is not available for this table.")
+                table_state["enforce_contract"] = candidates[0]
             selected = table_state.get("enforce_contract") or (
                 table_state.get("selected") if table_state.get("mode") == "enforce" else None
             )
@@ -403,50 +413,17 @@ def widget_select_data_contract(*, spark_session=None, context=None):
             ),
             value="enforce", **widget_common(widgets, role),
         )
+        source_picker = env != "prod" and role.lower() == "source"
+        selected_source = table_state.get("selected") if source_picker else None
         version_control = widgets.Dropdown(
             options=[("Select frozen candidate", ""), *[
                 (f"Data Contract v{row['contract_version']} · Frozen",
                  f"{row['contract_id']}\n{row['contract_version']}") for row in versions
             ]],
-            layout=widgets.Layout(display="none"),
+            value=(f"{selected_source['contract_id']}\n{selected_source['contract_version']}" if selected_source else ""),
+            layout=widgets.Layout(display="" if source_picker else "none"),
         )
         preview = widgets.HTML(value="")
-
-        def render(
-            _change: Any,
-            *,
-            current_table: str = table_id,
-            current_mode: Any = mode_control,
-            current_version: Any = version_control,
-            current_preview: Any = preview,
-        ) -> None:
-            try:
-                if current_mode.value == "enforce":
-                    current_version.layout.display = "none"
-                    set_mode(current_table, "enforce")
-                    selected = state["tables"][current_table].get("selected")
-                    current_preview.value = (
-                        f"<b>Enforce</b> · Data Contract v{selected['contract_version']} · Active"
-                        if selected else "<b>Enforce</b> · No enforceable contract selected in this environment"
-                    )
-                else:
-                    current_version.layout.display = ""
-                    if not current_version.value:
-                        current_preview.value = "<b>Validate</b> · Select an exact frozen candidate"
-                        return
-                    contract_id, version = current_version.value.split("\n", 1)
-                    set_mode(current_table, "validate", contract_id, int(version))
-                    current_preview.value = f"<b>Validate</b> · Data Contract v{version} · Frozen"
-                current_preview.value += source_expectation_html()
-                status.value = ""
-            except ValueError as exc:
-                status.value = html.escape(str(exc))
-
-        mode_control.observe(render, names="value")
-        version_control.observe(render, names="value")
-        controls[table_id] = {"mode": mode_control, "version": version_control, "preview": preview}
-        role_label = "Read" if role.lower() == "source" else "Write"
-        table_name = table_state["display_name"]
 
         def source_expectation_html(
             *, current_role: str = role, current_table_id: str = table_id
@@ -465,6 +442,51 @@ def widget_select_data_contract(*, spark_session=None, context=None):
                 "<br><span style='color:#667085;'>Expected refresh: "
                 f"<b>{html.escape(shown)} {html.escape(str(expected.get('unit') or ''))}</b></span>"
             )
+
+        def render(
+            _change: Any,
+            *,
+            current_table: str = table_id,
+            current_mode: Any = mode_control,
+            current_version: Any = version_control,
+            current_preview: Any = preview,
+            current_source_picker: bool = source_picker,
+            current_expectation: Any = source_expectation_html,
+        ) -> None:
+            try:
+                if current_mode.value == "enforce":
+                    current_version.layout.display = "" if current_source_picker else "none"
+                    if current_source_picker and current_version.value:
+                        contract_id, version = current_version.value.split("\n", 1)
+                        set_mode(current_table, "enforce", contract_id, int(version))
+                    else:
+                        if current_source_picker:
+                            state["tables"][current_table].update(enforce_contract=None, selected=None)
+                        set_mode(current_table, "enforce")
+                    selected = state["tables"][current_table].get("selected")
+                    current_preview.value = (
+                        f"<b>Enforce</b> · Data Contract v{selected['contract_version']} · Frozen"
+                        if selected else "<b>Enforce</b> · No enforceable contract selected in this environment"
+                    )
+                else:
+                    current_version.layout.display = ""
+                    if not current_version.value:
+                        current_preview.value = "<b>Validate</b> · Select an exact frozen candidate"
+                        return
+                    contract_id, version = current_version.value.split("\n", 1)
+                    set_mode(current_table, "validate", contract_id, int(version))
+                    current_preview.value = f"<b>Validate</b> · Data Contract v{version} · Frozen"
+                current_preview.value += current_expectation()
+                status.value = ""
+            except ValueError as exc:
+                status.value = html.escape(str(exc))
+
+        mode_control.observe(render, names="value")
+        version_control.observe(render, names="value")
+        controls[table_id] = {"mode": mode_control, "version": version_control, "preview": preview}
+        role_label = "Read" if role.lower() == "source" else "Write"
+        table_name = table_state["display_name"]
+
         short_table_id = f"{table_id[:8]}…{table_id[-6:]}" if len(table_id) > 18 else table_id
         sections.extend([
             widgets.HTML(value=(

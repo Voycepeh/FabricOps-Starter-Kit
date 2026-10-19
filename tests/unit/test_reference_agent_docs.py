@@ -726,7 +726,7 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
     """Verify user-guide pages link back to key callable references."""
     metadata_tables_path = ROOT / "docs" / "reference" / "metadata.md"
     metadata_tables = metadata_tables_path.read_text(encoding="utf-8")
-    lineage_table = (ROOT / "docs" / "reference" / "metadata" / "metadata_data_lineage_table.md").read_text(
+    lineage_table = (ROOT / "docs" / "reference" / "metadata" / "metadata_data_lineage.md").read_text(
         encoding="utf-8"
     )
 
@@ -737,20 +737,20 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
 
 
 def test_metadata_reference_overview_renders_model_diagram() -> None:
-    """Verify the metadata overview keeps the model diagram near the top."""
-    metadata_tables_path = ROOT / "docs" / "reference" / "metadata.md"
-    asset_path = ROOT / "docs" / "assets" / "fabricops-metadata-model.png"
-    text = metadata_tables_path.read_text(encoding="utf-8")
-    image_reference = "../assets/fabricops-metadata-model.png"
+    """The current model shows only registered physical tables and labels the JSON column."""
+    from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
 
-    assert asset_path.exists()
-    intro = "FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas"
-    assert intro in text
-    assert f"![FabricOps metadata model]({image_reference})" in text
-    assert (metadata_tables_path.parent / image_reference).resolve() == asset_path.resolve()
-    assert text.index(image_reference) < text.index(intro)
-    assert text.index(image_reference) < text.index('<div class="metadata-table-grid">')
-    assert text.index(image_reference) < text.index("METADATA_DATA_STEWARD")
+    text = (ROOT / "docs" / "reference" / "metadata.md").read_text(encoding="utf-8")
+    diagram = text.split("```mermaid", 1)[1].split("```", 1)[0]
+    assert len(CANONICAL_METADATA_TABLES) == 10
+    assert all(name in diagram for name in CANONICAL_METADATA_TABLES)
+    assert "METADATA_ENRICHMENT" not in diagram
+    assert re.search(r"\bMETADATA_GUARDRAIL\b", diagram) is None
+    assert "contract_payload_json: string column" in diagram
+    assert "fabricops-metadata-model.png" not in text
+    assert "10 physical metadata tables, reduced from 12" in text
+    assert text.index("```mermaid") < text.index('<div class="metadata-table-grid">')
+
 
 def test_template_function_map_page_stays_removed() -> None:
     """Verify the intentionally deleted template function map page stays removed."""
@@ -2063,3 +2063,20 @@ def test_retired_focused_call_graph_entrypoint_is_removed() -> None:
 
     assert not hasattr(generator, "generate_function_call_graph_artifacts")
     assert not (ROOT / "scripts" / "generate_function_call_graph.py").exists()
+
+
+
+def test_current_metadata_pages_match_reduced_registry_and_have_no_retired_links():
+    """Removed definition tables have no current schema pages or navigation links."""
+    from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
+
+    pages = {path.name for path in (REFERENCE_DIR / "metadata").glob("*.md")}
+    assert pages == {name.lower() + ".md" for name in CANONICAL_METADATA_TABLES}
+    assert len(pages) == 10
+    for slug in ("metadata_enrichment", "metadata_guardrail"):
+        assert not (REFERENCE_DIR / "metadata" / f"{slug}.md").exists()
+        assert f"metadata/{slug}.md" not in (ROOT / "mkdocs.yml").read_text()
+        for path in (ROOT / "docs").rglob("*.md"):
+            if "releases" in path.parts:
+                continue
+            assert not re.search(r"\]\([^)]*" + slug + r"(?:\.md)?/?(?:#[^)]*)?\)", path.read_text()), path

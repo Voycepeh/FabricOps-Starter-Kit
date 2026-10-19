@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+import json
 from typing import Any, Mapping
 
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
@@ -51,13 +52,25 @@ def _latest_validation(
             severity == "blocking" and status in {"fail", "failed", "block", "blocked"}
         )
 
+    def complete(row: Mapping[str, Any]) -> bool:
+        if row.get("guardrail_type") != "guardrail_coverage" or row.get("rule_type") != "contract_validation":
+            return False
+        try:
+            payload = json.loads(str(row.get("result_payload_json") or "{}"))
+        except (TypeError, ValueError):
+            return False
+        return (isinstance(payload, dict) and payload.get("validation_complete") is True
+                and row.get("can_continue") is True and str(row.get("status") or "").casefold() in {"passed", "pass"})
+
+    latest_rank = max((str(row.get("_committed_at") or ""), str(row.get("_activity_id") or "")) for row in latest_rows)
+    completed = any(complete(row) and (str(row.get("_committed_at") or ""), str(row.get("_activity_id") or "")) >= latest_rank for row in latest_rows)
     blocked = sum(blocking(row) for row in latest_rows)
     warnings = sum(
         str(row.get("status") or "").casefold() in {"warn", "warning"}
         for row in latest_rows
     )
     return {
-        "validated": bool(latest_rows) and blocked == 0,
+        "validated": completed and blocked == 0,
         "run_id": latest_run,
         "rows": latest_rows,
         "blocked": blocked,
@@ -72,8 +85,10 @@ def widget_activate_data_contract(
     """Link a Data Agreement and activate one validated frozen Data Contract.
 
     Only frozen versions are selectable. The exact selected version must have a
-    successful latest Engineering validation run in METADATA_GUARDRAIL_RESULTS
-    with execution_type='validate' before activation is enabled. Activation
+    successful latest completed Engineering validation run in METADATA_GUARDRAIL_RESULTS
+    with execution_type='validate' before activation is enabled. The completion
+    record is written for each participating source and target only after all
+    checks and Guardrail Coverage pass; isolated or partial check results do not qualify. Activation
     links one exact Data Agreement version and updates the active Production
     contract pointer; it never edits the immutable contract payload or deploys
     the Engineering pipeline.
@@ -295,7 +310,7 @@ def widget_activate_data_contract(
                 "<div style='font-size:12px;line-height:1.45;'>"
                 "<span style='color:#a4262c;font-weight:700;'>Activation blocked</span> · "
                 + (
-                    f"{validation['blocked']} blocking failure(s)"
+                    (f"{validation['blocked']} blocking failure(s)" if validation["blocked"] else "validation run incomplete")
                     if validation["run_id"]
                     else "no exact-version validation"
                 )

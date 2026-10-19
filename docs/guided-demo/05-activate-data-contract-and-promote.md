@@ -17,7 +17,7 @@ Return to `01_governance` and select the exact frozen Data Contract version that
 
 
 
-Do not activate a different draft or an untested version simply because it is newer.
+Do not activate a different draft or an untested version simply because it is newer. Activation requires a completed validation record for that exact frozen version. A successful pipeline validation records completion for each participating source and target, including sources with only Schema configured. Isolated or partial check results are insufficient. A later draft does not inherit its previous version's activation eligibility.
 
 ### Link the Data Agreement
 

@@ -1,6 +1,22 @@
 # List of Metadata Tables
 
-![FabricOps metadata model](../assets/fabricops-metadata-model.png)
+```mermaid
+flowchart TB
+    subgraph Governance
+        steward["METADATA_DATA_STEWARD"] --> agreement["METADATA_DATA_AGREEMENT"]
+        agreement --> contract["METADATA_DATA_CONTRACT<br/>contract_payload_json: string column<br/>Enrichment + Guardrails"]
+    end
+    subgraph Engineering
+        catalogue["METADATA_DATA_CATALOGUE"] --> profiled["METADATA_DATA_PROFILED"]
+        profiled --> frequency["METADATA_DATA_PROFILED_FREQUENCY"]
+        catalogue --> lineage["METADATA_DATA_LINEAGE"]
+        catalogue --> access["METADATA_DATA_ACCESS"]
+        catalogue --> observation["METADATA_SOURCE_OBSERVATION"]
+        results["METADATA_GUARDRAIL_RESULTS"]
+    end
+    catalogue --> contract
+    contract --> results
+```
 
 FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas:
 
@@ -9,7 +25,9 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
 
 `table_id` is the canonical bridge for the same governed data asset across both schemas. `contract_id` and `contract_version` identify its governed definition, with descriptive Enrichment and executable Guardrails stored only in `METADATA_DATA_CONTRACT.contract_payload_json` for that exact version.
 
-The illustration predates payload-only definitions. The table cards below describe the current implemented schemas; Enrichment and Guardrails now belong inside the Data Contract payload.
+`METADATA_DATA_CONTRACT` is the physical table. `contract_payload_json` is a string column in each version row containing the JSON definition; it is not another table. One row represents a governed table's contract version in its authoring environment.
+
+The current registry contains 10 physical metadata tables, reduced from 12. Enrichment and Guardrail definitions are inside the Data Contract payload; their separate definition tables and schema pages are removed. Execution results remain separate. Setup does not delete existing Lakehouse tables.
 
 ## Metadata tables
 
@@ -335,7 +353,7 @@ The illustration predates payload-only definitions. The table cards below descri
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Store aggregate enforce and validate Guardrail summaries, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.</span>
+  <span class="metadata-table-card__purpose">Store aggregate enforce and validate Guardrail summaries and completed pipeline-validation records for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One Guardrail outcome for one exact Data Contract version in one enforce or validate execution.</span>

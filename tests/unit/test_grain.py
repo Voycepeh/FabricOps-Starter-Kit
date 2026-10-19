@@ -215,4 +215,5 @@ def test_grain_only_validation_satisfies_exact_coverage(contract_runtime, spark_
     assert result["validation_passed"]
     assert result["coverage_result"]["coverage"][0]["evaluated"]
     assert result["coverage_result"]["coverage"][0]["guardrail_type"] == "grain"
-    assert len(writes) == 1 and writes[0]["contract_version"] == 2
+    assert len(writes) == 2 and writes[0]["contract_version"] == 2
+    assert writes[-1]["rule_type"] == "contract_validation"
