@@ -577,6 +577,15 @@ def validate_sensitive_data_parameters(parameters: Mapping[str, Any]) -> dict[st
             raise ValueError("Sensitive Data mask_character must be non-empty.")
         normalized["mask_character"] = mask_character
     elif treatment == "bucket":
+        if "bin_width" in values:
+            if "bins" in values or "labels" in values:
+                raise ValueError("Choose fixed width or explicit ranges, not both.")
+            width, origin = values["bin_width"], values.get("bin_origin", 0)
+            if any(isinstance(value, bool) or not isinstance(value, (int, float))
+                   or not math.isfinite(float(value)) for value in (width, origin)) or width <= 0:
+                raise ValueError("Sensitive Data bin_width must be positive and bin_origin finite.")
+            normalized.update({"bin_width": float(width), "bin_origin": float(origin)})
+            return normalized
         bins = values.get("bins")
         labels = values.get("labels")
         if not isinstance(bins, list) or not bins:

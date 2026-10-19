@@ -97,7 +97,9 @@ def check_sensitive_data(
         print(f"  Treatments applied/evaluated: {', '.join(treatments) if treatments else 'none'}.")
         print("  Evidence appended to METADATA_GUARDRAIL_RESULTS without raw sensitive values.")
         print(
-            "  Token support mapping returned to caller and not persisted automatically."
+            "  Token mapping reused and persisted in the configured restricted store."
+            if result.get("mapping_persisted") else
+            "  Token support mapping returned to caller; Validate never persists mappings."
             if result["support_mapping"] is not None
             else "  No token support mapping produced."
         )

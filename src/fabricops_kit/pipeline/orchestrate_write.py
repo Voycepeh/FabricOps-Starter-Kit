@@ -67,7 +67,12 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     existing_mapping : pyspark.sql.DataFrame, optional
         Previously returned Sensitive Data token mappings. Existing assignments
         are reused; the returned sensitive_result contains the support_mapping
-        for the caller to persist and supply on later runs. After consuming the
+        for the caller to persist and supply on later runs. When Engineering
+        configures GovernanceConfig.sensitive_data_token_mapping, Enforce
+        automatically reuses and inserts assignments in that restricted Delta
+        store. Validate reads the store without writing it. Without that setting,
+        mapping management remains caller-owned. Returned mappings retain
+        established identities absent from the current batch. After consuming the
         prepared DataFrame and persisting the mapping, call its unpersist()
         method to release its cache. Failed orchestration releases it automatically.
     spark_session : object, optional

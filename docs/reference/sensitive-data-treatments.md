@@ -28,7 +28,9 @@ Input DataFrame
 
     ### What it does
 
-    Mask casts the governed value to a string, optionally preserves characters at the beginning and end, and replaces the hidden middle characters with the configured mask character.
+    Mask defaults to hiding the complete value. Choose **Partial mask** to preserve approved characters at the beginning or end. The widget uses `*` for new masks and hides that technical setting. Existing saved mask characters remain supported.
+
+    Short values that cannot safely accommodate the preserved characters are fully masked; they are never returned unchanged.
 
     Null values remain null.
 
@@ -62,7 +64,13 @@ Input DataFrame
 
     Bucket replaces an exact numeric value with a configured coarse label.
 
-    It does not aggregate rows or remove records. The source column must be numeric, boundaries must be strictly increasing, and the configured labels must match the governed bins.
+    It does not aggregate rows or remove records. The source column must be numeric.
+
+    Choose **Approved ranges** to supply comma-separated lower bounds and matching labels. Bounds must be strictly increasing. The first label covers all values below the second bound, including values below the first bound. The last label covers all values at or above the final bound. Existing saved policies keep this behavior.
+
+    Choose **Fixed width** for equal-width intervals anchored at a starting point. Width `10` and starting point `0` produce `[-10.0, 0.0)`, `[0.0, 10.0)`, `[10.0, 20.0)`, and so on. Lower boundaries are inclusive and upper boundaries exclusive. These intervals never change with batch minima, maxima or frequencies.
+
+    Explore distributions and agree useful boundaries before authoring the contract. Automatic quantiles, equal-population groups, and arbitrary text mappings belong in Engineering transformations. Text grouping does not imply aggregation; use a managed reference mapping when categories need broader labels.
 
     Null values remain null.
 
@@ -126,9 +134,11 @@ Input DataFrame
 
     ### Token mapping ownership
 
-    FabricOps returns the original-to-token relationship as `result["sensitive_result"]["support_mapping"]`, but **does not persist it automatically**.
+    FabricOps returns the original-to-token relationship as `result["sensitive_result"]["support_mapping"]`.
 
-    To keep tokens stable across runs, the project must persist the mapping appropriately and provide it back to [Sensitive Data stage](../api/reference/orchestrate_write.md) as `existing_mapping`.
+    Engineering can configure a restricted mapping store once, as described below. Enforce then reuses saved tokens and inserts missing assignments automatically. Validate reads existing mappings but does not persist newly generated assignments. With no configured store, Engineering must persist and supply `existing_mapping` on later runs. Returned mappings retain previous assignments for each treated table/column, including identities absent from the current batch.
+
+    Token identities are scoped to the canonical table and column. They do not automatically join identities across different tables or columns.
 
     Raw original values are excluded from `METADATA_GUARDRAIL_RESULTS`; they exist in the returned support mapping.
 
@@ -174,6 +184,39 @@ Input DataFrame
     ```
 
     Frozen v1 remains the historical contract recording why the incoming column was removed. A later contract version can govern the shorter schema when that becomes the intended boundary definition.
+
+## Configure managed token reuse
+
+**Engineering owns the mapping store; Governance only chooses Tokenize.**
+
+Configure an existing Lakehouse store in `00_env_config` and give it a separate access boundary from consumer data and general Metadata. Provision an empty Delta table with five string columns: `table_id`, `column_id`, `original_value`, `token_value`, and `original_data_type`. Only authorized pipeline/service identities should read or write it. FabricOps does not create permissions or silently create this table.
+
+Set this project-level option when constructing `GovernanceConfig`:
+
+```python
+sensitive_data_token_mapping={
+    "store": "Sensitive",
+    "schema": "vault",
+    "table_name": "token_mappings",
+}
+```
+
+The store must resolve to a Lakehouse. The `Metadata` store key is rejected. Missing tables, invalid schemas, and conflicting original/token assignments block treatment. Token allocation uses insert-only Delta merges followed by an authoritative reread. Serialize allocation for the same table/column; a Delta merge is not a uniqueness constraint for competing writers. Existing conflicting mappings are rejected, never silently selected.
+
+Mappings may reserve tokens before a later Guardrail or publication fails. Retaining those reservations makes retries stable. Validate never writes to the mapping store. The result's `sensitive_result["mapping_persisted"]` reports whether Enforce persisted the mapping. Returned mappings still contain original values, even when storage is managed.
+
+## Decide and validate treatment
+
+| Responsibility | Owner |
+| --- | --- |
+| Agree permitted detail and useful bands | Business and Governance |
+| Explore distributions; implement text mappings | Engineering |
+| Freeze the approved deterministic treatment | Data Contract author |
+| Apply treatment before Grain, DQ and publication | FabricOps |
+
+The authoring widget does not need every source row to declare fixed rules. Evaluating disclosure risk needs representative population evidence and consideration of combinations of identifying columns. Bucketing or tokenization alone does not establish anonymisation. Treatment covers the incoming write input; changing a rule does not rewrite historical target rows or SCD2 versions.
+
+Sensitive Data AI receives column metadata and numeric row/null/distinct counts and percentages. Raw profile extrema, frequency values, samples and other profile statistics are excluded from its context. AI suggestions always resolve to Block and remain subject to human review.
 
 ## Validate versus Enforce
 

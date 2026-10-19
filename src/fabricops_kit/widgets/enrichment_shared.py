@@ -114,9 +114,7 @@ def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
     """Build compact metadata-only evidence for Sensitive Data suggestions."""
     fields = (
         "row_count", "non_null_count", "null_count", "null_percent",
-        "distinct_count", "distinct_percent", "mean_value", "stddev_value",
-        "min_value", "percentile_25_value", "median_value",
-        "percentile_75_value", "max_value",
+        "distinct_count", "distinct_percent",
     )
     columns = []
     for row in state.get("catalogue_profile_rows", []):
@@ -127,9 +125,11 @@ def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
             "description": str(row.get("description") or ""),
             "classification": str(row.get("classification") or ""),
             "profile_evidence": {
-                name: row.get(name) for name in fields if row.get(name) is not None
+                name: row.get(name, (row.get("profile_evidence") or {}).get(name))
+                for name in fields
+                if isinstance(row.get(name, (row.get("profile_evidence") or {}).get(name)), (int, float))
+                and not isinstance(row.get(name, (row.get("profile_evidence") or {}).get(name)), bool)
             },
-            "frequency_evidence": list(row.get("frequency_evidence") or [])[:3],
         })
     return {
         "table_id": str(state.get("table_id") or ""),
@@ -190,6 +190,7 @@ def suggest_sensitive_data(
         for row in context.get("columns", [])
         if str(row.get("column_name") or "") and str(row.get("column_id") or "")
     }
+    context = build_ai_sensitive_data_context({**context, "catalogue_profile_rows": context.get("columns", [])})
     instruction = (
         f"{prompt.strip()}\n\nSuggest advisory Sensitive Data rules using only this metadata context. "
         "Assess every supplied column as Direct PII, Indirect PII, or Not PII. "
@@ -197,7 +198,9 @@ def suggest_sensitive_data(
         "The column field must be the supplied column_name string, not a column object. "
         "Use pii_type values direct, indirect, or none. For none, treatment must be null, action must be null, "
         "and parameters must be an empty object. "
-        "Allowed treatments: tokenize, mask, bucket, remove. Allowed actions: Warn, Block. "
+        "Allowed treatments: tokenize, mask, bucket, remove. Action must be Block. "
+        "Bucket is numeric only; use fixed approved ranges, never inferred quantiles. "
+        "Prefer full mask with preserve_start=0, preserve_end=0, mask_character='*'. "
         "Classification is only an input signal, not an automatic rule. Do not include raw values.\n\n"
         f"Context:\n{json.dumps(context, sort_keys=True, default=str)}"
     )
@@ -251,7 +254,8 @@ def suggest_sensitive_data(
                 "treatment": candidate.get("treatment"),
                 **dict(candidate.get("parameters") or {}),
             })
-            action = normalize_guardrail_action(candidate.get("action"))
+            normalize_guardrail_action(candidate.get("action"))
+            action = "Block"
         except (TypeError, ValueError) as exc:
             raise ValueError(
                 f"AI Sensitive Data suggestion for {column_name!r} is invalid: {exc}"

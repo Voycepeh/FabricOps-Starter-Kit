@@ -3138,3 +3138,75 @@ def test_rejected_save_retains_pending_widget_edits(widget_runtime, monkeypatch)
     assert state["dirty"]
     assert state["_pending_enrichment"]
     assert any(item.get("value") == "Unsaved description" for item in state["current"]["enrichment"])
+
+
+def test_sensitive_ui_defaults_to_full_mask_and_hides_technical_settings(widget_runtime):
+    """The simplest protection exposes no character-count or mask-symbol settings."""
+    state = widget_runtime['open']()
+    controls = state['_controls']
+    controls['column_select'].value = 'col-0'
+    controls['pii_type'].value = 'direct'
+    controls['pii_reason'].value = 'Identifies the customer'
+    controls['sensitive_enabled'].value = True
+    assert controls['sensitive_treatment'].value == 'mask'
+    assert controls['mask_mode'].value == 'full'
+    assert controls['mask_start'].layout.display == 'none'
+    assert controls['mask_character'].layout.display == 'none'
+    controls['mask_mode'].value = 'partial'
+    assert controls['mask_start'].layout.display == ''
+    controls['mask_start'].value = '1'
+    controls['mask_mode'].value = 'full'
+    assert controls['mask_start'].value == '0'
+    assert not state['_validation_errors']
+
+
+def test_sensitive_fixed_width_policy_survives_save_and_reopen(widget_runtime):
+    """Persist fixed intervals rather than recomputing groups from observed rows."""
+    state = widget_runtime['open']()
+    controls = state['_controls']
+    controls['column_select'].value = 'col-0'
+    controls['pii_type'].value = 'indirect'
+    controls['pii_reason'].value = 'Reduce precision'
+    controls['sensitive_enabled'].value = True
+    controls['sensitive_treatment'].value = 'bucket'
+    controls['bucket_mode'].value = 'width'
+    controls['bucket_width'].value = '10'
+    controls['bucket_origin'].value = '5'
+    assert controls['bucket_width'].layout.display == ''
+    assert controls['bucket_bins'].layout.display == 'none'
+    assert not state['_validation_errors']
+    controls['save_data_contract'].click()
+    assert widget_runtime['calls']['guardrails']
+    reopened = widget_runtime['open']()['_controls']
+    reopened['column_select'].value = 'col-0'
+    assert reopened['bucket_mode'].value == 'width'
+    assert reopened['bucket_width'].value == '10.0'
+    assert reopened['bucket_origin'].value == '5.0'
+
+
+def test_text_columns_do_not_offer_numeric_buckets(widget_runtime):
+    """Category mappings belong in the transformation workflow."""
+    state = widget_runtime['open']()
+    controls = state['_controls']
+    controls['column_select'].value = 'col-1'  # timestamp, also non-numeric
+    assert 'bucket' not in [value for _label, value in controls['sensitive_treatment'].options]
+
+
+def test_saved_numeric_bucket_restores_after_viewing_text_column(widget_runtime):
+    """Filtering available treatments cannot make a saved numeric rule unopenable."""
+    state = widget_runtime['open']()
+    controls = state['_controls']
+    controls['column_select'].value = 'col-0'
+    controls['pii_type'].value = 'indirect'
+    controls['pii_reason'].value = 'Reduce precision'
+    controls['sensitive_enabled'].value = True
+    controls['sensitive_treatment'].value = 'bucket'
+    controls['bucket_mode'].value = 'width'
+    controls['save_data_contract'].click()
+    reopened = widget_runtime['open']()
+    controls = reopened['_controls']
+    controls['column_select'].value = 'col-1'
+    controls['column_select'].value = 'col-0'
+    assert controls['sensitive_treatment'].value == 'bucket'
+    assert controls['bucket_mode'].value == 'width'
+    assert not reopened['_validation_errors']

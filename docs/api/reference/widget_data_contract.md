@@ -111,6 +111,11 @@ Not PII from governed metadata and profile evidence. Editable draft state remain
 separate until Governance accepts a suggestion. Manual Description or Classification
 edits mark dependent advice stale for explicit re-run. AI never saves, freezes,
 activates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.
+Sensitive Data defaults to full masking; partial preservation is optional.
+Numeric buckets use approved fixed ranges or an anchored interval width.
+Text grouping and distribution-derived boundaries belong in Engineering
+exploration and transformations. AI suggestions receive counts and metadata,
+never raw profile extrema or frequency values. Treatment failures always block.
 
 </div>
 
@@ -121,9 +126,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:525`
+`fabricops_kit/widgets/widget_data_contract.py:527`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L525-L5632">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L527-L5714">View on GitHub</a>
 </div>
 
 

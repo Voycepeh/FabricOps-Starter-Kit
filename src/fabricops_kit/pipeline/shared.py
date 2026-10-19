@@ -1302,11 +1302,34 @@ def _parameters(rule: dict[str, Any]) -> dict[str, Any]:
     return parsed
 
 
-def _build_token_mapping(dataframe, *, column_name, column_id, table_id, existing_mapping):
+def _build_token_mapping(dataframe, *, column_name, column_id, table_id, existing_mapping,
+                         config=None, env=None, context=None, execution_type="enforce"):
     """Build and materialize one validated caller-owned token mapping."""
     from pyspark.sql import functions as F
 
     required = {"table_id", "column_id", "original_value", "token_value"}
+    target = dict(getattr(getattr(config, "governance_config", None), "sensitive_data_token_mapping", {}) or {})
+    vault = None
+    io_context = {**(context or {}), "config": config, "env": env, "_fabricops_suppress_io_log": True}
+    if target:
+        from delta.tables import DeltaTable
+
+        _store, _table, _schema, path = resolve_configured_lakehouse_table(
+            target["store"], target["table_name"], target.get("schema"), context=io_context,
+        )
+        if not DeltaTable.isDeltaTable(dataframe.sparkSession, path):
+            raise ValueError("Provision the restricted Sensitive Data token mapping Delta table before running this pipeline.")
+        vault = DeltaTable.forPath(dataframe.sparkSession, path)
+        saved = read_lakehouse_table(target["table_name"], store=target["store"], schema=target.get("schema"),
+                                    spark_session=dataframe.sparkSession, context=io_context)
+        if not required | {"original_data_type"} <= set(saved.columns):
+            raise ValueError("Token mapping store requires table_id, column_id, original_value, token_value and original_data_type.")
+        if any(saved.schema[name].dataType.simpleString() != "string" for name in required | {"original_data_type"}):
+            raise ValueError("Token mapping store columns must use string data types.")
+        if existing_mapping is not None and not required <= set(existing_mapping.columns):
+            raise ValueError("existing_mapping is missing required columns.")
+        saved = saved.where((F.col("table_id") == table_id) & (F.col("column_id") == column_id)).select(*sorted(required))
+        existing_mapping = saved if existing_mapping is None else saved.unionByName(existing_mapping.select(*sorted(required)))
     if existing_mapping is None:
         established = None
     else:
@@ -1356,12 +1379,24 @@ def _build_token_mapping(dataframe, *, column_name, column_id, table_id, existin
     )
     available_mapping = generated if established is None else established.unionByName(generated)
     mapping = (
-        available_mapping.join(originals, on="original_value", how="inner")
-        .withColumn("original_data_type", F.lit(original_type))
+        available_mapping.withColumn("original_data_type", F.lit(original_type))
         .cache()
     )
     try:
         mapping.count()
+        if vault is not None and execution_type == "enforce":
+            # Insert-only preserves established identities; allocations for a scope must be serialized.
+            condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in ("table_id", "column_id", "original_value"))
+            vault.alias("target").merge(mapping.alias("source"), condition).whenNotMatchedInsert(
+                values={name: f"source.`{name}`" for name in (*sorted(required), "original_data_type")}
+            ).execute()
+            canonical = read_lakehouse_table(target["table_name"], store=target["store"], schema=target.get("schema"),
+                                            spark_session=dataframe.sparkSession, context=io_context)
+            # Validate the authoritative assignments after the merge, not a cached proposal.
+            resolved = _build_token_mapping(dataframe, column_name=column_name, column_id=column_id,
+                                           table_id=table_id, existing_mapping=canonical)
+            mapping.unpersist()
+            return resolved
     except Exception:
         mapping.unpersist()
         raise
@@ -1414,7 +1449,8 @@ def _mask_column(dataframe, *, column_name, parameters):
         end = F.reverse(F.substring(F.reverse(value), 1, preserve_end))
     else:
         end = F.lit("")
-    masked = F.when(length <= preserve_start + preserve_end + 1, value).otherwise(
+    full_mask = F.expr(f"repeat({mask_literal}, length(cast(`{column_name.replace('`', '``')}` as string)))")
+    masked = F.when(length <= preserve_start + preserve_end + 1, full_mask).otherwise(
         F.concat(
             start,
             hidden,
@@ -1431,9 +1467,15 @@ def _bucket_column(dataframe, *, column_name, parameters):
 
     if not isinstance(dataframe.schema[column_name].dataType, NumericType):
         raise ValueError("Sensitive Data bucket treatment requires a numeric column.")
+    value = F.col(column_name)
+    if "bin_width" in parameters:
+        width, origin = parameters["bin_width"], parameters["bin_origin"]
+        lower = F.floor((value - F.lit(origin)) / F.lit(width)) * F.lit(width) + F.lit(origin)
+        label = F.concat(F.lit("["), lower.cast("string"), F.lit(", "),
+                         (lower + F.lit(width)).cast("string"), F.lit(")"))
+        return dataframe.withColumn(column_name, F.when(value.isNull(), F.lit(None)).otherwise(label))
     bins = parameters["bins"]
     labels = parameters["labels"]
-    value = F.col(column_name)
     bucket = F.lit(labels[0])
     for boundary, label in zip(bins[1:], labels[1:]):
         bucket = F.when(value >= F.lit(boundary), F.lit(label)).otherwise(bucket)
@@ -1485,6 +1527,7 @@ def check_sensitive_data_rules(
                         column_id=column_id,
                         table_id=identity["table_id"],
                         existing_mapping=existing_mapping,
+                        config=config, env=env, context=context, execution_type=execution_type,
                     )
                     mappings.append(mapping)
                     token_columns.append((column_name, column_id))
@@ -1557,6 +1600,8 @@ def check_sensitive_data_rules(
             "can_continue": can_continue,
             "dataframe": transformed,
             "support_mapping": support_mapping,
+            "mapping_persisted": bool(support_mapping is not None and execution_type == "enforce"
+                                      and getattr(getattr(config, "governance_config", None), "sensitive_data_token_mapping", {})),
             "checks": checks,
         }
         return result

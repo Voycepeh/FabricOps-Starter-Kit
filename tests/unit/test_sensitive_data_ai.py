@@ -263,3 +263,27 @@ def test_fabric_ai_unavailable_has_clear_failure(monkeypatch):
     monkeypatch.setattr(module.importlib, "import_module", fake_import)
     with pytest.raises(RuntimeError, match="AI Functions are unavailable"):
         module._invoke_fabric_ai("prompt")
+
+
+def test_sensitive_context_and_prompt_exclude_profile_values():
+    """Raw extrema, frequencies and unexpected fields never enter the AI prompt."""
+    evidence = {**_context()['columns'][0], 'min_value': 'raw-min@example.test',
+                'max_value': 'raw-max@example.test', 'sample': 'raw-sample',
+                'frequency_evidence': [{'value': 'raw-frequency', 'count': 2}],
+                'profile_evidence': {'min_value': 'raw-nested', 'row_count': 100, 'null_count': 2}}
+    built = module.build_ai_sensitive_data_context({'catalogue_profile_rows': [evidence]})
+    assert built['columns'][0]['profile_evidence'] == {'row_count': 100, 'null_count': 2}
+    prompts = []
+    module.suggest_sensitive_data({'columns': [evidence]}, prompt='Policy',
+                                 invoke=lambda prompt: prompts.append(prompt) or '[]')
+    assert 'raw-' not in prompts[0]
+    assert 'row_count' in prompts[0]
+
+
+def test_sensitive_suggestions_always_use_block():
+    """Older model output cannot reintroduce a Warn policy into the editor."""
+    result = module.suggest_sensitive_data(_context(), prompt='Policy', invoke=_invoke([{
+        'column': 'EMAIL', 'pii_type': 'direct', 'reason': 'Identifies a person',
+        'treatment': 'remove', 'action': 'Warn', 'parameters': {},
+    }]))
+    assert result[0]['action'] == 'Block'
