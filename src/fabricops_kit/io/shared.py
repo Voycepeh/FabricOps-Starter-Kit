@@ -262,6 +262,24 @@ def validate_select_query(query: str) -> str:
     words = [word for token in tokens if token.token_type not in quoted for word in token.text.upper().split()]
     if any(token.token_type in {TokenType.SEMICOLON, TokenType.COMMAND} for token in tokens) or forbidden.intersection(words) or "NEXT VALUE FOR" in " ".join(words):
         raise ValueError("query must be one read-only SELECT; mutations and sequence advancement are not supported.")
+    depth, selects, set_operand = 0, 0, False
+    for token in tokens:
+        kind = token.token_type
+        if kind == TokenType.L_PAREN:
+            if depth == 0:
+                set_operand = False
+            depth += 1
+        elif kind == TokenType.R_PAREN:
+            depth -= 1
+        elif depth == 0 and kind in {TokenType.UNION, TokenType.INTERSECT, TokenType.EXCEPT}:
+            set_operand = True
+        elif depth == 0 and kind == TokenType.SELECT:
+            if selects and not set_operand:
+                raise ValueError("query must contain only one read-only query.")
+            selects += 1
+            set_operand = False
+    if not selects:
+        raise ValueError("A CTE must end in a SELECT query.")
     return sql
 
 

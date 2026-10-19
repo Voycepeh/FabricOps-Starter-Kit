@@ -18,6 +18,7 @@ shared = import_module("fabricops_kit.pipeline.shared")
     "SELECT 1 EXEC('DELETE FROM dbo.orders')",
     "WITH rows AS (SELECT * FROM dbo.orders) UPDATE rows SET id = 1",
     "SELECT 1 UPDATE STATISTICS dbo.orders",
+    "SELECT 1 SELECT 2",
 ])
 def test_warehouse_reader_rejects_mutations_before_connector(monkeypatch, sql):
     """A query labelled read-only must not delegate write statements."""
@@ -33,6 +34,7 @@ def test_warehouse_reader_rejects_mutations_before_connector(monkeypatch, sql):
     "SELECT N'DELETE; INTO' AS [update];",
     "WITH rows AS (SELECT 1 AS id) SELECT id FROM rows",
     "SELECT 1 UNION ALL SELECT 2",
+    "SELECT 1 UNION (SELECT 2) INTERSECT SELECT 2",
     "SELECT (SELECT source.* FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) FROM dbo.orders source",
 ])
 def test_read_only_tsql_preserves_literals_identifiers_and_json(sql):
