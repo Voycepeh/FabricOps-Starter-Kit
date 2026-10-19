@@ -114,8 +114,9 @@ activates, or enforces a contract; runtime Sensitive Data enforcement remains de
 Sensitive Data defaults to full masking; partial preservation is optional.
 Numeric buckets use approved fixed ranges or an anchored interval width.
 Text grouping and distribution-derived boundaries belong in Engineering
-exploration and transformations. AI suggestions receive counts and metadata,
-never raw profile extrema or frequency values. Treatment failures always block.
+exploration and transformations. AI suggestions receive governed metadata,
+profile summaries including min/max, and the three most frequent values.
+Treatment failures always block.
 
 </div>
 
@@ -128,7 +129,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:527`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L527-L5714">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L527-L5717">View on GitHub</a>
 </div>
 
 

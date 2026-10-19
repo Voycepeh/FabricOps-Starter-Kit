@@ -393,7 +393,8 @@ DEFAULT_AI_ENRICHMENT = {
         "assessment briefly. For Direct or Indirect PII, suggest only tokenize, mask, bucket, or remove, "
         "explicit parameters, and a Block action. Prefer full masking; bucket only numeric values using "
         "approved fixed boundaries. The manually selected information "
-        "classification is context only, not a PII decision. Never request or return raw values. Return "
+        "classification is context only, not a PII decision. Profile summaries, min/max, and the top three "
+        "frequent values are approved input evidence. Never request full source rows or return raw values. Return "
         "structured JSON only; final review belongs to Governance."
     ),
     "grain_prompt": (

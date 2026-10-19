@@ -2166,9 +2166,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared._normalize_path_config",
-      "source_end_line": 797,
+      "source_end_line": 798,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 757,
+      "source_start_line": 758,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
@@ -2249,9 +2249,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.build_column_id",
-      "source_end_line": 882,
+      "source_end_line": 883,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 880,
+      "source_start_line": 881,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -2274,9 +2274,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.build_table_id",
-      "source_end_line": 877,
+      "source_end_line": 878,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 875,
+      "source_start_line": 876,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -2423,9 +2423,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.get_store",
-      "source_end_line": 850,
+      "source_end_line": 851,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 800,
+      "source_start_line": 801,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
@@ -2476,9 +2476,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.is_table_not_found_error",
-      "source_end_line": 861,
+      "source_end_line": 862,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 858,
+      "source_start_line": 859,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -2687,9 +2687,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.stable_metadata_id",
-      "source_end_line": 872,
+      "source_end_line": 873,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 864,
+      "source_start_line": 865,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -2717,9 +2717,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.validate_framework_config",
-      "source_end_line": 749,
+      "source_end_line": 750,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 669,
+      "source_start_line": 670,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -10129,9 +10129,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._enrichment_values",
-      "source_end_line": 809,
+      "source_end_line": 818,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 795,
+      "source_start_line": 804,
       "usage": "detached"
     },
     {
@@ -10165,9 +10165,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._normalize_ai_column_reference",
-      "source_end_line": 179,
+      "source_end_line": 188,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 147,
+      "source_start_line": 156,
       "usage": "public_flow_reachable"
     },
     {
@@ -10182,9 +10182,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._normalize_ai_dq_parameters",
-      "source_end_line": 426,
+      "source_end_line": 435,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 416,
+      "source_start_line": 425,
       "usage": "public_flow_reachable"
     },
     {
@@ -10201,9 +10201,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._rows",
-      "source_end_line": 737,
+      "source_end_line": 746,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 734,
+      "source_start_line": 743,
       "usage": "public_flow_reachable"
     },
     {
@@ -10218,9 +10218,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._validate_ai_dq_parameters",
-      "source_end_line": 446,
+      "source_end_line": 455,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 429,
+      "source_start_line": 438,
       "usage": "public_flow_reachable"
     },
     {
@@ -10235,9 +10235,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.build_ai_business_rule_context",
-      "source_end_line": 502,
+      "source_end_line": 511,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 449,
+      "source_start_line": 458,
       "usage": "public_flow_reachable"
     },
     {
@@ -10252,9 +10252,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.build_ai_dq_context",
-      "source_end_line": 303,
+      "source_end_line": 312,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 278,
+      "source_start_line": 287,
       "usage": "unused"
     },
     {
@@ -10287,7 +10287,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.build_ai_sensitive_data_context",
-      "source_end_line": 144,
+      "source_end_line": 153,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
       "source_start_line": 113,
       "usage": "public_flow_reachable"
@@ -10304,9 +10304,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.catalogue_table_browser_state",
-      "source_end_line": 881,
+      "source_end_line": 890,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 812,
+      "source_start_line": 821,
       "usage": "unused"
     },
     {
@@ -10321,9 +10321,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.catalogue_table_options",
-      "source_end_line": 765,
+      "source_end_line": 774,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 740,
+      "source_start_line": 749,
       "usage": "unused"
     },
     {
@@ -10338,9 +10338,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.latest_enrichment_values",
-      "source_end_line": 792,
+      "source_end_line": 801,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 768,
+      "source_start_line": 777,
       "usage": "unused"
     },
     {
@@ -10355,9 +10355,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_business_rule",
-      "source_end_line": 732,
+      "source_end_line": 741,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 505,
+      "source_start_line": 514,
       "usage": "public_flow_reachable"
     },
     {
@@ -10372,9 +10372,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_dq_rules",
-      "source_end_line": 413,
+      "source_end_line": 422,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 364,
+      "source_start_line": 373,
       "usage": "unused"
     },
     {
@@ -10406,9 +10406,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_grain_key",
-      "source_end_line": 362,
+      "source_end_line": 371,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 306,
+      "source_start_line": 315,
       "usage": "public_flow_reachable"
     },
     {
@@ -10423,9 +10423,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_sensitive_data",
-      "source_end_line": 275,
+      "source_end_line": 284,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 182,
+      "source_start_line": 191,
       "usage": "public_flow_reachable"
     },
     {
@@ -11815,12 +11815,12 @@
       ],
       "returns_documentation": "dict\n    Current selector, editor, lifecycle state, and callable authoring actions.",
       "signature": "def widget_data_contract(*, table_id: str | None=None, contract_version: int | None=None, spark_session: Any=None, context: Any=None) -> dict[str, Any]",
-      "source_end_line": 5714,
+      "source_end_line": 5717,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
       "source_start_line": 527,
       "summary": "Open the unified governance authoring and lifecycle experience for Data Contracts.",
       "usage": "public_flow_reachable",
-      "usage_notes": "Save overwrites the complete canonical JSON for the selected draft version, then reloads\nthat exact version. A new draft is seeded from the previous frozen version when one exists.\nProcessing prefers the current Engineering Catalogue scan, otherwise the previous contract,\nthen defaults to overwrite. Catalogue-resolved processing is read-only; inherited, defaulted,\nor manually saved processing remains editable until the draft is frozen.\nProfile context remains read-only and is never added\nto the canonical payload. Scheduled Refresh is discovered read-only from Microsoft\nFabric and remains independent of the authored Freshness expectation. Immutable\nversions are review-only. Grain description, selected key combination, and\noptional enforcement are independent. Enabling Grain defaults to Block.\nThe sidebar shows the shared configured rules for Read and Write; it does\nnot execute validation. Rule buttons open the existing authoring controls.\nIf the notebook runtime cannot provide AI suggestions, AI actions are disabled\nfor the widget session while manual authoring remains available. Technical\nfailure details are retained in the returned state rather than shown in the editor.\nWhen enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,\nSensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or\nNot PII from governed metadata and profile evidence. Editable draft state remains\nseparate until Governance accepts a suggestion. Manual Description or Classification\nedits mark dependent advice stale for explicit re-run. AI never saves, freezes,\nactivates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.\nSensitive Data defaults to full masking; partial preservation is optional.\nNumeric buckets use approved fixed ranges or an anchored interval width.\nText grouping and distribution-derived boundaries belong in Engineering\nexploration and transformations. AI suggestions receive counts and metadata,\nnever raw profile extrema or frequency values. Treatment failures always block."
+      "usage_notes": "Save overwrites the complete canonical JSON for the selected draft version, then reloads\nthat exact version. A new draft is seeded from the previous frozen version when one exists.\nProcessing prefers the current Engineering Catalogue scan, otherwise the previous contract,\nthen defaults to overwrite. Catalogue-resolved processing is read-only; inherited, defaulted,\nor manually saved processing remains editable until the draft is frozen.\nProfile context remains read-only and is never added\nto the canonical payload. Scheduled Refresh is discovered read-only from Microsoft\nFabric and remains independent of the authored Freshness expectation. Immutable\nversions are review-only. Grain description, selected key combination, and\noptional enforcement are independent. Enabling Grain defaults to Block.\nThe sidebar shows the shared configured rules for Read and Write; it does\nnot execute validation. Rule buttons open the existing authoring controls.\nIf the notebook runtime cannot provide AI suggestions, AI actions are disabled\nfor the widget session while manual authoring remains available. Technical\nfailure details are retained in the returned state rather than shown in the editor.\nWhen enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,\nSensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or\nNot PII from governed metadata and profile evidence. Editable draft state remains\nseparate until Governance accepts a suggestion. Manual Description or Classification\nedits mark dependent advice stale for explicit re-run. AI never saves, freezes,\nactivates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.\nSensitive Data defaults to full masking; partial preservation is optional.\nNumeric buckets use approved fixed ranges or an anchored interval width.\nText grouping and distribution-derived boundaries belong in Engineering\nexploration and transformations. AI suggestions receive governed metadata,\nprofile summaries including min/max, and the three most frequent values.\nTreatment failures always block."
     },
     {
       "architecture_classification": "internal",

@@ -579,8 +579,9 @@ def widget_data_contract(
     Sensitive Data defaults to full masking; partial preservation is optional.
     Numeric buckets use approved fixed ranges or an anchored interval width.
     Text grouping and distribution-derived boundaries belong in Engineering
-    exploration and transformations. AI suggestions receive counts and metadata,
-    never raw profile extrema or frequency values. Treatment failures always block.
+    exploration and transformations. AI suggestions receive governed metadata,
+    profile summaries including min/max, and the three most frequent values.
+    Treatment failures always block.
 
     Examples
     --------
@@ -3544,9 +3545,11 @@ def widget_data_contract(
                         **{name: profile.get(name) for name in (
                             "row_count", "non_null_count", "null_count", "null_percent",
                             "distinct_count", "distinct_percent", "min_value", "max_value",
+                            "mean_value", "stddev_value", "percentile_25_value", "median_value", "percentile_75_value",
                         ) if profile.get(name) is not None},
                         "frequency_evidence": [
-                            {"count": item.get("count")} for item in profile_value.get("values", [])
+                            {name: item[name] for name in ("value", "count", "percent") if name in item}
+                            for item in profile_value.get("values", [])
                         ],
                     }],
                 })

@@ -111,13 +111,19 @@ def suggest_enrichment(
 
 
 def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
-    """Build compact metadata-only evidence for Sensitive Data suggestions."""
+    """Build approved profile summaries and up to three frequent-value samples."""
     fields = (
         "row_count", "non_null_count", "null_count", "null_percent",
-        "distinct_count", "distinct_percent",
+        "distinct_count", "distinct_percent", "mean_value", "stddev_value",
+        "min_value", "percentile_25_value", "median_value",
+        "percentile_75_value", "max_value",
     )
     columns = []
     for row in state.get("catalogue_profile_rows", []):
+        frequencies = sorted(
+            (item for item in (row.get("frequency_evidence") or []) if isinstance(item, dict)),
+            key=lambda item: float(item.get("count") or 0), reverse=True,
+        )[:3]
         columns.append({
             "column_id": str(row.get("column_id") or ""),
             "column_name": str(row.get("column_name") or ""),
@@ -127,9 +133,12 @@ def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
             "profile_evidence": {
                 name: row.get(name, (row.get("profile_evidence") or {}).get(name))
                 for name in fields
-                if isinstance(row.get(name, (row.get("profile_evidence") or {}).get(name)), (int, float))
-                and not isinstance(row.get(name, (row.get("profile_evidence") or {}).get(name)), bool)
+                if row.get(name, (row.get("profile_evidence") or {}).get(name)) is not None
             },
+            "frequency_evidence": [
+                {name: item[name] for name in ("value", "count", "percent") if name in item}
+                for item in frequencies
+            ],
         })
     return {
         "table_id": str(state.get("table_id") or ""),
@@ -201,7 +210,7 @@ def suggest_sensitive_data(
         "Allowed treatments: tokenize, mask, bucket, remove. Action must be Block. "
         "Bucket is numeric only; use fixed approved ranges, never inferred quantiles. "
         "Prefer full mask with preserve_start=0, preserve_end=0, mask_character='*'. "
-        "Classification is only an input signal, not an automatic rule. Do not include raw values.\n\n"
+        "Classification is only an input signal, not an automatic rule. Use the supplied profile summaries and top-three frequent values as evidence. Do not include raw values in the response.\n\n"
         f"Context:\n{json.dumps(context, sort_keys=True, default=str)}"
     )
     raw = str((invoke or _invoke_fabric_ai)(instruction)).strip()

@@ -3210,3 +3210,13 @@ def test_saved_numeric_bucket_restores_after_viewing_text_column(widget_runtime)
     assert controls['sensitive_treatment'].value == 'bucket'
     assert controls['bucket_mode'].value == 'width'
     assert not reopened['_validation_errors']
+
+
+def test_sensitive_ai_receives_approved_profile_and_frequency_samples(widget_runtime, monkeypatch):
+    """The authoring widget passes min/max and frequent values into AI context."""
+    _state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    column = captures['sensitive'][0]['columns'][0]
+    assert column['profile_evidence']['min_value'] == '1'
+    assert column['profile_evidence']['max_value'] == '9'
+    assert column['profile_evidence']['mean_value'] == 5.0
+    assert column['frequency_evidence'] == [{'value': 'col-0', 'count': 2, 'percent': 20.0}]

@@ -265,19 +265,37 @@ def test_fabric_ai_unavailable_has_clear_failure(monkeypatch):
         module._invoke_fabric_ai("prompt")
 
 
-def test_sensitive_context_and_prompt_exclude_profile_values():
-    """Raw extrema, frequencies and unexpected fields never enter the AI prompt."""
-    evidence = {**_context()['columns'][0], 'min_value': 'raw-min@example.test',
-                'max_value': 'raw-max@example.test', 'sample': 'raw-sample',
-                'frequency_evidence': [{'value': 'raw-frequency', 'count': 2}],
-                'profile_evidence': {'min_value': 'raw-nested', 'row_count': 100, 'null_count': 2}}
+def test_sensitive_context_and_prompt_include_approved_profile_samples():
+    """Share summaries and only the three most frequent values, not full rows."""
+    evidence = {**_context()['columns'][0], 'min_value': 'min@example.test',
+                'max_value': 'max@example.test', 'sample': 'unapproved-source-row',
+                'frequency_evidence': [
+                    {'value': 'fourth', 'count': 1},
+                    {'value': 'second', 'count': 20, 'percent': 20.0, 'extra': 'unapproved-extra'},
+                    {'value': 'first', 'count': 30},
+                    {'value': 'third', 'count': 10},
+                ],
+                'profile_evidence': {'row_count': 100, 'null_count': 2}}
     built = module.build_ai_sensitive_data_context({'catalogue_profile_rows': [evidence]})
-    assert built['columns'][0]['profile_evidence'] == {'row_count': 100, 'null_count': 2}
+    column = built['columns'][0]
+    assert column['profile_evidence'] == {'row_count': 100, 'null_count': 2,
+                                        'min_value': 'min@example.test', 'max_value': 'max@example.test'}
+    assert [item['value'] for item in column['frequency_evidence']] == ['first', 'second', 'third']
+    assert column['frequency_evidence'][1]['percent'] == 20.0
     prompts = []
-    module.suggest_sensitive_data({'columns': [evidence]}, prompt='Policy',
-                                 invoke=lambda prompt: prompts.append(prompt) or '[]')
-    assert 'raw-' not in prompts[0]
-    assert 'row_count' in prompts[0]
+    module.suggest_sensitive_data(built, prompt='Policy', invoke=lambda prompt: prompts.append(prompt) or '[]')
+    assert 'min@example.test' in prompts[0] and 'max@example.test' in prompts[0]
+    assert all(value in prompts[0] for value in ('first', 'second', 'third'))
+    assert 'fourth' not in prompts[0] and 'unapproved-' not in prompts[0]
+
+
+def test_nested_profile_extrema_survive_context_rebuilding():
+    """The invocation boundary preserves approved metadata already normalized by the widget."""
+    built = module.build_ai_sensitive_data_context({'catalogue_profile_rows': [
+        {**_context()['columns'][0], 'profile_evidence': {'min_value': 'A', 'max_value': 'Z'}}
+    ]})
+    rebuilt = module.build_ai_sensitive_data_context({'catalogue_profile_rows': built['columns']})
+    assert rebuilt['columns'][0]['profile_evidence'] == {'min_value': 'A', 'max_value': 'Z'}
 
 
 def test_sensitive_suggestions_always_use_block():
