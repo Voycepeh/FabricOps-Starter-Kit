@@ -2496,6 +2496,8 @@
         "fabricops_kit.data_contract.shared.get_column_profile_context",
         "fabricops_kit.data_contract.shared.get_table_runtime_context",
         "fabricops_kit.data_contract.shared::<module>",
+        "fabricops_kit.pipeline.check_guardrail_coverage._latest_can_continue",
+        "fabricops_kit.pipeline.check_guardrail_coverage::<module>",
         "fabricops_kit.pipeline.shared._latest_source_target_observation",
         "fabricops_kit.pipeline.shared._select_rule",
         "fabricops_kit.pipeline.shared._select_table_guardrail_rule",
@@ -5734,6 +5736,26 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
+      "function_name": "_latest_can_continue",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "transitive_live_dependency",
+      "qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage._latest_can_continue",
+      "source_end_line": 101,
+      "source_path": "src/fabricops_kit/pipeline/check_guardrail_coverage.py",
+      "source_start_line": 85,
+      "supports_live_contract": true,
+      "transitive_live_dependents": [
+        "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
+      ],
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "live_critical_internal",
       "function_name": "_payload",
       "function_type": "private_function",
       "inbound_source_references": [
@@ -5786,9 +5808,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage",
-      "source_end_line": 338,
+      "source_end_line": 369,
       "source_path": "src/fabricops_kit/pipeline/check_guardrail_coverage.py",
-      "source_start_line": 85,
+      "source_start_line": 104,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -5891,7 +5913,7 @@
           "type": "str"
         },
         {
-          "description": "Source read behaviour forwarded to the internal Read stage.",
+          "description": "Source read behaviour. Surrounding whitespace and case are normalized before planning stages, validating parameters, or selecting Grain scope.",
           "name": "read_mode",
           "required": "No",
           "type": "str"
@@ -5959,7 +5981,7 @@
       ],
       "public_import_path": "fabricops_kit.orchestrate_read",
       "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
-      "raises_documentation": "ValueError\n    If a discovery limit is not a positive integer; checked before any stage runs.\nRuntimeError\n    If a stage fails. Its name is reported and the original exception is\n    retained as ``__cause__``.",
+      "raises_documentation": "ValueError\n    If read_mode is invalid or a discovery limit is not a positive integer;\n    checked before metadata resolution or any stage runs.\nRuntimeError\n    If a stage fails. Its name is reported and the original exception is\n    retained as ``__cause__``.",
       "release_history": [
         {
           "status": "live",
@@ -5968,13 +5990,13 @@
       ],
       "returns_documentation": "dict\n    The source-read result, including ``dataframe`` and ``table_id``,\n    plus capability results and ``orchestration_stages``. ``read_metrics``\n    contains ``rows_read`` and ``columns`` (None when unavailable).\n    ``total_duration_seconds`` is the full lifecycle wall-clock duration.",
       "signature": "def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str='full', query: str | None=None, read_parameters: dict[str, Any] | None=None, target_table_id: str | None=None, grain_discovery_enabled: bool=True, grain_discovery_max_columns: int=3, grain_discovery_max_candidates: int=8, frequency_enabled: bool=True, frequency_top_n: int | None=5, spark_session=None, verbose: bool=True) -> dict[str, Any]",
-      "source_end_line": 159,
+      "source_end_line": 167,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_read.py",
       "source_start_line": 20,
       "summary": "Execute the standard FabricOps governed Read lifecycle.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable",
-      "usage_notes": "Read resolves its Data Contract once, then runs only its configured\nFreshness, Schema, Grain, and Data Quality stages before Profile, matching\ncanonical ``02_pipeline``. Absent capability fields remain skipped in the\nreturned result; orchestration_stages and stdout show executed stages only.\nA contract-free Development run prints one concise Guardrail decision.\nGrain checks only the returned rows (the incremental batch in incremental mode),\nusing the configured physical row key; SCD2 history requires a version-aware\nkey, such as business key plus effective timestamp.\nIncremental batches include only rows after the accepted watermark and at\nor below the upper watermark observed for this run. Bootstrap reads use\nthe same upper bound and retain null-watermark rows. Timestamp instants use\ncanonical UTC checkpoints; TimestampNTZ checkpoints retain wall-clock time\nwithout attaching a timezone. Dates retain calendar-date semantics.\nLater arrivals above\nthat bound wait for the next run. This bounds progress, but does not make\nconcurrent source updates a transactional snapshot.\nIncremental progress captures one aggregate summary per source, including\nempty-source evidence; Source Drift fingerprints remain independent.\nDataFrames are never displayed. Incremental batches are not profiled.\nWith verbose=True, successful execution ends with a READ Summary on stdout.\nCounts reuse existing profiling results; no Spark action is added for\nreporting. An unavailable count is printed as ``Not available``."
+      "usage_notes": "Read resolves its Data Contract once, then runs only its configured\nFreshness, Schema, Grain, and Data Quality stages before Profile, matching\ncanonical ``02_pipeline``. Absent capability fields remain skipped in the\nreturned result; orchestration_stages and stdout show executed stages only.\nA contract-free Development run prints one concise Guardrail decision.\nGrain checks only the returned rows (the incremental batch in incremental mode),\nusing the configured physical row key; SCD2 history requires a version-aware\nkey, such as business key plus effective timestamp.\nIncremental batches include only rows after the accepted watermark and at\nor below the upper watermark observed for this run. Bootstrap reads use\nthe same upper bound and retain null-watermark rows. Timestamp instants use\ncanonical UTC checkpoints; TimestampNTZ checkpoints retain wall-clock time\nwithout attaching a timezone. Dates retain calendar-date semantics.\nLater arrivals above\nthat bound wait for the next run. This bounds progress, but does not make\nconcurrent source updates a transactional snapshot.\nIncremental progress captures one aggregate summary per source, including\nempty-source evidence; Source Drift fingerprints remain independent.\nDataFrames are never displayed. Incremental batches are not profiled.\nCustom Warehouse query results are profiled as DataFrames only, without\nupdating the physical source's Catalogue, Profile, or frequency snapshots.\nWith verbose=True, successful execution ends with a READ Summary on stdout.\nCounts reuse existing profiling results; no Spark action is added for\nreporting. An unavailable count is printed as ``Not available``."
     },
     {
       "architecture_classification": "standard_orchestration",
@@ -6095,7 +6117,7 @@
       ],
       "public_import_path": "fabricops_kit.orchestrate_write",
       "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
-      "raises_documentation": "ValueError\n    If a discovery limit is not a positive integer; checked before any stage runs.\nRuntimeError\n    If any stage fails. Its name is reported and the original exception is\n    retained as ``__cause__``.",
+      "raises_documentation": "ValueError\n    If a discovery limit is not a positive integer; checked before any stage runs.\nRuntimeError\n    If any stage fails. Its name is reported and the original exception is\n    retained as ``__cause__``.\n    A Profile failure after successful Write also exposes ``published=True``,\n    ``table_id``, ``write_metrics``, and ``failed_stage=\"Profile\"`` on the\n    exception. Publication and checkpoint finalization have already completed.",
       "release_history": [
         {
           "status": "live",
@@ -6104,13 +6126,13 @@
       ],
       "returns_documentation": "dict\n    Write identity and capability results. The top-level ``dataframe`` is\n    the prepared input after Sensitive Data treatment, in both Validate\n    and Enforce modes. It is the Write input, not necessarily the persisted\n    target after Append, SCD1, or SCD2. ``sensitive_result`` retains its\n    nested ``dataframe`` result. ``published`` is false when a Validate-mode\n    contract passes without publication. ``write_metrics`` retains the\n    internal Write measurements, with ``total_target_rows`` reused from\n    persisted-target profiling when available. It never treats prepared\n    input rows or profiled target rows as committed rows.\n    ``total_duration_seconds`` measures the complete lifecycle, including\n    Guardrails, metadata finalization, and profiling.",
       "signature": "def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None=None, contracts: dict[str, Any] | None=None, repartition_by: int | None=None, grain_discovery_enabled: bool=True, grain_discovery_max_columns: int=3, grain_discovery_max_candidates: int=8, frequency_enabled: bool=True, frequency_top_n: int | None=5, existing_mapping=None, spark_session=None, verbose: bool=True) -> dict[str, Any]",
-      "source_end_line": 246,
+      "source_end_line": 272,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
-      "source_start_line": 23,
+      "source_start_line": 24,
       "summary": "Execute the standard FabricOps governed Write lifecycle.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable",
-      "usage_notes": "Both contract modes evaluate the same configured Guardrails using contracts\nand rules resolved once per call. Absent Guardrails remain skipped in the\nresult fields but are omitted from stdout and orchestration_stages.\nContract-free Development prints one decision and proceeds to Write.\nValidate resolves the exact selected frozen candidate and records\nexecution_type=validate evidence for activation, including a completion\nrecord for every covered contract after Guardrail Coverage passes, then returns without writing;\nEnforce continues through Write and persisted-target Profile. Existing\nmetadata and Source Observation commit behaviour remains owned by\nthe internal Write stage. The returned ``dataframe`` is the prepared Write input,\nnot a reread of the persisted target; Append, SCD1, and SCD2 may produce a\ndifferent target state. Grain checks the prepared input after Sensitive Data\ntreatment for every strategy; it does not check existing target rows or\nguarantee resulting-table uniqueness for Append, SCD1, or SCD2. SCD strategies\nretain their separate business-key requirements and reject null business-key\ncomponents before staging or merging. Use a version-aware Grain\nkey for SCD2 history. No DataFrame is displayed or materialized for this\nreturn value. With verbose=True, every successful execution prints a final\nWRITE Summary to stdout, including Validate-only runs. Unavailable row\nmetrics print as ``Not available``. Reporting adds no Spark actions."
+      "usage_notes": "Both contract modes evaluate the same configured Guardrails using contracts\nand rules resolved once per call. Absent Guardrails remain skipped in the\nresult fields but are omitted from stdout and orchestration_stages.\nContract-free Development prints one decision and proceeds to Write.\nValidate resolves the exact selected frozen candidate and records\nexecution_type=validate evidence for activation, including a completion\nrecord for every covered contract after Guardrail Coverage and Processing\npass, then returns without writing. Processing uses the same strategy/parameter\nvalidation and exact contract comparison as Enforce, rejecting invalid SCD\ndefinitions and mismatches before recording successful validation. Validate\ndoes not exercise the physical writer or test destination availability.\nEnforce continues through Write and persisted-target Profile. Existing\nmetadata and Source Observation commit behaviour remains owned by\nthe internal Write stage. The returned ``dataframe`` is the prepared Write input,\nnot a reread of the persisted target; Append, SCD1, and SCD2 may produce a\ndifferent target state. Grain checks the prepared input after Sensitive Data\ntreatment for every strategy; it does not check existing target rows or\nguarantee resulting-table uniqueness for Append, SCD1, or SCD2. SCD strategies\nretain their separate business-key requirements and reject null business-key\ncomponents before staging or merging. Use a version-aware Grain\nkey for SCD2 history. No DataFrame is displayed or materialized for this\nreturn value. With verbose=True, every successful execution prints a final\nWRITE Summary to stdout, including Validate-only runs. Unavailable row\nmetrics print as ``Not available``. Reporting adds no Spark actions."
     },
     {
       "architecture_classification": "internal",
@@ -9851,24 +9873,26 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
+      ],
       "function_name": "resolve_table_processing_definition",
       "function_type": "shared_function",
       "inbound_source_references": [
         "fabricops_kit.pipeline.check_source_drift.check_source_drift",
         "fabricops_kit.pipeline.check_source_drift::<module>",
+        "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+        "fabricops_kit.pipeline.orchestrate_write::<module>",
         "fabricops_kit.pipeline.pipeline_write.pipeline_write",
         "fabricops_kit.pipeline.pipeline_write::<module>"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "transitive_live_dependency",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared.resolve_table_processing_definition",
       "source_end_line": 2651,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
       "source_start_line": 2603,
       "supports_live_contract": true,
-      "transitive_live_dependents": [
-        "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
-      ],
       "usage": "public_flow_reachable"
     },
     {
@@ -12885,6 +12909,7 @@
         "fabricops_kit.pipeline.check_guardrail_coverage._contract",
         "fabricops_kit.pipeline.check_guardrail_coverage._current_activity_results",
         "fabricops_kit.pipeline.check_guardrail_coverage._label",
+        "fabricops_kit.pipeline.check_guardrail_coverage._latest_can_continue",
         "fabricops_kit.pipeline.check_guardrail_coverage._payload",
         "fabricops_kit.pipeline.check_guardrail_coverage._rules",
         "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage",
@@ -13009,8 +13034,8 @@
       ],
       "metrics": {
         "depth": 8,
-        "scope": 187,
-        "width": 14
+        "scope": 188,
+        "width": 15
       },
       "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
       "refactor_signals": [
@@ -13018,7 +13043,7 @@
           "evidence": [
             {
               "depth": 8,
-              "width": 14
+              "width": 15
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -15831,6 +15856,10 @@
       "caller_qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage._label"
     },
     {
+      "callee_qualified_name": "fabricops_kit.config.shared.metadata_timestamp_sort_key",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage._latest_can_continue"
+    },
+    {
       "callee_qualified_name": "fabricops_kit.pipeline.shared.load_table_guardrail_rules",
       "caller_qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage._rules"
     },
@@ -15860,6 +15889,10 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage._label",
+      "caller_qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage._latest_can_continue",
       "caller_qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage"
     },
     {
@@ -16096,6 +16129,10 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.pipeline.shared.record_contract_validation",
+      "caller_qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.resolve_table_processing_definition",
       "caller_qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
     },
     {

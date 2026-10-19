@@ -13,6 +13,7 @@ def planned_stages(monkeypatch):
                 "_pipeline_contracts": {tid: {"contract_version": 1} for tid in table_ids},
                 "_pipeline_rules": {tid: [{"guardrail_type": kind} for kind in
                     ("schema", "freshness", "sensitive_data", "data_quality", "source_drift")] for tid in table_ids}}
+    monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_write"), "resolve_table_processing_definition", lambda *_args, **_kwargs: {"load_strategy": "overwrite"})
     monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_read"), "prepare_pipeline_execution", prepare)
     monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_write"), "prepare_pipeline_execution", prepare)
     monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_read"), "resolve_table_id", lambda **_kwargs: "source-id")
@@ -353,6 +354,7 @@ def test_validate_runs_enforce_guardrails_then_skips_write_and_profile(capsys):
         "Source Drift",
         "Data Quality",
         "Guardrail Coverage",
+        "Processing",
     ]
     contracts["validate"].assert_not_called()
     write.assert_not_called()
@@ -395,8 +397,8 @@ def test_validate_guardrail_failure_matches_enforce_and_stops_publication(capsys
             )
 
     output = capsys.readouterr().out
-    assert "[4/5] Data Quality ... ✗ Failed" in output
-    assert "[4/5] Data Quality ... ✓ Passed" not in output
+    assert "[4/6] Data Quality ... ✗ Failed" in output
+    assert "[4/6] Data Quality ... ✓ Passed" not in output
     assert "Later stages did not run." in output
     assert "FabricOps READ Summary" not in output
     assert raised.value.__cause__ is cause

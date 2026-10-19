@@ -30,7 +30,8 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     table_name : str
         Physical source table name.
     read_mode : {"full", "incremental"}, default="full"
-        Source read behaviour forwarded to the internal Read stage.
+        Source read behaviour. Surrounding whitespace and case are normalized
+        before planning stages, validating parameters, or selecting Grain scope.
     query : str, optional
         Read-only Warehouse query forwarded to the internal Read stage.
     read_parameters : dict, optional
@@ -70,7 +71,8 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     Raises
     ------
     ValueError
-        If a discovery limit is not a positive integer; checked before any stage runs.
+        If read_mode is invalid or a discovery limit is not a positive integer;
+        checked before metadata resolution or any stage runs.
     RuntimeError
         If a stage fails. Its name is reported and the original exception is
         retained as ``__cause__``.
@@ -96,6 +98,8 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     Incremental progress captures one aggregate summary per source, including
     empty-source evidence; Source Drift fingerprints remain independent.
     DataFrames are never displayed. Incremental batches are not profiled.
+    Custom Warehouse query results are profiled as DataFrames only, without
+    updating the physical source's Catalogue, Profile, or frequency snapshots.
     With verbose=True, successful execution ends with a READ Summary on stdout.
     Counts reuse existing profiling results; no Spark action is added for
     reporting. An unavailable count is printed as ``Not available``.
@@ -114,6 +118,9 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     orchestrate_write, profile_table
 
     """
+    read_mode = str(read_mode or "").strip().lower()
+    if read_mode not in {"full", "incremental"}:
+        raise ValueError("read_mode must be 'full' or 'incremental'.")
     for name, value in (
         ("grain_discovery_max_columns", grain_discovery_max_columns),
         ("grain_discovery_max_candidates", grain_discovery_max_candidates),
@@ -149,7 +156,8 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     schema_result = run("Schema", lambda: check_schema(dataframe, table_id=table_id, spark_session=spark_session, verbose=False, context=context)) if "schema" in active else dict(skipped)
     grain_result = run("Grain", lambda: check_grain(dataframe, table_id=table_id, scope="read_full" if read_mode == "full" else "read_incremental_batch", spark_session=spark_session, verbose=False, context=context)) if "grain" in active else dict(skipped)
     dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, spark_session=spark_session, verbose=False, context=context)) if "data_quality" in active else dict(skipped)
-    profile = run("Profile", lambda: profile_table(dataframe=dataframe, store=store, schema=schema, table_name=table_name, grain_discovery_enabled=grain_discovery_enabled, grain_discovery_max_columns=grain_discovery_max_columns, grain_discovery_max_candidates=grain_discovery_max_candidates, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session)) if read_mode == "full" else dict(skipped, reason="Incremental batch")
+    profile_identity = {} if source.get("is_query") else {"store": store, "schema": schema, "table_name": table_name}
+    profile = run("Profile", lambda: profile_table(dataframe=dataframe, **profile_identity, grain_discovery_enabled=grain_discovery_enabled, grain_discovery_max_columns=grain_discovery_max_columns, grain_discovery_max_candidates=grain_discovery_max_candidates, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session)) if read_mode == "full" else dict(skipped, reason="Incremental batch")
     if metrics["rows_read"] is None and read_mode == "full":
         metrics["rows_read"] = profile.get("row_count")
     duration = summary.finish([

@@ -15,10 +15,23 @@ def _rule(rule_id: str, guardrail_type: str) -> dict:
         "guardrail_rule_id": rule_id,
         "guardrail_type": guardrail_type,
         "is_active": True,
+        "guardrail_version": 1,
+    }
+
+
+def _evidence(participant, kind, **overrides):
+    """Build a persisted outcome with exact contract identity and decision."""
+    return {
+        "guardrail_rule_id": f"{participant}-{kind}",
+        "guardrail_version": 1, "guardrail_type": kind,
+        "table_id": participant, "contract_id": f"{participant}-contract",
+        "contract_version": 1, "status": "passed", "can_continue": True,
+        "_committed_at": "2026-10-19T18:00:00Z", **overrides,
     }
 
 
 def _patch_runtime(monkeypatch, *, contracts, rules, evidence=None, env="dev"):
+    contracts = {name: {"contract_version": 1, **contract} for name, contract in contracts.items()}
     monkeypatch.setattr(coverage_module, "resolve_fabric_context", lambda: ("config", env, {}))
     monkeypatch.setattr(coverage_module, "get_spark_session", lambda: "spark")
     monkeypatch.setattr(
@@ -70,7 +83,7 @@ def test_coverage_uses_readable_store_schema_table_labels(monkeypatch, capsys):
     monkeypatch.setattr(
         coverage_module,
         "resolve_pipeline_data_contract",
-        lambda _config, _env, table_id, **_kwargs: {"contract_id": f"{table_id}-contract"},
+        lambda _config, _env, table_id, **_kwargs: {"contract_id": f"{table_id}-contract", "contract_version": 1},
     )
     monkeypatch.setattr(
         coverage_module,
@@ -86,8 +99,8 @@ def test_coverage_uses_readable_store_schema_table_labels(monkeypatch, capsys):
         coverage_module,
         "_current_activity_results",
         lambda **_kwargs: [
-            {"guardrail_rule_id": "source-schema"},
-            {"guardrail_rule_id": "target-schema"},
+            _evidence("source", "schema"),
+            _evidence("target", "schema"),
         ],
     )
 
@@ -141,7 +154,7 @@ def test_target_only_selected_contract_requires_evidence(monkeypatch):
         monkeypatch,
         contracts={"target": {"contract_id": "target-contract"}},
         rules={"target": [_rule("target-schema", "schema")]},
-        evidence=[{"guardrail_rule_id": "target-schema"}],
+        evidence=[_evidence("target", "schema")],
     )
 
     result = coverage_module.check_guardrail_coverage(
@@ -176,8 +189,8 @@ def test_selected_contracts_need_only_one_applicable_guardrail_each(monkeypatch)
         "target": [_rule("target-schema", "schema")],
     }
     evidence = [
-        {"guardrail_rule_id": "source-schema"},
-        {"guardrail_rule_id": "target-schema"},
+        _evidence("source", "schema"),
+        _evidence("target", "schema"),
     ]
     _patch_runtime(
         monkeypatch,
@@ -202,7 +215,7 @@ def test_selected_contract_without_any_active_guardrail_is_not_ready(monkeypatch
         monkeypatch,
         contracts={"source": {"contract_id": "source-contract"}, "target": {"contract_id": "target-contract"}},
         rules={"source": [], "target": [_rule("target-schema", "schema")]},
-        evidence=[{"guardrail_rule_id": "target-schema"}],
+        evidence=[_evidence("target", "schema")],
     )
 
     with pytest.raises(RuntimeError, match="source / no active Guardrail"):
@@ -218,7 +231,7 @@ def test_partial_contract_selection_is_not_lifecycle_ready(monkeypatch):
         monkeypatch,
         contracts={"target": {"contract_id": "target-contract"}},
         rules={"target": [_rule("target-schema", "schema")]},
-        evidence=[{"guardrail_rule_id": "target-schema"}],
+        evidence=[_evidence("target", "schema")],
     )
 
     with pytest.raises(RuntimeError, match="source / no selected Data Contract"):
@@ -237,7 +250,7 @@ def test_data_quality_uses_canonical_guardrail_type_and_requires_evidence(monkey
             "source": [_rule("source-dq", "data_quality")],
             "target": [_rule("target-dq", "data_quality")],
         },
-        evidence=[{"guardrail_rule_id": "source-dq"}],
+        evidence=[_evidence("source", "data_quality", guardrail_rule_id="source-dq")],
     )
 
     with pytest.raises(RuntimeError, match="target / Data Quality not evaluated"):
@@ -257,11 +270,9 @@ def test_source_drift_evidence_is_scoped_to_the_target(monkeypatch):
             "target": [_rule("target-schema", "schema")],
         },
         evidence=[
-            {
-                "guardrail_rule_id": "source-drift",
-                "result_payload_json": '{"source_table_id":"source","target_table_id":"other-target"}',
-            },
-            {"guardrail_rule_id": "target-schema"},
+            _evidence("source", "source_drift", guardrail_rule_id="source-drift",
+                      result_payload_json='{"source_table_id":"source","target_table_id":"other-target"}'),
+            _evidence("target", "schema"),
         ],
     )
 
@@ -286,6 +297,7 @@ def test_grain_requires_evidence_for_each_applicable_boundary(monkeypatch, sourc
                    rules={"source": [{**_rule("source-grain", "grain"), "guardrail_version": 1}], "target": [{**_rule("target-grain", "grain"), "guardrail_version": 1}]},
                    evidence=[{"guardrail_rule_id": name + "-grain", "guardrail_type": "grain", "table_id": name,
                               "guardrail_version": 1, "contract_id": contract_id, "contract_version": 1,
+                              "status": "passed", "can_continue": True,
                               "result_payload_json": json.dumps({"validation_scope": scope})}
                              for name, scope, contract_id in [("source", source_scope, "c1"), ("target", target_scope, "c2")]])
     if passes:
@@ -306,6 +318,7 @@ def test_grain_coverage_rejects_evidence_for_another_exact_definition(monkeypatc
     rules = {name: [{**_rule(name + "-grain", "grain"), "guardrail_version": 2}] for name in contracts}
     evidence = [{"guardrail_rule_id": name + "-grain", "guardrail_version": 2, "guardrail_type": "grain",
                  "table_id": name, "contract_id": name + "-contract", "contract_version": 2,
+                 "status": "passed", "can_continue": True,
                  "result_payload_json": json.dumps({"validation_scope": "read_full" if name == "source" else "write_prepared_input"})}
                 for name in contracts]
     evidence[0 if participant == "source" else 1][field] = value

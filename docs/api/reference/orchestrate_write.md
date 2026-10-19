@@ -143,6 +143,9 @@ ValueError
 RuntimeError
     If any stage fails. Its name is reported and the original exception is
     retained as ``__cause__``.
+    A Profile failure after successful Write also exposes ``published=True``,
+    ``table_id``, ``write_metrics``, and ``failed_stage="Profile"`` on the
+    exception. Publication and checkpoint finalization have already completed.
 
 ## Notes
 
@@ -154,7 +157,11 @@ result fields but are omitted from stdout and orchestration_stages.
 Contract-free Development prints one decision and proceeds to Write.
 Validate resolves the exact selected frozen candidate and records
 execution_type=validate evidence for activation, including a completion
-record for every covered contract after Guardrail Coverage passes, then returns without writing;
+record for every covered contract after Guardrail Coverage and Processing
+pass, then returns without writing. Processing uses the same strategy/parameter
+validation and exact contract comparison as Enforce, rejecting invalid SCD
+definitions and mismatches before recording successful validation. Validate
+does not exercise the physical writer or test destination availability.
 Enforce continues through Write and persisted-target Profile. Existing
 metadata and Source Observation commit behaviour remains owned by
 the internal Write stage. The returned ``dataframe`` is the prepared Write input,
@@ -178,9 +185,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:23`
+`fabricops_kit/pipeline/orchestrate_write.py:24`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L23-L246">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L24-L272">View on GitHub</a>
 </div>
 
 
@@ -196,7 +203,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 181 |
+| Live-critical dependencies | 182 |
 
 ### Release history
 
@@ -267,6 +274,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._contract</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._current_activity_results</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._label</code></li>
+<li><code>fabricops_kit.pipeline.check_guardrail_coverage._latest_can_continue</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._payload</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._rules</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage</code></li>
