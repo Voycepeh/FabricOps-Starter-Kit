@@ -37,13 +37,13 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="guardrails">
 <summary><strong>Guardrails</strong> — Versioned rules that FabricOps checks during governed pipeline execution.</summary>
-<p>FabricOps Guardrails define runtime expectations such as Schema, Freshness, Source Drift, Data Quality, and Sensitive Data treatment. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.</p>
+<p>FabricOps Guardrails define runtime expectations such as Schema, Grain, Freshness, Source Drift, Data Quality, and Sensitive Data treatment. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Grain, Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.</p>
 <p><strong>Also known as:</strong> guardrail</p>
 </details>
 
 <details id="enforcement">
 <summary><strong>Enforcement</strong> — Evaluating active Guardrails during a pipeline run and applying their configured action.</summary>
-<p>FabricOps orchestrate_read() and orchestrate_write() resolve the selected Data Contract and run its Guardrails at the relevant boundary. Schema violations and Sensitive Data treatment failures block; Freshness, Source Drift, and Data Quality follow their saved Warn or Block action. Guardrail Coverage gates publication.</p>
+<p>FabricOps orchestrate_read() and orchestrate_write() resolve the selected Data Contract and run its Guardrails at the relevant boundary. Schema violations and Sensitive Data treatment failures block; Grain, Freshness, Source Drift, and Data Quality follow their saved Warn or Block action. Guardrail Coverage gates publication.</p>
 <p><strong>Also known as:</strong> runtime enforcement, enforce</p>
 </details>
 
@@ -106,7 +106,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="grain">
 <summary><strong>Grain</strong> — The column or column combination that uniquely identifies a row at the table's intended level of detail.</summary>
-<p>FabricOps can suggest grain candidates from profile evidence and validate single or composite keys. The selected grain is stored with the Data Contract and used as governed table metadata.</p>
+<p>FabricOps stores the Grain description as Enrichment, selected key columns as a singular table Grain definition, and enforcement as an independent choice. Grain is not enforced until explicitly enabled, defaulting to Block; Warn records violations and allows continuation. Enforced Grain rejects null key components and duplicate key combinations in returned Read rows or prepared Write input. It does not guarantee resulting-table uniqueness for Append or SCD. SCD2 history needs a version-aware physical row key.</p>
 <p><strong>Also known as:</strong> row grain</p>
 </details>
 

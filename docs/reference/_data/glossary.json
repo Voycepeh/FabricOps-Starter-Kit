@@ -54,7 +54,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "Versioned rules that FabricOps checks during governed pipeline execution.",
-    "long_definition": "FabricOps Guardrails define runtime expectations such as Schema, Freshness, Source Drift, Data Quality, and Sensitive Data treatment. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.",
+    "long_definition": "FabricOps Guardrails define runtime expectations such as Schema, Grain, Freshness, Source Drift, Data Quality, and Sensitive Data treatment. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Grain, Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.",
     "preferred_usage": "Use guardrails for the governed rules FabricOps evaluates; use singular only for grammar.",
     "avoid_usage": "generic policy when a FabricOps Guardrail is meant"
   },
@@ -79,7 +79,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "Evaluating active Guardrails during a pipeline run and applying their configured action.",
-    "long_definition": "FabricOps orchestrate_read() and orchestrate_write() resolve the selected Data Contract and run its Guardrails at the relevant boundary. Schema violations and Sensitive Data treatment failures block; Freshness, Source Drift, and Data Quality follow their saved Warn or Block action. Guardrail Coverage gates publication.",
+    "long_definition": "FabricOps orchestrate_read() and orchestrate_write() resolve the selected Data Contract and run its Guardrails at the relevant boundary. Schema violations and Sensitive Data treatment failures block; Grain, Freshness, Source Drift, and Data Quality follow their saved Warn or Block action. Guardrail Coverage gates publication.",
     "preferred_usage": "Use enforcement for applying active Guardrails during execution.",
     "avoid_usage": "validation when the runtime action on a Guardrail result is meant"
   },
@@ -199,7 +199,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "The column or column combination that uniquely identifies a row at the table's intended level of detail.",
-    "long_definition": "FabricOps can suggest grain candidates from profile evidence and validate single or composite keys. The selected grain is stored with the Data Contract and used as governed table metadata.",
+    "long_definition": "FabricOps stores the Grain description as Enrichment, selected key columns as a singular table Grain definition, and enforcement as an independent choice. Grain is not enforced until explicitly enabled, defaulting to Block; Warn records violations and allows continuation. Enforced Grain rejects null key components and duplicate key combinations in returned Read rows or prepared Write input. It does not guarantee resulting-table uniqueness for Append or SCD. SCD2 history needs a version-aware physical row key.",
     "preferred_usage": "Use grain for the governed row-level key or key combination.",
     "avoid_usage": "primary key unless a physical database constraint is specifically meant",
     "tooltip_labels": [

@@ -146,7 +146,11 @@ Enforce continues through Write and persisted-target Profile. Existing
 metadata and Source Observation commit behaviour remains owned by
 the internal Write stage. The returned ``dataframe`` is the prepared Write input,
 not a reread of the persisted target; Append, SCD1, and SCD2 may produce a
-different target state. No DataFrame is displayed or materialized for this
+different target state. Grain checks the prepared input after Sensitive Data
+treatment for every strategy; it does not check existing target rows or
+guarantee resulting-table uniqueness for Append, SCD1, or SCD2. SCD strategies
+retain their separate business-key requirements. Use a version-aware Grain
+key for SCD2 history. No DataFrame is displayed or materialized for this
 return value. With verbose=True, every successful execution prints a final
 WRITE Summary to stdout, including Validate-only runs. Unavailable row
 metrics print as ``Not available``. Reporting adds no Spark actions.
@@ -160,9 +164,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:21`
+`fabricops_kit/pipeline/orchestrate_write.py:22`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L21-L210">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L22-L219">View on GitHub</a>
 </div>
 
 
@@ -178,7 +182,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 175 |
+| Live-critical dependencies | 178 |
 
 ### Release history
 
@@ -243,6 +247,7 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.write_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.pipeline.check_dq.check_dq</code></li>
+<li><code>fabricops_kit.pipeline.check_grain.check_grain</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._contract</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._current_activity_results</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._label</code></li>
@@ -340,6 +345,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.evaluate_source_drift_guardrail</code></li>
 <li><code>fabricops_kit.pipeline.shared.execute_lakehouse_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.get_current_source_observation</code></li>
+<li><code>fabricops_kit.pipeline.shared.grain_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.incremental_publication_scopes</code></li>
 <li><code>fabricops_kit.pipeline.shared.lineage_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
@@ -362,6 +368,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.schema_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.select_table_guardrail_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared.stage_pipeline_write_observations</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>
 </ul>

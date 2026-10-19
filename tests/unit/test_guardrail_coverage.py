@@ -271,3 +271,24 @@ def test_source_drift_evidence_is_scoped_to_the_target(monkeypatch):
             source_table_ids=["source"],
             verbose=False,
         )
+
+
+@pytest.mark.parametrize("source_scope,target_scope,passes", [
+    ("read_full", "write_prepared_input", True),
+    ("read_incremental_batch", "write_prepared_input", True),
+    ("read_full", "read_full", False),
+    (None, "write_prepared_input", False),
+])
+def test_grain_requires_evidence_for_each_applicable_boundary(monkeypatch, source_scope, target_scope, passes):
+    """Grain is independently applicable and Read cannot satisfy target validation."""
+    import json
+    _patch_runtime(monkeypatch, contracts={"source": {"contract_id": "c1"}, "target": {"contract_id": "c2"}},
+                   rules={"source": [_rule("source-grain", "grain")], "target": [_rule("target-grain", "grain")]},
+                   evidence=[{"guardrail_rule_id": name + "-grain", "result_payload_json": json.dumps({"validation_scope": scope})} for name, scope in [("source", source_scope), ("target", target_scope)]])
+    if passes:
+        result = coverage_module.check_guardrail_coverage(target_table_id="target", source_table_ids=["source"], verbose=False)
+        assert len(result["coverage"]) == 2
+        assert all(row["evaluated"] for row in result["coverage"])
+    else:
+        with pytest.raises(RuntimeError, match="Grain not evaluated"):
+            coverage_module.check_guardrail_coverage(target_table_id="target", source_table_ids=["source"], verbose=False)

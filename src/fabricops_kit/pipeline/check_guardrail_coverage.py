@@ -18,11 +18,12 @@ from fabricops_kit.pipeline.shared import (
 )
 
 _GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
-_SOURCE_GUARDRAILS = {"freshness", "schema", "data_quality", "source_drift"}
-_TARGET_GUARDRAILS = {"schema", "sensitive_data", "data_quality"}
+_SOURCE_GUARDRAILS = {"freshness", "schema", "grain", "data_quality", "source_drift"}
+_TARGET_GUARDRAILS = {"schema", "grain", "sensitive_data", "data_quality"}
 _LABELS = {
     "freshness": "Freshness",
     "schema": "Schema",
+    "grain": "Grain",
     "data_quality": "Data Quality",
     "source_drift": "Source Drift",
     "sensitive_data": "Sensitive Data",
@@ -263,6 +264,10 @@ def check_guardrail_coverage(
                     and str(_payload(row).get("target_table_id") or "").strip() == target_id
                 ]
                 scope = "source_target"
+            if guardrail_type == "grain":
+                # A source-read result cannot stand in for prepared Write input.
+                expected_scopes = {"read_full", "read_incremental_batch"} if scope == "source" else {"write_prepared_input"}
+                matches = [row for row in matches if _payload(row).get("validation_scope") in expected_scopes]
             coverage.append({
                 "scope": scope,
                 "table_name": item["table_name"],

@@ -386,7 +386,7 @@ The diagram above shows the current implemented metadata tables and relationship
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Define enforced Guardrails: Schema violations and configured Sensitive Data treatment failures block; Freshness, Source Drift, and Data Quality retain Warn/Block actions. Authored names are captured in table_name and optional column_name.</span>
+  <span class="metadata-table-card__purpose">Define enforced Guardrails: Schema violations and configured Sensitive Data treatment failures block; Grain, Freshness, Source Drift, and Data Quality retain Warn/Block actions. Authored names are captured in table_name and optional column_name.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One configured Guardrail rule revision for one exact Data Contract version and optional column identity.</span>

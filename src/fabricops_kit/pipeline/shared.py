@@ -2360,6 +2360,81 @@ def catalogue_authored_processing(identity: Mapping[str, Any]) -> dict[str, Any]
     return {"load_strategy": strategy, **parameters}
 
 
+def validate_grain_parameters(parameters, *, active=True):
+    """Validate a singular table Grain key; inactive definitions may have no key.
+
+    Grain rejects SQL null in any key component. Empty strings are values.
+    The key combination is unique within the evaluated DataFrame only.
+    """
+    if not isinstance(parameters, dict):
+        raise ValueError("Grain parameters must be an object.")
+    if set(parameters) - {"columns"}:
+        raise ValueError("Grain supports only configured key columns.")
+    columns = parameters.get("columns", [])
+    if (not isinstance(columns, list)
+            or any(not isinstance(name, str) or not name.strip() for name in columns)
+            or len(set(columns)) != len(columns)
+            or any(name != name.strip() for name in columns)):
+        raise ValueError("Grain columns must be distinct non-blank column names.")
+    if active and not columns:
+        raise ValueError("Enforced Grain requires at least one key column.")
+    return {"columns": list(columns)}
+
+
+def grain_check_core(dataframe, rule, *, scope):
+    """Evaluate non-null composite-key uniqueness within exactly the supplied rows.
+
+    Missing columns and invalid definitions always block, including empty inputs.
+    A null in any component fails that row; blank strings are ordinary values.
+    Every member of a duplicate combination is a violation. No target is read.
+    """
+    from pyspark.sql import Window, functions as F
+
+    action = rule.get("action") or "Block"
+    result = {
+        "guardrail_type": "grain", "rule_type": "uniqueness", "action": action,
+        "guardrail_rule_id": rule.get("guardrail_rule_id"),
+        "guardrail_version": rule.get("guardrail_version", 1),
+        "validation_scope": scope,
+        "expected": {"null_policy": "reject", "uniqueness": "combination"},
+    }
+    try:
+        parameters = json.loads(rule.get("rule_parameters_json") or "{}")
+        columns = validate_grain_parameters(parameters)["columns"]
+        if action not in {"Warn", "Block"} or rule.get("column_id") or rule.get("rule_type") != "uniqueness":
+            raise ValueError("Grain requires a table-level uniqueness rule with Warn or Block policy.")
+        missing = [name for name in columns if name not in dataframe.columns]
+        if missing:
+            raise ValueError("Grain key columns are missing: " + ", ".join(missing))
+    except (TypeError, ValueError) as exc:
+        return {**result, "status": "failed", "can_continue": False, "reason": str(exc), "checks": []}
+    # Quote names literally, including dots and embedded backticks.
+    keys = [F.col("`" + name.replace("`", "``") + "`") for name in columns]
+    null_key = keys[0].isNull()
+    for key in keys[1:]:
+        null_key = null_key | key.isNull()
+    duplicate = F.count(F.lit(1)).over(Window.partitionBy(*keys)) > 1
+    violations = dataframe.select(
+        F.when(null_key, 1).otherwise(0).alias("null_key"),
+        F.when(duplicate, 1).otherwise(0).alias("duplicate_key"),
+        F.when(null_key | duplicate, 1).otherwise(0).alias("failed_key"),
+    )
+    counts = violations.agg(F.count(F.lit(1)).alias("total_count"), *[
+        F.sum(F.col(name)).alias(name) for name in ("null_key", "duplicate_key", "failed_key")
+    ]).first()
+    actual = {name: int(counts[name] or 0) for name in ("total_count", "null_key", "duplicate_key", "failed_key")}
+    passed = actual["failed_key"] == 0
+    result.update({
+        "status": "passed" if passed else ("warning" if action == "Warn" else "failed"),
+        "can_continue": passed or action == "Warn", "columns": columns,
+        "severity": "warning" if action == "Warn" else "blocking",
+        "actual": actual, "expected": {**result["expected"], "columns": columns},
+        "reason": "Grain key passed within the evaluated rows." if passed else f"{actual['failed_key']} row(s) violate Grain.",
+    })
+    result["checks"] = [{"check": "grain", "columns": columns, "passed": passed, **actual}]
+    return result
+
+
 def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, table_id: str) -> list[dict[str, Any]]:
     """Adapt frozen contract Guardrails to the existing runtime rule shape."""
     payload = contract.get("contract_payload") or _contract_payload(contract)
@@ -2411,6 +2486,16 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
                     column_names_by_id.get(str(column), str(column))
                     for column in params["required_columns"]
                 ]
+        if str(raw.get("guardrail_type") or "").strip().lower() == "grain":
+            params = validate_grain_parameters(params)
+            if raw.get("column_id") or raw.get("rule_type") != "uniqueness":
+                raise ValueError("Grain requires a table-level uniqueness rule.")
+            if set(params["columns"]) - set(expected_schema):
+                raise ValueError("Grain references columns outside the Data Contract.")
+            if raw.get("action", "Block") not in {"Warn", "Block"}:
+                raise ValueError("Grain policy must be Warn or Block.")
+            if any(row.get("guardrail_type") == "grain" for row in adapted):
+                raise ValueError("A Data Contract has one Grain definition.")
         adapted.append({
             **{name: value for name, value in raw.items() if name not in {"rule_parameters", "severity"}},
             "table_id": table_id,
