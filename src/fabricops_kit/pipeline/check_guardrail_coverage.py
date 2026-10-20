@@ -7,7 +7,7 @@ from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
-from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.config.shared import metadata_timestamp_sort_key, resolve_fabric_context
 from fabricops_kit.io import read_lakehouse_table
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
@@ -82,6 +82,25 @@ def _contract(config: Any, env: str, table_id: str, *, spark: Any, context: Any)
     )
 
 
+def _latest_can_continue(matches: list[dict[str, Any]]) -> bool:
+    """Require successful or warning evidence at the latest evaluation instant.
+
+    Equal timestamps are deliberately conservative: a blocking evaluation at
+    that instant cannot be hidden by a passing row with no reliable ordering.
+    """
+    if not matches:
+        return False
+    latest = max(metadata_timestamp_sort_key(row.get("_committed_at")) for row in matches)
+    return all(
+        row.get("can_continue") is True
+        and str(row.get("status") or "").strip().lower() in {
+            "passed", "pass", "warning", "warn", "baseline_created",
+        }
+        for row in matches
+        if metadata_timestamp_sort_key(row.get("_committed_at")) == latest
+    )
+
+
 def check_guardrail_coverage(
     *,
     target_table_id: str,
@@ -97,7 +116,10 @@ def check_guardrail_coverage(
     first Data Contracts. Once any Data Contract is selected, every participating
     source and target must have a selected contract with at least one active
     Guardrail that applies to its pipeline role. Every applicable configured
-    Guardrail must also have current-activity evidence before publication.
+    Guardrail must also have current-activity evidence for the exact table,
+    contract version, and rule revision before publication. The latest matching
+    evaluation must permit continuation; a failed or skipped check is not enough.
+    A newer successful reevaluation can replace a failure in the same activity.
 
     FabricOps does not require a fixed Guardrail bundle. Governance can choose
     the Guardrails appropriate to each table; Schema is a common minimal choice.
@@ -255,7 +277,18 @@ def check_guardrail_coverage(
         for rule in item["applicable_rules"]:
             guardrail_type = str(rule.get("guardrail_type") or "").strip().lower()
             rule_id = str(rule.get("guardrail_rule_id") or rule.get("rule_id") or "").strip()
-            matches = evidence_by_rule.get(rule_id, [])
+            contract = item["contract"] or {}
+            contract_version = int(contract.get("contract_version") or 0)
+            guardrail_version = int(rule.get("guardrail_version") or 1)
+            matches = [
+                row for row in evidence_by_rule.get(rule_id, [])
+                if contract_version > 0 and contract.get("contract_id")
+                and str(row.get("table_id") or "") == item["table_id"]
+                and str(row.get("guardrail_type") or "").lower() == guardrail_type
+                and str(row.get("contract_id") or "") == str(contract["contract_id"])
+                and row.get("contract_version") == contract_version
+                and row.get("guardrail_version") == guardrail_version
+            ]
             scope = item["scope"]
             if scope == "source" and guardrail_type == "source_drift":
                 matches = [
@@ -267,18 +300,9 @@ def check_guardrail_coverage(
             if guardrail_type == "grain":
                 # A source-read result cannot stand in for prepared Write input.
                 expected_scopes = {"read_full", "read_incremental_batch"} if scope == "source" else {"write_prepared_input"}
-                contract = item["contract"] or {}
-                contract_version = int(contract.get("contract_version") or 0)
-                guardrail_version = int(rule.get("guardrail_version") or 1)
                 matches = [
                     row for row in matches
-                    if contract_version > 0 and contract.get("contract_id")
-                    and _payload(row).get("validation_scope") in expected_scopes
-                    and str(row.get("table_id") or "") == item["table_id"]
-                    and str(row.get("guardrail_type") or "").lower() == "grain"
-                    and str(row.get("contract_id") or "") == str(contract.get("contract_id") or "")
-                    and row.get("contract_version") == contract_version
-                    and row.get("guardrail_version") == guardrail_version
+                    if _payload(row).get("validation_scope") in expected_scopes
                 ]
             coverage.append({
                 "scope": scope,
@@ -287,10 +311,12 @@ def check_guardrail_coverage(
                 "guardrail_type": guardrail_type,
                 "guardrail_rule_id": rule_id,
                 "evaluated": bool(matches),
+                "can_continue": _latest_can_continue(matches),
             })
 
     missing = [item for item in coverage if not item["evaluated"]]
-    can_continue = not issues and not missing
+    blocked = [item for item in coverage if item["evaluated"] and not item["can_continue"]]
+    can_continue = not issues and not missing and not blocked
     result = {
         "status": "passed" if can_continue else "blocked",
         "can_continue": can_continue,
@@ -301,6 +327,7 @@ def check_guardrail_coverage(
         "readiness": readiness,
         "coverage": coverage,
         "missing": missing,
+        "blocked": blocked,
         "issues": issues,
     }
 
@@ -316,7 +343,7 @@ def check_guardrail_coverage(
             scope_label = item["table_name"]
             if item["scope"] == "source_target":
                 scope_label = f"{scope_label} → {target_label}"
-            mark = "✓" if item["evaluated"] else "✗"
+            mark = "✓" if item["can_continue"] else "✗"
             print(f"{mark} {scope_label}: {_LABELS.get(item['guardrail_type'], item['guardrail_type'])}")
         print(f"Result: {'PASS' if can_continue else 'BLOCK'} ({env})")
 
@@ -333,6 +360,10 @@ def check_guardrail_coverage(
         detail.extend(
             f"{item['table_name']} / {_LABELS.get(item['guardrail_type'], item['guardrail_type'])} not evaluated"
             for item in missing
+        )
+        detail.extend(
+            f"{item['table_name']} / {_LABELS.get(item['guardrail_type'], item['guardrail_type'])} latest evaluation does not permit continuation"
+            for item in blocked
         )
         raise RuntimeError("Pipeline is not Guardrail-ready for publication: " + ", ".join(detail) + ".")
     return result

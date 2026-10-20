@@ -29,6 +29,7 @@ def write_workflow(monkeypatch):
     context = {"config": object(), "env": "dev", "_pipeline_contracts": {"target-id": {"contract_version": 1}},
                "_pipeline_rules": {"target-id": [{"guardrail_type": kind} for kind in ("schema", "sensitive_data", "data_quality")]}}
     monkeypatch.setattr(write_module, "prepare_pipeline_execution", lambda *_args, **_kwargs: context)
+    monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: {"load_strategy": "overwrite"})
     evidence = []
     monkeypatch.setattr(shared, "write_guardrail_result_row", lambda **kwargs: evidence.append(kwargs["result"]))
     return evidence, later
