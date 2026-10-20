@@ -43,7 +43,9 @@ Use the widget to create the data producer and consumer stewards.
 - The widget writes to the underlying metadata table. In the example below, I created myself as a Data Owner and later updated the record to Data Custodian.
 
 ![Steward](../assets/01/Widget_Steward.png)
-![Steward2](../assets/01/Widget_Update.png)
+ 
+ -
+
 ![Steward3](../assets/01/Recorded_Steward.png)
 
 <div class="fabricops-section-banner" markdown="1">
