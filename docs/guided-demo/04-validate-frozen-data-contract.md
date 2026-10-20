@@ -13,7 +13,7 @@ Testing evaluates actual source data and returns diagnostics without durable cha
 </div>
 </div>
 
-1. Run Environment and configure the exact source and target identities. Historical Lineage is not required.
+1. Run Environment and rerun the `widget_pipeline()` selector cell with the exact source and target identities to create a fresh selector for this Testing run. A previously built selector is locked, and its `build_plan()` returns the same plan. Historical Lineage is not required.
 2. Leave the pipeline-wide switch in red **Testing**.
 3. Select an eligible frozen version independently for every source and target. Do not leave choices implicit. For first-time bootstrap before contracts exist, explicitly select **No Contract** for every participant; it cannot bypass an active contract.
 4. Expand Schema to inspect every expected column and exact type. Expand Grain, Data Quality, Freshness, Source Drift and Sensitive Data to inspect individual parameters, thresholds, actions and states. Non-applicable saved rules remain visible with their boundary explanation.
@@ -56,7 +56,7 @@ Without a successful historical Live publication, Source Drift may report its fi
 
 ### Live publication is a separate decision
 
-After Governance has activated the appropriate frozen versions, switch the whole pipeline to green **Live**, build a new plan, and rerun Read → Transform → Write. Live rejects inactive candidates and preserves Warn/Block, required Guardrail execution, ownership, retry and recovery checks. A successful Live write commits authoritative Lineage at the existing boundary. Publication and metadata updates across Fabric stores are separate operations.
+After Governance has activated the appropriate frozen versions, rerun the selector cell to create a fresh widget, switch the whole pipeline to green **Live**, select the eligible contracts, build a new plan, and rerun Read → Transform → Write. Live rejects inactive candidates and preserves Warn/Block, required Guardrail execution, ownership, retry and recovery checks. A successful Live write commits authoritative Lineage at the existing boundary. Publication and metadata updates across Fabric stores are separate operations.
 
 Pass the complete in-memory Testing Write reports to `widget_activate_data_contract(testing_results=list(writes.values()))` in the separate Governance review. It matches the exact contract ID, version and immutable payload, requires explicit review approval and Data Agreement linkage, then asks for confirmation. Testing itself never registers evidence, activates a contract or authorizes Live.
 

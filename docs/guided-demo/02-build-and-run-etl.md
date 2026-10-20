@@ -1,20 +1,5 @@
 # Step 2. Build a Pipeline
 
-### Build explicit pipeline authority before Read
-
-The current `02_pipeline.ipynb` declares `PIPELINE_SOURCES` and `PIPELINE_TARGETS` before opening the selector. Keep these identities aligned with the participating Read and Write calls. Historical `METADATA_DATA_LINEAGE` is not required and cannot authorize unrelated tables.
-
-```python
-CONTRACTS = widget_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
-# Select a frozen version or explicit No Contract for every participant in the UI.
-EXECUTION_PLAN = CONTRACTS["build_plan"]()
-```
-
-The default is red **Testing**, with no data or metadata persistence. Expand each contract category to inspect all columns and individual rules, including saved inactive and non-applicable definitions. Selection does not edit or activate a contract. After building the plan, mode and contract controls are locked. Create a new selector and rerun Read → Transform → Write to change selections or mode.
-
-For scheduled execution use the `widget_pipeline(interactive=False, ...)` entry point with a deliberate `execution_mode="testing"` or `"live"`, explicit sources/targets and exact per-table selections. There is no environment-based Live default or notebook-global selection override.
-
-
 ### Before you begin
 
 1. Complete [Step 00B. Configure the Environment and load assets](00B-configure-environment-and-load-assets.md).

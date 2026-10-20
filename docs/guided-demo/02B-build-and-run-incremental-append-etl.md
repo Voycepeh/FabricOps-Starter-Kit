@@ -40,17 +40,42 @@ The notebook uses these governed tables throughout:
 
     For faster runs when frequency distributions are not needed, set `frequency_enabled=False` on the relevant orchestrator call. The standard statistical profile still runs. Setting `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating them.
 
-The standard Environment, Data Contract, result-storage, and inspection patterns are explained in [Step 2](02-build-and-run-etl.md). This page covers only the day selection, source staging, incremental scope, and resulting target state.
+### Select the pipeline and freeze its plan
+
+Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparation cell for that day. This setup can change Bronze before pipeline selection. Testing/Live applies to the subsequent governed Reads and Writes.
+
+The notebook declares `PIPELINE_SOURCES` and `PIPELINE_TARGETS`, then calls:
+
+```python
+CONTRACTS = widget_pipeline(
+    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, spark_session=spark,
+)
+# Pause here: select the pipeline mode and every participant in the widget.
+```
+
+After making the selections, run the next cell:
+
+```python
+EXECUTION_PLAN = CONTRACTS["build_plan"]()
+```
+
+Pass `execution_plan=EXECUTION_PLAN` to every `orchestrate_read()` and `orchestrate_write()` call. The notebook already does this. Once built, the selector is locked; rerun its cell to create a new selector before changing mode, contracts, or demo day. Calling `build_plan()` again on the same selector returns the existing plan and journal.
+
+A fresh selector defaults to red **Testing**, with every participant unselected. Select an eligible exact frozen contract or explicit **No Contract** where no active contract is bypassed. Testing returns diagnostics and does not publish Silver targets, commit ordinary pipeline metadata, or advance watermark progress. The declared Append Write still evaluates its prepared input and returns diagnostics.
+
+The persisted row counts and screenshots below require green **Live**. After reviewing Testing results, rerun the selector cell, deliberately choose Live and the eligible contracts, and build a fresh plan before rerunning Read → Transform → Write for the same day. Use `CONTRACTS["refresh"]()` in the final inspection cell to view this plan's exact-version results. Advance the day only after the Live run succeeds.
+
+Repeat the selection pause for each day and retry. Do not use Run all across a fresh interactive selector. For scheduled execution, use [`widget_pipeline(interactive=False, ...)`](../api/reference/widget_pipeline.md) with explicit mode and exact selections.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Press Run all and run Day 1 in Fabric
+## Run Day 1 in Fabric with a Live plan
 
 For Day 1 , we load 8 rows of data from 
-Bronze Lakehouse "demo.inventory_movement" table and load all 8 rows into 
-Silver Lakehouse "demo.inventory_movement_incremental" and set "modified_datetime" column as our watermark column 
+Bronze Lakehouse "demo.inventory_movements" table and load all 8 rows into
+Silver Lakehouse "demo.inventory_movements_incremental" and set "modified_datetime" column as our watermark column
 
 </div>
 </div>
@@ -97,9 +122,9 @@ Day 1 first run 8 rows is written
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Press Stop Session on the notebook and re-run the whole notebook again
+## Restart the session and repeat Day 1 with a fresh Live plan
 
-This runs the pipeline on day 1 data which we have already loaded so you will expect to see no diff read and not diff written 
+Run through the selector again, select Live and the eligible contracts, build a fresh plan, then continue. Since Day 1 already committed its watermark, the Read and Write have an empty incremental scope.
 
 </div>
 </div>
@@ -116,10 +141,10 @@ No new data so its empty write
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Change the demo day to 2 and press run all again 
+## Change the demo day to 2 and select a fresh plan
 
 For Day 2 , our underlying data has 12 rows of data in 
-Bronze Lakehouse "demo.inventory_movement" table of which 8 were already loaded into Silver Lakehouse "demo.inventory_movement_incremental" in day 1 , hence only 4 rows of data was read and appended 
+Bronze Lakehouse "demo.inventory_movements" table of which 8 were already loaded into Silver Lakehouse "demo.inventory_movements_incremental" in day 1 , hence only 4 rows of data was read and appended
 
 </div>
 </div>
@@ -138,15 +163,14 @@ Only this 4 rows are appended
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Change the demo day to 3 and press run all again 
+## Change the demo day to 3 and select a fresh plan
 
 For Day 3, our underlying data still has 12 rows of data in 
-Bronze Lakehouse "demo.inventory_movement" table of which 12 were already loaded into Silver Lakehouse "demo.inventory_movement_incremental" in day 1 , hence only 0 rows of data was read and appended 
+Bronze Lakehouse "demo.inventory_movements" table of which 12 were already loaded into Silver Lakehouse "demo.inventory_movements_incremental" in day 1 , hence only 0 rows of data was read and appended
 
 </div>
 </div>
 
-```
 ![Day 3 demo run](../assets/2b/Day%203.png)
 
 No new data so its empty read
@@ -171,7 +195,7 @@ Day 1 publishes the eight-row baseline, Day 2 appends four newly eligible rows, 
 
 ### Metadata saved by FabricOps
 
-All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
+The following records are committed by successful **Live** runs and routed to the Metadata Lakehouse configured by `00_env_config`. Testing keeps pipeline diagnostics in memory.
 
 | Metadata table or governed record | What this demo records |
 | --- | --- |
@@ -191,7 +215,8 @@ An Incremental demo cannot be reset by rerunning Day 1 or deleting only the Silv
 2. In the Silver Lakehouse, delete `demo.inventory_movements_incremental` from the table explorer. This removes the appended business data and the successful watermark progress stored with the governed target.
 3. Remove only the `METADATA_SOURCE_OBSERVATION` rows for the `inventory_movements` → `inventory_movements_incremental` relationship and the current environment. Do not clear observations for other pipelines.
 4. Set `DEMO_DAY = 1`.
-5. Run the notebook from the top. The Day 1 CSV recreates Bronze with eight rows, the Incremental Read bootstraps again, and the Append Write recreates the eight-row Silver target.
+5. Rerun [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) to restore the eight-row Day 1 Bronze source. Day 1 of this notebook does not load its own CSV.
+6. Run the notebook through a fresh selector, choose Live and eligible contracts, build the plan, then continue. The Incremental Read bootstraps again and Append recreates the eight-row Silver target.
 
 !!! warning "Keep incremental state aligned"
 

@@ -42,14 +42,39 @@ The notebook uses these governed tables throughout:
 
     For faster runs when frequency distributions are not needed, set `frequency_enabled=False` on the relevant orchestrator call. The standard statistical profile still runs. Setting `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating them.
 
-The standard Environment, Data Contract, result-storage, and inspection patterns are explained in [Step 2](02-build-and-run-etl.md). This page covers only the day selection, snapshot staging, and SCD outcomes.
+### Select the pipeline and freeze its plan
+
+Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparation cell for that day. This setup can change Bronze before pipeline selection. Testing/Live applies to the subsequent governed Reads and Writes.
+
+The notebook declares `PIPELINE_SOURCES` and `PIPELINE_TARGETS`, then calls:
+
+```python
+CONTRACTS = widget_pipeline(
+    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, spark_session=spark,
+)
+# Pause here: select the pipeline mode and every participant in the widget.
+```
+
+After making the selections, run the next cell:
+
+```python
+EXECUTION_PLAN = CONTRACTS["build_plan"]()
+```
+
+Pass `execution_plan=EXECUTION_PLAN` to every `orchestrate_read()` and `orchestrate_write()` call. The notebook already does this. Once built, the selector is locked; rerun its cell to create a new selector before changing mode, contracts, or demo day. Calling `build_plan()` again on the same selector returns the existing plan and journal.
+
+A fresh selector defaults to red **Testing**, with every participant unselected. Select an eligible exact frozen contract or explicit **No Contract** where no active contract is bypassed. Testing returns diagnostics and does not publish Silver targets, commit ordinary pipeline metadata, or advance watermark progress. All declared Writes still run, including both SCD targets in 02C.
+
+The persisted row counts and screenshots below require green **Live**. After reviewing Testing results, rerun the selector cell, deliberately choose Live and the eligible contracts, and build a fresh plan before rerunning Read → Transform → Write for the same day. Use `CONTRACTS["refresh"]()` in the final inspection cell to view this plan's exact-version results. Advance the day only after the Live run succeeds.
+
+Repeat the selection pause for each day and retry. Do not use Run all across a fresh interactive selector. For scheduled execution, use [`widget_pipeline(interactive=False, ...)`](../api/reference/widget_pipeline.md) with explicit mode and exact selections.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run all for day 1 demo 
-Reads 8 rows of data from bronze.demo."product_master" then set 'product_id' as key column for SCD1 and write to silver.demo.product_master_scd1, likewise set 'product_id' as key column , set `product_category` and `list_price` as tracking columns with `modified_datetime` as the effective column for SCD2 and write to silver.demo.product_master_scd2
+## Run Day 1 with a Live plan
+Reads 8 rows of data from Bronze `demo.product_master_updates` then set 'product_id' as key column for SCD1 and write to silver.demo.product_master_scd1, likewise set 'product_id' as key column , set `product_category` and `list_price` as tracking columns with `modified_datetime` as the effective column for SCD2 and write to silver.demo.product_master_scd2
 
 
 </div>
@@ -81,7 +106,7 @@ Reads 8 rows of data from bronze.demo."product_master" then set 'product_id' as 
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Change to day 2 and run all 
+## Change to Day 2 and select a fresh plan
 
 Product `P002` has a new `list_price`:
 
@@ -103,7 +128,7 @@ The SCD1 profile should show `row_count = 8`; the SCD2 profile should show `row_
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Change to day 3 and run all 
+## Change to Day 3 and select a fresh plan
 
 Product `P001` has a new `product_category`:
 
@@ -136,7 +161,7 @@ Day 1 creates eight current records in each target, Day 2 creates the first hist
 
 ### Metadata saved by FabricOps
 
-All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
+The following records are committed by successful **Live** runs and routed to the Metadata Lakehouse configured by `00_env_config`. Testing keeps pipeline diagnostics in memory.
 
 | Metadata table | What this demo records |
 | --- | --- |
@@ -157,8 +182,9 @@ Do not restart at Day 1 while either SCD target still contains later-day state. 
     - `demo.product_master_scd1`
     - `demo.product_master_scd2`
 3. Set `DEMO_DAY = 1`.
-4. Run the notebook from the top. The Day 1 CSV recreates the eight-row Bronze snapshot, WRITE 1 recreates the eight-row SCD1 target, and WRITE 2 recreates the eight initial SCD2 versions.
-5. Continue with Day 2 and Day 3 in order.
+4. Rerun [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) to restore the eight-row Day 1 Bronze snapshot. Day 1 of this notebook does not load its own CSV.
+5. Run the notebook through a fresh selector, choose Live and eligible contracts, build the plan, then continue through both Writes.
+6. Continue with Day 2 and Day 3 in order, selecting a fresh plan each day.
 
 Deleting only the Bronze source is not enough: retained SCD targets still contain the previous current state and history. Conversely, deleting only the targets leaves the Bronze table on its later snapshot until the Day 1 staging cells run.
 

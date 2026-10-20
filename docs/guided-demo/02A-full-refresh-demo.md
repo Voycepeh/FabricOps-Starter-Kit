@@ -34,7 +34,26 @@ Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite 
 | Governed Write | Overwrites a Silver Lakehouse target and a Gold Warehouse target. |
 | Inspection | Verifies the published data and FabricOps metadata. |
 
-Run **0. Environment** and **1. Data Contract** as described in [Step 2](02-build-and-run-etl.md). For the initial Guided Demo run, there is no Data Contract yet, so explicitly select **No Contract** for every source and target and build `EXECUTION_PLAN`. Leave the pipeline in **Testing** for the first evaluation. To bootstrap Catalogue/Profile and authoritative Lineage, deliberately switch to **Live**, build a new plan, and rerun Read → Transform → Write. The orchestrators print one explicit No Contract decision; skipped check fields remain in the returned dictionaries. Then initialize `sources = {}`.
+Run **0. Environment** and the **1. Pipeline Data Contracts** selector cell. The notebook declares all three `PIPELINE_SOURCES` and both `PIPELINE_TARGETS` before calling the public selector:
+
+```python
+CONTRACTS = widget_pipeline(
+    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, spark_session=spark,
+)
+# Pause here: select the pipeline mode and every participant in the widget.
+```
+
+After making the selections, run the next cell:
+
+```python
+EXECUTION_PLAN = CONTRACTS["build_plan"]()
+```
+
+Pass `execution_plan=EXECUTION_PLAN` to every `orchestrate_read()` and `orchestrate_write()` call. The notebook already does this. Once built, the selector is locked; rerun its cell to create a new selector before changing mode, contracts, or demo day. Calling `build_plan()` again on the same selector returns the existing plan and journal.
+
+For the initial Guided Demo run, there is no Data Contract yet, so explicitly select **No Contract** for every source and target. Keep the first plan in red **Testing** and run all three Reads, the transform, and both Writes. Both Write results remain available for inspection even though neither publishes. The orchestrators print one explicit No Contract decision; skipped check fields remain in the returned dictionaries.
+
+To bootstrap Catalogue/Profile and authoritative Lineage, rerun the selector cell, deliberately select green **Live**, choose every contract or eligible No Contract, and build a fresh plan before rerunning Read → Transform → Write. The published-data screenshots and row counts below describe this successful Live run. Do not use Run all across a fresh interactive selector: it requires explicit choices before the plan cell can run. Then initialize `sources = {}`.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -112,7 +131,7 @@ Initialize `writes = {}`, then run both Write blocks. This demo publishes two in
 | WRITE 1 — Lakehouse Curated Orders | `transformed_df` | Silver Lakehouse · `demo.curated_orders` | `writes["curated_orders_lakehouse"]` |
 | WRITE 2 — Warehouse Customer Summary | `customer_summary_df` | Gold Warehouse · `demo.customer_summary` | `writes["customer_summary_warehouse"]` |
 
-Both Write results should show `published=True`.
+In **Live**, both Write results should show `published=True`. In **Testing**, both show `published=False`; inspect each `validation_passed` result instead of treating an unpublished target as a successful test. The notebook continues through both targets and refreshes the selector with `CONTRACTS["refresh"]()`.
 
 ![Curated Orders Write output](../assets/02/Write_Block_Output.png)
 
@@ -149,7 +168,7 @@ Open the target tables in Fabric Stores directly or use the notebook's optional 
 
 ### Expected result
 
-The three Full Reads complete, both Overwrite targets publish, and the saved tables and metadata reflect the same successful notebook run.
+Testing completes all three Reads and both prepared Writes without publication. After an explicitly selected successful Live run, both Overwrite targets publish and the saved tables and metadata reflect that run.
 
 ### Data saved by the demo
 
