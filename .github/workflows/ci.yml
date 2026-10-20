@@ -12,11 +12,96 @@ on:
 permissions:
   contents: read
 
+env:
+  DISABLE_MKDOCS_2_WARNING: "true"
+
+# Replace obsolete PR runs; never interrupt validation/deployment on main.
+concurrency:
+  group: fabricops-ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  validate:
+  tests:
+    name: tests (${{ matrix.suite }}, ${{ matrix.shard }})
     runs-on: ubuntu-latest
-    env:
-      DISABLE_MKDOCS_2_WARNING: "true"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: integration
+            shard: 0
+            shards: 1
+          - suite: contract
+            shard: 0
+            shards: 1
+          - suite: unit
+            shard: 0
+            shards: 3
+          - suite: unit
+            shard: 1
+            shards: 3
+          - suite: unit
+            shard: 2
+            shards: 3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+
+      - name: Normalize guided-demo links
+        run: uv run python scripts/normalize_guided_demo_links.py
+
+      # Separate runners isolate Spark sessions and generated-file mutations.
+      # File-level sharding also keeps module-scoped fixtures together.
+      - name: Run test shard and report slowest tests
+        env:
+          TEST_SUITE: ${{ matrix.suite }}
+          TEST_SHARD: ${{ matrix.shard }}
+          TEST_SHARDS: ${{ matrix.shards }}
+        run: |
+          uv run python - <<'PY'
+          import os
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          suite = os.environ["TEST_SUITE"]
+          shard = int(os.environ["TEST_SHARD"])
+          shards = int(os.environ["TEST_SHARDS"])
+          directories = ["tests/contract", "tests/templates"] if suite == "contract" else [f"tests/{suite}"]
+          def test_files(directory):
+              return {str(path) for path in Path(directory).rglob("*.py")
+                      if path.name.startswith("test_") or path.name.endswith("_test.py")}
+
+          assigned = set().union(*(test_files(f"tests/{group}") for group in ("unit", "integration", "contract", "templates")))
+          unassigned = test_files("tests") - assigned
+          if unassigned:
+              raise SystemExit(f"Test files missing from CI partitions: {sorted(unassigned)}")
+          files = sorted(set().union(*(test_files(directory) for directory in directories)))
+          selected = files[shard::shards]
+          if not selected:
+              raise SystemExit("Empty test shard: check the CI partition")
+          print(f"Running {suite} shard {shard + 1}/{shards}: {len(selected)} test files", flush=True)
+          raise SystemExit(subprocess.call([sys.executable, "-m", "pytest", "--durations=20", *selected]))
+          PY
+
+  build:
+    name: lint, docs and package
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -41,9 +126,6 @@ jobs:
 
       - name: Normalize guided-demo links
         run: uv run python scripts/normalize_guided_demo_links.py
-
-      - name: Run full test suite
-        run: uv run pytest
 
       - name: Validate release navigation
         run: uv run python scripts/release_navigation.py --check
@@ -103,6 +185,20 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: site
+
+  # Keep the existing required check name and fail it if any parallel job fails.
+  validate:
+    if: always()
+    needs: [tests, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every validation job to pass
+        env:
+          TEST_RESULT: ${{ needs.tests.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: |
+          test "$TEST_RESULT" = success
+          test "$BUILD_RESULT" = success
 
   deploy-docs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
