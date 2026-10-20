@@ -66,7 +66,7 @@ Use the Data Agreement widget to define the relationship between the accountable
 - Capture the supporting information and other governance context required by your organisation.
 
 ![Agreement](../assets/01/Widget_Agreement.png)
-![Agreement2](../assets/01/Widget_Agreement_2.png)
+
 
 ### Expected result
 
