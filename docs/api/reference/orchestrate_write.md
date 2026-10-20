@@ -23,10 +23,7 @@ Use for the normal governed publication path after project PySpark transformatio
 <div class="reference-example-usage" markdown="1">
 
 ```python
-result = orchestrate_write(
-    transformed_df, sources=[source], store="Silver", schema="demo",
-    table_name="orders", write_mode="overwrite", contracts=CONTRACTS,
-)
+result = orchestrate_write(transformed_df, execution_plan=plan, sources=[source], store="Silver", schema="demo", table_name="orders", write_mode="overwrite")
 ```
 
 </div>
@@ -43,13 +40,13 @@ result = orchestrate_write(
 def orchestrate_write(
     dataframe: Any,
     *,
+    execution_plan,
     sources: Iterable[dict[str, Any]],
     store: str,
     schema: str | None,
     table_name: str,
     write_mode: str,
     write_parameters: dict[str, Any] | None=None,
-    contracts: dict[str, Any] | None=None,
     repartition_by: int | None=None,
     grain_discovery_enabled: bool=True,
     grain_discovery_max_columns: int=3,
@@ -75,24 +72,24 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `dataframe` | `Any` | Yes | `—` | Transformed Spark DataFrame to validate and publish. |
-| `sources` | `Iterable[dict[str, Any]]` | Yes | `—` | Governed source results containing ``table_id``. Pass [] for a source-free target. |
-| `store` | `str` | Yes | `—` | Configured destination store key. |
-| `schema` | `str \| None` | Yes | `—` | Physical target schema. This keyword is required; pass None for a store without schemas. |
+| `dataframe` | `Any` | Yes | `—` | Transformed Spark DataFrame; Sensitive Data treatment prepares the input. |
+| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Same required plan as all participating Reads. Testing evaluates Guardrails, processing, ownership, incremental safety and SCD input checks without publication, staging, mappings, metadata or activation evidence. Live enforces active frozen contracts and stops on Block before publication. |
+| `sources` | `Iterable[dict[str, Any]]` | Yes | `—` | Read results from this exact plan for the sources actually feeding this target. |
+| `store` | `str` | Yes | `—` | Configured target store key. |
+| `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
 | `table_name` | `str` | Yes | `—` | Physical target table name. |
-| `write_mode` | `str` | Yes | `—` | Notebook-facing Write mode forwarded to the internal Write stage as its governed load strategy. |
-| `write_parameters` | `dict[str, Any] \| None` | No | `None` | Parameters for the selected Write mode, forwarded to the internal Write stage as ``load_strategy_parameters``. For example, SCD1 requires ``key_columns``; SCD2 requires ``key_columns`` and ``effective_column`` and may also define ``tracked_columns``. |
-| `contracts` | `dict[str, Any] \| None` | No | `None` | ``widget_select_data_contract`` result used to choose Validate or Enforce publication behaviour. Both modes run the same Guardrails. |
-| `repartition_by` | `int \| None` | No | `None` | Spark write partition count. |
-| `grain_discovery_enabled` | `bool` | No | `True` | Whether Profile discovers candidate Grain keys for this call. False skips discovery and preserves saved candidates; contract Grain checks still run. |
-| `grain_discovery_max_columns` | `int` | No | `3` | Maximum columns in a candidate key. 1 checks single columns only; 2 also checks pairs. Must be a positive integer. Wider searches can be costly. |
-| `grain_discovery_max_candidates` | `int` | No | `8` | Maximum candidate keys to retain at the smallest valid key width. Must be a positive integer. Discovery stops after enough keys are found; this limit does not cap work when no valid key exists. |
-| `frequency_enabled` | `bool` | No | `True` | Whether Profile calculates frequency distributions for this call. The caller controls when to enable discovery and frequency profiling. |
-| `frequency_top_n` | `int \| None` | No | `5` | Maximum ranked frequency values per eligible column; None retains all. |
-| `existing_mapping` | `pyspark.sql.DataFrame` | No | `None` | Previously returned Sensitive Data token mappings. Existing assignments are reused; the returned sensitive_result contains the support_mapping for the caller to persist and supply on later runs. When Engineering configures GovernanceConfig.sensitive_data_token_mapping, Enforce automatically reuses and inserts assignments in that restricted Delta store. Validate reads the store without writing it. Without that setting, mapping management remains caller-owned. Caller-owned mappings retain established identities absent from the current batch; managed mappings return only assignments used in the current batch. Do not combine a configured mapping store with existing_mapping. After consuming the prepared DataFrame and persisting the mapping, call its unpersist() method to release its cache. Failed orchestration releases it automatically. |
-| `spark_session` | `object` | No | `None` | Spark session used by every stage. |
-| `verbose` | `bool` | No | `True` | Print stage start, outcome, duration, and failure attribution. |
-| `dq_diagnostics` | `str` | No | `'sample'` | Sample captures at most ten illustrative source records per DQ rule with exact metrics in the same aggregation. None captures metrics only. Full also returns every failure as a lazy diagnostic DataFrame. |
+| `write_mode` | `str` | Yes | `—` | Proposed strategy; must match the selected contract processing definition. |
+| `write_parameters` | `dict[str, Any] \| None` | No | `None` | Strategy parameters including SCD key_columns and SCD2 effective_column. |
+| `repartition_by` | `int \| None` | No | `None` | Physical write partition count for Live. |
+| `grain_discovery_enabled` | `bool` | No | `True` | Discover candidate Grain keys during persisted-target profiling; governed checks always run. |
+| `grain_discovery_max_columns` | `int` | No | `3` | Positive maximum width of a candidate key. |
+| `grain_discovery_max_candidates` | `int` | No | `8` | Positive maximum retained candidates at the smallest valid key width. |
+| `frequency_enabled` | `bool` | No | `True` | Calculate optional frequency distributions during profiling. |
+| `frequency_top_n` | `int \| None` | No | `5` | Maximum frequency rows per column. |
+| `existing_mapping` | `object` | No | `None` | Caller-managed Sensitive Data mapping; incompatible with a configured vault. Existing assignments are reused. The returned sensitive_result.support_mapping remains caller-owned; persist it only in Live workflows, then unpersist() its cache after consumption. A configured restricted mapping store is read-only during Testing and reused/updated during Live. Failures release the cache. |
+| `spark_session` | `object` | No | `None` | Spark session used throughout. |
+| `verbose` | `bool` | No | `True` | Print concise stages and outcome. |
+| `dq_diagnostics` | `str` | No | `'sample'` | Exact metrics with bounded samples, no samples or lazy full violations. |
 
 </div>
 
@@ -101,91 +98,31 @@ Required describes the Python signature. An optional parameter may still be need
 <div class="reference-example-usage" markdown="1">
 
 ```python
-result = orchestrate_write(
-    transformed_df, sources=[orders], store="Silver", schema="demo",
-    table_name="curated_orders", write_mode="overwrite", contracts=CONTRACTS,
-)
+result = orchestrate_write(transformed_df, execution_plan=plan, sources=[source],
+    store="Silver", schema="demo", table_name="orders", write_mode="overwrite")
 ```
-
-Development SCD1 with a source-free mapping table:
-
-```python
-result = orchestrate_write(
-    product_mapping_df, sources=[], store="Silver", schema="demo",
-    table_name="product_mapping", write_mode="scd1",
-    write_parameters={"key_columns": ["product_id"]},
-)
-```
-
-Discovery and frequency switches apply only when the lifecycle runs Profile.
-Pass ``grain_discovery_enabled=False, frequency_enabled=False`` on routine
-calls and enable either option on calls chosen by your own scheduler.
 
 </div>
 
 ## Returns
 
 dict
-    Write identity and capability results. The top-level ``dataframe`` is
-    the prepared input after Sensitive Data treatment, in both Validate
-    and Enforce modes. It is the Write input, not necessarily the persisted
-    target after Append, SCD1, or SCD2. ``sensitive_result`` retains its
-    nested ``dataframe`` result. ``published`` is false when a Validate-mode
-    contract passes without publication. ``write_metrics`` retains the
-    internal Write measurements, with ``total_target_rows`` reused from
-    persisted-target profiling when available. It never treats prepared
-    input rows or profiled target rows as committed rows.
-    ``total_duration_seconds`` measures the complete lifecycle, including
-    Guardrails, metadata finalization, and profiling.
+    Prepared dataframe, selected contract, execution_mode, Guardrail outcomes,
+    schema_result, sensitive_result, source_drift_results, grain_result,
+    dq_result, source_guardrail_results, write_metrics, published, persistence_status and explicit dry-run
+    limits. Testing failures remain diagnostic results, never publication success.
+    source_guardrail_results lists the configured Read rules required by the
+    contributing sources; disabled and unconfigured checks impose no requirement.
+    Live returns the actual publication outcome. Metadata commits across Fabric
+    stores are separate lifecycle operations, not one atomic transaction.
 
 ## Raises / Errors
 
 ValueError
-    If a discovery limit is not a positive integer; checked before any stage runs.
+    For inconsistent participants, plans, processing or parameter definitions.
 RuntimeError
-    If any stage fails. Its name is reported and the original exception is
-    retained as ``__cause__``.
-    A Profile failure after successful Write also exposes ``published=True``,
-    ``table_id``, ``write_metrics``, and ``failed_stage="Profile"`` on the
-    exception. Publication and checkpoint finalization have already completed.
-
-## Notes
-
-<div class="reference-docstring-notes" markdown="1">
-
-Both contract modes evaluate the same configured Guardrails using contracts
-and rules resolved once per call. Absent Guardrails remain skipped in the
-result fields but are omitted from stdout and orchestration_stages.
-Contract-free Development prints one decision and proceeds to Write.
-DQ summaries retain exact observed pass/fail counts independently of the
-authored tolerance decision. Sample mode stores at most ten illustrative
-source records per rule in METADATA_GUARDRAIL_RESULTS.result_payload_json;
-dq_result["failed_values"] contains only those captured examples. None
-suppresses examples; full returns an unbounded lazy failure DataFrame.
-dq_result["dataframe"] retains lazy row tags. The top-level source/prepared
-DataFrame and published target do not acquire those tags automatically.
-Validate resolves the exact selected frozen candidate and records
-execution_type=validate evidence for activation, including a completion
-record for every covered contract after Guardrail Coverage and Processing
-pass, then returns without writing. Processing uses the same strategy/parameter
-validation and exact contract comparison as Enforce, rejecting invalid SCD
-definitions and mismatches before recording successful validation. Validate
-does not exercise the physical writer or test destination availability.
-Enforce continues through Write and persisted-target Profile. Existing
-metadata and Source Observation commit behaviour remains owned by
-the internal Write stage. The returned ``dataframe`` is the prepared Write input,
-not a reread of the persisted target; Append, SCD1, and SCD2 may produce a
-different target state. Grain checks the prepared input after Sensitive Data
-treatment for every strategy; it does not check existing target rows or
-guarantee resulting-table uniqueness for Append, SCD1, or SCD2. SCD strategies
-retain their separate business-key requirements and reject null business-key
-components before staging or merging. Use a version-aware Grain
-key for SCD2 history. No DataFrame is displayed or materialized for this
-return value. With verbose=True, every successful execution prints a final
-WRITE Summary to stdout, including Validate-only runs. Unavailable row
-metrics print as ``Not available``. Reporting adds no Spark actions.
-
-</div>
+    For a failed Live stage. A Profile failure after publication retains
+    published=True and write_metrics on the exception; retry recovery is unchanged.
 
 ## See also
 
@@ -194,9 +131,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:24`
+`fabricops_kit/pipeline/orchestrate_write.py:25`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L24-L293">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L25-L228">View on GitHub</a>
 </div>
 
 
@@ -212,7 +149,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 189 |
+| Live-critical dependencies | 185 |
 
 ### Release history
 
@@ -280,13 +217,6 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.write_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.pipeline.check_dq.check_dq</code></li>
 <li><code>fabricops_kit.pipeline.check_grain.check_grain</code></li>
-<li><code>fabricops_kit.pipeline.check_guardrail_coverage._contract</code></li>
-<li><code>fabricops_kit.pipeline.check_guardrail_coverage._current_activity_results</code></li>
-<li><code>fabricops_kit.pipeline.check_guardrail_coverage._label</code></li>
-<li><code>fabricops_kit.pipeline.check_guardrail_coverage._latest_can_continue</code></li>
-<li><code>fabricops_kit.pipeline.check_guardrail_coverage._payload</code></li>
-<li><code>fabricops_kit.pipeline.check_guardrail_coverage._rules</code></li>
-<li><code>fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage</code></li>
 <li><code>fabricops_kit.pipeline.check_schema.check_schema</code></li>
 <li><code>fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data</code></li>
 <li><code>fabricops_kit.pipeline.check_source_drift.check_source_drift</code></li>
@@ -384,6 +314,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.dq_tolerance_parameter</code></li>
 <li><code>fabricops_kit.pipeline.shared.evaluate_source_drift_guardrail</code></li>
 <li><code>fabricops_kit.pipeline.shared.execute_lakehouse_processing</code></li>
+<li><code>fabricops_kit.pipeline.shared.execution_result</code></li>
 <li><code>fabricops_kit.pipeline.shared.get_current_source_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared.grain_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.incremental_publication_scopes</code></li>
@@ -391,14 +322,13 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.persist_lineage_participation</code></li>
+<li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>
 <li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_guardrail_result</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_pipeline_contract</code></li>
-<li><code>fabricops_kit.pipeline.shared.record_contract_validation</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_active_data_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_data_contract_version</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_pipeline_data_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
@@ -408,8 +338,11 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.resolve_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.schema_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.select_table_guardrail_rule</code></li>
+<li><code>fabricops_kit.pipeline.shared.source_guardrail_results</code></li>
 <li><code>fabricops_kit.pipeline.shared.stage_pipeline_write_observations</code></li>
+<li><code>fabricops_kit.pipeline.shared.tested_contract_identities</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_processing_input</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>
 </ul>

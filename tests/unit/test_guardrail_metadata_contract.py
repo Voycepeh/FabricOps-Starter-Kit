@@ -250,7 +250,7 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> 
     assert row["guardrail_rule_id"] == "rule-1"
     assert row["guardrail_version"] == 3
     assert row["run_id"] == "run-1"
-    assert row["execution_type"] == "enforce"
+    assert row["execution_type"] == "live"
     assert row["table_id"] == "table-a"
     assert row["table_name"] == "orders"
     assert row["guardrail_type"] == "schema"
@@ -284,14 +284,14 @@ def test_runtime_result_writer_rejects_missing_guardrail_version(monkeypatch) ->
         )
 
 
-@pytest.mark.parametrize("execution_type", ["runtime", "preflight", "testing", "live"])
-def test_guardrail_result_writer_accepts_only_enforce_or_validate_execution_types(
+@pytest.mark.parametrize("execution_type", ["enforce", "validate", "testing", "live"])
+def test_guardrail_result_writer_rejects_per_rule_execution_overrides(
     monkeypatch, execution_type
 ) -> None:
-    """Persisted contract execution terminology is limited to enforce and validate."""
+    """Only the shared plan determines mode; no individual rule can override it."""
     monkeypatch.setattr(guardrails_shared, "build_runtime_audit_fields", lambda **_kwargs: _audit())
 
-    with pytest.raises(ValueError, match="enforce.*validate"):
+    with pytest.raises(TypeError, match="execution_type"):
         guardrails_shared.write_guardrail_result_row(
             spark_session=FakeSpark(), config=framework_config(), env="dev", run_id="run-1",
             dataset_name="", table_name="", store_type="", layer="",

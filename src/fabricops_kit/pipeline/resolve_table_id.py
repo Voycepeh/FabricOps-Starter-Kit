@@ -4,7 +4,7 @@ from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.pipeline.shared import resolve_physical_table_identity
 
 
-def resolve_table_id(*, store: str, schema: str | None = None, table_name: str) -> str:
+def resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context=None) -> str:
     """Return the canonical table identity for configured physical coordinates.
 
     Parameters
@@ -15,6 +15,9 @@ def resolve_table_id(*, store: str, schema: str | None = None, table_name: str) 
         Physical schema, or ``None`` when the configured store does not use one.
     table_name : str
         Physical table name.
+
+    context : dict, optional
+        Explicit Fabric runtime and routing, including a pipeline plan context.
 
     Returns
     -------
@@ -38,7 +41,7 @@ def resolve_table_id(*, store: str, schema: str | None = None, table_name: str) 
     orchestrate_write, orchestrate_read
 
     """
-    config, env, _context = resolve_fabric_context()
+    config, env, _context = resolve_fabric_context() if context is None else resolve_fabric_context(context=context)
     identity = resolve_physical_table_identity(
         config, env, store=store, schema=schema, table_name=table_name
     )

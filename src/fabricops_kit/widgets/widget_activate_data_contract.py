@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import html
-import json
-from typing import Any, Mapping
+import hashlib
+from typing import Any
 
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
 from fabricops_kit.config.shared import metadata_timestamp_sort_key, resolve_fabric_context
@@ -23,75 +23,36 @@ def _rows(value: Any) -> list[dict[str, Any]]:
     ]
 
 
-def _latest_validation(
-    rows: list[dict[str, Any]], *, contract_id: str, contract_version: int, environment_name: str
-) -> dict[str, Any]:
-    """Summarize the latest exact-version Engineering validation run."""
-    matches = [
-        row for row in rows
-        if str(row.get("contract_id") or "") == contract_id
-        and int(row.get("contract_version") or 0) == int(contract_version)
-        and str(row.get("environment_name") or "") == environment_name
-        and str(row.get("execution_type") or "").casefold() == "validate"
-    ]
+def _diagnostic_review(reports, contract, environment):
+    """Match a complete in-memory Testing report to an exact frozen definition."""
+    expected = {"contract_id": contract["contract_id"], "contract_version": int(contract["contract_version"]),
+                "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest()}
+    matches = [report for report in reports or []
+               if report.get("execution_mode") == "testing" and report.get("execution_environment") == environment
+               and report.get("tested_contracts", {}).get(contract["table_id"]) == expected]
     if not matches:
-        return {"validated": False, "run_id": "", "rows": [], "blocked": 0, "warnings": 0}
-
-    run_rank: dict[str, tuple[Any, str]] = {}
-    for row in matches:
-        run_id = str(row.get("run_id") or "")
-        rank = (metadata_timestamp_sort_key(row.get("_committed_at")), str(row.get("_activity_id") or ""))
-        run_rank[run_id] = max(run_rank.get(run_id, (metadata_timestamp_sort_key(None), "")), rank)
-    latest_run = max(run_rank, key=run_rank.get)
-    latest_rows = [row for row in matches if str(row.get("run_id") or "") == latest_run]
-
-    def blocking(row: Mapping[str, Any]) -> bool:
-        status = str(row.get("status") or "").casefold()
-        severity = str(row.get("severity") or "").casefold()
-        return row.get("can_continue") is False or (
-            severity == "blocking" and status in {"fail", "failed", "block", "blocked"}
-        )
-
-    def complete(row: Mapping[str, Any]) -> bool:
-        if row.get("guardrail_type") != "guardrail_coverage" or row.get("rule_type") != "contract_validation":
-            return False
-        try:
-            payload = json.loads(str(row.get("result_payload_json") or "{}"))
-        except (TypeError, ValueError):
-            return False
-        return (isinstance(payload, dict) and payload.get("validation_complete") is True
-                and row.get("can_continue") is True and str(row.get("status") or "").casefold() in {"passed", "pass"})
-
-    latest_rank = max((metadata_timestamp_sort_key(row.get("_committed_at")), str(row.get("_activity_id") or "")) for row in latest_rows)
-    completed = any(complete(row) and (metadata_timestamp_sort_key(row.get("_committed_at")), str(row.get("_activity_id") or "")) >= latest_rank for row in latest_rows)
-    blocked = sum(blocking(row) for row in latest_rows)
-    warnings = sum(
-        str(row.get("status") or "").casefold() in {"warn", "warning"}
-        for row in latest_rows
-    )
-    return {
-        "validated": completed and blocked == 0,
-        "run_id": latest_run,
-        "rows": latest_rows,
-        "blocked": blocked,
-        "warnings": warnings,
-    }
+        return {"available": False, "plan_id": ""}
+    latest = max(metadata_timestamp_sort_key(report.get("testing_completed_at")) for report in matches)
+    current = [report for report in matches if metadata_timestamp_sort_key(report.get("testing_completed_at")) == latest]
+    available = all(report.get("validation_passed") is True and report.get("published") is False
+                    and report.get("persistence_status") == "disabled" and report.get("execution_plan_id")
+                    for report in current)
+    return {"available": bool(available), "plan_id": current[-1].get("execution_plan_id", "") if available else ""}
 
 
 def widget_activate_data_contract(
     *, table_id: str | None = None, contract_version: int | None = None,
+    testing_results: list[dict[str, Any]] | None = None,
     spark_session: Any = None, context: Any = None,
 ) -> dict[str, Any]:
     """Link a Data Agreement and activate one validated frozen Data Contract.
 
-    Only frozen versions are selectable. The exact selected version must have a
-    successful latest completed Engineering validation run in METADATA_GUARDRAIL_RESULTS
-    with execution_type='validate' before activation is enabled. The completion
-    record is written for each participating source and target only after all
-    checks and Guardrail Coverage pass; isolated or partial check results do not qualify. Activation
-    links one exact Data Agreement version and updates the active Production
-    contract pointer; it never edits the immutable contract payload or deploys
-    the Engineering pipeline.
+    This separate Governance action requires a successful in-memory Testing
+    report matching the exact frozen payload, explicit review approval, an exact
+    Data Agreement version and confirmation. Testing does not register activation
+    evidence or authorize activation. The approval is a deliberate Governance
+    decision after reviewing diagnostics and the checks that were not exercised.
+    Activation never edits the immutable payload or deploys the pipeline.
 
     Parameters
     ----------
@@ -100,6 +61,10 @@ def widget_activate_data_contract(
         first table with a frozen contract.
     contract_version : int, optional
         Initial frozen version selection. Choose an available version in the UI.
+    testing_results : list of dict, optional
+        Complete Write diagnostics returned by Testing. Only exact payload matches
+        with validation_passed=True qualify for explicit Governance review.
+        Reports remain in memory; opening this widget performs no persistence.
     spark_session : object, optional
         Active Fabric Spark session override.
     context : object, optional
@@ -115,7 +80,7 @@ def widget_activate_data_contract(
     ------
     ValueError
         If an activation request fails validation. Select a frozen version with
-        successful latest Engineering validation and an eligible Data Agreement.
+        successful Testing diagnostics, explicit review and an eligible Data Agreement.
     RuntimeError
         If metadata routing, reads, or activation persistence fail. Check the
         configured metadata target and permissions. UI callbacks display failures.
@@ -153,13 +118,6 @@ def widget_activate_data_contract(
         spark_session=spark,
         context=quiet_context,
     ))
-    results = _rows(read_lakehouse_table(
-        "METADATA_GUARDRAIL_RESULTS",
-        store="Metadata",
-        schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_RESULTS"),
-        spark_session=spark,
-        context=quiet_context,
-    ))
     table_labels = {
         str(row.get("table_id") or ""): (
             f"{row.get('layer') or ''} · {row.get('schema_name') or ''}.{row.get('table_name') or ''}"
@@ -191,10 +149,11 @@ def widget_activate_data_contract(
         layout=field_layout,
     )
     validation_view = widgets.HTML()
+    reviewed = widgets.Checkbox(value=False, description="I reviewed these Testing diagnostics and approve this frozen version for Live", indent=False)
     review_view = widgets.HTML()
     status = shared.status_message(widgets)
     activate = widgets.Button(
-        description="Activate for Production",
+        description="Activate for Live",
         button_style="primary",
         disabled=True,
         icon="check",
@@ -202,7 +161,7 @@ def widget_activate_data_contract(
     confirmation_text = widgets.HTML()
     cancel_confirmation = widgets.Button(description="Cancel")
     confirm_activation = widgets.Button(
-        description="Activate for Production",
+        description="Activate for Live",
         button_style="primary",
         icon="check",
     )
@@ -228,7 +187,8 @@ def widget_activate_data_contract(
         "contract_version": None,
         "agreement_id": None,
         "agreement_version": None,
-        "validation": None,
+        "diagnostic_review": None,
+        "review_approval": reviewed,
         "activation_result": None,
     }
 
@@ -268,7 +228,7 @@ def widget_activate_data_contract(
         selected = contract_select.value
         agreement = agreement_lookup.get(str(agreement_select.value or ""))
         if not selected:
-            state.update(contract_id=None, contract_version=None, validation=None)
+            state.update(contract_id=None, contract_version=None, diagnostic_review=None)
             validation_view.value = (
                 "<div style='color:#667085;font-size:12px;line-height:1.45;'>"
                 "Select a frozen version to load validation.</div>"
@@ -282,41 +242,28 @@ def widget_activate_data_contract(
             return
 
         contract_id_value, version = selected
-        validation = _latest_validation(
-            results,
-            contract_id=contract_id_value,
-            contract_version=version,
-            environment_name=env,
-        )
+        selected_row = next(row for row in frozen if row["contract_id"] == contract_id_value
+                            and int(row["contract_version"]) == version and row["table_id"] == table_select.value)
+        validation = _diagnostic_review(testing_results, selected_row, env)
+        approval_scope = (table_select.value, contract_id_value, version, agreement)
+        if state.get("approval_scope") != approval_scope:
+            reviewed.value = False
+        state["approval_scope"] = approval_scope
         state.update(
             table_id=table_select.value,
             contract_id=contract_id_value,
             contract_version=version,
-            validation=validation,
+            diagnostic_review=validation,
         )
         if agreement:
             state["agreement_id"], state["agreement_version"] = agreement
         else:
             state["agreement_id"], state["agreement_version"] = None, None
-        if validation["validated"]:
-            validation_view.value = (
-                "<div style='font-size:12px;line-height:1.45;'>"
-                "<span style='color:#107c10;font-weight:700;'>✓ Validated</span> · "
-                f"{html.escape(validation['run_id'])} · "
-                f"{validation['warnings']} warning(s)</div>"
-            )
-        else:
-            validation_view.value = (
-                "<div style='font-size:12px;line-height:1.45;'>"
-                "<span style='color:#a4262c;font-weight:700;'>Activation blocked</span> · "
-                + (
-                    (f"{validation['blocked']} blocking failure(s)" if validation["blocked"] else "validation run incomplete")
-                    if validation["run_id"]
-                    else "no exact-version validation"
-                )
-                + "</div>"
-            )
-
+        validation_view.value = (
+            "<p>Exact Testing diagnostics available for Governance review. "
+            "Publication permissions, transactions and finalization remain unverified.</p>"
+            if validation["available"] else "<p>Supply successful Testing diagnostics for this exact frozen payload before review.</p>"
+        )
         agreement_text = (
             f"{html.escape(str(agreement[0]))} · v{html.escape(str(agreement[1]))}"
             if agreement else "Not selected"
@@ -329,7 +276,7 @@ def widget_activate_data_contract(
             "</div>"
         )
         confirmation_prompt.layout.display = "none"
-        activate.disabled = not (validation["validated"] and agreement)
+        activate.disabled = not (validation["available"] and reviewed.value and agreement)
 
     def refresh_contracts(change: Any = None) -> None:
         selected_table = str(table_select.value or "")
@@ -353,7 +300,7 @@ def widget_activate_data_contract(
             "<div style='font-size:13px;line-height:1.5;'>"
             "<b>Activate Data Contract?</b><br>"
             f"Make <b>{html.escape(table_labels.get(str(table_select.value), str(table_select.value)))}</b> "
-            f"contract v{version} the governed Production definition linked to "
+            f"contract v{version} the active Live definition linked to "
             f"<b>{html.escape(str(agreement_id_value))} · v{html.escape(str(agreement_version_value))}</b>."
             "</div>"
         )
@@ -385,7 +332,7 @@ def widget_activate_data_contract(
             state["activation_result"] = result
             status.value = (
                 "<span style='color:#107c10;font-weight:600;'>Activated ✓</span> "
-                f"Data Contract v{version} is now the governed Production definition."
+                f"Data Contract v{version} is now the active Live definition."
             )
             activate.disabled = True
             confirmation_prompt.layout.display = "none"
@@ -398,6 +345,7 @@ def widget_activate_data_contract(
     table_select.observe(refresh_contracts, names="value")
     contract_select.observe(refresh_review, names="value")
     agreement_select.observe(refresh_review, names="value")
+    reviewed.observe(refresh_review, names="value")
     activate.on_click(on_activate)
     cancel_confirmation.on_click(cancel_activation)
     confirm_activation.on_click(perform_activation)
@@ -422,7 +370,7 @@ def widget_activate_data_contract(
             shared.form_section(
                 widgets,
                 title="3 · Review & activate",
-                children=[review_view, activation_actions, status],
+                children=[review_view, reviewed, activation_actions, status],
             ),
         ],
         layout=widgets.Layout(
@@ -438,8 +386,7 @@ def widget_activate_data_contract(
         widgets,
         title="Activate Data Contract",
         description=(
-            "Link an exact Data Agreement version and activate a validated frozen "
-            "contract for Production."
+            "Review exact Testing diagnostics, approve the frozen version, and link an exact Data Agreement for Live."
         ),
         children=[activation_flow, confirmation_prompt],
     )

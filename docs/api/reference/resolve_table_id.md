@@ -34,7 +34,13 @@ table_id = resolve_table_id(store="Silver", schema="dbo", table_name="orders")
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def resolve_table_id(*, store: str, schema: str | None=None, table_name: str) -> str
+def resolve_table_id(
+    *,
+    store: str,
+    schema: str | None=None,
+    table_name: str,
+    context=None,
+) -> str:
 ```
 
 </div>
@@ -52,6 +58,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `store` | `str` | Yes | `—` | Configured FabricStore key. |
 | `schema` | `str \| None` | No | `None` | Physical schema, or ``None`` when the configured store does not use one. |
 | `table_name` | `str` | Yes | `—` | Physical table name. |
+| `context` | `dict` | No | `None` | Explicit Fabric runtime and routing, including a pipeline plan context. |
 
 </div>
 
@@ -87,7 +94,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/resolve_table_id.py:7`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/resolve_table_id.py#L7-L45">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/resolve_table_id.py#L7-L48">View on GitHub</a>
 </div>
 
 

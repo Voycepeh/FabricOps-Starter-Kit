@@ -1,6 +1,6 @@
 # METADATA_GUARDRAIL_RESULTS
 
-Store aggregate enforce and validate Guardrail summaries and completed pipeline-validation records for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.
+Store aggregate Live Guardrail summaries for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.
 
 ## Writer functions
 
@@ -18,7 +18,7 @@ Store aggregate enforce and validate Guardrail summaries and completed pipeline-
 
 **Default physical schema:** `engineering`
 
-**Grain:** One Guardrail outcome for one exact Data Contract version in one enforce or validate execution.
+**Grain:** One persisted Live Guardrail outcome for one exact Data Contract version; Testing returns outcomes in memory only.
 
 **Primary key:** `guardrail_result_id`
 
@@ -46,7 +46,7 @@ via `contract_id` + `contract_version`
 | `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `contract_id` | `string` | Stable identifier for the contract row. |
 | `contract_version` | `integer` | Version recorded for the contract row. |
-| `execution_type` | `string` | Whether the runtime record came from enforce or validate contract execution. Completed pipeline-validation records use validate and require all checks plus Guardrail Coverage to pass. |
+| `execution_type` | `string` | Whether the runtime record came from Testing or Live contract execution. Testing results remain in memory; Live appends Guardrail Results. Historical validate records remain readable. |
 | `run_id` | `string` | Identifier stored for `run_id`. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `status` | `string` | Pipeline run status recorded with the run summary. |

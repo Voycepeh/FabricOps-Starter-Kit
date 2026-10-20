@@ -127,14 +127,14 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
     **`orchestrate_write()` checks the prepared input before publishing the target.**
 
     1. Run configured Schema and Sensitive Data checks, then Source Drift checks for participating sources.
-    2. Check Grain and Data Quality after Sensitive Data treatment, then check Guardrail Coverage for governed publication.
-    3. In Enforce mode, publish through the selected Write strategy, record lineage in `METADATA_DATA_LINEAGE`, and profile the complete persisted target.
+    2. Check Grain and Data Quality after Sensitive Data treatment, enforcing the selected Data Contract policies before publication.
+    3. In Live mode, publish through the selected Write strategy, record lineage in `METADATA_DATA_LINEAGE`, and profile the complete persisted target.
 
-    Validate mode runs the checks and records validation results without publishing or profiling the target. The Grain check covers prepared input; it does not guarantee resulting-table uniqueness for Append or SCD strategies.
+    Testing mode runs checks and profiles the prepared input in memory, with no business or metadata persistence at any stage. The Grain check covers prepared input; it does not guarantee resulting-table uniqueness for Append or SCD strategies.
 
     ### Both sides
 
-    - **Contract enforcement:** configured checks produce `METADATA_GUARDRAIL_RESULTS`. Discovering possible keys is separate from enforcing the contract's selected Grain key.
+    - **Contract enforcement:** Live checks commit `METADATA_GUARDRAIL_RESULTS`; Testing returns the same diagnostics in memory. Discovering possible keys is separate from enforcing the contract's selected Grain key.
     - **Profiling:** when the lifecycle reaches Profile, `profile_table()` calculates statistics and can also calculate frequency distributions and discover candidate Grain keys.
     - **Caller controls:** Read and Write accept the same profiling switches and discovery limits. Your notebook or external scheduler chooses when to enable them; FabricOps does not apply a discovery schedule.
 
@@ -183,7 +183,7 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
     - **Routine runs:** set `grain_discovery_enabled=False` to skip discovery and preserve saved candidates. Independently set `frequency_enabled=False` to skip frequency calculations.
     - **After the Data Contract is defined:** discovery can stay off until you choose to revisit the key. Configured Grain checks still validate the contract's key on each applicable Read or Write call.
 
-    These switches leave statistical profiling enabled whenever the lifecycle runs Profile. Incremental Read and Validate-only Write do not run Profile, regardless of the switches. Scheduling belongs to the caller.
+    These switches leave statistical profiling enabled whenever the lifecycle runs Profile. Incremental Read skips Profile. Testing Write profiles its prepared input without persistence. Scheduling belongs to the caller.
 
     See [`profile_table()`](../api/reference/profile_table.md) for exact parameters, direct column selection, and persistence behavior.
 

@@ -1,508 +1,354 @@
-"""Notebook-scoped Data Contract selection for Development and Production."""
+"""Compact pipeline-wide execution selection and immutable contract inspection."""
 
 from __future__ import annotations
 
-from fabricops_kit.io import read_lakehouse_table
-
 import html
+import json
 from typing import Any
 
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
-from fabricops_kit.config.shared import (
-    get_default_fabric_context,
-    is_table_not_found_error,
-    resolve_fabric_context,
-)
+from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
+from fabricops_kit.io import read_lakehouse_table
 from fabricops_kit.io.shared import get_spark_session
-from fabricops_kit.pipeline.shared import resolve_active_data_contract
-from fabricops_kit.widgets.shared import (
-    form_page,
-    form_section,
-    parse_data_contract_payload,
-    pipeline_active_context,
-    require_ipywidgets,
-    resolve_notebook_lineage_tables,
-    status_message,
-    widget_common,
-)
-
-CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
-LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
+from fabricops_kit.pipeline.create_pipeline_execution_plan import create_pipeline_execution_plan
+from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity, resolve_physical_table_identity
+from fabricops_kit.widgets.shared import parse_data_contract_payload, require_ipywidgets
 
 
-def _row_dict(row: Any) -> dict[str, Any]:
-    return row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
+def _value(value):
+    if value is None:
+        return "Not stored"
+    if isinstance(value, dict):
+        return "<br>".join(f"<b>{html.escape(str(key))}</b>: {_value(item)}" for key, item in value.items()) or "{}"
+    if isinstance(value, list):
+        return "[" + ", ".join(_value(item) for item in value) + "]"
+    return html.escape(str(value))
 
 
-def _contract_options(rows: list[dict[str, Any]], table_id: str) -> list[dict[str, Any]]:
-    """Return newest-first immutable contract rows for one canonical table."""
-    return sorted(
-        (
-            dict(row) for row in rows
-            if str(row.get("table_id") or "") == table_id
-            and str(row.get("status") or "").lower() == "frozen"
-        ),
-        key=lambda row: int(row.get("contract_version") or 0), reverse=True,
-    )
+def _table(rows, columns):
+    if not rows:
+        return "<p>No saved definitions.</p>"
+    headings = "".join(f"<th>{html.escape(label)}</th>" for _key, label in columns)
+    body = ""
+    for row in rows:
+        cells = "".join(f"<td>{_value(row.get(key))}</td>" for key, _label in columns)
+        if row.get("is_active") is False:
+            cells = cells.replace("<td>", "<td><span>Inactive · </span>", 1)
+        body += f'<tr class="{"inactive" if row.get("is_active") is False else "active"}">{cells}</tr>'
+    return f'<div class="contract-scroll"><table><thead><tr>{headings}</tr></thead><tbody>{body}</tbody></table></div>'
 
 
-def _validation_contract_options(rows: list[dict[str, Any]], table_id: str) -> list[dict[str, Any]]:
-    """Return newest-first frozen candidates available for validation."""
-    return _contract_options(rows, table_id)
-
-
-def _contract_review(row: dict[str, Any]) -> dict[str, Any]:
-    """Build a compact review solely from an immutable contract payload."""
-    payload = parse_data_contract_payload(row)
-    table = payload["table"]
-    guardrails = payload.get("guardrails") or []
-    counts: dict[str, int] = {}
-    expected_refresh = None
-    for rule in guardrails:
-        kind = str(rule.get("guardrail_type") or "unspecified")
-        counts[kind] = counts.get(kind, 0) + 1
-        if kind.lower() == "freshness" and rule.get("is_active", True):
-            parameters = rule.get("rule_parameters") or {}
-            if isinstance(parameters, dict):
-                if (
-                    str(rule.get("rule_type") or "").lower() == "skip"
-                    or str(parameters.get("refresh_expectation") or "").lower() == "static"
-                ):
-                    expected_refresh = {"mode": "static"}
-                else:
-                    frequency = parameters.get("expected_refresh_frequency")
-                    unit = parameters.get("expected_refresh_unit")
-                    if frequency not in (None, "") and unit:
-                        expected_refresh = {
-                            "mode": "recurring",
-                            "frequency": frequency,
-                            "unit": str(unit),
-                        }
-    return {
-        "contract_version": int(row["contract_version"]),
-        "status": str(row.get("status") or ""),
-        "contract_date": row.get("_committed_at"),
-        "table": {key: table.get(key) for key in ("table_id", "schema_name", "table_name")},
-        "schema_columns": len(table.get("columns") or []),
-        "guardrails": counts,
-        "guardrail_details": guardrails,
-        "processing": table.get("processing"),
-        "expected_refresh": expected_refresh,
+def _applicability(kind, roles):
+    boundaries = {
+        "schema": "Read and Write", "grain": "Read and Write", "data_quality": "Read and Write",
+        "freshness": "Read", "source_drift": "Write (source/target relationship; Read captures observation)",
+        "sensitive_data": "Write",
     }
+    boundary = boundaries.get(kind, "Unsupported by current evaluator; retained for review")
+    applicable = (kind in {"schema", "grain", "data_quality"}
+                  or (kind in {"freshness", "source_drift"} and "source" in roles)
+                  or (kind == "sensitive_data" and "target" in roles))
+    return boundary + ("" if applicable else " · Will not run at this participant's boundary")
 
 
-def _set_override(context: dict[str, Any], table_id: str, contract: dict[str, Any]) -> None:
-    """Set one table's immutable override without changing any other table."""
-    contexts = [context]
-    active = pipeline_active_context()
-    if active is not None:
-        if active.context is None:
-            active.context = {}
-        contexts.append(active.context)
-    try:
-        contexts.append(get_default_fabric_context())
-    except RuntimeError:
-        pass
-    for target_context in contexts:
-        overrides = dict(target_context.get("data_contract_overrides") or {})
-        overrides[table_id] = {
-            "contract_id": str(contract["contract_id"]),
-            "contract_version": int(contract["contract_version"]),
-        }
-        target_context["data_contract_overrides"] = overrides
+def _contract_review(row, roles=("source", "target")):
+    """Return every saved column and rule, without runtime defaults or filtering."""
+    payload = parse_data_contract_payload(row)
+    columns = payload["table"].get("columns")
+    rules = payload.get("guardrails")
+    if not isinstance(columns, list) or not isinstance(rules, list):
+        raise ValueError("Selected frozen payload requires table.columns and guardrails lists.")
+    names = {column.get("column_id"): column.get("column_name") for column in columns}
+    groups = {kind: [] for kind in ("schema", "grain", "data_quality", "freshness", "source_drift", "sensitive_data")}
+    for rule in rules:
+        if not isinstance(rule, dict):
+            raise ValueError("Invalid saved Guardrail definition.")
+        kind = str(rule.get("guardrail_type") or "unspecified")
+        params = rule.get("rule_parameters")
+        groups.setdefault(kind, []).append({
+            **rule,
+            "column": names.get(rule.get("column_id"), rule.get("column_id")),
+            "parameters": params,
+            "classification": [entry.get("value") for entry in
+                (payload.get("enrichment") or {}).get("columns", [])
+                if entry.get("column_id") == rule.get("column_id") and entry.get("enrichment_type") == "Classification"],
+            "applicability": _applicability(kind, roles),
+            "other": {key: value for key, value in rule.items() if key not in {
+                "guardrail_type", "rule_type", "column_id", "rule_parameters", "is_active", "action",
+            }},
+        })
+    return {"payload": payload, "columns": columns, "categories": groups,
+            "counts": {key: len(value) for key, value in groups.items()}}
 
 
-def _clear_overrides(context: dict[str, Any], table_id: str | None = None) -> None:
-    """Clear one or all overrides from every active runtime context."""
-    contexts = [context]
-    active = pipeline_active_context()
-    if active is not None:
-        if active.context is None:
-            active.context = {}
-        contexts.append(active.context)
-    try:
-        contexts.append(get_default_fabric_context())
-    except RuntimeError:
-        pass
-    seen: set[int] = set()
-    for target_context in contexts:
-        if id(target_context) in seen:
-            continue
-        seen.add(id(target_context))
-        overrides = dict(target_context.get("data_contract_overrides") or {})
-        if table_id is None:
-            overrides.clear()
-        else:
-            overrides.pop(table_id, None)
-        target_context["data_contract_overrides"] = overrides
+def _inspector(row, roles, results=()):
+    review = _contract_review(row, roles)
+    labels = {"schema": "Schema", "grain": "Grain", "data_quality": "Data Quality", "freshness": "Freshness",
+              "source_drift": "Source Drift", "sensitive_data": "Sensitive Data"}
+    sections = []
+    for kind, rules in review["categories"].items():
+        content = ""
+        if kind == "schema":
+            columns = [{**column, "constraints": {key: value for key, value in column.items() if key not in {
+                "column_id", "column_name", "data_type", "precision", "scale", "is_nullable", "nullable", "is_active",
+            }}} for column in review["columns"]]
+            for column in columns:
+                column["required_rules"] = [
+                    {"required": column.get("column_id") in rule["parameters"]["required_columns"]
+                                 or column.get("column_name") in rule["parameters"]["required_columns"],
+                     "active": rule.get("is_active"), "action": rule.get("action")}
+                    for rule in rules if isinstance(rule.get("parameters"), dict)
+                    and "required_columns" in rule["parameters"]
+                ]
+            # Exact authored keys are retained. No implied nullable/action/active defaults.
+            content += f'<p>{len(columns)} saved columns. Rule action and state are shown separately below.</p>'
+            content += _table(columns, [("column_name", "Column"), ("data_type", "Exact type"),
+                                      ("precision", "Precision"), ("scale", "Scale"),
+                                      ("is_nullable", "is_nullable"), ("nullable", "nullable"),
+                                      ("is_active", "Active"), ("required_rules", "Required by saved Schema rules (state/action)"), ("constraints", "Other saved column fields")])
+        content += _table(rules, [("column", "Column"), ("rule_type", "Rule"),
+                                  ("parameters", "Saved condition, thresholds and parameters"),
+                                  ("classification", "Saved classification"),
+                                  ("action", "Action"), ("is_active", "Active"),
+                                  ("applicability", "Boundary"), ("other", "Other saved fields")])
+        title = labels.get(kind, f"Other / {kind}")
+        inactive = sum(rule.get("is_active") is False for rule in rules)
+        sections.append(f'<details><summary>{html.escape(title)} · {len(rules)} checks · {inactive} inactive</summary>{content}</details>')
+    sections.append("<details><summary>Processing and ownership</summary>" + _value({key: review["payload"]["table"][key] for key in ("processing", "writer") if key in review["payload"]["table"]}) + "</details>")
+    actual = [result for result in results if result.get("contract_id") == row.get("contract_id")
+              and result.get("contract_version") == row.get("contract_version")
+              and result.get("table_id") == row.get("table_id")]
+    sections.append("<details><summary>Execution results · " + str(len(actual)) + "</summary>" +
+                    (_table(actual, [("guardrail_type", "Guardrail"), ("guardrail_rule_id", "Rule"),
+                                     ("execution_type", "Mode"), ("status", "Result"), ("can_continue", "Can continue"),
+                                     ("result_payload_json", "Evaluation details")]) if actual else
+                     "<p>Not executed in this plan. Saved definitions are configuration only.</p>") + "</details>")
+    raw = html.escape(json.dumps(review["payload"], indent=2, ensure_ascii=False))
+    return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def widget_select_data_contract(*, spark_session=None, context=None):
-    """Select immutable Data Contracts for every table linked to this notebook.
+def widget_select_data_contract(*, sources, targets, spark_session=None, context=None):
+    """Select one pipeline mode and independently inspect each participant's contract.
 
     Parameters
     ----------
+    sources : list of dict
+        Explicit source participants: store/schema/table_name or registered table_id.
+        Historical Lineage is optional and cannot introduce additional participants.
+    targets : list of dict
+        Explicit target participants with the same coordinate or table_id shape.
     spark_session : object, optional
-        Spark session override.
+        Spark session for metadata reads.
     context : dict, optional
-        FabricOps context normally established by ``00_env_config``. The current
-        ``notebook_id``, optional ``workspace_id``, and environment scope Lineage.
+        Configured environment routing and notebook identity.
 
     Returns
     -------
     dict
-        Notebook scope, role-preserving table states, table-scoped execution
-        modes and contract identities, controls, and a ``set_mode`` callable. Pass
-        this selection to ``orchestrate_write`` to evaluate the exact target
-        candidate and choose validation-only or enforcing publication.
+        Interactive state with execution_mode (initially testing), tables, controls,
+        select_contract, set_mode, build_plan and refresh. Each table starts unselected.
+        After executing the built plan, refresh shows its exact-version results
+        in expandable sections alongside saved definitions and disabled states.
+        Explicitly select No Contract for bootstrap; build_plan validates every
+        choice and freezes the plan to pass to all Read and Write calls.
+        UI edits after build_plan require a new plan and a new run of Read/Transform/Write.
+        The widget never changes notebook globals, edits or activates contracts.
 
     Raises
     ------
     ValueError
-        If notebook identity is missing, a requested frozen version is
-        unavailable, or Production enforcement has no active contract for a
-        Lineage-linked table.
+        For missing notebook identity, invalid payloads, unavailable selections or
+        Live choices bypassing an active contract.
     RuntimeError
-        If Production has multiple active versions for a lineage-linked table.
-
-    Notes
-    -----
-    Every Lineage-linked source remains in ``enforce`` mode. Each target can
-    independently use ``enforce`` or ``validate``. Enforce resolves the
-    selected frozen source contract in Development, using an explicit source
-    version picker even before activation. Production requires exactly one
-    frozen version tagged active and does not accept candidate overrides. Target validation exposes
-    frozen candidates and never installs the candidate as an enforcement
-    override. This widget never activates metadata.
+        For ambiguous active versions or a metadata-read failure.
 
     Examples
     --------
-    >>> selection = widget_select_data_contract()
-    >>> selection["set_mode"]("table-orders", "validate", "orders-contract", 3)
-
-    See Also
-    --------
-    widget_data_contract
+    >>> selection = widget_select_data_contract(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
+    >>> plan = selection["build_plan"]()
 
     """
     config, env, resolved = resolve_fabric_context(context=context)
+    runtime = {**resolved, "config": config, "env": env}
+    if not str(runtime.get("notebook_id") or "").strip():
+        raise ValueError("Configure notebook_id before selecting Pipeline Data Contracts.")
     spark = get_spark_session(spark_session)
-    runtime_context = {"config": config, "env": env, **(resolved or {})}
-    lineage_schema = metadata_table_physical_schema(config, LINEAGE_TABLE)
-    pairs, notebook_scope = resolve_notebook_lineage_tables(
-        environment_name=env, store="Metadata", schema=lineage_schema,
-        spark_session=spark, context=runtime_context, runtime_context=runtime_context,
-        required=env == "prod",
-    )
-    table_ids = list(dict.fromkeys(table_id for _role, table_id in pairs))
-    validation_table_ids = {
-        table_id for role, table_id in pairs if str(role or "").strip().lower() == "target"
-    }
-    selection_context = context if isinstance(context, dict) else (resolved or runtime_context)
-    state: dict[str, Any] = {
-        "notebook": notebook_scope,
-        "lineage_tables": [{"pipeline_role": role, "table_id": table_id} for role, table_id in pairs],
-        "environment": env, "tables": {}, "resolved_contracts": {}, "message": "", "_controls": {},
-    }
+    sources, targets = list(sources), list(targets)
+    identities = {}
+    for role, participants in (("source", sources), ("target", targets)):
+        for participant in participants:
+            identity = (resolve_physical_table_identity(config, env, **{
+                key: participant[key] for key in ("store", "schema", "table_name")
+            }) if "store" in participant else resolve_catalogue_table_identity(
+                config, env, participant["table_id"], context=runtime, spark_session=spark,
+            ))
+            table_id = identity["table_id"]
+            roles = identities.get(table_id, {}).get("roles", [])
+            if role in roles:
+                raise ValueError(f"Duplicate {role} participant {table_id!r}.")
+            identities[table_id] = {**identity, "roles": [*roles, role]}
+    if not identities:
+        raise ValueError("Configure at least one actual source or target.")
+    try:
+        rows = [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
+                for row in read_lakehouse_table("METADATA_DATA_CONTRACT", store="Metadata",
+                    schema=metadata_table_physical_schema(config, "METADATA_DATA_CONTRACT"),
+                    spark_session=spark, context=runtime).collect()]
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            raise RuntimeError("Initialize METADATA_DATA_CONTRACT in the configured metadata store before selection.") from exc
+        raise
+    state: dict[str, Any] = {"execution_mode": "testing", "environment": env, "tables": {}, "_controls": {}}
+    for table_id, identity in identities.items():
+        matching = [row for row in rows if row.get("table_id") == table_id and row.get("environment_name") == env]
+        active = [row for row in matching if row.get("is_active") is True]
+        if len(active) > 1:
+            raise RuntimeError(f"Multiple active Data Contract versions for {table_id!r}.")
+        if active and str(active[0].get("status") or "").lower() != "frozen":
+            raise ValueError("Active Data Contract must be frozen.")
+        versions = sorted([row for row in matching if str(row.get("status") or "").lower() == "frozen"],
+                          key=lambda row: int(row["contract_version"]), reverse=True)
+        keys = [(row["contract_id"], row["contract_version"]) for row in versions]
+        if len(keys) != len(set(keys)):
+            raise RuntimeError("Duplicate frozen contract version rows.")
+        for row in versions:
+            _contract_review(row, identity["roles"])
+        state["tables"][table_id] = {"identity": identity, "versions": versions, "active": active[0] if active else None,
+                                    "selected": None, "choice": None, "review": None}
 
-    catalogue_labels = {}
-
-    # Initialization always starts Development unselected and Production ignores overrides.
-    _clear_overrides(selection_context)
-    if env == "prod":
-        try:
-            contracts = [_row_dict(row) for row in read_lakehouse_table(
-                CONTRACT_TABLE, store="Metadata",
-                schema=metadata_table_physical_schema(config, CONTRACT_TABLE),
-                spark_session=spark, context=runtime_context,
-            ).collect()]
-        except Exception as exc:
-            if not is_table_not_found_error(exc):
-                raise
-            contracts = []
-        for table_id in table_ids:
-            try:
-                contract = resolve_active_data_contract(
-                    config, env, table_id, spark_session=spark, required=True,
-                )
-            except ValueError as exc:
-                raise ValueError(
-                    f"Production environment {env!r} requires exactly one active Data Contract for "
-                    f"lineage-linked table {table_id!r} (table_id={table_id!r})."
-                ) from exc
-            except RuntimeError as exc:
-                raise RuntimeError(
-                    f"Production environment {env!r} cannot resolve Data Contract for lineage-linked "
-                    f"table {table_id!r} (table_id={table_id!r}): {exc}"
-                ) from exc
-            review = _contract_review(contract)
-            state["tables"][table_id] = {
-                "mode": "enforce",
-                "contract_id": str(contract["contract_id"]),
-                "contract_version": int(contract["contract_version"]),
-                "versions": _validation_contract_options(contracts, table_id),
-                "selected": contract, "review": review,
-                "display_name": catalogue_labels.get(table_id) or review["table"].get("table_name") or table_id,
-            }
-            state["resolved_contracts"][table_id] = {
-                "contract_id": str(contract["contract_id"]),
-                "contract_version": int(contract["contract_version"]),
-            }
-        state["message"] = f"Resolved {len(table_ids)} active Production Data Contract(s)."
-    else:
-        try:
-            catalogue_rows = [_row_dict(row) for row in read_lakehouse_table(
-                "METADATA_DATA_CATALOGUE", store="Metadata",
-                schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
-                spark_session=spark, context=runtime_context,
-            ).collect()]
-        except Exception as exc:
-            if not is_table_not_found_error(exc):
-                raise
-            catalogue_rows = []
-        for row in catalogue_rows:
-            if (
-                str(row.get("environment_name") or "") == env
-                and str(row.get("metadata_level") or "").lower() == "table"
-                and bool(row.get("is_active"))
-                and str(row.get("table_id") or "") in table_ids
-            ):
-                parts = (row.get("layer"), row.get("schema_name"), row.get("table_name"))
-                label = " / ".join(str(part).strip() for part in parts if str(part or "").strip())
-                if label:
-                    catalogue_labels[str(row["table_id"])] = label
-        try:
-            contracts = [_row_dict(row) for row in read_lakehouse_table(
-                CONTRACT_TABLE, store="Metadata",
-                schema=metadata_table_physical_schema(config, CONTRACT_TABLE),
-                spark_session=spark, context=runtime_context,
-            ).collect()]
-        except Exception as exc:
-            if not is_table_not_found_error(exc):
-                raise
-            contracts = []
-        for table_id in table_ids:
-            versions = _validation_contract_options(contracts, table_id)
-            enforceable = [
-                row for row in _contract_options(contracts, table_id)
-                if str(row.get("status") or "").lower() == "frozen" and bool(row.get("is_active"))
-            ]
-            if len(enforceable) > 1:
-                raise RuntimeError(
-                    f"Data Contract integrity error: {table_id!r} has multiple active versions."
-                )
-            selected = enforceable[0] if enforceable else None
-            contract_table_name = None
-            representative = selected or (versions[0] if versions else None)
-            if representative:
-                contract_table_name = parse_data_contract_payload(representative)["table"].get("table_name")
-            state["tables"][table_id] = {
-                "mode": "enforce",
-                "contract_id": str(selected.get("contract_id") or "") if selected else None,
-                "contract_version": int(selected.get("contract_version") or 0) if selected else None,
-                "versions": versions,
-                "selected": selected,
-                "review": _contract_review(selected) if selected else None,
-                "display_name": catalogue_labels.get(table_id) or contract_table_name or table_id,
-            }
-            if selected:
-                _set_override(selection_context, table_id, selected)
-                state["resolved_contracts"][table_id] = {
-                    "contract_id": str(selected["contract_id"]),
-                    "contract_version": int(selected["contract_version"]),
-                }
-        state["message"] = (
-            f"Environment {env} · each table can enforce its active frozen contract or validate a frozen candidate."
-        )
-
-    def set_mode(
-        table_id: str,
-        mode: str,
-        contract_id: str | None = None,
-        contract_version: int | None = None,
-    ) -> dict[str, Any]:
-        """Set one table to enforce or to validate one exact frozen candidate."""
+    def select_contract(table_id, contract_id=None, contract_version=None, *, no_contract=False):
         if table_id not in state["tables"]:
-            raise ValueError("The selected table_id is not linked to the current notebook in METADATA_DATA_LINEAGE.")
-        normalized_mode = str(mode or "").strip().lower()
-        if normalized_mode not in {"enforce", "validate"}:
-            raise ValueError("Data Contract mode must be 'enforce' or 'validate'.")
-        if normalized_mode == "validate" and table_id not in validation_table_ids:
-            raise ValueError("Validate mode is available for pipeline target tables only.")
-        table_state = state["tables"][table_id]
-        if normalized_mode == "enforce":
+            raise ValueError("Only configured pipeline participants may select contracts.")
+        table = state["tables"][table_id]
+        if no_contract:
             if contract_id is not None or contract_version is not None:
-                if env == "prod":
-                    raise ValueError("Production enforces its active frozen contract; candidate overrides are Development-only.")
-                candidates = [row for row in table_state["versions"]
-                              if str(row.get("contract_id") or "") == str(contract_id or "")
-                              and int(row.get("contract_version") or 0) == int(contract_version or 0)]
-                if not candidates:
-                    raise ValueError("Selected frozen Data Contract version is not available for this table.")
-                table_state["enforce_contract"] = candidates[0]
-            selected = table_state.get("enforce_contract") or (
-                table_state.get("selected") if table_state.get("mode") == "enforce" else None
-            )
-            if env == "prod" and selected is None:
-                raise ValueError("Production enforcement requires an active Data Contract.")
-            if selected:
-                _set_override(selection_context, table_id, selected)
-                table_state.update(
-                    mode="enforce",
-                    contract_id=str(selected["contract_id"]),
-                    contract_version=int(selected["contract_version"]),
-                    selected=selected,
-                    review=_contract_review(selected),
-                )
-                state["resolved_contracts"][table_id] = {
-                    "contract_id": str(selected["contract_id"]),
-                    "contract_version": int(selected["contract_version"]),
-                }
-            else:
-                _clear_overrides(selection_context, table_id)
-                table_state.update(
-                    mode="enforce", contract_id=None, contract_version=None,
-                    selected=None, review=None,
-                )
-                state["resolved_contracts"].pop(table_id, None)
-            state["message"] = f"Enforce mode selected for {table_id}."
-            return state
-        if not str(contract_id or "").strip() or not contract_version:
-            raise ValueError("Validate mode requires an exact frozen contract_id and contract_version.")
-        matches = [
-            row for row in table_state["versions"]
-            if str(row.get("contract_id") or "") == str(contract_id or "")
-            and int(row.get("contract_version") or 0) == int(contract_version or 0)
-        ]
-        if not matches:
-            raise ValueError("Selected frozen Data Contract version is not available for this table.")
-        selected = matches[0]
-        review = _contract_review(selected)
-        _clear_overrides(selection_context, table_id)
-        table_state.update(
-            mode="validate",
-            contract_id=str(selected["contract_id"]),
-            contract_version=int(selected["contract_version"]),
-            selected=selected,
-            review=review,
-        )
-        state["resolved_contracts"].pop(table_id, None)
-        state["message"] = f"Validate mode selected with Data Contract v{selected['contract_version']} for {table_id}."
+                raise ValueError("No Contract cannot be combined with a contract identity.")
+            if table["active"]:
+                raise ValueError("Live cannot bypass the active contract with No Contract.")
+            selected, choice = None, {"no_contract": True}
+        else:
+            matches = [row for row in table["versions"] if row["contract_id"] == contract_id and row["contract_version"] == contract_version]
+            if len(matches) != 1:
+                raise ValueError("Select an available exact frozen version.")
+            selected = matches[0]
+            if state["execution_mode"] == "live" and selected is not table["active"]:
+                raise ValueError("Live requires the active frozen version.")
+            choice = {"contract_id": contract_id, "contract_version": contract_version}
+        state.pop("execution_plan", None)
+        table.update(selected=selected, choice=choice,
+                     review=_contract_review(selected, table["identity"]["roles"]) if selected else None)
+        refresh()
         return state
 
-    for table_state in state["tables"].values():
-        table_state["enforce_contract"] = table_state.get("selected")
+    def set_mode(mode):
+        if mode not in {"testing", "live"}:
+            raise ValueError("Mode must be testing or live.")
+        state.pop("execution_plan", None)
+        state["execution_mode"] = mode
+        if mode == "live":
+            for table in state["tables"].values():
+                active = table["active"]
+                # A visible mode change selects the only eligible Live version.
+                if active:
+                    table.update(selected=active, choice={"contract_id": active["contract_id"],
+                                 "contract_version": active["contract_version"]},
+                                 review=_contract_review(active, table["identity"]["roles"]))
+                elif table["selected"]:
+                    table.update(selected=None, choice=None, review=None)
+        refresh()
+        return state
 
-    state["set_mode"] = set_mode
+    def build_plan():
+        plan = create_pipeline_execution_plan(
+            execution_mode=state["execution_mode"], sources=sources, targets=targets,
+            selections={key: table["choice"] for key, table in state["tables"].items() if table["choice"] is not None},
+            context=runtime, spark_session=spark,
+        )
+
+        state["execution_plan"] = plan
+        return plan
+
+    state.update(select_contract=select_contract, set_mode=set_mode, build_plan=build_plan)
+    root = header = mode_control = None
+    refreshing = False
+
+    def refresh():
+        nonlocal refreshing
+        if root is None or refreshing:
+            return
+        refreshing = True
+        try:
+            testing = state["execution_mode"] == "testing"
+            root.remove_class("pipeline-testing" if not testing else "pipeline-live")
+            root.add_class("pipeline-testing" if testing else "pipeline-live")
+            mode_control.value = state["execution_mode"]
+            header.value = f'<h3>Pipeline Data Contracts · {"Testing" if testing else "Live"}</h3><p>' + (
+                "No data or metadata persistence. Checks return diagnostics in memory." if testing else
+                "Successful publication and operational metadata commits are permitted.") + '</p>'
+            for table_id, controls in state["_controls"].items():
+                table = state["tables"][table_id]
+                active = table["active"]
+                versions = table["versions"] if testing else ([active] if active else [])
+                options = [("Choose explicitly…", ""), *([("No Contract", "none")] if not active else [])]
+                options += [(f'{row.get("contract_name") or row["contract_id"]} · v{row["contract_version"]} · Frozen'
+                             + (" · Active" if row.get("is_active") else ""),
+                             f'{row["contract_id"]}\n{row["contract_version"]}') for row in versions]
+                controls["version"].options = options
+                selected = table["selected"]
+                controls["version"].value = (f'{selected["contract_id"]}\n{selected["contract_version"]}' if selected else
+                                             ("none" if table["choice"] else ""))
+                controls["inspector"].value = (_inspector(selected, table["identity"]["roles"],
+                    state["execution_plan"].results if state.get("execution_plan") else ()) if selected else
+                                                ("<p>Explicit No Contract: no saved Guardrails selected.</p>" if table["choice"] else "<p>Select a frozen contract to inspect its saved definitions.</p>"))
+        finally:
+            refreshing = False
+
+    state["refresh"] = refresh
     try:
         widgets = require_ipywidgets()
+        from IPython import display as ip
     except ModuleNotFoundError:
         return state
-    status = status_message(widgets)
+    style = widgets.HTML('''<style>
+.pipeline-contracts{max-width:1000px;padding:12px;border:2px solid var(--mode);border-radius:6px;color:#17212b;background:var(--surface)}
+.pipeline-testing{--mode:#a21920;--surface:#fff5f5}.pipeline-live{--mode:#176536;--surface:#f1fbf4}
+.pipeline-contracts h3{background:var(--mode);color:white;padding:9px;margin:0;border-radius:4px}
+.pipeline-contracts summary{cursor:pointer;color:var(--mode);font-weight:600;padding:5px}
+.pipeline-contracts table{border-collapse:collapse;width:100%;background:white;font-size:12px}
+.pipeline-contracts th,.pipeline-contracts td{border:1px solid #bbc0c5;padding:5px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.pipeline-contracts .inactive{background:#eceff1;color:#454c53}
+.pipeline-contracts .contract-scroll{overflow-x:auto}.pipeline-contracts pre{white-space:pre-wrap}
+.pipeline-contracts .widget-toggle-buttons .mod-active{background:var(--mode);color:white}
+</style>''')
+    header = widgets.HTML()
+    mode_control = widgets.ToggleButtons(options=[("Testing", "testing"), ("Live", "live")], value="testing", description="Pipeline mode")
+    mode_control.observe(lambda change: set_mode(change["new"]) if not refreshing else None, names="value")
     sections = []
-    controls: dict[str, Any] = {}
-    for role, table_id in pairs:
-        if table_id in controls:
-            continue
-        table_state = state["tables"][table_id]
-        versions = table_state["versions"]
-        mode_control = widgets.ToggleButtons(
-            options=(
-                [("Enforce", "enforce"), ("Validate", "validate")]
-                if table_id in validation_table_ids else [("Enforce", "enforce")]
-            ),
-            value="enforce", **widget_common(widgets, role),
-        )
-        source_picker = env != "prod" and role.lower() == "source"
-        selected_source = table_state.get("selected") if source_picker else None
-        version_control = widgets.Dropdown(
-            options=[("Select frozen candidate", ""), *[
-                (f"Data Contract v{row['contract_version']} · Frozen",
-                 f"{row['contract_id']}\n{row['contract_version']}") for row in versions
-            ]],
-            value=(f"{selected_source['contract_id']}\n{selected_source['contract_version']}" if selected_source else ""),
-            layout=widgets.Layout(display="" if source_picker else "none"),
-        )
-        preview = widgets.HTML(value="")
-
-        def source_expectation_html(
-            *, current_role: str = role, current_table_id: str = table_id
-        ) -> str:
-            if current_role.lower() != "source":
-                return ""
-            review = state["tables"][current_table_id].get("review") or {}
-            expected = review.get("expected_refresh")
-            if not expected:
-                return "<br><span style='color:#667085;'>Expected refresh: Not defined</span>"
-            if expected.get("mode") == "static":
-                return "<br><span style='color:#667085;'>Expected refresh: <b>No refresh expected</b></span>"
-            value = expected.get("frequency")
-            shown = str(int(value)) if isinstance(value, float) and value.is_integer() else str(value)
-            return (
-                "<br><span style='color:#667085;'>Expected refresh: "
-                f"<b>{html.escape(shown)} {html.escape(str(expected.get('unit') or ''))}</b></span>"
-            )
-
-        def render(
-            _change: Any,
-            *,
-            current_table: str = table_id,
-            current_mode: Any = mode_control,
-            current_version: Any = version_control,
-            current_preview: Any = preview,
-            current_source_picker: bool = source_picker,
-            current_expectation: Any = source_expectation_html,
-        ) -> None:
-            try:
-                if current_mode.value == "enforce":
-                    current_version.layout.display = "" if current_source_picker else "none"
-                    if current_source_picker and current_version.value:
-                        contract_id, version = current_version.value.split("\n", 1)
-                        set_mode(current_table, "enforce", contract_id, int(version))
-                    else:
-                        if current_source_picker:
-                            state["tables"][current_table].update(enforce_contract=None, selected=None)
-                        set_mode(current_table, "enforce")
-                    selected = state["tables"][current_table].get("selected")
-                    current_preview.value = (
-                        f"<b>Enforce</b> · Data Contract v{selected['contract_version']} · Frozen"
-                        if selected else "<b>Enforce</b> · No enforceable contract selected in this environment"
-                    )
-                else:
-                    current_version.layout.display = ""
-                    if not current_version.value:
-                        current_preview.value = "<b>Validate</b> · Select an exact frozen candidate"
-                        return
-                    contract_id, version = current_version.value.split("\n", 1)
-                    set_mode(current_table, "validate", contract_id, int(version))
-                    current_preview.value = f"<b>Validate</b> · Data Contract v{version} · Frozen"
-                current_preview.value += current_expectation()
-                status.value = ""
-            except ValueError as exc:
-                status.value = html.escape(str(exc))
-
-        mode_control.observe(render, names="value")
-        version_control.observe(render, names="value")
-        controls[table_id] = {"mode": mode_control, "version": version_control, "preview": preview}
-        role_label = "Read" if role.lower() == "source" else "Write"
-        table_name = table_state["display_name"]
-
-        short_table_id = f"{table_id[:8]}…{table_id[-6:]}" if len(table_id) > 18 else table_id
-        sections.extend([
-            widgets.HTML(value=(
-                f"<b>{role_label} · {html.escape(str(table_name))}</b><br>"
-                f"<span>table_id: <code title=\"{html.escape(table_id)}\">{html.escape(short_table_id)}</code></span>"
-            )),
-            mode_control, version_control, preview,
-        ])
-        render({"new": "enforce"})
-    page = form_page(
-        widgets, title="Pipeline Data Contracts",
-        description=(f"Environment: {env} · Notebook: {notebook_scope.get('notebook_name') or notebook_scope.get('notebook_id')} · "
-                     "Choose enforce or validate independently for each table."),
-        children=[form_section(widgets, title="Pipeline tables", children=sections), status],
-    )
-    state["_controls"] = {"selections": controls, "status": status, "page": page}
-    from IPython import display as ip
-    ip.display(page)
+    for table_id, table in state["tables"].items():
+        identity = table["identity"]
+        label = " / ".join(str(identity.get(key)) for key in ("store", "schema", "table_name") if identity.get(key))
+        roles = " / ".join("Read" if role == "source" else "Write" for role in identity["roles"])
+        title = widgets.HTML(f'<h4>{html.escape(roles)} · {html.escape(label)}</h4><small>{html.escape(table_id)}</small>')
+        version = widgets.Dropdown(description="Contract", layout=widgets.Layout(width="100%"), style={"description_width": "70px"})
+        inspector = widgets.HTML()
+        def changed(change, key=table_id):
+            if refreshing:
+                return
+            if not change["new"]:
+                state["tables"][key].update(selected=None, choice=None, review=None)
+                refresh()
+                return
+            if change["new"] == "none":
+                select_contract(key, no_contract=True)
+            else:
+                contract_id, version_number = change["new"].split("\n")
+                select_contract(key, contract_id, int(version_number))
+        version.observe(changed, names="value")
+        state["_controls"][table_id] = {"version": version, "inspector": inspector}
+        sections.append(widgets.VBox([title, version, inspector]))
+    root = widgets.VBox([style, header, mode_control, *sections])
+    root.add_class("pipeline-contracts")
+    state["widget"], state["mode_control"] = root, mode_control
+    refresh()
+    ip.display(root)
     return state

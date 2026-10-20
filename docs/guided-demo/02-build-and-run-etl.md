@@ -1,5 +1,20 @@
 # Step 2. Build a Pipeline
 
+### Build explicit pipeline authority before Read
+
+The current `02_pipeline.ipynb` declares `PIPELINE_SOURCES` and `PIPELINE_TARGETS` before opening the selector. Keep these identities aligned with the participating Read and Write calls. Historical `METADATA_DATA_LINEAGE` is not required and cannot authorize unrelated tables.
+
+```python
+CONTRACTS = widget_select_data_contract(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
+# Select a frozen version or explicit No Contract for every participant in the UI.
+EXECUTION_PLAN = CONTRACTS["build_plan"]()
+```
+
+The default is red **Testing**, with no data or metadata persistence. Expand each contract category to inspect all columns and individual rules, including saved inactive and non-applicable definitions. Selection does not edit or activate a contract. Build a new plan and rerun Read → Transform → Write after changing selections or mode.
+
+For scheduled execution use the public `create_pipeline_execution_plan()` API with a deliberate `execution_mode="testing"` or `"live"`, explicit sources/targets and exact per-table selections. There is no environment-based Live default or notebook-global selection override.
+
+
 ### Before you begin
 
 1. Complete [Step 00B. Configure the Environment and load assets](00B-configure-environment-and-load-assets.md).
@@ -32,7 +47,7 @@ The notebook follows one visible lifecycle:
 | Notebook section | What happens |
 | --- | --- |
 | Environment | Loads the shared Fabric configuration and imports the three public functions used by the pipeline. |
-| Data Contract | Lets you choose whether each governed target should **Enforce** an active contract or **Validate** a frozen candidate. |
+| Data Contract | Selects one pipeline-wide **Testing / Live** mode and an exact frozen contract independently for each explicitly configured source and target. |
 | Governed Read | Reads each configured source and runs the applicable source checks. |
 | PySpark Transform | Contains the joins, filters, derived columns, aggregations, or selections owned by your project. |
 | Governed Write | Checks and, when allowed, publishes each target using its configured load strategy. |
@@ -69,7 +84,7 @@ For the initial Guided Demo run, there is no Data Contract yet, so leave the sel
 
     The selector resolves the notebook's source and target identities from `METADATA_DATA_LINEAGE`, then resolves the available Data Contract state for each table.
 
-    In Engineering Development, **Validate** is available only for targets and requires an exact frozen Data Contract version. It does not activate that version. In Production, FabricOps requires the active version and uses **Enforce**.
+    **Testing** applies to the entire pipeline in every environment and permits eligible frozen candidates. **Live** enforces active frozen versions and rejects inactive substitutions. Explicit **No Contract** supports bootstrap only when it bypasses no active contract. A missing selection or invalid payload fails; it never becomes No Contract.
 
     The returned `CONTRACTS` object carries the table-level mode and contract identity into `orchestrate_write()`. See [`widget_select_data_contract()`](../api/reference/widget_select_data_contract.md) for the exact return contract.
 
@@ -96,6 +111,7 @@ Then run the configured Read cell:
 
 ```python
 source = orchestrate_read(
+    execution_plan=EXECUTION_PLAN,
     store="Bronze",
     schema="demo",
     table_name="source_table",  # Replace with the governed source table.
@@ -207,7 +223,7 @@ writes["target"] = orchestrate_write(
     schema="demo",
     table_name="target_table",  # Replace with the governed target table.
     write_mode="overwrite",
-    contracts=CONTRACTS,
+    execution_plan=EXECUTION_PLAN,
     repartition_by=None,
     spark_session=spark,
     frequency_top_n=5,
@@ -222,7 +238,7 @@ writes["target"] = orchestrate_write(
 | `store`, `schema`, `table_name` | The configured target store and physical target identity. Replace `target_table`. |
 | `write_mode` | The load strategy: `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`. |
 | `write_parameters` | Add parameters required by the selected strategy, such as SCD keys and tracked columns. |
-| `contracts` | Leave as `CONTRACTS` so the target follows the widget selection. |
+| `execution_plan` | Pass the same `EXECUTION_PLAN` used by every Read. |
 | `repartition_by` | Optionally control the Spark partition count before writing; otherwise leave it as `None`. |
 | `grain_discovery_enabled`, `grain_discovery_max_columns`, `grain_discovery_max_candidates` | Control candidate Grain profiling of the published target; contract Grain Guardrails are independent. |
 | `frequency_enabled`, `frequency_top_n` | Control target Frequency profiling after publication. |
@@ -240,11 +256,10 @@ writes["target"] = orchestrate_write(
     3. **Source Drift** on participating sources
     4. **Grain** on the prepared target input
     5. **Data Quality**
-    6. **Guardrail Coverage**
 
-    Absent Guardrails do not produce individual skipped-stage messages. A contract-free Development run prints one message and proceeds to Write. Guardrail Coverage remains mandatory whenever contracts participate.
+    Absent Guardrails do not produce individual skipped-stage messages. A pipeline using explicit No Contract prints one message and proceeds to Write. Live stops on configured blocking failures and required checks that cannot execute.
 
-    With **Validate**, FabricOps returns after those checks with `published=False`; the target is not written. With **Enforce**, passing the required checks allows FabricOps to continue through **Write** and then **Profile** the persisted target in `METADATA_DATA_PROFILED` and, where applicable, `METADATA_DATA_PROFILED_FREQUENCY`.
+    With **Testing**, FabricOps evaluates the prepared input and supported strategy checks, returning `published=False`. No stage writes business data, Catalogue, Profile, frequency rows, Guardrail Results, Lineage, Source Observation, mappings or staging. With **Live**, passing required checks permits publication and metadata commits at their existing lifecycle boundaries. These independent Fabric operations are not one atomic transaction.
 
     A successful Write also records the source and target pipeline participation in `METADATA_DATA_LINEAGE`. Source Observation history used by Source Drift and incremental execution is committed only through the successful write path.
 
@@ -276,7 +291,7 @@ The template keeps inspection outside the orchestration calls so the standard li
 # display(writes["target"].get("profile_result", {}).get("profile"))
 ```
 
-The guarded `.get()` call is useful because a Validate-mode Write does not publish or return a persisted-target profile.
+The guarded `.get()` call is useful because a Testing Write does not publish or return a persisted-target profile.
 
 With `verbose=True` (the default), every successful Read and Write ends with a summary. `total_duration_seconds` includes the complete lifecycle, including Guardrails and profiling. Inspect the same measurements programmatically:
 
@@ -292,7 +307,7 @@ print(writes["target"]["total_duration_seconds"])
 
     Lakehouse Append and Overwrite use the exact tagged Delta commit's output-row metric, including zero-row commits. Reporting uses bounded metadata-file reads, with no extra Spark jobs. Inaccessible metadata, a concurrent later commit, an exhausted metadata-probe budget, or missing operation metrics produce `Not available`. Caller-supplied Delta `userMetadata` in writer options or Spark session configuration is preserved and disables this attribution. The lookup uses checkpoint metadata and at most 32 exact log-file probes; it never enumerates the Delta log directory.
 
-    Warehouse connector writes do not return attributable row counts. Existing SCD merges include technical audit updates, so business inserts, updates, unchanged rows, and expired versions remain unavailable unless independently measurable. A new Lakehouse SCD target uses a measured bootstrap write when supported; its inserted rows or versions are reported separately. An already-applied Append or Overwrite retry reports zero newly committed rows. Validate-only runs report `Published → No` and zero committed rows.
+    Warehouse connector writes do not return attributable row counts. Existing SCD merges include technical audit updates, so business inserts, updates, unchanged rows, and expired versions remain unavailable unless independently measurable. A new Lakehouse SCD target uses a measured bootstrap write when supported; its inserted rows or versions are reported separately. An already-applied Append or Overwrite retry reports zero newly committed rows. Testing runs report `Published → No` and zero committed rows.
 
 ??? tip "A summary is missing in Microsoft Fabric"
 

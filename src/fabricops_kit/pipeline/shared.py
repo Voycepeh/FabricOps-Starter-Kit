@@ -10,8 +10,64 @@ import time
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from functools import reduce
+from dataclasses import dataclass, field as dataclass_field
 from uuid import uuid4
 from typing import Any, Mapping
+
+@dataclass(frozen=True)
+class PipelineExecutionPlan:
+    """Immutable run authority with an isolated in-memory diagnostic journal."""
+
+    execution_mode: str
+    environment: str
+    notebook_id: str
+    plan_id: str
+    participants_json: str
+    selections_json: str
+    contracts_json: str
+    runtime_context: Any = dataclass_field(repr=False, compare=False)
+    results: list = dataclass_field(default_factory=list, repr=False, compare=False)
+    simulations: list = dataclass_field(default_factory=list, repr=False, compare=False)
+
+    def __post_init__(self):
+        """Reject unsupported execution authority at construction."""
+        if self.execution_mode not in {"testing", "live"}:
+            raise ValueError("Execution mode must be testing or live.")
+
+    @property
+    def permits_persistence(self):
+        """Whether this run permits durable mutations."""
+        return self.execution_mode == "live"
+
+
+def persistence_permitted(context):
+    """Apply the single execution-level policy at a durable mutation boundary."""
+    plan = (context or {}).get("execution_plan")
+    return plan is None or plan.permits_persistence
+
+
+def execution_result(context, table_id, *, stages=()):
+    """Describe execution authority and publication limits without Spark actions."""
+    plan = context["execution_plan"]
+    contract = context["_pipeline_contracts"].get(table_id)
+    return {
+        "execution_mode": plan.execution_mode, "execution_plan_id": plan.plan_id,
+        "execution_environment": plan.environment,
+        "guardrail_outcomes": [dict(row) for row in plan.results if row.get("table_id") == table_id],
+        "simulation_outcomes": list(plan.simulations),
+        "selected_contract": ({"contract_id": contract["contract_id"],
+                               "contract_version": contract["contract_version"]} if contract else None),
+        "applicable_guardrails": sorted(pipeline_guardrail_types(context, table_id)),
+        "persistence_status": "completed" if plan.permits_persistence else "disabled",
+        "persistence_policy": "allow_commits" if plan.permits_persistence else "read_only",
+        "publication_status": "not_requested" if plan.permits_persistence else "not_published",
+        "checks_not_exercised": [] if plan.permits_persistence else [
+            "Fabric publication permissions", "target transaction and concurrency behavior",
+            "cross-store metadata finalization"] + [
+                f"{stage['stage']}: {stage.get('reason', 'not fully evaluated')}" for stage in stages
+                if stage.get("evaluation_status") == "not_fully_evaluated"],
+    }
+
 
 def _orchestration_status(result: Any) -> str:
     """Normalize a capability result into an orchestration stage status."""
@@ -41,21 +97,52 @@ def _orchestration_status(result: Any) -> str:
     return "passed"
 
 
-def _run_orchestration_stage(*, operation: str, name: str, index: int, total: int, stage: str, function, verbose: bool):
+def _run_orchestration_stage(*, operation: str, name: str, index: int, total: int, stage: str, function, verbose: bool, allow_blocked: bool = False):
     """Run one visible stage while retaining its original exception as the cause."""
     started = time.perf_counter()
     if verbose:
         print(f"[{index}/{total}] {stage} ... running")
     try:
-        result = function()
+        try:
+            result = function()
+        except ValueError as exc:
+            if not allow_blocked or stage not in {"Freshness", "Schema", "Grain", "Data Quality"}:
+                raise
+            result = {"status": "blocked", "can_continue": False, "checks": [],
+                      "evaluation_status": "not_fully_evaluated", "reason": str(exc)}
         if verbose and stage == "Data Quality" and isinstance(result, dict) and result.get("summary"):
             summary = result["summary"]
             print(f"  DQ applicable rows: {summary.get('DQ_PASSED_ROW_PERCENT', 0):.2f}% pass, "
                   f"{summary.get('DQ_FAILED_ROW_PERCENT', 0):.2f}% with violations; "
                   f"{summary.get('DQ_NOT_APPLICABLE_ROW_COUNT', 0)} not applicable. Tolerances determine continuation.")
         status = _orchestration_status(result)
-        if status == "blocked":
-            reason = result.get("reason") if isinstance(result, dict) else None
+        if stage in {"Schema", "Grain", "Data Quality", "Sensitive Data", "Source Drift", "Freshness"}:
+            items = result if isinstance(result, list) else [result]
+            normalized = []
+            for item in items:
+                unavailable = (
+                    not isinstance(item, dict) or str(item.get("status") or "").lower() not in {
+                        "passed", "pass", "success", "succeeded", "baseline_created", "warning", "warn",
+                        "failed", "fail", "failure", "error", "blocked", "block", "skip", "skipped", "not_applicable"
+                    }
+                    or (str(item["status"]).lower() in {"skip", "skipped", "not_applicable"}
+                        and not (stage == "Freshness" and item.get("rule_type") == "skip"))
+                    or item.get("evaluation_status") == "not_fully_evaluated"
+                )
+                normalized.append({**(item if isinstance(item, dict) else {}),
+                                   "status": "blocked", "can_continue": False,
+                                   "evaluation_status": "not_fully_evaluated",
+                                   "reason": "A configured Guardrail did not execute."} if unavailable else item)
+            result = normalized if isinstance(result, list) else normalized[0]
+            if not normalized:
+                result = {"status": "blocked", "can_continue": False,
+                          "evaluation_status": "not_fully_evaluated",
+                          "reason": "A configured Guardrail did not execute."}
+            status = _orchestration_status(result)
+        if status == "blocked" and not allow_blocked:
+            blocked_items = result if isinstance(result, list) else [result]
+            reason = next((item.get("reason") for item in blocked_items
+                           if isinstance(item, dict) and item.get("reason")), None)
             detail = f" Reason: {reason}" if reason else ""
             raise RuntimeError(f"Stage returned blocking status.{detail}")
     except Exception as exc:
@@ -79,19 +166,27 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
             print(f"[{index}/{total}] {stage} ... ✗ Failed ({duration:.2f}s)")
             print(f"  Root cause → {reason}{location}")
             print(f"{operation} {name!r} stopped at {stage}. Later stages did not run.")
-        raise RuntimeError(
-            f"{operation} {name!r} failed during {stage}. Root cause: {reason}{location}"
-        ) from exc
+        failure = RuntimeError(f"{operation} {name!r} failed during {stage}. Root cause: {reason}{location}")
+        for field_name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status"):
+            if hasattr(exc, field_name):
+                setattr(failure, field_name, getattr(exc, field_name))
+        raise failure from exc
     duration = max(0.01, round(time.perf_counter() - started, 2))
     if verbose:
         outcomes = {
             "skipped": ("○", "Skipped / not applicable"),
             "warning": ("⚠", "Warning"),
             "passed": ("✓", "Passed"),
+            "blocked": ("✗", "Blocked (diagnostic)"),
         }
         marker, label = outcomes[status]
         print(f"[{index}/{total}] {stage} ... {marker} {label} ({duration:.2f}s)")
-    return result, {"name": name, "stage": stage, "status": status, "duration_seconds": duration}
+    record = {"name": name, "stage": stage, "status": status, "duration_seconds": duration}
+    details = result if isinstance(result, list) else [result]
+    incomplete = next((item for item in details if isinstance(item, dict) and item.get("evaluation_status")), None)
+    if incomplete:
+        record.update(evaluation_status=incomplete["evaluation_status"], reason=incomplete.get("reason"))
+    return result, record
 
 
 from fabricops_kit.config.shared import (
@@ -312,6 +407,8 @@ def persist_lineage_participation(
     context: dict[str, Any] | None = None,
 ) -> str:
     """Upsert one canonical source or target participant for an activity."""
+    if not persistence_permitted(context):
+        raise RuntimeError("Testing cannot commit Lineage.")
     config, env, resolved_context = resolve_fabric_context(context=context)
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=resolved_context)
     effective_activity_id = str(activity_id or audit["_activity_id"]).strip()
@@ -818,7 +915,7 @@ def _merge_source_observation_records(
     records: list[dict[str, Any]], *, config: Any, context: Mapping[str, Any]
 ) -> None:
     """Idempotently merge target-specific Source Observation records."""
-    if not records:
+    if not records or not persistence_permitted(context):
         return
     try:
         from delta.tables import DeltaTable
@@ -882,6 +979,11 @@ def _recover_completed_source_observations(
                             else "committed"
                         ),
                     })
+    if recovered and not persistence_permitted(context):
+        context["execution_plan"].simulations.append({
+            "check": "Source Observation recovery", "outcome": "simulated",
+            "source_table_id": source_table_id, "target_table_id": target_table_id,
+        })
     _merge_source_observation_records(recovered, config=config, context=context)
     return [*rows, *recovered]
 
@@ -891,9 +993,10 @@ def resolve_incremental_source_scope(
     source_table_id: str,
     target_table_id: str,
     observation: Any,
+    context=None,
 ) -> dict[str, Any]:
     """Resolve and stage the unconsumed scope for one source-to-target relationship."""
-    config, env, context = resolve_fabric_context()
+    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     activity_id = str(audit["_activity_id"])
     current = observation_rows(observation)
@@ -1054,7 +1157,6 @@ def check_source_drift_for_target(
     source_processing: Mapping[str, Any],
     spark_session=None,
     context=None,
-    execution_type="enforce",
 ) -> dict[str, Any]:
     """Evaluate source-governed drift against a target-specific baseline."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
@@ -1185,7 +1287,7 @@ def check_source_drift_for_target(
             table_id=source_table_id,
             contract_id=str(selected_rule.get("contract_id") or ""),
             contract_version=int(selected_rule.get("contract_version") or 0),
-            execution_type=execution_type,
+
             context=context,
         )
     return result
@@ -1324,7 +1426,7 @@ def _validate_token_mapping(mapping):
 
 
 def _build_token_mapping(dataframe, *, column_name, column_id, table_id, existing_mapping,
-                         config=None, env=None, context=None, execution_type="enforce"):
+                         config=None, env=None, context=None):
     """Materialize batch lookups for a vault, or cumulative caller-owned assignments."""
     from pyspark.sql import functions as F
 
@@ -1373,7 +1475,7 @@ def _build_token_mapping(dataframe, *, column_name, column_id, table_id, existin
         if vault is not None:
             # Only proposed new assignments enter the Delta merge. Historical rows are never merged again.
             new_assignments = mapping.join(unmatched, "original_value", "left_semi")
-            if execution_type == "enforce" and new_assignments.limit(1).count():
+            if persistence_permitted(context) and new_assignments.limit(1).count():
                 condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in ("table_id", "column_id", "original_value"))
                 vault.alias("target").merge(new_assignments.alias("source"), condition).whenNotMatchedInsert(
                     values={name: f"source.`{name}`" for name in required + ["original_data_type"]}
@@ -1508,7 +1610,6 @@ def check_sensitive_data_rules(
     spark_session,
     run_id: str = "",
     existing_mapping=None,
-    execution_type: str = "enforce",
     context=None,
 ) -> dict[str, Any]:
     """Apply supplied exact-contract Sensitive Data rules without resolving contract state."""
@@ -1542,7 +1643,7 @@ def check_sensitive_data_rules(
                         column_id=column_id,
                         table_id=identity["table_id"],
                         existing_mapping=existing_mapping,
-                        config=config, env=env, context=context, execution_type=execution_type,
+                        config=config, env=env, context=context,
                     )
                     mappings.append(mapping)
                     token_columns.append((column_name, column_id))
@@ -1588,7 +1689,7 @@ def check_sensitive_data_rules(
                 table_id=identity["table_id"],
                 contract_id=str(rule.get("contract_id") or ""),
                 contract_version=int(rule.get("contract_version") or 0),
-                execution_type=execution_type,
+
                 context=context,
             )
         can_continue = all(check["can_continue"] for check in checks)
@@ -1615,7 +1716,7 @@ def check_sensitive_data_rules(
             "can_continue": can_continue,
             "dataframe": transformed,
             "support_mapping": support_mapping,
-            "mapping_persisted": bool(support_mapping is not None and execution_type == "enforce"
+            "mapping_persisted": bool(persistence_permitted(context) and support_mapping is not None
                                       and getattr(getattr(config, "governance_config", None), "sensitive_data_token_mapping", {})),
             "checks": checks,
         }
@@ -1626,46 +1727,6 @@ def check_sensitive_data_rules(
         for mapping in mappings:
             mapping.unpersist()
         raise
-
-
-def record_contract_validation(*, context, target_table_id, coverage, spark_session):
-    """Append completed-validation evidence for each exact covered contract version.
-
-    This is a runtime completion record, not an authorable Guardrail. It is
-    written only after all configured checks and Coverage have succeeded, so
-    source-only Read checks and target checks share one complete validation run.
-    """
-    if (coverage.get("status") != "passed" or not coverage.get("can_continue")
-            or not coverage.get("coverage") or not coverage.get("readiness")
-            or any(not item.get("evaluated") for item in coverage["coverage"])
-            or any(not item.get("ready") for item in coverage["readiness"])):
-        return
-    config, env = context["config"], context["env"]
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
-    for table_id, contract in context["_pipeline_contracts"].items():
-        if contract is None:
-            continue
-        identity = (context.get("_pipeline_identities") or {}).get(table_id) or {}
-        result = {
-            "guardrail_rule_id": f"{contract['contract_id']}:v{contract['contract_version']}:validation-complete",
-            "guardrail_version": 1,
-            "guardrail_type": "guardrail_coverage",
-            "rule_type": "contract_validation",
-            "rule_id": "contract_validation",
-            "validation_complete": True,
-            "target_table_id": target_table_id,
-            "status": "passed", "can_continue": True, "severity": "blocking", "action": "Block",
-            "coverage": coverage,
-            "rule_context": {"rule_type": "contract_validation", "action": "Block"},
-        }
-        write_guardrail_result_row(
-            spark_session=spark_session, config=config, env=env, run_id=str(audit["_activity_id"]),
-            dataset_name="", table_name=str(identity.get("table_name") or contract.get("table_name") or ""),
-            store_type="", layer="", table_id=table_id,
-            contract_id=contract["contract_id"], contract_version=contract["contract_version"],
-            execution_type="validate", guardrail_type="guardrail_coverage", rule_type="contract_validation",
-            result=result, context=context,
-        )
 
 
 def write_guardrail_result_row(
@@ -1687,7 +1748,6 @@ def write_guardrail_result_row(
     table_id: str = "",
     contract_id: str = "",
     contract_version: int = 0,
-    execution_type: str = "enforce",
     results_table: str = "METADATA_GUARDRAIL_RESULTS",
     context=None,
 ) -> None:
@@ -1703,9 +1763,8 @@ def write_guardrail_result_row(
         raise ValueError("guardrail_version is required to persist a Guardrail result.")
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"])
-    resolved_execution_type = str(execution_type or "enforce").strip().lower()
-    if resolved_execution_type not in {"enforce", "validate"}:
-        raise ValueError("execution_type must be 'enforce' or 'validate'.")
+    plan = (context or {}).get("execution_plan")
+    resolved_execution_type = plan.execution_mode if plan is not None else "live"
     payload = {
         key: value
         for key, value in result.items()
@@ -1748,6 +1807,11 @@ def write_guardrail_result_row(
         "result_payload_json": json.dumps(payload, default=str, sort_keys=True, separators=(",", ":")),
         **audit,
     }
+    plan = (context or {}).get("execution_plan")
+    if plan is not None:
+        plan.results.append(row)
+    if not persistence_permitted(context):
+        return
     write_lakehouse_table(
         spark_session.createDataFrame([coerce_metadata_row_types(results_table, row)]),
         results_table,
@@ -2198,26 +2262,25 @@ def resolve_active_data_contract(config, env: str, table_id: str, *, spark_sessi
             spark_session=spark_session, context={"config": config, "env": env},
         )
     except Exception as exc:
-        if is_table_not_found_error(exc) and not required:
-            return None
         if is_table_not_found_error(exc):
-            raise ValueError("No Data Contracts exist; Governance must register and activate one first.") from exc
+            raise RuntimeError(
+                "Cannot read METADATA_DATA_CONTRACT. Initialize the configured metadata store before execution; "
+                "a missing metadata table is not an explicit No Contract choice."
+            ) from exc
         raise
+    escaped_env = str(env).replace("'", "''")
     escaped_table_id = str(table_id).replace("'", "''")
     active = [
         _row_to_dict(row)
         for row in frame.filter(
-            f"`table_id` = '{escaped_table_id}' AND `is_active` = TRUE"
+            f"`table_id` = '{escaped_table_id}' AND `is_active` = TRUE AND `environment_name` = '{escaped_env}'"
         ).limit(2).collect()
     ]
     if len(active) > 1:
         raise RuntimeError(f"Data Contract integrity error: {table_id!r} has multiple active versions.")
     if not active:
-        matching = required or bool(
-            frame.filter(f"`table_id` = '{escaped_table_id}'").limit(1).collect()
-        )
-        if matching:
-            raise ValueError(f"No active Data Contract exists for {table_id!r}; Governance must activate one first.")
+        if required:
+            raise ValueError(f"No active Data Contract exists for {table_id!r}.")
         return None
     row = dict(active[0])
     if str(row.get("status") or "").lower() != "frozen":
@@ -2261,12 +2324,13 @@ def resolve_data_contract_version(
                 f"Data Contract {contract_id!r} version {requested_version} does not exist."
             ) from exc
         raise
+    escaped_env = str(env).replace("'", "''")
     escaped_contract_id = contract_id.replace("'", "''")
     matches = [
         _row_to_dict(row)
         for row in frame.filter(
             f"`contract_id` = '{escaped_contract_id}' "
-            f"AND `contract_version` = {requested_version}"
+            f"AND `contract_version` = {requested_version} AND `environment_name` = '{escaped_env}'"
         ).limit(2).collect()
     ]
     if not matches:
@@ -2286,25 +2350,95 @@ def resolve_data_contract_version(
     return row
 
 
-def prepare_pipeline_execution(table_ids, *, contracts=None, spark_session=None):
-    """Resolve one call's exact contracts and active rules without global state."""
-    config, env, active = resolve_fabric_context()
-    context = {**active, "_pipeline_contracts": {}, "_pipeline_rules": {}, "_pipeline_identities": {}}
-    overrides = dict(context.get("data_contract_overrides") or {})
-    for table_id, selection in (contracts or {}).get("tables", {}).items():
-        mode = str(selection.get("mode") or "enforce").strip().lower()
-        if mode not in {"validate", "enforce"}:
-            raise ValueError("Data Contract mode must be 'enforce' or 'validate'.")
-        if mode == "validate" and env == "prod":
-            raise ValueError("Production cannot validate a frozen candidate instead of enforcing the active contract.")
-        if mode == "validate" or selection.get("contract_id"):
-            overrides[table_id] = {"contract_id": selection.get("contract_id"), "contract_version": selection.get("contract_version")}
-        if mode == "validate" and not all(overrides[table_id].values()):
-            raise ValueError("Validate requires an exact frozen contract_id and contract_version.")
-    context["data_contract_overrides"] = overrides
-    for table_id in dict.fromkeys(table_ids):
+def prepare_pipeline_execution(table_ids, *, execution_plan, spark_session=None):
+    """Validate explicit run authority and reuse its frozen contract snapshots."""
+    if not isinstance(execution_plan, PipelineExecutionPlan):
+        raise ValueError("An explicit PipelineExecutionPlan is required for every Read and Write.")
+    plan = execution_plan
+    config, env, runtime = resolve_fabric_context(context=plan.runtime_context)
+    if env != plan.environment or str(runtime.get("notebook_id") or "") != plan.notebook_id:
+        raise ValueError("Execution plan environment or notebook identity changed; create a new plan.")
+    identities = json.loads(plan.participants_json)
+    if set(table_ids) - set(identities):
+        raise ValueError("Every Read/Write table must participate in the execution plan.")
+    context = {**runtime, "config": config, "env": env, "execution_plan": plan,
+               "_pipeline_contracts": json.loads(plan.contracts_json),
+               "_pipeline_rules": {}, "_pipeline_identities": identities}
+    context.pop("data_contract_overrides", None)
+    if plan.permits_persistence:
+        for table_id, selected in context["_pipeline_contracts"].items():
+            active_contract = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=False)
+            if (active_contract is None) != (selected is None) or (active_contract is not None and any(
+                active_contract[key] != selected[key] for key in ("contract_id", "contract_version", "contract_payload_json")
+            )):
+                raise ValueError("Active contract changed after plan creation; create a new execution plan.")
+    for table_id in identities:
         load_table_guardrail_rules(config, env, table_id=table_id, spark_session=spark_session, context=context)
     return context
+
+
+def tested_contract_identities(context, table_ids):
+    """Describe exact immutable versions covered by this diagnostic relationship."""
+    return {
+        table_id: {"contract_id": contract["contract_id"], "contract_version": contract["contract_version"],
+                   "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest()}
+        for table_id in table_ids
+        if (contract := context["_pipeline_contracts"].get(table_id)) is not None
+    }
+
+
+def source_guardrail_results(context, sources):
+    """Enforce each configured Read rule before consuming its source in Write.
+
+    No Contract, empty rule lists and disabled checks impose no requirement.
+    Results must belong to this plan and exact frozen rule revision; a caught
+    failed Read cannot authorize publication using an earlier successful result.
+    """
+    plan = context["execution_plan"]
+    outcomes = []
+    for source in sources:
+        table_id = source["table_id"]
+        contract = context["_pipeline_contracts"].get(table_id)
+        if contract is None:
+            continue
+        for rule in context["_pipeline_rules"].get(table_id, []):
+            kind = rule["guardrail_type"]
+            if kind not in {"schema", "grain", "freshness", "data_quality"}:
+                continue
+            if kind == "freshness" and rule.get("rule_type") == "skip":
+                continue
+            def matches(row):
+                if kind == "grain":
+                    try:
+                        scope = json.loads(row.get("result_payload_json") or "{}").get("validation_scope")
+                    except (TypeError, ValueError, AttributeError):
+                        return False
+                    if scope not in {"read_full", "read_incremental_batch"}:
+                        return False
+                return all(row.get(key) == value for key, value in {
+                    "table_id": table_id, "contract_id": contract["contract_id"],
+                    "contract_version": contract["contract_version"], "guardrail_type": kind,
+                    "guardrail_rule_id": rule["guardrail_rule_id"],
+                    "guardrail_version": rule.get("guardrail_version", 1),
+                }.items())
+            saved = [row for row in source.get("guardrail_outcomes", []) if matches(row)]
+            current = [row for row in plan.results if matches(row)]
+            def permits(rows):
+                if not rows:
+                    return False
+                latest = max(metadata_timestamp_sort_key(row.get("_committed_at")) for row in rows)
+                return all(row.get("can_continue") is True and str(row.get("status")).lower() in {
+                    "passed", "pass", "warning", "warn", "baseline_created"
+                } for row in rows if metadata_timestamp_sort_key(row.get("_committed_at")) == latest)
+            allowed = permits(saved) and permits(current)
+            outcome = {"table_id": table_id, "guardrail_rule_id": rule["guardrail_rule_id"],
+                       "guardrail_type": kind, "action": rule.get("action"), "can_continue": allowed,
+                       "status": ("warning" if any(str(row.get("status")).lower() in {"warn", "warning"}
+                                                  for row in saved) else "passed") if allowed else "blocked"}
+            outcomes.append(outcome)
+            if not allowed and plan.permits_persistence:
+                raise RuntimeError(f"Source {table_id!r} configured {kind} Guardrail has no successful Read result for this plan and contract revision.")
+    return outcomes
 
 
 def pipeline_guardrail_types(context, table_id):
@@ -2318,7 +2452,7 @@ def print_pipeline_contract(context, table_id, *, operation, guardrails, verbose
         return
     contract = context["_pipeline_contracts"].get(table_id)
     if contract is None and any(context["_pipeline_contracts"].values()):
-        print("No target Data Contract selected; checking participating Guardrails and contract coverage.")
+        print("No target Data Contract selected; enforcing configured source Guardrails.")
     elif contract is None:
         print(f"No Data Contract selected; no Guardrails. Continuing with {operation.title()}.")
     elif guardrails:
@@ -2335,24 +2469,11 @@ def resolve_pipeline_data_contract(
     spark_session=None,
     context: Mapping[str, Any] | None = None,
 ) -> dict[str, Any] | None:
-    """Resolve the pipeline-selected contract, or no contract in Development."""
+    """Resolve the explicit plan snapshot, or active authority for an internal check."""
     cache = (context or {}).get("_pipeline_contracts")
     if cache is not None and table_id in cache:
         return cache[table_id]
-    if env == "prod":
-        contract = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=True)
-    else:
-        overrides = (context or {}).get("data_contract_overrides") or {}
-        if not isinstance(overrides, Mapping):
-            raise ValueError("data_contract_overrides must be a mapping keyed by canonical table_id.")
-        selected = overrides.get(table_id) or {}
-        if not isinstance(selected, Mapping):
-            raise ValueError(f"Development Data Contract override for {table_id!r} must be a mapping.")
-        contract_id = str(selected.get("contract_id") or "").strip()
-        version = selected.get("contract_version")
-        if bool(contract_id) != bool(str(version or "").strip()):
-            raise ValueError(f"Development Data Contract override for table_id {table_id!r} requires both contract_id and contract_version.")
-        contract = resolve_data_contract_version(config, env, table_id, contract_id, version, spark_session=spark_session, context=context) if contract_id else None
+    contract = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=False)
     if cache is not None:
         cache[table_id] = contract
     return contract
@@ -2389,11 +2510,11 @@ def resolve_catalogue_table_id(
     identities = sorted(set(value for value in matches if value))
     if not identities:
         raise ValueError(
-            f"No active Catalogue table matches Production runtime table {table_name!r}; "
+            f"No active Catalogue table matches runtime table {table_name!r}; "
             "profile and register the table before enforcing its Data Contract."
         )
     if len(identities) > 1:
-        raise RuntimeError(f"Catalogue integrity error: Production runtime table {table_name!r} resolves to multiple table_id values.")
+        raise RuntimeError(f"Catalogue integrity error: runtime table {table_name!r} resolves to multiple table_id values.")
     return identities[0]
 
 
@@ -2709,7 +2830,7 @@ def resolve_table_processing_definition(
         return {
             **governed,
             "source": "data_contract",
-            "processing_mode": "production_enforcement" if env == "prod" else "development_validation",
+            "processing_mode": "contract_governed",
             "authored_processing": authored,
             "governed_processing": governed,
             "contract_id": contract["contract_id"],
@@ -2718,11 +2839,11 @@ def resolve_table_processing_definition(
             "owner_notebook_name": str(writer.get("notebook_name") or "").strip(),
         }
     if authored_processing is None:
-        raise ValueError("Development current authoring requires an authored processing definition.")
+        raise ValueError("Explicit No Contract processing requires an authored processing definition.")
     return {
         **authored,
         "source": "current_authoring",
-        "processing_mode": "development_authoring",
+        "processing_mode": "uncontracted",
         "authored_processing": authored,
         "governed_processing": None,
     }
@@ -2782,6 +2903,32 @@ def add_target_audit_fields(df, audit_fields: Mapping[str, Any]):
     return result
 
 
+def validate_processing_input(dataframe, processing):
+    """Evaluate common strategy input checks without staging or publication."""
+    definition = validated_processing(dict(processing))
+    strategy = definition["load_strategy"]
+    columns = list(getattr(dataframe, "columns", ()))
+    if not columns or len(columns) != len(set(columns)):
+        raise ValueError("Prepared input must have unique named columns.")
+    if strategy not in {"scd1", "scd2"}:
+        return
+    from pyspark.sql import functions as F
+
+    keys = list(definition["key_columns"])
+    if len(columns) != len(set(columns)) or set(keys) - set(columns):
+        raise ValueError("SCD input must have unique named columns and all business keys.")
+    if dataframe.where(reduce(lambda a, b: a | b, [F.col(key).isNull() for key in keys])).limit(1).count():
+        raise ValueError("Incoming target scope contains null business keys.")
+    if dataframe.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count():
+        raise ValueError("Incoming target scope contains duplicate business keys.")
+    if strategy == "scd2":
+        if definition["effective_column"] not in columns:
+            raise ValueError("SCD2 input is missing its effective_column.")
+        resolve_scd2_tracked_columns(columns, definition)
+    else:
+        resolve_scd1_business_columns(columns, keys)
+
+
 def execute_lakehouse_processing(
     df,
     *,
@@ -2815,11 +2962,7 @@ def execute_lakehouse_processing(
 
     _store, _table, _schema, path = resolve_configured_lakehouse_table(store, table_name, schema, context=context)
     keys = list(processing["key_columns"])
-    if persisted_df.where(reduce(lambda a, b: a | b, [F.col(key).isNull() for key in keys])).limit(1).count():
-        raise ValueError("Incoming target scope contains null business keys.")
-    duplicate = persisted_df.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count()
-    if duplicate:
-        raise ValueError("Incoming target scope contains duplicate business keys.")
+    validate_processing_input(persisted_df, processing)
     if not DeltaTable.isDeltaTable(df.sparkSession, path):
         write_lakehouse_table(persisted_df, table_name, store=store, schema=schema, mode="overwrite", context=context)
         return
@@ -3976,7 +4119,6 @@ def check_dq_runtime(
     rules_df: Any = None,
     contract_id: str = "",
     contract_version: int = 0,
-    execution_type: str = "enforce",
     diagnostics: str = "sample",
 ) -> dict[str, Any]:
     """Evaluate native Spark DQ flags, persist rule summaries, and return details.
@@ -3987,8 +4129,8 @@ def check_dq_runtime(
     diagnostics are an explicit lazy output; none returns no examples. No rows
     are dropped. Unrelated source columns are excluded from sampled examples.
     """
-    if execution_type not in {"enforce", "validate"}:
-        raise ValueError("execution_type must be 'enforce' or 'validate'.")
+    plan = (context or {}).get("execution_plan")
+    execution_mode = plan.execution_mode if plan is not None else "live"
     if diagnostics not in {"none", "sample", "full"}:
         raise ValueError("diagnostics must be 'none', 'sample', or 'full'.")
     spark_session = getattr(dataframe, "sparkSession", None)
@@ -4055,7 +4197,7 @@ def check_dq_runtime(
             "table_id": table_id,
             "contract_id": str(contract_id or ""),
             "contract_version": int(contract_version or 0),
-            "execution_type": execution_type,
+            "execution_type": execution_mode,
             "result_id": str(uuid4()),
             "run_id": resolved_run_id,
             "rule_key": rule["rule_key"],
@@ -4075,12 +4217,16 @@ def check_dq_runtime(
             "result_payload_json": json.dumps(check, default=str, sort_keys=True),
             **audit,
         })
-    context = {"config": config, "env": env}
-    write_lakehouse_table(
-        spark_session.createDataFrame([coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows]),
-        "METADATA_GUARDRAIL_RESULTS", store="Metadata",
-        schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_RESULTS"), context=context, mode="append",
-    )
+    plan = (context or {}).get("execution_plan")
+    if plan is not None:
+        plan.results.extend(summary_rows)
+    if persistence_permitted(context):
+        write_lakehouse_table(
+            spark_session.createDataFrame([coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows]),
+            "METADATA_GUARDRAIL_RESULTS", store="Metadata",
+            schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_RESULTS"),
+            context=context or {"config": config, "env": env}, mode="append",
+        )
 
     if diagnostics == "full":
         result["failed_values"] = _dq_failed_values_dataframe(
@@ -4804,10 +4950,12 @@ def capture_source_observation(
     dataframe: Any = None,
     incremental_columns: tuple[str, str] | None = None,
     source_identity: Mapping[str, Any] | None = None,
+    context=None,
+    spark_session=None,
 ) -> Any:
     """Capture independently configured current-run source Guardrail evidence."""
-    config, env, context = resolve_fabric_context()
-    spark = get_spark_session()
+    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+    spark = spark_session if spark_session is not None else get_spark_session()
     # An explicit physical source identity does not require Catalogue activation.
     # Revalidate it against this environment rather than trusting global cache state.
     governed_source = (

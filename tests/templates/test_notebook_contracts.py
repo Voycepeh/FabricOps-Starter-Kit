@@ -160,7 +160,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     assert 'store="Metadata"' not in source
     assert 'TABLE_ID = table_selection["table_id"]' not in source
     assert source.count("widget_data_contract(spark_session=spark)") == 1
-    assert source.count("widget_activate_data_contract(spark_session=spark)") == 1
+    assert source.count("widget_activate_data_contract(testing_results=testing_reports, spark_session=spark)") == 1
     assert "Data Steward" in source
     assert "Data Agreement" in source
     assert "**Table**, **Columns**, and **Review**" in source
@@ -206,13 +206,13 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "freezing does not activate" in normalized["step_3"]
     assert "immutable data contract" in normalized["step_3"]
 
-    assert "# step 4. validate the frozen data contract" in normalized["step_4"]
-    assert "select the exact frozen candidate version" in normalized["step_4"]
-    assert "same `02A_full_refresh_demo` notebook" in step_4
-    assert "do not edit a frozen version in place" in normalized["step_4"]
-    assert "defaults every table to **enforce**" in normalized["step_4"]
-    assert "the physical write stage was not reached" in normalized["step_4"]
-    assert "is never reached" in normalized["step_4"]
+    assert "# step 4. test the frozen data contracts" in normalized["step_4"]
+    assert "select an eligible frozen version independently" in normalized["step_4"]
+    assert "02A_full_refresh_demo.ipynb" in step_4
+    assert "selection does not edit or activate" in normalized["step_4"]
+    assert "pipeline-wide switch in red **testing**" in normalized["step_4"]
+    assert "no publication occurred" in normalized["step_4"]
+    assert "zero persistent changes" in normalized["step_4"]
 
     assert "# step 5. activate the data contract and promote to production" in normalized["step_5"]
     assert "link the data agreement" in normalized["step_5"]
@@ -222,7 +222,7 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
 
     assert "# step 6. run the pipeline in production" in normalized["step_6"]
     assert "same tested workflow in the production environment" in normalized["step_6"]
-    assert "production automatically resolves the single active data contract" in normalized["step_6"]
+    assert "**live** requires the active frozen data contract" in normalized["step_6"]
     assert "read → transform → write" in normalized["step_6"]
 
     lifecycle_steps = (
@@ -277,13 +277,13 @@ def test_02_pipeline_is_a_small_reusable_scaffold():
     source = _notebook_source("02_pipeline.ipynb")
     headings = (
         "# 0. Environment",
-        "# 1. Data Contract",
+        "# 1. Pipeline Data Contracts",
         "# 2. Read",
         "# 3. PySpark Transform",
         "# 4. Write",
     )
     assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
-    assert source.count("widget_select_data_contract(spark_session=spark)") == 1
+    assert source.count("widget_select_data_contract(") == 1
     code_source = "\n".join(source for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
     assert code_source.count("orchestrate_read(") == 1
     assert code_source.count("orchestrate_write(") == 1
@@ -358,7 +358,6 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
         "sensitive_result",
         "source_drift_results",
         "dq_result",
-        "coverage_result",
         "orchestration_stages",
     }
     for path in paths:
@@ -498,10 +497,10 @@ def test_guided_demo_preserves_initial_unselected_flow_and_optional_target_valid
     step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
 
     assert "there is no Data Contract yet" in step_2a
-    assert "leave the selection unchanged" in step_2a
-    assert "one contract-free decision" in step_2a
+    assert "explicitly select **No Contract**" in step_2a
+    assert "one explicit No Contract decision" in step_2a
     assert "skipped check fields remain in the returned dictionaries" in step_2a
     assert "individual Guardrail stages are omitted" in step_2a
-    assert "leave every source table in **Enforce** mode" in step_4
-    assert "choose **Validate** only for the target" in step_4
-    assert "Validate returns `published=False` and `validation_passed=True`" in step_4
+    assert "pipeline-wide switch in red **Testing**" in step_4
+    assert "every source and target" in step_4
+    assert "`validation_passed=True`" in step_4 and "`published=False`" in step_4

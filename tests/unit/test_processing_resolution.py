@@ -47,12 +47,12 @@ def catalogue(strategy="overwrite"):
 def test_development_uses_current_notebook_authoring_without_catalogue(monkeypatch):
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *args, **kwargs: pytest.fail("Catalogue read"))
     resolved = shared.resolve_table_processing_definition(
-        object(), "dev", "students", authored_processing={"load_strategy": "overwrite"}
+        object(), "dev", "students", context={"_pipeline_contracts": {"students": None}}, authored_processing={"load_strategy": "overwrite"}
     )
     assert resolved == {
         "load_strategy": "overwrite",
         "source": "current_authoring",
-        "processing_mode": "development_authoring",
+        "processing_mode": "uncontracted",
         "authored_processing": {"load_strategy": "overwrite"},
         "governed_processing": None,
     }
@@ -62,13 +62,13 @@ def test_development_override_uses_frozen_contract(monkeypatch):
     monkeypatch.setattr(shared, "resolve_data_contract_version", lambda *args, **kwargs: contract())
     resolved = shared.resolve_table_processing_definition(
         object(), "dev", "students",
-        context={"data_contract_overrides": {"students": {"contract_id": "contract", "contract_version": 3}}},
+        context={"_pipeline_contracts": {"students": contract()}},
         authored_processing={"load_strategy": "scd1", "key_columns": ["student_id"]},
     )
     assert resolved["load_strategy"] == "scd1"
     assert resolved["source"] == "data_contract"
     assert resolved["contract_version"] == 3
-    assert resolved["processing_mode"] == "development_validation"
+    assert resolved["processing_mode"] == "contract_governed"
     assert resolved["authored_processing"] == resolved["governed_processing"]
 
 
@@ -84,14 +84,14 @@ def test_development_override_rejects_engineering_processing_drift(monkeypatch, 
     with pytest.raises(ValueError, match="Processing mismatch detected.*Engineering proposes"):
         shared.resolve_table_processing_definition(
             object(), "dev", "students",
-            context={"data_contract_overrides": {"students": {"contract_id": "contract", "contract_version": 3}}},
+            context={"_pipeline_contracts": {"students": contract()}},
             authored_processing=authored,
         )
 
 
 def test_development_current_authoring_requires_notebook_definition():
     with pytest.raises(ValueError, match="authored processing"):
-        shared.resolve_table_processing_definition(object(), "dev", "students")
+        shared.resolve_table_processing_definition(object(), "dev", "students", context={"_pipeline_contracts": {"students": None}})
 
 
 def test_production_uses_active_contract_and_never_reads_catalogue(monkeypatch):
@@ -103,7 +103,7 @@ def test_production_uses_active_contract_and_never_reads_catalogue(monkeypatch):
     )
     assert resolved["load_strategy"] == "scd1"
     assert resolved["owner_notebook_id"] == "notebook-1"
-    assert resolved["processing_mode"] == "production_enforcement"
+    assert resolved["processing_mode"] == "contract_governed"
 
 
 def test_production_missing_active_contract_fails(monkeypatch):

@@ -19,14 +19,29 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="data-agreement">
 <summary><strong>Data Agreement</strong> — A versioned agreement between provider and recipient Data Stewards that defines why data may be shared and used.</summary>
-<p>In FabricOps, a Data Agreement records the provider and recipient Data Stewards, purpose, approved uses, validity, and supporting governance context. An activated Data Contract links to the exact Data Agreement version that authorizes Production use.</p>
+<p>In FabricOps, a Data Agreement records the provider and recipient Data Stewards, purpose, approved uses, validity, and supporting governance context. An activated Data Contract links to the exact Data Agreement version that authorizes Live use.</p>
 <p><strong>Also known as:</strong> data agreements</p>
 </details>
 
 <details id="data-contract">
 <summary><strong>Data Contract</strong> — A versioned set of governed expectations for one table.</summary>
-<p>A FabricOps Data Contract is authored for one table_id. A frozen version captures its schema, processing settings, enrichment, and guardrails. After validation, that exact version can be activated for Production and linked to a Data Agreement version.</p>
+<p>A FabricOps Data Contract is authored for one canonical table_id. Its immutable frozen payload defines Schema, processing, Enrichment and Guardrails. Testing may select eligible frozen candidates; Live enforces the active frozen version wherever one exists. Activation is a separate Governance review linked to an exact Data Agreement version.</p>
 <p><strong>Also known as:</strong> data contracts</p>
+</details>
+
+<details id="pipeline-execution-plan">
+<summary><strong>pipeline execution plan</strong> — The validated execution decisions shared by every Read and Write in one pipeline run.</summary>
+<p>A pipeline execution plan freezes the Testing or Live mode, environment and notebook identity, explicit source and target identities, exact frozen contract selections and explicit No Contract choices. All participating Read and Write calls consume the same plan. Diagnostic results are retained separately in its in-memory journal.</p>
+</details>
+
+<details id="testing">
+<summary><strong>Testing</strong> — The pipeline-wide mode that evaluates real data and prepared processing without durable mutations.</summary>
+<p>Testing evaluates the configured pipeline and eligible frozen Data Contracts, returns rule diagnostics and supported processing dry-run outcomes, and never publishes data or persists metadata, mappings, checkpoints, staging or activation evidence. It cannot verify real publication permissions, target transactions or cross-store finalization.</p>
+</details>
+
+<details id="live">
+<summary><strong>Live</strong> — The deliberate pipeline-wide mode that permits governed publication and operational metadata commits.</summary>
+<p>Live requires the active frozen Data Contract wherever one exists, enforces Guardrails, processing and ownership, and publishes only when continuation is permitted. Explicit No Contract can bootstrap when no active version is bypassed. Publication and metadata commits retain their separate lifecycle and recovery boundaries across Fabric stores.</p>
 </details>
 
 <details id="enrichment">
@@ -37,13 +52,13 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="guardrails">
 <summary><strong>Guardrails</strong> — Versioned rules that FabricOps checks during governed pipeline execution.</summary>
-<p>FabricOps Guardrails are executable definitions inside METADATA_DATA_CONTRACT.contract_payload_json for an exact version. Source contracts support five Guardrails: Schema, Grain, Freshness, Source Drift, and Data Quality. Target contracts support four: Schema, Grain, Data Quality, and Sensitive Data treatment. orchestrate_read runs four checks: Freshness, Schema, Grain, and Data Quality. orchestrate_write runs five checks: Schema, Sensitive Data, Source Drift on participating sources, Grain, and Data Quality, followed by Guardrail Coverage before publication. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Grain, Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.</p>
+<p>FabricOps Guardrails are executable definitions inside METADATA_DATA_CONTRACT.contract_payload_json for an exact version. Source contracts support five Guardrails: Schema, Grain, Freshness, Source Drift, and Data Quality. Target contracts support four: Schema, Grain, Data Quality, and Sensitive Data treatment. orchestrate_read runs four checks: Freshness, Schema, Grain, and Data Quality. orchestrate_write runs five checks: Schema, Sensitive Data, Source Drift on participating sources, Grain, and Data Quality before publication. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Grain, Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.</p>
 <p><strong>Also known as:</strong> guardrail</p>
 </details>
 
 <details id="enforcement">
 <summary><strong>Enforcement</strong> — Evaluating active Guardrails during a pipeline run and applying their configured action.</summary>
-<p>FabricOps orchestrate_read() and orchestrate_write() resolve the selected Data Contract and run its Guardrails at the relevant boundary. Schema violations and Sensitive Data treatment failures block; Grain, Freshness, Source Drift, and Data Quality follow their saved Warn or Block action. Guardrail Coverage gates publication.</p>
+<p>FabricOps orchestrate_read() and orchestrate_write() resolve the selected Data Contract and run its Guardrails at the relevant boundary. Schema violations and Sensitive Data treatment failures block; Grain, Freshness, Source Drift, and Data Quality follow their saved Warn or Block action. Live stops when an applicable configured Guardrail blocks or cannot execute; disabled optional checks do not impose additional requirements.</p>
 <p><strong>Also known as:</strong> runtime enforcement, enforce</p>
 </details>
 
@@ -88,7 +103,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="writer-ownership">
 <summary><strong>Writer Ownership</strong> — The rule that one governed target table_id has one owning notebook writer.</summary>
-<p>FabricOps records the logical writer notebook for a governed target. Production rejects a conflicting writer so independent pipelines do not write the same governed table with different assumptions.</p>
+<p>FabricOps records the logical writer notebook for a governed target. Pipeline execution rejects a conflicting writer so independent pipelines do not write the same governed table with different assumptions.</p>
 <p><strong>Also known as:</strong> single writer</p>
 </details>
 
@@ -124,13 +139,8 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="contract-status">
 <summary><strong>Contract Status</strong> — The lifecycle state of a Data Contract version: Draft, Frozen, or Activated.</summary>
-<p>A Draft can be edited, a Frozen version is immutable and ready for validation, and an Activated frozen version is approved for Production use and linked to a Data Agreement version.</p>
+<p>A Draft can be edited, a Frozen version is immutable and ready for validation, and an Activated frozen version is approved for Live use and linked to a Data Agreement version.</p>
 <p><strong>Also known as:</strong> Draft, Frozen, Activated</p>
-</details>
-
-<details id="guardrail-coverage">
-<summary><strong>Guardrail Coverage</strong> — A write-side check that confirms required governed expectations are present before publishing a target.</summary>
-<p>FabricOps checks Guardrail Coverage before the target write so required contract protections are not silently omitted from the governed pipeline.</p>
 </details>
 
 <details id="business-rule">

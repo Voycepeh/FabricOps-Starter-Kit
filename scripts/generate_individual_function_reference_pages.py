@@ -185,7 +185,7 @@ METADATA_FIELD_DESCRIPTIONS = {
     "superseded_by_rule_key": "Rule key that supersedes the current guardrail row.",
     "supersedes_rule_id": "Rule identifier superseded by the current row.",
     "guardrail_result_id": "Stable identifier for the aggregate Guardrail result row.",
-    "execution_type": "Whether the runtime record came from enforce or validate contract execution. Completed pipeline-validation records use validate and require all checks plus Guardrail Coverage to pass.",
+    "execution_type": "Whether the runtime record came from Testing or Live contract execution. Testing results remain in memory; Live appends Guardrail Results. Historical validate records remain readable.",
     "result_id": "Stable identifier for the runtime result payload.",
     "reason": "Human-readable reason recorded for the Guardrail outcome.",
     "expected_value_json": "Serialized expected value payload for the guardrail outcome.",
@@ -5448,7 +5448,7 @@ def main() -> None:
             "title": "Standard Orchestration",
             "note": "Recommended",
             "description": "Complete governed read and write lifecycle for the standard FabricOps pipeline.",
-            "functions": {"orchestrate_read", "orchestrate_write"},
+            "functions": {"orchestrate_read", "orchestrate_write", "create_pipeline_execution_plan"},
             "open": True,
         },
         {

@@ -308,6 +308,12 @@ def validate_contract_definitions(
     configuration but are not executed. Grain may keep an empty key selection
     only while disabled.
     """
+    obsolete = {"coverage_gate", "coverage_policy", "coverage_gate_policy", "guardrail_coverage"}
+    definitions = [payload, payload.get("table")]
+    if isinstance(payload.get("guardrails"), list):
+        definitions.extend(payload["guardrails"])
+    if any(isinstance(definition, dict) and obsolete.intersection(definition) for definition in definitions):
+        raise ValueError("Legacy Coverage Gate configuration requires migration: author required protections as Guardrails in a new draft, remove Coverage Gate settings, then freeze, test and activate the new version. Frozen payloads must not be edited.")
     enrichment = payload.get("enrichment")
     if not isinstance(enrichment, dict):
         raise ValueError("Data Contract enrichment must be an object with table and columns lists.")
@@ -1143,10 +1149,12 @@ def _contract_activation_changes(
         {
             "contract_id": row["contract_id"],
             "contract_version": int(row["contract_version"]),
+            "environment_name": row["environment_name"],
             "is_active": False,
         }
         for row in rows
         if str(row.get("table_id") or "") == str(selected.get("table_id") or "")
+        and row.get("environment_name") == selected.get("environment_name")
         and row.get("is_active") is True
         and (str(row.get("contract_id")), int(row.get("contract_version") or 0))
         != (str(selected.get("contract_id")), int(selected.get("contract_version") or 0))
@@ -1155,6 +1163,7 @@ def _contract_activation_changes(
         changes.append({
             "contract_id": selected["contract_id"],
             "contract_version": int(selected["contract_version"]),
+            "environment_name": selected["environment_name"],
             "is_active": True,
             "agreement_id": agreement_id,
             "agreement_version": agreement_version,
@@ -1167,7 +1176,7 @@ def activate_contract_version(
     agreement_id: str, agreement_version: str, store: str = "Metadata",
     schema: str | None = None, spark_session: Any = None, context: Any = None,
 ) -> dict[str, Any]:
-    """Tag one frozen contract version as the active Production definition."""
+    """Tag one frozen contract version as active in the configured environment."""
     from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table
 
     agreement_id, agreement_version = str(agreement_id or "").strip(), str(agreement_version or "").strip()
@@ -1176,6 +1185,7 @@ def activate_contract_version(
     rows = row_dicts(read_lakehouse_table(
         DATA_CONTRACT_TABLE, store=store, schema=schema, spark_session=spark_session, context=context,
     ))
+    rows = [row for row in rows if str(row.get("environment_name") or "") == str(env)]
     selected = [
         row for row in rows
         if str(row.get("contract_id") or "") == contract_id
@@ -1183,6 +1193,8 @@ def activate_contract_version(
     ]
     if not selected:
         raise ValueError("Selected Data Contract version does not exist.")
+    if len(selected) != 1:
+        raise RuntimeError("Selected Data Contract version has duplicate environment-scoped rows.")
     row = selected[0]
     if str(row.get("table_id") or "") != table_id:
         raise ValueError("Selected Data Contract version does not belong to the selected table_id.")
@@ -1237,7 +1249,8 @@ def activate_contract_version(
         .merge(
             source.alias("source"),
             "target.contract_id = source.contract_id "
-            "AND target.contract_version = source.contract_version",
+            "AND target.contract_version = source.contract_version "
+            "AND target.environment_name = source.environment_name",
         )
         .whenMatchedUpdate(
             set={

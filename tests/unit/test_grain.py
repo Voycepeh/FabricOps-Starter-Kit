@@ -8,7 +8,7 @@ import pytest
 
 from fabricops_kit.data_contract import shared as contracts
 from fabricops_kit.pipeline.shared import contract_guardrail_rows, grain_check_core
-from tests.unit.test_contract_orchestration import contract_runtime as grain_runtime
+from tests.unit.test_contract_orchestration import runtime as grain_runtime, SOURCE_ID, TARGET_ID, frozen, read, write
 
 
 @pytest.fixture
@@ -72,118 +72,11 @@ def test_assembled_frozen_runtime_round_trip(active):
         assert json.loads(runtime[0]["rule_parameters_json"]) == {"columns": ["id", "version"]}
 
 
-def _grain_contract(runtime, action="Block", active=True):
-    _selection, _context, payload, frozen, _writes, _reads = runtime
-    rule = _rule(["id"], action=action, active=active)
-    rule["rule_parameters"] = json.loads(rule.pop("rule_parameters_json"))
-    payload["guardrails"] = [rule]
-    frozen["contract_payload_json"] = json.dumps(payload)
-
-
-@pytest.mark.parametrize("strategy", ["overwrite", "append", "scd1", "scd2"])
-@pytest.mark.parametrize("action,active", [("Block", False), ("Warn", True), ("Block", True)])
-def test_write_grain_independent_of_dq_and_continuation(contract_runtime, spark_session, monkeypatch, strategy, action, active):
-    """Every strategy validates prepared input, records exact-version results, and gates continuation."""
-    selection, _context, payload, frozen, writes, _reads = contract_runtime
-    _grain_contract(contract_runtime, action, active)
-    parameters = {"key_columns": ["id"]} if strategy in {"scd1", "scd2"} else {}
-    if strategy == "scd2":
-        parameters["effective_column"] = "id"
-    payload["table"]["processing"] = {"load_strategy": strategy, **parameters}
-    frozen["contract_payload_json"] = json.dumps(payload)
-    module = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
-    coverage = Mock(return_value={"status": "passed", "can_continue": True})
-    monkeypatch.setattr(module, "check_guardrail_coverage", coverage)
-    frame = spark_session.createDataFrame([(1, "a"), (1, "b")], ["id", "email"])
-    args = dict(dataframe=frame, sources=[], store="Silver", schema="dbo", table_name="target", write_mode=strategy, write_parameters=parameters, contracts=selection, spark_session=spark_session, verbose=False)
-    if active and action == "Block":
-        with pytest.raises(RuntimeError, match="during Grain"):
-            module.orchestrate_write(**args)
-        coverage.assert_not_called()
-    else:
-        result = module.orchestrate_write(**args)
-        assert result["grain_result"]["status"] == ("warning" if active else "skipped")
-        assert result["dq_result"]["status"] == "skipped"
-        coverage.assert_called_once()
-    assert len(writes) == int(active)
-    if active:
-        assert writes[0]["guardrail_type"] == "grain"
-        assert writes[0]["execution_type"] == "validate"
-        assert writes[0]["contract_id"] == "contract-target"
-        assert writes[0]["contract_version"] == 2
-        assert json.loads(writes[0]["result_payload_json"])["validation_scope"] == "write_prepared_input"
-
-
-@pytest.mark.parametrize("read_mode", ["full", "incremental"])
-@pytest.mark.parametrize("action", ["Warn", "Block"])
-def test_read_grain_gates_profile_and_return(contract_runtime, spark_session, monkeypatch, read_mode, action):
-    """Read records Grain evidence and stops before Profile on Block."""
-    _grain_contract(contract_runtime, action)
-    contract_runtime[1]["data_contract_overrides"]["target"] = {"contract_id": "contract-target", "contract_version": 2}
-    module = importlib.import_module("fabricops_kit.pipeline.orchestrate_read")
-    frame = spark_session.createDataFrame([(1,), (1,)], ["id"])
-    monkeypatch.setattr(module, "pipeline_read", lambda **_kw: {"table_id": "target", "dataframe": frame})
-    profile = Mock(return_value={"row_count": 2})
-    monkeypatch.setattr(module, "profile_table", profile)
-    if action == "Block":
-        with pytest.raises(RuntimeError, match="during Grain"):
-            module.orchestrate_read(store="Silver", schema="dbo", table_name="target", read_mode=read_mode, spark_session=spark_session, verbose=False)
-        profile.assert_not_called()
-    else:
-        result = module.orchestrate_read(store="Silver", schema="dbo", table_name="target", read_mode=read_mode, spark_session=spark_session, verbose=False)
-        assert result["grain_result"]["validation_scope"] == ("read_full" if read_mode == "full" else "read_incremental_batch")
-        assert result["dq_result"]["status"] == "skipped"
-        assert profile.call_count == int(read_mode == "full")
-
-
 def test_scd2_history_uses_version_aware_grain(spark_session):
     """History repeats business keys; Grain never rewrites strategy keys or filters history."""
     history = spark_session.createDataFrame([(1, 1), (1, 2), (2, 1)], ["id", "version"])
     assert grain_check_core(history, _rule(), scope="read_full")["status"] == "passed"
     assert grain_check_core(history, _rule(["id"]), scope="read_full")["status"] == "failed"
-
-
-@pytest.mark.parametrize("action", ["Warn", "Block"])
-def test_enforced_write_continuation(contract_runtime, spark_session, monkeypatch, action):
-    """Warn reaches Write; Block stops publication after recording the Grain outcome."""
-    _grain_contract(contract_runtime, action)
-    selection, _context, _payload, frozen, writes, _reads = contract_runtime
-    frozen["is_active"] = True
-    selection["tables"]["target"]["mode"] = "enforce"
-    module = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
-    publish = Mock(return_value={"table_id": "target", "strategy": "append"})
-    monkeypatch.setattr(module, "pipeline_write", publish)
-    monkeypatch.setattr(module, "profile_table", Mock(return_value={"row_count": 2}))
-    monkeypatch.setattr(module, "check_guardrail_coverage", Mock(return_value={"can_continue": True}))
-    frame = spark_session.createDataFrame([(1,), (1,)], ["id"])
-    args = dict(sources=[], store="Silver", schema="dbo", table_name="target", write_mode="append", contracts=selection, spark_session=spark_session, verbose=False)
-    if action == "Block":
-        with pytest.raises(RuntimeError, match="during Grain"):
-            module.orchestrate_write(frame, **args)
-        publish.assert_not_called()
-    else:
-        result = module.orchestrate_write(frame, **args)
-        assert result["grain_result"]["status"] == "warning"
-        publish.assert_called_once()
-    assert len(writes) == 1
-    assert writes[0]["execution_type"] == "enforce"
-
-
-def test_missing_prepared_key_records_failure_even_warn(contract_runtime, spark_session):
-    """A key removed by treatment cannot silently pass or produce empty success."""
-    _grain_contract(contract_runtime, "Warn")
-    selection, _context, payload, frozen, writes, _reads = contract_runtime
-    payload["guardrails"].append({"guardrail_rule_id": "remove-key", "guardrail_version": 1,
-        "guardrail_type": "sensitive_data", "rule_type": "remove", "column_id": "id-column",
-        "rule_parameters": {"scope": "column", "treatment": "remove"}, "action": "Block", "is_active": True})
-    frozen["contract_payload_json"] = json.dumps(payload)
-    module = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
-    frame = spark_session.createDataFrame([(1, "example")], "id long, email string")
-    with pytest.raises(RuntimeError, match="Grain key columns are missing"):
-        module.orchestrate_write(frame, sources=[], store="Silver", schema="dbo", table_name="target", write_mode="append", contracts=selection, spark_session=spark_session, verbose=False)
-    assert [row["guardrail_type"] for row in writes] == ["sensitive_data", "grain"]
-    assert writes[-1]["can_continue"] is False
-    assert writes[-1]["status"] == "failed"
 
 
 def test_incomplete_grain_preview_cannot_be_saved_frozen_or_enforced():
@@ -210,15 +103,34 @@ def test_incomplete_grain_preview_cannot_be_saved_frozen_or_enforced():
         contract_guardrail_rows({"contract_payload": preview}, environment_name="dev", table_id="t")
 
 
-def test_grain_only_validation_satisfies_exact_coverage(contract_runtime, spark_session):
-    """Persisted real Grain Results satisfy the tightened matcher without a coverage stub."""
-    _grain_contract(contract_runtime)
-    selection, _context, _payload, _frozen, writes, _reads = contract_runtime
+@pytest.mark.parametrize("mode,action", [("testing", "Block"), ("live", "Block"), ("live", "Warn")])
+def test_grain_plan_guardrails_and_continuation(contract_runtime, spark_session, monkeypatch, mode, action):
+    """Exact Grain outcomes govern Live continuation and remain in memory in Testing."""
+    make, rows, spies, _ = contract_runtime
+    rows.extend([frozen(SOURCE_ID, active=mode == "live"), frozen(TARGET_ID, active=mode == "live")])
+    payload = json.loads(rows[1]["contract_payload_json"])
+    rule = _rule(["id"], action=action)
+    rule["rule_parameters"] = json.loads(rule.pop("rule_parameters_json"))
+    payload["guardrails"] = [rule]
+    rows[1]["contract_payload_json"] = json.dumps(payload)
+    plan = make(mode, contracted=True)
+    source = read(plan, spark_session)
+    frame = spark_session.createDataFrame([(1,), (1,)], "id long")
+    # Grain is the actual evaluator; isolate downstream Fabric publication after Warn.
     module = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
-    frame = spark_session.createDataFrame([(1, "a"), (2, "b")], ["id", "email"])
-    result = module.orchestrate_write(frame, sources=[], store="Silver", schema="dbo", table_name="target", write_mode="overwrite", contracts=selection, spark_session=spark_session, verbose=False)
-    assert result["validation_passed"]
-    assert result["coverage_result"]["coverage"][0]["evaluated"]
-    assert result["coverage_result"]["coverage"][0]["guardrail_type"] == "grain"
-    assert len(writes) == 2 and writes[0]["contract_version"] == 2
-    assert writes[-1]["rule_type"] == "contract_validation"
+    publish = Mock(return_value={"table_id": TARGET_ID, "strategy": "overwrite"})
+    if mode == "live":
+        monkeypatch.setattr(module, "pipeline_write", publish)
+        monkeypatch.setattr(module, "profile_table", Mock(return_value={"row_count": 2}))
+    if mode == "live" and action == "Block":
+        with pytest.raises(RuntimeError, match="during Grain"):
+            write(plan, source, spark_session, dataframe=frame)
+        publish.assert_not_called()
+    else:
+        result = write(plan, source, spark_session, dataframe=frame)
+        assert result["grain_result"]["validation_scope"] == "write_prepared_input"
+        assert result["grain_result"]["can_continue"] is (action == "Warn")
+        assert result["published"] is (mode == "live")
+    assert any(row["guardrail_type"] == "grain" for row in plan.results)
+    if mode == "testing":
+        assert all(spy.call_count == 0 for spy in spies.values())

@@ -26,7 +26,6 @@ def check_sensitive_data(
     spark_session=None,
     verbose: bool = True,
     context=None,
-    execution_type="enforce",
 ) -> dict:
     """Evaluate the resolved contract stage and return its continuation decision."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
@@ -38,7 +37,7 @@ def check_sensitive_data(
             "dataframe": dataframe,
             "support_mapping": None,
             "checks": [],
-            "reason": "No Data Contract selected; Development only.",
+            "reason": "Explicit No Contract selected.",
         }
         print_guardrail_result(
             "Sensitive Data",
@@ -77,7 +76,7 @@ def check_sensitive_data(
         spark_session=spark_session,
         run_id=run_id,
         existing_mapping=existing_mapping,
-        execution_type=execution_type,
+
         context=context,
     )
     print_guardrail_result(

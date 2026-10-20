@@ -22,7 +22,7 @@ def test_governed_guardrail_public_signatures_are_relationship_safe() -> None:
         assert "enabled" not in parameters
         assert "raise_on_failure" not in parameters
         assert "context" in parameters
-        assert parameters["execution_type"].default == "enforce"
+        assert "execution_type" not in parameters
 
 
 def test_source_drift_resolves_source_processing(monkeypatch) -> None:
@@ -63,7 +63,6 @@ def test_source_drift_resolves_source_processing(monkeypatch) -> None:
             "source_processing": {"load_strategy": "append"},
             "spark_session": "spark",
             "context": {},
-            "execution_type": "enforce",
         }
     ]
     assert processing_table_ids == ["canonical-source-a"]

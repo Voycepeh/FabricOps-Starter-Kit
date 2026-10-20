@@ -92,7 +92,7 @@ def _resolve_requested_incremental_columns(
     contract: dict[str, Any] | None,
     read_parameters: dict[str, Any] | None,
 ) -> tuple[str, str]:
-    """Use notebook authoring in Development, with the selected contract authoritative."""
+    """Use explicit notebook authoring with the selected frozen contract authoritative."""
     if not read_parameters:
         return resolve_incremental_observation_columns(identity, contract)
     requested = read_parameters["watermark_column"].strip()
@@ -381,12 +381,12 @@ def pipeline_read(
                 table_id=str(identity["table_id"]),
                 dataframe=complete_dataframe,
                 incremental_columns=incremental_columns,
-                source_identity=identity,
+                source_identity=identity, context=context, spark_session=spark_session,
             )
             scope = resolve_incremental_source_scope(
                 source_table_id=str(identity["table_id"]),
                 target_table_id=str(canonical_target_id),
-                observation=observation,
+                observation=observation, context=context,
             )
             dataframe = _filter_lakehouse_incremental(complete_dataframe, scope)
         else:
@@ -397,12 +397,12 @@ def pipeline_read(
         observation = capture_source_observation(
             table_id=str(identity["table_id"]),
             incremental_columns=incremental_columns,
-            source_identity=identity,
+            source_identity=identity, context=context, spark_session=spark_session,
         )
         scope = resolve_incremental_source_scope(
             source_table_id=str(identity["table_id"]),
             target_table_id=str(canonical_target_id),
-            observation=observation,
+            observation=observation, context=context,
         )
         dataframe = read_warehouse_query(
             _warehouse_incremental_query(identity, scope),
@@ -421,7 +421,7 @@ def pipeline_read(
 
     if has_contract and observation is None:
         observation = capture_source_observation(
-            table_id=str(identity["table_id"]), dataframe=dataframe
+            table_id=str(identity["table_id"]), dataframe=dataframe, source_identity=identity, context=context, spark_session=spark_session
         )
         observation_label = (
             "captured current-run state"

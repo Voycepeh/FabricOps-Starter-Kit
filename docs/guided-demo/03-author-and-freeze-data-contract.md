@@ -22,7 +22,7 @@ Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the c
 
 ## Cover the whole pipeline, not only the target
 
-Step 4 validates the complete governed path, so every participating table needs a frozen contract:
+This walkthrough validates frozen contracts for every participating table in the governed path:
 
 </div>
 </div>
@@ -40,7 +40,7 @@ Step 4 validates the complete governed path, so every participating table needs 
 | Target | `curated_orders` | Schema, Sensitive Data, Data Quality |
 | Target | `customer_summary` | Schema |
 
-Guardrail Coverage then proves that every selected source/target contract has applicable rules and that every applicable rule produced evidence in the current activity.
+The selected Data Contract determines which Guardrails run; empty or intentionally disabled optional checks impose no additional requirement. Live requires configured checks to execute successfully or return a Warn decision before publication.
 
 Open `01_governance`, run the setup cells, select each table above, then run [`widget_data_contract()`](../api/reference/widget_data_contract.md):
 
@@ -100,9 +100,9 @@ A composite key is unique as a combination. Any SQL null in any key component fa
 
 The sidebar groups configured rules under **When this table is read** (`orchestrate_read()`: Freshness, Schema, Grain, Data Quality) and **Before this table is written** (`orchestrate_write()`: Schema, Sensitive Data, Source Drift, Grain, Data Quality). Source Drift belongs to the source → consuming target relationship and runs during that target's Write orchestration. The same Schema, Grain, and DQ configuration applies to both paths; there are no separate Read/Write policies.
 
-Expand a Guardrail to inspect its columns, rules, parameters, and policy, then click a rule to open its existing editor. **Configure guardrails** reveals routes to the existing editors, including unconfigured options; **Column** and **Business Rules** also expose their authoring controls. Documented but unenforced Grain remains in **Grain & Row Key**, outside the active checks. Summaries update as edits are staged, before Save.
+Expand a Guardrail to inspect its columns, rules, parameters, and policy, then click a rule to open its existing editor. **Configure guardrails** reveals routes to the existing editors, including unconfigured options; **Column** and **Business Rules** also expose their authoring controls. Disabled Grain remains visible with its disabled state; its description and key selection remain editable in **Grain & Row Key**. Summaries update as edits are staged, before Save.
 
-**Warn/Block is policy, not an execution result.** The sidebar does not execute validation. `METADATA_GUARDRAIL_RESULTS` records actual Grain evaluations with `guardrail_type=grain`, the exact contract version, continuation decision, counts, and validation scope. Guardrail Coverage requires applicable Read and Write Grain Results for the current activity before publication; it is a publication requirement rather than an authorable rule. Sensitive Data treatments must succeed before continuation. Profiling supplies observations and suggestions, not Guardrails.
+**Warn/Block is policy, not an execution result.** The sidebar does not execute validation. `METADATA_GUARDRAIL_RESULTS` records actual Grain evaluations with `guardrail_type=grain`, the exact contract version, continuation decision, counts, and validation scope. Configured Grain checks validate Read rows and prepared Write input independently; their authored Warn or Block action determines continuation. Sensitive Data treatments must succeed before continuation. Profiling supplies observations and suggestions, not Guardrails.
 
 
 <div class="fabricops-section-banner" markdown="1">
@@ -203,7 +203,7 @@ If a column disappears from the Catalogue, its inherited definitions remain visi
 
 Choose **Save Data Contract** while the version is still a draft. Close and reopen that exact draft to confirm its descriptions, classifications, key selection, Processing, and configured Guardrails hydrate from the saved payload. Pending sidebar edits are not saved until Save succeeds. When it is ready for Engineering validation, choose **Freeze** and reopen the exact frozen version to review its immutable manifest.
 
-`METADATA_DATA_CONTRACT.contract_payload_json` is the single source of authored table and column Enrichment and the configured Guardrails. Source contracts support five Guardrails: Schema, Grain, Freshness, Source Drift, and Data Quality. Target contracts support four: Schema, Grain, Data Quality, and Sensitive Data. `orchestrate_read` runs four checks (Freshness, Schema, Grain, Data Quality); `orchestrate_write` runs five (Schema, Sensitive Data, Source Drift on sources, Grain, Data Quality) plus the Guardrail Coverage gate. Grain description is descriptive Enrichment; key selection and optional enforcement are stored as the Grain Guardrail in the same payload. Save replaces the draft payload, Freeze makes that exact version immutable, and the next draft inherits the previous frozen definition. Runtime checks, exports, and Guardrail Coverage resolve the selected payload; actual evaluations remain in `METADATA_GUARDRAIL_RESULTS`.
+`METADATA_DATA_CONTRACT.contract_payload_json` is the single source of authored table and column Enrichment and the configured Guardrails. Source contracts support five Guardrails: Schema, Grain, Freshness, Source Drift, and Data Quality. Target contracts support four: Schema, Grain, Data Quality, and Sensitive Data. `orchestrate_read` runs four checks (Freshness, Schema, Grain, Data Quality); `orchestrate_write` runs five (Schema, Sensitive Data, Source Drift on sources, Grain, Data Quality). Grain description is descriptive Enrichment; key selection and optional enforcement are stored as the Grain Guardrail in the same payload. Save replaces the draft payload, Freeze makes that exact version immutable, and the next draft inherits the previous frozen definition. Runtime checks and exports resolve the selected payload; actual evaluations remain in `METADATA_GUARDRAIL_RESULTS`.
 
 The frozen version is an immutable data contract and becomes the exact candidate Engineering selects in Step 4. Freezing does not activate it for Production.
 

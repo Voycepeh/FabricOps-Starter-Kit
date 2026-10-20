@@ -6,12 +6,12 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Link an exact Data Agreement version and activate one validated frozen Data Contract for Production.
+Review exact Testing diagnostics and activate a frozen Data Contract for Live.
 
 
 ## Usage notes
 
-Use after Engineering validates an exact frozen Data Contract version and Governance is ready to activate it for Production.
+Use for separate Governance approval after reviewing a complete in-memory Testing report.
 
 
 ## Example usage
@@ -36,6 +36,7 @@ def widget_activate_data_contract(
     *,
     table_id: str | None=None,
     contract_version: int | None=None,
+    testing_results: list[dict[str, Any]] | None=None,
     spark_session: Any=None,
     context: Any=None,
 ) -> dict[str, Any]:
@@ -55,6 +56,7 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `table_id` | `str \| None` | No | `None` | Initial governed table selection; omitted or unavailable IDs select the first table with a frozen contract. |
 | `contract_version` | `int \| None` | No | `None` | Initial frozen version selection. Choose an available version in the UI. |
+| `testing_results` | `list[dict[str, Any]] \| None` | No | `None` | Complete Write diagnostics returned by Testing. Only exact payload matches with validation_passed=True qualify for explicit Governance review. Reports remain in memory; opening this widget performs no persistence. |
 | `spark_session` | `Any` | No | `None` | Active Fabric Spark session override. |
 | `context` | `Any` | No | `None` | FabricOps runtime context established by 00_env_config. |
 
@@ -68,36 +70,34 @@ dict[str, Any]
 
 ### Return interpretation
 
-The returned state identifies the selected frozen contract and Data Agreement version plus the exact validation evidence used by the activation gate.
+Diagnostics qualify a version for explicit Governance review; the separate confirmed activation action mutates governance state.
 
 ## Raises / Errors
 
 ValueError
     If an activation request fails validation. Select a frozen version with
-    successful latest Engineering validation and an eligible Data Agreement.
+    successful Testing diagnostics, explicit review and an eligible Data Agreement.
 RuntimeError
     If metadata routing, reads, or activation persistence fail. Check the
     configured metadata target and permissions. UI callbacks display failures.
 
 ### Common failure causes
 
-- No frozen contract exists for the selected table.
-- The exact frozen version has no successful Engineering validation evidence.
-- No Data Agreement version is selected.
-- The metadata target cannot be read or written.
+- No eligible frozen version.
+- Missing or mismatched Testing report.
+- Governance review not approved or no Data Agreement selected.
+- Metadata routing or persistence failure.
 
 ## Behavior and scope
 
 <div class="reference-docstring-intro" markdown="1">
 
-Only frozen versions are selectable. The exact selected version must have a
-successful latest completed Engineering validation run in METADATA_GUARDRAIL_RESULTS
-with execution_type='validate' before activation is enabled. The completion
-record is written for each participating source and target only after all
-checks and Guardrail Coverage pass; isolated or partial check results do not qualify. Activation
-links one exact Data Agreement version and updates the active Production
-contract pointer; it never edits the immutable contract payload or deploys
-the Engineering pipeline.
+This separate Governance action requires a successful in-memory Testing
+report matching the exact frozen payload, explicit review approval, an exact
+Data Agreement version and confirmation. Testing does not register activation
+evidence or authorize activation. The approval is a deliberate Governance
+decision after reviewing diagnostics and the checks that were not exercised.
+Activation never edits the immutable payload or deploys the pipeline.
 
 </div>
 
@@ -108,9 +108,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_activate_data_contract.py:81`
+`fabricops_kit/widgets/widget_activate_data_contract.py:43`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_data_contract.py#L81-L449">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_data_contract.py#L43-L396">View on GitHub</a>
 </div>
 
 

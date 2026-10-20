@@ -335,10 +335,10 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Store aggregate enforce and validate Guardrail summaries and completed pipeline-validation records for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.</span>
+  <span class="metadata-table-card__purpose">Store aggregate Live Guardrail summaries for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One Guardrail outcome for one exact Data Contract version in one enforce or validate execution.</span>
+    <span>One persisted Live Guardrail outcome for one exact Data Contract version; Testing returns outcomes in memory only.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>

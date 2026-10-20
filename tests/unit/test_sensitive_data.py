@@ -4,6 +4,7 @@ from importlib import import_module
 import json
 
 import pytest
+from tests.helpers import execution_plan_stub
 
 module = import_module("fabricops_kit.pipeline.check_sensitive_data")
 shared = import_module("fabricops_kit.pipeline.shared")
@@ -301,7 +302,7 @@ def test_returned_token_mapping_retains_absent_identities(spark_session):
         mapping.unpersist()
 
 
-@pytest.mark.parametrize('mode', ['validate', 'enforce'])
+@pytest.mark.parametrize('mode', ['testing', 'live'])
 @pytest.mark.parametrize('collision', [False, True])
 def test_managed_token_mapping_uses_restricted_target_without_validation_writes(monkeypatch, spark_session, mode, collision):
     """Exercise real token generation and reuse around a mocked Delta vault merge."""
@@ -357,21 +358,21 @@ def test_managed_token_mapping_uses_restricted_target_without_validation_writes(
     if collision:
         with pytest.raises(ValueError, match='reuses one token'):
             shared._build_token_mapping(frame, column_name='value', column_id='c', table_id='t',
-                existing_mapping=None, config=config, env='dev', execution_type=mode)
+                existing_mapping=None, config=config, env='dev', context={"execution_plan": execution_plan_stub(mode)})
         stored.unpersist()
         return
     mapping = shared._build_token_mapping(frame, column_name='value', column_id='c', table_id='t',
-        existing_mapping=None, config=config, env='dev', execution_type=mode)
+        existing_mapping=None, config=config, env='dev', context={"execution_plan": execution_plan_stub(mode)})
     try:
         values = {r.original_value: r.token_value for r in mapping.collect()}
         assert set(values) == {'known', 'new'}
         assert values['known'] == 'stable'
         assert values['new'] != 'new'
-        assert merges == ([1] if mode == 'enforce' else [])
-        assert {r.original_value for r in stored.collect()} == ({'known', 'new', 'absent'} if mode == 'enforce' else {'known', 'absent'})
-        if mode == 'enforce':
+        assert merges == ([1] if mode == 'live' else [])
+        assert {r.original_value for r in stored.collect()} == ({'known', 'new', 'absent'} if mode == 'live' else {'known', 'absent'})
+        if mode == 'live':
             again = shared._build_token_mapping(frame, column_name='value', column_id='c', table_id='t',
-                existing_mapping=None, config=config, env='dev', execution_type='enforce')
+                existing_mapping=None, config=config, env='dev', context={"execution_plan": execution_plan_stub("live")})
             try:
                 assert {r.original_value: r.token_value for r in again.collect()} == values
                 assert merges == [1]  # Reusing known assignments must not perform another Delta merge.
