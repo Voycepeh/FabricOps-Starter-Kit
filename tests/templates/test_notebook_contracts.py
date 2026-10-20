@@ -504,3 +504,27 @@ def test_guided_demo_preserves_initial_unselected_flow_and_optional_target_valid
     assert "pipeline-wide switch in red **Testing**" in step_4
     assert "every source and target" in step_4
     assert "`validation_passed=True`" in step_4 and "`published=False`" in step_4
+
+
+@pytest.mark.parametrize("notebook_name", [
+    "02A_full_refresh_demo.ipynb",
+    "02B_incremental_append_demo.ipynb",
+    "02C_scd_demo.ipynb",
+])
+def test_demo_notebooks_start_with_title_and_inspect_after_write(notebook_name: str) -> None:
+    """Each independent demo opens with its own title, never stale Write results."""
+    notebook = _load_notebook(DEMO_NOTEBOOK_DIR / notebook_name)
+    ids = [cell.get("id") for cell in notebook.cells]
+    assert ids[0] == "title"
+    assert notebook.cells[0].cell_type == "markdown"
+    assert ids.count("title") == 1
+    inspection_id = "write-inspection" if notebook_name.startswith("02A") else "inspect"
+    assert ids.count(inspection_id) == 1
+    last_write = max(
+        index for index, cell_id in enumerate(ids)
+        if cell_id.startswith("write-") and cell_id not in {"write-inspection", "write-dictionary-inspection-heading"}
+    )
+    assert ids.index(inspection_id) > last_write
+    assert ids.index(inspection_id) > 0
+    if notebook_name.startswith(("02B", "02C")):
+        assert "write-inspection" not in ids
