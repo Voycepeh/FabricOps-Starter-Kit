@@ -629,18 +629,6 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
   'template_path': 'templates/notebooks/example_dq_rule_smoke_test.ipynb'}]
 
 PUBLIC_SYMBOL_DOCS = [
- {'kind': 'function',
- 'module': 'pipeline.create_pipeline_execution_plan',
- 'function_type': 'callable',
- 'symbol_name': 'create_pipeline_execution_plan',
- 'summary_override': 'Create explicit immutable Testing/Live execution authority for a pipeline.',
- 'use_when': 'Use for scheduled execution or to freeze widget selections before Read.',
- 'parameters': 'Required execution_mode, sources, targets and per-table explicit selections; optional context and '
-               'Spark session.',
- 'returns': 'PipelineExecutionPlan with frozen contract snapshots and an isolated in-memory diagnostic journal.',
- 'side_effects': 'Metadata reads only; never activates contracts or writes metadata.',
- 'related_functions': ['orchestrate_read', 'orchestrate_write', 'widget_select_data_contract']},
-
  {'kind': 'function', 'module': 'consumption.create_data_agent', 'function_type': 'callable',
   'symbol_name': 'create_data_agent', 'template_notebook': '99_explore', 'template_segment': 'Create Data Agent',
   'summary_override': 'Create and configure one native Fabric Data Agent from an activated Production table.',
@@ -1561,10 +1549,10 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'Canonical table_id, a Fabric Spark session, and an optional active Fabric context.',
   'returns': 'Exact-version state, compact controls, the displayed UI, and validation and freeze actions.',
   'raises': 'Raises validation, widget, Spark, or configured metadata routing errors.',
-  'related_functions': ['widget_select_data_contract'],
+  'related_functions': ['widget_pipeline'],
   'expanded_purpose': 'Provides one four-tab governance experience for table and column authoring, Advanced rules, canonical manifest review, freezing, and activation.',
   'when_to_use': 'Use after Engineering registers a table to create or reopen its agreement-free draft and author descriptive Enrichment plus normalized Schema, Grain, Freshness, Source Drift, Data Quality, and Sensitive Data Guardrails.',
-  'do_not_use_when': 'Do not use for pipeline-time immutable contract selection; use widget_select_data_contract.',
+  'do_not_use_when': 'Do not use for pipeline-time immutable contract selection; use widget_pipeline.',
   'glossary_terms': ['data contract', 'guardrails', 'enrichment', 'metadata lakehouse'],
   'return_interpretation': 'The returned state remains pinned to the draft created or reopened for the requested table_id and active environment; saves delegate to contract-authoring services.',
   'common_failure_causes': ['The table_id has no active Catalogue row.',
@@ -1583,7 +1571,7 @@ PUBLIC_SYMBOL_DOCS = [
  'returns': 'Exact frozen identity, diagnostic review, explicit approval control, confirmation and activation '
             'result.',
  'raises': 'Raises metadata routing, exact-version diagnostic review, agreement linkage or activation errors.',
- 'related_functions': ['widget_data_contract', 'widget_select_data_contract'],
+ 'related_functions': ['widget_data_contract', 'widget_pipeline'],
  'expanded_purpose': 'Matches the exact frozen payload to a complete in-memory Testing report, requires '
                      'deliberate Governance review approval and confirmation, then links an exact Data Agreement '
                      'and activates the frozen version. Testing never registers successful activation evidence.',
@@ -1612,17 +1600,17 @@ PUBLIC_SYMBOL_DOCS = [
 
 
  {'kind': 'function',
- 'module': 'widgets.widget_select_data_contract',
+ 'module': 'widgets.widget_pipeline',
  'function_type': 'callable',
  'summary_override': 'Select pipeline-wide Testing/Live and inspect exact frozen contracts per explicit '
                      'participant.',
- 'symbol_name': 'widget_select_data_contract',
+ 'symbol_name': 'widget_pipeline',
  'template_notebook': '02_pipeline',
  'template_segment': 'Select notebook Data Contracts',
  'use_when': 'Use before Read, including first-time bootstrap without historical Lineage.',
  'related_functions': ['widget_data_contract', 'orchestrate_read', 'orchestrate_write'],
  'return_interpretation': 'Select every contract or explicit No Contract, then call build_plan() and pass the '
-                          'same immutable plan to every Read and Write.',
+                          'same immutable plan to every Read and Write. For scheduled runs, set interactive=False with execution_mode and selections; the same builder returns the plan directly.',
  'expanded_purpose': 'A read-only inspector displays every saved Schema column and individual Guardrail '
                      'definition, including inactive and non-applicable rules. Testing uses red accents and Live '
                      'green; no global overrides are installed.',

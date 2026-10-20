@@ -1,4 +1,4 @@
-# `widget_select_data_contract`
+# `widget_pipeline`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -19,8 +19,12 @@ Use before Read, including first-time bootstrap without historical Lineage.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-selection = widget_select_data_contract(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
+selection = widget_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
 plan = selection["build_plan"]()
+scheduled_plan = widget_pipeline(
+    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, interactive=False,
+    execution_mode="testing", selections=EXACT_SELECTIONS,
+)
 ```
 
 </div>
@@ -33,7 +37,16 @@ plan = selection["build_plan"]()
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_select_data_contract(*, sources, targets, spark_session=None, context=None)
+def widget_pipeline(
+    *,
+    sources,
+    targets,
+    execution_mode=None,
+    selections=None,
+    interactive=True,
+    spark_session=None,
+    context=None,
+):
 ```
 
 </div>
@@ -50,6 +63,9 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `sources` | `list of dict` | Yes | `—` | Explicit source participants: store/schema/table_name or registered table_id. Historical Lineage is optional and cannot introduce additional participants. |
 | `targets` | `list of dict` | Yes | `—` | Explicit target participants with the same coordinate or table_id shape. |
+| `execution_mode` | `{"testing", "live"}` | No | `None` | Interactive mode defaults to Testing. Required for headless execution. |
+| `selections` | `dict` | No | `None` | Exact per-table contract_id/contract_version or explicit no_contract=True. Required for headless execution; uses the same builder as interactive selection. |
+| `interactive` | `bool` | No | `True` | If False, return the immutable plan directly without loading notebook UI packages or enumerating unrelated contract versions. |
 | `spark_session` | `object` | No | `None` | Spark session for metadata reads. |
 | `context` | `dict` | No | `None` | Configured environment routing and notebook identity. |
 
@@ -57,19 +73,21 @@ Required describes the Python signature. An optional parameter may still be need
 
 ## Returns
 
-dict
-    Interactive state with execution_mode (initially testing), tables, controls,
+dict or PipelineExecutionPlan
+    Headless execution returns the immutable plan. Interactive execution returns
+    state with execution_mode (initially testing), tables, controls,
     select_contract, set_mode, build_plan and refresh. Each table starts unselected.
     After executing the built plan, refresh shows its exact-version results
     in expandable sections alongside saved definitions and disabled states.
     Explicitly select No Contract for bootstrap; build_plan validates every
     choice and freezes the plan to pass to all Read and Write calls.
-    UI edits after build_plan require a new plan and a new run of Read/Transform/Write.
+    Mode and selection edits are rejected after build_plan; create a new widget
+    for the next run. Repeated build_plan calls return the same plan and journal.
     The widget never changes notebook globals, edits or activates contracts.
 
 ### Return interpretation
 
-Select every contract or explicit No Contract, then call build_plan() and pass the same immutable plan to every Read and Write.
+Select every contract or explicit No Contract, then call build_plan() and pass the same immutable plan to every Read and Write. For scheduled runs, set interactive=False with execution_mode and selections; the same builder returns the plan directly.
 
 ## Raises / Errors
 
@@ -77,7 +95,7 @@ ValueError
     For missing notebook identity, invalid payloads, unavailable selections or
     Live choices bypassing an active contract.
 RuntimeError
-    For ambiguous active versions or a metadata-read failure.
+    For ambiguous active versions, metadata-read failure, or edits to a built plan.
 
 ### Common failure causes
 
@@ -93,9 +111,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_select_data_contract.py:130`
+`fabricops_kit/widgets/widget_pipeline.py:129`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L130-L354">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_pipeline.py#L129-L385">View on GitHub</a>
 </div>
 
 
@@ -112,13 +130,6 @@ No related guides documented.
 | Contract classification | Preview public function |
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
-
-### Release history
-
-| Status | Version |
-| --- | --- |
-| Preview | 0.2.0 |
-| Preview | 0.2.5 |
 
 
 </details>

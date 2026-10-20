@@ -8,7 +8,7 @@ Need the complete implementation-level dependency graph? Use the [Call Flow Dash
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">27</strong>
+    <strong class="reference-kpi-value">26</strong>
     <span class="reference-kpi-title">Public functions</span>
     <p class="reference-kpi-note">Notebook-facing Starter Kit functions.</p>
   </section>
@@ -18,14 +18,14 @@ Need the complete implementation-level dependency graph? Use the [Call Flow Dash
 
 ## Find a function
 
-Use the finder below to search 27 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
+Use the finder below to search 26 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
 
 <div class="callable-finder" data-callable-finder>
   <label class="callable-finder-label" for="callable-finder-input">Search public functions</label>
   <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">
   <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, starter path, usage source, or description.</p>
   <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">lineage</span> <span class="callable-finder-chip">guardrail</span></p>
-  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 27 public functions.</p>
+  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 26 public functions.</p>
   <p class="callable-finder-empty" data-callable-finder-empty hidden>No public functions match your search.</p>
 </div>
 
@@ -34,9 +34,9 @@ Use the finder below to search 27 public functions. Config classes stay out of t
 
     Maintainer inventory metrics:
 
-    - Source Python files count: 52
-    - Total callables: 630
-    - Supporting functions: 292
+    - Source Python files count: 51
+    - Total callables: 631
+    - Supporting functions: 294
     - Private helpers to review: 304
 
     - [Function Call Graph](../function-call-graph.md): explanatory page for the v4 normalized public-function call-flow architecture contract.
@@ -50,14 +50,9 @@ Use the finder below to search 27 public functions. Config classes stay out of t
 Expand a group to browse its public functions. Standard Orchestration is open by default.
 
 <details class="reference-function-group" data-callable-group="standard-orchestration" data-default-open="true" open>
-<summary><span class="reference-function-group-title">Standard Orchestration</span><span class="reference-function-group-meta">3 functions · Recommended</span></summary>
+<summary><span class="reference-function-group-title">Standard Orchestration</span><span class="reference-function-group-meta">2 functions · Recommended</span></summary>
 <p class="reference-function-group-description">Complete governed read and write lifecycle for the standard FabricOps pipeline.</p>
 <div class="reference-catalogue-list">
-<article id="pipeline.create_pipeline_execution_plan-create_pipeline_execution_plan" class="reference-catalogue-item" data-callable-row="true" data-callable-name="create_pipeline_execution_plan" data-callable-module="pipeline.create_pipeline_execution_plan" data-function-type="public-starter-kit" data-callable-purpose="Create explicit immutable Testing/Live execution authority for a pipeline.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/create_pipeline_execution_plan/"><code>create_pipeline_execution_plan</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Create explicit immutable Testing/Live execution authority for a pipeline.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
-</article>
 <article id="pipeline.orchestrate_read-orchestrate_read" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_read" data-callable-module="pipeline.orchestrate_read" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Run the observable standard governed source lifecycle.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_read/"><code>orchestrate_read</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run the observable standard governed source lifecycle.</p>
@@ -112,6 +107,11 @@ Expand a group to browse its public functions. Standard Orchestration is open by
   <p class="reference-catalogue-item-purpose">Create or reopen and author one agreement-free, table-centric Data Contract draft.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">01_governance</span></p>
 </article>
+<article id="widgets.widget_pipeline-widget_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_pipeline" data-callable-module="widgets.widget_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Select pipeline-wide Testing/Live and inspect exact frozen contracts per explicit participant.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_pipeline/"><code>widget_pipeline</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Select pipeline-wide Testing/Live and inspect exact frozen contracts per explicit participant.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
+</article>
 <article id="widgets.widget_render_data_agreement-widget_render_data_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_data_agreement" data-callable-module="widgets.widget_render_data_agreement" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Render the standalone data-agreement intake widget.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render the standalone data-agreement intake widget.</p>
@@ -121,11 +121,6 @@ Expand a group to browse its public functions. Standard Orchestration is open by
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render the standalone data-steward intake widget.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span><span class="reference-chip">01_governance</span></p>
-</article>
-<article id="widgets.widget_select_data_contract-widget_select_data_contract" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_data_contract" data-callable-module="widgets.widget_select_data_contract" data-function-type="public-starter-kit" data-callable-purpose="Select pipeline-wide Testing/Live and inspect exact frozen contracts per explicit participant.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_data_contract/"><code>widget_select_data_contract</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Select pipeline-wide Testing/Live and inspect exact frozen contracts per explicit participant.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 <article id="widgets.widget_view_catalogue-widget_view_catalogue" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_view_catalogue" data-callable-module="widgets.widget_view_catalogue" data-callable-starter-path="01_governance, 99_explore" data-callable-usage-source="01_governance, 99_explore" data-function-type="public-starter-kit" data-callable-purpose="Select catalogue evidence through an explicit pipeline, agreement, or explore dataset scope.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_view_catalogue/"><code>widget_view_catalogue</code></a></h3>

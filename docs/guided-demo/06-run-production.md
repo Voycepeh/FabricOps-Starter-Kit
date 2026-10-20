@@ -45,7 +45,7 @@ The key difference is Data Contract resolution:
 
 The same Guardrail functions therefore enforce the Production-active definition, and [`orchestrate_write()`](../api/reference/orchestrate_write.md) uses the active governed Processing configuration for each target.
 
-Deliberately select **Live** for the whole pipeline and build a new `EXECUTION_PLAN`. Pass that same plan to all three Reads and both Writes. Scheduled execution must call `create_pipeline_execution_plan(execution_mode="live", ...)` explicitly. The environment only routes work; it never infers Live. All three sources and both targets need the active frozen versions prepared in Step 5.
+Deliberately select **Live** for the whole pipeline and build a new `EXECUTION_PLAN`. Pass that same plan to all three Reads and both Writes. Scheduled execution must call `widget_pipeline(interactive=False, execution_mode="live", ...)` explicitly. The environment only routes work; it never infers Live. All three sources and both targets need the active frozen versions prepared in Step 5.
 
 ### Check the two independent publications
 

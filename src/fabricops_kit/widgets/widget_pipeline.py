@@ -10,8 +10,7 @@ from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
 from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
 from fabricops_kit.io import read_lakehouse_table
 from fabricops_kit.io.shared import get_spark_session
-from fabricops_kit.pipeline.create_pipeline_execution_plan import create_pipeline_execution_plan
-from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity, resolve_physical_table_identity
+from fabricops_kit.pipeline.shared import build_pipeline_execution_plan, resolve_pipeline_participants
 from fabricops_kit.widgets.shared import parse_data_contract_payload, require_ipywidgets
 
 
@@ -127,7 +126,7 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def widget_select_data_contract(*, sources, targets, spark_session=None, context=None):
+def widget_pipeline(*, sources, targets, execution_mode=None, selections=None, interactive=True, spark_session=None, context=None):
     """Select one pipeline mode and independently inspect each participant's contract.
 
     Parameters
@@ -137,6 +136,14 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
         Historical Lineage is optional and cannot introduce additional participants.
     targets : list of dict
         Explicit target participants with the same coordinate or table_id shape.
+    execution_mode : {"testing", "live"}, optional
+        Interactive mode defaults to Testing. Required for headless execution.
+    selections : dict, optional
+        Exact per-table contract_id/contract_version or explicit no_contract=True.
+        Required for headless execution; uses the same builder as interactive selection.
+    interactive : bool, optional
+        If False, return the immutable plan directly without loading notebook UI
+        packages or enumerating unrelated contract versions.
     spark_session : object, optional
         Spark session for metadata reads.
     context : dict, optional
@@ -144,14 +151,16 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
 
     Returns
     -------
-    dict
-        Interactive state with execution_mode (initially testing), tables, controls,
+    dict or PipelineExecutionPlan
+        Headless execution returns the immutable plan. Interactive execution returns
+        state with execution_mode (initially testing), tables, controls,
         select_contract, set_mode, build_plan and refresh. Each table starts unselected.
         After executing the built plan, refresh shows its exact-version results
         in expandable sections alongside saved definitions and disabled states.
         Explicitly select No Contract for bootstrap; build_plan validates every
         choice and freezes the plan to pass to all Read and Write calls.
-        UI edits after build_plan require a new plan and a new run of Read/Transform/Write.
+        Mode and selection edits are rejected after build_plan; create a new widget
+        for the next run. Repeated build_plan calls return the same plan and journal.
         The widget never changes notebook globals, edits or activates contracts.
 
     Raises
@@ -160,35 +169,36 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
         For missing notebook identity, invalid payloads, unavailable selections or
         Live choices bypassing an active contract.
     RuntimeError
-        For ambiguous active versions or a metadata-read failure.
+        For ambiguous active versions, metadata-read failure, or edits to a built plan.
 
     Examples
     --------
-    >>> selection = widget_select_data_contract(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
+    >>> selection = widget_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
     >>> plan = selection["build_plan"]()
+    >>> scheduled_plan = widget_pipeline(
+    ...     sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, interactive=False,
+    ...     execution_mode="testing", selections=EXACT_SELECTIONS,
+    ... )
 
     """
+    if not interactive:
+        if execution_mode is None or selections is None:
+            raise ValueError("Headless execution requires explicit execution_mode and selections.")
+        return build_pipeline_execution_plan(
+            execution_mode=execution_mode, sources=sources, targets=targets,
+            selections=selections, context=context, spark_session=spark_session,
+        )
+    if execution_mode is not None and execution_mode not in {"testing", "live"}:
+        raise ValueError("execution_mode must explicitly be 'testing' or 'live'.")
     config, env, resolved = resolve_fabric_context(context=context)
     runtime = {**resolved, "config": config, "env": env}
     if not str(runtime.get("notebook_id") or "").strip():
         raise ValueError("Configure notebook_id before selecting Pipeline Data Contracts.")
     spark = get_spark_session(spark_session)
     sources, targets = list(sources), list(targets)
-    identities = {}
-    for role, participants in (("source", sources), ("target", targets)):
-        for participant in participants:
-            identity = (resolve_physical_table_identity(config, env, **{
-                key: participant[key] for key in ("store", "schema", "table_name")
-            }) if "store" in participant else resolve_catalogue_table_identity(
-                config, env, participant["table_id"], context=runtime, spark_session=spark,
-            ))
-            table_id = identity["table_id"]
-            roles = identities.get(table_id, {}).get("roles", [])
-            if role in roles:
-                raise ValueError(f"Duplicate {role} participant {table_id!r}.")
-            identities[table_id] = {**identity, "roles": [*roles, role]}
-    if not identities:
-        raise ValueError("Configure at least one actual source or target.")
+    identities = resolve_pipeline_participants(
+        config, env, sources=sources, targets=targets, context=runtime, spark_session=spark,
+    )
     try:
         rows = [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
                 for row in read_lakehouse_table("METADATA_DATA_CONTRACT", store="Metadata",
@@ -216,7 +226,12 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
         state["tables"][table_id] = {"identity": identity, "versions": versions, "active": active[0] if active else None,
                                     "selected": None, "choice": None, "review": None}
 
+    def require_unbuilt_plan():
+        if state.get("execution_plan") is not None:
+            raise RuntimeError("Cannot change selection during an active execution plan; create a new widget for a new run.")
+
     def select_contract(table_id, contract_id=None, contract_version=None, *, no_contract=False):
+        require_unbuilt_plan()
         if table_id not in state["tables"]:
             raise ValueError("Only configured pipeline participants may select contracts.")
         table = state["tables"][table_id]
@@ -234,16 +249,15 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
             if state["execution_mode"] == "live" and selected is not table["active"]:
                 raise ValueError("Live requires the active frozen version.")
             choice = {"contract_id": contract_id, "contract_version": contract_version}
-        state.pop("execution_plan", None)
         table.update(selected=selected, choice=choice,
                      review=_contract_review(selected, table["identity"]["roles"]) if selected else None)
         refresh()
         return state
 
     def set_mode(mode):
+        require_unbuilt_plan()
         if mode not in {"testing", "live"}:
             raise ValueError("Mode must be testing or live.")
-        state.pop("execution_plan", None)
         state["execution_mode"] = mode
         if mode == "live":
             for table in state["tables"].values():
@@ -259,13 +273,16 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
         return state
 
     def build_plan():
-        plan = create_pipeline_execution_plan(
+        if state.get("execution_plan") is not None:
+            return state["execution_plan"]
+        plan = build_pipeline_execution_plan(
             execution_mode=state["execution_mode"], sources=sources, targets=targets,
             selections={key: table["choice"] for key, table in state["tables"].items() if table["choice"] is not None},
             context=runtime, spark_session=spark,
         )
 
         state["execution_plan"] = plan
+        refresh()
         return plan
 
     state.update(select_contract=select_contract, set_mode=set_mode, build_plan=build_plan)
@@ -281,6 +298,7 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
             testing = state["execution_mode"] == "testing"
             root.remove_class("pipeline-testing" if not testing else "pipeline-live")
             root.add_class("pipeline-testing" if testing else "pipeline-live")
+            mode_control.disabled = state.get("execution_plan") is not None
             mode_control.value = state["execution_mode"]
             header.value = f'<h3>Pipeline Data Contracts · {"Testing" if testing else "Live"}</h3><p>' + (
                 "No data or metadata persistence. Checks return diagnostics in memory." if testing else
@@ -293,6 +311,7 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
                 options += [(f'{row.get("contract_name") or row["contract_id"]} · v{row["contract_version"]} · Frozen'
                              + (" · Active" if row.get("is_active") else ""),
                              f'{row["contract_id"]}\n{row["contract_version"]}') for row in versions]
+                controls["version"].disabled = state.get("execution_plan") is not None
                 controls["version"].options = options
                 selected = table["selected"]
                 controls["version"].value = (f'{selected["contract_id"]}\n{selected["contract_version"]}' if selected else
@@ -304,6 +323,17 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
             refreshing = False
 
     state["refresh"] = refresh
+    if execution_mode is not None:
+        set_mode(execution_mode)
+    if selections is not None:
+        if set(selections) != set(identities):
+            raise ValueError("Supply an explicit choice for every participating table only.")
+        for table_id, choice in selections.items():
+            if not isinstance(choice, dict) or set(choice) not in ({"no_contract"}, {"contract_id", "contract_version"}):
+                raise ValueError("Select exact contract_id/contract_version or explicit no_contract=True.")
+            if "no_contract" in choice and choice["no_contract"] is not True:
+                raise ValueError("No Contract must explicitly be True.")
+            select_contract(table_id, **choice)
     try:
         widgets = require_ipywidgets()
         from IPython import display as ip
@@ -334,6 +364,7 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
         def changed(change, key=table_id):
             if refreshing:
                 return
+            require_unbuilt_plan()
             if not change["new"]:
                 state["tables"][key].update(selected=None, choice=None, review=None)
                 refresh()

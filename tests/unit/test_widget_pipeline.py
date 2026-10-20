@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-module = importlib.import_module("fabricops_kit.widgets.widget_select_data_contract")
+module = importlib.import_module("fabricops_kit.widgets.widget_pipeline")
 
 
 def _row(version=1, *, table_id="source", active=False):
@@ -33,13 +33,14 @@ def _row(version=1, *, table_id="source", active=False):
             "contract_payload_json": json.dumps(payload)}
 
 
-def _render(monkeypatch, rows, *, interactive=False, metadata_error=None, lineage_state="empty"):
+def _render(monkeypatch, rows, *, interactive=False, metadata_error=None, lineage_state="empty", targets=None):
     context = {"config": object(), "env": "canary-east", "notebook_id": "notebook-1"}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: (context_obj["config"], "canary-east", context_obj))
     context_obj = context
     monkeypatch.setattr(module, "get_spark_session", lambda spark=None: object())
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *a: "metadata")
-    monkeypatch.setattr(module, "resolve_physical_table_identity", lambda c, e, **kw: {
+    builder = importlib.import_module("fabricops_kit.pipeline.shared")
+    monkeypatch.setattr(builder, "resolve_physical_table_identity", lambda c, e, **kw: {
         **kw, "table_id": kw["table_name"], "store_kind": "lakehouse"})
     reads = []
     def read(name, **kw):
@@ -55,9 +56,9 @@ def _render(monkeypatch, rows, *, interactive=False, metadata_error=None, lineag
         monkeypatch.setattr(ip, "display", lambda *a: None)
     if not interactive:
         monkeypatch.setattr(module, "require_ipywidgets", lambda: (_ for _ in ()).throw(ModuleNotFoundError()))
-    state = module.widget_select_data_contract(
+    state = module.widget_pipeline(
         sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}],
-        targets=[{"store": "Silver", "schema": "demo", "table_name": "target"}], context=context,
+        targets=targets if targets is not None else [{"store": "Silver", "schema": "demo", "table_name": "target"}], context=context,
     )
     return context, state, reads
 
@@ -164,7 +165,9 @@ builtins.__import__ = without_notebook_packages
 import fabricops_kit as kit
 for name in kit.__all__:
     getattr(kit, name)
-assert callable(kit.create_pipeline_execution_plan)
+assert callable(kit.widget_pipeline)
+assert not hasattr(kit, "create_pipeline_execution_plan")
+assert not hasattr(kit, "widget_select_data_contract")
 '''
     subprocess.run([sys.executable, "-c", code], check=True, capture_output=True, text=True)
 
@@ -182,18 +185,119 @@ def test_inspector_shows_only_exact_contract_results_and_escapes_details():
     assert "Not executed in this plan" in module._inspector(row, ["target"])
 
 
-def test_inspector_refresh_uses_built_plan_and_mode_change_clears_results(monkeypatch):
-    """A visible mode or selection change cannot display results from the old plan."""
+def test_inspector_refresh_uses_built_plan_and_locks_selection(monkeypatch):
+    """A built plan keeps its journal and rejects mode or contract changes."""
     from types import SimpleNamespace
     _, state, _ = _render(monkeypatch, [_row(active=True)], interactive=True)
     state["select_contract"]("source", "contract-source", 1)
     state["select_contract"]("target", no_contract=True)
     plan = SimpleNamespace(results=[])
-    monkeypatch.setattr(module, "create_pipeline_execution_plan", lambda **kw: plan)
+    monkeypatch.setattr(module, "build_pipeline_execution_plan", lambda **kw: plan)
     assert state["build_plan"]() is plan
     plan.results.append({"table_id": "source", "contract_id": "contract-source", "contract_version": 1,
                          "guardrail_type": "schema", "status": "passed"})
     state["refresh"]()
     assert "Execution results · 1" in state["_controls"]["source"]["inspector"].value
-    state["set_mode"]("live")
-    assert "Not executed in this plan" in state["_controls"]["source"]["inspector"].value
+    assert state["build_plan"]() is plan
+    assert state["mode_control"].disabled
+    assert all(controls["version"].disabled for controls in state["_controls"].values())
+    with pytest.raises(RuntimeError, match="active execution plan"):
+        state["set_mode"]("live")
+    with pytest.raises(RuntimeError, match="active execution plan"):
+        state["select_contract"]("source", "contract-source", 1)
+    assert state["execution_plan"] is plan
+    assert "Execution results · 1" in state["_controls"]["source"]["inspector"].value
+
+
+def test_headless_uses_builder_without_loading_ui_or_listing_contracts(monkeypatch):
+    """Scheduled selection reaches the same builder without notebook dependencies."""
+    from unittest.mock import Mock
+
+    sentinel = object()
+    builder = Mock(return_value=sentinel)
+    forbidden = Mock(side_effect=AssertionError("Interactive-only work reached"))
+    monkeypatch.setattr(module, "build_pipeline_execution_plan", builder)
+    monkeypatch.setattr(module, "require_ipywidgets", forbidden)
+    monkeypatch.setattr(module, "read_lakehouse_table", forbidden)
+    selections = {"source": {"contract_id": "contract-source", "contract_version": 2}}
+    assert module.widget_pipeline(sources=[{"table_id": "source"}], targets=[], interactive=False,
+                                  execution_mode="testing", selections=selections) is sentinel
+    builder.assert_called_once_with(execution_mode="testing", sources=[{"table_id": "source"}],
+                                    targets=[], selections=selections, context=None, spark_session=None)
+    forbidden.assert_not_called()
+
+
+@pytest.mark.parametrize("configuration", [{}, {"execution_mode": "testing"}, {"selections": {}}])
+def test_headless_missing_configuration_fails_before_metadata_access(monkeypatch, configuration):
+    """Headless execution never infers mode or silently chooses contracts."""
+    monkeypatch.setattr(module, "build_pipeline_execution_plan", lambda **kw: pytest.fail("Builder reached"))
+    with pytest.raises(ValueError, match="requires explicit"):
+        module.widget_pipeline(sources=[], targets=[], interactive=False, **configuration)
+
+
+def test_interactive_and_headless_share_identity_validation_and_plan_snapshots(monkeypatch):
+    """Both paths produce identical frozen authority and isolated journals."""
+    context, state, _ = _render(monkeypatch, [], interactive=True)
+    builder = importlib.import_module("fabricops_kit.pipeline.shared")
+    monkeypatch.setattr(builder, "resolve_fabric_context", lambda context=None: (
+        context["config"], context["env"], context))
+    monkeypatch.setattr(builder, "resolve_active_data_contract", lambda *a, **kw: None)
+    for table_id in ("source", "target"):
+        state["select_contract"](table_id, no_contract=True)
+    plan = state["build_plan"]()
+    choices = {"source": {"no_contract": True}, "target": {"no_contract": True}}
+    scheduled = module.widget_pipeline(
+        sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}],
+        targets=[{"store": "Silver", "schema": "demo", "table_name": "target"}],
+        interactive=False, execution_mode="testing", selections=choices, context=context,
+    )
+    assert plan.participants_json == scheduled.participants_json
+    assert plan.selections_json == scheduled.selections_json
+    assert plan.contracts_json == scheduled.contracts_json
+    assert plan.plan_id != scheduled.plan_id
+    choices["source"]["no_contract"] = False
+    assert json.loads(scheduled.selections_json)["source"] == {"no_contract": True}
+    plan.results.append({"status": "passed"})
+    assert not scheduled.results
+    assert state["build_plan"]() is plan
+
+
+@pytest.mark.parametrize("interactive", [True, False])
+def test_participant_mismatch_rejected_in_both_paths(monkeypatch, interactive):
+    """The interactive inspector cannot ignore a mismatched canonical table ID."""
+    context, _, _ = _render(monkeypatch, [])
+    builder = importlib.import_module("fabricops_kit.pipeline.shared")
+    monkeypatch.setattr(builder, "resolve_fabric_context", lambda context=None: (
+        context["config"], context["env"], context))
+    with pytest.raises(ValueError, match="canonical table_id"):
+        module.widget_pipeline(
+            sources=[{"store": "Bronze", "schema": "demo", "table_name": "source", "table_id": "wrong"}],
+            targets=[], interactive=interactive, execution_mode="testing",
+            selections={"wrong": {"no_contract": True}}, context=context,
+        )
+
+
+def test_obsolete_public_apis_and_modules_are_removed():
+    """The breaking cleanup leaves no callable aliases or old owner modules."""
+    import fabricops_kit as kit
+    import fabricops_kit.pipeline as pipeline
+    import fabricops_kit.widgets as widgets
+
+    assert "widget_pipeline" in kit.__all__ and "widget_pipeline" in widgets.__all__
+    for package in (kit, pipeline):
+        assert not hasattr(package, "create_pipeline_execution_plan")
+    for package in (kit, widgets):
+        assert not hasattr(package, "widget_select_data_contract")
+    for name in ("fabricops_kit.pipeline.create_pipeline_execution_plan",
+                 "fabricops_kit.widgets.widget_select_data_contract"):
+        with pytest.raises(ModuleNotFoundError):
+            importlib.import_module(name)
+
+
+def test_interactive_read_only_selection_has_no_target_controls(monkeypatch):
+    """The interactive selector accepts a Read-only structure without inventing a target."""
+    _, state, _ = _render(monkeypatch, [_row()], interactive=True, targets=[])
+    assert set(state["tables"]) == {"source"}
+    assert state["tables"]["source"]["identity"]["roles"] == ["source"]
+    state["select_contract"]("source", "contract-source", 1)
+    assert state["tables"]["source"]["selected"]["contract_version"] == 1

@@ -5151,3 +5151,81 @@ class ExecutionSummary:
             for label, value in [*fields, ("Total duration", f"{elapsed:.2f}s")]:
                 print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not available'}")
         return elapsed
+
+
+def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections, context=None, spark_session=None):
+    """Freeze validated mode, participant identities and exact contract snapshots."""
+    from types import MappingProxyType
+
+    if execution_mode not in {"testing", "live"}:
+        raise ValueError("execution_mode must explicitly be 'testing' or 'live'.")
+    from fabricops_kit.data_contract.shared import validate_contract_definitions
+
+    config, env, runtime = resolve_fabric_context(context=context)
+    notebook_id = str(runtime.get("notebook_id") or "").strip()
+    if not notebook_id:
+        raise ValueError("An explicit notebook_id is required for pipeline execution.")
+    identities = resolve_pipeline_participants(
+        config, env, sources=sources, targets=targets, context=runtime, spark_session=spark_session,
+    )
+    if not identities or set(selections) != set(identities):
+        raise ValueError("Supply an explicit contract or No Contract choice for every participating table only.")
+    contracts = {}
+    for table_id, choice in selections.items():
+        if not isinstance(choice, dict):
+            raise ValueError("Every contract selection must be an explicit mapping.")
+        active = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=False)
+        if choice == {"no_contract": True}:
+            if active is not None:
+                raise ValueError(f"No Contract cannot bypass the active contract for {table_id!r}.")
+            contracts[table_id] = None
+            continue
+        if set(choice) != {"contract_id", "contract_version"}:
+            raise ValueError("Select exact contract_id/contract_version or explicit no_contract=True.")
+        selected = resolve_data_contract_version(
+            config, env, table_id, choice["contract_id"], choice["contract_version"],
+            spark_session=spark_session, context=runtime,
+        )
+        validate_contract_definitions(selected["contract_payload"])
+        contract_guardrail_rows(selected, environment_name=env, table_id=table_id)
+        if execution_mode == "live" and (active is None or any(
+            selected[key] != active[key] for key in ("contract_id", "contract_version")
+        )):
+            raise ValueError(f"Live requires the active frozen contract for {table_id!r}; candidates require Testing.")
+        contracts[table_id] = selected
+    plan_id = str(uuid4())
+    run_context = {**runtime, "config": config, "env": env}
+    if execution_mode == "testing":
+        run_context["activity_id"] = plan_id
+    return PipelineExecutionPlan(
+        execution_mode, env, notebook_id, plan_id,
+        json.dumps(identities, default=str, sort_keys=True),
+        json.dumps(selections, sort_keys=True), json.dumps(contracts, default=str, sort_keys=True),
+        MappingProxyType(run_context),
+    )
+
+
+def resolve_pipeline_participants(config, env, *, sources, targets, context=None, spark_session=None):
+    """Resolve configured participants once under the shared identity validation rules."""
+    identities = {}
+    for role, participants in (("source", sources), ("target", targets)):
+        for participant in participants:
+            if "store" in participant:
+                identity = resolve_physical_table_identity(config, env, **{
+                    key: participant[key] for key in ("store", "schema", "table_name")
+                })
+                if participant.get("table_id") not in (None, identity["table_id"]):
+                    raise ValueError("Configured participant does not match its canonical table_id.")
+            else:
+                identity = resolve_catalogue_table_identity(
+                    config, env, participant["table_id"], context=context, spark_session=spark_session,
+                )
+            identity = {**identity, "store_type": identity.get("store_type") or identity.get("store_kind")}
+            table_id = identity["table_id"]
+            roles = list(identities.get(table_id, {}).get("roles", []))
+            if role in roles:
+                raise ValueError(f"Duplicate {role} participant {table_id!r}.")
+            identities[table_id] = {**identity, "roles": [*roles, role]}
+    if not identities:
+        raise ValueError("Configure at least one actual source or target.")
+    return identities

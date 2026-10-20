@@ -41,7 +41,7 @@ LIVE_WIDGETS = {
     "widget_activate_data_contract",
     "widget_render_data_steward",
     "widget_render_data_agreement",
-    "widget_select_data_contract",
+    "widget_pipeline",
     "widget_view_catalogue",
 }
 
@@ -51,7 +51,7 @@ def test_live_widget_inventory_uses_the_canonical_page_composer():
     assert set(widget_package.__all__) == LIVE_WIDGETS
     for name in LIVE_WIDGETS:
         module = __import__(f"fabricops_kit.widgets.{name}", fromlist=[name])
-        if name == "widget_select_data_contract":
+        if name == "widget_pipeline":
             assert "pipeline-contracts" in inspect.getsource(module)
             assert "pipeline-testing" in inspect.getsource(module) and "pipeline-live" in inspect.getsource(module)
         else:

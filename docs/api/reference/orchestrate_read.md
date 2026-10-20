@@ -69,7 +69,7 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Required immutable plan from create_pipeline_execution_plan or the widget. Pass the same object to every Read and Write. Testing evaluates configured Freshness, Schema, Grain and Data Quality and returns profiles and violations in memory. It cannot persist Catalogue, Profile, frequency, Guardrail Results or recover durable Source Observation state. Live preserves these lifecycle boundaries. Environment names determine routing only. Empty or disabled optional Guardrails add no execution requirement. A configured check that cannot execute blocks Live and remains a Testing diagnostic. |
+| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Required immutable plan from widget_pipeline in interactive or headless mode. Pass the same object to every Read and Write. Testing evaluates configured Freshness, Schema, Grain and Data Quality and returns profiles and violations in memory. It cannot persist Catalogue, Profile, frequency, Guardrail Results or recover durable Source Observation state. Live preserves these lifecycle boundaries. Environment names determine routing only. Empty or disabled optional Guardrails add no execution requirement. A configured check that cannot execute blocks Live and remains a Testing diagnostic. |
 | `store` | `str` | Yes | `—` | Configured source store key. |
 | `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
 | `table_name` | `str` | Yes | `—` | Physical source table name. |

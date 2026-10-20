@@ -9,7 +9,7 @@ from fabricops_kit.pipeline import shared
 from tests.unit.test_contract_orchestration import frozen
 from tests.unit.test_data_contract_resolution import RecordingFrame
 
-module = importlib.import_module("fabricops_kit.pipeline.create_pipeline_execution_plan")
+module = importlib.import_module("fabricops_kit.pipeline.shared")
 
 
 @pytest.fixture
@@ -26,7 +26,7 @@ def plan_runtime(monkeypatch):
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *a, **kw: RecordingFrame(rows))
     monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *a: "metadata")
     def make(mode="testing", selections=None):
-        return module.create_pipeline_execution_plan(execution_mode=mode,
+        return module.build_pipeline_execution_plan(execution_mode=mode,
             sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}],
             targets=[{"store": "Silver", "schema": "demo", "table_name": "target"}],
             selections=selections if selections is not None else {"source": {"no_contract": True}, "target": {"no_contract": True}},
@@ -125,3 +125,16 @@ def test_missing_contract_store_is_not_an_explicit_no_contract_state(plan_runtim
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("Table not found")))
     with pytest.raises(RuntimeError, match="missing metadata table"):
         make("live")
+
+
+@pytest.mark.parametrize("mode", ["testing", "live"])
+def test_read_only_headless_plan_needs_no_target(plan_runtime, mode):
+    """Read-only participants use the same immutable plan without a business target."""
+    from fabricops_kit import widget_pipeline
+
+    _, runtime, _, _ = plan_runtime
+    plan = widget_pipeline(interactive=False, execution_mode=mode,
+        sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}], targets=[],
+        selections={"source": {"no_contract": True}}, context=runtime)
+    assert json.loads(plan.participants_json)["source"]["roles"] == ["source"]
+    assert set(json.loads(plan.contracts_json)) == {"source"}

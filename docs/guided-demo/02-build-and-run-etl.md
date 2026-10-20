@@ -5,14 +5,14 @@
 The current `02_pipeline.ipynb` declares `PIPELINE_SOURCES` and `PIPELINE_TARGETS` before opening the selector. Keep these identities aligned with the participating Read and Write calls. Historical `METADATA_DATA_LINEAGE` is not required and cannot authorize unrelated tables.
 
 ```python
-CONTRACTS = widget_select_data_contract(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
+CONTRACTS = widget_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
 # Select a frozen version or explicit No Contract for every participant in the UI.
 EXECUTION_PLAN = CONTRACTS["build_plan"]()
 ```
 
-The default is red **Testing**, with no data or metadata persistence. Expand each contract category to inspect all columns and individual rules, including saved inactive and non-applicable definitions. Selection does not edit or activate a contract. Build a new plan and rerun Read → Transform → Write after changing selections or mode.
+The default is red **Testing**, with no data or metadata persistence. Expand each contract category to inspect all columns and individual rules, including saved inactive and non-applicable definitions. Selection does not edit or activate a contract. After building the plan, mode and contract controls are locked. Create a new selector and rerun Read → Transform → Write to change selections or mode.
 
-For scheduled execution use the public `create_pipeline_execution_plan()` API with a deliberate `execution_mode="testing"` or `"live"`, explicit sources/targets and exact per-table selections. There is no environment-based Live default or notebook-global selection override.
+For scheduled execution use the `widget_pipeline(interactive=False, ...)` entry point with a deliberate `execution_mode="testing"` or `"live"`, explicit sources/targets and exact per-table selections. There is no environment-based Live default or notebook-global selection override.
 
 
 ### Before you begin
@@ -72,21 +72,25 @@ Then run the import cell immediately below it. The import cell provides the publ
 ### Run the Data Contract block
 
 ```python
-CONTRACTS = widget_select_data_contract(spark_session=spark)
+CONTRACTS = widget_pipeline(
+    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, spark_session=spark,
+)
+# Select every contract or explicit No Contract, then run the next cell.
+EXECUTION_PLAN = CONTRACTS["build_plan"]()
 ```
 
-For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. The orchestrators print one contract-free decision and omit individual Guardrail stages; skipped fields remain in the returned dictionaries. The targets can publish in Engineering Development.
+For the initial Guided Demo run, there is no Data Contract yet, so explicitly select **No Contract** for every participant. Testing returns diagnostics without publishing targets. To publish bootstrap outputs, create a new selector, deliberately select Live, choose No Contract where no active version exists, and build a new plan before rerunning all Reads and Writes.
 
 ![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
 
 
 ??? info "Under the hood"
 
-    The selector resolves the notebook's source and target identities from `METADATA_DATA_LINEAGE`, then resolves the available Data Contract state for each table.
+    The selector resolves the explicitly configured source and target identities, then lists available frozen Data Contracts for each participant. Historical `METADATA_DATA_LINEAGE` does not determine pipeline membership.
 
     **Testing** applies to the entire pipeline in every environment and permits eligible frozen candidates. **Live** enforces active frozen versions and rejects inactive substitutions. Explicit **No Contract** supports bootstrap only when it bypasses no active contract. A missing selection or invalid payload fails; it never becomes No Contract.
 
-    The returned `CONTRACTS` object carries the table-level mode and contract identity into `orchestrate_write()`. See [`widget_select_data_contract()`](../api/reference/widget_select_data_contract.md) for the exact return contract.
+    The returned `CONTRACTS` state builds one immutable `EXECUTION_PLAN`. Pass that same plan to every `orchestrate_read()` and `orchestrate_write()` call. See [`widget_pipeline()`](../api/reference/widget_pipeline.md) for the exact return contract.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
