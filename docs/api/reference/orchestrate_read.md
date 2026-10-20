@@ -112,7 +112,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:21`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L21-L140">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L21-L144">View on GitHub</a>
 </div>
 
 

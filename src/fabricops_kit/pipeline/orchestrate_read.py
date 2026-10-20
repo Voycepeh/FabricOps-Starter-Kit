@@ -104,6 +104,10 @@ def orchestrate_read(*, execution_plan, store: str, schema: str | None, table_na
         raise ValueError("Incremental target must be an explicit target participant in the plan.")
     active = pipeline_guardrail_types(context, table_id)
     labels = [("freshness", "Freshness"), ("schema", "Schema"), ("grain", "Grain"), ("data_quality", "Data Quality")]
+    # A new Read supersedes earlier evidence even if evaluation cannot complete.
+    read_types = {kind for kind, _label in labels}
+    execution_plan.results[:] = [row for row in execution_plan.results
+                                if row.get("table_id") != table_id or row.get("guardrail_type") not in read_types]
     names = ["Read", *[label for kind, label in labels if kind in active]]
     if read_mode == "full":
         names.append("Profile")

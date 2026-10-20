@@ -22,7 +22,7 @@ Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the c
 
 ## Cover the whole pipeline, not only the target
 
-Step 4 validates the complete governed path, so every participating table needs a frozen contract:
+This walkthrough validates frozen contracts for every participating table in the governed path:
 
 </div>
 </div>

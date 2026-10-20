@@ -50,7 +50,9 @@ def _render(monkeypatch, rows, *, interactive=False, metadata_error=None, lineag
             raise metadata_error
         return type("Frame", (), {"collect": lambda self: rows})()
     monkeypatch.setattr(module, "read_lakehouse_table", read)
-    monkeypatch.setattr(module.ip, "display", lambda *a: None)
+    if interactive:
+        from IPython import display as ip
+        monkeypatch.setattr(ip, "display", lambda *a: None)
     if not interactive:
         monkeypatch.setattr(module, "require_ipywidgets", lambda: (_ for _ in ()).throw(ModuleNotFoundError()))
     state = module.widget_select_data_contract(
@@ -143,3 +145,24 @@ def test_invalid_contracts_never_become_no_contract(monkeypatch, corruption):
     if corruption == "duplicate": rows = [_row(), _row()]
     with pytest.raises((ValueError, RuntimeError)):
         _render(monkeypatch, rows)
+
+
+def test_public_imports_do_not_require_optional_notebook_packages():
+    """Package imports and headless APIs work without IPython or ipywidgets."""
+    import subprocess
+    import sys
+
+    code = '''
+import builtins
+original_import = builtins.__import__
+def without_notebook_packages(name, *args, **kwargs):
+    if name.split('.')[0] in {'IPython', 'ipywidgets'}:
+        raise ModuleNotFoundError(name)
+    return original_import(name, *args, **kwargs)
+builtins.__import__ = without_notebook_packages
+import fabricops_kit as kit
+for name in kit.__all__:
+    getattr(kit, name)
+assert callable(kit.create_pipeline_execution_plan)
+'''
+    subprocess.run([sys.executable, "-c", code], check=True, capture_output=True, text=True)

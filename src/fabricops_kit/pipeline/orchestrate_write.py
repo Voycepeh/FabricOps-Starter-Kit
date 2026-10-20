@@ -182,7 +182,9 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
             dry_run = run("Processing", evaluate_processing)
             profile = profile_table(dataframe=prepared, frequency_enabled=frequency_enabled,
                                     frequency_top_n=frequency_top_n, spark_session=spark_session)
-            passed = all(stage["status"] != "blocked" for stage in stages)
+            passed = all(stage["status"] != "blocked" for stage in [
+                *stages, *(stage for source in sources for stage in source.get("orchestration_stages", []))
+            ])
             duration = summary.finish([("Mode", "Testing"), ("Target", target),
                                        ("Checks passed", passed), ("Published", "No"), ("Persistence", "Disabled")])
             return {**common_results, **dry_run, "dataframe": prepared, "published": False,

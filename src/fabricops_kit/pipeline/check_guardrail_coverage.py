@@ -116,9 +116,10 @@ def check_guardrail_coverage(
 
     Explicit No Contract permits bootstrap execution so Engineering
     can populate Catalogue and Profile metadata before Governance authors the
-    first Data Contracts. Once any Data Contract is selected, every participating
-    source and target must have a selected contract with at least one active
-    Guardrail that applies to its pipeline role. Every applicable configured
+    first Data Contracts. Each participant with a selected contract must have
+    at least one active Guardrail that applies to its pipeline role. An explicit
+    No Contract choice in the validated plan exempts only that participant;
+    an absent selection is still an error. Every applicable configured
     Guardrail must also have current-activity evidence for the exact table,
     contract version, and rule revision before publication. The latest matching
     evaluation must permit continuation; a failed or skipped check is not enough.
@@ -226,19 +227,25 @@ def check_guardrail_coverage(
 
     readiness: list[dict[str, Any]] = []
     issues: list[dict[str, Any]] = []
+    plan = context.get("execution_plan")
+    selections = json.loads(plan.selections_json) if plan is not None else {}
     for item in participants:
         contract_selected = item["contract"] is not None
+        explicit_no_contract = not contract_selected and selections.get(item["table_id"]) == {"no_contract": True}
         active_count = len(item["rules"])
         applicable_count = len(item["applicable_rules"])
-        ready = contract_selected and applicable_count > 0
+        ready = explicit_no_contract or (contract_selected and applicable_count > 0)
         readiness.append({
             "scope": item["scope"],
             "table_name": item["table_name"],
             "contract_selected": contract_selected,
+            "explicit_no_contract": explicit_no_contract,
             "active_guardrail_count": active_count,
             "applicable_guardrail_count": applicable_count,
             "ready": ready,
         })
+        if explicit_no_contract:
+            continue
         if not contract_selected:
             issues.append({
                 "scope": item["scope"],
@@ -337,6 +344,9 @@ def check_guardrail_coverage(
         print("FabricOps Contract Coverage")
         for item in readiness:
             mark = "✓" if item["ready"] else "✗"
+            if item["explicit_no_contract"]:
+                print(f"{mark} {item['table_name']}: explicit No Contract")
+                continue
             print(
                 f"{mark} {item['table_name']}: contract + "
                 f"{item['applicable_guardrail_count']} applicable Guardrail(s)"

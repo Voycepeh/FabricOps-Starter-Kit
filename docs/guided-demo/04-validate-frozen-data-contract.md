@@ -21,7 +21,7 @@ Selection does not edit or activate a contract.
 
 5. Run `EXECUTION_PLAN = CONTRACTS["build_plan"]()` after selecting versions. All Reads and Writes must use this same plan.
 
-Guardrail Coverage still requires contracts and applicable checks for the complete governed source → target relationship once any participant uses a contract. Mixing contracted and uncontracted participants cannot bypass that requirement.
+Guardrail Coverage requires complete applicable checks for each selected contract in the source → target relationship. An explicit **No Contract** choice exempts only that participant; it cannot bypass an active contract or excuse missing or failed checks on another participant. Missing selections remain errors.
 
 ### Run Read → Transform → Write → Inspect
 

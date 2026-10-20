@@ -6,8 +6,6 @@ import html
 import json
 from typing import Any
 
-from IPython import display as ip
-
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
 from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
 from fabricops_kit.io import read_lakehouse_table
@@ -291,6 +289,7 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
 
     try:
         widgets = require_ipywidgets()
+        from IPython import display as ip
     except ModuleNotFoundError:
         return state
     style = widgets.HTML('''<style>

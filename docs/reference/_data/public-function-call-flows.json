@@ -3192,7 +3192,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.shared._contract_activation_changes",
-      "source_end_line": 1162,
+      "source_end_line": 1165,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
       "source_start_line": 1138,
       "usage": "public_flow_reachable"
@@ -3366,9 +3366,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.shared.activate_contract_version",
-      "source_end_line": 1256,
+      "source_end_line": 1263,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 1165,
+      "source_start_line": 1168,
       "usage": "public_flow_reachable"
     },
     {
@@ -3382,9 +3382,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.shared.assemble_contract_payload",
-      "source_end_line": 1531,
+      "source_end_line": 1538,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 1378,
+      "source_start_line": 1385,
       "usage": "public_flow_reachable"
     },
     {
@@ -3399,9 +3399,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.data_contract.shared.build_enrichment_records",
-      "source_end_line": 1329,
+      "source_end_line": 1336,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 1259,
+      "source_start_line": 1266,
       "usage": "unused"
     },
     {
@@ -3532,9 +3532,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.shared.freeze_contract",
-      "source_end_line": 1599,
+      "source_end_line": 1606,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 1534,
+      "source_start_line": 1541,
       "usage": "public_flow_reachable"
     },
     {
@@ -3548,9 +3548,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.shared.freeze_contract_record",
-      "source_end_line": 1376,
+      "source_end_line": 1383,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 1348,
+      "source_start_line": 1355,
       "usage": "public_flow_reachable"
     },
     {
@@ -3809,9 +3809,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.shared.validate_grain_contract",
-      "source_end_line": 1345,
+      "source_end_line": 1352,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 1332,
+      "source_start_line": 1339,
       "usage": "public_flow_reachable"
     },
     {
@@ -5828,7 +5828,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage",
-      "source_end_line": 371,
+      "source_end_line": 381,
       "source_path": "src/fabricops_kit/pipeline/check_guardrail_coverage.py",
       "source_start_line": 107,
       "supports_live_contract": true,
@@ -6084,7 +6084,7 @@
       ],
       "returns_documentation": "dict\n    Source dataframe and identity, selected contract, execution_mode,\n    applicable_guardrails, diagnostic results, profile, persistence_status,\n    publication_status and checks_not_exercised. Testing retains blocking\n    rule outcomes for inspection; Live stops on Block. Neither publishes data.",
       "signature": "def orchestrate_read(*, execution_plan, store: str, schema: str | None, table_name: str, read_mode: str='full', query: str | None=None, read_parameters: dict[str, Any] | None=None, target_table_id: str | None=None, grain_discovery_enabled: bool=True, grain_discovery_max_columns: int=3, grain_discovery_max_candidates: int=8, frequency_enabled: bool=True, frequency_top_n: int | None=5, spark_session=None, verbose: bool=True, dq_diagnostics: str='sample') -> dict[str, Any]",
-      "source_end_line": 140,
+      "source_end_line": 144,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_read.py",
       "source_start_line": 21,
       "summary": "Read real source data under an explicit shared pipeline execution plan.",
@@ -6225,7 +6225,7 @@
       ],
       "returns_documentation": "dict\n    Prepared dataframe, selected contract, execution_mode, Guardrail outcomes,\n    schema_result, sensitive_result, source_drift_results, grain_result,\n    dq_result, coverage_result, write_metrics, published, persistence_status and explicit dry-run\n    limits. Testing failures remain diagnostic results, never publication success.\n    Live returns the actual publication outcome. Metadata commits across Fabric\n    stores are separate lifecycle operations, not one atomic transaction.",
       "signature": "def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None=None, repartition_by: int | None=None, grain_discovery_enabled: bool=True, grain_discovery_max_columns: int=3, grain_discovery_max_candidates: int=8, frequency_enabled: bool=True, frequency_top_n: int | None=5, existing_mapping=None, spark_session=None, verbose: bool=True, dq_diagnostics: str='sample') -> dict[str, Any]",
-      "source_end_line": 225,
+      "source_end_line": 227,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
       "source_start_line": 25,
       "summary": "Evaluate and optionally publish a target using the shared execution plan.",
@@ -12614,9 +12614,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract._applicability",
-      "source_end_line": 53,
+      "source_end_line": 51,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 43,
+      "source_start_line": 41,
       "usage": "public_flow_reachable"
     },
     {
@@ -12631,9 +12631,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract._contract_review",
-      "source_end_line": 83,
+      "source_end_line": 81,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 56,
+      "source_start_line": 54,
       "usage": "public_flow_reachable"
     },
     {
@@ -12647,9 +12647,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract._inspector",
-      "source_end_line": 121,
+      "source_end_line": 119,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 86,
+      "source_start_line": 84,
       "usage": "public_flow_reachable"
     },
     {
@@ -12663,9 +12663,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract._table",
-      "source_end_line": 40,
+      "source_end_line": 38,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 30,
+      "source_start_line": 28,
       "usage": "public_flow_reachable"
     },
     {
@@ -12680,9 +12680,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_select_data_contract._value",
-      "source_end_line": 27,
+      "source_end_line": 25,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 20,
+      "source_start_line": 18,
       "usage": "public_flow_reachable"
     },
     {
@@ -12735,9 +12735,9 @@
       ],
       "returns_documentation": "dict\n    Interactive state with execution_mode (initially testing), tables, controls,\n    select_contract, set_mode and build_plan. Each table starts unselected.\n    Explicitly select No Contract for bootstrap; build_plan validates every\n    choice and freezes the plan to pass to all Read and Write calls.\n    UI edits after build_plan require a new plan and a new run of Read/Transform/Write.\n    The widget never changes notebook globals, edits or activates contracts.",
       "signature": "def widget_select_data_contract(*, sources, targets, spark_session=None, context=None)",
-      "source_end_line": 338,
+      "source_end_line": 337,
       "source_path": "src/fabricops_kit/widgets/widget_select_data_contract.py",
-      "source_start_line": 124,
+      "source_start_line": 122,
       "summary": "Select one pipeline mode and independently inspect each participant's contract.",
       "usage": "public_flow_reachable"
     },

@@ -214,18 +214,32 @@ def test_live_explicit_bootstrap_publishes_and_commits_lineage(runtime, spark_se
     assert spies["fabricops_kit.pipeline.pipeline_write._persist_target_processing"].call_count == 1
 
 
-def test_mixed_contracted_relationship_cannot_bypass_full_coverage(runtime, spark_session):
-    """Explicit No Contract is a choice, never an escape from governed participation."""
-    make, rows, spies, context = runtime
-    candidate = frozen(SOURCE_ID)
+@pytest.mark.parametrize("mode", ["testing", "live"])
+@pytest.mark.parametrize("contracted_id", [SOURCE_ID, TARGET_ID])
+def test_mixed_relationship_respects_explicit_no_contract(runtime, spark_session, monkeypatch, mode, contracted_id):
+    """Explicit opt-out exempts one participant, retaining the selected contract's checks."""
+    _, rows, spies, context = runtime
+    candidate = frozen(contracted_id, active=mode == "live")
     rows.append(candidate)
-    plan = create_pipeline_execution_plan(execution_mode="testing", sources=[SOURCE], targets=[TARGET],
-        selections={SOURCE_ID: {"contract_id": candidate["contract_id"], "contract_version": 1},
-                    TARGET_ID: {"no_contract": True}}, context=context, spark_session=spark_session)
+    selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
+    selections[contracted_id] = {"contract_id": candidate["contract_id"], "contract_version": 1}
+    plan = create_pipeline_execution_plan(execution_mode=mode, sources=[SOURCE], targets=[TARGET],
+        selections=selections, context=context, spark_session=spark_session)
+    monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
+    orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
+    if mode == "live":
+        monkeypatch.setattr(orchestrator, "profile_table", lambda **kw: {"row_count": 2})
     result = write(plan, read(plan, spark_session), spark_session)
-    assert not result["validation_passed"] and not result["published"]
-    assert any(issue["reason"] == "missing_contract" for issue in result["coverage_result"]["issues"])
-    assert all(spy.call_count == 0 for spy in spies.values())
+    assert result["coverage_result"]["can_continue"]
+    assert len(result["coverage_result"]["coverage"]) == 2
+    assert any(item["explicit_no_contract"] for item in result["coverage_result"]["readiness"])
+    assert result["published"] is (mode == "live")
+    if mode == "testing":
+        assert result["validation_passed"]
+        assert all(spy.call_count == 0 for spy in spies.values())
+    else:
+        assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 1
+        assert spies["fabricops_kit.pipeline.shared.persist_lineage_participation"].call_count == 2
 
 
 @pytest.mark.parametrize("strategy,parameters", [("scd1", {"key_columns": ["id"]}),
@@ -254,3 +268,57 @@ def test_testing_missing_dq_column_reports_unevaluated_check_without_losing_rows
     assert result["dq_result"]["evaluation_status"] == "not_fully_evaluated"
     assert any("Data Quality:" in check for check in result["checks_not_exercised"])
     assert not result["published"] and all(spy.call_count == 0 for spy in spies.values())
+
+
+def test_failed_read_cannot_reuse_prior_successful_dq_evidence(runtime, spark_session, monkeypatch):
+    """A missing optional Schema column invalidates its previous passing DQ check."""
+    make, rows, spies, _ = runtime
+    make(contracted=True)
+    payload = json.loads(rows[0]["contract_payload_json"])
+    payload["table"]["columns"].append({"column_id": "other-col", "column_name": "other", "data_type": "bigint"})
+    payload["guardrails"][1]["column_id"] = "other-col"
+    payload["guardrails"][1]["rule_parameters"]["columns"] = ["other"]
+    rows[0]["contract_payload_json"] = json.dumps(payload)
+    plan = make(contracted=True)
+    initial = spark_session.createDataFrame([(1, 1), (2, 2)], "id long, other long")
+    monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: initial)
+    read(plan, spark_session)
+    changed = initial.drop("other")
+    monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: changed)
+    failed = read(plan, spark_session)
+    assert failed["dq_result"]["can_continue"] is False
+    result = write(plan, failed, spark_session)
+    assert not result["validation_passed"]
+    assert not result["coverage_result"]["can_continue"]
+    from fabricops_kit.widgets.widget_activate_data_contract import _diagnostic_review
+    assert not _diagnostic_review([result], rows[0], "dev")["available"]
+    # Reevaluation can recover without creating a new plan or retaining stale failures.
+    monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: initial)
+    recovered = read(plan, spark_session)
+    assert write(plan, recovered, spark_session, dataframe=recovered["dataframe"].select("id"))["validation_passed"]
+    # A later passing Read cannot turn the earlier failed Read result into a passing report.
+    assert not write(plan, failed, spark_session)["validation_passed"]
+    assert all(spy.call_count == 0 for spy in spies.values())
+
+
+@pytest.mark.parametrize("mode", ["testing", "live"])
+def test_no_contract_target_does_not_exempt_failed_source_checks(runtime, spark_session, monkeypatch, mode):
+    """An explicit target opt-out cannot waive Block outcomes on its contracted source."""
+    _, rows, spies, context = runtime
+    candidate = frozen(SOURCE_ID, active=mode == "live")
+    rows.append(candidate)
+    plan = create_pipeline_execution_plan(execution_mode=mode, sources=[SOURCE], targets=[TARGET],
+        selections={SOURCE_ID: {"contract_id": candidate["contract_id"], "contract_version": 1},
+                    TARGET_ID: {"no_contract": True}}, context=context, spark_session=spark_session)
+    bad = spark_session.createDataFrame([(None,)], "id long")
+    monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: bad)
+    if mode == "live":
+        with pytest.raises(RuntimeError, match="Data Quality"):
+            read(plan, spark_session)
+    else:
+        source = read(plan, spark_session)
+        result = write(plan, source, spark_session)
+        assert not result["validation_passed"]
+        assert not result["coverage_result"]["can_continue"]
+        assert all(spy.call_count == 0 for spy in spies.values())
+    assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 0
