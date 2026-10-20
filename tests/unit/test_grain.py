@@ -84,13 +84,18 @@ def _grain_contract(runtime, action="Block", active=True):
 @pytest.mark.parametrize("action,active", [("Block", False), ("Warn", True), ("Block", True)])
 def test_write_grain_independent_of_dq_and_continuation(contract_runtime, spark_session, monkeypatch, strategy, action, active):
     """Every strategy validates prepared input, records exact-version results, and gates continuation."""
-    selection, _context, _payload, _frozen, writes, _reads = contract_runtime
+    selection, _context, payload, frozen, writes, _reads = contract_runtime
     _grain_contract(contract_runtime, action, active)
+    parameters = {"key_columns": ["id"]} if strategy in {"scd1", "scd2"} else {}
+    if strategy == "scd2":
+        parameters["effective_column"] = "id"
+    payload["table"]["processing"] = {"load_strategy": strategy, **parameters}
+    frozen["contract_payload_json"] = json.dumps(payload)
     module = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
     coverage = Mock(return_value={"status": "passed", "can_continue": True})
     monkeypatch.setattr(module, "check_guardrail_coverage", coverage)
     frame = spark_session.createDataFrame([(1, "a"), (1, "b")], ["id", "email"])
-    args = dict(dataframe=frame, sources=[], store="Silver", schema="dbo", table_name="target", write_mode=strategy, contracts=selection, spark_session=spark_session, verbose=False)
+    args = dict(dataframe=frame, sources=[], store="Silver", schema="dbo", table_name="target", write_mode=strategy, write_parameters=parameters, contracts=selection, spark_session=spark_session, verbose=False)
     if active and action == "Block":
         with pytest.raises(RuntimeError, match="during Grain"):
             module.orchestrate_write(**args)

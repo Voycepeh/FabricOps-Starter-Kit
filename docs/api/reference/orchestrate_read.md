@@ -72,7 +72,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `store` | `str` | Yes | `—` | Configured source store key. |
 | `schema` | `str \| None` | Yes | `—` | Physical source schema. This keyword is required; pass None for a store without schemas. |
 | `table_name` | `str` | Yes | `—` | Physical source table name. |
-| `read_mode` | `str` | No | `'full'` | Source read behaviour forwarded to the internal Read stage. |
+| `read_mode` | `str` | No | `'full'` | Source read behaviour. Surrounding whitespace and case are normalized before planning stages, validating parameters, or selecting Grain scope. |
 | `query` | `str \| None` | No | `None` | Read-only Warehouse query forwarded to the internal Read stage. |
 | `read_parameters` | `dict[str, Any] \| None` | No | `None` | Incremental configuration, for example {"watermark_column": "modified_datetime"}. A selected Data Contract must agree with the supplied watermark. Required for incremental mode when no selected contract supplies the watermark. |
 | `target_table_id` | `str \| None` | No | `None` | Governed target identity required for incremental reads. |
@@ -113,7 +113,8 @@ dict
 ## Raises / Errors
 
 ValueError
-    If a discovery limit is not a positive integer; checked before any stage runs.
+    If read_mode is invalid or a discovery limit is not a positive integer;
+    checked before metadata resolution or any stage runs.
 RuntimeError
     If a stage fails. Its name is reported and the original exception is
     retained as ``__cause__``.
@@ -148,6 +149,8 @@ concurrent source updates a transactional snapshot.
 Incremental progress captures one aggregate summary per source, including
 empty-source evidence; Source Drift fingerprints remain independent.
 DataFrames are never displayed. Incremental batches are not profiled.
+Custom Warehouse query results are profiled as DataFrames only, without
+updating the physical source's Catalogue, Profile, or frequency snapshots.
 With verbose=True, successful execution ends with a READ Summary on stdout.
 Counts reuse existing profiling results; no Spark action is added for
 reporting. An unavailable count is printed as ``Not available``.
@@ -163,7 +166,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:20`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L20-L173">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L20-L182">View on GitHub</a>
 </div>
 
 

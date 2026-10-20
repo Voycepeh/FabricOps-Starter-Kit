@@ -17,6 +17,7 @@ from fabricops_kit.pipeline.shared import (
     pipeline_guardrail_types,
     print_pipeline_contract,
     record_contract_validation,
+    resolve_table_processing_definition,
 )
 
 
@@ -67,7 +68,14 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     existing_mapping : pyspark.sql.DataFrame, optional
         Previously returned Sensitive Data token mappings. Existing assignments
         are reused; the returned sensitive_result contains the support_mapping
-        for the caller to persist and supply on later runs. After consuming the
+        for the caller to persist and supply on later runs. When Engineering
+        configures GovernanceConfig.sensitive_data_token_mapping, Enforce
+        automatically reuses and inserts assignments in that restricted Delta
+        store. Validate reads the store without writing it. Without that setting,
+        mapping management remains caller-owned. Caller-owned mappings retain
+        established identities absent from the current batch; managed mappings
+        return only assignments used in the current batch. Do not combine a
+        configured mapping store with existing_mapping. After consuming the
         prepared DataFrame and persisting the mapping, call its unpersist()
         method to release its cache. Failed orchestration releases it automatically.
     spark_session : object, optional
@@ -102,6 +110,9 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     RuntimeError
         If any stage fails. Its name is reported and the original exception is
         retained as ``__cause__``.
+        A Profile failure after successful Write also exposes ``published=True``,
+        ``table_id``, ``write_metrics``, and ``failed_stage="Profile"`` on the
+        exception. Publication and checkpoint finalization have already completed.
 
     Notes
     -----
@@ -118,7 +129,11 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     DataFrame and published target do not acquire those tags automatically.
     Validate resolves the exact selected frozen candidate and records
     execution_type=validate evidence for activation, including a completion
-    record for every covered contract after Guardrail Coverage passes, then returns without writing;
+    record for every covered contract after Guardrail Coverage and Processing
+    pass, then returns without writing. Processing uses the same strategy/parameter
+    validation and exact contract comparison as Enforce, rejecting invalid SCD
+    definitions and mismatches before recording successful validation. Validate
+    does not exercise the physical writer or test destination availability.
     Enforce continues through Write and persisted-target Profile. Existing
     metadata and Source Observation commit behaviour remains owned by
     the internal Write stage. The returned ``dataframe`` is the prepared Write input,
@@ -188,12 +203,14 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
         names.append("Data Quality")
     if governed:
         names.append("Guardrail Coverage")
-    if contract_mode != "validate":
+    if contract_mode == "validate":
+        names.append("Processing")
+    else:
         names.extend(["Write", "Profile"])
     stages = []
     if verbose:
         print(f"FabricOps WRITE · {table_name}")
-    print_pipeline_contract(context, target_id, operation="Write", guardrails=[name for name in names if name not in {"Write", "Profile", "Guardrail Coverage"}], verbose=verbose)
+    print_pipeline_contract(context, target_id, operation="Write", guardrails=[name for name in names if name not in {"Write", "Profile", "Guardrail Coverage", "Processing"}], verbose=verbose)
     def run(stage, function):
         result, record = _run_orchestration_stage(operation="WRITE", name=table_name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose)
         stages.append(record)
@@ -220,6 +237,11 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
             "orchestration_stages": stages,
         }
         if contract_mode == "validate":
+            run("Processing", lambda: resolve_table_processing_definition(
+                context["config"], context["env"], target_id, context=context,
+                spark_session=spark_session,
+                authored_processing={"load_strategy": write_mode, **(write_parameters or {})},
+            ))
             record_contract_validation(context=context, target_table_id=target_id, coverage=coverage, spark_session=spark_session)
             columns = getattr(prepared, "columns", None)
             metrics = {"input_columns": len(columns) if columns is not None else None, "input_rows": None, "rows_committed": 0, "total_target_rows": None,
@@ -244,7 +266,18 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
         columns = getattr(prepared, "columns", None)
         metrics.setdefault("input_columns", len(columns) if columns is not None else None)
         summary.details([("Strategy", strategy.title()), ("Target", target), ("Rows committed", metrics["rows_committed"]), ("Columns", metrics["input_columns"])])
-        profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], grain_discovery_enabled=grain_discovery_enabled, grain_discovery_max_columns=grain_discovery_max_columns, grain_discovery_max_candidates=grain_discovery_max_candidates, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session))
+        try:
+            profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], grain_discovery_enabled=grain_discovery_enabled, grain_discovery_max_columns=grain_discovery_max_columns, grain_discovery_max_candidates=grain_discovery_max_candidates, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session))
+        except RuntimeError as exc:
+            exc.published = True
+            exc.table_id = write_result["table_id"]
+            exc.write_metrics = dict(metrics)
+            exc.failed_stage = "Profile"
+            message = "Target publication and checkpoint finalization already succeeded; Profile failed afterwards."
+            exc.args = (f"{exc} {message}",)
+            if verbose:
+                print(message)
+            raise
         metrics["total_target_rows"] = profile.get("row_count")
         fields = [("Target", target), ("Strategy", strategy.title()), ("Published", "Yes"), ("Rows committed", metrics["rows_committed"])]
         if strategy == "scd1":

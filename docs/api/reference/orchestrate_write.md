@@ -89,7 +89,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `grain_discovery_max_candidates` | `int` | No | `8` | Maximum candidate keys to retain at the smallest valid key width. Must be a positive integer. Discovery stops after enough keys are found; this limit does not cap work when no valid key exists. |
 | `frequency_enabled` | `bool` | No | `True` | Whether Profile calculates frequency distributions for this call. The caller controls when to enable discovery and frequency profiling. |
 | `frequency_top_n` | `int \| None` | No | `5` | Maximum ranked frequency values per eligible column; None retains all. |
-| `existing_mapping` | `pyspark.sql.DataFrame` | No | `None` | Previously returned Sensitive Data token mappings. Existing assignments are reused; the returned sensitive_result contains the support_mapping for the caller to persist and supply on later runs. After consuming the prepared DataFrame and persisting the mapping, call its unpersist() method to release its cache. Failed orchestration releases it automatically. |
+| `existing_mapping` | `pyspark.sql.DataFrame` | No | `None` | Previously returned Sensitive Data token mappings. Existing assignments are reused; the returned sensitive_result contains the support_mapping for the caller to persist and supply on later runs. When Engineering configures GovernanceConfig.sensitive_data_token_mapping, Enforce automatically reuses and inserts assignments in that restricted Delta store. Validate reads the store without writing it. Without that setting, mapping management remains caller-owned. Caller-owned mappings retain established identities absent from the current batch; managed mappings return only assignments used in the current batch. Do not combine a configured mapping store with existing_mapping. After consuming the prepared DataFrame and persisting the mapping, call its unpersist() method to release its cache. Failed orchestration releases it automatically. |
 | `spark_session` | `object` | No | `None` | Spark session used by every stage. |
 | `verbose` | `bool` | No | `True` | Print stage start, outcome, duration, and failure attribution. |
 | `dq_diagnostics` | `str` | No | `'sample'` | Sample captures at most ten illustrative source records per DQ rule with exact metrics in the same aggregation. None captures metrics only. Full also returns every failure as a lazy diagnostic DataFrame. |
@@ -145,6 +145,9 @@ ValueError
 RuntimeError
     If any stage fails. Its name is reported and the original exception is
     retained as ``__cause__``.
+    A Profile failure after successful Write also exposes ``published=True``,
+    ``table_id``, ``write_metrics``, and ``failed_stage="Profile"`` on the
+    exception. Publication and checkpoint finalization have already completed.
 
 ## Notes
 
@@ -163,7 +166,11 @@ dq_result["dataframe"] retains lazy row tags. The top-level source/prepared
 DataFrame and published target do not acquire those tags automatically.
 Validate resolves the exact selected frozen candidate and records
 execution_type=validate evidence for activation, including a completion
-record for every covered contract after Guardrail Coverage passes, then returns without writing;
+record for every covered contract after Guardrail Coverage and Processing
+pass, then returns without writing. Processing uses the same strategy/parameter
+validation and exact contract comparison as Enforce, rejecting invalid SCD
+definitions and mismatches before recording successful validation. Validate
+does not exercise the physical writer or test destination availability.
 Enforce continues through Write and persisted-target Profile. Existing
 metadata and Source Observation commit behaviour remains owned by
 the internal Write stage. The returned ``dataframe`` is the prepared Write input,
@@ -187,9 +194,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:23`
+`fabricops_kit/pipeline/orchestrate_write.py:24`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L23-L260">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L24-L293">View on GitHub</a>
 </div>
 
 
@@ -205,7 +212,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 187 |
+| Live-critical dependencies | 189 |
 
 ### Release history
 
@@ -276,6 +283,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._contract</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._current_activity_results</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._label</code></li>
+<li><code>fabricops_kit.pipeline.check_guardrail_coverage._latest_can_continue</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._payload</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage._rules</code></li>
 <li><code>fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage</code></li>
@@ -362,6 +370,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._string_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._summarize_dq_guardrail</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_dq_rules</code></li>
+<li><code>fabricops_kit.pipeline.shared._validate_token_mapping</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>

@@ -278,7 +278,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     validated = orchestrate_write(read["dataframe"], sources=[read, schema_read], store="Silver", schema="dbo", table_name="curated_orders", write_mode="overwrite", contracts=selection, spark_session=state.spark, verbose=False)
     assert validated["validation_passed"] and not validated["published"]
     assert "curated_orders" not in state.business
-    assert [item["stage"] for item in validated["orchestration_stages"]] == ["Schema", "Sensitive Data", "Source Drift", "Grain", "Data Quality", "Guardrail Coverage"]
+    assert [item["stage"] for item in validated["orchestration_stages"]] == ["Schema", "Sensitive Data", "Source Drift", "Grain", "Data Quality", "Guardrail Coverage", "Processing"]
     assert validated["dataframe"].first().email == "****************"
     for table_id in (state.source_id, state.schema_source_id, state.target_id):
         widget, buttons = _activation(state, table_id)

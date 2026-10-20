@@ -391,8 +391,11 @@ DEFAULT_AI_ENRICHMENT = {
         "Assess the selected active canonical column as Direct PII, Indirect PII, or Not PII using only "
         "the supplied table context, column metadata, Enrichment, and profile evidence. Explain the "
         "assessment briefly. For Direct or Indirect PII, suggest only tokenize, mask, bucket, or remove, "
-        "explicit parameters, and a Warn or Block action. The manually selected information "
-        "classification is context only, not a PII decision. Never request or return raw values. Return "
+        "explicit parameters, and a Block action. Use Mask for text or categorical columns and Bucket for "
+        "numeric values using approved fixed boundaries. Tokenize can protect numeric or categorical "
+        "identifiers; Remove supports either. Prefer full masking when Mask applies. The manually selected information "
+        "classification is context only, not a PII decision. Profile summaries, min/max, and the top three "
+        "frequent values are approved input evidence. Never request full source rows or return raw values. Return "
         "structured JSON only; final review belongs to Governance."
     ),
     "grain_prompt": (
@@ -438,6 +441,12 @@ class GovernanceConfig:
     ai_enrichment : dict[str, Any]
         Optional AI Enrichment authoring settings. ``enabled`` controls the
         assistant and the prompt fields provide project instructions.
+    sensitive_data_token_mapping : dict[str, Any], optional
+        Engineering-managed token vault target with ``store``, ``schema`` and
+        ``table_name``. Provision a restricted Delta table before use. The store
+        must be separate from Metadata because mappings contain original values.
+        Enforce inserts missing assignments; Validate reads without persisting.
+        Empty keeps explicit caller-owned mapping management.
     enrichment_context_widget, enrichment_classification_widget : dict[str, Any]
         Widget definitions for organization-specific enrichment fields. Each
         widget uses ``custom_fields`` entries keyed by ``key``.
@@ -451,8 +460,22 @@ class GovernanceConfig:
     enrichment_context_widget: dict[str, Any] = field(default_factory=lambda: {"custom_fields": []})
     enrichment_classification_widget: dict[str, Any] = field(default_factory=lambda: {"custom_fields": []})
 
+    sensitive_data_token_mapping: dict[str, Any] = field(default_factory=dict)
+
     def __post_init__(self) -> None:
         """Validate and normalize initialized values."""
+        target = dict(self.sensitive_data_token_mapping or {})
+        if target:
+            if set(target) - {"store", "schema", "table_name"} or not all(
+                isinstance(target.get(key), str) and target[key].strip() for key in ("store", "table_name")
+            ):
+                raise ValueError("sensitive_data_token_mapping requires store and table_name; schema is optional.")
+            if target["store"].strip().lower() == "metadata":
+                raise ValueError("Token mappings contain original values; use a separately restricted store, not Metadata.")
+            if target.get("schema") is not None and not isinstance(target["schema"], str):
+                raise ValueError("Token mapping schema must be a string or None.")
+            target = {key: value.strip() if isinstance(value, str) else value for key, value in target.items()}
+        object.__setattr__(self, "sensitive_data_token_mapping", target)
         object.__setattr__(self, "required_classification", bool(self.required_classification))
         object.__setattr__(self, "sensitivity_rules", dict(self.sensitivity_rules or {}))
         labels = [str(option).strip() for option in (self.classification_levels or []) if str(option).strip()]

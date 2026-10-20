@@ -1,35 +1,35 @@
 {
   "artifacts": {
     "individual_function_reference_pages": {
-      "generated_at_sgt": "20 Oct 2026, 2:22 PM SGT",
-      "generated_at_utc": "2026-10-20T06:22:35.633154Z",
+      "generated_at_sgt": "20 Oct 2026, 2:28 PM SGT",
+      "generated_at_utc": "2026-10-20T06:28:26.069799Z",
       "generator": "scripts/generate_individual_function_reference_pages.py",
       "label": "Individual function reference pages",
       "output_path": "docs/api/reference"
     },
     "public_api_compatibility_json": {
-      "generated_at_sgt": "20 Oct 2026, 2:23 PM SGT",
-      "generated_at_utc": "2026-10-20T06:23:58.986522Z",
+      "generated_at_sgt": "20 Oct 2026, 2:28 PM SGT",
+      "generated_at_utc": "2026-10-20T06:28:28.985972Z",
       "generator": "scripts/generate_public_api_compatibility.py",
       "label": "Public API compatibility snapshots",
       "output_path": "docs/reference/_data/public-api-compatibility.json"
     },
     "public_function_call_flows_dashboard": {
-      "generated_at_sgt": "19 Oct 2026, 4:13 PM SGT",
-      "generated_at_utc": "2026-10-19T08:13:11.976852Z",
+      "generated_at_sgt": "20 Oct 2026, 1:43 PM SGT",
+      "generated_at_utc": "2026-10-20T05:43:30.883028Z",
       "generator": "scripts/generate_public_function_call_flows_dashboard.py",
       "label": "Public function call-flow dashboard",
       "output_path": "docs/assets/public-function-call-flows-dashboard.html"
     },
     "public_function_call_flows_json": {
-      "generated_at_sgt": "20 Oct 2026, 2:23 PM SGT",
-      "generated_at_utc": "2026-10-20T06:23:51.325700Z",
+      "generated_at_sgt": "20 Oct 2026, 2:28 PM SGT",
+      "generated_at_utc": "2026-10-20T06:28:22.232067Z",
       "generator": "scripts/generate_public_function_call_flows_json.py",
       "label": "Public function call-flow data",
       "output_path": "docs/reference/_data/public-function-call-flows.json"
     }
   },
-  "last_generated_at_sgt": "20 Oct 2026, 2:23 PM SGT",
-  "last_generated_at_utc": "2026-10-20T06:23:58.986522Z",
+  "last_generated_at_sgt": "20 Oct 2026, 2:28 PM SGT",
+  "last_generated_at_utc": "2026-10-20T06:28:28.985972Z",
   "schema": "fabricops_generated_artifact_timestamps_v1"
 }

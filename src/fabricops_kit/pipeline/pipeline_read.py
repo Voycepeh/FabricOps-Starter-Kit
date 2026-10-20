@@ -295,6 +295,9 @@ def pipeline_read(
     profile_table
 
     """
+    read_mode = str(read_mode or "").strip().lower()
+    if read_mode not in {"full", "incremental"}:
+        raise ValueError("read_mode must be 'full' or 'incremental'.")
     if read_parameters is not None:
         if not isinstance(read_parameters, dict):
             raise ValueError("read_parameters must be a dictionary.")
@@ -307,9 +310,6 @@ def pipeline_read(
         if not isinstance(value, str) or not value.strip():
             raise ValueError("read_parameters.watermark_column must be a non-empty string.")
     coordinates = (store, schema, table_name)
-    read_mode = str(read_mode or "").strip().lower()
-    if read_mode not in {"full", "incremental"}:
-        raise ValueError("read_mode must be 'full' or 'incremental'.")
     if read_mode == "incremental" and not str(target_table_id or "").strip():
         raise ValueError("target_table_id is required when read_mode='incremental'.")
     if read_mode == "incremental" and query is not None:

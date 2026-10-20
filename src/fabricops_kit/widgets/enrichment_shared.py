@@ -15,6 +15,7 @@ from fabricops_kit.config.shared import metadata_timestamp_sort_key
 from fabricops_kit.data_contract.shared import (
     normalize_guardrail_action,
     validate_sensitive_data_parameters,
+    sensitive_data_treatments_for_type,
 )
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
@@ -112,7 +113,7 @@ def suggest_enrichment(
 
 
 def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
-    """Build compact metadata-only evidence for Sensitive Data suggestions."""
+    """Build approved profile summaries and up to three frequent-value samples."""
     fields = (
         "row_count", "non_null_count", "null_count", "null_percent",
         "distinct_count", "distinct_percent", "mean_value", "stddev_value",
@@ -121,6 +122,10 @@ def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
     )
     columns = []
     for row in state.get("catalogue_profile_rows", []):
+        frequencies = sorted(
+            (item for item in (row.get("frequency_evidence") or []) if isinstance(item, dict)),
+            key=lambda item: float(item.get("count") or 0), reverse=True,
+        )[:3]
         columns.append({
             "column_id": str(row.get("column_id") or ""),
             "column_name": str(row.get("column_name") or ""),
@@ -128,9 +133,14 @@ def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
             "description": str(row.get("description") or ""),
             "classification": str(row.get("classification") or ""),
             "profile_evidence": {
-                name: row.get(name) for name in fields if row.get(name) is not None
+                name: row.get(name, (row.get("profile_evidence") or {}).get(name))
+                for name in fields
+                if row.get(name, (row.get("profile_evidence") or {}).get(name)) is not None
             },
-            "frequency_evidence": list(row.get("frequency_evidence") or [])[:3],
+            "frequency_evidence": [
+                {name: item[name] for name in ("value", "count", "percent") if name in item}
+                for item in frequencies
+            ],
         })
     return {
         "table_id": str(state.get("table_id") or ""),
@@ -191,6 +201,7 @@ def suggest_sensitive_data(
         for row in context.get("columns", [])
         if str(row.get("column_name") or "") and str(row.get("column_id") or "")
     }
+    context = build_ai_sensitive_data_context({**context, "catalogue_profile_rows": context.get("columns", [])})
     instruction = (
         f"{prompt.strip()}\n\nSuggest advisory Sensitive Data rules using only this metadata context. "
         "Assess every supplied column as Direct PII, Indirect PII, or Not PII. "
@@ -198,8 +209,11 @@ def suggest_sensitive_data(
         "The column field must be the supplied column_name string, not a column object. "
         "Use pii_type values direct, indirect, or none. For none, treatment must be null, action must be null, "
         "and parameters must be an empty object. "
-        "Allowed treatments: tokenize, mask, bucket, remove. Allowed actions: Warn, Block. "
-        "Classification is only an input signal, not an automatic rule. Do not include raw values.\n\n"
+        "Allowed treatments: tokenize, mask, bucket, remove. Action must be Block. "
+        "Bucket is numeric only; Mask is for text or categorical columns. Tokenize works for numeric or categorical identifiers; Remove works for either. "
+        "Use fixed approved ranges, never inferred quantiles. "
+        "Prefer full mask with preserve_start=0, preserve_end=0, mask_character='*'. "
+        "Classification is only an input signal, not an automatic rule. Use the supplied profile summaries and top-three frequent values as evidence. Do not include raw values in the response.\n\n"
         f"Context:\n{json.dumps(context, sort_keys=True, default=str)}"
     )
     raw = str((invoke or _invoke_fabric_ai)(instruction)).strip()
@@ -252,7 +266,11 @@ def suggest_sensitive_data(
                 "treatment": candidate.get("treatment"),
                 **dict(candidate.get("parameters") or {}),
             })
-            action = normalize_guardrail_action(candidate.get("action"))
+            column_type = next(row.get("data_type", "") for row in context["columns"] if row["column_name"] == column_name)
+            if parameters["treatment"] not in sensitive_data_treatments_for_type(column_type):
+                raise ValueError("Treatment does not apply to the column datatype.")
+            normalize_guardrail_action(candidate.get("action"))
+            action = "Block"
         except (TypeError, ValueError) as exc:
             raise ValueError(
                 f"AI Sensitive Data suggestion for {column_name!r} is invalid: {exc}"

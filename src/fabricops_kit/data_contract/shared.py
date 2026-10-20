@@ -547,6 +547,18 @@ def normalize_guardrail_action(value: Any) -> str:
         raise ValueError("Guardrail action must be Warn or Block.") from exc
 
 
+def sensitive_data_treatments_for_type(data_type: str) -> tuple[str, ...]:
+    """Return authoring choices for the declared physical datatype."""
+    base = str(data_type or "").strip().lower().split("(", 1)[0].strip()
+    if base in {"byte", "tinyint", "short", "smallint", "int", "integer", "long", "bigint", "float", "double", "decimal", "numeric"}:
+        return ("tokenize", "bucket", "remove")
+    if base in {"string", "varchar", "char", "bool", "boolean", "category", "categorical"}:
+        return ("mask", "tokenize", "remove")
+    if base in {"date", "timestamp", "timestamp_ntz"}:
+        return ("tokenize", "remove")
+    return ("remove",)
+
+
 def validate_sensitive_data_parameters(parameters: Mapping[str, Any]) -> dict[str, Any]:
     """Validate and normalize one column-scoped Sensitive Data policy."""
     values = dict(parameters)
@@ -577,6 +589,15 @@ def validate_sensitive_data_parameters(parameters: Mapping[str, Any]) -> dict[st
             raise ValueError("Sensitive Data mask_character must be non-empty.")
         normalized["mask_character"] = mask_character
     elif treatment == "bucket":
+        if "bin_width" in values:
+            if "bins" in values or "labels" in values:
+                raise ValueError("Choose fixed width or explicit ranges, not both.")
+            width, origin = values["bin_width"], values.get("bin_origin", 0)
+            if any(isinstance(value, bool) or not isinstance(value, (int, float))
+                   or not math.isfinite(float(value)) for value in (width, origin)) or width <= 0:
+                raise ValueError("Sensitive Data bin_width must be positive and bin_origin finite.")
+            normalized.update({"bin_width": float(width), "bin_origin": float(origin)})
+            return normalized
         bins = values.get("bins")
         labels = values.get("labels")
         if not isinstance(bins, list) or not bins:
