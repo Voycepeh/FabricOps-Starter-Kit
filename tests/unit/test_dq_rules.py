@@ -98,7 +98,7 @@ def test_dq_rule_engine_supports_catalogue_rules(spark_session, rule, failed):
         ],
         "id string, semester string, email string, name string, status string, country string, score int, amount int, credit_units int, risk_score double, response_rate int, birth_date string, event_date string, updated_at string, snapshot_date string, source_id string, target_id string, end_date string, start_date string, expiry_date string, other_start_date string, approved_date string, student_status string, is_active boolean, credits_attempted int, credits_earned int",
     )
-    checks = governance._run_dq_guardrail_checks(df, "students", [rule])
+    checks = governance._evaluate_dq_rules(df, "students", [rule])["checks"]
     assert checks[0]["failed_count"] == failed
 
 
@@ -120,11 +120,11 @@ def test_uniqueness_threshold_allows_minimum_distinct_percentage(spark_session):
         minimum_unique_percent=70,
     )
 
-    passing_check = governance._run_dq_guardrail_checks(df, "items", [passing])[0]
-    failing_check = governance._run_dq_guardrail_checks(df, "items", [failing])[0]
+    passing_check = governance._evaluate_dq_rules(df, "items", [passing])["checks"][0]
+    failing_check = governance._evaluate_dq_rules(df, "items", [failing])["checks"][0]
 
     assert passing_check["passed"] is True
-    assert passing_check["failed_count"] == 0
+    assert passing_check["failed_count"] == 2
     assert failing_check["passed"] is False
     assert failing_check["failed_count"] == 2
 
@@ -149,7 +149,7 @@ def test_custom_expression_supports_safe_arithmetic_business_rule(spark_session)
         ),
     )
 
-    checks = governance._run_dq_guardrail_checks(df, "orders", [rule])
+    checks = governance._evaluate_dq_rules(df, "orders", [rule])["checks"]
 
     assert checks[0]["failed_count"] == 1
 
@@ -191,7 +191,7 @@ def test_conditional_completeness_only_applies_when_condition_matches(spark_sess
         treat_blank_as_missing=True,
     )
 
-    checks = governance._run_dq_guardrail_checks(df, "orders", [rule])
+    checks = governance._evaluate_dq_rules(df, "orders", [rule])["checks"]
 
     assert checks[0]["failed_count"] == 1
 
@@ -215,7 +215,7 @@ def test_conditional_values_only_applies_when_condition_matches(spark_session):
         values=["SGD"],
     )
 
-    checks = governance._run_dq_guardrail_checks(df, "orders", [rule])
+    checks = governance._evaluate_dq_rules(df, "orders", [rule])["checks"]
 
     assert checks[0]["failed_count"] == 1
 
@@ -232,8 +232,8 @@ def test_completeness_blank_handling_is_explicit(spark_session):
     df = spark_session.createDataFrame([(None,), ("",), ("   ",), ("ok",)], "name string")
     null_only = _rule("completeness", columns=["name"], maximum_missing_percent=0, treat_blank_as_missing=False)
     include_blanks = _rule("completeness", columns=["name"], maximum_missing_percent=0, treat_blank_as_missing=True)
-    assert governance._run_dq_guardrail_checks(df, "students", [null_only])[0]["failed_count"] == 1
-    assert governance._run_dq_guardrail_checks(df, "students", [include_blanks])[0]["failed_count"] == 3
+    assert governance._evaluate_dq_rules(df, "students", [null_only])["checks"][0]["failed_count"] == 1
+    assert governance._evaluate_dq_rules(df, "students", [include_blanks])["checks"][0]["failed_count"] == 3
 
 def test_latest_active_rule_resolution_and_inactive_not_enforced(spark_session):
     """Verify latest active rule resolution and inactive not enforced."""
@@ -349,9 +349,9 @@ def test_cross_column_rules_use_consistent_null_behavior(spark_session):
         "a int, b int",
     )
 
-    equal_check = governance._run_dq_guardrail_checks(df, "pairs", [_rule("column_relationship", columns=["a", "b"], operator="=")])[0]
-    gte_check = governance._run_dq_guardrail_checks(df, "pairs", [_rule("column_relationship", columns=["a", "b"], operator=">=")])[0]
-    gt_check = governance._run_dq_guardrail_checks(df, "pairs", [_rule("column_relationship", columns=["a", "b"], operator=">")])[0]
+    equal_check = governance._evaluate_dq_rules(df, "pairs", [_rule("column_relationship", columns=["a", "b"], operator="=")])["checks"][0]
+    gte_check = governance._evaluate_dq_rules(df, "pairs", [_rule("column_relationship", columns=["a", "b"], operator=">=")])["checks"][0]
+    gt_check = governance._evaluate_dq_rules(df, "pairs", [_rule("column_relationship", columns=["a", "b"], operator=">")])["checks"][0]
 
     assert equal_check["failed_count"] == 4
     assert gte_check["failed_count"] == 3
@@ -415,8 +415,8 @@ def test_null_rate_zero_is_strict_and_positive_threshold_allows_expected_rate(sp
     strict = _rule("completeness", columns=["value"], maximum_missing_percent=0)
     permissive = _rule("completeness", columns=["value"], maximum_missing_percent=25)
 
-    assert governance._run_dq_guardrail_checks(df, "values", [strict])[0]["failed_count"] == 1
-    assert governance._run_dq_guardrail_checks(df, "values", [permissive])[0]["failed_count"] == 0
+    assert governance._evaluate_dq_rules(df, "values", [strict])["checks"][0]["failed_count"] == 1
+    assert governance._evaluate_dq_rules(df, "values", [permissive])["checks"][0]["failed_count"] == 1
 
 
 @pytest.mark.parametrize(
@@ -433,7 +433,7 @@ def test_between_supports_one_or_two_inclusive_or_exclusive_bounds(spark_session
     """Consolidate directional comparisons into configurable range bounds."""
     df = spark_session.createDataFrame([(0,), (50,), (100,)], "score int")
     rule = _rule("range", columns=["score"], **parameters)
-    assert governance._run_dq_guardrail_checks(df, "scores", [rule])[0]["failed_count"] == failed
+    assert governance._evaluate_dq_rules(df, "scores", [rule])["checks"][0]["failed_count"] == failed
 
 
 def test_between_preserves_comparable_date_values(spark_session):
@@ -447,7 +447,7 @@ def test_between_preserves_comparable_date_values(spark_session):
         maximum="2026-12-31",
         maximum_inclusive=False,
     )
-    assert governance._run_dq_guardrail_checks(df, "events", [rule])[0]["failed_count"] == 2
+    assert governance._evaluate_dq_rules(df, "events", [rule])["checks"][0]["failed_count"] == 2
 
 
 @pytest.mark.parametrize("operator", ["=", "!=", ">", ">=", "<", "<="])
@@ -455,7 +455,7 @@ def test_column_relationship_supports_controlled_operators(spark_session, operat
     """Keep ordered column comparison limited to the governed operator list."""
     df = spark_session.createDataFrame([(2, 1)], "a int, b int")
     rule = _rule("column_relationship", columns=["a", "b"], operator=operator)
-    check = governance._run_dq_guardrail_checks(df, "pairs", [rule])[0]
+    check = governance._evaluate_dq_rules(df, "pairs", [rule])["checks"][0]
     assert check["failed_count"] in {0, 1}
 
 
@@ -483,9 +483,9 @@ def test_authored_guardrail_action_maps_to_dq_runtime_severity(action, runtime_s
 def test_column_relationship_supports_all_controlled_operators(spark_session, operator):
     """Evaluate every supported table relationship operator natively."""
     df = spark_session.createDataFrame([(1, 1), (2, 1), (None, 1)], "a int, b int")
-    check = governance._run_dq_guardrail_checks(
+    check = governance._evaluate_dq_rules(
         df, "pairs", [_rule("column_relationship", columns=["a", "b"], operator=operator)]
-    )[0]
+    )["checks"][0]
     assert check["total_count"] == 3
 
 
@@ -499,11 +499,11 @@ def test_custom_expression_pass_fail_and_validation(spark_session):
         "custom_expression", columns=[], expression_language="pyspark",
         expression='(F.col("status") != "Closed") | F.col("closed_date").isNotNull()',
     )
-    assert governance._run_dq_guardrail_checks(df, "orders", [rule])[0]["failed_count"] == 1
+    assert governance._evaluate_dq_rules(df, "orders", [rule])["checks"][0]["failed_count"] == 1
     with pytest.raises(ValueError, match="missing column"):
-        governance._run_dq_guardrail_checks(
+        governance._evaluate_dq_rules(
             df, "orders", [_rule("custom_expression", columns=[], expression_language="pyspark", expression='F.col("unknown") == 1')]
-        )
+        )["checks"]
     with pytest.raises(ValueError, match="unsupported"):
         governance._validate_dq_rules([
             _rule("custom_expression", columns=[], expression_language="pyspark", expression='__import__("os").system("echo unsafe")')
@@ -528,7 +528,7 @@ def test_custom_expression_supports_safe_column_methods(spark_session, expressio
     rule = _rule(
         "custom_expression", columns=[], expression_language="pyspark", expression=expression,
     )
-    check = governance._run_dq_guardrail_checks(dataframe, "orders", [rule])[0]
+    check = governance._evaluate_dq_rules(dataframe, "orders", [rule])["checks"][0]
     assert check["failed_count"] == failed_count
 
 
@@ -539,7 +539,7 @@ def test_custom_expression_requires_boolean_spark_column(spark_session):
         "custom_expression", columns=[], expression_language="pyspark", expression='F.col("amount")',
     )
     with pytest.raises(ValueError, match="must resolve to a boolean Spark Column"):
-        governance._run_dq_guardrail_checks(dataframe, "orders", [rule])
+        governance._evaluate_dq_rules(dataframe, "orders", [rule])["checks"]
 
 
 @pytest.mark.parametrize(

@@ -102,6 +102,16 @@ versions are review-only. Grain description, selected key combination, and
 optional enforcement are independent. Enabling Grain defaults to Block.
 The sidebar shows the shared configured rules for Read and Write; it does
 not execute validation. Rule buttons open the existing authoring controls.
+DQ authoring uses Warn/Block and accepted failure rate percent.
+Completeness counts missing rows; Uniqueness counts all duplicate-group rows.
+Legacy distinct-key limits retain their runtime meaning and require an explicit
+failure rate when edited.
+Allowed values, range, pattern, relationship, and custom row rules can use
+maximum failure percent. Conditional rules use matching applicable rows;
+null values ignored by value checks are not counted as passing rows.
+Prohibited-value lists remain strict. Required/Schema, Grain, Sensitive
+Data, Freshness, and Source Drift do not gain a DQ row-percentage setting.
+Actual violation counts remain visible even when within the authored limit.
 If the notebook runtime cannot provide AI suggestions, AI actions are disabled
 for the widget session while manual authoring remains available. Technical
 failure details are retained in the returned state rather than shown in the editor.
@@ -129,9 +139,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:527`
+`fabricops_kit/widgets/widget_data_contract.py:528`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L527-L5738">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L528-L5815">View on GitHub</a>
 </div>
 
 

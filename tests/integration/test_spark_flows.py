@@ -161,6 +161,7 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
             "minimum": 0,
             "minimum_inclusive": False,
             "maximum_inclusive": True,
+            "maximum_failure_percent": 0.0,
         }
     ]
 
@@ -260,6 +261,9 @@ def test_check_dq_runtime_persists_summaries_and_returns_failed_values(spark_ses
         "DQ_STATUS": "failed", "DQ_RULE_COUNT": 2, "DQ_FAILED_RULE_COUNT": 2,
         "DQ_WARNING_RULE_COUNT": 1, "DQ_ERROR_RULE_COUNT": 1, "DQ_FAILED_ROW_COUNT": 1,
         "DQ_FAILED_ROW_PERCENT": 50.0, "DQ_CHECKED_AT": result["summary"]["DQ_CHECKED_AT"],
+        "DQ_CHECKED_ROW_COUNT": 2, "DQ_PASSED_ROW_COUNT": 1, "DQ_PASSED_ROW_PERCENT": 50.0,
+        "DQ_VIOLATING_RULE_COUNT": 2,
+        "DQ_TOTAL_ROW_COUNT": 2, "DQ_NOT_APPLICABLE_ROW_COUNT": 0,
     }
     summaries = next(rows for table, rows in writes if table == "METADATA_GUARDRAIL_RESULTS")
     evidence = result["failed_values"].collect()
@@ -418,7 +422,7 @@ def test_dq_authored_action_controls_runtime_continuation(
         "rule_id": "required", "rule_type": "completeness", "columns": ["value"],
         "maximum_missing_percent": 0, "treat_blank_as_missing": False, "severity": action,
     }])[0]
-    check = shared._run_dq_guardrail_checks(dataframe, "orders", [rule])[0]
+    check = shared._evaluate_dq_rules(dataframe, "orders", [rule])["checks"][0]
     result = shared._summarize_dq_guardrail([check])
     details = shared._dq_failed_values_dataframe(
         dataframe, [rule], run_id="run-action", row_identity_columns=[]
@@ -442,4 +446,4 @@ def test_dq_missing_column_raises_configuration_error(spark_session):
     }])[0]
 
     with pytest.raises(ValueError, match="missing column"):
-        shared._run_dq_guardrail_checks(dataframe, "customers", [rule])
+        shared._evaluate_dq_rules(dataframe, "customers", [rule])["checks"]

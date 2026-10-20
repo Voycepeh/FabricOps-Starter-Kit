@@ -53,6 +53,7 @@ def orchestrate_read(
     frequency_top_n: int | None=5,
     spark_session=None,
     verbose: bool=True,
+    dq_diagnostics: str='sample',
 ) -> dict[str, Any]:
 ```
 
@@ -82,6 +83,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `frequency_top_n` | `int \| None` | No | `5` | Maximum ranked frequency values per eligible column; None retains all. |
 | `spark_session` | `object` | No | `None` | Spark session used by every stage. |
 | `verbose` | `bool` | No | `True` | Print stage start, outcome, duration, and failure attribution. |
+| `dq_diagnostics` | `str` | No | `'sample'` | Sample captures at most ten illustrative source records per DQ rule with exact metrics in the same aggregation. None captures metrics only. Full also returns every failure as a lazy diagnostic DataFrame. |
 
 </div>
 
@@ -126,6 +128,13 @@ Freshness, Schema, Grain, and Data Quality stages before Profile, matching
 canonical ``02_pipeline``. Absent capability fields remain skipped in the
 returned result; orchestration_stages and stdout show executed stages only.
 A contract-free Development run prints one concise Guardrail decision.
+DQ summaries retain exact observed pass/fail counts independently of the
+authored tolerance decision. Sample mode stores at most ten illustrative
+source records per rule in METADATA_GUARDRAIL_RESULTS.result_payload_json;
+dq_result["failed_values"] contains only those captured examples. None
+suppresses examples; full returns an unbounded lazy failure DataFrame.
+dq_result["dataframe"] retains lazy row tags. The top-level source/prepared
+DataFrame and published target do not acquire those tags automatically.
 Grain checks only the returned rows (the incremental batch in incremental mode),
 using the configured physical row key; SCD2 history requires a version-aware
 key, such as business key plus effective timestamp.
@@ -157,7 +166,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:20`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L20-L167">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L20-L182">View on GitHub</a>
 </div>
 
 
@@ -173,7 +182,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 155 |
+| Live-critical dependencies | 161 |
 
 ### Release history
 
@@ -270,10 +279,16 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._custom_expression_column</code></li>
 <li><code>fabricops_kit.pipeline.shared._custom_expression_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._custom_expression_tree</code></li>
+<li><code>fabricops_kit.pipeline.shared._dq_applicable_expression</code></li>
+<li><code>fabricops_kit.pipeline.shared._dq_checks_from_counts</code></li>
+<li><code>fabricops_kit.pipeline.shared._dq_empty_failed_values</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_failed_expression</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_failed_value_schema</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_failed_values_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared._dq_sample_failed_values</code></li>
+<li><code>fabricops_kit.pipeline.shared._dq_sample_record</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_tagged_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared._evaluate_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared._guardrail_schema_check_base</code></li>
 <li><code>fabricops_kit.pipeline.shared._identifier</code></li>
 <li><code>fabricops_kit.pipeline.shared._is_active_guardrail_rule</code></li>
@@ -297,7 +312,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._recover_completed_source_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared._rule_review_status</code></li>
-<li><code>fabricops_kit.pipeline.shared._run_dq_guardrail_checks</code></li>
 <li><code>fabricops_kit.pipeline.shared._run_orchestration_stage</code></li>
 <li><code>fabricops_kit.pipeline.shared._select_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared._select_table_guardrail_rule</code></li>
@@ -315,6 +329,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.check_dq_runtime</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.display_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.dq_tolerance_parameter</code></li>
 <li><code>fabricops_kit.pipeline.shared.freshness_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.get_current_freshness_evidence</code></li>
 <li><code>fabricops_kit.pipeline.shared.grain_check_core</code></li>

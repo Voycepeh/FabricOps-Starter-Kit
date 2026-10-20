@@ -21,7 +21,7 @@ from fabricops_kit.pipeline.shared import (
 )
 
 
-def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping=None, spark_session=None, verbose: bool = True) -> dict[str, Any]:
+def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping=None, spark_session=None, verbose: bool = True, dq_diagnostics: str = "sample") -> dict[str, Any]:
     """Execute the standard FabricOps governed Write lifecycle.
 
     Parameters
@@ -83,6 +83,11 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     verbose : bool, default=True
         Print stage start, outcome, duration, and failure attribution.
 
+    dq_diagnostics : {"sample", "none", "full"}, default="sample"
+        Sample captures at most ten illustrative source records per DQ rule
+        with exact metrics in the same aggregation. None captures metrics only.
+        Full also returns every failure as a lazy diagnostic DataFrame.
+
     Returns
     -------
     dict
@@ -115,6 +120,13 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     and rules resolved once per call. Absent Guardrails remain skipped in the
     result fields but are omitted from stdout and orchestration_stages.
     Contract-free Development prints one decision and proceeds to Write.
+    DQ summaries retain exact observed pass/fail counts independently of the
+    authored tolerance decision. Sample mode stores at most ten illustrative
+    source records per rule in METADATA_GUARDRAIL_RESULTS.result_payload_json;
+    dq_result["failed_values"] contains only those captured examples. None
+    suppresses examples; full returns an unbounded lazy failure DataFrame.
+    dq_result["dataframe"] retains lazy row tags. The top-level source/prepared
+    DataFrame and published target do not acquire those tags automatically.
     Validate resolves the exact selected frozen candidate and records
     execution_type=validate evidence for activation, including a completion
     record for every covered contract after Guardrail Coverage and Processing
@@ -166,6 +178,8 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
     ):
         if isinstance(value, bool) or not isinstance(value, int) or value < 1:
             raise ValueError(f"{name} must be a positive integer.")
+    if dq_diagnostics not in {"none", "sample", "full"}:
+        raise ValueError("dq_diagnostics must be 'none', 'sample', or 'full'.")
     summary = ExecutionSummary("WRITE", verbose=verbose)
     target = ".".join(str(part) for part in (store, schema, table_name) if part)
     source_ids = [source["table_id"] for source in sources]
@@ -210,7 +224,7 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
         prepared = sensitive["dataframe"]
         drift = run("Source Drift", lambda: [check_source_drift(source_id, target_table_id=target_id, spark_session=spark_session, verbose=False, context=context, execution_type=contract_mode) if source_id in drift_ids else dict(skipped) for source_id in source_ids]) if drift_ids else [dict(skipped) for _ in source_ids]
         grain_result = run("Grain", lambda: check_grain(prepared, table_id=target_id, scope="write_prepared_input", spark_session=spark_session, verbose=False, context=context, execution_type=contract_mode)) if "grain" in active else dict(skipped)
-        dq_result = run("Data Quality", lambda: check_dq(prepared, table_id=target_id, spark_session=spark_session, verbose=False, context=context, execution_type=contract_mode)) if "data_quality" in active else dict(skipped)
+        dq_result = run("Data Quality", lambda: check_dq(prepared, table_id=target_id, spark_session=spark_session, verbose=False, context=context, execution_type=contract_mode, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
         coverage = run("Guardrail Coverage", lambda: check_guardrail_coverage(target_table_id=target_id, source_table_ids=source_ids, spark_session=spark_session, verbose=False, context=context)) if governed else dict(skipped)
         common_results = {
             "table_id": target_id,
