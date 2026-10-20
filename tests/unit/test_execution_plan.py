@@ -29,7 +29,7 @@ def plan_runtime(monkeypatch):
         return module.build_pipeline_execution_plan(execution_mode=mode,
             sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}],
             targets=[{"store": "Silver", "schema": "demo", "table_name": "target"}],
-            selections=selections if selections is not None else {"source": {"no_contract": True}, "target": {"no_contract": True}},
+            selections=None if mode == "bootstrap" else (selections if selections is not None else {"source": {"no_contract": True}, "target": {"no_contract": True}}),
             context=runtime)
     def row(table_id="source", version=1, active=False):
         result = frozen(table_id, version=version, active=active)
@@ -39,22 +39,22 @@ def plan_runtime(monkeypatch):
 
 
 @pytest.mark.parametrize("environment", ["dev", "test", "uat", "prod", "production", "canary-east", "sandbox42"])
-@pytest.mark.parametrize("mode", ["testing", "live"])
+@pytest.mark.parametrize("mode", ["testing", "bootstrap"])
 def test_arbitrary_environment_has_identical_explicit_bootstrap_policy(plan_runtime, environment, mode):
     """Environment identity routes execution and never decides persistence or contracts."""
     _, runtime, make, _ = plan_runtime
     runtime["env"] = environment
     plan = make(mode)
     assert plan.environment == environment
-    assert plan.permits_persistence is (mode == "live")
+    assert plan.permits_persistence is (mode != "testing")
     assert json.loads(plan.selections_json)["target"] == {"no_contract": True}
 
 
 def test_testing_can_select_inactive_candidate_but_live_cannot(plan_runtime):
     """Exact frozen version choices are independent by participant."""
     rows, _, make, row = plan_runtime
-    rows.extend([row(active=True), row(version=2)])
-    selections = {"source": {"contract_id": "contract-source", "contract_version": 2}, "target": {"no_contract": True}}
+    rows.extend([row(active=True), row(version=2), row(table_id="target", active=True)])
+    selections = {"source": {"contract_id": "contract-source", "contract_version": 2}, "target": {"contract_id": "contract-target", "contract_version": 1}}
     plan = make(selections=selections)
     assert json.loads(plan.contracts_json)["source"]["contract_version"] == 2
     with pytest.raises(ValueError, match="active frozen"):
@@ -97,7 +97,7 @@ def test_metadata_scope_filters_other_environment_versions(plan_runtime):
     other = row(active=True)
     other["environment_name"] = "elsewhere"
     rows.append(other)
-    assert json.loads(make("live").contracts_json)["source"] is None
+    assert json.loads(make("bootstrap").contracts_json)["source"] is None
 
 
 def test_missing_and_unrelated_choices_rejected(plan_runtime):
@@ -112,8 +112,8 @@ def test_missing_and_unrelated_choices_rejected(plan_runtime):
 def test_live_plan_rejects_active_version_changes_after_creation(plan_runtime):
     """All calls revalidate Live authority before evaluating or publishing."""
     rows, _, make, row = plan_runtime
-    rows.append(row(active=True))
-    plan = make("live", {"source": {"contract_id": "contract-source", "contract_version": 1}, "target": {"no_contract": True}})
+    rows.extend([row(active=True), row(table_id="target", active=True)])
+    plan = make("live", {"source": {"contract_id": "contract-source", "contract_version": 1}, "target": {"contract_id": "contract-target", "contract_version": 1}})
     rows[:] = [row(version=2, active=True)]
     with pytest.raises(ValueError, match="changed after plan creation"):
         shared.prepare_pipeline_execution(["source"], execution_plan=plan)
@@ -132,9 +132,11 @@ def test_read_only_headless_plan_needs_no_target(plan_runtime, mode):
     """Read-only participants use the same immutable plan without a business target."""
     from fabricops_kit import setup_pipeline
 
-    _, runtime, _, _ = plan_runtime
+    rows, runtime, _, row = plan_runtime
+    if mode == "live":
+        rows.append(row(active=True))
     plan = setup_pipeline(interactive=False, execution_mode=mode,
         sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}], targets=[],
-        selections={"source": {"no_contract": True}}, context=runtime)
+        selections={"source": {"contract_id": "contract-source", "contract_version": 1} if mode == "live" else {"no_contract": True}}, context=runtime)
     assert json.loads(plan.participants_json)["source"]["roles"] == ["source"]
     assert set(json.loads(plan.contracts_json)) == {"source"}

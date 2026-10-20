@@ -127,7 +127,7 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, interactive=True, spark_session=None, context=None):
+def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, interactive=False, spark_session=None, context=None):
     """Set up an immutable pipeline plan interactively or without human intervention.
 
     Parameters
@@ -137,12 +137,18 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         Historical Lineage is optional and cannot introduce additional participants.
     targets : list of dict
         Explicit target participants with the same coordinate or table_id shape.
-    execution_mode : {"testing", "live"}, optional
-        Interactive mode defaults to Testing. Required for headless execution.
+    execution_mode : {"bootstrap", "testing", "live"}, optional
+        Defaults to Bootstrap without interaction. Bootstrap creates and profiles
+        initial outputs only while no participating frozen or active contract exists.
+        Interactive setup defaults to Testing. Governed headless modes are explicit.
     selections : dict, optional
-        Exact per-table contract_id/contract_version or explicit no_contract=True.
-        Required for headless execution; uses the same builder as interactive selection.
+        Exact per-table contract_id/contract_version; Testing also permits explicit
+        no_contract=True when no active contract is bypassed. Live requires a contract
+        for every participant.
+        Required for headless Testing/Live; omitted for Bootstrap. Both paths use
+        the same immutable plan builder.
     interactive : bool, optional
+        Defaults to False. If True, explicitly enable interactive contract Testing.
         If False, return the immutable plan directly without loading notebook UI
         packages or enumerating unrelated contract versions.
     spark_session : object, optional
@@ -158,8 +164,9 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         select_contract, set_mode, build_plan and refresh. Each table starts unselected.
         After executing the built plan, refresh shows its exact-version results
         in expandable sections alongside saved definitions and disabled states.
-        Explicitly select No Contract for bootstrap; build_plan validates every
-        choice and freezes the plan to pass to all Read and Write calls.
+        Bootstrap needs no selections or build action and returns its plan directly.
+        For interactive Testing, build_plan validates every choice and freezes
+        the plan to pass to all Read and Write calls.
         Mode and selection edits are rejected after build_plan; create a new widget
         for the next run. Repeated build_plan calls return the same plan and journal.
         The widget never changes notebook globals, edits or activates contracts.
@@ -167,15 +174,17 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
     Raises
     ------
     ValueError
-        For missing notebook identity, invalid payloads, unavailable selections or
+        For frozen/active contracts blocking Bootstrap, missing notebook identity,
+        invalid payloads, unavailable selections or
         Live choices bypassing an active contract.
     RuntimeError
         For ambiguous active versions, metadata-read failure, or edits to a built plan.
 
     Examples
     --------
-    >>> selection = setup_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
-    >>> plan = selection["build_plan"]()
+    >>> plan = setup_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
+    >>> selection = setup_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, interactive=True)
+    >>> testing_plan = selection["build_plan"]()
     >>> scheduled_plan = setup_pipeline(
     ...     sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, interactive=False,
     ...     execution_mode="testing", selections=EXACT_SELECTIONS,
@@ -183,10 +192,11 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
 
     """
     if not interactive:
-        if execution_mode is None or selections is None:
-            raise ValueError("Headless execution requires explicit execution_mode and selections.")
+        mode = "bootstrap" if execution_mode is None else execution_mode
+        if mode != "bootstrap" and selections is None:
+            raise ValueError("Headless Testing/Live requires explicit execution_mode and selections.")
         return build_pipeline_execution_plan(
-            execution_mode=execution_mode, sources=sources, targets=targets,
+            execution_mode=mode, sources=sources, targets=targets,
             selections=selections, context=context, spark_session=spark_session,
         )
     if execution_mode is not None and execution_mode not in {"testing", "live"}:
@@ -240,7 +250,9 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
             if contract_id is not None or contract_version is not None:
                 raise ValueError("No Contract cannot be combined with a contract identity.")
             if table["active"]:
-                raise ValueError("Live cannot bypass the active contract with No Contract.")
+                raise ValueError("No Contract cannot bypass the active contract.")
+            if state["execution_mode"] == "live":
+                raise ValueError("Live requires an active frozen Data Contract for every participant.")
             selected, choice = None, {"no_contract": True}
         else:
             matches = [row for row in table["versions"] if row["contract_id"] == contract_id and row["contract_version"] == contract_version]
@@ -268,7 +280,7 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
                     table.update(selected=active, choice={"contract_id": active["contract_id"],
                                  "contract_version": active["contract_version"]},
                                  review=_contract_review(active, table["identity"]["roles"]))
-                elif table["selected"]:
+                elif table["choice"] is not None:
                     table.update(selected=None, choice=None, review=None)
         refresh()
         return state
@@ -308,7 +320,7 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
                 table = state["tables"][table_id]
                 active = table["active"]
                 versions = table["versions"] if testing else ([active] if active else [])
-                options = [("Choose explicitly…", ""), *([("No Contract", "none")] if not active else [])]
+                options = [("Choose explicitly…", ""), *([("No Contract", "none")] if testing and not active else [])]
                 options += [(f'{row.get("contract_name") or row["contract_id"]} · v{row["contract_version"]} · Frozen'
                              + (" · Active" if row.get("is_active") else ""),
                              f'{row["contract_id"]}\n{row["contract_version"]}') for row in versions]

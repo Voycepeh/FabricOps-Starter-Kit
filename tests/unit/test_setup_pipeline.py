@@ -58,7 +58,7 @@ def _render(monkeypatch, rows, *, interactive=False, metadata_error=None, lineag
         monkeypatch.setattr(importlib.import_module("fabricops_kit.widgets.shared"), "require_ipywidgets", lambda: (_ for _ in ()).throw(ModuleNotFoundError()))
     state = module.setup_pipeline(
         sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}],
-        targets=targets if targets is not None else [{"store": "Silver", "schema": "demo", "table_name": "target"}], context=context,
+        targets=targets if targets is not None else [{"store": "Silver", "schema": "demo", "table_name": "target"}], context=context, interactive=True,
     )
     return context, state, reads
 
@@ -229,7 +229,7 @@ def test_headless_uses_builder_without_loading_ui_or_listing_contracts(monkeypat
     forbidden.assert_not_called()
 
 
-@pytest.mark.parametrize("configuration", [{}, {"execution_mode": "testing"}, {"selections": {}}])
+@pytest.mark.parametrize("configuration", [{"execution_mode": "testing"}, {"execution_mode": "live"}])
 def test_headless_missing_configuration_fails_before_metadata_access(monkeypatch, configuration):
     """Headless execution never infers mode or silently chooses contracts."""
     monkeypatch.setattr(module, "build_pipeline_execution_plan", lambda **kw: pytest.fail("Builder reached"))

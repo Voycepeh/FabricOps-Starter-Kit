@@ -81,7 +81,7 @@ def runtime(monkeypatch, spark_session):
         if not contracted:
             selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
         return setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
-                                              selections=selections, context=context, spark_session=spark_session)
+                                              selections=None if mode == "bootstrap" else selections, context=context, spark_session=spark_session)
     return make, rows, spies, context
 
 
@@ -159,15 +159,15 @@ def test_immutable_plan_and_cross_run_sources_are_rejected(runtime, spark_sessio
     with pytest.raises(FrozenInstanceError):
         testing.execution_mode = "live"
     source = read(testing, spark_session)
-    live = make("live")
+    bootstrap = make("bootstrap")
     with pytest.raises(ValueError, match="same execution plan"):
-        write(live, source, spark_session)
+        write(bootstrap, source, spark_session)
 
 
 def test_headless_requires_mode_and_every_explicit_choice(runtime):
     """Headless callers cannot infer Live or silently omit table choices."""
     _, _, _, context = runtime
-    with pytest.raises(ValueError, match="execution_mode"):
+    with pytest.raises(ValueError, match="Bootstrap does not accept"):
         setup_pipeline(interactive=False, sources=[SOURCE], targets=[TARGET], selections={}, context=context)
     with pytest.raises(ValueError, match="every participating"):
         setup_pipeline(interactive=False, execution_mode="testing", sources=[SOURCE], targets=[TARGET], selections={}, context=context)
@@ -198,16 +198,17 @@ def test_testing_observation_recovery_cannot_merge_durable_state(runtime, monkey
     create_spark.assert_not_called()
 
 
-def test_live_explicit_bootstrap_publishes_and_commits_lineage(runtime, spark_session, monkeypatch):
-    """An explicit uncontracted Live bootstrap works without historical Lineage."""
+@pytest.mark.parametrize("mode", ["bootstrap", "live"])
+def test_initial_publication_publishes_and_commits_lineage(runtime, spark_session, monkeypatch, mode):
+    """Initial publication uses its explicit policy without requiring historical Lineage."""
     make, _, spies, _ = runtime
-    plan = make("live")
+    plan = make(mode, contracted=mode == "live")
     monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
     orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
     monkeypatch.setattr(orchestrator, "profile_table", lambda **kw: {"row_count": 2})
     source = read(plan, spark_session)
     result = write(plan, source, spark_session)
-    assert result["published"] and result["execution_mode"] == "live"
+    assert result["published"] and result["execution_mode"] == mode
     assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 1
     assert spies["fabricops_kit.pipeline.shared.persist_lineage_participation"].call_count == 2
     assert spies["fabricops_kit.pipeline.pipeline_write._persist_target_processing"].call_count == 1
@@ -222,6 +223,12 @@ def test_mixed_relationship_respects_explicit_no_contract(runtime, spark_session
     rows.append(candidate)
     selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
     selections[contracted_id] = {"contract_id": candidate["contract_id"], "contract_version": 1}
+    if mode == "live":
+        with pytest.raises(ValueError, match="Live requires"):
+            setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
+                selections=selections, context=context, spark_session=spark_session)
+        assert all(spy.call_count == 0 for spy in spies.values())
+        return
     plan = setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
         selections=selections, context=context, spark_session=spark_session)
     monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
@@ -304,9 +311,16 @@ def test_no_contract_target_does_not_exempt_failed_source_checks(runtime, spark_
     _, rows, spies, context = runtime
     candidate = frozen(SOURCE_ID, active=mode == "live")
     rows.append(candidate)
+    selections = {SOURCE_ID: {"contract_id": candidate["contract_id"], "contract_version": 1},
+                  TARGET_ID: {"no_contract": True}}
+    if mode == "live":
+        with pytest.raises(ValueError, match="Live requires"):
+            setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
+                selections=selections, context=context, spark_session=spark_session)
+        assert all(spy.call_count == 0 for spy in spies.values())
+        return
     plan = setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
-        selections={SOURCE_ID: {"contract_id": candidate["contract_id"], "contract_version": 1},
-                    TARGET_ID: {"no_contract": True}}, context=context, spark_session=spark_session)
+        selections=selections, context=context, spark_session=spark_session)
     bad = spark_session.createDataFrame([(None,)], "id long")
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: bad)
     if mode == "live":

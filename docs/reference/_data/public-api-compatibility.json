@@ -2057,7 +2057,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = True, spark_session = None, context = None)",
+          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None)",
           "signature_before": null
         },
         {
@@ -3388,7 +3388,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = True, spark_session = None, context = None)",
+          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None)",
           "signature_before": null
         },
         {
@@ -4439,7 +4439,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = True, spark_session = None, context = None)",
+          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None)",
           "signature_before": null
         },
         {
@@ -5470,7 +5470,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = True, spark_session = None, context = None)",
+          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None)",
           "signature_before": null
         },
         {
@@ -5824,7 +5824,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = True, spark_session = None, context = None)"
+          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None)"
         },
         {
           "change_type": "added",
@@ -6252,7 +6252,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = True, spark_session = None, context = None)"
+          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None)"
         },
         {
           "change_type": "modified",
@@ -6492,7 +6492,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = True, spark_session = None, context = None)"
+          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None)"
         },
         {
           "change_type": "modified",
@@ -6700,7 +6700,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = True, spark_session = None, context = None)"
+          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None)"
         },
         {
           "change_type": "modified",
@@ -16102,7 +16102,7 @@
             },
             {
               "annotation": null,
-              "default": "True",
+              "default": "False",
               "has_default": true,
               "kind": "keyword_only",
               "name": "interactive",
@@ -16127,7 +16127,7 @@
           ],
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "return_annotation": null,
-          "signature": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = True, spark_session = None, context = None)",
+          "signature": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None)",
           "source_path": "src/fabricops_kit/pipeline/setup_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline"
         },
@@ -16350,7 +16350,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:116b70bce4a85e7a1cf2bbb73026dc360ce8ef917fd145476bd7c5ab96772eb9",
+      "source_digest": "sha256:05b1f7bd9d5214a4fa15d35f2615fe89bb4470ba129328171cab0c82d0423de8",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

@@ -1602,19 +1602,19 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
  'module': 'pipeline.setup_pipeline',
  'function_type': 'callable',
- 'summary_override': 'Set up interactive or scheduled Testing/Live execution with exact frozen contracts per '
+ 'summary_override': 'Bootstrap initial outputs or explicitly set up contract Testing/Live for each '
                      'participant.',
  'symbol_name': 'setup_pipeline',
  'template_notebook': '02_pipeline',
  'template_segment': 'Select notebook Data Contracts',
  'use_when': 'Use before Read, including first-time bootstrap without historical Lineage.',
  'related_functions': ['widget_data_contract', 'orchestrate_read', 'orchestrate_write'],
- 'return_interpretation': 'Select every contract or explicit No Contract, then call build_plan() and pass the '
+ 'return_interpretation': 'Default Bootstrap returns a plan with no UI or choices while no participant has frozen or active contracts. Explicit interactive Testing selects contracts and calls build_plan(); pass the '
                           'same immutable plan to every Read and Write. For scheduled runs, set interactive=False with execution_mode and selections; the same builder returns the plan directly.',
  'expanded_purpose': 'A read-only inspector displays every saved Schema column and individual Guardrail '
                      'definition, including inactive and non-applicable rules. Testing uses red accents and Live '
                      'green; no global overrides are installed.',
- 'common_failure_causes': ['Missing notebook identity or explicit participant configuration.',
+ 'common_failure_causes': ['Bootstrap would bypass a frozen or active contract.', 'Missing notebook identity or explicit participant configuration.',
                            'Ambiguous active versions.',
                            'Invalid or mismatched frozen JSON.',
                            'Live attempts to bypass an active frozen contract.']},

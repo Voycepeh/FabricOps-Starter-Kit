@@ -40,38 +40,32 @@ The notebook uses these governed tables throughout:
 
     For faster runs when frequency distributions are not needed, set `frequency_enabled=False` on the relevant orchestrator call. The standard statistical profile still runs. Setting `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating them.
 
-### Select the pipeline and freeze its plan
+### Set up the pipeline
 
-Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparation cell for that day. This setup can change Bronze before pipeline selection. Testing/Live applies to the subsequent governed Reads and Writes.
-
-The notebook declares `PIPELINE_SOURCES` and `PIPELINE_TARGETS`, then calls:
+Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparation cell. That setup can change Bronze before pipeline selection. The default pipeline setup is:
 
 ```python
+CONTRACT_TESTING = False  # First run: Bootstrap, no selections or UI.
 CONTRACTS = setup_pipeline(
-    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, spark_session=spark,
+    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
+    interactive=CONTRACT_TESTING, spark_session=spark,
 )
-# Pause here: select the pipeline mode and every participant in the widget.
+EXECUTION_PLAN = CONTRACTS["build_plan"]() if CONTRACT_TESTING else CONTRACTS
 ```
 
-After making the selections, run the next cell:
+With the default `False`, Run all builds a Bootstrap plan and creates/profiles initial outputs without human interaction. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Metadata routing must already be initialized by the environment setup; business targets and Catalogue records do not need to exist.
 
-```python
-EXECUTION_PLAN = CONTRACTS["build_plan"]()
-```
+After Governance authors and freezes the contracts, set `CONTRACT_TESTING = True`. Pause after setup to select the exact frozen versions, then run the execution-plan cell and all Reads and Writes. Testing evaluates every declared operation without publishing targets or committing ordinary operational metadata. Rerun setup for a new test; rebuilding on the same selector reuses its locked plan and journal.
 
-Pass `execution_plan=EXECUTION_PLAN` to every `orchestrate_read()` and `orchestrate_write()` call. The notebook already does this. Once built, the selector is locked; rerun its cell to create a new selector before changing mode, contracts, or demo day. Calling `build_plan()` again on the same selector returns the existing plan and journal.
+Bootstrap fails closed if any participating table has a frozen or active contract, including one frozen after setup. It never silently drops governed requirements. UI visibility is separate from execution policy: headless Testing uses `interactive=False`, `execution_mode="testing"`, and saved exact selections.
 
-A fresh selector defaults to red **Testing**, with every participant unselected. Select an eligible exact frozen contract or explicit **No Contract** where no active contract is bypassed. Testing returns diagnostics and does not publish Silver targets, commit ordinary pipeline metadata, or advance watermark progress. The declared Append Write still evaluates its prepared input and returns diagnostics.
-
-The persisted row counts and screenshots below require green **Live**. After reviewing Testing results, rerun the selector cell, deliberately choose Live and the eligible contracts, and build a fresh plan before rerunning Read → Transform → Write for the same day. Use `CONTRACTS["refresh"]()` in the final inspection cell to view this plan's exact-version results. Advance the day only after the Live run succeeds.
-
-Repeat the selection pause for each day and retry. Do not use Run all across a fresh interactive selector. For scheduled execution, use [`setup_pipeline(interactive=False, ...)`](../api/reference/setup_pipeline.md) with explicit mode and exact selections.
+The persisted row counts below describe Bootstrap runs before contracts exist, or governed Live runs after approval. Advance the day only after publication succeeds. Once contracts are frozen, Bootstrap is no longer an eligible way to publish; use Testing to evaluate changes and the governed release workflow for subsequent publication.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run Day 1 in Fabric with a Live plan
+## Run Day 1 in Fabric with the Bootstrap defaults
 
 For Day 1 , we load 8 rows of data from 
 Bronze Lakehouse "demo.inventory_movements" table and load all 8 rows into
@@ -122,9 +116,9 @@ Day 1 first run 8 rows is written
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Restart the session and repeat Day 1 with a fresh Live plan
+## Restart the session and repeat Day 1 with a fresh Bootstrap plan
 
-Run through the selector again, select Live and the eligible contracts, build a fresh plan, then continue. Since Day 1 already committed its watermark, the Read and Write have an empty incremental scope.
+Run through setup again with the Bootstrap defaults, then continue. Since Day 1 already committed its watermark, the Read and Write have an empty incremental scope.
 
 </div>
 </div>
@@ -195,7 +189,7 @@ Day 1 publishes the eight-row baseline, Day 2 appends four newly eligible rows, 
 
 ### Metadata saved by FabricOps
 
-The following records are committed by successful **Live** runs and routed to the Metadata Lakehouse configured by `00_env_config`. Testing keeps pipeline diagnostics in memory.
+The following records are committed by successful **Bootstrap** or governed **Live** runs and routed to the Metadata Lakehouse configured by `00_env_config`. Testing keeps pipeline diagnostics in memory.
 
 | Metadata table or governed record | What this demo records |
 | --- | --- |
@@ -216,7 +210,7 @@ An Incremental demo cannot be reset by rerunning Day 1 or deleting only the Silv
 3. Remove only the `METADATA_SOURCE_OBSERVATION` rows for the `inventory_movements` → `inventory_movements_incremental` relationship and the current environment. Do not clear observations for other pipelines.
 4. Set `DEMO_DAY = 1`.
 5. Rerun [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) to restore the eight-row Day 1 Bronze source. Day 1 of this notebook does not load its own CSV.
-6. Run the notebook through a fresh selector, choose Live and eligible contracts, build the plan, then continue. The Incremental Read bootstraps again and Append recreates the eight-row Silver target.
+6. Run the notebook through a fresh selector, keep the Bootstrap defaults before contracts exist, then continue. The Incremental Read bootstraps again and Append recreates the eight-row Silver target.
 
 !!! warning "Keep incremental state aligned"
 

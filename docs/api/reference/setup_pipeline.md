@@ -6,7 +6,7 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Set up interactive or scheduled Testing/Live execution with exact frozen contracts per participant.
+Bootstrap initial outputs or explicitly set up contract Testing/Live for each participant.
 
 
 ## Usage notes
@@ -19,8 +19,9 @@ Use before Read, including first-time bootstrap without historical Lineage.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-selection = setup_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
-plan = selection["build_plan"]()
+plan = setup_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
+selection = setup_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, interactive=True)
+testing_plan = selection["build_plan"]()
 scheduled_plan = setup_pipeline(
     sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, interactive=False,
     execution_mode="testing", selections=EXACT_SELECTIONS,
@@ -43,7 +44,7 @@ def setup_pipeline(
     targets,
     execution_mode=None,
     selections=None,
-    interactive=True,
+    interactive=False,
     spark_session=None,
     context=None,
 ):
@@ -63,9 +64,9 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `sources` | `list of dict` | Yes | `—` | Explicit source participants: store/schema/table_name or registered table_id. Historical Lineage is optional and cannot introduce additional participants. |
 | `targets` | `list of dict` | Yes | `—` | Explicit target participants with the same coordinate or table_id shape. |
-| `execution_mode` | `{"testing", "live"}` | No | `None` | Interactive mode defaults to Testing. Required for headless execution. |
-| `selections` | `dict` | No | `None` | Exact per-table contract_id/contract_version or explicit no_contract=True. Required for headless execution; uses the same builder as interactive selection. |
-| `interactive` | `bool` | No | `True` | If False, return the immutable plan directly without loading notebook UI packages or enumerating unrelated contract versions. |
+| `execution_mode` | `{"bootstrap", "testing", "live"}` | No | `None` | Defaults to Bootstrap without interaction. Bootstrap creates and profiles initial outputs only while no participating frozen or active contract exists. Interactive setup defaults to Testing. Governed headless modes are explicit. |
+| `selections` | `dict` | No | `None` | Exact per-table contract_id/contract_version; Testing also permits explicit no_contract=True when no active contract is bypassed. Live requires a contract for every participant. Required for headless Testing/Live; omitted for Bootstrap. Both paths use the same immutable plan builder. |
+| `interactive` | `bool` | No | `False` | Defaults to False. If True, explicitly enable interactive contract Testing. If False, return the immutable plan directly without loading notebook UI packages or enumerating unrelated contract versions. |
 | `spark_session` | `object` | No | `None` | Spark session for metadata reads. |
 | `context` | `dict` | No | `None` | Configured environment routing and notebook identity. |
 
@@ -79,26 +80,29 @@ dict or PipelineExecutionPlan
     select_contract, set_mode, build_plan and refresh. Each table starts unselected.
     After executing the built plan, refresh shows its exact-version results
     in expandable sections alongside saved definitions and disabled states.
-    Explicitly select No Contract for bootstrap; build_plan validates every
-    choice and freezes the plan to pass to all Read and Write calls.
+    Bootstrap needs no selections or build action and returns its plan directly.
+    For interactive Testing, build_plan validates every choice and freezes
+    the plan to pass to all Read and Write calls.
     Mode and selection edits are rejected after build_plan; create a new widget
     for the next run. Repeated build_plan calls return the same plan and journal.
     The widget never changes notebook globals, edits or activates contracts.
 
 ### Return interpretation
 
-Select every contract or explicit No Contract, then call build_plan() and pass the same immutable plan to every Read and Write. For scheduled runs, set interactive=False with execution_mode and selections; the same builder returns the plan directly.
+Default Bootstrap returns a plan with no UI or choices while no participant has frozen or active contracts. Explicit interactive Testing selects contracts and calls build_plan(); pass the same immutable plan to every Read and Write. For scheduled runs, set interactive=False with execution_mode and selections; the same builder returns the plan directly.
 
 ## Raises / Errors
 
 ValueError
-    For missing notebook identity, invalid payloads, unavailable selections or
+    For frozen/active contracts blocking Bootstrap, missing notebook identity,
+    invalid payloads, unavailable selections or
     Live choices bypassing an active contract.
 RuntimeError
     For ambiguous active versions, metadata-read failure, or edits to a built plan.
 
 ### Common failure causes
 
+- Bootstrap would bypass a frozen or active contract.
 - Missing notebook identity or explicit participant configuration.
 - Ambiguous active versions.
 - Invalid or mismatched frozen JSON.
@@ -113,7 +117,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L388">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L400">View on GitHub</a>
 </div>
 
 

@@ -31,13 +31,13 @@ class PipelineExecutionPlan:
 
     def __post_init__(self):
         """Reject unsupported execution authority at construction."""
-        if self.execution_mode not in {"testing", "live"}:
-            raise ValueError("Execution mode must be testing or live.")
+        if self.execution_mode not in {"bootstrap", "testing", "live"}:
+            raise ValueError("Execution mode must be bootstrap, testing or live.")
 
     @property
     def permits_persistence(self):
         """Whether this run permits durable mutations."""
-        return self.execution_mode == "live"
+        return self.execution_mode in {"bootstrap", "live"}
 
 
 def persistence_permitted(context):
@@ -2365,7 +2365,9 @@ def prepare_pipeline_execution(table_ids, *, execution_plan, spark_session=None)
                "_pipeline_contracts": json.loads(plan.contracts_json),
                "_pipeline_rules": {}, "_pipeline_identities": identities}
     context.pop("data_contract_overrides", None)
-    if plan.permits_persistence:
+    if plan.execution_mode == "bootstrap":
+        _require_bootstrap_contracts_absent(config, env, identities, spark_session=spark_session)
+    elif plan.permits_persistence:
         for table_id, selected in context["_pipeline_contracts"].items():
             active_contract = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=False)
             if (active_contract is None) != (selected is None) or (active_contract is not None and any(
@@ -5153,12 +5155,12 @@ class ExecutionSummary:
         return elapsed
 
 
-def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections, context=None, spark_session=None):
+def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections=None, context=None, spark_session=None):
     """Freeze validated mode, participant identities and exact contract snapshots."""
     from types import MappingProxyType
 
-    if execution_mode not in {"testing", "live"}:
-        raise ValueError("execution_mode must explicitly be 'testing' or 'live'.")
+    if execution_mode not in {"bootstrap", "testing", "live"}:
+        raise ValueError("execution_mode must be bootstrap, testing or live.")
     from fabricops_kit.data_contract.shared import validate_contract_definitions
 
     config, env, runtime = resolve_fabric_context(context=context)
@@ -5168,7 +5170,12 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
     identities = resolve_pipeline_participants(
         config, env, sources=sources, targets=targets, context=runtime, spark_session=spark_session,
     )
-    if not identities or set(selections) != set(identities):
+    if execution_mode == "bootstrap":
+        if selections is not None:
+            raise ValueError("Bootstrap does not accept contract selections; enable Testing to select contracts.")
+        _require_bootstrap_contracts_absent(config, env, identities, spark_session=spark_session)
+        selections = {table_id: {"no_contract": True} for table_id in identities}
+    if not isinstance(selections, dict) or set(selections) != set(identities):
         raise ValueError("Supply an explicit contract or No Contract choice for every participating table only.")
     contracts = {}
     for table_id, choice in selections.items():
@@ -5178,6 +5185,8 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
         if choice == {"no_contract": True}:
             if active is not None:
                 raise ValueError(f"No Contract cannot bypass the active contract for {table_id!r}.")
+            if execution_mode == "live":
+                raise ValueError("Live requires an active frozen Data Contract for every participant; use Bootstrap for initial contract-free publication.")
             contracts[table_id] = None
             continue
         if set(choice) != {"contract_id", "contract_version"}:
@@ -5229,3 +5238,24 @@ def resolve_pipeline_participants(config, env, *, sources, targets, context=None
     if not identities:
         raise ValueError("Configure at least one actual source or target.")
     return identities
+
+
+def _require_bootstrap_contracts_absent(config, env, identities, *, spark_session=None):
+    """Reject Bootstrap when any participant has frozen or active Governance requirements."""
+    try:
+        frame = read_lakehouse_table(
+            DATA_CONTRACT_TABLE, store="Metadata",
+            schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
+            spark_session=spark_session, context={"config": config, "env": env},
+        )
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            raise RuntimeError("Initialize the configured metadata store before Bootstrap; missing metadata cannot authorize contract-free execution.") from exc
+        raise
+    escaped_env = str(env).replace("'", "''")
+    for row in frame.filter(f"`environment_name` = '{escaped_env}'").collect():
+        row = _row_to_dict(row)
+        if row.get("table_id") in identities and (
+            row.get("is_active") is True or str(row.get("status") or "").strip().lower() == "frozen"
+        ):
+            raise ValueError("Bootstrap cannot bypass a frozen or active Data Contract. Enable Testing and select exact versions, or use the configured governed Live workflow.")

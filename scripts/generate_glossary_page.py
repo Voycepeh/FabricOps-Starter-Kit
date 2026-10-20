@@ -23,6 +23,7 @@ GLOSSARY_GROUPS = [
             "data-agreement",
             "data-contract",
             "pipeline-execution-plan",
+            "bootstrap",
             "testing",
             "live",
             "enrichment",

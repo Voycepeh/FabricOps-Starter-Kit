@@ -491,14 +491,15 @@ def test_guided_demo_pages_match_the_notebook_split():
     assert "02A-full-refresh-demo.md" in step_3
 
 
-def test_guided_demo_preserves_initial_unselected_flow_and_optional_target_validation():
+def test_guided_demo_explains_bootstrap_then_explicit_contract_testing():
     """The executable 02A walkthrough keeps the initial unselected run and later target validation."""
     step_2a = (ROOT / "docs/guided-demo/02A-full-refresh-demo.md").read_text(encoding="utf-8")
     step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
 
     assert "there is no Data Contract yet" in step_2a
-    assert "explicitly select **No Contract**" in step_2a
-    assert "one explicit No Contract decision" in step_2a
+    assert "CONTRACT_TESTING = False" in step_2a
+    assert "without human interaction" in step_2a
+    assert "CONTRACT_TESTING = True" in step_2a
     assert "skipped check fields remain in the returned dictionaries" in step_2a
     assert "individual Guardrail stages are omitted" in step_2a
     assert "pipeline-wide switch in red **Testing**" in step_4

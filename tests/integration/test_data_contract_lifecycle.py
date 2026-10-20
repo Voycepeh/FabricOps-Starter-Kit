@@ -248,7 +248,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
         {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
         {"store": "Bronze", "schema": "dbo", "table_name": "products"}],
         "targets": [{"store": "Silver", "schema": "dbo", "table_name": "curated_orders"}]}
-    selection = selector.setup_pipeline(**coordinates, spark_session=state.spark, context=state.context)
+    selection = selector.setup_pipeline(**coordinates, interactive=True, spark_session=state.spark, context=state.context)
     for row in (source, schema_source, target):
         selection["select_contract"](row["table_id"], row["contract_id"], 1)
     snapshot = deepcopy(state.metadata)
@@ -267,7 +267,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert state.metadata == snapshot and "curated_orders" not in state.business
     gate, buttons = _activation(state, state.target_id, [failed])
     assert not gate["diagnostic_review"]["available"] and buttons[0].disabled
-    selection = selector.setup_pipeline(**coordinates, spark_session=state.spark, context=state.context)
+    selection = selector.setup_pipeline(**coordinates, interactive=True, spark_session=state.spark, context=state.context)
     for row in (source, schema_source, target):
         selection["select_contract"](row["table_id"], row["contract_id"], 1)
     plan = selection["build_plan"]()
@@ -289,7 +289,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
         assert widget["activation_result"]["changed"]
     assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]] for row in state.metadata["METADATA_DATA_CONTRACT"])
     state.context["activity_id"] = "live"
-    selection = selector.setup_pipeline(**coordinates, spark_session=state.spark, context=state.context)
+    selection = selector.setup_pipeline(**coordinates, interactive=True, spark_session=state.spark, context=state.context)
     selection["set_mode"]("live")
     live = selection["build_plan"]()
     inputs = reads(live)

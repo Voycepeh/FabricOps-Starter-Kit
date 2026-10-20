@@ -32,7 +32,7 @@ The notebook follows one visible lifecycle:
 | Notebook section | What happens |
 | --- | --- |
 | Environment | Loads the shared Fabric configuration and imports the three public functions used by the pipeline. |
-| Data Contract | Selects one pipeline-wide **Testing / Live** mode and an exact frozen contract independently for each explicitly configured source and target. |
+| Data Contract | Defaults to noninteractive **Bootstrap** for initial outputs; explicitly enable contract **Testing** after Governance freezes the versions. |
 | Governed Read | Reads each configured source and runs the applicable source checks. |
 | PySpark Transform | Contains the joins, filters, derived columns, aggregations, or selections owned by your project. |
 | Governed Write | Checks and, when allowed, publishes each target using its configured load strategy. |
@@ -48,7 +48,7 @@ The template starts with one Read, one transformation, and one Write. Add more R
 
 `00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
 
-### Import required widget functions
+### Import required pipeline functions
 
 Then run the import cell immediately below it. The import cell provides the public APIs used by that notebook, so its exact list can vary by demo.
 
@@ -57,25 +57,19 @@ Then run the import cell immediately below it. The import cell provides the publ
 ### Run the Data Contract block
 
 ```python
+CONTRACT_TESTING = False  # First run: Bootstrap, no selections or UI.
 CONTRACTS = setup_pipeline(
-    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, spark_session=spark,
+    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
+    interactive=CONTRACT_TESTING, spark_session=spark,
 )
-# Select every contract or explicit No Contract, then run the next cell.
-EXECUTION_PLAN = CONTRACTS["build_plan"]()
+EXECUTION_PLAN = CONTRACTS["build_plan"]() if CONTRACT_TESTING else CONTRACTS
 ```
 
-For the initial Guided Demo run, there is no Data Contract yet, so explicitly select **No Contract** for every participant. Testing returns diagnostics without publishing targets. To publish bootstrap outputs, create a new selector, deliberately select Live, choose No Contract where no active version exists, and build a new plan before rerunning all Reads and Writes.
+With the default `False`, Run all builds a Bootstrap plan and creates/profiles initial outputs without human interaction. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Metadata routing must already be initialized by the environment setup; business targets and Catalogue records do not need to exist.
 
-![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
+After Governance authors and freezes the contracts, set `CONTRACT_TESTING = True`. Pause after setup to select the exact frozen versions, then run the execution-plan cell and all Reads and Writes. Testing evaluates every declared operation without publishing targets or committing ordinary operational metadata. Rerun setup for a new test; rebuilding on the same selector reuses its locked plan and journal.
 
-
-??? info "Under the hood"
-
-    The selector resolves the explicitly configured source and target identities, then lists available frozen Data Contracts for each participant. Historical `METADATA_DATA_LINEAGE` does not determine pipeline membership.
-
-    **Testing** applies to the entire pipeline in every environment and permits eligible frozen candidates. **Live** enforces active frozen versions and rejects inactive substitutions. Explicit **No Contract** supports bootstrap only when it bypasses no active contract. A missing selection or invalid payload fails; it never becomes No Contract.
-
-    The returned `CONTRACTS` state builds one immutable `EXECUTION_PLAN`. Pass that same plan to every `orchestrate_read()` and `orchestrate_write()` call. See [`setup_pipeline()`](../api/reference/setup_pipeline.md) for the exact return contract.
+Bootstrap fails closed if any participating table has a frozen or active contract, including one frozen after setup. It never silently drops governed requirements. UI visibility is separate from execution policy: headless Testing uses `interactive=False`, `execution_mode="testing"`, and saved exact selections.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
