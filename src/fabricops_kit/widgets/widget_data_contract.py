@@ -24,6 +24,8 @@ from fabricops_kit.widgets.enrichment_shared import (
     suggest_sensitive_data,
 )
 
+_SENSITIVE_TREATMENT_OPTIONS = (("Mask", "mask"), ("Tokenize", "tokenize"), ("Bucket numeric values", "bucket"), ("Remove column", "remove"))
+
 DATA_CONTRACT_MANIFEST: dict[str, Any] | None = None
 DATA_CONTRACT_MANIFEST_JSON: str | None = None
 
@@ -574,6 +576,14 @@ def widget_data_contract(
     separate until Governance accepts a suggestion. Manual Description or Classification
     edits mark dependent advice stale for explicit re-run. AI never saves, freezes,
     activates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.
+    Sensitive Data offers Mask for categorical/text columns, Bucket for numeric
+    columns, and Tokenize/Remove for either. Dates offer Tokenize/Remove; complex
+    types offer Remove. Text defaults to full masking; partial preservation is optional.
+    Numeric buckets use approved fixed ranges or an anchored interval width.
+    Text grouping and distribution-derived boundaries belong in Engineering
+    exploration and transformations. AI suggestions receive governed metadata,
+    profile summaries including min/max, and the three most frequent values.
+    Treatment failures always block.
 
     Examples
     --------
@@ -2725,17 +2735,24 @@ def widget_data_contract(
         pii_reason = widgets.Textarea(
             disabled=not editable, **shared.widget_common(widgets, "Reason", textarea=True)
         )
-        sensitive_treatment = widgets.Dropdown(options=("tokenize", "mask", "bucket", "remove"), disabled=not editable, **shared.widget_common(widgets, "Treatment"))
+        sensitive_treatment = widgets.Dropdown(options=_SENSITIVE_TREATMENT_OPTIONS, disabled=not editable, **shared.widget_common(widgets, "Treatment"))
         for sensitive_field in (pii_type, sensitive_treatment, pii_reason):
             sensitive_field.layout.width = "100%"
             sensitive_field.layout.min_width = "0"
             sensitive_field.layout.max_width = "722px"
         sensitive_rule_preview = widgets.HTML()
-        mask_start = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve start"))
-        mask_end = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Mask: preserve end"))
+        mask_mode = widgets.Dropdown(options=(("Full mask", "full"), ("Partial mask", "partial")),
+                                     disabled=not editable, **shared.widget_common(widgets, "Mask style"))
+        treatment_help = widgets.HTML()
+        bucket_mode = widgets.Dropdown(options=(("Approved ranges", "ranges"), ("Fixed width", "width")),
+                                       disabled=not editable, **shared.widget_common(widgets, "Bucket method"))
+        bucket_width = widgets.Text(value="10", disabled=not editable, **shared.widget_common(widgets, "Interval width"))
+        bucket_origin = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Starting point"))
+        mask_start = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Visible characters at start"))
+        mask_end = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Visible characters at end"))
         mask_character = widgets.Text(value="*", disabled=not editable, **shared.widget_common(widgets, "Mask character"))
-        bucket_bins = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Bucket boundaries (comma-separated)"))
-        bucket_labels = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Bucket labels (comma-separated)"))
+        bucket_bins = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Lower bounds"))
+        bucket_labels = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Band labels"))
         def dq_checkbox(label: str) -> Any:
             control = widgets.Checkbox(
                 description=label,
@@ -2839,7 +2856,7 @@ def widget_data_contract(
             table_description, table_classification,
             column_description, column_classification, datatype_choice,
             pii_type, pii_reason, sensitive_treatment,
-            mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
+            mask_start, mask_end, mask_character, bucket_bins, bucket_labels, bucket_mode, bucket_width, bucket_origin,
             dq_max_missing, dq_min_unique, dq_whitelist_values, dq_blacklist_values,
             dq_minimum, dq_maximum,
         ):
@@ -2882,6 +2899,10 @@ def widget_data_contract(
                 "pii_type": pii_type.value,
                 "pii_reason": pii_reason.value,
                 "sensitive_treatment": sensitive_treatment.value,
+                "mask_mode": mask_mode.value,
+                "bucket_mode": bucket_mode.value,
+                "bucket_width": bucket_width.value,
+                "bucket_origin": bucket_origin.value,
                 "mask_start": mask_start.value,
                 "mask_end": mask_end.value,
                 "mask_character": mask_character.value,
@@ -3040,12 +3061,14 @@ def widget_data_contract(
                 )
                 pii_reason.value = str(sensitive_parameters.get("pii_reason") or "")
                 sensitive_enabled.value = bool(sensitive and sensitive.get("is_active", True))
+                allowed_treatments = contracts.sensitive_data_treatments_for_type(str(datatype_choice.value or contract_type or observed_type))
+                sensitive_treatment.options = tuple(option for option in _SENSITIVE_TREATMENT_OPTIONS if option[1] in allowed_treatments)
                 _set_selection_value(
                     sensitive_treatment,
                     _valid_dropdown_value(
-                        ("tokenize", "mask", "bucket", "remove"),
-                        sensitive_parameters.get("treatment") or "tokenize",
-                        fallback="tokenize",
+                        allowed_treatments,
+                        sensitive_parameters.get("treatment") or allowed_treatments[0],
+                        fallback=None if sensitive_parameters.get("treatment") in {"mask", "tokenize", "bucket", "remove"} else allowed_treatments[0],
                     ),
                     control_name="sensitive_treatment",
                     table_name=str(table.get("table_name") or ""),
@@ -3054,6 +3077,10 @@ def widget_data_contract(
                 mask_start.value = str(sensitive_parameters.get("preserve_start", 0))
                 mask_end.value = str(sensitive_parameters.get("preserve_end", 0))
                 mask_character.value = str(sensitive_parameters.get("mask_character") or "*")
+                mask_mode.value = "partial" if int(mask_start.value) or int(mask_end.value) else "full"
+                bucket_mode.value = "width" if "bin_width" in sensitive_parameters else "ranges"
+                bucket_width.value = str(sensitive_parameters.get("bin_width", 10))
+                bucket_origin.value = str(sensitive_parameters.get("bin_origin", 0))
                 bucket_bins.value = ", ".join(map(str, sensitive_parameters.get("bins", [])))
                 bucket_labels.value = ", ".join(map(str, sensitive_parameters.get("labels", [])))
                 if dq_visibility["refresh"] is not None:
@@ -3074,10 +3101,14 @@ def widget_data_contract(
                     )
                     pii_reason.value = pending["pii_reason"]
                     sensitive_treatment.value = _valid_dropdown_value(
-                        ("tokenize", "mask", "bucket", "remove"),
+                        allowed_treatments,
                         pending["sensitive_treatment"],
-                        fallback="tokenize",
+                        fallback=None,
                     )
+                    mask_mode.value = pending["mask_mode"]
+                    bucket_mode.value = pending["bucket_mode"]
+                    bucket_width.value = pending["bucket_width"]
+                    bucket_origin.value = pending["bucket_origin"]
                     mask_start.value = pending["mask_start"]
                     mask_end.value = pending["mask_end"]
                     mask_character.value = pending["mask_character"]
@@ -3121,10 +3152,22 @@ def widget_data_contract(
 
         def update_sensitive_fields(change: dict[str, Any] | None = None) -> None:
             treatment = str(sensitive_treatment.value or "")
-            for control in (mask_start, mask_end, mask_character):
-                control.layout.display = "" if treatment == "mask" else "none"
+            enabled = bool(sensitive_enabled.value) and str(pii_type.value or "none") != "none"
+            mask_mode.layout.display = "" if enabled and treatment == "mask" else "none"
+            for control in (mask_start, mask_end):
+                control.layout.display = "" if enabled and treatment == "mask" and mask_mode.value == "partial" else "none"
+            mask_character.layout.display = "none"
+            bucket_mode.layout.display = "" if enabled and treatment == "bucket" else "none"
             for control in (bucket_bins, bucket_labels):
-                control.layout.display = "" if treatment == "bucket" else "none"
+                control.layout.display = "" if enabled and treatment == "bucket" and bucket_mode.value == "ranges" else "none"
+            for control in (bucket_width, bucket_origin):
+                control.layout.display = "" if enabled and treatment == "bucket" and bucket_mode.value == "width" else "none"
+            treatment_help.value = {
+                "mask": "Hide the value. Partial masks expose only approved characters; short values are fully masked.",
+                "tokenize": "Replace values with stable opaque identifiers. Token mappings are managed by the pipeline, not authored here.",
+                "bucket": "Replace numbers with fixed bands; rows are preserved. Design bands during data exploration. For approved ranges, comma-separate lower bounds and labels. The first and last bands are open-ended.",
+                "remove": "Exclude this column from the written output.",
+            }.get(treatment, "") if enabled else ""
             removing = bool(sensitive_enabled.value) and treatment == "remove"
             if removing and required.value and editable and not hydrating["active"] and not removal_state["pending"]:
                 removal_state["pending"] = True
@@ -3172,6 +3215,8 @@ def widget_data_contract(
                     f" Preserve {html.escape(str(mask_start.value or '0'))} character(s) at the start "
                     f"and {html.escape(str(mask_end.value or '0'))} at the end."
                 )
+            elif treatment == "bucket" and bucket_mode.value == "width":
+                detail = f" Fixed width: {html.escape(str(bucket_width.value))}; starting point: {html.escape(str(bucket_origin.value))}."
             elif treatment == "bucket":
                 bins = str(bucket_bins.value or "").strip()
                 labels = str(bucket_labels.value or "").strip()
@@ -3206,7 +3251,7 @@ def widget_data_contract(
 
         for sensitive_control in (
             sensitive_enabled, pii_type, pii_reason, sensitive_treatment,
-            mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
+            mask_start, mask_end, mask_character, bucket_bins, bucket_labels, bucket_mode, bucket_width, bucket_origin,
         ):
             sensitive_control.observe(refresh_sensitive_rule_preview, names="value")
 
@@ -3230,6 +3275,21 @@ def widget_data_contract(
 
         confirm_removal.on_click(confirm_column_removal)
         cancel_removal.on_click(cancel_column_removal)
+        def change_mask_style(_change: dict[str, Any]) -> None:
+            if not hydrating["active"] and mask_mode.value == "full":
+                hydrating["active"] = True
+                try:
+                    mask_start.value = "0"
+                    mask_end.value = "0"
+                    mask_character.value = "*"
+                finally:
+                    hydrating["active"] = False
+            update_sensitive_fields()
+            sync_sensitive()
+            refresh_sensitive_rule_preview()
+
+        mask_mode.observe(change_mask_style, names="value")
+        bucket_mode.observe(update_sensitive_fields, names="value")
         sensitive_treatment.observe(update_sensitive_fields, names="value")
         sensitive_enabled.observe(update_sensitive_fields, names="value")
         column_classification.observe(refresh_sensitive_rule_preview, names="value")
@@ -3488,9 +3548,11 @@ def widget_data_contract(
                         **{name: profile.get(name) for name in (
                             "row_count", "non_null_count", "null_count", "null_percent",
                             "distinct_count", "distinct_percent", "min_value", "max_value",
+                            "mean_value", "stddev_value", "percentile_25_value", "median_value", "percentile_75_value",
                         ) if profile.get(name) is not None},
                         "frequency_evidence": [
-                            {"count": item.get("count")} for item in profile_value.get("values", [])
+                            {name: item[name] for name in ("value", "count", "percent") if name in item}
+                            for item in profile_value.get("values", [])
                         ],
                     }],
                 })
@@ -3536,16 +3598,38 @@ def widget_data_contract(
             suggestion = ai_state["columns"].get(str(column_select.value or ""), {}).get("sensitive_data", {})
             if not suggestion or suggestion.get("error"):
                 return
-            pii_type.value = str(suggestion["pii_type"])
-            pii_reason.value = str(suggestion["reason"])
-            sensitive_enabled.value = suggestion["pii_type"] != "none"
-            sensitive_treatment.value = str(suggestion.get("treatment") or "mask")
+            allowed = contracts.sensitive_data_treatments_for_type(str(datatype_choice.value or ""))
+            treatment = str(suggestion.get("treatment") or sensitive_treatment.value or allowed[0])
             parameters = suggestion.get("parameters", {})
-            mask_start.value = str(parameters.get("preserve_start", 0))
-            mask_end.value = str(parameters.get("preserve_end", 0))
-            mask_character.value = str(parameters.get("mask_character", "*"))
-            bucket_bins.value = ", ".join(map(str, parameters.get("bins", [])))
-            bucket_labels.value = ", ".join(map(str, parameters.get("labels", [])))
+            try:
+                if suggestion["pii_type"] != "none":
+                    if treatment not in allowed:
+                        raise ValueError("This treatment does not apply to the column datatype. Use Bucket for numeric values, Mask for text/categories, or Tokenize/Remove for supported scalar values.")
+                    parameters = contracts.validate_sensitive_data_parameters({"scope": "column", "treatment": treatment, **parameters})
+            except (TypeError, ValueError) as exc:
+                set_status(str(exc), error=True)
+                return
+            previous_treatment = sensitive_treatment.value
+            hydrating["active"] = True
+            try:
+                pii_type.value = str(suggestion["pii_type"])
+                pii_reason.value = str(suggestion["reason"])
+                sensitive_enabled.value = suggestion["pii_type"] != "none"
+                sensitive_treatment.value = treatment
+                mask_start.value = str(parameters.get("preserve_start", 0))
+                mask_end.value = str(parameters.get("preserve_end", 0))
+                mask_character.value = str(parameters.get("mask_character", "*"))
+                mask_mode.value = "partial" if int(mask_start.value) or int(mask_end.value) else "full"
+                bucket_mode.value = "width" if "bin_width" in parameters else "ranges"
+                bucket_width.value = str(parameters.get("bin_width", 10))
+                bucket_origin.value = str(parameters.get("bin_origin", 0))
+                bucket_bins.value = ", ".join(map(str, parameters.get("bins", [])))
+                bucket_labels.value = ", ".join(map(str, parameters.get("labels", [])))
+            finally:
+                hydrating["active"] = False
+            update_sensitive_fields({"owner": sensitive_treatment, "old": previous_treatment})
+            sync_sensitive()
+            refresh_sensitive_rule_preview()
 
         accept_column_description.on_click(accept_description_clicked)
         accept_sensitive.on_click(accept_sensitive_clicked)
@@ -3688,6 +3772,8 @@ def widget_data_contract(
                 return None
             if str(pii_type.value or "none") == "none" and sensitive_enabled.value:
                 raise ValueError("Enable a Sensitive Data rule only for Direct or Indirect PII.")
+            if sensitive_enabled.value and sensitive_treatment.value not in contracts.sensitive_data_treatments_for_type(str(datatype_choice.value or "")):
+                raise ValueError("Select a treatment supported by this datatype: Bucket for numeric values, Mask for text/categories, or Tokenize/Remove.")
             parameters: dict[str, Any] = {
                 "scope": "column", "treatment": sensitive_treatment.value,
             }
@@ -3704,6 +3790,8 @@ def widget_data_contract(
                     "preserve_end": int(mask_end.value),
                     "mask_character": mask_character.value,
                 })
+            elif sensitive_treatment.value == "bucket" and bucket_mode.value == "width":
+                parameters.update({"bin_width": float(bucket_width.value), "bin_origin": float(bucket_origin.value)})
             elif sensitive_treatment.value == "bucket":
                 parameters.update({
                     "bins": [
@@ -3737,7 +3825,7 @@ def widget_data_contract(
                 mark_column_hydrated(
                     "sensitive_enabled", "pii_type", "pii_reason", "sensitive_treatment",
                     "mask_start", "mask_end", "mask_character",
-                    "bucket_bins", "bucket_labels",
+                    "bucket_bins", "bucket_labels", "mask_mode", "bucket_mode", "bucket_width", "bucket_origin",
                 )
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error(key, exc)
@@ -3843,7 +3931,7 @@ def widget_data_contract(
         required.observe(sync_required, names="value")
         for control in (
             sensitive_enabled, pii_type, pii_reason, sensitive_treatment,
-            mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
+            mask_start, mask_end, mask_character, bucket_bins, bucket_labels, bucket_mode, bucket_width, bucket_origin,
         ):
             control.observe(sync_sensitive, names="value")
         for kind, controls in dq_family_controls.items():
@@ -4026,6 +4114,19 @@ def widget_data_contract(
                 "byte", "tinyint", "short", "smallint", "int", "integer", "long",
                 "bigint", "float", "double", "decimal", "numeric",
             }
+            selected_treatment = sensitive_treatment.value
+            allowed = contracts.sensitive_data_treatments_for_type(data_type)
+            options = tuple(option for option in _SENSITIVE_TREATMENT_OPTIONS if option[1] in allowed)
+            was_hydrating = hydrating["active"]
+            hydrating["active"] = True
+            try:
+                sensitive_treatment.options = tuple(options)
+                sensitive_treatment.value = selected_treatment if selected_treatment in allowed else None
+            finally:
+                hydrating["active"] = was_hydrating
+            if editable and sensitive_enabled.value and sensitive_treatment.value is None:
+                set_validation_error(f"column.{column_select.value}.sensitive", "The saved treatment does not apply to this datatype. Select a supported treatment before saving.")
+            update_sensitive_fields()
             temporal = base_type in {"date", "timestamp", "timestamp_ntz"}
             boolean = base_type in {"bool", "boolean"}
             scalar = base_type in {"string", "varchar", "char"} or numeric or temporal or boolean
@@ -4123,11 +4224,15 @@ def widget_data_contract(
             [
                 pii_type,
                 sensitive_treatment,
+                treatment_help,
                 removal_confirmation_box,
                 column_classification,
+                mask_mode,
                 mask_start,
                 mask_end,
-                mask_character,
+                bucket_mode,
+                bucket_width,
+                bucket_origin,
                 bucket_bins,
                 bucket_labels,
                 pii_reason,
@@ -4156,8 +4261,7 @@ def widget_data_contract(
                 "Sensitive Data",
                 banner_title="Applies before this governed table is written.",
                 banner_detail=(
-                    "FabricOps applies the selected deterministic treatment to this column "
-                    "before the governed write proceeds."
+                    "Treatment runs before Data Quality and publication. Every treatment failure stops the write."
                 ),
                 description=(
                     "Assess whether this column contains PII, choose how the pipeline should treat "
@@ -5293,6 +5397,8 @@ def widget_data_contract(
             "pii_type": pii_type, "pii_reason": pii_reason,
             "sensitive_ai": sensitive_ai, "accept_sensitive": accept_sensitive,
             "rerun_sensitive": rerun_sensitive,
+            "mask_mode": mask_mode, "treatment_help": treatment_help,
+            "bucket_mode": bucket_mode, "bucket_width": bucket_width, "bucket_origin": bucket_origin,
             "mask_start": mask_start,
             "mask_end": mask_end, "mask_character": mask_character,
             "bucket_bins": bucket_bins, "bucket_labels": bucket_labels,

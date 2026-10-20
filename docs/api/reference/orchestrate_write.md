@@ -88,7 +88,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `grain_discovery_max_candidates` | `int` | No | `8` | Maximum candidate keys to retain at the smallest valid key width. Must be a positive integer. Discovery stops after enough keys are found; this limit does not cap work when no valid key exists. |
 | `frequency_enabled` | `bool` | No | `True` | Whether Profile calculates frequency distributions for this call. The caller controls when to enable discovery and frequency profiling. |
 | `frequency_top_n` | `int \| None` | No | `5` | Maximum ranked frequency values per eligible column; None retains all. |
-| `existing_mapping` | `pyspark.sql.DataFrame` | No | `None` | Previously returned Sensitive Data token mappings. Existing assignments are reused; the returned sensitive_result contains the support_mapping for the caller to persist and supply on later runs. After consuming the prepared DataFrame and persisting the mapping, call its unpersist() method to release its cache. Failed orchestration releases it automatically. |
+| `existing_mapping` | `pyspark.sql.DataFrame` | No | `None` | Previously returned Sensitive Data token mappings. Existing assignments are reused; the returned sensitive_result contains the support_mapping for the caller to persist and supply on later runs. When Engineering configures GovernanceConfig.sensitive_data_token_mapping, Enforce automatically reuses and inserts assignments in that restricted Delta store. Validate reads the store without writing it. Without that setting, mapping management remains caller-owned. Caller-owned mappings retain established identities absent from the current batch; managed mappings return only assignments used in the current batch. Do not combine a configured mapping store with existing_mapping. After consuming the prepared DataFrame and persisting the mapping, call its unpersist() method to release its cache. Failed orchestration releases it automatically. |
 | `spark_session` | `object` | No | `None` | Spark session used by every stage. |
 | `verbose` | `bool` | No | `True` | Print stage start, outcome, duration, and failure attribution. |
 
@@ -187,7 +187,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:24`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L24-L272">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L24-L279">View on GitHub</a>
 </div>
 
 
@@ -203,7 +203,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 182 |
+| Live-critical dependencies | 183 |
 
 ### Release history
 
@@ -356,6 +356,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._string_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._summarize_dq_guardrail</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_dq_rules</code></li>
+<li><code>fabricops_kit.pipeline.shared._validate_token_mapping</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>

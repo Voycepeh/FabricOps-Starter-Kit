@@ -15,7 +15,7 @@ def _context() -> dict:
         "table_name": "customers",
         "columns": [
             {"column_id": "email-id", "column_name": "EMAIL", "data_type": "string"},
-            {"column_id": "postal-id", "column_name": "POSTAL_CODE", "data_type": "string"},
+            {"column_id": "postal-id", "column_name": "POSTAL_CODE", "data_type": "long"},
             {"column_id": "total-id", "column_name": "ORDER_TOTAL", "data_type": "decimal"},
         ],
     }
@@ -263,3 +263,58 @@ def test_fabric_ai_unavailable_has_clear_failure(monkeypatch):
     monkeypatch.setattr(module.importlib, "import_module", fake_import)
     with pytest.raises(RuntimeError, match="AI Functions are unavailable"):
         module._invoke_fabric_ai("prompt")
+
+
+def test_sensitive_context_and_prompt_include_approved_profile_samples():
+    """Share summaries and only the three most frequent values, not full rows."""
+    evidence = {**_context()['columns'][0], 'min_value': 'min@example.test',
+                'max_value': 'max@example.test', 'sample': 'unapproved-source-row',
+                'frequency_evidence': [
+                    {'value': 'fourth', 'count': 1},
+                    {'value': 'second', 'count': 20, 'percent': 20.0, 'extra': 'unapproved-extra'},
+                    {'value': 'first', 'count': 30},
+                    {'value': 'third', 'count': 10},
+                ],
+                'profile_evidence': {'row_count': 100, 'null_count': 2}}
+    built = module.build_ai_sensitive_data_context({'catalogue_profile_rows': [evidence]})
+    column = built['columns'][0]
+    assert column['profile_evidence'] == {'row_count': 100, 'null_count': 2,
+                                        'min_value': 'min@example.test', 'max_value': 'max@example.test'}
+    assert [item['value'] for item in column['frequency_evidence']] == ['first', 'second', 'third']
+    assert column['frequency_evidence'][1]['percent'] == 20.0
+    prompts = []
+    module.suggest_sensitive_data(built, prompt='Policy', invoke=lambda prompt: prompts.append(prompt) or '[]')
+    assert 'min@example.test' in prompts[0] and 'max@example.test' in prompts[0]
+    assert all(value in prompts[0] for value in ('first', 'second', 'third'))
+    assert 'fourth' not in prompts[0] and 'unapproved-' not in prompts[0]
+
+
+def test_nested_profile_extrema_survive_context_rebuilding():
+    """The invocation boundary preserves approved metadata already normalized by the widget."""
+    built = module.build_ai_sensitive_data_context({'catalogue_profile_rows': [
+        {**_context()['columns'][0], 'profile_evidence': {'min_value': 'A', 'max_value': 'Z'}}
+    ]})
+    rebuilt = module.build_ai_sensitive_data_context({'catalogue_profile_rows': built['columns']})
+    assert rebuilt['columns'][0]['profile_evidence'] == {'min_value': 'A', 'max_value': 'Z'}
+
+
+def test_sensitive_suggestions_always_use_block():
+    """Older model output cannot reintroduce a Warn policy into the editor."""
+    result = module.suggest_sensitive_data(_context(), prompt='Policy', invoke=_invoke([{
+        'column': 'EMAIL', 'pii_type': 'direct', 'reason': 'Identifies a person',
+        'treatment': 'remove', 'action': 'Warn', 'parameters': {},
+    }]))
+    assert result[0]['action'] == 'Block'
+
+
+@pytest.mark.parametrize('column,treatment,parameters', [
+    ('EMAIL', 'bucket', {'bins': [0, 10], 'labels': ['low', 'high']}),
+    ('POSTAL_CODE', 'mask', {'preserve_start': 0, 'preserve_end': 0, 'mask_character': '*'}),
+])
+def test_ai_rejects_treatments_incompatible_with_datatype(column, treatment, parameters):
+    """Reject unusable suggestions before the editor can offer acceptance."""
+    with pytest.raises(ValueError, match='datatype'):
+        module.suggest_sensitive_data(_context(), prompt='Policy', invoke=_invoke([{
+            'column': column, 'pii_type': 'direct', 'reason': 'Identifies an entity',
+            'treatment': treatment, 'action': 'Block', 'parameters': parameters,
+        }]))

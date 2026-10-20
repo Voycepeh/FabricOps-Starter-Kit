@@ -98,7 +98,7 @@ def test_mask_preserves_configured_portions(monkeypatch, spark_session, paramete
     frame = spark_session.createDataFrame([(1, "S1234567A"), (2, "S1"), (3, None)], ["id", "email"])
     result = module.check_sensitive_data(frame, table_id="table-id")
     values = [row.email for row in result["dataframe"].orderBy("id").collect()]
-    assert values == [expected, "S1", None]
+    assert values == [expected, "**", None]
     assert result["support_mapping"] is None
 
 
@@ -247,3 +247,182 @@ def test_later_treatment_failure_releases_earlier_token_cache(monkeypatch, spark
     assert result["can_continue"] is False
     assert result["support_mapping"] is None
     assert spark_session.sparkContext._jsc.getPersistentRDDs().size() == before
+
+
+@pytest.mark.parametrize('value,start,end,expected', [
+    ('A', 0, 0, '*'), ('ABC', 1, 1, '***'), ('AB', 9, 9, '**'),
+    ('', 0, 0, ''), ('ABCDE', 1, 1, 'A***E'),
+])
+def test_mask_never_exposes_short_values(spark_session, value, start, end, expected):
+    """Partial preservation must never cause a short value to bypass masking."""
+    frame = spark_session.createDataFrame([(value,)], ['sensitive'])
+    prepared = shared._mask_column(frame, column_name='sensitive', parameters={
+        'preserve_start': start, 'preserve_end': end, 'mask_character': '*',
+    })
+    assert prepared.first().sensitive == expected
+
+
+def test_fixed_width_buckets_are_stable_across_batches(spark_session):
+    """An anchored interval has the same meaning regardless of batch extrema."""
+    from fabricops_kit.data_contract.shared import validate_sensitive_data_parameters
+
+    params = validate_sensitive_data_parameters({'scope': 'column', 'treatment': 'bucket',
+                                                 'bin_width': 10, 'bin_origin': 0})
+    frame = spark_session.createDataFrame([(-1,), (0,), (9,), (10,), (None,)], 'value int')
+    result = shared._bucket_column(frame, column_name='value', parameters=params)
+    assert [r.value for r in result.collect()] == ['[-10, 0)', '[0, 10)', '[0, 10)', '[10, 20)', None]
+    later = spark_session.createDataFrame([(9,), (1000,)], ['value'])
+    assert shared._bucket_column(later, column_name='value', parameters=params).first().value == '[0, 10)'
+
+
+@pytest.mark.parametrize('extra', [
+    {'bin_width': 0}, {'bin_width': -1}, {'bin_width': True}, {'bin_width': float('nan')},
+    {'bin_width': 10, 'bin_origin': float('inf')}, {'bin_width': 10, 'bins': [0], 'labels': ['all']},
+])
+def test_fixed_width_policy_rejects_invalid_or_ambiguous_settings(extra):
+    """Reject invalid policy before constructing a Spark expression."""
+    from fabricops_kit.data_contract.shared import validate_sensitive_data_parameters
+
+    with pytest.raises(ValueError):
+        validate_sensitive_data_parameters({'scope': 'column', 'treatment': 'bucket', **extra})
+
+
+def test_returned_token_mapping_retains_absent_identities(spark_session):
+    """A batch cannot erase assignments needed by a later batch."""
+    existing = spark_session.createDataFrame([
+        ('t', 'c', 'absent', 'retained'), ('t', 'c', 'present', 'stable'),
+    ], ['table_id', 'column_id', 'original_value', 'token_value'])
+    frame = spark_session.createDataFrame([('present',)], ['value'])
+    mapping = shared._build_token_mapping(frame, column_name='value', column_id='c', table_id='t', existing_mapping=existing)
+    try:
+        assert {r.original_value: r.token_value for r in mapping.collect()} == {'absent': 'retained', 'present': 'stable'}
+        assert shared._apply_token_mapping(frame, column_name='value', column_id='c', table_id='t', mapping=mapping).first().value == 'stable'
+    finally:
+        mapping.unpersist()
+
+
+@pytest.mark.parametrize('mode', ['validate', 'enforce'])
+@pytest.mark.parametrize('collision', [False, True])
+def test_managed_token_mapping_uses_restricted_target_without_validation_writes(monkeypatch, spark_session, mode, collision):
+    """Exercise real token generation and reuse around a mocked Delta vault merge."""
+    import sys
+    import types
+    from fabricops_kit.config import GovernanceConfig
+
+    fields = ['table_id', 'column_id', 'original_value', 'token_value', 'original_data_type']
+    stored = spark_session.createDataFrame([('t', 'c', 'known', 'stable', 'string'),
+        ('t', 'c', 'absent', 'stable' if collision else 'reserved', 'string')], fields)
+    merges = []
+    reads = []
+
+    class Vault:
+        def alias(self, _name):
+            return self
+
+        def merge(self, frame, condition):
+            self.pending = frame
+            assert 'original_value' in condition and 'column_id' in condition
+            return self
+
+        def whenNotMatchedInsert(self, **kwargs):
+            assert set(kwargs['values']) == set(fields)
+            return self
+
+        def execute(self):
+            nonlocal stored
+            merges.append(self.pending.count())
+            new = self.pending.join(stored.select('table_id', 'column_id', 'original_value'),
+                                    ['table_id', 'column_id', 'original_value'], 'left_anti')
+            stored = stored.unionByName(new).cache()
+            stored.count()
+
+    vault = Vault()
+    delta = types.ModuleType('delta.tables')
+    delta.DeltaTable = types.SimpleNamespace(isDeltaTable=lambda *_args: True, forPath=lambda *_args: vault)
+    monkeypatch.setitem(sys.modules, 'delta', types.ModuleType('delta'))
+    monkeypatch.setitem(sys.modules, 'delta.tables', delta)
+    monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', lambda *args, **kwargs: (None, None, None, '/restricted'))
+
+    def read(table_name, **kwargs):
+        reads.append((table_name, kwargs))
+        assert kwargs['store'] == 'Sensitive'
+        assert kwargs['context']['_fabricops_suppress_io_log'] is True
+        return stored
+
+    monkeypatch.setattr(shared, 'read_lakehouse_table', read)
+    config = types.SimpleNamespace(governance_config=GovernanceConfig(sensitive_data_token_mapping={
+        'store': 'Sensitive', 'schema': 'vault', 'table_name': 'tokens',
+    }))
+    frame = spark_session.createDataFrame([('known',), ('new',)], ['value'])
+    if collision:
+        with pytest.raises(ValueError, match='reuses one token'):
+            shared._build_token_mapping(frame, column_name='value', column_id='c', table_id='t',
+                existing_mapping=None, config=config, env='dev', execution_type=mode)
+        stored.unpersist()
+        return
+    mapping = shared._build_token_mapping(frame, column_name='value', column_id='c', table_id='t',
+        existing_mapping=None, config=config, env='dev', execution_type=mode)
+    try:
+        values = {r.original_value: r.token_value for r in mapping.collect()}
+        assert set(values) == {'known', 'new'}
+        assert values['known'] == 'stable'
+        assert values['new'] != 'new'
+        assert merges == ([1] if mode == 'enforce' else [])
+        assert {r.original_value for r in stored.collect()} == ({'known', 'new', 'absent'} if mode == 'enforce' else {'known', 'absent'})
+        if mode == 'enforce':
+            again = shared._build_token_mapping(frame, column_name='value', column_id='c', table_id='t',
+                existing_mapping=None, config=config, env='dev', execution_type='enforce')
+            try:
+                assert {r.original_value: r.token_value for r in again.collect()} == values
+                assert merges == [1]  # Reusing known assignments must not perform another Delta merge.
+            finally:
+                again.unpersist()
+    finally:
+        mapping.unpersist()
+        stored.unpersist()
+
+
+def test_managed_token_mapping_configuration_requires_separate_store():
+    """Raw original-to-token relationships cannot default into general metadata."""
+    from fabricops_kit.config import GovernanceConfig
+
+    with pytest.raises(ValueError, match='separately restricted'):
+        GovernanceConfig(sensitive_data_token_mapping={'store': 'Metadata', 'table_name': 'tokens'})
+    with pytest.raises(ValueError, match='requires store'):
+        GovernanceConfig(sensitive_data_token_mapping={'store': 'Sensitive'})
+
+
+@pytest.mark.parametrize('origin', [0.0, 0.05])
+def test_fixed_width_decimal_boundaries_are_exact(spark_session, origin):
+    """A value exactly on a decimal boundary belongs to its own lower-inclusive band."""
+    from decimal import Decimal
+
+    values = [('1.20', '[1.2, 1.3)'), ('1.30', '[1.3, 1.4)'), ('2.40', '[2.4, 2.5)'), ('-0.10', '[-0.1, 0)')]
+    if origin:
+        values = [('1.25', '[1.25, 1.35)'), ('1.35', '[1.35, 1.45)'), ('-0.05', '[-0.05, 0.05)')]
+    frame = spark_session.createDataFrame([(Decimal(value),) for value, _label in values], 'value decimal(10,2)')
+    result = shared._bucket_column(frame, column_name='value', parameters={'bin_width': 0.1, 'bin_origin': origin})
+    assert [row.value for row in result.collect()] == [label for _value, label in values]
+
+
+def test_fixed_width_float_boundaries_and_nulls(spark_session):
+    """Floating sources use decimal interval arithmetic and keep nulls."""
+    frame = spark_session.createDataFrame([(1.2,), (1.3,), (None,)], 'value double')
+    result = shared._bucket_column(frame, column_name='value', parameters={'bin_width': 0.1, 'bin_origin': 0.0})
+    assert [row.value for row in result.collect()] == ['[1.2, 1.3)', '[1.3, 1.4)', None]
+
+
+def test_fixed_width_high_precision_values_just_below_boundaries(spark_session):
+    """Shifting high-precision decimals must not round them across an interval edge."""
+    from decimal import Decimal
+
+    frame = spark_session.createDataFrame([(Decimal('1.249999999999999999'),)], 'value decimal(38,18)')
+    result = shared._bucket_column(frame, column_name='value', parameters={'bin_width': 0.1, 'bin_origin': 0.05})
+    assert result.first().value == '[1.15, 1.25)'
+
+
+def test_fixed_width_rejects_origin_that_reduces_decimal_precision(spark_session):
+    """A large origin cannot silently round a small value into another interval."""
+    frame = spark_session.createDataFrame([(1e-17,)], 'value double')
+    with pytest.raises(ValueError, match='supported decimal precision'):
+        shared._bucket_column(frame, column_name='value', parameters={'bin_width': 1e20, 'bin_origin': 1e20})

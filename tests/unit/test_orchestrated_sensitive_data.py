@@ -139,3 +139,31 @@ def test_later_write_failure_releases_token_mapping(monkeypatch, spark_session, 
         orchestrate_write(frame, sources=[], store="Silver", schema="dbo", table_name="customers",
                           write_mode="overwrite", spark_session=spark_session, verbose=False)
     assert spark_session.sparkContext._jsc.getPersistentRDDs().size() == before
+
+
+@pytest.mark.parametrize('mode', ['validate', 'enforce'])
+def test_simplified_mask_and_fixed_buckets_reach_the_public_write_workflow(monkeypatch, spark_session, write_workflow, mode):
+    """DQ and publication receive the same protected rows declared by the contract."""
+    evidence, later = write_workflow
+    base = {'guardrail_version': 1, 'contract_id': 'contract', 'contract_version': 1,
+            'guardrail_type': 'sensitive_data', 'action': 'Block', 'is_active': True}
+    rules = [
+        {**base, 'guardrail_rule_id': 'mask', 'column_id': 'email-id', 'column_name': 'email',
+         'rule_parameters_json': json.dumps({'scope': 'column', 'treatment': 'mask',
+                                            'preserve_start': 1, 'preserve_end': 1, 'mask_character': '*'})},
+        {**base, 'guardrail_rule_id': 'bucket', 'column_id': 'age-id', 'column_name': 'age',
+         'rule_parameters_json': json.dumps({'scope': 'column', 'treatment': 'bucket', 'bin_width': 10})},
+    ]
+    monkeypatch.setattr(sensitive_module, 'load_table_guardrail_rules', lambda *_args, **_kwargs: rules)
+    frame = spark_session.createDataFrame([('ABC', 27), ('ALICE', 31)], ['email', 'age'])
+    result = orchestrate_write(frame, sources=[], store='Silver', schema='dbo', table_name='customers',
+        write_mode='overwrite', contracts={'tables': {'target-id': {'mode': mode}}},
+        spark_session=spark_session, verbose=False)
+    assert [(r.email, r.age) for r in result['dataframe'].collect()] == [('***', '[20, 30)'), ('A***E', '[30, 40)')]
+    assert later['check_dq'].call_args.args[0] is result['dataframe']
+    assert result['published'] is (mode == 'enforce')
+    assert len(evidence) == 2 and all(item['action'] == 'Block' for item in evidence)
+    if mode == 'enforce':
+        assert later['pipeline_write'].call_args.args[0] is result['dataframe']
+    else:
+        later['pipeline_write'].assert_not_called()

@@ -31,6 +31,18 @@ def _catalogue_rows(count: int = 2) -> list[dict]:
     return rows
 
 
+def _use_text_identifier(runtime):
+    """Use a categorical identifier when exercising mask-specific controls."""
+    runtime["catalogue"][1]["data_type"] = "string"
+    payload = json.loads(runtime["contract"]["contract_payload_json"])
+    payload["table"]["columns"][0]["data_type"] = "string"
+    runtime["contract"]["contract_payload_json"] = json.dumps(payload)
+    sensitive = next(row for row in runtime["guardrails"] if row.get("guardrail_type") == "sensitive_data")
+    sensitive.update({"rule_type": "mask", "rule_parameters_json": json.dumps({
+        "scope": "column", "treatment": "mask", "preserve_start": 0, "preserve_end": 0, "mask_character": "*",
+    })})
+
+
 @pytest.fixture
 def widget_runtime(monkeypatch):
     """Provide mutable canonical service state behind the real ipywidgets controls."""
@@ -175,7 +187,7 @@ def widget_runtime(monkeypatch):
         {"guardrail_rule_id": "schema", "guardrail_version": 1, "guardrail_type": "schema", "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["col-0"]}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","expected_refresh_frequency":1,"expected_refresh_unit":"days","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1"}', "action": "Warn", "is_active": True},
-        {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "mask", "rule_parameters_json": '{"scope":"column","treatment":"mask","preserve_start":0,"preserve_end":0,"mask_character":"*"}', "action": "Block", "is_active": True},
+        {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "tokenize", "rule_parameters_json": '{"scope":"column","treatment":"tokenize"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "completeness", "rule_parameters_json": '{"columns":["column_0"],"maximum_missing_percent":0,"treat_blank_as_missing":false}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "dq-pattern", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "pattern", "rule_parameters_json": '{"columns":["column_0"],"pattern":"^ORD-[0-9]+$"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "advanced", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "", "rule_type": "column_relationship", "rule_parameters_json": '{"columns":["column_1","column_0"],"operator":">"}', "action": "Warn", "is_active": True},
@@ -733,6 +745,7 @@ def test_general_table_uniqueness_is_not_reinterpreted_as_grain(widget_runtime):
 
 def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     """Saved governance choices hydrate without relying on the old widget instance."""
+    _use_text_identifier(widget_runtime)
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
@@ -1164,9 +1177,9 @@ def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
         return [{
             "column_name": column["column_name"], "column_id": column["column_id"],
             "pii_type": "direct", "pii_label": "Direct PII",
-            "reason": "Can uniquely associate a person.", "treatment": "mask",
+            "reason": "Can uniquely associate a person.", "treatment": "mask" if column["data_type"] == "string" else "tokenize",
             "action": "Block",
-            "parameters": {"preserve_start": 1, "preserve_end": 0, "mask_character": "*"},
+            "parameters": {"preserve_start": 1, "preserve_end": 0, "mask_character": "*"} if column["data_type"] == "string" else {},
             "is_active": True,
         }]
 
@@ -1473,7 +1486,7 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     description = controls["column_description"].value
     controls["accept_sensitive"].click()
     assert controls["pii_type"].value == "direct"
-    assert controls["sensitive_treatment"].value == "mask"
+    assert controls["sensitive_treatment"].value == "tokenize"
     assert "sensitive_block" not in controls
     assert controls["column_description"].value == description
     assert controls["column_classification"].value == "Confidential"
@@ -3138,3 +3151,136 @@ def test_rejected_save_retains_pending_widget_edits(widget_runtime, monkeypatch)
     assert state["dirty"]
     assert state["_pending_enrichment"]
     assert any(item.get("value") == "Unsaved description" for item in state["current"]["enrichment"])
+
+
+def test_sensitive_ui_defaults_to_full_mask_and_hides_technical_settings(widget_runtime):
+    """The simplest protection exposes no character-count or mask-symbol settings."""
+    _use_text_identifier(widget_runtime)
+    state = widget_runtime['open']()
+    controls = state['_controls']
+    controls['column_select'].value = 'col-0'
+    controls['pii_type'].value = 'direct'
+    controls['pii_reason'].value = 'Identifies the customer'
+    controls['sensitive_enabled'].value = True
+    assert controls['sensitive_treatment'].value == 'mask'
+    assert controls['mask_mode'].value == 'full'
+    assert controls['mask_start'].layout.display == 'none'
+    assert controls['mask_character'].layout.display == 'none'
+    controls['mask_mode'].value = 'partial'
+    assert controls['mask_start'].layout.display == ''
+    controls['mask_start'].value = '1'
+    controls['mask_mode'].value = 'full'
+    assert controls['mask_start'].value == '0'
+    assert not state['_validation_errors']
+
+
+def test_sensitive_fixed_width_policy_survives_save_and_reopen(widget_runtime):
+    """Persist fixed intervals rather than recomputing groups from observed rows."""
+    state = widget_runtime['open']()
+    controls = state['_controls']
+    controls['column_select'].value = 'col-0'
+    controls['pii_type'].value = 'indirect'
+    controls['pii_reason'].value = 'Reduce precision'
+    controls['sensitive_enabled'].value = True
+    controls['sensitive_treatment'].value = 'bucket'
+    controls['bucket_mode'].value = 'width'
+    controls['bucket_width'].value = '10'
+    controls['bucket_origin'].value = '5'
+    assert controls['bucket_width'].layout.display == ''
+    assert controls['bucket_bins'].layout.display == 'none'
+    assert not state['_validation_errors']
+    controls['save_data_contract'].click()
+    assert widget_runtime['calls']['guardrails']
+    reopened = widget_runtime['open']()['_controls']
+    reopened['column_select'].value = 'col-0'
+    assert reopened['bucket_mode'].value == 'width'
+    assert reopened['bucket_width'].value == '10.0'
+    assert reopened['bucket_origin'].value == '5.0'
+
+
+def test_text_columns_do_not_offer_numeric_buckets(widget_runtime):
+    """Category mappings belong in the transformation workflow."""
+    state = widget_runtime['open']()
+    controls = state['_controls']
+    controls['column_select'].value = 'col-1'  # timestamp, also non-numeric
+    assert 'bucket' not in [value for _label, value in controls['sensitive_treatment'].options]
+
+
+def test_saved_numeric_bucket_restores_after_viewing_text_column(widget_runtime):
+    """Filtering available treatments cannot make a saved numeric rule unopenable."""
+    state = widget_runtime['open']()
+    controls = state['_controls']
+    controls['column_select'].value = 'col-0'
+    controls['pii_type'].value = 'indirect'
+    controls['pii_reason'].value = 'Reduce precision'
+    controls['sensitive_enabled'].value = True
+    controls['sensitive_treatment'].value = 'bucket'
+    controls['bucket_mode'].value = 'width'
+    controls['save_data_contract'].click()
+    reopened = widget_runtime['open']()
+    controls = reopened['_controls']
+    controls['column_select'].value = 'col-1'
+    controls['column_select'].value = 'col-0'
+    assert controls['sensitive_treatment'].value == 'bucket'
+    assert controls['bucket_mode'].value == 'width'
+    assert not reopened['_validation_errors']
+
+
+def test_sensitive_ai_receives_approved_profile_and_frequency_samples(widget_runtime, monkeypatch):
+    """The authoring widget passes min/max and frequent values into AI context."""
+    _state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    column = captures['sensitive'][0]['columns'][0]
+    assert column['profile_evidence']['min_value'] == '1'
+    assert column['profile_evidence']['max_value'] == '9'
+    assert column['profile_evidence']['mean_value'] == 5.0
+    assert column['frequency_evidence'] == [{'value': 'col-0', 'count': 2, 'percent': 20.0}]
+
+
+def test_numeric_columns_offer_bucket_tokenize_remove_without_mask(widget_runtime):
+    """Numeric identifiers can be tokenized; numerical measures can be bucketed."""
+    controls = widget_runtime['open']()['_controls']
+    assert {value for _label, value in controls['sensitive_treatment'].options} == {'bucket', 'tokenize', 'remove'}
+
+
+def test_categorical_columns_offer_mask_tokenize_remove_without_bucket(widget_runtime):
+    """Physical text columns expose no numeric interval configuration."""
+    _use_text_identifier(widget_runtime)
+    controls = widget_runtime['open']()['_controls']
+    assert {value for _label, value in controls['sensitive_treatment'].options} == {'mask', 'tokenize', 'remove'}
+
+
+def test_invalid_ai_acceptance_leaves_all_authored_fields_unchanged(widget_runtime, monkeypatch):
+    """Even malformed advice bypassing the decoder cannot partially mutate the form."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state['_controls']
+    controls['column_select'].value = 'col-1'
+    def bucket(context, **kwargs):
+        column = context['columns'][0]
+        return [{'column_name': column['column_name'], 'column_id': column['column_id'],
+            'pii_type': 'indirect', 'pii_label': 'Indirect PII', 'reason': 'Coarse detail',
+            'treatment': 'bucket', 'action': 'Block', 'parameters': {'bins': [0, 10], 'labels': ['low', 'high']}, 'is_active': True}]
+    monkeypatch.setattr(module, 'suggest_sensitive_data', bucket)
+    controls['rerun_sensitive'].click()
+    fields = ['pii_type', 'pii_reason', 'sensitive_enabled', 'sensitive_treatment', 'column_classification', 'required']
+    before = {name: controls[name].value for name in fields}
+    controls['accept_sensitive'].click()
+    assert {name: controls[name].value for name in fields} == before
+    assert 'does not apply' in state['message']
+
+
+def test_saved_incompatible_treatment_requires_explicit_repair(widget_runtime):
+    """Opening a numeric mask does not silently replace the saved governance decision."""
+    rule = next(row for row in widget_runtime['guardrails'] if row.get('guardrail_type') == 'sensitive_data')
+    rule.update({'rule_type': 'mask', 'rule_parameters_json': json.dumps({
+        'scope': 'column', 'treatment': 'mask', 'preserve_start': 0, 'preserve_end': 0, 'mask_character': '*',
+    })})
+    state = widget_runtime['open']()
+    controls = state['_controls']
+    assert controls['sensitive_treatment'].value is None
+    assert state['_validation_errors']
+    controls['save_data_contract'].click()
+    assert not widget_runtime['calls']['guardrails']
+    controls['sensitive_treatment'].value = 'tokenize'
+    controls['pii_reason'].value = 'Numeric customer identifier'
+    controls['save_data_contract'].click()
+    assert widget_runtime['calls']['guardrails']
