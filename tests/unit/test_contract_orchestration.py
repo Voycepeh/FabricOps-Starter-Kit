@@ -101,6 +101,18 @@ def test_widget_candidate_is_evaluated_and_produces_activation_evidence(contract
     assert "Source Drift" not in output
 
 
+def test_processing_mismatch_cannot_produce_activation_evidence(contract_runtime, spark_session):
+    """Real Guardrail success cannot validate an incompatible publication strategy."""
+    selection, _context, _payload, _frozen, writes, _reads = contract_runtime
+    frame = spark_session.createDataFrame([(1, "raw@example.test")], ["id", "email"])
+    with pytest.raises(RuntimeError, match="failed during Processing"):
+        orchestrate_write(frame, sources=[], store="Silver", schema="dbo", table_name="target",
+                          write_mode="append", contracts=selection, spark_session=spark_session, verbose=False)
+    assert writes and all(row["can_continue"] for row in writes)
+    assert not any(row["rule_type"] == "contract_validation" for row in writes)
+    assert not _latest_validation(writes, contract_id="contract-target", contract_version=2, environment_name="dev")["validated"]
+
+
 def test_validate_missing_required_column_persists_failure_and_stops(contract_runtime, spark_session):
     """Real Schema failure cannot become a successful validation or activation."""
     selection, _context, _payload, _frozen, writes, _reads = contract_runtime
@@ -123,7 +135,7 @@ def test_schema_only_contract_prints_only_applicable_check(contract_runtime, spa
     frame = spark_session.createDataFrame([(1,)], ["id"])
     result = orchestrate_write(frame, sources=[], store="Silver", schema="dbo", table_name="target",
                               write_mode="overwrite", contracts=selection, spark_session=spark_session)
-    assert [stage["stage"] for stage in result["orchestration_stages"]] == ["Schema", "Guardrail Coverage"]
+    assert [stage["stage"] for stage in result["orchestration_stages"]] == ["Schema", "Guardrail Coverage", "Processing"]
     assert result["sensitive_result"]["status"] == result["dq_result"]["status"] == "skipped"
     output = capsys.readouterr().out
     assert "Checking Schema." in output
