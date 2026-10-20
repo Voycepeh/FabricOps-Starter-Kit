@@ -161,6 +161,7 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
             "minimum": 0,
             "minimum_inclusive": False,
             "maximum_inclusive": True,
+            "maximum_failure_percent": 0.0,
         }
     ]
 
