@@ -40,17 +40,36 @@ The notebook uses these governed tables throughout:
 
     For faster runs when frequency distributions are not needed, set `frequency_enabled=False` on the relevant orchestrator call. The standard statistical profile still runs. Setting `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating them.
 
-The standard Environment, Data Contract, result-storage, and inspection patterns are explained in [Step 2](02-build-and-run-etl.md). This page covers only the day selection, source staging, incremental scope, and resulting target state.
+### Set up the pipeline
+
+Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparation cell. That setup can change Bronze before pipeline selection. The default pipeline setup is:
+
+```python
+CONTRACT_TESTING = False  # First run: Bootstrap, no selections or UI.
+CONTRACTS = setup_pipeline(
+    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
+    interactive=CONTRACT_TESTING, spark_session=spark,
+)
+EXECUTION_PLAN = CONTRACTS["build_plan"]() if CONTRACT_TESTING else CONTRACTS
+```
+
+With the default `False`, Run all builds a Bootstrap plan and creates/profiles initial outputs without human interaction. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Metadata routing must already be initialized by the environment setup; business targets and Catalogue records do not need to exist.
+
+After Governance authors and freezes the contracts, set `CONTRACT_TESTING = True`. Pause after setup to select the exact frozen versions, then run the execution-plan cell and all Reads and Writes. Testing evaluates every declared operation without publishing targets or committing ordinary operational metadata. Rerun setup for a new test; rebuilding on the same selector reuses its locked plan and journal.
+
+Bootstrap fails closed if any participating table has a frozen or active contract, including one frozen after setup. It never silently drops governed requirements. UI visibility is separate from execution policy: headless Testing uses `interactive=False`, `execution_mode="testing"`, and saved exact selections.
+
+The persisted row counts below describe Bootstrap runs before contracts exist, or governed Live runs after approval. Advance the day only after publication succeeds. Once contracts are frozen, Bootstrap is no longer an eligible way to publish; use Testing to evaluate changes and the governed release workflow for subsequent publication.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Press Run all and run Day 1 in Fabric
+## Run Day 1 in Fabric with the Bootstrap defaults
 
 For Day 1 , we load 8 rows of data from 
-Bronze Lakehouse "demo.inventory_movement" table and load all 8 rows into 
-Silver Lakehouse "demo.inventory_movement_incremental" and set "modified_datetime" column as our watermark column 
+Bronze Lakehouse "demo.inventory_movements" table and load all 8 rows into
+Silver Lakehouse "demo.inventory_movements_incremental" and set "modified_datetime" column as our watermark column
 
 </div>
 </div>
@@ -97,9 +116,9 @@ Day 1 first run 8 rows is written
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Press Stop Session on the notebook and re-run the whole notebook again
+## Restart the session and repeat Day 1 with a fresh Bootstrap plan
 
-This runs the pipeline on day 1 data which we have already loaded so you will expect to see no diff read and not diff written 
+Run through setup again with the Bootstrap defaults, then continue. Since Day 1 already committed its watermark, the Read and Write have an empty incremental scope.
 
 </div>
 </div>
@@ -116,10 +135,10 @@ No new data so its empty write
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Change the demo day to 2 and press run all again 
+## Change the demo day to 2 and select a fresh plan
 
 For Day 2 , our underlying data has 12 rows of data in 
-Bronze Lakehouse "demo.inventory_movement" table of which 8 were already loaded into Silver Lakehouse "demo.inventory_movement_incremental" in day 1 , hence only 4 rows of data was read and appended 
+Bronze Lakehouse "demo.inventory_movements" table of which 8 were already loaded into Silver Lakehouse "demo.inventory_movements_incremental" in day 1 , hence only 4 rows of data was read and appended
 
 </div>
 </div>
@@ -138,15 +157,14 @@ Only this 4 rows are appended
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Change the demo day to 3 and press run all again 
+## Change the demo day to 3 and select a fresh plan
 
 For Day 3, our underlying data still has 12 rows of data in 
-Bronze Lakehouse "demo.inventory_movement" table of which 12 were already loaded into Silver Lakehouse "demo.inventory_movement_incremental" in day 1 , hence only 0 rows of data was read and appended 
+Bronze Lakehouse "demo.inventory_movements" table of which 12 were already loaded into Silver Lakehouse "demo.inventory_movements_incremental" in day 1 , hence only 0 rows of data was read and appended
 
 </div>
 </div>
 
-```
 ![Day 3 demo run](../assets/2b/Day%203.png)
 
 No new data so its empty read
@@ -171,7 +189,7 @@ Day 1 publishes the eight-row baseline, Day 2 appends four newly eligible rows, 
 
 ### Metadata saved by FabricOps
 
-All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
+The following records are committed by successful **Bootstrap** or governed **Live** runs and routed to the Metadata Lakehouse configured by `00_env_config`. Testing keeps pipeline diagnostics in memory.
 
 | Metadata table or governed record | What this demo records |
 | --- | --- |
@@ -191,7 +209,8 @@ An Incremental demo cannot be reset by rerunning Day 1 or deleting only the Silv
 2. In the Silver Lakehouse, delete `demo.inventory_movements_incremental` from the table explorer. This removes the appended business data and the successful watermark progress stored with the governed target.
 3. Remove only the `METADATA_SOURCE_OBSERVATION` rows for the `inventory_movements` → `inventory_movements_incremental` relationship and the current environment. Do not clear observations for other pipelines.
 4. Set `DEMO_DAY = 1`.
-5. Run the notebook from the top. The Day 1 CSV recreates Bronze with eight rows, the Incremental Read bootstraps again, and the Append Write recreates the eight-row Silver target.
+5. Rerun [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) to restore the eight-row Day 1 Bronze source. Day 1 of this notebook does not load its own CSV.
+6. Run the notebook through a fresh selector, keep the Bootstrap defaults before contracts exist, then continue. The Incremental Read bootstraps again and Append recreates the eight-row Silver target.
 
 !!! warning "Keep incremental state aligned"
 

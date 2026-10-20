@@ -178,11 +178,11 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         assert f"fabricops_kit.widgets.{demoted_widget}" not in source
     authoring_cell = _cell_by_id("01_governance.ipynb", "contract-author").source
     activation_cell = _cell_by_id("01_governance.ipynb", "activation-widget").source
-    assert "widget_select_data_contract" not in authoring_cell
+    assert "setup_pipeline" not in authoring_cell
     assert "widget_data_contract(" in authoring_cell
-    assert "widget_select_data_contract" not in activation_cell
+    assert "setup_pipeline" not in activation_cell
     assert "widget_activate_data_contract(" in activation_cell
-    assert "widget_select_data_contract" not in source
+    assert "setup_pipeline" not in source
     assert "METADATA_SCHEMA" not in source
 
 def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
@@ -283,7 +283,7 @@ def test_02_pipeline_is_a_small_reusable_scaffold():
         "# 4. Write",
     )
     assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
-    assert source.count("widget_select_data_contract(") == 1
+    assert source.count("setup_pipeline(") == 1
     code_source = "\n".join(source for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
     assert code_source.count("orchestrate_read(") == 1
     assert code_source.count("orchestrate_write(") == 1
@@ -491,14 +491,15 @@ def test_guided_demo_pages_match_the_notebook_split():
     assert "02A-full-refresh-demo.md" in step_3
 
 
-def test_guided_demo_preserves_initial_unselected_flow_and_optional_target_validation():
+def test_guided_demo_explains_bootstrap_then_explicit_contract_testing():
     """The executable 02A walkthrough keeps the initial unselected run and later target validation."""
     step_2a = (ROOT / "docs/guided-demo/02A-full-refresh-demo.md").read_text(encoding="utf-8")
     step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
 
     assert "there is no Data Contract yet" in step_2a
-    assert "explicitly select **No Contract**" in step_2a
-    assert "one explicit No Contract decision" in step_2a
+    assert "CONTRACT_TESTING = False" in step_2a
+    assert "without human interaction" in step_2a
+    assert "CONTRACT_TESTING = True" in step_2a
     assert "skipped check fields remain in the returned dictionaries" in step_2a
     assert "individual Guardrail stages are omitted" in step_2a
     assert "pipeline-wide switch in red **Testing**" in step_4

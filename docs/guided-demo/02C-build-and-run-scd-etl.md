@@ -42,14 +42,33 @@ The notebook uses these governed tables throughout:
 
     For faster runs when frequency distributions are not needed, set `frequency_enabled=False` on the relevant orchestrator call. The standard statistical profile still runs. Setting `frequency_top_n=None` retains all frequency values when enabled, but does not avoid the cost of calculating them.
 
-The standard Environment, Data Contract, result-storage, and inspection patterns are explained in [Step 2](02-build-and-run-etl.md). This page covers only the day selection, snapshot staging, and SCD outcomes.
+### Set up the pipeline
+
+Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparation cell. That setup can change Bronze before pipeline selection. The default pipeline setup is:
+
+```python
+CONTRACT_TESTING = False  # First run: Bootstrap, no selections or UI.
+CONTRACTS = setup_pipeline(
+    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
+    interactive=CONTRACT_TESTING, spark_session=spark,
+)
+EXECUTION_PLAN = CONTRACTS["build_plan"]() if CONTRACT_TESTING else CONTRACTS
+```
+
+With the default `False`, Run all builds a Bootstrap plan and creates/profiles initial outputs without human interaction. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Metadata routing must already be initialized by the environment setup; business targets and Catalogue records do not need to exist.
+
+After Governance authors and freezes the contracts, set `CONTRACT_TESTING = True`. Pause after setup to select the exact frozen versions, then run the execution-plan cell and all Reads and Writes. Testing evaluates every declared operation without publishing targets or committing ordinary operational metadata. Rerun setup for a new test; rebuilding on the same selector reuses its locked plan and journal.
+
+Bootstrap fails closed if any participating table has a frozen or active contract, including one frozen after setup. It never silently drops governed requirements. UI visibility is separate from execution policy: headless Testing uses `interactive=False`, `execution_mode="testing"`, and saved exact selections.
+
+The persisted row counts below describe Bootstrap runs before contracts exist, or governed Live runs after approval. Advance the day only after publication succeeds. Once contracts are frozen, Bootstrap is no longer an eligible way to publish; use Testing to evaluate changes and the governed release workflow for subsequent publication.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run all for day 1 demo 
-Reads 8 rows of data from bronze.demo."product_master" then set 'product_id' as key column for SCD1 and write to silver.demo.product_master_scd1, likewise set 'product_id' as key column , set `product_category` and `list_price` as tracking columns with `modified_datetime` as the effective column for SCD2 and write to silver.demo.product_master_scd2
+## Run Day 1 with the Bootstrap defaults
+Reads 8 rows of data from Bronze `demo.product_master_updates` then set 'product_id' as key column for SCD1 and write to silver.demo.product_master_scd1, likewise set 'product_id' as key column , set `product_category` and `list_price` as tracking columns with `modified_datetime` as the effective column for SCD2 and write to silver.demo.product_master_scd2
 
 
 </div>
@@ -81,7 +100,7 @@ Reads 8 rows of data from bronze.demo."product_master" then set 'product_id' as 
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Change to day 2 and run all 
+## Change to Day 2 and select a fresh plan
 
 Product `P002` has a new `list_price`:
 
@@ -103,7 +122,7 @@ The SCD1 profile should show `row_count = 8`; the SCD2 profile should show `row_
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Change to day 3 and run all 
+## Change to Day 3 and select a fresh plan
 
 Product `P001` has a new `product_category`:
 
@@ -136,7 +155,7 @@ Day 1 creates eight current records in each target, Day 2 creates the first hist
 
 ### Metadata saved by FabricOps
 
-All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
+The following records are committed by successful **Bootstrap** or governed **Live** runs and routed to the Metadata Lakehouse configured by `00_env_config`. Testing keeps pipeline diagnostics in memory.
 
 | Metadata table | What this demo records |
 | --- | --- |
@@ -157,8 +176,9 @@ Do not restart at Day 1 while either SCD target still contains later-day state. 
     - `demo.product_master_scd1`
     - `demo.product_master_scd2`
 3. Set `DEMO_DAY = 1`.
-4. Run the notebook from the top. The Day 1 CSV recreates the eight-row Bronze snapshot, WRITE 1 recreates the eight-row SCD1 target, and WRITE 2 recreates the eight initial SCD2 versions.
-5. Continue with Day 2 and Day 3 in order.
+4. Rerun [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) to restore the eight-row Day 1 Bronze snapshot. Day 1 of this notebook does not load its own CSV.
+5. Run the notebook through a fresh selector, keep the Bootstrap defaults before contracts exist, then continue through both Writes.
+6. Continue with Day 2 and Day 3 in order, building a fresh plan each day.
 
 Deleting only the Bronze source is not enough: retained SCD targets still contain the previous current state and history. Conversely, deleting only the targets leaves the Bronze table on its later snapshot until the Day 1 staging cells run.
 

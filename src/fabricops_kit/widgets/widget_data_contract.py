@@ -603,7 +603,7 @@ def widget_data_contract(
 
     See Also
     --------
-    widget_select_data_contract
+    setup_pipeline
 
     """
     from IPython import display as ip

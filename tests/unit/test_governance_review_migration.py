@@ -30,7 +30,6 @@ def test_widget_public_callables_live_under_widgets_package():
     widget_names = {
         'widget_data_contract',
         'widget_view_catalogue',
-        'widget_select_data_contract',
         'widget_render_data_agreement',
         'widget_render_data_steward',
     }
@@ -52,7 +51,6 @@ def test_widget_modules_do_not_call_public_widget_functions():
         'widget_data_contract',
         'widget_view_catalogue',
         'widget_data_contract',
-        'widget_select_data_contract',
         'widget_render_data_agreement',
         'widget_render_data_steward',
     }

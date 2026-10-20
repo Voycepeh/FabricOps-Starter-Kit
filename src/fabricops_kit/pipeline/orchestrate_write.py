@@ -28,7 +28,9 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
     Parameters
     ----------
     execution_plan : PipelineExecutionPlan
-        Same required plan as all participating Reads. Testing evaluates Guardrails,
+        Same required plan as all participating Reads. Bootstrap publishes and
+        profiles initial outputs only while no participating frozen or active
+        contract exists. Testing evaluates Guardrails,
         processing, ownership, incremental safety and SCD input checks
         without publication, staging, mappings, metadata or activation evidence.
         Live enforces active frozen contracts and stops on Block before publication.

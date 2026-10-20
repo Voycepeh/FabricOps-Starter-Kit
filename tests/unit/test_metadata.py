@@ -209,7 +209,7 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'read_warehouse_table',
         'read_warehouse_query',
         'write_warehouse_table',
-        'create_pipeline_execution_plan',
+        'setup_pipeline',
         'profile_table',
         'resolve_table_id',
         'orchestrate_read',
@@ -219,7 +219,6 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'widget_render_data_steward',
         'widget_render_data_agreement',
         'widget_view_catalogue',
-        'widget_select_data_contract',
     ]
     assert fabricops_kit.__all__ == expected_public_callables
     assert len(fabricops_kit.__all__) == len(expected_public_callables)

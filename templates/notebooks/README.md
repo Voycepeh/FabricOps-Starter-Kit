@@ -23,6 +23,8 @@ For the end-to-end workflow, follow the [Guided Demo](https://voycepeh.github.io
 
 ## Pipeline execution mode
 
-The current scaffold declares participating sources/targets before the Pipeline Data Contracts widget. Select a frozen version or explicit No Contract per participant, then build one execution plan and pass it explicitly to every Read and Write. Testing defaults on and makes no persistent changes at any stage. Live requires active frozen versions where present and permits approved publication and metadata commits. Environment names only route work.
+The scaffold declares participating sources/targets and defaults to `CONTRACT_TESTING = False`. Run all uses noninteractive Bootstrap to create/profile initial outputs with no contract choices. Bootstrap is allowed only while every participant has no frozen or active contract; unavailable metadata is an error.
 
-For headless runs, call `create_pipeline_execution_plan(execution_mode="testing" or "live", sources=..., targets=..., selections=...)`; mode and every selection are deliberate. Rebuild a plan and rerun Read → Transform → Write when changing selections. The redesign has local structural validation; real Fabric publication, permissions, transactions and recovery require runtime testing.
+After authoring frozen contracts, set `CONTRACT_TESTING = True`, choose exact versions in the Testing inspector, build the plan, and continue through every Read and Write. Testing does not publish business outputs or commit ordinary metadata. A new test requires a fresh setup; built selections remain locked.
+
+Scheduled Testing uses `setup_pipeline(interactive=False, execution_mode="testing", sources=..., targets=..., selections=...)`. UI visibility does not decide publication permission. Saved Activated Pipeline selection, one active version per logical pipeline, manifest-pinned Live verification, and deployment bindings belong to the subsequent activation phase. Bootstrap must never be reported as approved Live execution.

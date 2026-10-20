@@ -73,7 +73,7 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `dataframe` | `Any` | Yes | `—` | Transformed Spark DataFrame; Sensitive Data treatment prepares the input. |
-| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Same required plan as all participating Reads. Testing evaluates Guardrails, processing, ownership, incremental safety and SCD input checks without publication, staging, mappings, metadata or activation evidence. Live enforces active frozen contracts and stops on Block before publication. |
+| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Same required plan as all participating Reads. Bootstrap publishes and profiles initial outputs only while no participating frozen or active contract exists. Testing evaluates Guardrails, processing, ownership, incremental safety and SCD input checks without publication, staging, mappings, metadata or activation evidence. Live enforces active frozen contracts and stops on Block before publication. |
 | `sources` | `Iterable[dict[str, Any]]` | Yes | `—` | Read results from this exact plan for the sources actually feeding this target. |
 | `store` | `str` | Yes | `—` | Configured target store key. |
 | `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
@@ -133,7 +133,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:25`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L25-L228">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L25-L230">View on GitHub</a>
 </div>
 
 
@@ -149,7 +149,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 185 |
+| Live-critical dependencies | 186 |
 
 ### Release history
 
@@ -291,6 +291,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._previous_source_target_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
+<li><code>fabricops_kit.pipeline.shared._require_bootstrap_contracts_absent</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared._rule_review_status</code></li>
 <li><code>fabricops_kit.pipeline.shared._run_orchestration_stage</code></li>

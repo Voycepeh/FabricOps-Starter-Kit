@@ -29,7 +29,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "A versioned set of governed expectations for one table.",
-    "long_definition": "A FabricOps Data Contract is authored for one canonical table_id. Its immutable frozen payload defines Schema, processing, Enrichment and Guardrails. Testing may select eligible frozen candidates; Live enforces the active frozen version wherever one exists. Activation is a separate Governance review linked to an exact Data Agreement version.",
+    "long_definition": "A FabricOps Data Contract is authored for one canonical table_id. Its immutable frozen payload defines Schema, processing, Enrichment and Guardrails. Testing may select eligible frozen candidates; Live enforces the active frozen version for every participant. Activation is a separate Governance review linked to an exact Data Agreement version.",
     "preferred_usage": "Use data contract for table-level governed expectations; describe Data Agreement linkage only at activation.",
     "avoid_usage": "data agreement when the steward-to-steward sharing relationship is meant"
   },
@@ -39,9 +39,19 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "The validated execution decisions shared by every Read and Write in one pipeline run.",
-    "long_definition": "A pipeline execution plan freezes the Testing or Live mode, environment and notebook identity, explicit source and target identities, exact frozen contract selections and explicit No Contract choices. All participating Read and Write calls consume the same plan. Diagnostic results are retained separately in its in-memory journal.",
+    "long_definition": "A pipeline execution plan freezes the Bootstrap, Testing or Live mode, environment and notebook identity, explicit source and target identities, exact frozen contract selections and explicit No Contract choices. setup_pipeline builds the plan for interactive and headless execution. All participating Read and Write calls consume the same plan; a built selector locks its mode and contract choices. Diagnostic results are retained separately in its in-memory journal. Bootstrap automatically uses No Contract only while no participating frozen or active version exists; Testing contract choices are explicit.",
     "preferred_usage": "Pass one explicit plan throughout Read, Transform and Write; build a new plan after selection changes.",
     "avoid_usage": "mutable notebook-global contract overrides"
+  },
+  {
+    "id": "bootstrap",
+    "term": "Bootstrap",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "The default noninteractive first-run mode for creating and profiling outputs before contracts are frozen.",
+    "long_definition": "setup_pipeline defaults to Bootstrap without UI or contract selections. Bootstrap permits initial business publication and normal Catalogue, Profile, Lineage and Source Observation commits only while no participating frozen or active Data Contract exists. Eligibility is checked at setup and before each Read/Write; unreadable metadata fails closed. Bootstrap is separate from tested and approved Live execution.",
+    "preferred_usage": "Use Bootstrap for initial registration and publication before contract Testing; never treat it as pipeline activation.",
+    "avoid_usage": "silently disabling configured Governance requirements"
   },
   {
     "id": "testing",
@@ -59,7 +69,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "The deliberate pipeline-wide mode that permits governed publication and operational metadata commits.",
-    "long_definition": "Live requires the active frozen Data Contract wherever one exists, enforces Guardrails, processing and ownership, and publishes only when continuation is permitted. Explicit No Contract can bootstrap when no active version is bypassed. Publication and metadata commits retain their separate lifecycle and recovery boundaries across Fabric stores.",
+    "long_definition": "Live requires an active frozen Data Contract for every participant, enforces Guardrails, processing and ownership, and publishes only when continuation is permitted. No Contract is rejected in Live; initial uncontracted publication uses Bootstrap. Publication and metadata commits retain their separate lifecycle and recovery boundaries across Fabric stores. Release-manifest-pinned Live enforcement follows in the pipeline activation phase.",
     "preferred_usage": "Use Live for the execution decision in any configured environment; scheduled runs select it explicitly.",
     "avoid_usage": "an execution default inferred from an environment name"
   },

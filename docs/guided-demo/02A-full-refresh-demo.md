@@ -28,13 +28,30 @@ Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite 
 | Notebook section | What happens |
 | --- | --- |
 | Environment | Loads the shared Fabric configuration and imports the functions used by this demo. |
-| Data Contract | Selects pipeline-wide Testing/Live and explicit frozen contracts per participant; No Contract permits bootstrap when no active contract is bypassed. |
+| Data Contract | Defaults to Bootstrap without UI; explicitly enable Testing after the contracts are frozen. |
 | Governed Read | Reads Orders, Products, and Order History in full. |
 | PySpark Transform | Produces detailed orders and a customer summary. |
 | Governed Write | Overwrites a Silver Lakehouse target and a Gold Warehouse target. |
 | Inspection | Verifies the published data and FabricOps metadata. |
 
-Run **0. Environment** and **1. Data Contract** as described in [Step 2](02-build-and-run-etl.md). For the initial Guided Demo run, there is no Data Contract yet, so explicitly select **No Contract** for every source and target and build `EXECUTION_PLAN`. Leave the pipeline in **Testing** for the first evaluation. To bootstrap Catalogue/Profile and authoritative Lineage, deliberately switch to **Live**, build a new plan, and rerun Read → Transform → Write. The orchestrators print one explicit No Contract decision; skipped check fields remain in the returned dictionaries. Then initialize `sources = {}`.
+Run **0. Environment** and **1. Pipeline Data Contracts** with their defaults. The notebook declares all three sources and both targets, then performs this setup:
+
+```python
+CONTRACT_TESTING = False  # First run: Bootstrap, no selections or UI.
+CONTRACTS = setup_pipeline(
+    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
+    interactive=CONTRACT_TESTING, spark_session=spark,
+)
+EXECUTION_PLAN = CONTRACTS["build_plan"]() if CONTRACT_TESTING else CONTRACTS
+```
+
+With the default `False`, Run all builds a Bootstrap plan and creates/profiles initial outputs without human interaction. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Metadata routing must already be initialized by the environment setup; business targets and Catalogue records do not need to exist.
+
+After Governance authors and freezes the contracts, set `CONTRACT_TESTING = True`. Pause after setup to select the exact frozen versions, then run the execution-plan cell and all Reads and Writes. Testing evaluates every declared operation without publishing targets or committing ordinary operational metadata. Rerun setup for a new test; rebuilding on the same selector reuses its locked plan and journal.
+
+Bootstrap fails closed if any participating table has a frozen or active contract, including one frozen after setup. It never silently drops governed requirements. UI visibility is separate from execution policy: headless Testing uses `interactive=False`, `execution_mode="testing"`, and saved exact selections.
+
+For the initial Guided Demo run, there is no Data Contract yet, so no choices are needed. Bootstrap registers Catalogue/Profile and authoritative Lineage at the normal commit boundaries. Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. The saved-data screenshots below describe a successful publishing run.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -112,7 +129,7 @@ Initialize `writes = {}`, then run both Write blocks. This demo publishes two in
 | WRITE 1 — Lakehouse Curated Orders | `transformed_df` | Silver Lakehouse · `demo.curated_orders` | `writes["curated_orders_lakehouse"]` |
 | WRITE 2 — Warehouse Customer Summary | `customer_summary_df` | Gold Warehouse · `demo.customer_summary` | `writes["customer_summary_warehouse"]` |
 
-Both Write results should show `published=True`.
+In the initial **Bootstrap** run or a governed **Live** run, both Write results should show `published=True`. In **Testing**, both show `published=False`; inspect each `validation_passed` result instead of treating an unpublished target as a successful test. The notebook continues through both targets and refreshes the selector with `CONTRACTS["refresh"]()` when contract Testing is enabled.
 
 ![Curated Orders Write output](../assets/02/Write_Block_Output.png)
 
@@ -149,7 +166,7 @@ Open the target tables in Fabric Stores directly or use the notebook's optional 
 
 ### Expected result
 
-The three Full Reads complete, both Overwrite targets publish, and the saved tables and metadata reflect the same successful notebook run.
+Testing completes all three Reads and both prepared Writes without publication. After a successful Bootstrap or governed Live run, both Overwrite targets publish and the saved tables and metadata reflect that run.
 
 ### Data saved by the demo
 

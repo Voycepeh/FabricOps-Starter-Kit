@@ -4,7 +4,7 @@ from fabricops_kit.pipeline.profile_table import profile_table
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 
 __all__ = [
-    "create_pipeline_execution_plan",
+    "setup_pipeline",
     "resolve_table_id",
     "profile_table",
     "orchestrate_read",
@@ -14,4 +14,4 @@ __all__ = [
 from fabricops_kit.pipeline.orchestrate_read import orchestrate_read
 from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
 
-from .create_pipeline_execution_plan import create_pipeline_execution_plan
+from fabricops_kit.pipeline.setup_pipeline import setup_pipeline

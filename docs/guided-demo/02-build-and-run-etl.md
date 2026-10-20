@@ -1,20 +1,5 @@
 # Step 2. Build a Pipeline
 
-### Build explicit pipeline authority before Read
-
-The current `02_pipeline.ipynb` declares `PIPELINE_SOURCES` and `PIPELINE_TARGETS` before opening the selector. Keep these identities aligned with the participating Read and Write calls. Historical `METADATA_DATA_LINEAGE` is not required and cannot authorize unrelated tables.
-
-```python
-CONTRACTS = widget_select_data_contract(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
-# Select a frozen version or explicit No Contract for every participant in the UI.
-EXECUTION_PLAN = CONTRACTS["build_plan"]()
-```
-
-The default is red **Testing**, with no data or metadata persistence. Expand each contract category to inspect all columns and individual rules, including saved inactive and non-applicable definitions. Selection does not edit or activate a contract. Build a new plan and rerun Read → Transform → Write after changing selections or mode.
-
-For scheduled execution use the public `create_pipeline_execution_plan()` API with a deliberate `execution_mode="testing"` or `"live"`, explicit sources/targets and exact per-table selections. There is no environment-based Live default or notebook-global selection override.
-
-
 ### Before you begin
 
 1. Complete [Step 00B. Configure the Environment and load assets](00B-configure-environment-and-load-assets.md).
@@ -47,7 +32,7 @@ The notebook follows one visible lifecycle:
 | Notebook section | What happens |
 | --- | --- |
 | Environment | Loads the shared Fabric configuration and imports the three public functions used by the pipeline. |
-| Data Contract | Selects one pipeline-wide **Testing / Live** mode and an exact frozen contract independently for each explicitly configured source and target. |
+| Data Contract | Defaults to noninteractive **Bootstrap** for initial outputs; explicitly enable contract **Testing** after Governance freezes the versions. |
 | Governed Read | Reads each configured source and runs the applicable source checks. |
 | PySpark Transform | Contains the joins, filters, derived columns, aggregations, or selections owned by your project. |
 | Governed Write | Checks and, when allowed, publishes each target using its configured load strategy. |
@@ -63,7 +48,7 @@ The template starts with one Read, one transformation, and one Write. Add more R
 
 `00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
 
-### Import required widget functions
+### Import required pipeline functions
 
 Then run the import cell immediately below it. The import cell provides the public APIs used by that notebook, so its exact list can vary by demo.
 
@@ -72,21 +57,19 @@ Then run the import cell immediately below it. The import cell provides the publ
 ### Run the Data Contract block
 
 ```python
-CONTRACTS = widget_select_data_contract(spark_session=spark)
+CONTRACT_TESTING = False  # First run: Bootstrap, no selections or UI.
+CONTRACTS = setup_pipeline(
+    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
+    interactive=CONTRACT_TESTING, spark_session=spark,
+)
+EXECUTION_PLAN = CONTRACTS["build_plan"]() if CONTRACT_TESTING else CONTRACTS
 ```
 
-For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. The orchestrators print one contract-free decision and omit individual Guardrail stages; skipped fields remain in the returned dictionaries. The targets can publish in Engineering Development.
+With the default `False`, Run all builds a Bootstrap plan and creates/profiles initial outputs without human interaction. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Metadata routing must already be initialized by the environment setup; business targets and Catalogue records do not need to exist.
 
-![Data Contract selector before a contract exists](../assets/02/Data%20_Contract_None.png)
+After Governance authors and freezes the contracts, set `CONTRACT_TESTING = True`. Pause after setup to select the exact frozen versions, then run the execution-plan cell and all Reads and Writes. Testing evaluates every declared operation without publishing targets or committing ordinary operational metadata. Rerun setup for a new test; rebuilding on the same selector reuses its locked plan and journal.
 
-
-??? info "Under the hood"
-
-    The selector resolves the notebook's source and target identities from `METADATA_DATA_LINEAGE`, then resolves the available Data Contract state for each table.
-
-    **Testing** applies to the entire pipeline in every environment and permits eligible frozen candidates. **Live** enforces active frozen versions and rejects inactive substitutions. Explicit **No Contract** supports bootstrap only when it bypasses no active contract. A missing selection or invalid payload fails; it never becomes No Contract.
-
-    The returned `CONTRACTS` object carries the table-level mode and contract identity into `orchestrate_write()`. See [`widget_select_data_contract()`](../api/reference/widget_select_data_contract.md) for the exact return contract.
+Bootstrap fails closed if any participating table has a frozen or active contract, including one frozen after setup. It never silently drops governed requirements. UI visibility is separate from execution policy: headless Testing uses `interactive=False`, `execution_mode="testing"`, and saved exact selections.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
