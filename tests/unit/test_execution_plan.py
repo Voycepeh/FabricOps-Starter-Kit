@@ -141,3 +141,16 @@ def test_read_only_headless_plan_needs_no_target(plan_runtime, mode):
         selections={"source": {"contract_id": "contract-source", "contract_version": 1} if mode == "live" else {"no_contract": True}}, context=runtime)
     assert json.loads(plan.participants_json)["source"]["roles"] == ["source"]
     assert set(json.loads(plan.contracts_json)) == {"source"}
+
+
+def test_testing_attempts_preserve_activity_and_isolate_transient_engine_state(plan_runtime):
+    """Separate attempts within one Fabric activity keep independent observation caches."""
+    _, context, make, _ = plan_runtime
+    context["activity_id"] = "actual-fabric-activity"
+    first, second = make(), make()
+    assert first.runtime_context["activity_id"] == second.runtime_context["activity_id"] == "actual-fabric-activity"
+    first_engine = shared.prepare_pipeline_execution(["source"], execution_plan=first)
+    second_engine = shared.prepare_pipeline_execution(["source"], execution_plan=second)
+    assert first_engine["activity_id"] == first.plan_id
+    assert second_engine["activity_id"] == second.plan_id
+    assert first_engine["activity_id"] != second_engine["activity_id"]

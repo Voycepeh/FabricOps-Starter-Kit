@@ -216,4 +216,4 @@ def isolated_operation_journal(monkeypatch):
 
     for name in ("orchestrate_read", "orchestrate_write"):
         monkeypatch.setattr(import_module(f"fabricops_kit.pipeline.{name}"), "PipelineOperation",
-                            lambda *a, **kw: nullcontext(Mock()))
+                            lambda _plan, _role, arguments: nullcontext(Mock(arguments=arguments)))

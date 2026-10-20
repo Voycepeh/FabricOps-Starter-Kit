@@ -19,7 +19,7 @@ def runtime(monkeypatch):
     installed_version = metadata.version
     monkeypatch.setattr(metadata, "version", lambda name: "test-delta-runtime" if name == "delta-spark" else installed_version(name))
     saved, writes = {}, []
-    failure = {"enabled": False}
+    failure = {"enabled": False, "after_commit": False, "invalidate_unavailable": False}
 
     class Merge:
         def alias(self, name):
@@ -37,11 +37,13 @@ def runtime(monkeypatch):
             return self
 
         def execute(self):
-            if failure["enabled"]:
+            if failure["enabled"] or (failure["invalidate_unavailable"] and self.row["status"] == "failed"):
                 raise OSError("credential=never persist this message")
             row = copy.deepcopy(self.row)
             writes.append(row)
             saved[row["run_id"]] = row
+            if failure["after_commit"] and row["status"] == "succeeded":
+                raise OSError("final commit acknowledgement lost")
 
     delta = SimpleNamespace(forPath=lambda spark, path: Merge())
     monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=delta))
@@ -53,12 +55,12 @@ def runtime(monkeypatch):
     monkeypatch.setattr(shared, "resolve_physical_table_identity", lambda config, env, **kw:
                         {**kw, "table_id": kw["table_name"]})
 
-    def make(mode="testing", roles=("source", "source", "target", "target"), executable="a" * 64, dependencies="{}"):
+    def make(mode="testing", roles=("source", "source", "target", "target"), executable="a" * 64, dependencies="{}", activity="fabric-activity", notebook_name="notebook"):
         identities = {f"table{i}": {"store": "Bronze" if role == "source" else "Silver", "table_name": f"table{i}",
                                    "schema": "physical", "logical_id": f"asset{i}", "roles": [role]}
                       for i, role in enumerate(roles)}
         plan = shared.PipelineExecutionPlan(mode, "canary", "notebook", f"run-{len(saved)}", json.dumps(identities),
-                                            "{}", json.dumps(dict.fromkeys(identities)), {"config": {}, "env": "canary"},
+                                            "{}", json.dumps(dict.fromkeys(identities)), {"config": {}, "env": "canary", "activity_id": activity, "notebook_name": notebook_name},
                                             pipeline_id="orders", executable_sha256=executable, dependencies_json=dependencies)
         shared.persist_pipeline_run(plan)
         return plan
@@ -84,7 +86,7 @@ def test_read_only_and_multiple_inputs_outputs_finalize_once(runtime):
             operation(plan, index)
             assert saved[plan.plan_id]["status"] == "incomplete"
         result = finalize_pipeline(plan)
-        assert result["status"] == "succeeded" and result["qualifies_for_activation"]
+        assert result["status"] == "succeeded"
         count = len(writes)
         assert finalize_pipeline(plan) == result and len(writes) == count
         with pytest.raises(RuntimeError, match="closed"):
@@ -108,7 +110,7 @@ def test_missing_failed_blocking_duplicate_and_external_failures(runtime):
     plan = make(roles=("source",))
     operation(plan, 0)
     assert finalize_pipeline(plan, failed=True)["status"] == "failed"
-    assert not any(row["qualifies_for_activation"] for row in saved.values())
+    assert not any(row["execution_mode"] == "testing" and row["status"] == "succeeded" for row in saved.values())
 
 
 def test_operation_exception_is_safe_and_unfinalized_success_is_incomplete(runtime):
@@ -119,7 +121,7 @@ def test_operation_exception_is_safe_and_unfinalized_success_is_incomplete(runti
         with shared.PipelineOperation(plan, "source", {"store": "Bronze", "schema": "physical", "table_name": "table0"}):
             raise OSError("password=hidden")
     assert saved[plan.plan_id]["status"] == "failed"
-    assert "hidden" not in saved[plan.plan_id]["failure_json"]
+    assert "hidden" not in saved[plan.plan_id]["operation_summary_json"]
     assert finalize_pipeline(plan)["status"] == "failed"
     plan = make(roles=("source",))
     operation(plan, 0)
@@ -149,7 +151,7 @@ def test_evidence_write_failures_poison_the_plan(runtime, point):
             make()
         else:
             finalize_pipeline(plan)
-    assert not any(row["qualifies_for_activation"] for row in saved.values())
+    assert not any(row["execution_mode"] == "testing" and row["status"] == "succeeded" for row in saved.values())
 
 
 @pytest.mark.parametrize("mode,executable,status", [("bootstrap", "a" * 64, "bootstrap_completed"),
@@ -160,7 +162,7 @@ def test_bootstrap_and_unavailable_fingerprint_never_qualify(runtime, mode, exec
     plan = make(mode=mode, roles=("source",), executable=executable)
     operation(plan, 0)
     result = finalize_pipeline(plan)
-    assert result["status"] == status and not result["qualifies_for_activation"]
+    assert result["status"] == status
 
 
 def test_candidate_determinism_changes_and_physical_binding_exclusion(runtime):
@@ -222,8 +224,8 @@ def test_mutated_engine_or_dependency_identity_cannot_qualify(runtime, monkeypat
     real_version = metadata.version
     monkeypatch.setattr(metadata, "version", lambda name: "changed" if name == "pandas" else real_version(name))
     result = finalize_pipeline(plan)
-    assert result["status"] == "failed" and not result["qualifies_for_activation"]
-    assert "candidate_changed_during_run" in result["failure_json"]
+    assert result["status"] == "failed"
+    assert "candidate_changed_during_run" in result["operation_summary_json"]
 
 
 @pytest.mark.parametrize("secret_key", ["password", "api_key", "authorization"])
@@ -261,7 +263,7 @@ def test_failed_guardrail_persistence_links_diagnostics_but_cannot_qualify(runti
                 context={**plan.runtime_context, "execution_plan": plan})
     assert plan.results[0]["run_id"] == plan.plan_id
     assert finalize_pipeline(plan)["status"] == "failed"
-    assert not saved[plan.plan_id]["qualifies_for_activation"]
+    assert saved[plan.plan_id]["status"] != "succeeded"
 
 
 def test_partial_operation_snapshot_failure_cannot_be_finalized(runtime):
@@ -275,7 +277,7 @@ def test_partial_operation_snapshot_failure_cannot_be_finalized(runtime):
     failure["enabled"] = False
     with pytest.raises(RuntimeError, match="persistence failed"):
         finalize_pipeline(plan)
-    assert saved[plan.plan_id]["status"] == "incomplete" and not saved[plan.plan_id]["qualifies_for_activation"]
+    assert saved[plan.plan_id]["status"] == "incomplete"
 
 
 @pytest.mark.parametrize("dependencies", ["null", '{"project-library":null}', '{"project-library":"latest"}'])
@@ -285,3 +287,198 @@ def test_omitted_project_dependency_manifest_cannot_qualify(runtime, dependencie
     plan = make(roles=("source",), dependencies=dependencies)
     operation(plan, 0)
     assert finalize_pipeline(plan)["status"] == "incomplete"
+
+
+def test_run_schema_has_only_independent_lifecycle_fields():
+    """Keep standard audit fields and avoid redundant activation/failure columns."""
+    from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
+    fields = metadata_table_schema_registry()["METADATA_PIPELINE_RUN"].fieldNames()
+    assert fields == ["run_id", "pipeline_id", "execution_mode", "environment_name", "started_at", "completed_at",
+                      "status", "candidate_fingerprint", "candidate_json", "operation_summary_json",
+                      *[name for name, *_ in AUDIT_SCHEMA_FIELDS]]
+    assert len(fields) == 18
+
+
+def test_distinct_attempts_keep_activity_identity_and_survive_notebook_rename(runtime, monkeypatch):
+    """Preserve the actual activity and stable pipeline across attempts and renames."""
+    make, operation, _, _, _ = runtime
+    monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kw: {
+        "_activity_id": kw["runtime_context"]["activity_id"],
+        "_notebook_id": "physical-notebook", "_notebook_name": kw["runtime_context"]["notebook_name"]})
+    runs = []
+    diagnostics = []
+    monkeypatch.setattr(shared, "write_lakehouse_table", lambda frame, *a, **kw: diagnostics.append(frame.row))
+    for name in ("original-notebook", "renamed-notebook"):
+        plan = make(roles=("source",), activity="same-fabric-activity", notebook_name=name)
+        operation(plan, 0)
+        shared.write_guardrail_result_row(
+            spark_session=shared.get_spark_session(), config={}, env="canary", run_id="ignored",
+            dataset_name="demo", table_name="table0", store_type="lakehouse", layer="Bronze",
+            guardrail_type="schema", rule_type="required_columns", table_id="table0",
+            result={"guardrail_rule_id": "schema-rule", "guardrail_version": 1, "can_continue": True,
+                    "status": "passed", "rule_context": {"guardrail_type": "schema"}},
+            context={**plan.runtime_context, "activity_id": plan.plan_id, "execution_plan": plan})
+        result = finalize_pipeline(plan)
+        assert result["_activity_id"] == "same-fabric-activity" and result["run_id"] != "same-fabric-activity"
+        assert result["pipeline_id"] == "orders" and result["_notebook_name"] == name
+        runs.append(result["run_id"])
+    assert len(set(runs)) == 2
+    assert {row["_activity_id"] for row in diagnostics} == {"same-fabric-activity"}
+    assert {row["run_id"] for row in diagnostics} == set(runs)
+
+
+def test_failed_source_iterator_is_a_recorded_write_attempt(runtime):
+    """Record generator failures before first Write and after an earlier success."""
+    from fabricops_kit import orchestrate_write
+    make, operation, _, _, _ = runtime
+    for previous_write in (False, True):
+        plan = make(roles=("source", "target"))
+        operation(plan, 0)
+        if previous_write:
+            operation(plan, 1)
+        def broken_sources():
+            raise OSError("private input iterator failure")
+            yield {}  # pragma: no cover
+        with pytest.raises((OSError, ValueError)):
+            orchestrate_write(None, execution_plan=plan, sources=broken_sources(), store="Silver", schema="physical",
+                              table_name="table1", write_mode="overwrite")
+        assert finalize_pipeline(plan)["status"] == "failed"
+
+
+def test_concurrent_duplicate_operations_cannot_both_complete(runtime, monkeypatch):
+    """Serialize the duplicate check and reservation even under overlapping attempts."""
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event
+    from unittest.mock import Mock
+    make, operation, saved, _, _ = runtime
+    plan = make(roles=("source",))
+    entered, release, attempted = Event(), Event(), Event()
+    real_spark = shared.get_spark_session
+    def wait_in_first_operation(supplied=None):
+        if not entered.is_set():
+            entered.set()
+            assert release.wait(5)
+        return real_spark(supplied)
+    monkeypatch.setattr(shared, "get_spark_session", wait_in_first_operation)
+    def duplicate():
+        attempted.set()
+        operation(plan, 0)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(operation, plan, 0)
+        assert entered.wait(5)
+        second = pool.submit(duplicate)
+        assert attempted.wait(5)
+        release.set()
+        first.result(timeout=5)
+        with pytest.raises(ValueError, match="Duplicate"):
+            second.result(timeout=5)
+    assert finalize_pipeline(plan)["status"] == "failed"
+    assert saved[plan.plan_id]["status"] == "failed"
+
+
+def test_finalization_waits_for_an_in_flight_operation(runtime, monkeypatch):
+    """Do not seal an incomplete snapshot while an operation is finishing."""
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event
+    make, operation, _, _, _ = runtime
+    plan = make(roles=("source",))
+    entered, release = Event(), Event()
+    real_spark = shared.get_spark_session
+    def wait_in_operation(supplied=None):
+        if not entered.is_set():
+            entered.set()
+            assert release.wait(5)
+        return real_spark(supplied)
+    monkeypatch.setattr(shared, "get_spark_session", wait_in_operation)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        active = pool.submit(operation, plan, 0)
+        assert entered.wait(5)
+        final = pool.submit(finalize_pipeline, plan)
+        release.set()
+        active.result(timeout=5)
+        assert final.result(timeout=5)["status"] == "succeeded"
+
+
+@pytest.mark.parametrize("required", ["0.0.1", "999.0.0"])
+def test_project_dependencies_are_checked_against_installed_versions(runtime, required):
+    """A fabricated package pin cannot identify a successfully tested candidate."""
+    from importlib.metadata import version
+    make, operation, _, _, _ = runtime
+    plan = make(roles=("source",), dependencies=json.dumps({"numpy": required}))
+    operation(plan, 0)
+    result = finalize_pipeline(plan)
+    assert result["status"] == "incomplete" and not result["candidate_fingerprint"]
+    assert json.loads(result["candidate_json"])["dependencies"]["numpy"] == {"required": required, "observed": version("numpy")}
+
+
+def test_valid_dependency_names_containing_secret_are_not_credentials(runtime, monkeypatch):
+    """Treat distribution names as identities, rather than secret-bearing fields."""
+    from importlib import metadata
+    real_version = metadata.version
+    monkeypatch.setattr(metadata, "version", lambda name: "4.10.0" if name == "azure-keyvault-secrets" else real_version(name))
+    make, operation, _, _, _ = runtime
+    plan = make(roles=("source",), dependencies='{"azure-keyvault-secrets":"4.10.0"}')
+    operation(plan, 0)
+    assert finalize_pipeline(plan)["status"] == "succeeded"
+
+
+def test_missing_project_distribution_retains_non_successful_diagnostics(runtime):
+    """Uninstalled or unverifiable dependencies leave an incomplete run."""
+    make, operation, _, _, _ = runtime
+    plan = make(roles=("source",), dependencies='{"nonexistent-fabricops-review-package":"1.0.0"}')
+    operation(plan, 0)
+    assert finalize_pipeline(plan)["status"] == "incomplete"
+
+
+def test_lost_final_commit_acknowledgement_invalidates_the_durable_success(runtime):
+    """Revoke a success that committed before the transport raised an exception."""
+    make, operation, saved, _, failure = runtime
+    plan = make(roles=("source",))
+    operation(plan, 0)
+    failure["after_commit"] = True
+    with pytest.raises(RuntimeError, match="persistence failed"):
+        finalize_pipeline(plan)
+    row = saved[plan.plan_id]
+    assert row["status"] == "failed"
+    assert "evidence_persistence_failed" in row["operation_summary_json"]
+    assert plan.evidence["persistence_failed"]
+    with pytest.raises(RuntimeError, match="persistence failed"):
+        finalize_pipeline(plan)
+
+
+def test_unreachable_invalidation_reports_unknown_instead_of_claiming_failure_was_saved(runtime):
+    """No local protocol can guarantee an update during an unavailable store."""
+    make, operation, saved, _, failure = runtime
+    plan = make(roles=("source",))
+    operation(plan, 0)
+    failure.update(after_commit=True, invalidate_unavailable=True)
+    with pytest.raises(RuntimeError, match="final outcome is unknown"):
+        finalize_pipeline(plan)
+    assert plan.evidence["persistence_failed"] and not plan.evidence["sealed"]
+    # This is explicitly unresolved, not an assertion of cross-store atomicity.
+    assert saved[plan.plan_id]["status"] == "succeeded"
+
+
+def test_post_publication_evidence_failure_retains_published_flag(runtime):
+    """An evidence error cannot imply that an already completed Write rolled back."""
+    make, operation, _, _, failure = runtime
+    plan = make(mode="live", roles=("target",))
+    with pytest.raises(RuntimeError) as raised:
+        with shared.PipelineOperation(plan, "target", {"store": "Silver", "schema": "physical", "table_name": "table0", "sources": []}) as journal:
+            journal.complete([{"stage": "Write", "status": "passed"}, {"stage": "Profile", "status": "passed"}])
+            failure["enabled"] = True
+    assert raised.value.published is True and raised.value.failed_stage == "Run evidence"
+
+
+def test_invalid_dependency_urls_and_values_are_not_persisted(runtime):
+    """Unsupported dependency assertions must not leak URLs or credential values."""
+    make, operation, _, _, _ = runtime
+    plan = make(roles=("source",), dependencies=json.dumps({
+        "https://user:private-credential@internal-host/package": "1.0.0",
+        "valid-distribution": "https://user:other-private-credential@internal-host/package",
+    }))
+    operation(plan, 0)
+    result = finalize_pipeline(plan)
+    assert result["status"] == "incomplete"
+    assert "private-credential" not in json.dumps(result, default=str)
+    assert "internal-host" not in json.dumps(result, default=str)

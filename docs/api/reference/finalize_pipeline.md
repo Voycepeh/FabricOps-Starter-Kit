@@ -63,15 +63,18 @@ Required describes the Python signature. An optional parameter may still be need
 dict
     Persisted METADATA_PIPELINE_RUN snapshot. Only a complete Testing run with
     an available candidate fingerprint and no blocking or persistence failure
-    qualifies_for_activation. Bootstrap never qualifies. This does not activate
+    has status="succeeded". Bootstrap completes as "bootstrap_completed". This does not activate
     anything; current Live still uses existing Data Contract authority.
     Repeated finalization returns the same snapshot without another write.
 
 ## Raises / Errors
 
 RuntimeError
-    If evidence cannot be persisted; create a new plan for a retry. Metadata
-    and business stores are separate transactions without cross-store atomicity.
+    If evidence cannot be persisted; create a new plan for a retry. A final
+    write with a lost acknowledgement is invalidated when storage is reachable;
+    an unconfirmed invalidation reports an unknown outcome requiring manual
+    reconciliation. Metadata and business stores are separate transactions
+    without cross-store atomicity.
 ValueError
     If execution_plan is invalid.
 
@@ -84,7 +87,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/finalize_pipeline.py:6`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L6-L44">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L6-L47">View on GitHub</a>
 </div>
 
 

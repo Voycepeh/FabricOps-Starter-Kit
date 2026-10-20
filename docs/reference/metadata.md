@@ -44,7 +44,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Persist one complete logical pipeline execution, candidate identity and operation outcomes. Bootstrap never qualifies as successful Testing evidence. Live continues to use existing contract authority.</span>
+  <span class="metadata-table-card__purpose">Persist one logical execution attempt with candidate identity, operation outcomes and safe failures. run_id distinguishes attempts; standard _activity_id preserves the Fabric activity and may be shared by several attempts. pipeline_id survives notebook renames and environment copies. Activation eligibility is not a stored flag. Bootstrap is separate from successful Testing; Live keeps existing contract authority.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One logical pipeline run across all participating sources and targets.</span>

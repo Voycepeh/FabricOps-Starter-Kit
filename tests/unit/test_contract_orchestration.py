@@ -142,7 +142,7 @@ def test_testing_real_guardrails_persist_linked_diagnostics(runtime, spark_sessi
     assert all(row["run_id"] == plan.plan_id for row in plan.results)
     from fabricops_kit import finalize_pipeline
     finalized = finalize_pipeline(plan, spark_session=spark_session)
-    assert finalized["status"] == "succeeded" and finalized["qualifies_for_activation"]
+    assert finalized["status"] == "succeeded"
     assert all(row["rule_type"] != "contract_validation" for row in plan.results)
     assert result["validation_passed"] and not result["published"]
     assert_testing_mutations_are_diagnostics_only(spies)
@@ -525,4 +525,4 @@ def test_iterable_sources_are_materialized_once_for_evidence_and_execution(runti
                                grain_discovery_enabled=False, frequency_enabled=False)
     assert len(result["source_guardrail_results"]) == 2
     from fabricops_kit import finalize_pipeline
-    assert finalize_pipeline(plan, spark_session=spark_session)["qualifies_for_activation"]
+    assert finalize_pipeline(plan, spark_session=spark_session)["status"] == "succeeded"

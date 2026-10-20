@@ -1,6 +1,6 @@
 # METADATA_PIPELINE_RUN
 
-Persist one complete logical pipeline execution, candidate identity and operation outcomes. Bootstrap never qualifies as successful Testing evidence. Live continues to use existing contract authority.
+Persist one logical execution attempt with candidate identity, operation outcomes and safe failures. run_id distinguishes attempts; standard _activity_id preserves the Fabric activity and may be shared by several attempts. pipeline_id survives notebook renames and environment copies. Activation eligibility is not a stored flag. Bootstrap is separate from successful Testing; Live keeps existing contract authority.
 
 ## Writer functions
 
@@ -28,8 +28,8 @@ No immediate table relationship is defined in the current implementation.
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 20 |
-| Business columns | 12 |
+| Total columns | 18 |
+| Business columns | 10 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -43,11 +43,9 @@ No immediate table relationship is defined in the current implementation.
 | `started_at` | `timestamp` | Pipeline bootstrap timestamp captured when the pipeline context is initialized. |
 | `completed_at` | `timestamp` | Timestamp captured when the pipeline run summary is written. Pipeline duration is derived from the difference between `started_at` and `completed_at`. |
 | `status` | `string` | Pipeline run status recorded with the run summary. |
-| `qualifies_for_activation` | `boolean` | Metadata Pipeline Run field `qualifies_for_activation`. |
 | `candidate_fingerprint` | `string` | Metadata Pipeline Run field `candidate_fingerprint`. |
 | `candidate_json` | `string` | JSON payload stored for `candidate_json`. |
 | `operation_summary_json` | `string` | JSON payload stored for `operation_summary_json`. |
-| `failure_json` | `string` | JSON payload stored for `failure_json`. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

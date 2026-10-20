@@ -22,15 +22,18 @@ def finalize_pipeline(execution_plan, *, failed=False, spark_session=None):
     dict
         Persisted METADATA_PIPELINE_RUN snapshot. Only a complete Testing run with
         an available candidate fingerprint and no blocking or persistence failure
-        qualifies_for_activation. Bootstrap never qualifies. This does not activate
+        has status="succeeded". Bootstrap completes as "bootstrap_completed". This does not activate
         anything; current Live still uses existing Data Contract authority.
         Repeated finalization returns the same snapshot without another write.
 
     Raises
     ------
     RuntimeError
-        If evidence cannot be persisted; create a new plan for a retry. Metadata
-        and business stores are separate transactions without cross-store atomicity.
+        If evidence cannot be persisted; create a new plan for a retry. A final
+        write with a lost acknowledgement is invalidated when storage is reachable;
+        an unconfirmed invalidation reports an unknown outcome requiring manual
+        reconciliation. Metadata and business stores are separate transactions
+        without cross-store atomicity.
     ValueError
         If execution_plan is invalid.
 

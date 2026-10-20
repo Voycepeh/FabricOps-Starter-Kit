@@ -285,7 +285,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert tested["dataframe"].first().email == "****************"
     assert_ordinary_metadata_unchanged(state.metadata, snapshot)
     completed = finalize_pipeline(plan, spark_session=state.spark)
-    assert completed["status"] == "succeeded" and completed["qualifies_for_activation"]
+    assert completed["status"] == "succeeded"
     assert all(row["run_id"] == plan.plan_id for row in plan.results)
     assert all(row["rule_type"] != "contract_validation" for row in plan.results)
     for table_id in (state.source_id, state.schema_source_id, state.target_id):

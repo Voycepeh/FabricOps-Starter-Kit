@@ -10,6 +10,7 @@ import time
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from functools import reduce
+from threading import RLock
 from dataclasses import dataclass, field as dataclass_field
 from uuid import uuid4
 from typing import Any, Mapping
@@ -29,6 +30,7 @@ class PipelineExecutionPlan:
     pipeline_id: str = ""
     executable_sha256: str = ""
     dependencies_json: str = "{}"
+    lock: Any = dataclass_field(default_factory=RLock, repr=False, compare=False)
     evidence: dict = dataclass_field(default_factory=dict, repr=False, compare=False)
     results: list = dataclass_field(default_factory=list, repr=False, compare=False)
     simulations: list = dataclass_field(default_factory=list, repr=False, compare=False)
@@ -1770,9 +1772,10 @@ def write_guardrail_result_row(
     guardrail_version = int(result.get("guardrail_version") or 0)
     if guardrail_version <= 0:
         raise ValueError("guardrail_version is required to persist a Guardrail result.")
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
-    resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"])
     plan = (context or {}).get("execution_plan")
+    audit = build_runtime_audit_fields(config=config, env=env,
+                                       runtime_context=plan.runtime_context if plan is not None else context)
+    resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"])
     resolved_execution_type = plan.execution_mode if plan is not None else "live"
     if plan is not None:
         resolved_run_id = plan.plan_id
@@ -1818,7 +1821,6 @@ def write_guardrail_result_row(
         "result_payload_json": json.dumps(payload, default=str, sort_keys=True, separators=(",", ":")),
         **audit,
     }
-    plan = (context or {}).get("execution_plan")
     if plan is not None:
         plan.results.append(row)
     write_lakehouse_table(
@@ -2373,6 +2375,9 @@ def prepare_pipeline_execution(table_ids, *, execution_plan, spark_session=None)
     context = {**runtime, "config": config, "env": env, "execution_plan": plan,
                "_pipeline_contracts": json.loads(plan.contracts_json),
                "_pipeline_rules": {}, "_pipeline_identities": identities}
+    # Isolate transient Testing caches without replacing persisted Fabric audit identity.
+    if plan.execution_mode == "testing":
+        context["activity_id"] = plan.plan_id
     context.pop("data_contract_overrides", None)
     if plan.execution_mode == "bootstrap":
         _require_bootstrap_contracts_absent(config, env, identities, spark_session=spark_session)
@@ -4196,7 +4201,8 @@ def check_dq_runtime(
         result["failed_values"] = _dq_empty_failed_values(spark_session)
         return result
 
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    audit = build_runtime_audit_fields(config=config, env=env,
+                                       runtime_context=plan.runtime_context if plan is not None else context)
     resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"]).strip()
     if plan is not None:
         resolved_run_id = plan.plan_id
@@ -5216,8 +5222,6 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
         contracts[table_id] = selected
     plan_id = str(uuid4())
     run_context = {**runtime, "config": config, "env": env}
-    if execution_mode == "testing":
-        run_context["activity_id"] = plan_id
     plan = PipelineExecutionPlan(
         execution_mode, env, notebook_id, plan_id,
         json.dumps(identities, default=str, sort_keys=True),
@@ -5349,20 +5353,33 @@ def pipeline_candidate(plan):
             dependencies[name] = version(name)
         except PackageNotFoundError:
             dependencies[name] = None
+    project_dependencies = json.loads(plan.dependencies_json)
+    observed_project_dependencies = {}
+    project_dependencies_available = isinstance(project_dependencies, dict)
+    for name, required in (project_dependencies.items() if isinstance(project_dependencies, dict) else []):
+        valid_name = isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", name)
+        if not valid_name:
+            project_dependencies_available = False
+            continue  # Invalid names may be credential-bearing URLs; never persist them.
+        # Only installed Python distribution versions are verifiable here. Unsupported
+        # digests/URLs and missing versions remain diagnostic, never successful evidence.
+        valid_version = isinstance(required, str) and re.fullmatch(r"(?:[0-9]+!)?[0-9]+(?:\.[0-9]+)*(?:(?:a|b|rc)[0-9]+)?(?:\.post[0-9]+)?(?:\.dev[0-9]+)?(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?", required)
+        try:
+            observed = version(name) if valid_name else None
+        except PackageNotFoundError:
+            observed = None
+        observed_project_dependencies[str(name)] = {
+            "required": required if valid_version else None, "observed": observed,
+        }
+        project_dependencies_available = bool(project_dependencies_available and valid_name and valid_version and required == observed)
     candidate = {"format": "fabricops.pipeline-candidate.v1", "pipeline_id": plan.pipeline_id,
                  "executable_sha256": plan.executable_sha256, "engine_sha256": engine.hexdigest(),
-                 "dependencies": _portable_candidate_value(json.loads(plan.dependencies_json)),
+                 "dependencies": observed_project_dependencies,
                  "runtime_dependencies": dependencies,
                  "python_version": __import__("sys").version.split()[0],
                  "participants": sorted(participants, key=lambda item: item["participant"]),
                  "operations": sorted([{"operation": key, "configuration_sha256": value.get("configuration_sha256")}
                                        for key, value in plan.evidence["operations"].items()], key=lambda item: item["operation"])}
-    project_dependencies = json.loads(plan.dependencies_json)
-    project_dependencies_available = isinstance(project_dependencies, dict) and all(
-        isinstance(name, str) and name.strip() and isinstance(identity, str) and identity.strip()
-        and identity.lower() not in {"latest", "main", "head", "*"}
-        and not any(marker in identity for marker in (">", "<", "^", "~", "*"))
-        for name, identity in project_dependencies.items())
     valid = project_dependencies_available and all(dependencies.values()) and bool(plan.pipeline_id and re.fullmatch(r"[0-9a-f]{64}", plan.executable_sha256))
     valid = valid and len({item["participant"] for item in participants}) == len(participants)
     valid = valid and all(item["configuration_sha256"] for item in candidate["operations"])
@@ -5375,8 +5392,23 @@ def pipeline_candidate(plan):
     return candidate, _candidate_hash(candidate) if valid else None, bindings
 
 
+def _merge_pipeline_run_row(plan, row, *, spark_session=None):
+    from delta.tables import DeltaTable
+
+    spark = get_spark_session(spark_session)
+    table = "METADATA_PIPELINE_RUN"
+    frame = spark.createDataFrame([coerce_metadata_row_types(table, row)], schema=metadata_table_schema_registry()[table])
+    _store, _table, _schema, path = resolve_configured_lakehouse_table(
+        "Metadata", table, metadata_table_physical_schema(plan.runtime_context["config"], table),
+        context=plan.runtime_context)
+    (DeltaTable.forPath(spark, path).alias("target")
+     .merge(frame.alias("source"), "target.run_id = source.run_id")
+     .whenMatchedUpdateAll().whenNotMatchedInsertAll().execute())
+
+
 def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", completed_at=None):
-    """Merge one run snapshot through configured metadata routing; fail closed on error."""
+    """Persist one run snapshot; invalidate an uncertain final commit when reachable."""
+    row = None
     try:
         candidate, fingerprint, bindings = pipeline_candidate(plan)
         base = _candidate_hash({key: value for key, value in candidate.items()
@@ -5384,79 +5416,83 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
         previous = plan.evidence.setdefault("candidate_base", base)
         if previous != base:
             plan.evidence["failures"].append({"code": "candidate_changed_during_run"})
-            status = "failed"
         if plan.evidence["failures"] or any(item["status"] == "failed" for item in plan.evidence["operations"].values()) or any(
             result.get("can_continue") is False for result in plan.results):
             status = "failed"
-        qualifies = status == "succeeded" and plan.execution_mode == "testing" and bool(fingerprint)
-        if status == "succeeded" and plan.execution_mode == "testing" and not qualifies:
+        if status == "succeeded" and plan.execution_mode == "testing" and not fingerprint:
             status = "incomplete"
         row = {"run_id": plan.plan_id, "pipeline_id": plan.pipeline_id,
                "execution_mode": plan.execution_mode, "environment_name": plan.environment,
                "started_at": plan.evidence["started_at"], "completed_at": completed_at,
-               "status": status, "qualifies_for_activation": qualifies,
-               "candidate_fingerprint": fingerprint or "", "candidate_json": canonical_candidate_json(candidate),
+               "status": status, "candidate_fingerprint": fingerprint or "",
+               "candidate_json": canonical_candidate_json(candidate),
                "operation_summary_json": canonical_candidate_json({"operations": plan.evidence["operations"],
-                                                                      "frozen_contracts": bindings}),
-               "failure_json": canonical_candidate_json(plan.evidence["failures"]),
+                    "frozen_contracts": bindings, "failures": plan.evidence["failures"]}),
                **build_runtime_audit_fields(config=plan.runtime_context["config"], env=plan.environment,
                                             runtime_context=plan.runtime_context)}
-        from delta.tables import DeltaTable
-
-        spark = get_spark_session(spark_session)
-        table = "METADATA_PIPELINE_RUN"
-        frame = spark.createDataFrame([coerce_metadata_row_types(table, row)], schema=metadata_table_schema_registry()[table])
-        _store, _table, _schema, path = resolve_configured_lakehouse_table(
-            "Metadata", table, metadata_table_physical_schema(plan.runtime_context["config"], table),
-            context=plan.runtime_context)
-        (DeltaTable.forPath(spark, path).alias("target")
-         .merge(frame.alias("source"), "target.run_id = source.run_id")
-         .whenMatchedUpdateAll().whenNotMatchedInsertAll().execute())
+        _merge_pipeline_run_row(plan, row, spark_session=spark_session)
         return row
     except Exception as exc:
         plan.evidence["persistence_failed"] = True
-        # Do not persist exception messages: connector errors may contain credentials/data.
+        # Connector exception messages can contain credentials or business values.
         plan.evidence["failures"].append({"code": "evidence_persistence_failed", "exception_type": type(exc).__name__})
-        raise RuntimeError("Pipeline run evidence persistence failed; this run cannot qualify. Create a new plan.") from exc
+        if row is not None and row["status"] in {"succeeded", "bootstrap_completed"}:
+            # A transport exception can follow a successful commit. Revoke that
+            # snapshot using the same run ID; never retry it as success.
+            row["status"] = "failed"
+            summary = json.loads(row["operation_summary_json"])
+            summary["failures"] = list(plan.evidence["failures"])
+            row["operation_summary_json"] = canonical_candidate_json(summary)
+            try:
+                _merge_pipeline_run_row(plan, row, spark_session=spark_session)
+            except Exception:
+                raise RuntimeError(
+                    "Pipeline run evidence persistence failed; the final outcome is unknown because invalidation could not be confirmed. "
+                    "Reconcile METADATA_PIPELINE_RUN before consuming this run; create a new plan for a retry."
+                ) from exc
+        raise RuntimeError("Pipeline run evidence persistence failed; create a new plan.") from exc
 
 
 class PipelineOperation:
-    """Journal one declared operation, including validation failures and duplicate attempts."""
+    """Serialize a plan's operations and finalization, including rejected retries."""
 
     def __init__(self, plan, role, arguments):
-        """Capture bound orchestration parameters without retaining data or credentials."""
+        """Capture bound parameters without retaining data or credentials in metadata."""
         self.plan, self.role, self.arguments = plan, role, arguments
         self.record = None
 
     def __enter__(self):
-        """Persist incomplete state before any operation can mutate a business store."""
+        """Reserve the operation before iterating inputs or executing any stage."""
         plan = self.plan
         if not isinstance(plan, PipelineExecutionPlan):
             raise ValueError("An explicit PipelineExecutionPlan is required.")
-        if plan.evidence.get("sealed") or plan.evidence.get("persistence_failed"):
-            raise RuntimeError("Execution plan is closed or evidence persistence failed; create a new plan.")
-        if plan.evidence["failures"] and plan.permits_persistence:
-            raise RuntimeError("Pipeline run previously failed; create a new plan.")
+        plan.lock.acquire()
         args = self.arguments
         try:
+            if plan.evidence.get("sealed") or plan.evidence.get("persistence_failed"):
+                raise RuntimeError("Execution plan is closed or evidence persistence failed; create a new plan.")
+            if plan.evidence["failures"] and plan.permits_persistence:
+                raise RuntimeError("Pipeline run previously failed; create a new plan.")
             table_id = resolve_physical_table_identity(
                 plan.runtime_context["config"], plan.environment,
                 **{key: args[key] for key in ("store", "schema", "table_name")})["table_id"]
-            identity = json.loads(plan.participants_json).get(table_id)
+            identities = json.loads(plan.participants_json)
+            identity = identities.get(table_id)
             if identity is None or self.role not in identity["roles"]:
                 raise ValueError("Operation must match a declared pipeline participant and role.")
             logical = identity.get("logical_id") or f"{identity['store']}/{identity['table_name']}"
             key = f"{self.role}:{logical}"
-            if key in plan.evidence["operations"] and plan.evidence["operations"][key]["status"] != "not_started":
+            if plan.evidence["operations"][key]["status"] != "not_started":
                 raise ValueError("Duplicate operation: retries require a new pipeline execution plan.")
+            self.record = {"status": "incomplete", "configuration_sha256": None, "stages": []}
+            plan.evidence["operations"][key] = self.record
             excluded = {"execution_plan", "spark_session", "verbose", "dataframe", "existing_mapping", "sources"}
             configuration = {name: value for name, value in args.items() if name not in excluded}
             if self.role == "target":
-                identities = json.loads(plan.participants_json)
+                args["sources"] = tuple(args["sources"])
                 configuration["sources"] = sorted(identities[source["table_id"]].get("logical_id") or
                                                   f"{identities[source['table_id']]['store']}/{identities[source['table_id']]['table_name']}"
                                                   for source in args["sources"])
-            identities = json.loads(plan.participants_json)
             if args.get("target_table_id") is not None:
                 target = identities[args["target_table_id"]]
                 configuration["incremental_target"] = target.get("logical_id") or f"{target['store']}/{target['table_name']}"
@@ -5471,21 +5507,25 @@ class PipelineOperation:
                     sql_configuration[name] = spark.conf.get(name)
             configuration["spark_sql"] = sql_configuration
             configuration = _portable_candidate_value(configuration)
-            # SQL text can contain undeclared dependencies and embedded physical bindings;
-            # caller-owned mappings have no immutable content identity in this API.
-            fingerprint = _candidate_hash(configuration) if args.get("existing_mapping") is None and not mapping_configured and not args.get("query") and sql_configuration else None
-            self.record = {"status": "incomplete", "configuration_sha256": fingerprint, "stages": []}
-            plan.evidence["operations"][key] = self.record
+            # SQL and mapping content require dependency identity support beyond this API.
+            self.record["configuration_sha256"] = _candidate_hash(configuration) if (
+                args.get("existing_mapping") is None and not mapping_configured and not args.get("query") and sql_configuration
+            ) else None
             persist_pipeline_run(plan, spark_session=args.get("spark_session"))
             return self
-        except Exception as exc:
-            plan.evidence["failures"].append({"code": "operation_start_failed", "exception_type": type(exc).__name__})
-            if not plan.evidence["persistence_failed"]:
-                persist_pipeline_run(plan, spark_session=args.get("spark_session"), status="failed")
+        except BaseException as exc:
+            try:
+                if not plan.evidence.get("sealed") and not plan.evidence.get("persistence_failed"):
+                    plan.evidence["failures"].append({"code": "operation_start_failed", "exception_type": type(exc).__name__})
+                    if self.record is not None:
+                        self.record["status"] = "failed"
+                    persist_pipeline_run(plan, spark_session=args.get("spark_session"), status="failed")
+            finally:
+                plan.lock.release()
             raise
 
     def complete(self, stages):
-        """Retain safe stage outcomes; blocking and unevaluated checks prevent success."""
+        """Keep safe stage outcomes; blocking or unevaluated checks prevent success."""
         self.record["stages"] = [{key: stage[key] for key in ("stage", "status", "evaluation_status") if key in stage}
                                  for stage in stages]
         self.record["status"] = "failed" if any(
@@ -5493,36 +5533,46 @@ class PipelineOperation:
             for stage in stages) else "succeeded"
 
     def __exit__(self, exc_type, exc, traceback):
-        """Persist failures without swallowing the original operation exception."""
+        """Persist the outcome and release the plan even when storage fails."""
         plan = self.plan
-        if exc is not None:
-            self.record["status"] = "failed"
-            plan.evidence["failures"].append({"code": "operation_failed", "exception_type": exc_type.__name__})
-        persist_pipeline_run(plan, spark_session=self.arguments.get("spark_session"),
-                             status="failed" if exc is not None or self.record["status"] == "failed" else "incomplete")
+        try:
+            if exc is not None:
+                self.record["status"] = "failed"
+                plan.evidence["failures"].append({"code": "operation_failed", "exception_type": exc_type.__name__})
+            try:
+                persist_pipeline_run(plan, spark_session=self.arguments.get("spark_session"))
+            except RuntimeError as persistence_error:
+                if self.role == "target" and any(stage.get("stage") == "Write" and stage.get("status") == "passed"
+                                                  for stage in self.record["stages"]):
+                    persistence_error.published = True
+                    persistence_error.failed_stage = "Run evidence"
+                raise
+        finally:
+            plan.lock.release()
         return False
 
 
 def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
-    """Seal a logical run only after every source and target completed exactly once."""
+    """Seal a run after every declared operation; never race an in-flight operation."""
     if not isinstance(plan, PipelineExecutionPlan):
         raise ValueError("An explicit PipelineExecutionPlan is required.")
-    if plan.evidence.get("persistence_failed"):
-        raise RuntimeError("Evidence persistence failed; create a new plan.")
-    if plan.evidence.get("sealed"):
-        return plan.evidence["final_result"]
-    if failed:
-        plan.evidence["failures"].append({"code": "project_execution_failed"})
-    expected = {f"{role}:{identity.get('logical_id') or identity['store'] + '/' + identity['table_name']}"
-                for identity in json.loads(plan.participants_json).values() for role in identity["roles"]}
-    operations = plan.evidence["operations"]
-    blocked = failed or bool(plan.evidence["failures"]) or any(
-        row.get("can_continue") is False for row in plan.results) or any(
-        operation["status"] == "failed" for operation in operations.values())
-    complete = set(operations) == expected and all(operation["status"] == "succeeded" for operation in operations.values())
-    status = "failed" if blocked else "succeeded" if complete else "incomplete"
-    if plan.execution_mode == "bootstrap" and status == "succeeded":
-        status = "bootstrap_completed"
-    row = persist_pipeline_run(plan, spark_session=spark_session, status=status, completed_at=datetime.now(UTC))
-    plan.evidence.update(sealed=True, final_result=row)
-    return row
+    with plan.lock:
+        if plan.evidence.get("persistence_failed"):
+            raise RuntimeError("Evidence persistence failed; create a new plan.")
+        if plan.evidence.get("sealed"):
+            return plan.evidence["final_result"]
+        if failed:
+            plan.evidence["failures"].append({"code": "project_execution_failed"})
+        operations = plan.evidence["operations"]
+        blocked = failed or bool(plan.evidence["failures"]) or any(
+            row.get("can_continue") is False for row in plan.results) or any(
+            operation["status"] == "failed" for operation in operations.values())
+        expected = {f"{role}:{identity.get('logical_id') or identity['store'] + '/' + identity['table_name']}"
+                    for identity in json.loads(plan.participants_json).values() for role in identity["roles"]}
+        complete = set(operations) == expected and all(operation["status"] == "succeeded" for operation in operations.values())
+        status = "failed" if blocked else "succeeded" if complete else "incomplete"
+        if plan.execution_mode == "bootstrap" and status == "succeeded":
+            status = "bootstrap_completed"
+        row = persist_pipeline_run(plan, spark_session=spark_session, status=status, completed_at=datetime.now(UTC))
+        plan.evidence.update(sealed=True, final_result=row)
+        return row

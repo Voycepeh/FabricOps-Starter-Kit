@@ -100,8 +100,8 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
     ...     store="Silver", schema="demo", table_name="orders", write_mode="overwrite")
 
     """
-    sources = tuple(sources)
     with PipelineOperation(execution_plan, "target", locals()) as operation:
+        sources = operation.arguments["sources"]
         for name, value in (
             ("grain_discovery_max_columns", grain_discovery_max_columns),
             ("grain_discovery_max_candidates", grain_discovery_max_candidates),

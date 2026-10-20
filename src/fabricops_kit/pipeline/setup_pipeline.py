@@ -158,7 +158,9 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         SHA-256 of the complete project executable (notebook and transformation code).
         Required for qualifying Testing evidence. Supply from the deployed artifact.
     dependencies : dict, optional
-        Project dependency names to immutable version or digest identities. Do not
+        Installed Python distribution names to exact runtime versions. They are
+        checked against installed package metadata; missing/mismatched or unsupported
+        dependency identities prevent successful Testing evidence. Do not
         include credentials, paths or physical environment bindings. Supply an
         explicit empty dict when no additional project dependencies exist; omitted
         dependency identity cannot qualify as successful Testing evidence.

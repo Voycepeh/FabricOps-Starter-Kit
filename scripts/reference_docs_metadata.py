@@ -133,7 +133,7 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 
 METADATA_TABLE_MODELS = {
     "METADATA_PIPELINE_RUN": {
-        "purpose": "Persist one complete logical pipeline execution, candidate identity and operation outcomes. Bootstrap never qualifies as successful Testing evidence. Live continues to use existing contract authority.",
+        "purpose": "Persist one logical execution attempt with candidate identity, operation outcomes and safe failures. run_id distinguishes attempts; standard _activity_id preserves the Fabric activity and may be shared by several attempts. pipeline_id survives notebook renames and environment copies. Activation eligibility is not a stored flag. Bootstrap is separate from successful Testing; Live keeps existing contract authority.",
         "grain": "One logical pipeline run across all participating sources and targets.",
         "primary_key": ["run_id"], "foreign_keys": [], "relationships": [],
     },
