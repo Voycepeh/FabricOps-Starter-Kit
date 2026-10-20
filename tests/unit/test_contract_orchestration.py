@@ -7,7 +7,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from fabricops_kit import widget_pipeline, orchestrate_read, orchestrate_write
+from fabricops_kit import setup_pipeline, orchestrate_read, orchestrate_write
 from fabricops_kit.pipeline import shared
 from tests.helpers import framework_config
 from tests.unit.test_data_contract_resolution import RecordingFrame
@@ -80,7 +80,7 @@ def runtime(monkeypatch, spark_session):
         selections = {row["table_id"]: {"contract_id": row["contract_id"], "contract_version": row["contract_version"]} for row in rows}
         if not contracted:
             selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
-        return widget_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
+        return setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
                                               selections=selections, context=context, spark_session=spark_session)
     return make, rows, spies, context
 
@@ -168,9 +168,9 @@ def test_headless_requires_mode_and_every_explicit_choice(runtime):
     """Headless callers cannot infer Live or silently omit table choices."""
     _, _, _, context = runtime
     with pytest.raises(ValueError, match="execution_mode"):
-        widget_pipeline(interactive=False, sources=[SOURCE], targets=[TARGET], selections={}, context=context)
+        setup_pipeline(interactive=False, sources=[SOURCE], targets=[TARGET], selections={}, context=context)
     with pytest.raises(ValueError, match="every participating"):
-        widget_pipeline(interactive=False, execution_mode="testing", sources=[SOURCE], targets=[TARGET], selections={}, context=context)
+        setup_pipeline(interactive=False, execution_mode="testing", sources=[SOURCE], targets=[TARGET], selections={}, context=context)
 
 
 @pytest.mark.parametrize("strategy,parameters", [("append", None), ("scd1", {"key_columns": ["id"]}),
@@ -222,7 +222,7 @@ def test_mixed_relationship_respects_explicit_no_contract(runtime, spark_session
     rows.append(candidate)
     selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
     selections[contracted_id] = {"contract_id": candidate["contract_id"], "contract_version": 1}
-    plan = widget_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
+    plan = setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
         selections=selections, context=context, spark_session=spark_session)
     monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
     orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
@@ -304,7 +304,7 @@ def test_no_contract_target_does_not_exempt_failed_source_checks(runtime, spark_
     _, rows, spies, context = runtime
     candidate = frozen(SOURCE_ID, active=mode == "live")
     rows.append(candidate)
-    plan = widget_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
+    plan = setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
         selections={SOURCE_ID: {"contract_id": candidate["contract_id"], "contract_version": 1},
                     TARGET_ID: {"no_contract": True}}, context=context, spark_session=spark_session)
     bad = spark_session.createDataFrame([(None,)], "id long")

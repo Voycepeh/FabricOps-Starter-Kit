@@ -41,7 +41,6 @@ LIVE_WIDGETS = {
     "widget_activate_data_contract",
     "widget_render_data_steward",
     "widget_render_data_agreement",
-    "widget_pipeline",
     "widget_view_catalogue",
 }
 
@@ -51,11 +50,10 @@ def test_live_widget_inventory_uses_the_canonical_page_composer():
     assert set(widget_package.__all__) == LIVE_WIDGETS
     for name in LIVE_WIDGETS:
         module = __import__(f"fabricops_kit.widgets.{name}", fromlist=[name])
-        if name == "widget_pipeline":
-            assert "pipeline-contracts" in inspect.getsource(module)
-            assert "pipeline-testing" in inspect.getsource(module) and "pipeline-live" in inspect.getsource(module)
-        else:
-            assert "form_page(" in inspect.getsource(module)
+        assert "form_page(" in inspect.getsource(module)
+    pipeline = __import__("fabricops_kit.pipeline.setup_pipeline", fromlist=["setup_pipeline"])
+    assert "pipeline-contracts" in inspect.getsource(pipeline)
+    assert "pipeline-testing" in inspect.getsource(pipeline) and "pipeline-live" in inspect.getsource(pipeline)
 
 
 def test_form_page_is_a_stable_full_width_scrolling_viewport(monkeypatch):

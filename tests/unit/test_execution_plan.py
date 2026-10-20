@@ -130,10 +130,10 @@ def test_missing_contract_store_is_not_an_explicit_no_contract_state(plan_runtim
 @pytest.mark.parametrize("mode", ["testing", "live"])
 def test_read_only_headless_plan_needs_no_target(plan_runtime, mode):
     """Read-only participants use the same immutable plan without a business target."""
-    from fabricops_kit import widget_pipeline
+    from fabricops_kit import setup_pipeline
 
     _, runtime, _, _ = plan_runtime
-    plan = widget_pipeline(interactive=False, execution_mode=mode,
+    plan = setup_pipeline(interactive=False, execution_mode=mode,
         sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}], targets=[],
         selections={"source": {"no_contract": True}}, context=runtime)
     assert json.loads(plan.participants_json)["source"]["roles"] == ["source"]

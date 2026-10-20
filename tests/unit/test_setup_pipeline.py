@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-module = importlib.import_module("fabricops_kit.widgets.widget_pipeline")
+module = importlib.import_module("fabricops_kit.pipeline.setup_pipeline")
 
 
 def _row(version=1, *, table_id="source", active=False):
@@ -55,8 +55,8 @@ def _render(monkeypatch, rows, *, interactive=False, metadata_error=None, lineag
         from IPython import display as ip
         monkeypatch.setattr(ip, "display", lambda *a: None)
     if not interactive:
-        monkeypatch.setattr(module, "require_ipywidgets", lambda: (_ for _ in ()).throw(ModuleNotFoundError()))
-    state = module.widget_pipeline(
+        monkeypatch.setattr(importlib.import_module("fabricops_kit.widgets.shared"), "require_ipywidgets", lambda: (_ for _ in ()).throw(ModuleNotFoundError()))
+    state = module.setup_pipeline(
         sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}],
         targets=targets if targets is not None else [{"store": "Silver", "schema": "demo", "table_name": "target"}], context=context,
     )
@@ -163,9 +163,11 @@ def without_notebook_packages(name, *args, **kwargs):
     return original_import(name, *args, **kwargs)
 builtins.__import__ = without_notebook_packages
 import fabricops_kit as kit
+import sys
+assert "fabricops_kit.widgets" not in sys.modules
 for name in kit.__all__:
     getattr(kit, name)
-assert callable(kit.widget_pipeline)
+assert callable(kit.setup_pipeline)
 assert not hasattr(kit, "create_pipeline_execution_plan")
 assert not hasattr(kit, "widget_select_data_contract")
 '''
@@ -217,10 +219,10 @@ def test_headless_uses_builder_without_loading_ui_or_listing_contracts(monkeypat
     builder = Mock(return_value=sentinel)
     forbidden = Mock(side_effect=AssertionError("Interactive-only work reached"))
     monkeypatch.setattr(module, "build_pipeline_execution_plan", builder)
-    monkeypatch.setattr(module, "require_ipywidgets", forbidden)
+    monkeypatch.setattr(importlib.import_module("fabricops_kit.widgets.shared"), "require_ipywidgets", forbidden)
     monkeypatch.setattr(module, "read_lakehouse_table", forbidden)
     selections = {"source": {"contract_id": "contract-source", "contract_version": 2}}
-    assert module.widget_pipeline(sources=[{"table_id": "source"}], targets=[], interactive=False,
+    assert module.setup_pipeline(sources=[{"table_id": "source"}], targets=[], interactive=False,
                                   execution_mode="testing", selections=selections) is sentinel
     builder.assert_called_once_with(execution_mode="testing", sources=[{"table_id": "source"}],
                                     targets=[], selections=selections, context=None, spark_session=None)
@@ -232,7 +234,7 @@ def test_headless_missing_configuration_fails_before_metadata_access(monkeypatch
     """Headless execution never infers mode or silently chooses contracts."""
     monkeypatch.setattr(module, "build_pipeline_execution_plan", lambda **kw: pytest.fail("Builder reached"))
     with pytest.raises(ValueError, match="requires explicit"):
-        module.widget_pipeline(sources=[], targets=[], interactive=False, **configuration)
+        module.setup_pipeline(sources=[], targets=[], interactive=False, **configuration)
 
 
 def test_interactive_and_headless_share_identity_validation_and_plan_snapshots(monkeypatch):
@@ -246,7 +248,7 @@ def test_interactive_and_headless_share_identity_validation_and_plan_snapshots(m
         state["select_contract"](table_id, no_contract=True)
     plan = state["build_plan"]()
     choices = {"source": {"no_contract": True}, "target": {"no_contract": True}}
-    scheduled = module.widget_pipeline(
+    scheduled = module.setup_pipeline(
         sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}],
         targets=[{"store": "Silver", "schema": "demo", "table_name": "target"}],
         interactive=False, execution_mode="testing", selections=choices, context=context,
@@ -270,7 +272,7 @@ def test_participant_mismatch_rejected_in_both_paths(monkeypatch, interactive):
     monkeypatch.setattr(builder, "resolve_fabric_context", lambda context=None: (
         context["config"], context["env"], context))
     with pytest.raises(ValueError, match="canonical table_id"):
-        module.widget_pipeline(
+        module.setup_pipeline(
             sources=[{"store": "Bronze", "schema": "demo", "table_name": "source", "table_id": "wrong"}],
             targets=[], interactive=interactive, execution_mode="testing",
             selections={"wrong": {"no_contract": True}}, context=context,
@@ -283,13 +285,16 @@ def test_obsolete_public_apis_and_modules_are_removed():
     import fabricops_kit.pipeline as pipeline
     import fabricops_kit.widgets as widgets
 
-    assert "widget_pipeline" in kit.__all__ and "widget_pipeline" in widgets.__all__
+    assert "setup_pipeline" in kit.__all__ and "setup_pipeline" in pipeline.__all__
+    assert "setup_pipeline" not in widgets.__all__
     for package in (kit, pipeline):
         assert not hasattr(package, "create_pipeline_execution_plan")
     for package in (kit, widgets):
         assert not hasattr(package, "widget_select_data_contract")
+        assert not hasattr(package, "widget_pipeline")
     for name in ("fabricops_kit.pipeline.create_pipeline_execution_plan",
-                 "fabricops_kit.widgets.widget_select_data_contract"):
+                 "fabricops_kit.widgets.widget_select_data_contract",
+                 "fabricops_kit.widgets.widget_pipeline"):
         with pytest.raises(ModuleNotFoundError):
             importlib.import_module(name)
 

@@ -13,7 +13,7 @@ Testing evaluates actual source data and returns diagnostics without durable cha
 </div>
 </div>
 
-1. Run Environment and rerun the `widget_pipeline()` selector cell with the exact source and target identities to create a fresh selector for this Testing run. A previously built selector is locked, and its `build_plan()` returns the same plan. Historical Lineage is not required.
+1. Run Environment and rerun the `setup_pipeline()` selector cell with the exact source and target identities to create a fresh selector for this Testing run. A previously built selector is locked, and its `build_plan()` returns the same plan. Historical Lineage is not required.
 2. Leave the pipeline-wide switch in red **Testing**.
 3. Select an eligible frozen version independently for every source and target. Do not leave choices implicit. For first-time bootstrap before contracts exist, explicitly select **No Contract** for every participant; it cannot bypass an active contract.
 4. Expand Schema to inspect every expected column and exact type. Expand Grain, Data Quality, Freshness, Source Drift and Sensitive Data to inspect individual parameters, thresholds, actions and states. Non-applicable saved rules remain visible with their boundary explanation.

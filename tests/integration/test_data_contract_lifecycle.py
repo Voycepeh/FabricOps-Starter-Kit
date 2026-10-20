@@ -80,7 +80,7 @@ class _DeltaTransport:
 def lifecycle(monkeypatch, spark_session):
     """Share one configured local metadata store across every real workflow phase."""
     modules = [importlib.import_module(name) for name in (
-        "fabricops_kit.widgets.widget_data_contract", "fabricops_kit.widgets.widget_pipeline",
+        "fabricops_kit.widgets.widget_data_contract", "fabricops_kit.pipeline.setup_pipeline",
         "fabricops_kit.widgets.widget_activate_data_contract", "fabricops_kit.data_contract.scheduled_refresh",
         "fabricops_kit.pipeline.orchestrate_read", "fabricops_kit.pipeline.orchestrate_write",
         "fabricops_kit.pipeline.pipeline_read", "fabricops_kit.pipeline.pipeline_write",
@@ -243,12 +243,12 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     before, buttons = _activation(state, state.target_id)
     assert not before["diagnostic_review"]["available"] and buttons[0].disabled
     assert not state.metadata["METADATA_DATA_LINEAGE"]
-    selector = importlib.import_module("fabricops_kit.widgets.widget_pipeline")
+    selector = importlib.import_module("fabricops_kit.pipeline.setup_pipeline")
     coordinates = {"sources": [
         {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
         {"store": "Bronze", "schema": "dbo", "table_name": "products"}],
         "targets": [{"store": "Silver", "schema": "dbo", "table_name": "curated_orders"}]}
-    selection = selector.widget_pipeline(**coordinates, spark_session=state.spark, context=state.context)
+    selection = selector.setup_pipeline(**coordinates, spark_session=state.spark, context=state.context)
     for row in (source, schema_source, target):
         selection["select_contract"](row["table_id"], row["contract_id"], 1)
     snapshot = deepcopy(state.metadata)
@@ -267,7 +267,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert state.metadata == snapshot and "curated_orders" not in state.business
     gate, buttons = _activation(state, state.target_id, [failed])
     assert not gate["diagnostic_review"]["available"] and buttons[0].disabled
-    selection = selector.widget_pipeline(**coordinates, spark_session=state.spark, context=state.context)
+    selection = selector.setup_pipeline(**coordinates, spark_session=state.spark, context=state.context)
     for row in (source, schema_source, target):
         selection["select_contract"](row["table_id"], row["contract_id"], 1)
     plan = selection["build_plan"]()
@@ -289,7 +289,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
         assert widget["activation_result"]["changed"]
     assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]] for row in state.metadata["METADATA_DATA_CONTRACT"])
     state.context["activity_id"] = "live"
-    selection = selector.widget_pipeline(**coordinates, spark_session=state.spark, context=state.context)
+    selection = selector.setup_pipeline(**coordinates, spark_session=state.spark, context=state.context)
     selection["set_mode"]("live")
     live = selection["build_plan"]()
     inputs = reads(live)

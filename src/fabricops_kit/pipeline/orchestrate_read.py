@@ -24,7 +24,7 @@ def orchestrate_read(*, execution_plan, store: str, schema: str | None, table_na
     Parameters
     ----------
     execution_plan : PipelineExecutionPlan
-        Required immutable plan from widget_pipeline in interactive or headless mode.
+        Required immutable plan from setup_pipeline in interactive or headless mode.
         Pass the same object to every Read and Write. Testing evaluates configured
         Freshness, Schema, Grain and Data Quality and returns profiles and violations
         in memory. It cannot persist Catalogue, Profile, frequency, Guardrail Results

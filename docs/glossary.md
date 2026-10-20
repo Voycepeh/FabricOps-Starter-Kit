@@ -31,7 +31,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-execution-plan">
 <summary><strong>pipeline execution plan</strong> — The validated execution decisions shared by every Read and Write in one pipeline run.</summary>
-<p>A pipeline execution plan freezes the Testing or Live mode, environment and notebook identity, explicit source and target identities, exact frozen contract selections and explicit No Contract choices. widget_pipeline builds the plan for interactive and headless execution. All participating Read and Write calls consume the same plan; a built selector locks its mode and contract choices. Diagnostic results are retained separately in its in-memory journal.</p>
+<p>A pipeline execution plan freezes the Testing or Live mode, environment and notebook identity, explicit source and target identities, exact frozen contract selections and explicit No Contract choices. setup_pipeline builds the plan for interactive and headless execution. All participating Read and Write calls consume the same plan; a built selector locks its mode and contract choices. Diagnostic results are retained separately in its in-memory journal.</p>
 </details>
 
 <details id="testing">

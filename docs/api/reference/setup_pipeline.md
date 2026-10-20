@@ -1,4 +1,4 @@
-# `widget_pipeline`
+# `setup_pipeline`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -6,7 +6,7 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Select pipeline-wide Testing/Live and inspect exact frozen contracts per explicit participant.
+Set up interactive or scheduled Testing/Live execution with exact frozen contracts per participant.
 
 
 ## Usage notes
@@ -19,9 +19,9 @@ Use before Read, including first-time bootstrap without historical Lineage.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-selection = widget_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
+selection = setup_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
 plan = selection["build_plan"]()
-scheduled_plan = widget_pipeline(
+scheduled_plan = setup_pipeline(
     sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, interactive=False,
     execution_mode="testing", selections=EXACT_SELECTIONS,
 )
@@ -37,7 +37,7 @@ scheduled_plan = widget_pipeline(
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_pipeline(
+def setup_pipeline(
     *,
     sources,
     targets,
@@ -111,9 +111,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_pipeline.py:129`
+`fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_pipeline.py#L129-L385">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L388">View on GitHub</a>
 </div>
 
 

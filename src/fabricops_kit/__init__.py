@@ -30,6 +30,7 @@ from .io import (
     write_warehouse_table,
 )
 from .pipeline import (
+    setup_pipeline,
     resolve_table_id,
     profile_table,
     orchestrate_read,
@@ -72,6 +73,7 @@ IO_EXPORTS = (
 )
 
 PIPELINE_EXPORTS = (
+    "setup_pipeline",
     "profile_table",
     "resolve_table_id",
     "orchestrate_read",
@@ -84,7 +86,6 @@ WIDGET_EXPORTS = (
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_view_catalogue",
-    "widget_pipeline",
 )
 
 _LAZY_WIDGET_MODULES = {name: f"fabricops_kit.widgets.{name}" for name in WIDGET_EXPORTS}

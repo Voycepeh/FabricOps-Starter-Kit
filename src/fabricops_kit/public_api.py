@@ -33,7 +33,7 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
     "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
     "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
-    "fabricops_kit.widgets.widget_pipeline.widget_pipeline",
+    "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
 )
 
 RELEASE_PUBLIC_API = SUPPORTED_PUBLIC_API + PREVIEW_PUBLIC_API

@@ -50,7 +50,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 Expand a group to browse its public functions. Standard Orchestration is open by default.
 
 <details class="reference-function-group" data-callable-group="standard-orchestration" data-default-open="true" open>
-<summary><span class="reference-function-group-title">Standard Orchestration</span><span class="reference-function-group-meta">2 functions · Recommended</span></summary>
+<summary><span class="reference-function-group-title">Standard Orchestration</span><span class="reference-function-group-meta">3 functions · Recommended</span></summary>
 <p class="reference-function-group-description">Complete governed read and write lifecycle for the standard FabricOps pipeline.</p>
 <div class="reference-catalogue-list">
 <article id="pipeline.orchestrate_read-orchestrate_read" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_read" data-callable-module="pipeline.orchestrate_read" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Run the observable standard governed source lifecycle.">
@@ -62,6 +62,11 @@ Expand a group to browse its public functions. Standard Orchestration is open by
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_write/"><code>orchestrate_write</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run the observable standard governed target lifecycle.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.5</span><span class="reference-chip">02_pipeline</span></p>
+</article>
+<article id="pipeline.setup_pipeline-setup_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_pipeline" data-callable-module="pipeline.setup_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Set up interactive or scheduled Testing/Live execution with exact frozen contracts per participant.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_pipeline/"><code>setup_pipeline</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Set up interactive or scheduled Testing/Live execution with exact frozen contracts per participant.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 </div>
 </details>
@@ -84,7 +89,7 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 </details>
 
 <details class="reference-function-group" data-callable-group="governance-metadata" data-default-open="false">
-<summary><span class="reference-function-group-title">Governance &amp; Metadata</span><span class="reference-function-group-meta">8 functions · Author and inspect governed context</span></summary>
+<summary><span class="reference-function-group-title">Governance &amp; Metadata</span><span class="reference-function-group-meta">7 functions · Author and inspect governed context</span></summary>
 <p class="reference-function-group-description">Notebook setup, metadata initialization, Data Steward and Agreement intake, Data Contract workflows, and catalogue views.</p>
 <div class="reference-catalogue-list">
 <article id="config.setup_metadata_tables-setup_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_metadata_tables" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-starter-kit" data-callable-purpose="Create missing FabricOps metadata tables and check existing table columns and Spark data types.">
@@ -106,11 +111,6 @@ Expand a group to browse its public functions. Standard Orchestration is open by
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_data_contract/"><code>widget_data_contract</code></a></h3>
   <p class="reference-catalogue-item-purpose">Create or reopen and author one agreement-free, table-centric Data Contract draft.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">01_governance</span></p>
-</article>
-<article id="widgets.widget_pipeline-widget_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_pipeline" data-callable-module="widgets.widget_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Select pipeline-wide Testing/Live and inspect exact frozen contracts per explicit participant.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_pipeline/"><code>widget_pipeline</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Select pipeline-wide Testing/Live and inspect exact frozen contracts per explicit participant.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 <article id="widgets.widget_render_data_agreement-widget_render_data_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_data_agreement" data-callable-module="widgets.widget_render_data_agreement" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Render the standalone data-agreement intake widget.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></h3>

@@ -178,11 +178,11 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         assert f"fabricops_kit.widgets.{demoted_widget}" not in source
     authoring_cell = _cell_by_id("01_governance.ipynb", "contract-author").source
     activation_cell = _cell_by_id("01_governance.ipynb", "activation-widget").source
-    assert "widget_pipeline" not in authoring_cell
+    assert "setup_pipeline" not in authoring_cell
     assert "widget_data_contract(" in authoring_cell
-    assert "widget_pipeline" not in activation_cell
+    assert "setup_pipeline" not in activation_cell
     assert "widget_activate_data_contract(" in activation_cell
-    assert "widget_pipeline" not in source
+    assert "setup_pipeline" not in source
     assert "METADATA_SCHEMA" not in source
 
 def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
@@ -283,7 +283,7 @@ def test_02_pipeline_is_a_small_reusable_scaffold():
         "# 4. Write",
     )
     assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
-    assert source.count("widget_pipeline(") == 1
+    assert source.count("setup_pipeline(") == 1
     code_source = "\n".join(source for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
     assert code_source.count("orchestrate_read(") == 1
     assert code_source.count("orchestrate_write(") == 1

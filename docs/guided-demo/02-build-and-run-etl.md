@@ -57,7 +57,7 @@ Then run the import cell immediately below it. The import cell provides the publ
 ### Run the Data Contract block
 
 ```python
-CONTRACTS = widget_pipeline(
+CONTRACTS = setup_pipeline(
     sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, spark_session=spark,
 )
 # Select every contract or explicit No Contract, then run the next cell.
@@ -75,7 +75,7 @@ For the initial Guided Demo run, there is no Data Contract yet, so explicitly se
 
     **Testing** applies to the entire pipeline in every environment and permits eligible frozen candidates. **Live** enforces active frozen versions and rejects inactive substitutions. Explicit **No Contract** supports bootstrap only when it bypasses no active contract. A missing selection or invalid payload fails; it never becomes No Contract.
 
-    The returned `CONTRACTS` state builds one immutable `EXECUTION_PLAN`. Pass that same plan to every `orchestrate_read()` and `orchestrate_write()` call. See [`widget_pipeline()`](../api/reference/widget_pipeline.md) for the exact return contract.
+    The returned `CONTRACTS` state builds one immutable `EXECUTION_PLAN`. Pass that same plan to every `orchestrate_read()` and `orchestrate_write()` call. See [`setup_pipeline()`](../api/reference/setup_pipeline.md) for the exact return contract.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">

@@ -45,7 +45,7 @@ def test_demo_executes_every_declared_operation_before_inspection(name, mode, pa
     forbidden = Mock(side_effect=AssertionError("Notebook exited or published outside the orchestrators"))
     namespace = {
         "F": MagicMock(), "spark": object(), "display": Mock(),
-        "widget_pipeline": select, "orchestrate_read": read, "orchestrate_write": write,
+        "setup_pipeline": select, "orchestrate_read": read, "orchestrate_write": write,
         "resolve_table_id": Mock(return_value="inventory-target"),
         "read_lakehouse_csv": forbidden, "read_lakehouse_table": forbidden,
         "write_lakehouse_table": forbidden,

@@ -1549,10 +1549,10 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'Canonical table_id, a Fabric Spark session, and an optional active Fabric context.',
   'returns': 'Exact-version state, compact controls, the displayed UI, and validation and freeze actions.',
   'raises': 'Raises validation, widget, Spark, or configured metadata routing errors.',
-  'related_functions': ['widget_pipeline'],
+  'related_functions': ['setup_pipeline'],
   'expanded_purpose': 'Provides one four-tab governance experience for table and column authoring, Advanced rules, canonical manifest review, freezing, and activation.',
   'when_to_use': 'Use after Engineering registers a table to create or reopen its agreement-free draft and author descriptive Enrichment plus normalized Schema, Grain, Freshness, Source Drift, Data Quality, and Sensitive Data Guardrails.',
-  'do_not_use_when': 'Do not use for pipeline-time immutable contract selection; use widget_pipeline.',
+  'do_not_use_when': 'Do not use for pipeline-time immutable contract selection; use setup_pipeline.',
   'glossary_terms': ['data contract', 'guardrails', 'enrichment', 'metadata lakehouse'],
   'return_interpretation': 'The returned state remains pinned to the draft created or reopened for the requested table_id and active environment; saves delegate to contract-authoring services.',
   'common_failure_causes': ['The table_id has no active Catalogue row.',
@@ -1571,7 +1571,7 @@ PUBLIC_SYMBOL_DOCS = [
  'returns': 'Exact frozen identity, diagnostic review, explicit approval control, confirmation and activation '
             'result.',
  'raises': 'Raises metadata routing, exact-version diagnostic review, agreement linkage or activation errors.',
- 'related_functions': ['widget_data_contract', 'widget_pipeline'],
+ 'related_functions': ['widget_data_contract', 'setup_pipeline'],
  'expanded_purpose': 'Matches the exact frozen payload to a complete in-memory Testing report, requires '
                      'deliberate Governance review approval and confirmation, then links an exact Data Agreement '
                      'and activates the frozen version. Testing never registers successful activation evidence.',
@@ -1600,11 +1600,11 @@ PUBLIC_SYMBOL_DOCS = [
 
 
  {'kind': 'function',
- 'module': 'widgets.widget_pipeline',
+ 'module': 'pipeline.setup_pipeline',
  'function_type': 'callable',
- 'summary_override': 'Select pipeline-wide Testing/Live and inspect exact frozen contracts per explicit '
+ 'summary_override': 'Set up interactive or scheduled Testing/Live execution with exact frozen contracts per '
                      'participant.',
- 'symbol_name': 'widget_pipeline',
+ 'symbol_name': 'setup_pipeline',
  'template_notebook': '02_pipeline',
  'template_segment': 'Select notebook Data Contracts',
  'use_when': 'Use before Read, including first-time bootstrap without historical Lineage.',

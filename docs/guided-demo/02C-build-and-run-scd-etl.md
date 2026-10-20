@@ -49,7 +49,7 @@ Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparati
 The notebook declares `PIPELINE_SOURCES` and `PIPELINE_TARGETS`, then calls:
 
 ```python
-CONTRACTS = widget_pipeline(
+CONTRACTS = setup_pipeline(
     sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, spark_session=spark,
 )
 # Pause here: select the pipeline mode and every participant in the widget.
@@ -67,7 +67,7 @@ A fresh selector defaults to red **Testing**, with every participant unselected.
 
 The persisted row counts and screenshots below require green **Live**. After reviewing Testing results, rerun the selector cell, deliberately choose Live and the eligible contracts, and build a fresh plan before rerunning Read → Transform → Write for the same day. Use `CONTRACTS["refresh"]()` in the final inspection cell to view this plan's exact-version results. Advance the day only after the Live run succeeds.
 
-Repeat the selection pause for each day and retry. Do not use Run all across a fresh interactive selector. For scheduled execution, use [`widget_pipeline(interactive=False, ...)`](../api/reference/widget_pipeline.md) with explicit mode and exact selections.
+Repeat the selection pause for each day and retry. Do not use Run all across a fresh interactive selector. For scheduled execution, use [`setup_pipeline(interactive=False, ...)`](../api/reference/setup_pipeline.md) with explicit mode and exact selections.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">

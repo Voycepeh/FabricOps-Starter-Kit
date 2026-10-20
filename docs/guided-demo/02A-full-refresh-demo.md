@@ -37,7 +37,7 @@ Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite 
 Run **0. Environment** and the **1. Pipeline Data Contracts** selector cell. The notebook declares all three `PIPELINE_SOURCES` and both `PIPELINE_TARGETS` before calling the public selector:
 
 ```python
-CONTRACTS = widget_pipeline(
+CONTRACTS = setup_pipeline(
     sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, spark_session=spark,
 )
 # Pause here: select the pipeline mode and every participant in the widget.

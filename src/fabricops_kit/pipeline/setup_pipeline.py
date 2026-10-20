@@ -1,4 +1,4 @@
-"""Compact pipeline-wide execution selection and immutable contract inspection."""
+"""Set up interactive or scheduled pipeline execution with one immutable plan."""
 
 from __future__ import annotations
 
@@ -11,7 +11,6 @@ from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric
 from fabricops_kit.io import read_lakehouse_table
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import build_pipeline_execution_plan, resolve_pipeline_participants
-from fabricops_kit.widgets.shared import parse_data_contract_payload, require_ipywidgets
 
 
 def _value(value):
@@ -52,6 +51,8 @@ def _applicability(kind, roles):
 
 def _contract_review(row, roles=("source", "target")):
     """Return every saved column and rule, without runtime defaults or filtering."""
+    from fabricops_kit.widgets.shared import parse_data_contract_payload
+
     payload = parse_data_contract_payload(row)
     columns = payload["table"].get("columns")
     rules = payload.get("guardrails")
@@ -126,8 +127,8 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def widget_pipeline(*, sources, targets, execution_mode=None, selections=None, interactive=True, spark_session=None, context=None):
-    """Select one pipeline mode and independently inspect each participant's contract.
+def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, interactive=True, spark_session=None, context=None):
+    """Set up an immutable pipeline plan interactively or without human intervention.
 
     Parameters
     ----------
@@ -173,9 +174,9 @@ def widget_pipeline(*, sources, targets, execution_mode=None, selections=None, i
 
     Examples
     --------
-    >>> selection = widget_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
+    >>> selection = setup_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
     >>> plan = selection["build_plan"]()
-    >>> scheduled_plan = widget_pipeline(
+    >>> scheduled_plan = setup_pipeline(
     ...     sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, interactive=False,
     ...     execution_mode="testing", selections=EXACT_SELECTIONS,
     ... )
@@ -335,6 +336,8 @@ def widget_pipeline(*, sources, targets, execution_mode=None, selections=None, i
                 raise ValueError("No Contract must explicitly be True.")
             select_contract(table_id, **choice)
     try:
+        from fabricops_kit.widgets.shared import require_ipywidgets
+
         widgets = require_ipywidgets()
         from IPython import display as ip
     except ModuleNotFoundError:
