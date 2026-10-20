@@ -36,6 +36,33 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
 </style>
 
 <div class="metadata-table-grid">
+<a class="metadata-table-card metadata-table-card--engineering" href="metadata_pipeline_run/" aria-label="Open METADATA_PIPELINE_RUN schema">
+  <span class="metadata-table-card__header">
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_PIPELINE_RUN</span>
+      <span class="metadata-table-card__schema">engineering</span>
+    </span>
+    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
+  </span>
+  <span class="metadata-table-card__purpose">Persist one complete logical pipeline execution, candidate identity and operation outcomes. Bootstrap never qualifies as successful Testing evidence. Live continues to use existing contract authority.</span>
+  <span class="metadata-table-card__meta">
+    <strong>Grain</strong>
+    <span>One logical pipeline run across all participating sources and targets.</span>
+  </span>
+  <span class="metadata-table-card__meta">
+    <strong>Primary key</strong>
+    <span><code>run_id</code></span>
+  </span>
+  <span class="metadata-table-card__relationships">
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_GUARDRAIL_RESULTS</code>
+      </span>
+    </span>
+  </span>
+</a>
 <a class="metadata-table-card metadata-table-card--governance" href="metadata_data_steward/" aria-label="Open METADATA_DATA_STEWARD schema">
   <span class="metadata-table-card__header">
     <span class="metadata-table-card__identity">
@@ -346,6 +373,12 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_PIPELINE_RUN</code>
+      </span>
+    </span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">N → 1</span>
       <span class="metadata-table-card__relationship-list">

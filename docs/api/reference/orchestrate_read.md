@@ -69,7 +69,7 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Required immutable plan from setup_pipeline in interactive or headless mode. Pass the same object to every Read and Write. Bootstrap registers and profiles initial sources while no participant has frozen or active contracts. Testing evaluates configured Freshness, Schema, Grain and Data Quality and returns profiles and violations in memory. It cannot persist Catalogue, Profile, frequency, Guardrail Results or recover durable Source Observation state. Live preserves these lifecycle boundaries. Environment names determine routing only. Empty or disabled optional Guardrails add no execution requirement. A configured check that cannot execute blocks Live and remains a Testing diagnostic. |
+| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Required immutable plan from setup_pipeline in interactive or headless mode. Pass the same object to every Read and Write. Bootstrap registers and profiles initial sources while no participant has frozen or active contracts. Testing evaluates configured Freshness, Schema, Grain and Data Quality and returns profiles and violations in memory. It cannot persist Catalogue, Profile or frequency; run evidence and Guardrail diagnostics are persisted. It cannot publish business data or recover durable Source Observation state. Live preserves these lifecycle boundaries. Environment names determine routing only. Empty or disabled optional Guardrails add no execution requirement. A configured check that cannot execute blocks Live and remains a Testing diagnostic. |
 | `store` | `str` | Yes | `—` | Configured source store key. |
 | `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
 | `table_name` | `str` | Yes | `—` | Physical source table name. |
@@ -110,9 +110,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_read.py:21`
+`fabricops_kit/pipeline/orchestrate_read.py:22`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L21-L148">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L22-L151">View on GitHub</a>
 </div>
 
 

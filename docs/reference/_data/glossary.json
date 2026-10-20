@@ -59,7 +59,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "The pipeline-wide mode that evaluates real data and prepared processing without durable mutations.",
-    "long_definition": "Testing evaluates the configured pipeline and eligible frozen Data Contracts, returns rule diagnostics and supported processing dry-run outcomes, and never publishes data or persists metadata, mappings, checkpoints, staging or activation evidence. It cannot verify real publication permissions, target transactions or cross-store finalization.",
+    "long_definition": "Testing evaluates eligible frozen Data Contracts and processing dry runs, persists METADATA_PIPELINE_RUN and linked METADATA_GUARDRAIL_RESULTS, and never publishes business data or commits ordinary metadata, mappings, checkpoints or staging. Explicit finalization records complete-run status for later activation work. Current Live authority is unchanged. Testing cannot verify real publication permissions, target transactions or cross-store finalization.",
     "preferred_usage": "Use Testing for the execution mode, independently of the configured environment name.",
     "avoid_usage": "successful Live publication when only dry-run checks passed"
   },
@@ -738,5 +738,15 @@
       "Effective Data Access",
       "effective data access"
     ]
+  },
+  {
+    "id": "pipeline-run",
+    "term": "pipeline run",
+    "aliases": [],
+    "category": "Data Engineering concepts",
+    "short_definition": "One logical pipeline execution across every declared Read and Write.",
+    "long_definition": "METADATA_PIPELINE_RUN records one run_id for a stable logical pipeline_id, candidate fingerprints, operation summary and completion status. Explicit finalization is required, including Read-only runs. Bootstrap never qualifies as successful Testing evidence. Live retains existing Data Contract authority.",
+    "preferred_usage": "Use pipeline run for the complete execution; distinguish it from table participation and rule-level Guardrail Results.",
+    "avoid_usage": "one run per participating table"
   }
 ]

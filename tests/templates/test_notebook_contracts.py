@@ -212,7 +212,9 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "selection does not edit or activate" in normalized["step_4"]
     assert "pipeline-wide switch in red **testing**" in normalized["step_4"]
     assert "no publication occurred" in normalized["step_4"]
-    assert "zero persistent changes" in normalized["step_4"]
+    assert "METADATA_PIPELINE_RUN" in step_4
+    assert "METADATA_GUARDRAIL_RESULTS" in step_4
+    assert "preserving publication boundaries" in normalized["step_4"]
 
     assert "# step 5. activate the data contract and promote to production" in normalized["step_5"]
     assert "link the data agreement" in normalized["step_5"]

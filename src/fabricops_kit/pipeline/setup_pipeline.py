@@ -127,7 +127,7 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, interactive=False, spark_session=None, context=None):
+def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, interactive=False, spark_session=None, context=None, pipeline_id=None, executable_sha256=None, dependencies=None):
     """Set up an immutable pipeline plan interactively or without human intervention.
 
     Parameters
@@ -151,6 +151,17 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         Defaults to False. If True, explicitly enable interactive contract Testing.
         If False, return the immutable plan directly without loading notebook UI
         packages or enumerating unrelated contract versions.
+    pipeline_id : str, optional
+        Stable project-owned logical identity, portable across environments. Required
+        for qualifying Testing evidence; never use a run or workspace identifier.
+    executable_sha256 : str, optional
+        SHA-256 of the complete project executable (notebook and transformation code).
+        Required for qualifying Testing evidence. Supply from the deployed artifact.
+    dependencies : dict, optional
+        Project dependency names to immutable version or digest identities. Do not
+        include credentials, paths or physical environment bindings. Supply an
+        explicit empty dict when no additional project dependencies exist; omitted
+        dependency identity cannot qualify as successful Testing evidence.
     spark_session : object, optional
         Spark session for metadata reads.
     context : dict, optional
@@ -190,6 +201,9 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
     ...     execution_mode="testing", selections=EXACT_SELECTIONS,
     ... )
 
+    Finalize every plan with finalize_pipeline(), including Read-only pipelines.
+    Live continues to use existing active frozen Data Contract authority.
+
     """
     if not interactive:
         mode = "bootstrap" if execution_mode is None else execution_mode
@@ -198,6 +212,7 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         return build_pipeline_execution_plan(
             execution_mode=mode, sources=sources, targets=targets,
             selections=selections, context=context, spark_session=spark_session,
+            pipeline_id=pipeline_id, executable_sha256=executable_sha256, dependencies=dependencies,
         )
     if execution_mode is not None and execution_mode not in {"testing", "live"}:
         raise ValueError("execution_mode must explicitly be 'testing' or 'live'.")
@@ -292,6 +307,7 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
             execution_mode=state["execution_mode"], sources=sources, targets=targets,
             selections={key: table["choice"] for key, table in state["tables"].items() if table["choice"] is not None},
             context=runtime, spark_session=spark,
+            pipeline_id=pipeline_id, executable_sha256=executable_sha256, dependencies=dependencies,
         )
 
         state["execution_plan"] = plan
@@ -314,7 +330,7 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
             mode_control.disabled = state.get("execution_plan") is not None
             mode_control.value = state["execution_mode"]
             header.value = f'<h3>Pipeline Data Contracts · {"Testing" if testing else "Live"}</h3><p>' + (
-                "No data or metadata persistence. Checks return diagnostics in memory." if testing else
+                "Business publication is disabled. METADATA_PIPELINE_RUN and Guardrail diagnostics are persisted." if testing else
                 "Successful publication and operational metadata commits are permitted.") + '</p>'
             for table_id, controls in state["_controls"].items():
                 table = state["tables"][table_id]

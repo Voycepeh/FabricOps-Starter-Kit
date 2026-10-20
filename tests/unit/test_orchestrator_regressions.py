@@ -144,3 +144,15 @@ def test_profile_failure_exposes_completed_publication_and_original_cause(monkey
     assert raised.value.__cause__ is cause
     publish.assert_called_once()
     assert "already succeeded" in capsys.readouterr().out
+
+
+@pytest.fixture(autouse=True)
+def isolated_operation_journal(monkeypatch):
+    """Stage unit tests isolate run storage; lifecycle tests exercise the real journal."""
+    from contextlib import nullcontext
+    from importlib import import_module
+    from unittest.mock import Mock
+
+    for name in ("orchestrate_read", "orchestrate_write"):
+        monkeypatch.setattr(import_module(f"fabricops_kit.pipeline.{name}"), "PipelineOperation",
+                            lambda *a, **kw: nullcontext(Mock()))

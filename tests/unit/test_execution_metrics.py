@@ -205,3 +205,15 @@ def test_exact_path_probes_find_latest_without_listing(checkpoint, latest):
     assert spark.fs.exists.call_count <= 33  # checkpoint existence plus 32 probes
     assert spark.fs.open.call_args.args[0].value.endswith(f"/{latest:020d}.json")
     reader.close.assert_called_once()
+
+
+@pytest.fixture(autouse=True)
+def isolated_operation_journal(monkeypatch):
+    """Stage unit tests isolate run storage; lifecycle tests exercise the real journal."""
+    from contextlib import nullcontext
+    from importlib import import_module
+    from unittest.mock import Mock
+
+    for name in ("orchestrate_read", "orchestrate_write"):
+        monkeypatch.setattr(import_module(f"fabricops_kit.pipeline.{name}"), "PipelineOperation",
+                            lambda *a, **kw: nullcontext(Mock()))

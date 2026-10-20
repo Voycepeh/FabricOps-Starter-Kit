@@ -747,7 +747,7 @@ def test_metadata_reference_overview_renders_model_diagram() -> None:
     assert image_reference in text
     assert "one-to-many Data Contract to Guardrail Results relationship" in text
     assert "```mermaid" not in text
-    assert len(CANONICAL_METADATA_TABLES) == 10
+    assert len(CANONICAL_METADATA_TABLES) == 11
     assert all(name in text for name in CANONICAL_METADATA_TABLES)
     assert "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column" in text
     assert "containing authored Guardrails and Enrichment" in text
@@ -2076,7 +2076,7 @@ def test_current_metadata_pages_match_reduced_registry_and_have_no_retired_links
 
     pages = {path.name for path in (REFERENCE_DIR / "metadata").glob("*.md")}
     assert pages == {name.lower() + ".md" for name in CANONICAL_METADATA_TABLES}
-    assert len(pages) == 10
+    assert len(pages) == 11
     for slug in ("metadata_enrichment", "metadata_guardrail"):
         assert not (REFERENCE_DIR / "metadata" / f"{slug}.md").exists()
         assert f"metadata/{slug}.md" not in (ROOT / "mkdocs.yml").read_text()

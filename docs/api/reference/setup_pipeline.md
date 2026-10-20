@@ -28,6 +28,9 @@ scheduled_plan = setup_pipeline(
 )
 ```
 
+Finalize every plan with finalize_pipeline(), including Read-only pipelines.
+Live continues to use existing active frozen Data Contract authority.
+
 </div>
 
 <details class="reference-signature-details" markdown="1">
@@ -47,6 +50,9 @@ def setup_pipeline(
     interactive=False,
     spark_session=None,
     context=None,
+    pipeline_id=None,
+    executable_sha256=None,
+    dependencies=None,
 ):
 ```
 
@@ -69,6 +75,9 @@ Required describes the Python signature. An optional parameter may still be need
 | `interactive` | `bool` | No | `False` | Defaults to False. If True, explicitly enable interactive contract Testing. If False, return the immutable plan directly without loading notebook UI packages or enumerating unrelated contract versions. |
 | `spark_session` | `object` | No | `None` | Spark session for metadata reads. |
 | `context` | `dict` | No | `None` | Configured environment routing and notebook identity. |
+| `pipeline_id` | `str` | No | `None` | Stable project-owned logical identity, portable across environments. Required for qualifying Testing evidence; never use a run or workspace identifier. |
+| `executable_sha256` | `str` | No | `None` | SHA-256 of the complete project executable (notebook and transformation code). Required for qualifying Testing evidence. Supply from the deployed artifact. |
+| `dependencies` | `dict` | No | `None` | Project dependency names to immutable version or digest identities. Do not include credentials, paths or physical environment bindings. Supply an explicit empty dict when no additional project dependencies exist; omitted dependency identity cannot qualify as successful Testing evidence. |
 
 </div>
 
@@ -117,7 +126,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L400">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L416">View on GitHub</a>
 </div>
 
 

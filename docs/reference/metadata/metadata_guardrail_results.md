@@ -24,6 +24,9 @@ Store aggregate Live Guardrail summaries for exact participating contract versio
 
 **Relationships:**
 
+`METADATA_PIPELINE_RUN` **(N → 1)**
+via `run_id`
+
 `METADATA_DATA_CONTRACT` **(N → 1)**
 via `contract_id` + `contract_version`
 

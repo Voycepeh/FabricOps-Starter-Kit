@@ -15,6 +15,7 @@ module = importlib.import_module("fabricops_kit.pipeline.shared")
 @pytest.fixture
 def plan_runtime(monkeypatch):
     """Supply only metadata read and configured identity boundaries."""
+    monkeypatch.setattr(shared, "persist_pipeline_run", lambda *a, **kw: None)
     rows = []
     runtime = {"config": object(), "env": "canary-east", "notebook_id": "notebook"}
     def resolve(context=None):
