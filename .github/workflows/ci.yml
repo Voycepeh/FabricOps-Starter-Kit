@@ -36,10 +36,13 @@ jobs:
             shards: 1
           - suite: unit
             shard: 0
-            shards: 2
+            shards: 3
           - suite: unit
             shard: 1
-            shards: 2
+            shards: 3
+          - suite: unit
+            shard: 2
+            shards: 3
     steps:
       - name: Checkout
         uses: actions/checkout@v5
