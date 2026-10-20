@@ -178,6 +178,25 @@ SMOKE_SCRIPT = r"""
       document.getElementById('downloadSimplifyPacket').click();
       check(JSON.parse(downloads.at(-1).text).evidence_packet.prompt_task === 'simplify_preserve_behaviour', 'simplify packet export failed');
 
+      // Reproduce the screenshot's helper tree, including long dependent names.
+      selectPublic(DATA.public_functions.find(row => row.function_name === 'create_data_agent').qualified_name, {scrollToPanel:false});
+      const tree = document.getElementById('selected-call-tree');
+      check(!/[Ââ]/.test(tree.textContent), 'call tree contains corrupted Unicode');
+      check(tree.querySelector('.tree-toggle').textContent === '▾', 'expanded tree arrow is corrupted');
+      check(tree.querySelector('.tree-toggle-placeholder').textContent === '•', 'leaf bullet is corrupted');
+      const checkTreeBounds = () => {
+        const bounds = tree.getBoundingClientRect();
+        check(tree.scrollWidth <= tree.clientWidth + 1, 'helper content overflows the tree');
+        tree.querySelectorAll('.tree-node, .tree-row-main, .tree-card-button, .tree-meta').forEach(element => {
+          const rect = element.getBoundingClientRect();
+          check(rect.right <= bounds.right + 1, 'helper content extends beyond tree bounds');
+        });
+      };
+      checkTreeBounds();
+      tree.querySelector('.tree-function').textContent = 'long_function_name_'.repeat(30);
+      tree.querySelector('.tree-meta').textContent = 'long_dependent_function_'.repeat(40);
+      checkTreeBounds();
+
       const filterColumns = getComputedStyle(document.querySelector('.filter-panel')).gridTemplateColumns.split(' ').length;
       const treeNameStyle = getComputedStyle(document.querySelector('.tree-function'));
       check(document.documentElement.scrollWidth <= window.innerWidth + 1, 'dashboard overflows the viewport');
