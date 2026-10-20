@@ -19,7 +19,7 @@ def runtime(monkeypatch):
     installed_version = metadata.version
     monkeypatch.setattr(metadata, "version", lambda name: "test-delta-runtime" if name == "delta-spark" else installed_version(name))
     saved, writes = {}, []
-    failure = {"enabled": False, "after_commit": False, "invalidate_unavailable": False}
+    failure = {"enabled": False, "after_commit": False, "read_unavailable": False}
 
     class Merge:
         def alias(self, name):
@@ -37,7 +37,7 @@ def runtime(monkeypatch):
             return self
 
         def execute(self):
-            if failure["enabled"] or (failure["invalidate_unavailable"] and self.row["status"] == "failed"):
+            if failure["enabled"]:
                 raise OSError("credential=never persist this message")
             row = copy.deepcopy(self.row)
             writes.append(row)
@@ -54,6 +54,20 @@ def runtime(monkeypatch):
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kw: {})
     monkeypatch.setattr(shared, "resolve_physical_table_identity", lambda config, env, **kw:
                         {**kw, "table_id": kw["table_name"]})
+
+    def read_run(*args, **kwargs):
+        if failure["read_unavailable"]:
+            raise OSError("read unavailable")
+        class Rows:
+            def filter(self, expression):
+                self.run_id = expression.split("'")[1]
+                return self
+            def limit(self, count):
+                return self
+            def collect(self):
+                return [copy.deepcopy(saved[self.run_id])] if self.run_id in saved else []
+        return Rows()
+    monkeypatch.setattr(shared, "read_lakehouse_table", read_run)
 
     def make(mode="testing", roles=("source", "source", "target", "target"), executable="a" * 64, dependencies="{}", activity="fabric-activity", notebook_name="notebook"):
         identities = {f"table{i}": {"store": "Bronze" if role == "source" else "Silver", "table_name": f"table{i}",
@@ -430,33 +444,61 @@ def test_missing_project_distribution_retains_non_successful_diagnostics(runtime
     assert finalize_pipeline(plan)["status"] == "incomplete"
 
 
-def test_lost_final_commit_acknowledgement_invalidates_the_durable_success(runtime):
-    """Revoke a success that committed before the transport raised an exception."""
+def test_lost_final_commit_acknowledgement_confirms_exact_durable_snapshot(runtime):
+    """The committed Delta transaction, not its transport acknowledgement, is authority."""
     make, operation, saved, _, failure = runtime
     plan = make(roles=("source",))
     operation(plan, 0)
     failure["after_commit"] = True
-    with pytest.raises(RuntimeError, match="persistence failed"):
-        finalize_pipeline(plan)
-    row = saved[plan.plan_id]
-    assert row["status"] == "failed"
-    assert "evidence_persistence_failed" in row["operation_summary_json"]
-    assert plan.evidence["persistence_failed"]
-    with pytest.raises(RuntimeError, match="persistence failed"):
-        finalize_pipeline(plan)
+    result = finalize_pipeline(plan)
+    assert result == saved[plan.plan_id] and result["status"] == "succeeded"
+    assert not plan.evidence["persistence_failed"] and plan.evidence["sealed"]
+    assert finalize_pipeline(plan) == result
 
 
-def test_unreachable_invalidation_reports_unknown_instead_of_claiming_failure_was_saved(runtime):
-    """No local protocol can guarantee an update during an unavailable store."""
+def test_unreachable_readback_reports_unknown_client_outcome(runtime):
+    """An unavailable acknowledgement/read-back cannot undo the committed transaction."""
     make, operation, saved, _, failure = runtime
     plan = make(roles=("source",))
     operation(plan, 0)
-    failure.update(after_commit=True, invalidate_unavailable=True)
-    with pytest.raises(RuntimeError, match="final outcome is unknown"):
+    failure.update(after_commit=True, read_unavailable=True)
+    with pytest.raises(RuntimeError, match="outcome is unknown"):
         finalize_pipeline(plan)
     assert plan.evidence["persistence_failed"] and not plan.evidence["sealed"]
-    # This is explicitly unresolved, not an assertion of cross-store atomicity.
     assert saved[plan.plan_id]["status"] == "succeeded"
+    with pytest.raises(RuntimeError, match="persistence failed"):
+        finalize_pipeline(plan)
+
+
+def test_exact_contract_identity_changes_exact_but_not_portable_fingerprint(runtime):
+    """Keep exact frozen identity separate from portable payload identity."""
+    make, operation, _, _, _ = runtime
+    plan = make(roles=("source",))
+    operation(plan, 0)
+    contract = {"contract_id": "first", "contract_version": 1, "contract_payload_json": '{"table":{"columns":[]}}'}
+    before = shared.pipeline_candidate(replace(plan, contracts_json=json.dumps({"table0": contract})))
+    contract["contract_id"] = "second"
+    after = shared.pipeline_candidate(replace(plan, contracts_json=json.dumps({"table0": contract})))
+    assert before[1] != after[1]
+    assert before[0]["portable_fingerprint"] == after[0]["portable_fingerprint"]
+
+
+def test_secondary_metadata_failure_preserves_original_publication_details(runtime):
+    """Do not erase an earlier committed publication when diagnostics also fail."""
+    make, _, _, _, failure = runtime
+    plan = make(mode="live", roles=("target",))
+    with pytest.raises(RuntimeError) as raised:
+        with shared.PipelineOperation(plan, "target", {"store": "Silver", "schema": "physical", "table_name": "table0", "sources": []}):
+            error = RuntimeError("Profile failed")
+            error.published = True
+            error.table_id = "table0"
+            error.write_metrics = {"rows_committed": 10}
+            error.failed_stage = "Profile"
+            failure["enabled"] = True
+            raise error
+    assert raised.value.published and raised.value.table_id == "table0"
+    assert raised.value.write_metrics == {"rows_committed": 10}
+    assert raised.value.failed_stage == "Profile"
 
 
 def test_post_publication_evidence_failure_retains_published_flag(runtime):

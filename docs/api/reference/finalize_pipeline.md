@@ -71,9 +71,9 @@ dict
 
 RuntimeError
     If evidence cannot be persisted; create a new plan for a retry. A final
-    write with a lost acknowledgement is invalidated when storage is reachable;
-    an unconfirmed invalidation reports an unknown outcome requiring manual
-    reconciliation. Metadata and business stores are separate transactions
+    write with a lost acknowledgement is confirmed by exact read-back when
+    possible. Unavailable read-back reports an unknown client outcome. The
+    committed Delta snapshot is authoritative, independent of acknowledgement. Metadata and business stores are separate transactions
     without cross-store atomicity.
 ValueError
     If execution_plan is invalid.

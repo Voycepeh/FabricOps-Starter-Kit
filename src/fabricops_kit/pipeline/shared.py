@@ -5386,8 +5386,8 @@ def pipeline_candidate(plan):
     portable_fingerprint = _candidate_hash(candidate) if valid else None
     candidate["portable_fingerprint"] = portable_fingerprint
     candidate["exact_contract_payloads"] = sorted(
-        [{"participant": item["participant"], "contract": ({"contract_version": item["contract"]["contract_version"],
-          "payload_sha256": item["contract"]["payload_sha256"]} if item["contract"] else None)} for item in bindings],
+        [{"participant": item["participant"], "contract": ({"contract_id": item["contract"]["contract_id"],
+          "contract_version": item["contract"]["contract_version"], "payload_sha256": item["contract"]["payload_sha256"]} if item["contract"] else None)} for item in bindings],
         key=lambda item: item["participant"])
     return candidate, _candidate_hash(candidate) if valid else None, bindings
 
@@ -5407,7 +5407,7 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
 
 
 def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", completed_at=None):
-    """Persist one run snapshot; invalidate an uncertain final commit when reachable."""
+    """Persist one authoritative Delta snapshot; confirm lost acknowledgements by read-back."""
     row = None
     try:
         candidate, fingerprint, bindings = pipeline_candidate(plan)
@@ -5433,23 +5433,32 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
         _merge_pipeline_run_row(plan, row, spark_session=spark_session)
         return row
     except Exception as exc:
+        if row is not None:
+            try:
+                frame = read_lakehouse_table(
+                    "METADATA_PIPELINE_RUN", store="Metadata",
+                    schema=metadata_table_physical_schema(plan.runtime_context["config"], "METADATA_PIPELINE_RUN"),
+                    spark_session=spark_session, context=plan.runtime_context,
+                )
+                matches = frame.filter("`run_id` = '" + plan.plan_id.replace("'", "''") + "'").limit(2).collect()
+                if len(matches) == 1:
+                    stored = _row_to_dict(matches[0])
+                    expected = coerce_metadata_row_types("METADATA_PIPELINE_RUN", row)
+                    # Spark TimestampType collects local naive datetimes; compare instants.
+                    if all((metadata_timestamp_sort_key(stored.get(key)) == metadata_timestamp_sort_key(value)
+                            if isinstance(value, datetime) else stored.get(key) == value)
+                           for key, value in expected.items()):
+                        return row
+            except Exception:
+                plan.evidence["persistence_failed"] = True
+                plan.evidence["failures"].append({"code": "evidence_commit_unknown"})
+                raise RuntimeError(
+                    "Pipeline run evidence persistence outcome is unknown; inspect the committed Delta snapshot. "
+                    "A committed complete snapshot is authoritative; do not replay this plan. Create a new plan for a retry."
+                ) from exc
         plan.evidence["persistence_failed"] = True
         # Connector exception messages can contain credentials or business values.
         plan.evidence["failures"].append({"code": "evidence_persistence_failed", "exception_type": type(exc).__name__})
-        if row is not None and row["status"] in {"succeeded", "bootstrap_completed"}:
-            # A transport exception can follow a successful commit. Revoke that
-            # snapshot using the same run ID; never retry it as success.
-            row["status"] = "failed"
-            summary = json.loads(row["operation_summary_json"])
-            summary["failures"] = list(plan.evidence["failures"])
-            row["operation_summary_json"] = canonical_candidate_json(summary)
-            try:
-                _merge_pipeline_run_row(plan, row, spark_session=spark_session)
-            except Exception:
-                raise RuntimeError(
-                    "Pipeline run evidence persistence failed; the final outcome is unknown because invalidation could not be confirmed. "
-                    "Reconcile METADATA_PIPELINE_RUN before consuming this run; create a new plan for a retry."
-                ) from exc
         raise RuntimeError("Pipeline run evidence persistence failed; create a new plan.") from exc
 
 
@@ -5542,6 +5551,9 @@ class PipelineOperation:
             try:
                 persist_pipeline_run(plan, spark_session=self.arguments.get("spark_session"))
             except RuntimeError as persistence_error:
+                for name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status"):
+                    if exc is not None and hasattr(exc, name):
+                        setattr(persistence_error, name, getattr(exc, name))
                 if self.role == "target" and any(stage.get("stage") == "Write" and stage.get("status") == "passed"
                                                   for stage in self.record["stages"]):
                     persistence_error.published = True
