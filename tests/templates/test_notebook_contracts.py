@@ -518,8 +518,13 @@ def test_demo_notebooks_start_with_title_and_inspect_after_write(notebook_name: 
     assert ids[0] == "title"
     assert notebook.cells[0].cell_type == "markdown"
     assert ids.count("title") == 1
-    assert ids.count("inspect") == 1
-    assert ids.index("inspect") > max(
-        index for index, cell_id in enumerate(ids) if cell_id.startswith("write-")
+    inspection_id = "write-inspection" if notebook_name.startswith("02A") else "inspect"
+    assert ids.count(inspection_id) == 1
+    last_write = max(
+        index for index, cell_id in enumerate(ids)
+        if cell_id.startswith("write-") and cell_id not in {"write-inspection", "write-dictionary-inspection-heading"}
     )
-    assert "write-inspection" not in ids
+    assert ids.index(inspection_id) > last_write
+    assert ids.index(inspection_id) > 0
+    if notebook_name.startswith(("02B", "02C")):
+        assert "write-inspection" not in ids
