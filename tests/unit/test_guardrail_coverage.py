@@ -133,7 +133,7 @@ def test_development_baseline_skips_when_no_contracts_are_selected(monkeypatch):
 
     assert result["status"] == "skipped"
     assert result["can_continue"] is True
-    assert result["reason"] == "No Data Contracts selected; Development baseline run."
+    assert result["reason"] == "No Data Contracts selected; explicit No Contract bootstrap."
 
 
 def test_target_only_development_baseline_skips_without_contract(monkeypatch):

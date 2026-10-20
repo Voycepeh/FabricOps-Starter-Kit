@@ -15,6 +15,7 @@ from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
     observation_rows,
     resolve_pipeline_data_contract,
+    persistence_permitted,
 )
 
 _GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
@@ -57,6 +58,8 @@ def _label(config: Any, env: str, table_id: str, *, spark, context) -> str:
 
 
 def _current_activity_results(*, config: Any, env: str, context: Any, spark: Any, activity_id: str) -> list[dict[str, Any]]:
+    if (context or {}).get("execution_plan") is not None:
+        return list(context["execution_plan"].results)
     from pyspark.sql import functions as F
 
     return observation_rows(
@@ -111,11 +114,12 @@ def check_guardrail_coverage(
 ) -> dict[str, Any]:
     """Verify that the governed pipeline is ready to publish its target.
 
-    Development may still perform a contract-free baseline run so Engineering
+    Explicit No Contract permits bootstrap execution so Engineering
     can populate Catalogue and Profile metadata before Governance authors the
-    first Data Contracts. Once any Data Contract is selected, every participating
-    source and target must have a selected contract with at least one active
-    Guardrail that applies to its pipeline role. Every applicable configured
+    first Data Contracts. Each participant with a selected contract must have
+    at least one active Guardrail that applies to its pipeline role. An explicit
+    No Contract choice in the validated plan exempts only that participant;
+    an absent selection is still an error. Every applicable configured
     Guardrail must also have current-activity evidence for the exact table,
     contract version, and rule revision before publication. The latest matching
     evaluation must permit continuation; a failed or skipped check is not enough.
@@ -141,7 +145,7 @@ def check_guardrail_coverage(
     -------
     dict
         ``can_continue``, ``status``, participant readiness and coverage, missing
-        results, and issues. Contract-free Development returns a skipped result.
+        results, and issues. Explicit No Contract returns a skipped result.
         Failed readiness raises rather than returning a blocking result.
 
     Raises
@@ -169,7 +173,6 @@ def check_guardrail_coverage(
 
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
     spark = get_spark_session() if spark_session is None else spark_session
-    is_production = str(env).strip().lower() in {"prod", "production"}
 
     participants: list[dict[str, Any]] = []
     for source_id in source_ids:
@@ -203,7 +206,7 @@ def check_guardrail_coverage(
     })
 
     selected_count = sum(item["contract"] is not None for item in participants)
-    if selected_count == 0 and not is_production:
+    if selected_count == 0:
         result = {
             "status": "skipped",
             "can_continue": True,
@@ -215,28 +218,34 @@ def check_guardrail_coverage(
             "coverage": [],
             "missing": [],
             "issues": [],
-            "reason": "No Data Contracts selected; Development baseline run.",
+            "reason": "No Data Contracts selected; explicit No Contract bootstrap.",
         }
         if verbose:
             print("FabricOps Contract Coverage")
-            print("Result: SKIP (Development baseline run without selected Data Contracts)")
+            print("Result: SKIP (explicit No Contract bootstrap without selected Data Contracts)")
         return result
 
     readiness: list[dict[str, Any]] = []
     issues: list[dict[str, Any]] = []
+    plan = context.get("execution_plan")
+    selections = json.loads(plan.selections_json) if plan is not None else {}
     for item in participants:
         contract_selected = item["contract"] is not None
+        explicit_no_contract = not contract_selected and selections.get(item["table_id"]) == {"no_contract": True}
         active_count = len(item["rules"])
         applicable_count = len(item["applicable_rules"])
-        ready = contract_selected and applicable_count > 0
+        ready = explicit_no_contract or (contract_selected and applicable_count > 0)
         readiness.append({
             "scope": item["scope"],
             "table_name": item["table_name"],
             "contract_selected": contract_selected,
+            "explicit_no_contract": explicit_no_contract,
             "active_guardrail_count": active_count,
             "applicable_guardrail_count": applicable_count,
             "ready": ready,
         })
+        if explicit_no_contract:
+            continue
         if not contract_selected:
             issues.append({
                 "scope": item["scope"],
@@ -335,6 +344,9 @@ def check_guardrail_coverage(
         print("FabricOps Contract Coverage")
         for item in readiness:
             mark = "✓" if item["ready"] else "✗"
+            if item["explicit_no_contract"]:
+                print(f"{mark} {item['table_name']}: explicit No Contract")
+                continue
             print(
                 f"{mark} {item['table_name']}: contract + "
                 f"{item['applicable_guardrail_count']} applicable Guardrail(s)"
@@ -347,7 +359,7 @@ def check_guardrail_coverage(
             print(f"{mark} {scope_label}: {_LABELS.get(item['guardrail_type'], item['guardrail_type'])}")
         print(f"Result: {'PASS' if can_continue else 'BLOCK'} ({env})")
 
-    if not can_continue:
+    if not can_continue and persistence_permitted(context):
         detail: list[str] = []
         for item in issues:
             if item["reason"] == "missing_contract":

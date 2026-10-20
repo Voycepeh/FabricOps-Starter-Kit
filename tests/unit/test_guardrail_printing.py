@@ -22,7 +22,7 @@ def test_internal_guardrail_stage_controls_are_consistent() -> None:
         assert "enabled" not in parameters
         assert "raise_on_failure" not in parameters
         assert parameters["context"].default is None
-        assert parameters["execution_type"].default == "enforce"
+        assert "execution_type" not in parameters
         assert parameters["verbose"].default is True
 
 

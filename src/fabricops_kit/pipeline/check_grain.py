@@ -13,7 +13,7 @@ from fabricops_kit.pipeline.shared import (
 )
 
 
-def check_grain(dataframe, *, table_id, scope, spark_session=None, verbose=True, context=None, execution_type="enforce"):
+def check_grain(dataframe, *, table_id, scope, spark_session=None, verbose=True, context=None):
     """Record the selected Grain result before orchestration decides continuation."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
     spark = spark_session if spark_session is not None else getattr(dataframe, "sparkSession", None)
@@ -34,7 +34,7 @@ def check_grain(dataframe, *, table_id, scope, spark_session=None, verbose=True,
         table_name=identity["table_name"], store_type=identity["store_type"], layer=identity["store"],
         schema_name=identity["schema"], guardrail_type="grain", rule_type="uniqueness",
         result=result, table_id=table_id, contract_id=contract["contract_id"],
-        contract_version=contract["contract_version"], execution_type=execution_type, context=context,
+        contract_version=contract["contract_version"], context=context,
     )
     print_guardrail_result("Grain", result, verbose=verbose, table_id=table_id, config=config, env=env, spark_session=spark, context=context)
     return result

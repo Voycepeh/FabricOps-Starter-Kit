@@ -149,7 +149,7 @@ def test_freshness_baseline_skips_before_observation_or_catalogue(monkeypatch):
     result = freshness_module.check_freshness("source-id", verbose=False)
 
     assert result["status"] == "skipped"
-    assert result["reason"] == "No Data Contract selected; Development only."
+    assert result["reason"] == "Explicit No Contract selected."
 
 
 def test_source_drift_baseline_skips_before_catalogue(monkeypatch):
@@ -163,7 +163,7 @@ def test_source_drift_baseline_skips_before_catalogue(monkeypatch):
 
     result = source_drift_module.check_source_drift(
         "source-id",
-        target_table_id="target-id",
+        target_table_id="target-id", spark_session=object(),
         verbose=False,
     )
 
@@ -190,7 +190,8 @@ def test_pipeline_read_captures_transient_observation_for_governed_source(monkey
     captured = []
     monkeypatch.setattr(read_module, "capture_source_observation", lambda **kwargs: captured.append(kwargs))
     read_module.pipeline_read(table_id=identity["table_id"], verbose=False)
-    assert captured == [{"table_id": identity["table_id"], "dataframe": "frame"}]
+    assert captured == [{"table_id": identity["table_id"], "dataframe": "frame",
+                         "source_identity": identity, "context": {}, "spark_session": None}]
 
 
 @pytest.mark.parametrize("guardrail_type", ["schema", "freshness", "data_quality"])
@@ -1033,3 +1034,19 @@ def test_scd_bootstrap_reports_only_measured_insertions(monkeypatch, spark_sessi
     assert metrics["rows_inserted" if strategy == "scd1" else "versions_inserted"] == 8
     assert metrics["rows_updated" if strategy == "scd1" else "versions_expired"] == 0
     assert metrics["rows_unchanged"] is None
+
+
+def test_publication_outcome_survives_metadata_finalization_failure(monkeypatch):
+    """A cross-store finalization failure cannot imply that business publication rolled back."""
+    _patch_write(monkeypatch, strategy="append")
+    published = []
+    monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *args, **kwargs: published.append(True))
+    def fail(**kwargs):
+        raise ValueError("schedule lookup failed after publication")
+    monkeypatch.setattr(write_module, "_writer_scheduled_refresh", fail)
+    with pytest.raises(ValueError, match="schedule lookup") as raised:
+        write_module.pipeline_write(object(), store="Silver", schema="dbo", table_name="students", source_table_ids=[])
+    assert published == [True]
+    assert raised.value.published is True
+    assert raised.value.persistence_status == "incomplete"
+    assert raised.value.failed_stage == "Metadata finalization"

@@ -379,11 +379,10 @@ def pipeline_write(
         Canonical registered target identity. This identity form is mutually
         exclusive with ``store``, ``schema``, and ``table_name``.
     load_strategy : {"overwrite", "append", "scd1", "scd2"}, optional
-        Development-authored processing proposal. Selected or frozen contract
-        validation applies in Development, and the active approved Data
-        Contract remains authoritative in Production.
+        Authored processing proposal. The selected frozen payload is authoritative;
+        Live requires the active version and Testing evaluates the selected candidate.
     load_strategy_parameters : dict, optional
-        Development-authored strategy parameters, subject to contract validation.
+        Authored strategy parameters, subject to the selected frozen contract.
         SCD1 requires ``key_columns``; SCD2 requires ``key_columns`` and
         ``effective_column`` and may specify ``tracked_columns``.
     source_table_ids : list[str] or tuple[str, ...], optional
@@ -510,7 +509,7 @@ def pipeline_write(
     >>> result["table_id"]
     'lakehouse:unified:demo:curated_orders'
 
-    Development may propose processing, without bypassing contract authority:
+    Explicit No Contract execution may propose processing:
 
     >>> pipeline_write(
     ...     prepared_df, store="Silver", schema="demo",
@@ -530,6 +529,8 @@ def pipeline_write(
         commit_pipeline_write_success,
         execute_lakehouse_processing,
         stage_pipeline_write_observations,
+        persistence_permitted,
+        validate_processing_input,
     )
 
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
@@ -618,8 +619,20 @@ def pipeline_write(
         "notebook_id": audit["_notebook_id"],
         "context": context,
     }
-    stage_pipeline_write_observations(success_context)
     prepared_df = add_target_audit_fields(df, audit)
+    if not persistence_permitted(context):
+        validate_processing_input(prepared_df, _physical_processing_definition(processing))
+        write_metrics.update(rows_committed=0, measurement_source="dry_run")
+        return {
+            "table_id": target_table_id, "strategy": strategy, "published": False,
+            "write_metrics": write_metrics,
+            "dry_run": {"status": "passed", "fully_evaluated": [
+                "processing definition", "writer ownership", "incremental publication safety",
+                "input column names"] + (["SCD business keys"] if strategy in {"scd1", "scd2"} else []),
+                "simulated": [f"{strategy} publication"],
+                "not_verified": ["destination permissions", "target transaction", "concurrent target writes",
+                                 "metadata finalization after publication"]},
+        }
     if strategy == "scd2":
         from pyspark.sql import functions as F
 
@@ -630,6 +643,8 @@ def pipeline_write(
             .withColumn("_effective_to", F.lit(None).cast(effective_type))
             .withColumn("_is_current", F.lit(True))
         )
+
+    stage_pipeline_write_observations(success_context)
 
     if strategy in {"scd1", "scd2"}:
         publication_path = "execute_lakehouse_processing" if store_kind == "lakehouse" else "execute_warehouse_processing"
@@ -711,25 +726,34 @@ def pipeline_write(
     else:
         raise ValueError(f"Configured store has unsupported kind {store_kind or '<blank>'!r}.")
 
-    scheduled_refresh = _writer_scheduled_refresh(audit=audit)
-    _persist_target_processing(
-        identity=identity,
-        processing=processing,
-        scheduled_refresh=scheduled_refresh,
-        audit=audit,
-        config=config,
-        env=env,
-        dataframe=df,
-        context=context,
-        spark_session=spark_session,
-    )
-    if verbose:
-        print("6. Catalogue → load strategy and Scheduled Refresh persisted")
+    try:
+        scheduled_refresh = _writer_scheduled_refresh(audit=audit)
+        _persist_target_processing(
+            identity=identity,
+            processing=processing,
+            scheduled_refresh=scheduled_refresh,
+            audit=audit,
+            config=config,
+            env=env,
+            dataframe=df,
+            context=context,
+            spark_session=spark_session,
+        )
+        if verbose:
+            print("6. Catalogue → load strategy and Scheduled Refresh persisted")
 
-    commit_pipeline_write_success(success_context)
-    if verbose:
-        print("7. Success metadata → Lineage and accepted Source Observation state committed")
-        print("Result → target published; checks and profiling remain explicit notebook steps.")
+        commit_pipeline_write_success(success_context)
+        if verbose:
+            print("7. Success metadata → Lineage and accepted Source Observation state committed")
+            print("Result → target published; checks and profiling remain explicit notebook steps.")
+
+    except Exception as exc:
+        exc.published = True
+        exc.table_id = target_table_id
+        exc.write_metrics = dict(write_metrics)
+        exc.failed_stage = "Metadata finalization"
+        exc.persistence_status = "incomplete"
+        raise
 
     if strategy in {"scd1", "scd2"} and write_metrics["rows_committed"] is not None:
         if strategy == "scd1":

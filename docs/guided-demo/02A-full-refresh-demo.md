@@ -28,13 +28,13 @@ Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite 
 | Notebook section | What happens |
 | --- | --- |
 | Environment | Loads the shared Fabric configuration and imports the functions used by this demo. |
-| Data Contract | Selects Validate or Enforce for each target; the initial Development run can proceed before any contract exists. |
+| Data Contract | Selects pipeline-wide Testing/Live and explicit frozen contracts per participant; No Contract permits bootstrap when no active contract is bypassed. |
 | Governed Read | Reads Orders, Products, and Order History in full. |
 | PySpark Transform | Produces detailed orders and a customer summary. |
 | Governed Write | Overwrites a Silver Lakehouse target and a Gold Warehouse target. |
 | Inspection | Verifies the published data and FabricOps metadata. |
 
-Run **0. Environment** and **1. Data Contract** as described in [Step 2](02-build-and-run-etl.md). For the initial Guided Demo run, there is no Data Contract yet, so leave the selection unchanged. The orchestrators print one contract-free decision; skipped check fields remain in the returned dictionaries. Then initialize `sources = {}`.
+Run **0. Environment** and **1. Data Contract** as described in [Step 2](02-build-and-run-etl.md). For the initial Guided Demo run, there is no Data Contract yet, so explicitly select **No Contract** for every source and target and build `EXECUTION_PLAN`. Leave the pipeline in **Testing** for the first evaluation. To bootstrap Catalogue/Profile and authoritative Lineage, deliberately switch to **Live**, build a new plan, and rerun Read → Transform → Write. The orchestrators print one explicit No Contract decision; skipped check fields remain in the returned dictionaries. Then initialize `sources = {}`.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">

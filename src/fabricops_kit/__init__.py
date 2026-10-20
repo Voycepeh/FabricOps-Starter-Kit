@@ -30,6 +30,7 @@ from .io import (
     write_warehouse_table,
 )
 from .pipeline import (
+    create_pipeline_execution_plan,
     resolve_table_id,
     profile_table,
     orchestrate_read,
@@ -72,6 +73,7 @@ IO_EXPORTS = (
 )
 
 PIPELINE_EXPORTS = (
+    "create_pipeline_execution_plan",
     "profile_table",
     "resolve_table_id",
     "orchestrate_read",

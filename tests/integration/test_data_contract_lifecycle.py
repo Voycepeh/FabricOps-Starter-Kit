@@ -219,9 +219,9 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
     return frozen
 
 
-def _activation(state, table_id):
+def _activation(state, table_id, reports=None):
     module = importlib.import_module("fabricops_kit.widgets.widget_activate_data_contract")
-    widget = module.widget_activate_data_contract(table_id=table_id, contract_version=1, spark_session=state.spark, context=state.context)
+    widget = module.widget_activate_data_contract(table_id=table_id, contract_version=1, testing_results=reports, spark_session=state.spark, context=state.context)
     def walk(node):
         yield node
         for child in getattr(node, "children", ()):
@@ -229,80 +229,80 @@ def _activation(state, table_id):
     controls = list(walk(widget["widget"]))
     agreement = next(item for item in controls if getattr(item, "description", "") == "Agreement")
     agreement.value = agreement.options[0]
-    buttons = [item for item in controls if getattr(item, "description", "") == "Activate for Production"]
+    buttons = [item for item in controls if getattr(item, "description", "") == "Activate for Live"]
     return widget, buttons
 
 
 def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
-    """Run one full source/target lifecycle without mocking checks, resolution or Coverage."""
+    """Author/freeze, bootstrap-free Testing, explicit Governance review, then governed Live."""
     state = lifecycle
     source = _author_and_freeze(state, state.source_id, source=True)
     schema_source = _author_and_freeze(state, state.schema_source_id, source=True, schema_only=True)
     target = _author_and_freeze(state, state.target_id, source=False)
     frozen_json = {row["contract_id"]: row["contract_payload_json"] for row in (source, schema_source, target)}
     before, buttons = _activation(state, state.target_id)
-    assert before["validation"]["validated"] is False and buttons[0].disabled
-    for table_id, role in ((state.source_id, "source"), (state.schema_source_id, "source"), (state.target_id, "target")):
-        runtime.persist_lineage_participation(table_id=table_id, pipeline_role=role, context=state.context)
-    selector_module = importlib.import_module("fabricops_kit.widgets.widget_select_data_contract")
-    selection = selector_module.widget_select_data_contract(spark_session=state.spark, context=state.context)
-    for row in (source, schema_source):
-        controls = selection["_controls"]["selections"][row["table_id"]]
-        assert controls["mode"].value == "enforce" and controls["version"].layout.display != "none"
-        controls["version"].value = f"{row['contract_id']}\n1"
-        assert state.context["data_contract_overrides"][row["table_id"]]["contract_version"] == 1
-        if row["table_id"] == state.source_id:
-            assert "1 days" in controls["preview"].value
-            assert selection["tables"][row["table_id"]]["review"]["expected_refresh"] == {"mode": "recurring", "frequency": 1, "unit": "days"}
-    controls = selection["_controls"]["selections"][state.target_id]
-    controls["mode"].value = "validate"
-    controls["version"].value = f"{target['contract_id']}\n1"
-    assert state.target_id not in state.context["data_contract_overrides"]
-    state.context["activity_id"] = "failed-validation"
-    failed_read = orchestrate_read(store="Bronze", schema="dbo", table_name="orders", spark_session=state.spark, verbose=False)
-    failed_schema_read = orchestrate_read(store="Bronze", schema="dbo", table_name="products", spark_session=state.spark, verbose=False)
+    assert not before["diagnostic_review"]["available"] and buttons[0].disabled
+    assert not state.metadata["METADATA_DATA_LINEAGE"]
+    selector = importlib.import_module("fabricops_kit.widgets.widget_select_data_contract")
+    coordinates = {"sources": [
+        {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
+        {"store": "Bronze", "schema": "dbo", "table_name": "products"}],
+        "targets": [{"store": "Silver", "schema": "dbo", "table_name": "curated_orders"}]}
+    selection = selector.widget_select_data_contract(**coordinates, spark_session=state.spark, context=state.context)
+    for row in (source, schema_source, target):
+        selection["select_contract"](row["table_id"], row["contract_id"], 1)
+    snapshot = deepcopy(state.metadata)
+    state.context["activity_id"] = "testing"
+    plan = selection["build_plan"]()
+    def reads(plan):
+        return [orchestrate_read(execution_plan=plan, **coords, spark_session=state.spark, verbose=False)
+                for coords in coordinates["sources"]]
+    inputs = reads(plan)
     from pyspark.sql import functions as F
-    invalid = failed_read["dataframe"].withColumn("id", F.lit(None).cast("long"))
-    with pytest.raises(RuntimeError, match="failed during Grain"):
-        orchestrate_write(invalid, sources=[failed_read, failed_schema_read], store="Silver", schema="dbo", table_name="curated_orders", write_mode="overwrite", contracts=selection, spark_session=state.spark, verbose=False)
-    assert "curated_orders" not in state.business
-    failed_gate, buttons = _activation(state, state.target_id)
-    assert not failed_gate["validation"]["validated"] and buttons[0].disabled
-    failed_schema_gate, source_buttons = _activation(state, state.schema_source_id)
-    assert not failed_schema_gate["validation"]["validated"] and source_buttons[0].disabled
-    assert any(row["contract_id"] == target["contract_id"] and not row["can_continue"] for row in state.metadata["METADATA_GUARDRAIL_RESULTS"])
-    state.context["activity_id"] = "validate-run"
-    read = orchestrate_read(store="Bronze", schema="dbo", table_name="orders", spark_session=state.spark, verbose=False)
-    assert [item["stage"] for item in read["orchestration_stages"]] == ["Read", "Freshness", "Schema", "Grain", "Data Quality", "Profile"]
-    schema_read = orchestrate_read(store="Bronze", schema="dbo", table_name="products", spark_session=state.spark, verbose=False)
-    validated = orchestrate_write(read["dataframe"], sources=[read, schema_read], store="Silver", schema="dbo", table_name="curated_orders", write_mode="overwrite", contracts=selection, spark_session=state.spark, verbose=False)
-    assert validated["validation_passed"] and not validated["published"]
-    assert "curated_orders" not in state.business
-    assert [item["stage"] for item in validated["orchestration_stages"]] == ["Schema", "Sensitive Data", "Source Drift", "Grain", "Data Quality", "Guardrail Coverage", "Processing"]
-    assert validated["dataframe"].first().email == "****************"
+    invalid = inputs[0]["dataframe"].withColumn("id", F.lit(None).cast("long"))
+    failed = orchestrate_write(invalid, execution_plan=plan, sources=inputs, **coordinates["targets"][0],
+        write_mode="overwrite", spark_session=state.spark, verbose=False)
+    assert not failed["validation_passed"] and not failed["published"]
+    assert failed["grain_result"]["can_continue"] is False
+    assert state.metadata == snapshot and "curated_orders" not in state.business
+    gate, buttons = _activation(state, state.target_id, [failed])
+    assert not gate["diagnostic_review"]["available"] and buttons[0].disabled
+    plan = selection["build_plan"]()
+    inputs = reads(plan)
+    tested = orchestrate_write(inputs[0]["dataframe"], execution_plan=plan, sources=inputs,
+        **coordinates["targets"][0], write_mode="overwrite", spark_session=state.spark, verbose=False)
+    assert tested["validation_passed"] and not tested["published"]
+    assert tested["coverage_result"]["can_continue"]
+    assert tested["dataframe"].first().email == "****************"
+    assert state.metadata == snapshot
+    assert all(row["rule_type"] != "contract_validation" for row in plan.results)
     for table_id in (state.source_id, state.schema_source_id, state.target_id):
-        widget, buttons = _activation(state, table_id)
-        assert widget["validation"]["validated"] and not buttons[0].disabled
+        widget, buttons = _activation(state, table_id, [tested])
+        assert widget["diagnostic_review"]["available"] and buttons[0].disabled
+        widget["review_approval"].value = True
+        assert not buttons[0].disabled
         buttons[0].click()
         buttons[1].click()
         assert widget["activation_result"]["changed"]
     assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]] for row in state.metadata["METADATA_DATA_CONTRACT"])
-    # Production resolves the activated authoring-environment versions, without overrides.
-    state.context.update(env="prod", activity_id="production-run", data_contract_overrides={})
-    state.metadata["METADATA_DATA_CATALOGUE"] += [{**row, "environment_name": "prod"} for row in list(state.metadata["METADATA_DATA_CATALOGUE"])]
-    production_read = orchestrate_read(store="Bronze", schema="dbo", table_name="orders", spark_session=state.spark, verbose=False)
-    production_schema_read = orchestrate_read(store="Bronze", schema="dbo", table_name="products", spark_session=state.spark, verbose=False)
-    published = orchestrate_write(production_read["dataframe"], sources=[production_read, production_schema_read], store="Silver", schema="dbo", table_name="curated_orders", write_mode="overwrite", spark_session=state.spark, verbose=False)
+    state.context["activity_id"] = "live"
+    selection = selector.widget_select_data_contract(**coordinates, spark_session=state.spark, context=state.context)
+    selection["set_mode"]("live")
+    live = selection["build_plan"]()
+    inputs = reads(live)
+    published = orchestrate_write(inputs[0]["dataframe"], execution_plan=live, sources=inputs,
+        **coordinates["targets"][0], write_mode="overwrite", spark_session=state.spark, verbose=False)
     assert published["published"] and published["coverage_result"]["can_continue"]
     assert state.business["curated_orders"].first().email == "****************"
-    results = state.metadata["METADATA_GUARDRAIL_RESULTS"]
-    assert {row["guardrail_type"] for row in results if row["guardrail_type"] != "guardrail_coverage"} == {"schema", "grain", "freshness", "source_drift", "data_quality", "sensitive_data"}
-    assert {row["execution_type"] for row in results} == {"validate", "enforce"}
-    assert all(row["contract_version"] == 1 for row in results)
-    assert "METADATA_ENRICHMENT" not in state.reads and "METADATA_GUARDRAIL" not in state.reads
-    assert {item["stage"] for item in published["orchestration_stages"]} >= {"Write", "Profile", "Guardrail Coverage"}
+    assert {row["pipeline_role"] for row in state.metadata["METADATA_DATA_LINEAGE"]} == {"source", "target"}
+    assert state.metadata["METADATA_SOURCE_OBSERVATION"]
+    assert {row["execution_type"] for row in state.metadata["METADATA_GUARDRAIL_RESULTS"]} == {"live"}
+    # Same activity retry does not republish, but idempotently finalizes metadata.
+    lineage_count = len(state.metadata["METADATA_DATA_LINEAGE"])
+    retried = orchestrate_write(inputs[0]["dataframe"], execution_plan=live, sources=inputs,
+        **coordinates["targets"][0], write_mode="overwrite", spark_session=state.spark, verbose=False)
+    assert retried["published"] and retried["write_metrics"]["measurement_source"] == "already_applied"
+    assert len(state.metadata["METADATA_DATA_LINEAGE"]) == lineage_count
     next_draft = contracts.create_contract_draft(table_id=state.target_id, config=state.config, env="dev", spark_session=state.spark)
     assert next_draft["contract_version"] == 2 and not next_draft["is_active"]
-    assert len(json.loads(next_draft["contract_payload_json"])["guardrails"]) == 4
-    assert runtime.resolve_active_data_contract(state.config, "prod", state.target_id, spark_session=state.spark)["contract_version"] == 1
     assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]] for row in state.metadata["METADATA_DATA_CONTRACT"] if row["status"] == "frozen")

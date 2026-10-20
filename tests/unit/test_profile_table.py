@@ -25,7 +25,7 @@ def test_profile_table_public_signature_and_removed_symbols():
         "(*, dataframe=None, store: 'str | None' = None, schema: 'str | None' = None, "
         "table_name: 'str | None' = None, table_id: 'str | None' = None, grain_discovery_enabled: 'bool' = True, grain_discovery_max_columns: 'int' = 3, grain_discovery_max_candidates: 'int' = 8, frequency_columns=None, "
         "frequency_enabled: 'bool' = True, frequency_top_n: 'int | None' = 5, frequency_max_distinct_percent: 'float | None' = 80.0, "
-        "spark_session=None)"
+        "context=None, spark_session=None)"
     )
     for name in ("profile_dataframe", "profile_frequency_distribution", "profile_and_register_table"):
         assert not hasattr(fabricops_kit, name)
@@ -866,6 +866,8 @@ def test_discovery_limits_are_validated_before_any_work(monkeypatch, entrypoint,
     prepare = Mock(side_effect=AssertionError("must validate before work"))
     monkeypatch.setattr(module, boundary, prepare)
     kwargs = dict(store="Silver", schema="dbo", table_name="orders", grain_discovery_enabled=False)
+    if entrypoint.startswith("orchestrate_"):
+        kwargs["execution_plan"] = None
     if entrypoint == "orchestrate_write":
         kwargs.update(dataframe=object(), sources=[], write_mode="overwrite")
     with pytest.raises(ValueError, match=f"{parameter} must be a positive integer"):

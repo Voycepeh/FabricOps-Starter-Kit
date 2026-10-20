@@ -21,7 +21,6 @@ def check_source_drift(
     spark_session=None,
     verbose: bool = True,
     context=None,
-    execution_type="enforce",
 ) -> dict:
     """Evaluate the resolved contract stage and return its continuation decision."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
@@ -38,7 +37,7 @@ def check_source_drift(
             "status": "skipped",
             "can_continue": True,
             "checks": [],
-            "reason": "No Data Contract selected; Development only.",
+            "reason": "Explicit No Contract selected.",
             "source_table_id": str(source_table_id).strip(),
             "target_table_id": str(target_table_id).strip(),
             "environment_name": env,
@@ -97,7 +96,7 @@ def check_source_drift(
         source_processing=source_processing,
         spark_session=spark_session,
         context=context,
-        execution_type=execution_type,
+
     )
     print_guardrail_result(
         "Source Drift",

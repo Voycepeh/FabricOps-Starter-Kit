@@ -581,6 +581,7 @@ def execute_warehouse_processing(
 
     from fabricops_kit.pipeline.shared import (
         validated_processing,
+        validate_processing_input,
         resolve_scd1_business_columns,
         resolve_scd2_tracked_columns,
     )
@@ -598,12 +599,7 @@ def execute_warehouse_processing(
     missing = sorted(set(keys) - set(columns))
     if missing:
         raise ValueError(f"Incoming Warehouse SCD data is missing key columns: {', '.join(missing)}.")
-    from functools import reduce
-
-    if df.where(reduce(lambda a, b: a | b, [F.col(key).isNull() for key in keys])).limit(1).count():
-        raise ValueError("Incoming target scope contains null business keys.")
-    if df.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count():
-        raise ValueError("Incoming target scope contains duplicate business keys.")
+    validate_processing_input(df, definition)
     tracked: list[str] = []
     if strategy == "scd2":
         required = {definition["effective_column"], "_effective_from", "_effective_to", "_is_current"}

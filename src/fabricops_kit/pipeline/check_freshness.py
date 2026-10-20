@@ -23,7 +23,6 @@ def check_freshness(
     spark_session=None,
     verbose: bool = True,
     context=None,
-    execution_type="enforce",
 ) -> dict:
     """Evaluate the resolved contract stage and return its continuation decision."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
@@ -39,7 +38,7 @@ def check_freshness(
             "status": "skipped",
             "can_continue": True,
             "checks": [],
-            "reason": "No Data Contract selected; Development only.",
+            "reason": "Explicit No Contract selected.",
             "table_id": requested_table_id,
             "environment_name": env,
         }
@@ -137,7 +136,7 @@ def check_freshness(
             table_id=table_id,
             contract_id=str(freshness_rule.get("contract_id") or ""),
             contract_version=int(freshness_rule.get("contract_version") or 0),
-            execution_type=execution_type,
+
             context=context,
         )
     print_guardrail_result(

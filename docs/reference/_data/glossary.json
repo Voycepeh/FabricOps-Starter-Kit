@@ -17,7 +17,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "A versioned agreement between provider and recipient Data Stewards that defines why data may be shared and used.",
-    "long_definition": "In FabricOps, a Data Agreement records the provider and recipient Data Stewards, purpose, approved uses, validity, and supporting governance context. An activated Data Contract links to the exact Data Agreement version that authorizes Production use.",
+    "long_definition": "In FabricOps, a Data Agreement records the provider and recipient Data Stewards, purpose, approved uses, validity, and supporting governance context. An activated Data Contract links to the exact Data Agreement version that authorizes Live use.",
     "preferred_usage": "Use data agreement for the steward-to-steward governance relationship that starts the FabricOps workflow.",
     "avoid_usage": "data contract when table-level guarantees are meant"
   },
@@ -29,9 +29,39 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "A versioned set of governed expectations for one table.",
-    "long_definition": "A FabricOps Data Contract is authored for one table_id. A frozen version captures its schema, processing settings, enrichment, and guardrails. After validation, that exact version can be activated for Production and linked to a Data Agreement version.",
+    "long_definition": "A FabricOps Data Contract is authored for one canonical table_id. Its immutable frozen payload defines Schema, processing, Enrichment and Guardrails. Testing may select eligible frozen candidates; Live enforces the active frozen version wherever one exists. Activation is a separate Governance review linked to an exact Data Agreement version.",
     "preferred_usage": "Use data contract for table-level governed expectations; describe Data Agreement linkage only at activation.",
     "avoid_usage": "data agreement when the steward-to-steward sharing relationship is meant"
+  },
+  {
+    "id": "pipeline-execution-plan",
+    "term": "pipeline execution plan",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "The validated execution decisions shared by every Read and Write in one pipeline run.",
+    "long_definition": "A pipeline execution plan freezes the Testing or Live mode, environment and notebook identity, explicit source and target identities, exact frozen contract selections and explicit No Contract choices. All participating Read and Write calls consume the same plan. Diagnostic results are retained separately in its in-memory journal.",
+    "preferred_usage": "Pass one explicit plan throughout Read, Transform and Write; build a new plan after selection changes.",
+    "avoid_usage": "mutable notebook-global contract overrides"
+  },
+  {
+    "id": "testing",
+    "term": "Testing",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "The pipeline-wide mode that evaluates real data and prepared processing without durable mutations.",
+    "long_definition": "Testing evaluates the configured pipeline and eligible frozen Data Contracts, returns rule and coverage diagnostics and supported processing dry-run outcomes, and never publishes data or persists metadata, mappings, checkpoints, staging or activation evidence. It cannot verify real publication permissions, target transactions or cross-store finalization.",
+    "preferred_usage": "Use Testing for the execution mode, independently of the configured environment name.",
+    "avoid_usage": "successful Live publication when only dry-run checks passed"
+  },
+  {
+    "id": "live",
+    "term": "Live",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "The deliberate pipeline-wide mode that permits governed publication and operational metadata commits.",
+    "long_definition": "Live requires the active frozen Data Contract wherever one exists, enforces Guardrails, processing, ownership and coverage, and publishes only when continuation is permitted. Explicit No Contract can bootstrap when no active version is bypassed. Publication and metadata commits retain their separate lifecycle and recovery boundaries across Fabric stores.",
+    "preferred_usage": "Use Live for the execution decision in any configured environment; scheduled runs select it explicitly.",
+    "avoid_usage": "an execution default inferred from an environment name"
   },
   {
     "id": "enrichment",
@@ -253,7 +283,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "The rule that one governed target table_id has one owning notebook writer.",
-    "long_definition": "FabricOps records the logical writer notebook for a governed target. Production rejects a conflicting writer so independent pipelines do not write the same governed table with different assumptions.",
+    "long_definition": "FabricOps records the logical writer notebook for a governed target. Pipeline execution rejects a conflicting writer so independent pipelines do not write the same governed table with different assumptions.",
     "preferred_usage": "State that one governed target table_id should have one owning pipeline/notebook writer.",
     "avoid_usage": "a scheduling or distributed locking guarantee"
   },
@@ -592,7 +622,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "The lifecycle state of a Data Contract version: Draft, Frozen, or Activated.",
-    "long_definition": "A Draft can be edited, a Frozen version is immutable and ready for validation, and an Activated frozen version is approved for Production use and linked to a Data Agreement version.",
+    "long_definition": "A Draft can be edited, a Frozen version is immutable and ready for validation, and an Activated frozen version is approved for Live use and linked to a Data Agreement version.",
     "preferred_usage": "Use Draft, Frozen, and Activated for Data Contract lifecycle states.",
     "avoid_usage": "approved when the specific FabricOps contract state is meant",
     "tooltip_labels": [

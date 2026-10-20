@@ -20,7 +20,6 @@ def check_dq(
     spark_session=None,
     verbose: bool = True,
     context=None,
-    execution_type="enforce",
     diagnostics="sample",
 ) -> dict:
     """Evaluate the resolved contract stage and return its continuation decision."""
@@ -41,7 +40,7 @@ def check_dq(
             "status": "skipped",
             "can_continue": True,
             "checks": [],
-            "reason": "No Data Contract selected; Development only.",
+            "reason": "Explicit No Contract selected.",
             "table_id": table_id,
             "environment_name": env,
         }
@@ -80,7 +79,7 @@ def check_dq(
         context=context,
         contract_id=str(contract.get("contract_id") or ""),
         contract_version=int(contract.get("contract_version") or 0),
-        execution_type=execution_type,
+
         diagnostics=diagnostics,
     )
     print_guardrail_result(

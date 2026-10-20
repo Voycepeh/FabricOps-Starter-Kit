@@ -148,3 +148,15 @@ class FakeSpark:
         rows = list(rows)
         self.source_rows.append(rows)
         return FakeFrame(rows)
+
+
+def execution_plan_stub(mode="live"):
+    """Provide explicit authority for isolated orchestrator stage-order tests."""
+    return SimpleNamespace(execution_mode=mode, permits_persistence=mode == "live", plan_id="test-plan", runtime_context={}, environment="dev", results=[], simulations=[])
+
+
+def execution_context_stub(contracts, rules=None, *, mode="live"):
+    """Complete a mocked planning boundary while keeping stage tests independent of Fabric."""
+    return {"execution_plan": execution_plan_stub(mode), "_pipeline_contracts": contracts,
+            "_pipeline_rules": rules or {key: [] for key in contracts},
+            "_pipeline_identities": {key: {"roles": ["source", "target"]} for key in {*contracts, "target"}}}
