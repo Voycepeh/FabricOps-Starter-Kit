@@ -7,6 +7,7 @@ from unittest.mock import Mock
 import pytest
 
 from fabricops_kit import orchestrate_write
+from tests.helpers import execution_plan_stub, execution_context_stub
 from fabricops_kit.pipeline import shared
 
 write_module = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
@@ -26,16 +27,17 @@ def write_workflow(monkeypatch):
     monkeypatch.setattr(sensitive_module, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(sensitive_module, "resolve_pipeline_data_contract", lambda *_args, **_kwargs: {"contract_id": "contract", "contract_version": 1})
     monkeypatch.setattr(sensitive_module, "resolve_catalogue_table_identity", lambda *_args, **_kwargs: identity)
-    context = {"config": object(), "env": "dev", "_pipeline_contracts": {"target-id": {"contract_version": 1}},
-               "_pipeline_rules": {"target-id": [{"guardrail_type": kind} for kind in ("schema", "sensitive_data", "data_quality")]}}
-    monkeypatch.setattr(write_module, "prepare_pipeline_execution", lambda *_args, **_kwargs: context)
-    monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: {"load_strategy": "overwrite"})
+    context = {"config": object(), "env": "dev", **execution_context_stub({"target-id": {"contract_id": "contract", "contract_version": 1, "contract_payload_json": "{}"}}, {"target-id": [{"guardrail_type": kind} for kind in ("schema", "sensitive_data", "data_quality")]})}
+    def prepare(*args, **kwargs):
+        context["execution_plan"] = kwargs["execution_plan"]
+        return context
+    monkeypatch.setattr(write_module, "prepare_pipeline_execution", prepare)
     evidence = []
     monkeypatch.setattr(shared, "write_guardrail_result_row", lambda **kwargs: evidence.append(kwargs["result"]))
     return evidence, later
 
 
-@pytest.mark.parametrize("mode", ["validate", "enforce"])
+@pytest.mark.parametrize("mode", ["testing", "live"])
 @pytest.mark.parametrize("saved_action", ["Warn", "Block"])
 def test_treatment_failure_blocks_write_after_persisting_outcome(monkeypatch, spark_session, write_workflow, mode, saved_action):
     """A missing treatment column cannot reach DQ or publication in either mode."""
@@ -49,13 +51,19 @@ def test_treatment_failure_blocks_write_after_persisting_outcome(monkeypatch, sp
     }
     monkeypatch.setattr(sensitive_module, "load_table_guardrail_rules", lambda *_args, **_kwargs: [rule])
     frame = spark_session.createDataFrame([(1, "raw@example.test")], ["id", "email"])
-    with pytest.raises(RuntimeError, match="failed during Sensitive Data"):
-        orchestrate_write(
+    def run():
+        return orchestrate_write(
             frame, sources=[], store="Silver", schema="dbo", table_name="customers", write_mode="overwrite",
-            contracts={"tables": {"target-id": {"mode": mode}}}, spark_session=spark_session, verbose=False,
+            execution_plan=execution_plan_stub(mode), spark_session=spark_session, verbose=False,
         )
-    for stage in later.values():
-        stage.assert_not_called()
+    if mode == "live":
+        with pytest.raises(RuntimeError, match="failed during Sensitive Data"):
+            run()
+        for stage in later.values():
+            stage.assert_not_called()
+    else:
+        result = run()
+        assert not result["published"] and not result["validation_passed"]
     assert len(evidence) == 1
     assert evidence[0]["status"] == "failed"
     assert evidence[0]["can_continue"] is False
@@ -64,7 +72,7 @@ def test_treatment_failure_blocks_write_after_persisting_outcome(monkeypatch, sp
     assert "raw@example.test" not in json.dumps(evidence)
 
 
-@pytest.mark.parametrize("mode", ["validate", "enforce"])
+@pytest.mark.parametrize("mode", ["testing", "live"])
 def test_token_mapping_reuse_and_treated_write_input(monkeypatch, spark_session, write_workflow, mode):
     """The public orchestrator retains established tokens and returns caller-owned mappings."""
     evidence, later = write_workflow
@@ -83,17 +91,16 @@ def test_token_mapping_reuse_and_treated_write_input(monkeypatch, spark_session,
     )
     result = orchestrate_write(
         frame, sources=[], store="Silver", schema="dbo", table_name="customers", write_mode="overwrite",
-        existing_mapping=existing, contracts={"tables": {"target-id": {"mode": mode}}}, spark_session=spark_session, verbose=False,
+        existing_mapping=existing, execution_plan=execution_plan_stub(mode), spark_session=spark_session, verbose=False,
     )
     assert result["dataframe"].first().email == "established-token"
     assert result["sensitive_result"]["support_mapping"].first().original_value == "raw@example.test"
-    assert result["published"] is (mode == "enforce")
+    assert result["published"] is (mode == "live")
     assert later["check_dq"].call_args.args[0] is result["dataframe"]
-    if mode == "enforce":
+    if mode == "live":
         assert later["pipeline_write"].call_args.args[0] is result["dataframe"]
     else:
-        later["pipeline_write"].assert_not_called()
-        later["profile_table"].assert_not_called()
+        assert later["pipeline_write"].call_args.args[0] is result["dataframe"]
     assert evidence[0]["status"] == "passed"
     assert "raw@example.test" not in json.dumps(evidence)
 
@@ -136,12 +143,12 @@ def test_later_write_failure_releases_token_mapping(monkeypatch, spark_session, 
     frame = spark_session.createDataFrame([("raw@example.test",)], ["email"])
     before = spark_session.sparkContext._jsc.getPersistentRDDs().size()
     with pytest.raises(RuntimeError, match="publication failed"):
-        orchestrate_write(frame, sources=[], store="Silver", schema="dbo", table_name="customers",
+        orchestrate_write(frame, execution_plan=execution_plan_stub(), sources=[], store="Silver", schema="dbo", table_name="customers",
                           write_mode="overwrite", spark_session=spark_session, verbose=False)
     assert spark_session.sparkContext._jsc.getPersistentRDDs().size() == before
 
 
-@pytest.mark.parametrize('mode', ['validate', 'enforce'])
+@pytest.mark.parametrize('mode', ['testing', 'live'])
 def test_simplified_mask_and_fixed_buckets_reach_the_public_write_workflow(monkeypatch, spark_session, write_workflow, mode):
     """DQ and publication receive the same protected rows declared by the contract."""
     evidence, later = write_workflow
@@ -157,13 +164,13 @@ def test_simplified_mask_and_fixed_buckets_reach_the_public_write_workflow(monke
     monkeypatch.setattr(sensitive_module, 'load_table_guardrail_rules', lambda *_args, **_kwargs: rules)
     frame = spark_session.createDataFrame([('ABC', 27), ('ALICE', 31)], ['email', 'age'])
     result = orchestrate_write(frame, sources=[], store='Silver', schema='dbo', table_name='customers',
-        write_mode='overwrite', contracts={'tables': {'target-id': {'mode': mode}}},
+        write_mode='overwrite', execution_plan=execution_plan_stub(mode),
         spark_session=spark_session, verbose=False)
     assert [(r.email, r.age) for r in result['dataframe'].collect()] == [('***', '[20, 30)'), ('A***E', '[30, 40)')]
     assert later['check_dq'].call_args.args[0] is result['dataframe']
-    assert result['published'] is (mode == 'enforce')
+    assert result['published'] is (mode == 'live')
     assert len(evidence) == 2 and all(item['action'] == 'Block' for item in evidence)
-    if mode == 'enforce':
+    if mode == 'live':
         assert later['pipeline_write'].call_args.args[0] is result['dataframe']
     else:
-        later['pipeline_write'].assert_not_called()
+        assert later['pipeline_write'].call_args.args[0] is result['dataframe']

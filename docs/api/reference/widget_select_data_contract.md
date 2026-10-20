@@ -6,12 +6,12 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Resolve current-notebook Lineage and select one immutable Data Contract independently per table.
+Select pipeline-wide Testing/Live and inspect exact frozen contracts per explicit participant.
 
 
 ## Usage notes
 
-Use after baseline Lineage exists and before governed checks so Development selects immutable versions per Source/Target table and Production resolves active versions automatically.
+Use before Read, including first-time bootstrap without historical Lineage.
 
 
 ## Example usage
@@ -19,8 +19,8 @@ Use after baseline Lineage exists and before governed checks so Development sele
 <div class="reference-example-usage" markdown="1">
 
 ```python
-selection = widget_select_data_contract()
-selection["set_mode"]("table-orders", "validate", "orders-contract", 3)
+selection = widget_select_data_contract(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
+plan = selection["build_plan"]()
 ```
 
 </div>
@@ -33,7 +33,7 @@ selection["set_mode"]("table-orders", "validate", "orders-contract", 3)
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_select_data_contract(*, spark_session=None, context=None)
+def widget_select_data_contract(*, sources, targets, spark_session=None, context=None)
 ```
 
 </div>
@@ -48,52 +48,41 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `spark_session` | `object` | No | `None` | Spark session override. |
-| `context` | `dict` | No | `None` | FabricOps context normally established by ``00_env_config``. The current ``notebook_id``, optional ``workspace_id``, and environment scope Lineage. |
+| `sources` | `list of dict` | Yes | `—` | Explicit source participants: store/schema/table_name or registered table_id. Historical Lineage is optional and cannot introduce additional participants. |
+| `targets` | `list of dict` | Yes | `—` | Explicit target participants with the same coordinate or table_id shape. |
+| `spark_session` | `object` | No | `None` | Spark session for metadata reads. |
+| `context` | `dict` | No | `None` | Configured environment routing and notebook identity. |
 
 </div>
 
 ## Returns
 
 dict
-    Notebook scope, role-preserving table states, table-scoped execution
-    modes and contract identities, controls, and a ``set_mode`` callable. Pass
-    this selection to ``orchestrate_write`` to evaluate the exact target
-    candidate and choose validation-only or enforcing publication.
+    Interactive state with execution_mode (initially testing), tables, controls,
+    select_contract, set_mode and build_plan. Each table starts unselected.
+    Explicitly select No Contract for bootstrap; build_plan validates every
+    choice and freezes the plan to pass to all Read and Write calls.
+    UI edits after build_plan require a new plan and a new run of Read/Transform/Write.
+    The widget never changes notebook globals, edits or activates contracts.
 
 ### Return interpretation
 
-Each source remains in enforce mode. Each target returns its independent enforce or validate mode and exact contract identity; orchestrate_write evaluates that exact frozen candidate against the transformed target DataFrame and persists validate evidence before activation.
+Select every contract or explicit No Contract, then call build_plan() and pass the same immutable plan to every Read and Write.
 
 ## Raises / Errors
 
 ValueError
-    If notebook identity is missing, a requested frozen version is
-    unavailable, or Production enforcement has no active contract for a
-    Lineage-linked table.
+    For missing notebook identity, invalid payloads, unavailable selections or
+    Live choices bypassing an active contract.
 RuntimeError
-    If Production has multiple active versions for a lineage-linked table.
+    For ambiguous active versions or a metadata-read failure.
 
 ### Common failure causes
 
-- The current notebook identity or Lineage is missing.
-- A discovered table has no eligible immutable version.
-- The selected version belongs to another table.
-- The frozen contract payload is invalid.
-
-## Notes
-
-<div class="reference-docstring-notes" markdown="1">
-
-Every Lineage-linked source remains in ``enforce`` mode. Each target can
-independently use ``enforce`` or ``validate``. Enforce resolves the
-selected frozen source contract in Development, using an explicit source
-version picker even before activation. Production requires exactly one
-frozen version tagged active and does not accept candidate overrides. Target validation exposes
-frozen candidates and never installs the candidate as an enforcement
-override. This widget never activates metadata.
-
-</div>
+- Missing notebook identity or explicit participant configuration.
+- Ambiguous active versions.
+- Invalid or mismatched frozen JSON.
+- Live attempts to bypass an active frozen contract.
 
 ## See also
 
@@ -102,9 +91,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_select_data_contract.py:140`
+`fabricops_kit/widgets/widget_select_data_contract.py:124`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L140-L508">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L124-L338">View on GitHub</a>
 </div>
 
 

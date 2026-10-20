@@ -52,6 +52,7 @@ def profile_table(
     frequency_enabled: bool=True,
     frequency_top_n: int | None=5,
     frequency_max_distinct_percent: float | None=80.0,
+    context=None,
     spark_session=None,
 ):
 ```
@@ -80,6 +81,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `frequency_enabled` | `bool` | No | `True` | Whether to calculate frequency distributions for this call. False skips all frequency columns. The caller controls when to enable frequency profiling. |
 | `frequency_top_n` | `int \| None` | No | `5` | Ranked values to retain per frequency column. ``None`` retains all. |
 | `frequency_max_distinct_percent` | `float \| None` | No | `80.0` | Maximum distinct-per-non-null percentage for automatically selected columns. ``None`` disables the cardinality filter. |
+| `context` | `dict` | No | `None` | Explicit pipeline context; Testing returns profiles without persistence. |
 | `spark_session` | `object` | No | `None` | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active session. |
 
 </div>
@@ -193,7 +195,7 @@ profiled without creating an identity or writing metadata.
 
 `fabricops_kit/pipeline/profile_table.py:1095`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1095-L1463">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1095-L1469">View on GitHub</a>
 </div>
 
 
@@ -235,7 +237,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 71 |
+| Live-critical dependencies | 72 |
 
 ### Release history
 
@@ -315,6 +317,7 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>

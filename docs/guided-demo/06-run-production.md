@@ -40,12 +40,12 @@ The same source reads, transformations, Guardrail checks, governed write logic, 
 
 The key difference is Data Contract resolution:
 
-* Development can explicitly select an eligible frozen version for validation.
-* Production automatically resolves the single active Data Contract for each governed `table_id`.
+* **Testing** explicitly selects eligible frozen candidates in any configured environment.
+* **Live** requires the active frozen Data Contract for each governed `table_id`, in any configured environment.
 
 The same Guardrail functions therefore enforce the Production-active definition, and [`orchestrate_write()`](../api/reference/orchestrate_write.md) uses the active governed Processing configuration for each target.
 
-Confirm both target Write blocks run in **Enforce** mode. A Development Validate selection must not be carried into Production; Production does not accept candidate validation overrides. All three sources and both targets need the active frozen versions prepared in Step 5.
+Deliberately select **Live** for the whole pipeline and build a new `EXECUTION_PLAN`. Pass that same plan to all three Reads and both Writes. Scheduled execution must call `create_pipeline_execution_plan(execution_mode="live", ...)` explicitly. The environment only routes work; it never infers Live. All three sources and both targets need the active frozen versions prepared in Step 5.
 
 ### Check the two independent publications
 

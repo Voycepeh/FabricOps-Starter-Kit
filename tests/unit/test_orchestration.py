@@ -2,6 +2,9 @@
 from unittest.mock import Mock, patch
 import pytest
 import importlib
+from types import SimpleNamespace
+
+LIVE_PLAN = SimpleNamespace(execution_mode="live", plan_id="plan", permits_persistence=True, runtime_context={}, environment="dev", results=[], simulations=[])
 
 
 def test_dq_stage_prints_observed_percentages_independently_of_decision(capsys):
@@ -26,9 +29,9 @@ def test_invalid_dq_diagnostics_fails_before_io(operation):
         with pytest.raises(ValueError, match="dq_diagnostics"):
             options = {"store": "Bronze", "schema": "demo", "table_name": "orders", "dq_diagnostics": "invalid"}
             if operation == "read":
-                module.orchestrate_read(**options)
+                module.orchestrate_read(execution_plan=LIVE_PLAN, **options)
             else:
-                module.orchestrate_write(object(), sources=[], write_mode="overwrite", **options)
+                module.orchestrate_write(object(), execution_plan=LIVE_PLAN, sources=[], write_mode="overwrite", **options)
 
 
 
@@ -36,11 +39,11 @@ def test_invalid_dq_diagnostics_fails_before_io(operation):
 def planned_stages(monkeypatch):
     """Isolate stage ordering from metadata planning; integration tests exercise planning."""
     def prepare(table_ids, **_kwargs):
-        return {"config": object(), "env": "dev",
-                "_pipeline_contracts": {tid: {"contract_version": 1} for tid in table_ids},
+        return {"config": object(), "env": "dev", "execution_plan": LIVE_PLAN,
+                "_pipeline_identities": {tid: {"roles": ["source", "target"]} for tid in table_ids},
+                "_pipeline_contracts": {tid: {"contract_id": "contract", "contract_version": 1} for tid in table_ids},
                 "_pipeline_rules": {tid: [{"guardrail_type": kind} for kind in
                     ("schema", "freshness", "sensitive_data", "data_quality", "source_drift")] for tid in table_ids}}
-    monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_write"), "resolve_table_processing_definition", lambda *_args, **_kwargs: {"load_strategy": "overwrite"})
     monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_read"), "prepare_pipeline_execution", prepare)
     monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_write"), "prepare_pipeline_execution", prepare)
     monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_read"), "resolve_table_id", lambda **_kwargs: "source-id")
@@ -54,7 +57,7 @@ def test_orchestrate_read_orders_stages_and_preserves_source(capsys):
         def call(*args, **kwargs): calls.append(name); return value
         return call
     with patch("fabricops_kit.pipeline.orchestrate_read.pipeline_read", result("read", {"dataframe": dataframe, "table_id": "source-id"})), patch("fabricops_kit.pipeline.orchestrate_read.check_freshness", result("freshness", {"status": "skipped"})), patch("fabricops_kit.pipeline.orchestrate_read.check_schema", result("schema", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.check_dq", result("dq", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.profile_table", result("profile", {"profile": object()})):
-        actual = orchestrate_read(store="Bronze", schema="demo", table_name="orders", verbose=False)
+        actual = orchestrate_read(execution_plan=LIVE_PLAN, store="Bronze", schema="demo", table_name="orders", verbose=False)
     assert calls == ["read", "freshness", "schema", "dq", "profile"]
     assert actual["dataframe"] is dataframe
     assert actual["table_id"] == "source-id"
@@ -83,7 +86,7 @@ def test_orchestrate_read_uses_table_name_for_heading_and_stage_metadata(capsys)
         "fabricops_kit.pipeline.orchestrate_read.profile_table",
         return_value={"status": "skipped"},
     ):
-        result = orchestrate_read(
+        result = orchestrate_read(execution_plan=LIVE_PLAN,
             store="Bronze", schema="demo", table_name="physical_orders"
         )
 
@@ -148,7 +151,7 @@ def test_orchestrate_read_reports_selected_physical_reader(capsys):
         "fabricops_kit.pipeline.orchestrate_read.profile_table",
         return_value={"status": "skipped"},
     ):
-        actual = orchestrate_read(
+        actual = orchestrate_read(execution_plan=LIVE_PLAN,
             store="Product",
             schema="demo",
             table_name="order_history",
@@ -164,7 +167,7 @@ def test_orchestrate_read_attributes_failure_and_stops_later_stages():
     cause = ValueError("meaningful schema mismatch")
     with patch("fabricops_kit.pipeline.orchestrate_read.pipeline_read", return_value={"dataframe": object(), "table_id": "source-id"}), patch("fabricops_kit.pipeline.orchestrate_read.check_freshness", return_value={"status": "passed"}), patch("fabricops_kit.pipeline.orchestrate_read.check_schema", side_effect=cause), patch("fabricops_kit.pipeline.orchestrate_read.check_dq") as dq:
         with pytest.raises(RuntimeError, match="READ 'orders' failed during Schema") as raised:
-            orchestrate_read(store="Bronze", schema="demo", table_name="orders", verbose=False)
+            orchestrate_read(execution_plan=LIVE_PLAN, store="Bronze", schema="demo", table_name="orders", verbose=False)
     assert raised.value.__cause__ is cause
     dq.assert_not_called()
 
@@ -188,7 +191,7 @@ def test_orchestrate_write_orders_stages_and_profiles_after_write(capsys):
         patch("fabricops_kit.pipeline.orchestrate_write.profile_table", effect("profile", {"profile":object()})),
     ]
     with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5], patches[6] as write, patches[7]:
-        actual = orchestrate_write(dataframe, sources=[{"table_id":"source-id"}], store="Silver", schema="demo", table_name="physical_target", write_mode="overwrite")
+        actual = orchestrate_write(dataframe, execution_plan=LIVE_PLAN, sources=[{"table_id":"source-id", "execution_plan_id":"plan"}], store="Silver", schema="demo", table_name="physical_target", write_mode="overwrite")
     assert calls == ["schema", "sensitive", "drift", "dq", "coverage", "write", "profile"]
     assert actual["published"] is True
     assert actual["table_id"] == "target-id"
@@ -238,7 +241,7 @@ def test_orchestrate_write_forwards_scd_write_parameters(capsys):
     ):
         orchestrate_write(
             object(),
-            sources=[],
+            execution_plan=LIVE_PLAN, sources=[],
             store="Silver",
             schema="demo",
             table_name="product_mapping_scd2",
@@ -258,7 +261,7 @@ def test_orchestrate_write_preserves_guardrail_failure_and_does_not_write():
     cause = RuntimeError("blocking DQ rule: completeness 96.7%")
     with patch("fabricops_kit.pipeline.orchestrate_write.resolve_table_id", return_value="target-id"), patch("fabricops_kit.pipeline.orchestrate_write.check_schema", return_value={"status":"passed"}), patch("fabricops_kit.pipeline.orchestrate_write.check_sensitive_data", return_value={"status":"passed", "dataframe":object()}), patch("fabricops_kit.pipeline.orchestrate_write.check_source_drift", return_value={"status":"passed"}), patch("fabricops_kit.pipeline.orchestrate_write.check_dq", side_effect=cause), patch("fabricops_kit.pipeline.orchestrate_write.pipeline_write") as write:
         with pytest.raises(RuntimeError, match="WRITE 'physical_target' failed during Data Quality") as raised:
-            orchestrate_write(object(), sources=[{"table_id":"source-id"}], store="Silver", schema="demo", table_name="physical_target", write_mode="overwrite", verbose=False)
+            orchestrate_write(object(), execution_plan=LIVE_PLAN, sources=[{"table_id":"source-id", "execution_plan_id":"plan"}], store="Silver", schema="demo", table_name="physical_target", write_mode="overwrite", verbose=False)
     assert raised.value.__cause__ is cause
     write.assert_not_called()
 
@@ -278,7 +281,7 @@ def test_failed_stage_output_never_reports_passed_and_marks_later_stages_not_run
         side_effect=ValueError("schema mismatch"),
     ):
         with pytest.raises(RuntimeError):
-            orchestrate_read(
+            orchestrate_read(execution_plan=LIVE_PLAN,
                 store="Bronze",
                 schema="demo",
                 table_name="orders",
@@ -317,119 +320,6 @@ def test_orchestration_status_aggregates_multi_source_results():
 
     assert _orchestration_status([{"status": "passed"}, {"status": "warning"}]) == "warning"
     assert _orchestration_status([{"status": "passed"}, {"status": "blocked"}]) == "blocked"
-
-
-def test_validate_runs_enforce_guardrails_then_skips_write_and_profile(capsys):
-    """Validate is the enforcement Guardrail path with publication omitted."""
-    from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
-
-    dataframe, prepared = object(), object()
-    calls = []
-
-    def record(stage, result):
-        def call(*args, **kwargs):
-            calls.append(stage)
-            return result
-
-        return call
-
-    contracts = {
-        "tables": {"target-id": {"mode": "validate"}},
-        "validate": Mock(side_effect=AssertionError("legacy validation callback called")),
-    }
-    with patch(
-        "fabricops_kit.pipeline.orchestrate_write.resolve_table_id",
-        return_value="target-id",
-    ), patch(
-        "fabricops_kit.pipeline.orchestrate_write.check_schema",
-        record("schema", {"status": "passed"}),
-    ), patch(
-        "fabricops_kit.pipeline.orchestrate_write.check_sensitive_data",
-        record("sensitive", {"status": "passed", "dataframe": prepared}),
-    ), patch(
-        "fabricops_kit.pipeline.orchestrate_write.check_source_drift",
-        record("drift", {"status": "passed"}),
-    ), patch(
-        "fabricops_kit.pipeline.orchestrate_write.check_dq",
-        record("dq", {"status": "passed"}),
-    ), patch(
-        "fabricops_kit.pipeline.orchestrate_write.check_guardrail_coverage",
-        record("coverage", {"status": "passed"}),
-    ), patch("fabricops_kit.pipeline.orchestrate_write.pipeline_write") as write, patch(
-        "fabricops_kit.pipeline.orchestrate_write.profile_table"
-    ) as profile:
-        result = orchestrate_write(
-            dataframe,
-            sources=[{"table_id": "source-id"}],
-            store="Silver",
-            schema="demo",
-            table_name="target",
-            write_mode="overwrite",
-            contracts=contracts,
-        )
-
-    output = capsys.readouterr().out
-    assert "FabricOps WRITE Summary" in output
-    assert "Published       → No" in output
-    assert result["write_metrics"]["rows_committed"] == 0
-    assert calls == ["schema", "sensitive", "drift", "dq", "coverage"]
-    assert result["published"] is False
-    assert result["validation_passed"] is True
-    assert [stage["stage"] for stage in result["orchestration_stages"]] == [
-        "Schema",
-        "Sensitive Data",
-        "Source Drift",
-        "Data Quality",
-        "Guardrail Coverage",
-        "Processing",
-    ]
-    contracts["validate"].assert_not_called()
-    write.assert_not_called()
-    profile.assert_not_called()
-
-
-def test_validate_guardrail_failure_matches_enforce_and_stops_publication(capsys):
-    """Validate attributes the same blocking Guardrail and never publishes."""
-    from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
-
-    cause = RuntimeError("blocking target Data Quality rule")
-    contracts = {"tables": {"target-id": {"mode": "validate"}}}
-    with patch(
-        "fabricops_kit.pipeline.orchestrate_write.resolve_table_id",
-        return_value="target-id",
-    ), patch(
-        "fabricops_kit.pipeline.orchestrate_write.check_schema",
-        return_value={"status": "passed"},
-    ), patch(
-        "fabricops_kit.pipeline.orchestrate_write.check_sensitive_data",
-        return_value={"status": "passed", "dataframe": object()},
-    ), patch(
-        "fabricops_kit.pipeline.orchestrate_write.check_source_drift",
-        return_value={"status": "passed"},
-    ), patch(
-        "fabricops_kit.pipeline.orchestrate_write.check_dq",
-        side_effect=cause,
-    ), patch("fabricops_kit.pipeline.orchestrate_write.pipeline_write") as write:
-        with pytest.raises(
-            RuntimeError, match="WRITE 'target' failed during Data Quality"
-        ) as raised:
-            orchestrate_write(
-                object(),
-                sources=[{"table_id": "source-id"}],
-                store="Silver",
-                schema="demo",
-                table_name="target",
-                write_mode="overwrite",
-                contracts=contracts,
-            )
-
-    output = capsys.readouterr().out
-    assert "[4/6] Data Quality ... ✗ Failed" in output
-    assert "[4/6] Data Quality ... ✓ Passed" not in output
-    assert "Later stages did not run." in output
-    assert "FabricOps READ Summary" not in output
-    assert raised.value.__cause__ is cause
-    write.assert_not_called()
 
 
 def test_orchestration_stage_duration_is_two_decimal_seconds_with_minimum():
@@ -486,15 +376,39 @@ def test_orchestrators_forward_independent_profile_controls(
                   grain_discovery_max_candidates=1, frequency_enabled=frequency_enabled)
     if operation == "read":
         monkeypatch.setattr(module, "pipeline_read", Mock(return_value={"dataframe": object(), "table_id": "source-id"}))
-        result = module.orchestrate_read(**kwargs)
+        result = module.orchestrate_read(execution_plan=LIVE_PLAN, **kwargs)
     else:
         monkeypatch.setattr(module, "resolve_table_id", lambda **k: "target-id")
         monkeypatch.setattr(module, "pipeline_write", Mock(return_value={"table_id": "target-id"}))
         monkeypatch.setattr(module, "check_guardrail_coverage", Mock(return_value={"status": "passed"}))
-        result = module.orchestrate_write(object(), sources=[], write_mode="overwrite", **kwargs)
+        result = module.orchestrate_write(object(), execution_plan=LIVE_PLAN, sources=[], write_mode="overwrite", **kwargs)
     assert profile.call_args.kwargs["grain_discovery_enabled"] is grain_discovery_enabled
     assert profile.call_args.kwargs["frequency_enabled"] is frequency_enabled
     assert profile.call_args.kwargs["grain_discovery_max_columns"] == 2
     assert profile.call_args.kwargs["grain_discovery_max_candidates"] == 1
     grain.assert_called_once()
     assert result["grain_result"]["status"] == "passed"
+
+
+def test_testing_blocked_stage_prints_diagnostics_and_retains_result(capsys):
+    """A normal Testing violation must remain inspectable with verbose output enabled."""
+    from fabricops_kit.pipeline.shared import _run_orchestration_stage
+    result, stage = _run_orchestration_stage(operation="WRITE", name="orders", index=1, total=1,
+        stage="Grain", function=lambda: {"status": "failed", "can_continue": False}, verbose=True, allow_blocked=True)
+    assert not result["can_continue"] and stage["status"] == "blocked"
+    assert "Blocked (diagnostic)" in capsys.readouterr().out
+
+
+def test_stage_failure_retains_actual_publication_and_persistence_status():
+    """Stage attribution must preserve the partial outcome returned by a native writer."""
+    from fabricops_kit.pipeline.shared import _run_orchestration_stage
+    failure = ValueError("metadata finalization failed")
+    failure.published = True
+    failure.persistence_status = "incomplete"
+    failure.table_id = "target"
+    def fail():
+        raise failure
+    with pytest.raises(RuntimeError) as raised:
+        _run_orchestration_stage(operation="WRITE", name="orders", index=1, total=1, stage="Write", function=fail, verbose=False)
+    assert raised.value.published is True and raised.value.persistence_status == "incomplete"
+    assert raised.value.table_id == "target" and raised.value.__cause__ is failure

@@ -42,7 +42,7 @@ def test_capture_reuses_pipeline_read_dataframe_without_rescanning(monkeypatch) 
 
     dataframe = type("Frame", (), {"columns": ["partition", "changed", "value"]})()
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda: (object(), "dev", {}))
-    monkeypatch.setattr(shared, "get_spark_session", Spark)
+    monkeypatch.setattr(shared, "get_spark_session", lambda *a: Spark())
     monkeypatch.setattr(shared, "resolve_catalogue_table_identity", lambda *args, **kwargs: {
         "table_id": "source-a", "store": "source", "schema": "dbo",
         "table_name": "orders", "store_type": "lakehouse",
@@ -86,7 +86,7 @@ def test_incremental_observation_allows_new_source_without_catalogue_or_contract
     }
     monkeypatch.setattr(shared, "resolve_physical_table_identity", lambda *args, **kwargs: identity)
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda: (object(), "dev", {}))
-    monkeypatch.setattr(shared, "get_spark_session", Spark)
+    monkeypatch.setattr(shared, "get_spark_session", lambda *a: Spark())
     monkeypatch.setattr(
         shared, "resolve_catalogue_table_identity",
         lambda *args, **kwargs: pytest.fail("new physical source must not require Catalogue activation"),
@@ -118,7 +118,7 @@ def test_incremental_observation_allows_new_source_without_catalogue_or_contract
 def test_observation_rejects_identity_mismatch_across_environments(monkeypatch) -> None:
     """Never silently use a source identity from another environment."""
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda: (object(), "dev", {}))
-    monkeypatch.setattr(shared, "get_spark_session", lambda: object())
+    monkeypatch.setattr(shared, "get_spark_session", lambda *args: object())
     monkeypatch.setattr(
         shared, "resolve_physical_table_identity",
         lambda *args, **kwargs: {"table_id": "different-environment-table"},

@@ -1105,6 +1105,7 @@ def profile_table(
     frequency_columns=None,
     frequency_enabled: bool = True, frequency_top_n: int | None = 5,
     frequency_max_distinct_percent: float | None = 80.0,
+    context=None,
     spark_session=None,
 ):
     """Profile a Spark DataFrame or a complete governed physical table.
@@ -1162,6 +1163,8 @@ def profile_table(
     frequency_max_distinct_percent : float or None, default=80.0
         Maximum distinct-per-non-null percentage for automatically selected
         columns. ``None`` disables the cardinality filter.
+    context : dict, optional
+        Explicit pipeline context; Testing returns profiles without persistence.
     spark_session : object, optional
         Spark session to use. When omitted, FabricOps uses the supplied
         DataFrame session or resolves the active session.
@@ -1278,14 +1281,14 @@ def profile_table(
     if frequency_top_n is not None and frequency_top_n <= 0:
         raise ValueError("frequency_top_n must be greater than zero when supplied.")
     identity = None
-    config = env = context = None
+    config = env = None
     warehouse_fields = None
     warehouse_physical = False
     profile_input_label = "supplied DataFrame"
     backend_label = "PySpark"
 
     if table_id is not None or has_coordinates:
-        config, env, context = resolve_fabric_context()
+        config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
         if table_id is not None:
             identity = resolve_catalogue_table_identity(config, env, table_id, spark_session=spark_session, context=context)
         else:
@@ -1366,8 +1369,11 @@ def profile_table(
     print("3. Statistical profile → calculated")
     print(f"4. Frequency profile → {frequency_label}")
 
-    if identity is None:
-        print("5. Metadata persistence → skipped; DataFrame-only profiling does not invent a table_id")
+    from fabricops_kit.pipeline.shared import persistence_permitted
+
+    if identity is None or not persistence_permitted(context):
+        print("5. Metadata persistence → disabled by Testing policy" if identity is not None else
+              "5. Metadata persistence → skipped; DataFrame-only profiling does not invent a table_id")
         print("Result → profile outputs returned; no Catalogue or profiling metadata was written.")
         return {"profile": statistical_profile, "frequency_profile": frequency_profile, **profile_metrics}
 

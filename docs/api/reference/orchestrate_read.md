@@ -23,11 +23,10 @@ Use for the normal governed Read path before project PySpark transformation.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+source = orchestrate_read(execution_plan=plan, store="Bronze", schema="demo", table_name="orders")
 ```
 
 </div>
-
 
 <details class="reference-signature-details" markdown="1">
 <summary>Signature</summary>
@@ -39,6 +38,7 @@ source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 ```python
 def orchestrate_read(
     *,
+    execution_plan,
     store: str,
     schema: str | None,
     table_name: str,
@@ -69,93 +69,39 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
+| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Required immutable plan from create_pipeline_execution_plan or the widget. Pass the same object to every Read and Write. Testing evaluates configured Freshness, Schema, Grain and Data Quality and returns profiles and violations in memory. It cannot persist Catalogue, Profile, frequency, Guardrail Results or recover durable Source Observation state. Live preserves these lifecycle boundaries. Environment names determine routing only. |
 | `store` | `str` | Yes | `—` | Configured source store key. |
-| `schema` | `str \| None` | Yes | `—` | Physical source schema. This keyword is required; pass None for a store without schemas. |
+| `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
 | `table_name` | `str` | Yes | `—` | Physical source table name. |
-| `read_mode` | `str` | No | `'full'` | Source read behaviour. Surrounding whitespace and case are normalized before planning stages, validating parameters, or selecting Grain scope. |
-| `query` | `str \| None` | No | `None` | Read-only Warehouse query forwarded to the internal Read stage. |
-| `read_parameters` | `dict[str, Any] \| None` | No | `None` | Incremental configuration, for example {"watermark_column": "modified_datetime"}. A selected Data Contract must agree with the supplied watermark. Required for incremental mode when no selected contract supplies the watermark. |
-| `target_table_id` | `str \| None` | No | `None` | Governed target identity required for incremental reads. |
-| `grain_discovery_enabled` | `bool` | No | `True` | Whether Profile discovers candidate Grain keys for this call. False skips discovery and preserves saved candidates; contract Grain checks still run. |
-| `grain_discovery_max_columns` | `int` | No | `3` | Maximum columns in a candidate key. 1 checks single columns only; 2 also checks pairs. Must be a positive integer. Wider searches can be costly. |
-| `grain_discovery_max_candidates` | `int` | No | `8` | Maximum candidate keys to retain at the smallest valid key width. Must be a positive integer. Discovery stops after enough keys are found; this limit does not cap work when no valid key exists. |
-| `frequency_enabled` | `bool` | No | `True` | Whether Profile calculates frequency distributions for this call. The caller controls when to enable discovery and frequency profiling. |
-| `frequency_top_n` | `int \| None` | No | `5` | Maximum ranked frequency values per eligible column; None retains all. |
-| `spark_session` | `object` | No | `None` | Spark session used by every stage. |
-| `verbose` | `bool` | No | `True` | Print stage start, outcome, duration, and failure attribution. |
-| `dq_diagnostics` | `str` | No | `'sample'` | Sample captures at most ten illustrative source records per DQ rule with exact metrics in the same aggregation. None captures metrics only. Full also returns every failure as a lazy diagnostic DataFrame. |
-
-</div>
-
-## Advanced examples
-
-<div class="reference-example-usage" markdown="1">
-
-```python
-source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
-orders_df = source["dataframe"]
-```
-
-Discovery and frequency switches apply only when the lifecycle runs Profile.
-Pass ``grain_discovery_enabled=False, frequency_enabled=False`` on routine
-calls and enable either option on calls chosen by your own scheduler.
+| `read_mode` | `str` | No | `'full'` | Full reads profile the source; incremental reads retain checkpoint bounds. |
+| `query` | `str \| None` | No | `None` | Read-only Warehouse query, supported for full reads only. |
+| `read_parameters` | `dict[str, Any] \| None` | No | `None` | Incremental watermark_column; must agree with the selected contract. |
+| `target_table_id` | `str \| None` | No | `None` | Required target for incremental reads, also a participant in the plan. |
+| `grain_discovery_enabled` | `bool` | No | `True` | Discover candidate Grain keys during full-read profiling; contract Grain checks always run. |
+| `grain_discovery_max_columns` | `int` | No | `3` | Positive maximum width of a candidate key. |
+| `grain_discovery_max_candidates` | `int` | No | `8` | Positive maximum retained candidates at the smallest valid key width. |
+| `frequency_enabled` | `bool` | No | `True` | Calculate optional frequency distributions during profiling. |
+| `frequency_top_n` | `int \| None` | No | `5` | Maximum frequency values per column. |
+| `spark_session` | `object` | No | `None` | Spark session shared by all stages. |
+| `verbose` | `bool` | No | `True` | Print concise stage outcomes and summary. |
+| `dq_diagnostics` | `str` | No | `'sample'` | Rule metrics plus bounded examples, no examples, or lazy full failures. |
 
 </div>
 
 ## Returns
 
 dict
-    The source-read result, including ``dataframe`` and ``table_id``,
-    plus capability results and ``orchestration_stages``. ``read_metrics``
-    contains ``rows_read`` and ``columns`` (None when unavailable).
-    ``total_duration_seconds`` is the full lifecycle wall-clock duration.
+    Source dataframe and identity, selected contract, execution_mode,
+    applicable_guardrails, diagnostic results, profile, persistence_status,
+    publication_status and checks_not_exercised. Testing retains blocking
+    rule outcomes for inspection; Live stops on Block. Neither publishes data.
 
 ## Raises / Errors
 
 ValueError
-    If read_mode is invalid or a discovery limit is not a positive integer;
-    checked before metadata resolution or any stage runs.
+    For an invalid or inconsistent plan, mode, parameters or participant.
 RuntimeError
-    If a stage fails. Its name is reported and the original exception is
-    retained as ``__cause__``.
-
-## Notes
-
-<div class="reference-docstring-notes" markdown="1">
-
-Read resolves its Data Contract once, then runs only its configured
-Freshness, Schema, Grain, and Data Quality stages before Profile, matching
-canonical ``02_pipeline``. Absent capability fields remain skipped in the
-returned result; orchestration_stages and stdout show executed stages only.
-A contract-free Development run prints one concise Guardrail decision.
-DQ summaries retain exact observed pass/fail counts independently of the
-authored tolerance decision. Sample mode stores at most ten illustrative
-source records per rule in METADATA_GUARDRAIL_RESULTS.result_payload_json;
-dq_result["failed_values"] contains only those captured examples. None
-suppresses examples; full returns an unbounded lazy failure DataFrame.
-dq_result["dataframe"] retains lazy row tags. The top-level source/prepared
-DataFrame and published target do not acquire those tags automatically.
-Grain checks only the returned rows (the incremental batch in incremental mode),
-using the configured physical row key; SCD2 history requires a version-aware
-key, such as business key plus effective timestamp.
-Incremental batches include only rows after the accepted watermark and at
-or below the upper watermark observed for this run. Bootstrap reads use
-the same upper bound and retain null-watermark rows. Timestamp instants use
-canonical UTC checkpoints; TimestampNTZ checkpoints retain wall-clock time
-without attaching a timezone. Dates retain calendar-date semantics.
-Later arrivals above
-that bound wait for the next run. This bounds progress, but does not make
-concurrent source updates a transactional snapshot.
-Incremental progress captures one aggregate summary per source, including
-empty-source evidence; Source Drift fingerprints remain independent.
-DataFrames are never displayed. Incremental batches are not profiled.
-Custom Warehouse query results are profiled as DataFrames only, without
-updating the physical source's Catalogue, Profile, or frequency snapshots.
-With verbose=True, successful execution ends with a READ Summary on stdout.
-Counts reuse existing profiling results; no Spark action is added for
-reporting. An unavailable count is printed as ``Not available``.
-
-</div>
+    For a failed stage, retaining the original exception as its cause.
 
 ## See also
 
@@ -164,9 +110,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_read.py:20`
+`fabricops_kit/pipeline/orchestrate_read.py:21`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L20-L182">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L21-L140">View on GitHub</a>
 </div>
 
 
@@ -182,7 +128,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 161 |
+| Live-critical dependencies | 162 |
 
 ### Release history
 
@@ -330,18 +276,19 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.display_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.dq_tolerance_parameter</code></li>
+<li><code>fabricops_kit.pipeline.shared.execution_result</code></li>
 <li><code>fabricops_kit.pipeline.shared.freshness_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.get_current_freshness_evidence</code></li>
 <li><code>fabricops_kit.pipeline.shared.grain_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>
 <li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_guardrail_result</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_pipeline_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_active_data_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_data_contract_version</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_freshness_observation_column</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_incremental_observation_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_incremental_source_scope</code></li>

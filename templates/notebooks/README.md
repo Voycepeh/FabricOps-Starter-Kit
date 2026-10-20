@@ -20,3 +20,9 @@ Completed learning demos are kept separately under `templates/DemoData/`:
 > **Multiple Write blocks:** each `orchestrate_write()` publishes independently. If an earlier Write succeeds and a later Write fails, the pipeline is partially published. A retry runs the earlier Write again, which can duplicate or otherwise repeat non-idempotent writes such as Append. If partial publication or duplicate writes are unacceptable, use separate pipeline executions for each governed target.
 
 For the end-to-end workflow, follow the [Guided Demo](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/).
+
+## Pipeline execution mode
+
+The current scaffold declares participating sources/targets before the Pipeline Data Contracts widget. Select a frozen version or explicit No Contract per participant, then build one execution plan and pass it explicitly to every Read and Write. Testing defaults on and makes no persistent changes at any stage. Live requires active frozen versions where present and permits approved publication and metadata commits. Environment names only route work.
+
+For headless runs, call `create_pipeline_execution_plan(execution_mode="testing" or "live", sources=..., targets=..., selections=...)`; mode and every selection are deliberate. Rebuild a plan and rerun Read → Transform → Write when changing selections. The redesign has local structural validation; real Fabric publication, permissions, transactions and recovery require runtime testing.

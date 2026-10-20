@@ -17,9 +17,11 @@ Return to the activation cell in `01_governance` and open [`widget_activate_data
 
 
 
-Do not activate a different draft or an untested version simply because it is newer. Activation requires a completed validation record for that exact frozen version. A successful pipeline validation records completion for each participating source and target, including sources with only Schema configured. Isolated or partial check results are insufficient. A later draft does not inherit its previous version's activation eligibility.
+Do not activate a different draft or an untested version simply because it is newer. Supply complete in-memory Testing Write reports with `testing_results=list(writes.values())`. The widget requires a passing report for the exact contract ID, version, environment and immutable payload. Partial checks and reports for other versions do not qualify.
 
-For the full `02A_full_refresh_demo` notebook, repeat activation for **five tables**: `orders`, `products`, `order_history`, `curated_orders`, and `customer_summary`. Both targets must have completed their separate Step 4 validation runs with the intended source versions.
+Review the diagnostics and the checks that Testing could not exercise, then explicitly approve the selected version for Live. Changing the contract or agreement clears that approval. This is a separate Governance action: Testing writes no activation evidence and grants no publication authority.
+
+For the full `02A_full_refresh_demo` notebook, repeat activation for **five tables**: `orders`, `products`, `order_history`, `curated_orders`, and `customer_summary`. Both targets must have completed their Step 4 Testing runs with the intended source versions.
 
 ### Link the Data Agreement
 
@@ -36,28 +38,28 @@ real table_id from Engineering
         ↓
 frozen Data Contract version
         ↓
-Development validation
+Pipeline-wide Testing diagnostics
         ↓
-Agreement linkage + activation
+Explicit Governance review + Agreement linkage + activation
 ```
 
 ### Activate the Data Contract
 
 Review the selected `table_id`, tested Data Contract version, and linked Data Agreement version, then activate it.
 
-Activation tells FabricOps which immutable contract version Production must resolve for that governed table.
+Activation tells Live execution which immutable contract version to enforce in the configured environment.
 
 ??? tip "Activation is blocked or the expected version is missing"
 
     | What you see | What to check |
     | --- | --- |
     | Candidate missing | Save and freeze that exact draft, then reopen the activation widget to refresh the available versions. |
-    | No exact-version validation or validation incomplete | Rerun all participating Reads and the target's Validate Write through successful Coverage; a passing individual check is insufficient. |
+    | No exact-version validation or validation incomplete | Rerun all participating Reads and the target's Testing Write through successful Coverage, then supply that complete in-memory report; a passing individual check is insufficient. |
     | Blocking validation failure | Restore the clean data or correct the implementation, then complete validation again. Changing a frozen rule requires a new draft/version. |
-    | Previously validated version is blocked after another attempt | The latest run must complete; an earlier completion record cannot qualify a later partial or failed attempt. |
+    | Previously validated version is blocked after another attempt | Supply a complete passing Testing report for the exact frozen payload and explicitly approve review. |
     | Agreement missing | Create the Data Agreement in Step 1 and select its exact version. |
 
-    Reopen the widget after completing validation elsewhere. Review the linked agreement and use the explicit activation confirmation. Activation updates the active pointer; it does not deploy a notebook or modify the frozen JSON.
+    Open the widget with the completed Testing reports. Review the linked agreement and use the explicit activation confirmation. Activation updates the active pointer; it does not deploy a notebook or modify the frozen JSON.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">

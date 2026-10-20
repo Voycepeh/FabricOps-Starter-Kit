@@ -124,8 +124,7 @@ def test_save_freeze_runtime_preserves_selections(monkeypatch, required):
     assert written["contract_payload_json"] == saved["contract_payload_json"]
     frozen = contracts.freeze_contract_record(draft=saved, audit={})
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *_a, **_k: RecordingFrame([frozen]))
-    context = {"data_contract_overrides": {"orders": {"contract_id": "contract-orders", "contract_version": 1}}}
-    resolved = shared.resolve_pipeline_data_contract(config, "dev", "orders", context=context)
+    resolved = shared.resolve_data_contract_version(config, "dev", "orders", "contract-orders", 1)
     assert resolved["contract_payload"]["guardrails"][0]["rule_parameters"] == {"required_columns": required}
     rows = shared.contract_guardrail_rows(resolved, environment_name="dev", table_id="orders")
     result = shared.schema_check_core(schema_frame([]), rules_df=rows, table_id="orders", environment_name="dev")
@@ -138,8 +137,8 @@ def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, differ
     """Run real resolution, adapter, evaluator and result writer beneath check_schema."""
     module = importlib.import_module("fabricops_kit.pipeline.check_schema")
     config = framework_config()
-    context = {"data_contract_overrides": {"orders": {"contract_id": "contract-orders", "contract_version": 1}}}
     frozen = frozen_contract(["col-id"])
+    context = {"_pipeline_contracts": {"orders": {**frozen, "contract_payload": json.loads(frozen["contract_payload_json"])}}}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (config, "dev", context))
     # The current Catalogue has drifted to string; the frozen contract remains bigint.
     catalogue = [
