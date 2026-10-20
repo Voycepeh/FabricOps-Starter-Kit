@@ -309,16 +309,11 @@ def validate_contract_definitions(
     only while disabled.
     """
     obsolete = {"coverage_gate", "coverage_policy", "coverage_gate_policy", "guardrail_coverage"}
-    def reject_obsolete(value):
-        if isinstance(value, dict):
-            if obsolete.intersection(value):
-                raise ValueError("Legacy Coverage Gate configuration requires migration: author required protections as Guardrails in a new draft, remove Coverage Gate settings, then freeze, test and activate the new version. Frozen payloads must not be edited.")
-            for item in value.values():
-                reject_obsolete(item)
-        elif isinstance(value, list):
-            for item in value:
-                reject_obsolete(item)
-    reject_obsolete(payload)
+    definitions = [payload, payload.get("table")]
+    if isinstance(payload.get("guardrails"), list):
+        definitions.extend(payload["guardrails"])
+    if any(isinstance(definition, dict) and obsolete.intersection(definition) for definition in definitions):
+        raise ValueError("Legacy Coverage Gate configuration requires migration: author required protections as Guardrails in a new draft, remove Coverage Gate settings, then freeze, test and activate the new version. Frozen payloads must not be edited.")
     enrichment = payload.get("enrichment")
     if not isinstance(enrichment, dict):
         raise ValueError("Data Contract enrichment must be an object with table and columns lists.")

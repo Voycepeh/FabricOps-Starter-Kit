@@ -392,13 +392,15 @@ def test_warn_failures_report_and_permit_configured_write(runtime, spark_session
 
 
 @pytest.mark.parametrize("key", ["coverage_gate", "coverage_policy", "coverage_gate_policy", "guardrail_coverage"])
-def test_legacy_coverage_settings_require_explicit_new_contract_migration(key):
+@pytest.mark.parametrize("location", ["contract", "table", "guardrail"])
+def test_legacy_coverage_settings_require_explicit_new_contract_migration(key, location):
     """Never silently discard a legacy requirement or mutate its frozen payload."""
     from fabricops_kit.data_contract.shared import validate_contract_definitions
     record = frozen(TARGET_ID)
     payload = json.loads(record["contract_payload_json"])
     validate_contract_definitions(payload)
-    payload[key] = {"action": "Block", "required": ["schema"]}
+    definition = {"contract": payload, "table": payload["table"], "guardrail": payload["guardrails"][0]}[location]
+    definition[key] = {"action": "Block", "required": ["schema"]}
     original = json.dumps(payload, sort_keys=True)
     with pytest.raises(ValueError, match="requires migration"):
         validate_contract_definitions(payload)
@@ -442,4 +444,19 @@ def test_legacy_coverage_guardrail_is_rejected_without_rewriting_other_policies(
     original = json.dumps(payload, sort_keys=True)
     with pytest.raises(ValueError, match="unsupported Guardrail definition"):
         validate_contract_definitions(payload)
+    assert json.dumps(payload, sort_keys=True) == original
+
+
+@pytest.mark.parametrize("column_name", ["coverage_gate", "coverage_policy", "coverage_gate_policy", "guardrail_coverage"])
+def test_legacy_setting_names_are_valid_column_names_in_schema_mappings(column_name):
+    """Data keys must not be interpreted as obsolete execution configuration."""
+    from fabricops_kit.data_contract.shared import validate_contract_definitions
+    payload = json.loads(frozen(TARGET_ID)["contract_payload_json"])
+    payload["table"]["columns"][0]["column_name"] = column_name
+    payload["guardrails"] = payload["guardrails"][:1]
+    payload["guardrails"][0]["rule_parameters"]["data_types"] = {column_name: "bigint"}
+    original = json.dumps(payload, sort_keys=True)
+    validate_contract_definitions(payload)
+    rows = shared.contract_guardrail_rows({"contract_payload": payload}, environment_name="dev", table_id=TARGET_ID)
+    assert json.loads(rows[0]["rule_parameters_json"])["data_types"] == {column_name: "bigint"}
     assert json.dumps(payload, sort_keys=True) == original
