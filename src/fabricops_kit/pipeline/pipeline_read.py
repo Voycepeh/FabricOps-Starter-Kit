@@ -372,6 +372,7 @@ def pipeline_read(
         print(f"2. Data Contract → {contract_label}")
         print(f"3. Physical read → {reader_name}")
 
+    recovery_start = len(context.get("_fabricops_source_observation_recovery", []))
     observation = None
     scope: dict[str, Any] = {"type": "full", "first_run": False}
     if store_kind == "lakehouse":
@@ -434,11 +435,17 @@ def pipeline_read(
     else:
         observation_label = "skipped; no selected Data Contract"
 
+    recovery = context.get("_fabricops_source_observation_recovery", [])[recovery_start:]
     if verbose:
         print(f"4. Source Observation → {observation_label}")
+        for recovered in recovery:
+            print(f"   Recovery → {recovered['status'].replace('_', ' ')}; {recovered['batches']} exact batch(es) verified")
+        if scope.get("has_data") is False:
+            print("   Scope → empty incremental scope; no new source records")
         print("Result → DataFrame returned; checks, profiling, transformations, and writes remain explicit.")
 
     return {
+        "source_observation_recovery": recovery,
         "read_metrics": {
             "rows_read": 0 if scope.get("has_data") is False else None,
             "columns": len(dataframe.columns) if hasattr(dataframe, "columns") else None,

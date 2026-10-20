@@ -882,24 +882,224 @@ def _compact_value(value: Any, *, timestamp: bool = False, timestamp_ntz: bool =
     return str(value)
 
 
-def _physical_target_has_activity(
-    identity: Mapping[str, Any], activity_id: str, *, context: Mapping[str, Any]
+def _publication_value(column, datatype):
+    """Canonicalize nested maps without collecting business rows to the driver."""
+    from pyspark.sql import functions as F
+    from pyspark.sql.types import ArrayType, MapType, StructType
+
+    if isinstance(datatype, MapType):
+        return F.array_sort(F.transform(F.map_entries(column), lambda entry: F.struct(
+            _publication_value(entry["key"], datatype.keyType).alias("key"),
+            _publication_value(entry["value"], datatype.valueType).alias("value"),
+        )))
+    if isinstance(datatype, ArrayType):
+        return F.transform(column, lambda item: _publication_value(item, datatype.elementType))
+    if isinstance(datatype, StructType):
+        return F.when(column.isNull(), F.lit(None)).otherwise(F.struct(*[
+            _publication_value(column[field.name], field.dataType).alias(field.name) for field in datatype.fields
+        ]))
+    return column
+
+
+class PublicationBatch:
+    """Bind an immutable prepared batch to a durable, exact target-write marker.
+
+    The content identity includes processing, source membership and target identity.
+    A staged receipt binds that identity to a fresh (activity, timestamp) pair;
+    both audit literals are written atomically with the business rows. Legacy
+    activity-only observations are deliberately ineligible for automatic recovery.
+    """
+
+    def __init__(self, dataframe, *, identity, processing, source_table_ids, audit, context):
+        """Retain the publication boundary without evaluating Spark data."""
+        self.dataframe = dataframe
+        self.identity = identity
+        self.processing = processing
+        self.source_table_ids = source_table_ids
+        self.audit = dict(audit)
+        self.context = context
+        self.already_applied = False
+        self.finalization_recovery = False
+        self.receipt = {}
+        self._owns_cache = not dataframe.is_cached
+
+    def __enter__(self):
+        """Materialize and identify the exact input before staging or writing."""
+        from pyspark import StorageLevel
+        from pyspark.sql import functions as F
+
+        if self._owns_cache:
+            self.dataframe.persist(StorageLevel.MEMORY_AND_DISK)
+        try:
+            names = sorted(set(self.dataframe.columns) - _TARGET_TECHNICAL_COLUMNS)
+            if not names:
+                raise ValueError("A publication batch must contain business columns.")
+            encoded = F.to_json(F.struct(*[_publication_value(F.col(f"`{n}`"), self.dataframe.schema[n].dataType).alias(n) for n in names]),
+                                options={"ignoreNullFields": "false", "timeZone": "UTC"})
+            hashes = self.dataframe.select(F.sha2(encoded, 256).alias("hash"))
+            # Bounded, order-independent multiset fingerprint; row multiplicity
+            # matters. This action establishes retry identity, never presentation.
+            totals = hashes.agg(F.count("*").alias("rows"), *[
+                F.sum(F.conv(F.substring("hash", offset, 16), 16, 10).cast("decimal(38,0)")).alias(f"h{offset}")
+                for offset in (1, 17, 33, 49)
+            ]).first().asDict()
+            self.input_rows = totals["rows"]
+            boundary = {
+                "environment": self.context["env"], "target": self.identity["table_id"],
+                "sources": sorted(self.source_table_ids), "processing": self.processing,
+                "schema": [(n, self.dataframe.schema[n].dataType.jsonValue()) for n in names],
+                "content": totals,
+            }
+            batch_id = hashlib.sha256(json.dumps(boundary, sort_keys=True, default=str).encode()).hexdigest()
+            # Fresh per-batch audit time, independent of a notebook's reused
+            # activity and of caller-provided run-consistent audit timestamps.
+            self.audit["_committed_at"] = datetime.now(UTC)
+            self.receipt = {"batch_id": batch_id, "activity_id": self.audit["_activity_id"],
+                            "committed_at": self.audit["_committed_at"].isoformat(), "input_rows": self.input_rows}
+            try:
+                history = read_lakehouse_table(
+                    _SOURCE_OBSERVATION_TABLE, store="Metadata",
+                    schema=metadata_table_physical_schema(self.context["config"], _SOURCE_OBSERVATION_TABLE),
+                    context=self.context,
+                )
+                receipts = []
+                history_rows = observation_rows(history)
+                for row in history_rows:
+                    if row.get("environment_name") != self.context["env"] or row.get("target_table_id") != self.identity["table_id"]:
+                        continue
+                    receipt = _publication_receipt(row)
+                    if receipt.get("batch_id") == batch_id and receipt not in receipts:
+                        receipts.append(receipt)
+                for receipt in receipts:
+                    if _physical_target_has_publication(self.identity, receipt, context=self.context):
+                        self.receipt = receipt
+                        self.already_applied = True
+                        self.finalization_recovery = not any(
+                            row.get("observation_status") in {"committed", "drift_committed"}
+                            and _publication_receipt(row) == receipt for row in history_rows
+                        )
+                        break
+            except Exception as exc:
+                if not is_table_not_found_error(exc):
+                    raise
+            if not self.already_applied:
+                receipt = _find_applied_publication(
+                    self.identity, batch_id, context=self.context, spark_session=self.dataframe.sparkSession,
+                )
+                if receipt:
+                    self.receipt = receipt
+                    self.already_applied = True
+            return self
+        except BaseException:
+            if self._owns_cache:
+                self.dataframe.unpersist()
+            raise
+
+    def confirm(self):
+        """Refuse metadata advancement if a writer silently omitted this batch."""
+        if self.input_rows == 0 and self.processing["load_strategy"] in {"scd1", "scd2"}:
+            # An empty keyed input cannot change business rows or advance a
+            # watermark; no-op merges may legitimately leave no Delta commit.
+            return
+        if not _physical_target_has_publication(self.identity, self.receipt, context=self.context):
+            # A concurrent identical append may have won Delta's transaction
+            # identity. Accept its exact receipt, never the loser's timestamp.
+            receipt = _find_applied_publication(
+                self.identity, self.receipt["batch_id"], context=self.context, spark_session=self.dataframe.sparkSession,
+            )
+            if receipt:
+                self.receipt = receipt
+                self.already_applied = True
+                return
+            raise RuntimeError(
+                "Physical publication did not establish the exact batch receipt; "
+                "Source Observation was not committed. Inspect the target before retrying."
+            )
+
+    def __exit__(self, *_exc):
+        """Release only the cache owned by this publication attempt."""
+        if self._owns_cache:
+            self.dataframe.unpersist()
+
+
+def _find_applied_publication(identity, batch_id, *, context, spark_session):
+    """Find the exact winning Delta receipt, including source-free publications."""
+    if identity.get("store_type") != "lakehouse":
+        return None
+    from delta.tables import DeltaTable
+    from pyspark.sql import functions as F
+
+    _store, _table, _schema, path = resolve_configured_lakehouse_table(
+        identity["store"], identity["table_name"], identity.get("schema"), context=context,
+    )
+    if not DeltaTable.isDeltaTable(spark_session, path):
+        return None
+    commits = DeltaTable.forPath(spark_session, path).history().where(
+        F.get_json_object("userMetadata", "$.batch_id") == batch_id
+    ).select("userMetadata").collect()
+    for commit in commits:
+        receipt = json.loads(commit["userMetadata"])
+        if _physical_target_has_publication(identity, receipt, context=context):
+            return receipt
+    return None
+
+
+def _publication_receipt(row: Mapping[str, Any]) -> dict[str, Any]:
+    """Decode new staged receipts; never infer one from legacy activity IDs."""
+    raw = row.get("publication_payload_json")
+    if not raw:
+        return {}
+    receipt = json.loads(raw)
+    if not isinstance(receipt, dict) or not all(receipt.get(k) for k in ("batch_id", "activity_id", "committed_at")):
+        raise ValueError("Source Observation publication receipt is incomplete.")
+    return receipt
+
+
+def _physical_target_has_publication(
+    identity: Mapping[str, Any], receipt: Mapping[str, Any], *, context: Mapping[str, Any]
 ) -> bool:
-    """Return whether a governed physical target contains an activity marker."""
+    """Verify both literals bound to an exact staged batch's atomic write."""
+    if not receipt:
+        return False
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
-    escaped = activity_id.replace("'", "''")
+    escaped = receipt["activity_id"].replace("'", "''")
+    instant = datetime.fromisoformat(receipt["committed_at"])
+    if instant.tzinfo is None:
+        raise ValueError("Publication marker timestamp must include its timezone.")
     try:
         if store_kind == "lakehouse":
+            from delta.tables import DeltaTable
+            from pyspark.sql import functions as F
+
+            _store, _table, _schema, path = resolve_configured_lakehouse_table(
+                identity["store"], identity["table_name"], identity.get("schema"), context=context,
+            )
+            spark = get_spark_session()
+            if not DeltaTable.isDeltaTable(spark, path):
+                return False
+            attested = DeltaTable.forPath(spark, path).history().where(
+                F.col("userMetadata") == json.dumps(dict(receipt), sort_keys=True)
+            ).limit(1).count() > 0
+            if receipt.get("input_rows") == 0:
+                return attested
             frame = read_lakehouse_table(
                 str(identity["table_name"]), store=str(identity["store"]),
                 schema=identity.get("schema"), context=context,
-            ).filter(f"`_activity_id` = '{escaped}'")
+            ).where((F.col("_activity_id") == receipt["activity_id"]) & (F.col("_committed_at") == F.lit(instant)))
+            marked = frame.limit(1).count() > 0
+            if marked and not attested:
+                raise RuntimeError(
+                    "An exact-batch target marker exists but its Delta commit receipt is unavailable; "
+                    "reconcile the publication before retrying."
+                )
+            return marked and attested
         elif store_kind == "warehouse":
             schema = str(identity["schema"]).replace("]", "]]")
             table = str(identity["table_name"]).replace("]", "]]")
+            timestamp = instant.astimezone(UTC).replace(tzinfo=None).isoformat(timespec="microseconds")
             frame = read_warehouse_query(
                 f"SELECT TOP (1) 1 AS fabricops_target_row FROM [{schema}].[{table}] "
-                f"WHERE [_activity_id] = '{escaped}'",
+                f"WHERE [_activity_id] = '{escaped}' AND [_committed_at] = CAST('{timestamp}' AS datetime2(6))",
                 store=str(identity["store"]), context=context,
             )
         else:
@@ -929,8 +1129,11 @@ def _merge_source_observation_records(
         "Metadata", _SOURCE_OBSERVATION_TABLE,
         metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE), context=context,
     )
+    target = DeltaTable.forPath(spark, path)
+    if any(row.get("publication_payload_json") for row in records) and "publication_payload_json" not in target.toDF().columns:
+        raise RuntimeError("Run setup_metadata_tables() to add publication_payload_json before finalizing Source Observation; publication progress was not committed.")
     (
-        DeltaTable.forPath(spark, path).alias("target")
+        target.alias("target")
         .merge(
             frame.alias("source"),
             "target.environment_name = source.environment_name "
@@ -957,6 +1160,15 @@ def _recover_completed_source_observations(
         and str(row.get("target_table_id") or "") == target_table_id
         and str(row.get("observation_status") or "") in {"observed", "drift_observed"}
     ]
+    accepted = {
+        (row.get("observation_id"), row.get("partition_value"), row.get("publication_payload_json"), row.get("observation_status"))
+        for row in rows if row.get("environment_name") == env and row.get("source_table_id") == source_table_id
+        and row.get("target_table_id") == target_table_id
+    }
+    staged = [row for row in staged if (
+        row.get("observation_id"), row.get("partition_value"), row.get("publication_payload_json"),
+        "drift_committed" if row.get("observation_status") == "drift_observed" else "committed",
+    ) not in accepted]
     if not staged:
         return rows
     identity = _CURRENT_TABLE_IDENTITIES.get(str(target_table_id))
@@ -967,24 +1179,31 @@ def _recover_completed_source_observations(
             config, env, target_table_id, context=dict(context)
         )
     recovered: list[dict[str, Any]] = []
-    for activity_id in dict.fromkeys(str(row.get("_activity_id") or "") for row in staged):
-        if activity_id and _physical_target_has_activity(identity, activity_id, context=context):
-            for row in staged:
-                if str(row.get("_activity_id") or "") == activity_id:
-                    recovered.append({
-                        **row,
-                        "observation_status": (
-                            "drift_committed"
-                            if row.get("observation_status") == "drift_observed"
-                            else "committed"
-                        ),
-                    })
+    verified = {}
+    for row in staged:
+        receipt = _publication_receipt(row)
+        key = row.get("publication_payload_json")
+        if receipt and key not in verified:
+            verified[key] = _physical_target_has_publication(identity, receipt, context=context)
+        if receipt and verified[key]:
+            recovered.append({
+                **row,
+                "observation_status": (
+                    "drift_committed" if row.get("observation_status") == "drift_observed" else "committed"
+                ),
+            })
     if recovered and not persistence_permitted(context):
         context["execution_plan"].simulations.append({
             "check": "Source Observation recovery", "outcome": "simulated",
             "source_table_id": source_table_id, "target_table_id": target_table_id,
         })
     _merge_source_observation_records(recovered, config=config, context=context)
+    if recovered:
+        context.setdefault("_fabricops_source_observation_recovery", []).append({
+            "source_table_id": source_table_id, "target_table_id": target_table_id,
+            "status": "metadata_recovered" if persistence_permitted(context) else "recovery_simulated",
+            "batches": len({row["publication_payload_json"] for row in recovered}),
+        })
     return [*rows, *recovered]
 
 
@@ -1293,6 +1512,17 @@ def check_source_drift_for_target(
     return result
 
 
+def snapshot_pipeline_write_observations(*, environment_name, activity_id, target_table_id, source_table_ids):
+    """Freeze source evidence so later reads cannot change a publication's checkpoint."""
+    return {
+        source_id: {
+            "incremental": [dict(row) for row in _PENDING_SOURCE_OBSERVATIONS.get((environment_name, activity_id, source_id, target_table_id), [])],
+            "drift": [dict(row) for row in _PENDING_SOURCE_DRIFT_OBSERVATIONS.get((environment_name, activity_id, source_id, target_table_id), [])],
+        }
+        for source_id in source_table_ids
+    }
+
+
 def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[dict[str, Any]]:
     """Commit target Lineage and promote current source observations after a write."""
     if not isinstance(success_context, Mapping):
@@ -1307,15 +1537,13 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     config, env, context = resolve_fabric_context(context=success_context.get("context"))
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     audit["_activity_id"] = activity_id
+    snapshot = success_context["observation_snapshot"]
     records: list[dict[str, Any]] = []
     for source_table_id in source_table_ids:
-        pending_key = (env, activity_id, source_table_id, target_table_id)
+        captured = snapshot[source_table_id]
         pending_groups = (
-            (_PENDING_SOURCE_OBSERVATIONS.get(pending_key, []), "committed"),
-            (
-                _PENDING_SOURCE_DRIFT_OBSERVATIONS.get(pending_key, []),
-                "drift_committed",
-            ),
+            (captured["incremental"], "committed"),
+            (captured["drift"], "drift_committed"),
         )
         for current, observation_status in pending_groups:
             for row in current:
@@ -1333,6 +1561,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
                     "source_table_name": _CURRENT_TABLE_IDENTITIES.get(source_table_id, {}).get("table_name") or resolve_catalogue_table_identity(config, env, source_table_id, context=context).get("table_name"),
                     "target_table_name": _CURRENT_TABLE_IDENTITIES.get(target_table_id, {}).get("table_name") or resolve_catalogue_table_identity(config, env, target_table_id, context=context).get("table_name"),
                     "observation_status": observation_status,
+                    "publication_payload_json": (json.dumps(success_context["publication"], sort_keys=True) if success_context.get("publication") else None),
                     **audit,
                 }))
     for source_table_id in source_table_ids:
@@ -1350,15 +1579,13 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     )
     _merge_source_observation_records(records, config=config, context=context)
     for source_table_id in source_table_ids:
-        _PENDING_SOURCE_OBSERVATIONS.pop(
-            (env, activity_id, source_table_id, target_table_id), None
-        )
-        _PENDING_SOURCE_DRIFT_OBSERVATIONS.pop(
-            (env, activity_id, source_table_id, target_table_id), None
-        )
-        _INCREMENTAL_SOURCE_SCOPES.pop(
-            (env, activity_id, source_table_id, target_table_id), None
-        )
+        key = (env, activity_id, source_table_id, target_table_id)
+        captured = snapshot[source_table_id]
+        if _PENDING_SOURCE_OBSERVATIONS.get(key, []) == captured["incremental"]:
+            _PENDING_SOURCE_OBSERVATIONS.pop(key, None)
+            _INCREMENTAL_SOURCE_SCOPES.pop(key, None)
+        if _PENDING_SOURCE_DRIFT_OBSERVATIONS.get(key, []) == captured["drift"]:
+            _PENDING_SOURCE_DRIFT_OBSERVATIONS.pop(key, None)
     return records
 
 
@@ -1373,12 +1600,13 @@ def stage_pipeline_write_observations(success_context: Mapping[str, Any]) -> lis
     config, env, context = resolve_fabric_context(context=success_context.get("context"))
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     audit["_activity_id"] = activity_id
+    snapshot = success_context["observation_snapshot"]
     records: list[dict[str, Any]] = []
     for source_table_id in source_table_ids:
-        pending_key = (env, activity_id, source_table_id, target_table_id)
+        captured = snapshot[source_table_id]
         for current, observation_status in (
-            (_PENDING_SOURCE_OBSERVATIONS.get(pending_key, []), "observed"),
-            (_PENDING_SOURCE_DRIFT_OBSERVATIONS.get(pending_key, []), "drift_observed"),
+            (captured["incremental"], "observed"),
+            (captured["drift"], "drift_observed"),
         ):
             for row in current:
                 records.append(coerce_metadata_row_types(_SOURCE_OBSERVATION_TABLE, {
@@ -1394,6 +1622,7 @@ def stage_pipeline_write_observations(success_context: Mapping[str, Any]) -> lis
                     "source_table_name": _CURRENT_TABLE_IDENTITIES.get(source_table_id, {}).get("table_name") or resolve_catalogue_table_identity(config, env, source_table_id, context=context).get("table_name"),
                     "target_table_name": _CURRENT_TABLE_IDENTITIES.get(target_table_id, {}).get("table_name") or resolve_catalogue_table_identity(config, env, target_table_id, context=context).get("table_name"),
                     "observation_status": observation_status,
+                    "publication_payload_json": (json.dumps(success_context["publication"], sort_keys=True) if success_context.get("publication") else None),
                     **audit,
                 }))
     _merge_source_observation_records(records, config=config, context=context)
@@ -2966,9 +3195,22 @@ def execute_lakehouse_processing(
     keys = list(processing["key_columns"])
     validate_processing_input(persisted_df, processing)
     if not DeltaTable.isDeltaTable(df.sparkSession, path):
-        write_lakehouse_table(persisted_df, table_name, store=store, schema=schema, mode="overwrite", context=context)
+        receipt = (context or {}).get("_fabricops_publication_receipt")
+        options = {"userMetadata": json.dumps(receipt, sort_keys=True)} if receipt else None
+        write_lakehouse_table(persisted_df, table_name, store=store, schema=schema, mode="overwrite", options=options, context=context)
         return
-    delta = DeltaTable.forPath(df.sparkSession, path)
+    merge_session = df.sparkSession
+    receipt = (context or {}).get("_fabricops_publication_receipt")
+    if receipt:
+        merge_session = df.sparkSession.newSession()
+        # Keep the caller's processing semantics while isolating commit tags.
+        for name in ("spark.sql.session.timeZone", "spark.sql.caseSensitive",
+                     "spark.sql.ansi.enabled", "spark.sql.storeAssignmentPolicy"):
+            merge_session.conf.set(name, df.sparkSession.conf.get(name))
+        merge_session.conf.set("spark.databricks.delta.schema.autoMerge.enabled",
+                               df.sparkSession.conf.get("spark.databricks.delta.schema.autoMerge.enabled", "false"))
+        merge_session.conf.set("spark.databricks.delta.commitInfo.userMetadata", json.dumps(receipt, sort_keys=True))
+    delta = DeltaTable.forPath(merge_session, path)
     condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in keys)
     if strategy == "scd1":
         business_columns = resolve_scd1_business_columns(list(df.columns), keys)

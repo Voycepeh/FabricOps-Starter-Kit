@@ -395,9 +395,9 @@ class DeltaCommitMetrics:
     measurement. A unique writer option binds metrics to this physical attempt.
     """
 
-    def __init__(self):
-        """Create an independent identity for one physical write attempt."""
-        self.token = f"fabricops-metrics:{uuid4()}"
+    def __init__(self, token=None):
+        """Use an atomic publication receipt or create a metrics-only write tag."""
+        self.token = token or f"fabricops-metrics:{uuid4()}"
 
     def read(self, spark, path):
         """Return exact WRITE output rows or None when attribution is unavailable."""

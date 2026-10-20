@@ -82,6 +82,7 @@ _SOURCE_OBSERVATION_COLUMNS = [
     "content_fingerprint",
     "is_present",
     "observation_status",
+    "publication_payload_json",
     *_AUDIT_COLUMNS,
 ]
 

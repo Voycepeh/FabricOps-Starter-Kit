@@ -325,6 +325,7 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("content_fingerprint", "string"),
                 ("is_present", "boolean"),
                 ("observation_status", "string"),
+                ("publication_payload_json", "string"),
                 *audit,
             ],
         ),

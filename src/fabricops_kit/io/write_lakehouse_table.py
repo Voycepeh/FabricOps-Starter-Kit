@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from .shared import (
@@ -285,12 +286,15 @@ def write_lakehouse_table(
     df = repartition_dataframe_for_write(df, repartition_by)
     metrics = (context or {}).get("_fabricops_write_metrics")
     physical_options = dict(options or {})
+    receipt = (context or {}).get("_fabricops_publication_receipt")
+    publication_token = json.dumps(receipt, sort_keys=True) if receipt else None
     can_measure = (
         isinstance(metrics, dict)
         and normalized_mode in {"append", "overwrite"}
-        and not any(str(key).lower() == "usermetadata" for key in physical_options)
+        and (not any(str(key).lower() == "usermetadata" for key in physical_options)
+             or (publication_token is not None and physical_options.get("userMetadata") == publication_token))
     )
-    attempt = DeltaCommitMetrics() if can_measure else None
+    attempt = DeltaCommitMetrics(token=publication_token) if can_measure else None
     if attempt is not None:
         try:
             # Delta gives writer options precedence over this session setting.

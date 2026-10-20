@@ -254,6 +254,32 @@ def test_resolve_physical_table_identity_preserves_configured_store_case(monkeyp
     assert identity["store"] == "Bronze"
 
 
+class BatchDouble:
+    """Isolate routing tests from content identity and physical receipt reads."""
+
+    applied = staticmethod(lambda **kwargs: False)
+
+    def __init__(self, dataframe, **kwargs):
+        """Retain routing arguments without reading a physical target."""
+        self.finalization_recovery = False
+        self.input_rows = None
+        self.dataframe = dataframe
+        self.audit = kwargs["audit"]
+        self.receipt = {"batch_id": "batch", "activity_id": "activity", "committed_at": "2026-08-22T00:00:00Z"}
+        self.already_applied = self.applied(**kwargs)
+
+    def __enter__(self):
+        """Return the isolated batch double."""
+        return self
+
+    def confirm(self):
+        """Physical proof is exercised by persisted Delta regression tests."""
+
+    def __exit__(self, *_args):
+        """Leave cleanup to the test fixture."""
+        pass
+
+
 def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", context=None):
     context = context if context is not None else {}
     identity = _identity(f"{store_type}:unified:dbo:students", store_type=store_type)
@@ -272,7 +298,8 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", cont
     )
     monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: _audit())
     monkeypatch.setattr(write_module, "incremental_publication_scopes", lambda **kwargs: {})
-    monkeypatch.setattr(write_module, "_target_has_activity", lambda **kwargs: False)
+    monkeypatch.setattr(shared_module, "PublicationBatch", BatchDouble)
+    monkeypatch.setattr(BatchDouble, "applied", staticmethod(lambda **kwargs: False))
     monkeypatch.setattr(shared_module, "stage_pipeline_write_observations", lambda value: [])
     monkeypatch.setattr(write_module, "add_target_audit_fields", lambda frame, _audit_values: frame)
     monkeypatch.setattr(
@@ -323,8 +350,7 @@ def test_lakehouse_incremental_bootstrap_probe_uses_quiet_io_context(monkeypatch
     )]
 
 
-@pytest.mark.parametrize("probe", ["activity", "rows"])
-def test_warehouse_first_write_treats_missing_target_as_not_applied(monkeypatch, probe):
+def test_warehouse_first_write_treats_missing_target_as_not_applied(monkeypatch):
     """Missing Warehouse targets must not be queried before their first publication."""
     identity = _identity("warehouse:unified:demo:customer_summary", store_type="warehouse")
     identity["store"] = "Gold"
@@ -342,19 +368,9 @@ def test_warehouse_first_write_treats_missing_target_as_not_applied(monkeypatch,
 
     monkeypatch.setattr(io_package, "read_warehouse_query", read_query)
 
-    if probe == "activity":
-        result = write_module._target_has_activity(
-            identity=identity,
-            activity_id="activity-1",
-            context={},
-            spark_session="spark",
-        )
-    else:
-        result = write_module._target_has_rows(
-            identity=identity,
-            context={},
-            spark_session="spark",
-        )
+    result = write_module._target_has_rows(
+        identity=identity, context={}, spark_session="spark",
+    )
 
     assert result is False
     assert len(queries) == 1
@@ -720,10 +736,10 @@ def test_pipeline_write_failure_does_not_commit_or_establish_profile(monkeypatch
 
 
 @pytest.mark.parametrize("strategy", ["append", "overwrite", "scd1", "scd2"])
-def test_pipeline_write_retry_uses_activity_marker_and_replays_metadata(
+def test_pipeline_write_retry_uses_exact_batch_proof_and_replays_metadata(
     monkeypatch, spark_session, strategy
 ):
-    """Non-SCD retries skip writes; SCD retries reevaluate keyed merges safely."""
+    """All verified exact retries skip mutation and finalize metadata safely."""
     identity, context = _patch_write(monkeypatch, strategy=strategy)
     processing = {"load_strategy": strategy}
     if strategy in {"scd1", "scd2"}:
@@ -738,7 +754,7 @@ def test_pipeline_write_retry_uses_activity_marker_and_replays_metadata(
     finalizations = []
     catalogue = []
     monkeypatch.setattr(
-        write_module, "_target_has_activity", lambda **_kwargs: marker["present"]
+        BatchDouble, "applied", staticmethod(lambda **_kwargs: marker["present"])
     )
 
     def publish(*_args, **_kwargs):
@@ -771,9 +787,9 @@ def test_pipeline_write_retry_uses_activity_marker_and_replays_metadata(
     retried = write_module.pipeline_write(
         frame, table_id=identity["table_id"], source_table_ids=["source-a"], verbose=False
     )
-    assert retried["write_metrics"]["rows_committed"] == (None if strategy in {"scd1", "scd2"} else 0)
+    assert retried["write_metrics"]["rows_committed"] == 0
 
-    expected_merges = 3 if strategy in {"scd1", "scd2"} else 1
+    expected_merges = 1
     assert physical == [strategy] * expected_merges
     assert catalogue == [strategy, strategy, strategy]
     assert finalizations == [strategy, strategy, strategy]
@@ -792,7 +808,7 @@ def test_no_marker_publication_can_be_safely_reevaluated(monkeypatch, spark_sess
     monkeypatch.setattr(
         write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing
     )
-    monkeypatch.setattr(write_module, "_target_has_activity", lambda **_kwargs: False)
+    monkeypatch.setattr(BatchDouble, "applied", staticmethod(lambda **_kwargs: False))
     physical = []
     monkeypatch.setattr(
         io_package, "write_lakehouse_table", lambda *_args, **_kwargs: physical.append(strategy)
@@ -841,9 +857,9 @@ def test_two_targets_commit_only_their_exact_source_subsets(monkeypatch):
     commits = []
     writes = []
     monkeypatch.setattr(
-        write_module,
-        "_target_has_activity",
-        lambda **kwargs: kwargs["identity"]["table_id"] == "target-1",
+        BatchDouble,
+        "applied",
+        staticmethod(lambda **kwargs: kwargs["identity"]["table_id"] == "target-1"),
     )
     monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *a, **k: writes.append(a))
     monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: commits.append(value))
@@ -936,7 +952,7 @@ def test_orchestration_success_stage_record_remains_unchanged(capsys):
 
 
 @pytest.mark.parametrize("strategy", ["scd1", "scd2"])
-def test_scd_reconciles_changes_even_when_activity_already_exists(monkeypatch, spark_session, strategy):
+def test_scd_reconciles_new_batch_even_when_activity_already_exists(monkeypatch, spark_session, strategy):
     """A reused interactive notebook activity cannot bypass keyed SCD change detection."""
     _patch_write(monkeypatch, strategy=strategy)
     processing = {"load_strategy": strategy, "key_columns": ["id"]}
@@ -945,7 +961,7 @@ def test_scd_reconciles_changes_even_when_activity_already_exists(monkeypatch, s
     monkeypatch.setattr(
         write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing
     )
-    monkeypatch.setattr(write_module, "_target_has_activity", lambda **_kwargs: True)
+    monkeypatch.setattr(BatchDouble, "applied", staticmethod(lambda **_kwargs: False))
     monkeypatch.setattr(write_module, "_physical_processing_definition", lambda value: value)
     monkeypatch.setattr(write_module, "_persist_target_processing", lambda **_kwargs: None)
     monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda _value: None)
@@ -971,10 +987,10 @@ def test_scd_reconciles_changes_even_when_activity_already_exists(monkeypatch, s
 
 
 @pytest.mark.parametrize("strategy", ["append", "overwrite"])
-def test_non_scd_retry_still_skips_existing_activity(monkeypatch, strategy):
+def test_non_scd_retry_skips_verified_exact_batch(monkeypatch, strategy):
     """Non-keyed writes must retain their duplicate-publication protection."""
     _patch_write(monkeypatch, strategy=strategy)
-    monkeypatch.setattr(write_module, "_target_has_activity", lambda **_kwargs: True)
+    monkeypatch.setattr(BatchDouble, "applied", staticmethod(lambda **_kwargs: True))
     monkeypatch.setattr(
         io_package, "write_lakehouse_table",
         lambda *_args, **_kwargs: pytest.fail("already applied physical write repeated"),
@@ -1050,3 +1066,16 @@ def test_publication_outcome_survives_metadata_finalization_failure(monkeypatch)
     assert raised.value.published is True
     assert raised.value.persistence_status == "incomplete"
     assert raised.value.failed_stage == "Metadata finalization"
+
+
+def test_testing_rejects_populated_incremental_bootstrap_without_writing(monkeypatch):
+    """Testing evaluates bootstrap safety while keeping all durable boundaries read-only."""
+    from types import SimpleNamespace
+    context = {'execution_plan': SimpleNamespace(permits_persistence=False)}
+    _patch_write(monkeypatch, strategy='append', context=context)
+    monkeypatch.setattr(write_module, 'incremental_publication_scopes', lambda **kw: {'source': {'first_run': True}})
+    monkeypatch.setattr(write_module, '_target_has_rows', lambda **kw: True)
+    monkeypatch.setattr(io_package, 'write_lakehouse_table', lambda *a, **kw: pytest.fail('Testing wrote business rows'))
+    monkeypatch.setattr(shared_module, 'commit_pipeline_write_success', lambda *a: pytest.fail('Testing committed metadata'))
+    with pytest.raises(ValueError, match='bootstrap requires a new or empty target'):
+        write_module.pipeline_write(object(), table_id='target', source_table_ids=['source'], verbose=False)

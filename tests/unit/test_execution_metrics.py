@@ -160,7 +160,8 @@ def test_read_summary_reuses_profile_only_for_full_scope(incremental, rows, caps
 @pytest.mark.parametrize("key", ["userMetadata", "USERMETADATA"])
 def test_caller_commit_metadata_is_preserved_without_unattributable_lookup(key):
     module = import_module("fabricops_kit.io.write_lakehouse_table")
-    frame = SimpleNamespace(write=object())
+    frame = SimpleNamespace(write=object(), sparkSession=SimpleNamespace(
+        conf=SimpleNamespace(get=lambda _key, default: default)))
     options = {key: "caller-provided"}
     metrics = {"rows_committed": None}
     with patch.object(module, "resolve_configured_lakehouse_table", return_value=(None, "orders", None, "/table")), patch.object(module, "repartition_dataframe_for_write", return_value=frame), patch.object(module, "write_delta_path") as write, patch.object(DeltaCommitMetrics, "read") as read:
@@ -205,3 +206,20 @@ def test_exact_path_probes_find_latest_without_listing(checkpoint, latest):
     assert spark.fs.exists.call_count <= 33  # checkpoint existence plus 32 probes
     assert spark.fs.open.call_args.args[0].value.endswith(f"/{latest:020d}.json")
     reader.close.assert_called_once()
+
+
+def test_exact_publication_receipt_preserves_attributable_append_metrics():
+    """The atomic batch receipt also identifies the native WRITE metric commit."""
+    module = import_module('fabricops_kit.io.write_lakehouse_table')
+    receipt = {'batch_id': 'batch', 'activity_id': 'activity', 'committed_at': '2026-10-20T00:00:00+00:00'}
+    token = json.dumps(receipt, sort_keys=True)
+    frame = SimpleNamespace(write=object(), sparkSession=SimpleNamespace(
+        conf=SimpleNamespace(get=lambda _key, default: default)))
+    metrics = {'rows_committed': None}
+    options = {'userMetadata': token, 'txnAppId': 'batch', 'txnVersion': 0}
+    context = {'_fabricops_publication_receipt': receipt, '_fabricops_write_metrics': metrics}
+    with patch.object(module, 'resolve_configured_lakehouse_table', return_value=(None, 'orders', None, '/table')), patch.object(module, 'repartition_dataframe_for_write', return_value=frame), patch.object(module, 'write_delta_path') as write, patch.object(DeltaCommitMetrics, 'read', return_value=4):
+        module.write_lakehouse_table(frame, 'orders', options=options, verbose=False, context=context)
+    assert write.call_args.kwargs['options'] == options
+    assert metrics['rows_committed'] == 4
+    assert metrics['measurement_source'] == 'delta_commit'

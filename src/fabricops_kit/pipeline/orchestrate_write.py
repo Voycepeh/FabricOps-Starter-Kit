@@ -196,6 +196,8 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
                     "tested_contracts": tested_contract_identities(context, [target_id, *source_ids]),
                     "total_duration_seconds": duration}
         write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=write_mode, load_strategy_parameters=write_parameters, source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False, context=context))
+        published = write_result.get("published", True)
+        publication_status = write_result.get("publication_status", "published")
         metrics = dict(write_result.get("write_metrics") or {})
         for key in ("input_rows", "rows_committed", "total_target_rows", "rows_inserted", "rows_updated", "rows_unchanged", "versions_inserted", "versions_expired", "measurement_source"):
             metrics.setdefault(key, None)
@@ -206,23 +208,24 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
         try:
             profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], grain_discovery_enabled=grain_discovery_enabled, grain_discovery_max_columns=grain_discovery_max_columns, grain_discovery_max_candidates=grain_discovery_max_candidates, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, context=context, spark_session=spark_session))
         except RuntimeError as exc:
-            exc.published = True
+            exc.published = published
             exc.table_id = write_result["table_id"]
             exc.write_metrics = dict(metrics)
             exc.failed_stage = "Profile"
-            message = "Target publication and checkpoint finalization already succeeded; Profile failed afterwards."
+            message = ("Target publication and checkpoint finalization already succeeded; Profile failed afterwards."
+                       if published else "The empty incremental scope was not published; Profile failed afterwards.")
             exc.args = (f"{exc} {message}",)
             if verbose:
                 print(message)
             raise
         metrics["total_target_rows"] = profile.get("row_count")
-        fields = [("Target", target), ("Strategy", strategy.title()), ("Published", "Yes"), ("Rows committed", metrics["rows_committed"])]
+        fields = [("Target", target), ("Strategy", strategy.title()), ("Published", "Yes" if published else "No"), ("Publication", publication_status.replace("_", " ")), ("Rows committed", metrics["rows_committed"])]
         if strategy == "scd1":
             fields.extend((label, metrics[key]) for label, key in (("Rows inserted", "rows_inserted"), ("Rows updated", "rows_updated"), ("Rows unchanged", "rows_unchanged")))
         elif strategy == "scd2":
             fields.extend((label, metrics[key]) for label, key in (("Versions inserted", "versions_inserted"), ("Versions expired", "versions_expired"), ("Rows unchanged", "rows_unchanged")))
         duration = summary.finish(fields)
-        return {**common_results, **write_result, "write_metrics": metrics, "total_duration_seconds": duration, "dataframe": prepared, "published": True, "publication_status": "published", "profile_result": profile}
+        return {**common_results, **write_result, "write_metrics": metrics, "total_duration_seconds": duration, "dataframe": prepared, "published": published, "publication_status": publication_status, "profile_result": profile}
     except Exception:
         mapping = sensitive.get("support_mapping")
         if mapping is not None:

@@ -197,6 +197,7 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
         "content_fingerprint",
         "is_present",
         "observation_status",
+        "publication_payload_json",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
     assert {

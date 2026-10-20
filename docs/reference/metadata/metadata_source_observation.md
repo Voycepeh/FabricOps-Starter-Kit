@@ -31,8 +31,8 @@ via `source_table_id` + `target_table_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 21 |
-| Business columns | 13 |
+| Total columns | 22 |
+| Business columns | 14 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -52,6 +52,7 @@ via `source_table_id` + `target_table_id`
 | `content_fingerprint` | `string` | Metadata Source Observation field `content_fingerprint`. |
 | `is_present` | `boolean` | Whether the partition exists in this observation; false identifies a removal tombstone. |
 | `observation_status` | `string` | Metadata Source Observation field `observation_status`. |
+| `publication_payload_json` | `string` | Exact prepared-batch identity, writer activity and publication timestamp staged before the physical write. Recovery verifies this receipt against the atomic Delta commit and target marker; legacy rows without a receipt are not automatically promoted. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

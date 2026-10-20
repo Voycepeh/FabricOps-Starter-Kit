@@ -493,6 +493,7 @@ METADATA_COLUMN_OWNERS = {
         "source_table_name": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
         "target_table_name": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
         "observation_status": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
+        "publication_payload_json": ["fabricops_kit.pipeline.shared.stage_pipeline_write_observations", "fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
     },
 }
 

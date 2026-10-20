@@ -1,5 +1,7 @@
 """Shared-plan integration and durable-boundary spies for Testing and Live."""
 
+from contextlib import nullcontext
+from types import SimpleNamespace
 import importlib
 import json
 from dataclasses import FrozenInstanceError
@@ -61,7 +63,9 @@ def runtime(monkeypatch, spark_session):
     monkeypatch.setattr(shared, "get_spark_session", lambda *a: spark_session)
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda name, **kw: RecordingFrame(rows) if name == "METADATA_DATA_CONTRACT" else (_ for _ in ()).throw(RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")))
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: source)
-    monkeypatch.setattr(write_module, "_target_has_activity", lambda **kw: False)
+    monkeypatch.setattr(shared, "PublicationBatch", lambda dataframe, **kw: nullcontext(SimpleNamespace(
+        dataframe=dataframe, audit=kw["audit"], receipt={"batch_id": "batch"}, input_rows=2, already_applied=False, finalization_recovery=False, confirm=lambda: None,
+    )))
     monkeypatch.setattr(write_module, "_target_has_rows", lambda **kw: False)
     # Every mutation reachable from Read, validation, recovery and Write is observed.
     spies = {}

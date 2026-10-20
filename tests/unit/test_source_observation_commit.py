@@ -70,6 +70,9 @@ def _context(*, target="target-x", sources=("source-a", "source-b"), notebook="0
         "activity_id": "run-1",
         "notebook_name": notebook,
         "notebook_id": "physical-id",
+        "observation_snapshot": shared.snapshot_pipeline_write_observations(
+            environment_name="dev", activity_id="run-1", target_table_id=target, source_table_ids=list(sources),
+        ),
     }
 
 
@@ -218,3 +221,17 @@ def test_partial_multi_target_failure_commits_only_successful_boundary(monkeypat
     assert written == records
     assert failed_target_key in shared._PENDING_SOURCE_OBSERVATIONS
     assert not any(row["target_table_id"] == "target-b" for row in written)
+
+
+def test_finalization_keeps_the_snapshot_staged_for_the_physical_batch(monkeypatch):
+    """A later same-session read cannot be committed by an older target write."""
+    prior = _observation('source-a')
+    written, _ = _configure_commit(monkeypatch, [prior])
+    success = _context(sources=('source-a',))
+    key = ('dev', 'run-1', 'source-a', 'target-x')
+    newer = {**prior, 'observation_id': 'newer', 'max_change_value': '2026-09-12'}
+    shared._PENDING_SOURCE_OBSERVATIONS[key] = [newer]
+    records = shared.commit_pipeline_write_success(success)
+    assert [r['max_change_value'] for r in records] == ['2026-09-11']
+    assert shared._PENDING_SOURCE_OBSERVATIONS[key] == [newer]
+    assert written == records

@@ -112,7 +112,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:21`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L21-L148">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L21-L152">View on GitHub</a>
 </div>
 
 
@@ -128,7 +128,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 163 |
+| Live-critical dependencies | 164 |
 
 ### Release history
 
@@ -251,10 +251,11 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._orchestration_status</code></li>
 <li><code>fabricops_kit.pipeline.shared._parse_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared._parse_rule_parameters</code></li>
-<li><code>fabricops_kit.pipeline.shared._physical_target_has_activity</code></li>
+<li><code>fabricops_kit.pipeline.shared._physical_target_has_publication</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._progress_key</code></li>
+<li><code>fabricops_kit.pipeline.shared._publication_receipt</code></li>
 <li><code>fabricops_kit.pipeline.shared._recover_completed_source_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared._require_bootstrap_contracts_absent</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
