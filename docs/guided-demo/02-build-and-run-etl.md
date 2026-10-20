@@ -101,8 +101,14 @@ source = orchestrate_read(
     table_name="source_table",  # Replace with the governed source table.
     read_mode="full",
     query=None,
-    spark_session=spark,
+    grain_discovery_enabled=True,
+    grain_discovery_max_columns=3,
+    grain_discovery_max_candidates=8,
+    frequency_enabled=True,
     frequency_top_n=5,
+    spark_session=spark,
+    verbose=True,
+    dq_diagnostics="sample",
 )
 sources["source"] = source
 ```
@@ -117,6 +123,10 @@ sources["source"] = source
 | `query` | Optionally provide a read-only Warehouse query; otherwise leave it as `None`. |
 | `read_parameters` | Add mode-specific options such as the watermark column for an Incremental read. |
 | `target_table_id` | Add the governed target identity required by an Incremental read. |
+| `grain_discovery_enabled`, `grain_discovery_max_columns`, `grain_discovery_max_candidates` | Enable candidate Grain discovery and bound its key width and stored candidates. Disabling discovery does not disable the Data Contract Grain Guardrail. |
+| `frequency_enabled`, `frequency_top_n` | Enable Frequency profiling and choose how many values to retain. |
+| `dq_diagnostics` | Choose `"sample"` (default), `"none"` for metrics only, or `"full"` for a lazy DataFrame of all failures. |
+| `verbose` | Print orchestration stages and summary; set `False` for quieter runs. |
 
 The result is a dictionary, not only a DataFrame. Use its DataFrame for transformation while retaining the complete result for checks and lineage:
 
@@ -127,7 +137,7 @@ display(source_df)
 
 If a transformation needs another governed source, duplicate the complete **READ 1 — Example source** block, give the Read and its dictionary key a unique name, and configure the second table. Remove a Read block when it does not contribute to the pipeline. Every source that contributes to a target should later appear in that target's `sources` list.
 
-For Incremental reads, add `read_parameters` and `target_table_id` rather than implementing watermark filtering in the transformation. See [Read and Load Strategies](../reference/read-and-load-strategies.md) and the [Step 2B demo](02B-build-and-run-incremental-append-etl.md).
+For Incremental reads, add `read_parameters` and `target_table_id` rather than implementing watermark filtering in the transformation. Incremental batches skip full-source Profile, so enabling Grain candidate discovery and Frequency profiling does not profile that incremental batch. See [Read and Load Strategies](../reference/read-and-load-strategies.md) and the [Step 2B demo](02B-build-and-run-incremental-append-etl.md).
 
 ??? info "Under the hood"
 
@@ -207,13 +217,18 @@ writes["target"] = orchestrate_write(
 | Parameter | What you normally change |
 | --- | --- |
 | `transformed_df` | The DataFrame produced by your transformation section. |
-| `name` | A short notebook-facing name for the target. Use the same key in `writes`. |
+| `writes` dictionary key | A notebook-facing label for the target, not an `orchestrate_write()` parameter. |
 | `sources` | Every complete Read result that contributed to this target. |
 | `store`, `schema`, `table_name` | The configured target store and physical target identity. Replace `target_table`. |
 | `write_mode` | The load strategy: `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`. |
 | `write_parameters` | Add parameters required by the selected strategy, such as SCD keys and tracked columns. |
 | `contracts` | Leave as `CONTRACTS` so the target follows the widget selection. |
 | `repartition_by` | Optionally control the Spark partition count before writing; otherwise leave it as `None`. |
+| `grain_discovery_enabled`, `grain_discovery_max_columns`, `grain_discovery_max_candidates` | Control candidate Grain profiling of the published target; contract Grain Guardrails are independent. |
+| `frequency_enabled`, `frequency_top_n` | Control target Frequency profiling after publication. |
+| `dq_diagnostics` | Choose `"sample"`, `"none"`, or `"full"` for Data Quality failure detail. |
+| `existing_mapping` | Supply a previously saved Sensitive Data token mapping only when handling mappings yourself; do not supply it with a managed mapping store. |
+| `verbose` | Print orchestration stages and summary; set `False` for quieter runs. |
 
 
 ??? info "Under the hood"
