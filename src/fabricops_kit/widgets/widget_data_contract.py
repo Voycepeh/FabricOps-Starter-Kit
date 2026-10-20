@@ -2265,7 +2265,7 @@ def widget_data_contract(
             return widgets.VBox([toggle, content], layout=widgets.Layout(width="100%", min_width="0", gap="4px"))
 
         def render_guardrail_sidebar():
-            active = [r for r in session_guardrails() if r.get("is_active", True)]
+            active = list(session_guardrails())
             names_by_id = {str(c.get("column_id")): str(c.get("column_name")) for c in columns}
             payload_columns = json.loads(str(current["contract"].get("contract_payload_json") or "{}")).get("table", {}).get("columns", [])
             types = {str(c.get("column_name")): str(c.get("data_type")) for c in payload_columns}
@@ -2294,6 +2294,7 @@ def widget_data_contract(
                 policy = "Block" if kind in {"schema", "sensitive_data"} else str(rule.get("action") or ("Block" if kind == "grain" else "Warn"))
                 affected_names = affected(rule)
                 detail = []
+                enabled = rule.get("is_active", True)
                 if kind == "schema":
                     required_names = list(dict.fromkeys(names_by_id.get(str(name), str(name)) for name in params.get("required_columns", [])))
                     detail = [("Required columns", required_names or "None"), ("Frozen type expectations", ", ".join(f"{name}: {dtype}" for name, dtype in types.items()) or "None"), ("Policy", "Block missing Required columns and contracted type mismatches; additional columns Warn and allow continuation")]
@@ -2306,6 +2307,7 @@ def widget_data_contract(
                     if kind == "source_drift":
                         detail.append(("Scope", str(table.get("table_name") or "This source") + " → consuming target; compared with the target's accepted Source Observation"))
                     detail.extend((("Accepted failure rate %" if key in {"maximum_missing_percent", "maximum_failure_percent"} else key.replace("_", " ").capitalize()), value) for key, value in params.items() if key not in {"columns", "engineering_reviewed_by", "engineering_review_note"})
+                detail.insert(0, ("State", "Enabled" if enabled else "Disabled · intentionally not executed"))
                 text = "".join(f"<div><b>{escaped(key)}:</b> {escaped(value)}</div>" for key, value in detail)
                 description = (", ".join(affected_names) + " · " if affected_names else "Table · ") + str(rule.get("rule_type") or labels[kind]).replace("_", " ") + " · " + policy
                 button = widgets.Button(description=description, tooltip="Edit " + description, layout=widgets.Layout(width="100%", min_width="0", height="auto"))
@@ -2348,7 +2350,6 @@ def widget_data_contract(
             guardrail_sidebar.children = (
                 group("read", "When this table is read", "orchestrate_read()", ("freshness", "schema", "grain", "data_quality")),
                 group("write", "Before this table is written", "orchestrate_write()", ("schema", "sensitive_data", "source_drift", "grain", "data_quality")),
-                widgets.HTML("<div class='fabricops-guardrail-detail'><b>Guardrail Coverage · publication requirement</b><br>Before publication, every participating table needs a selected Data Contract, an applicable active Guardrail, and current-activity results for each applicable rule. Source Drift belongs to the source → target relationship. These are configured policies; this sidebar has not run validation.</div>"),
                 configure_guardrails, configure_options,
             )
             sidebar_snapshot["signature"] = signature

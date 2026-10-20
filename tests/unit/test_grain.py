@@ -104,7 +104,7 @@ def test_incomplete_grain_preview_cannot_be_saved_frozen_or_enforced():
 
 
 @pytest.mark.parametrize("mode,action", [("testing", "Block"), ("live", "Block"), ("live", "Warn")])
-def test_grain_plan_coverage_and_continuation(contract_runtime, spark_session, monkeypatch, mode, action):
+def test_grain_plan_guardrails_and_continuation(contract_runtime, spark_session, monkeypatch, mode, action):
     """Exact Grain outcomes govern Live continuation and remain in memory in Testing."""
     make, rows, spies, _ = contract_runtime
     rows.extend([frozen(SOURCE_ID, active=mode == "live"), frozen(TARGET_ID, active=mode == "live")])
@@ -129,7 +129,7 @@ def test_grain_plan_coverage_and_continuation(contract_runtime, spark_session, m
     else:
         result = write(plan, source, spark_session, dataframe=frame)
         assert result["grain_result"]["validation_scope"] == "write_prepared_input"
-        assert result["coverage_result"]["can_continue"] is (action == "Warn")
+        assert result["grain_result"]["can_continue"] is (action == "Warn")
         assert result["published"] is (mode == "live")
     assert any(row["guardrail_type"] == "grain" for row in plan.results)
     if mode == "testing":

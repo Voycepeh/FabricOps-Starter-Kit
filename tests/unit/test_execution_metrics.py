@@ -121,7 +121,7 @@ def test_write_summary_keeps_profile_total_separate_from_committed(mode, capsys,
     monkeypatch.setattr(module, "prepare_pipeline_execution", lambda *_args, **_kwargs: execution_context_stub({"target": None}))
     frame = SimpleNamespace(columns=["id", "value"])
     with ExitStack() as stack:
-        for name in ("resolve_table_id", "check_schema", "check_source_drift", "check_dq", "check_guardrail_coverage"):
+        for name in ("resolve_table_id", "check_schema", "check_source_drift", "check_dq"):
             stack.enter_context(patch.object(module, name, return_value="target" if name == "resolve_table_id" else {"status": "passed"}))
         stack.enter_context(patch.object(module, "check_sensitive_data", return_value={"dataframe": frame}))
         stack.enter_context(patch.object(module, "pipeline_write", return_value={"table_id": "target", "strategy": mode, "write_metrics": {"rows_committed": 8 if mode in {"append", "overwrite"} else None}}))

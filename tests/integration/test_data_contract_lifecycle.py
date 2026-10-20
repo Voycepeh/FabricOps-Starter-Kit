@@ -272,7 +272,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     tested = orchestrate_write(inputs[0]["dataframe"], execution_plan=plan, sources=inputs,
         **coordinates["targets"][0], write_mode="overwrite", spark_session=state.spark, verbose=False)
     assert tested["validation_passed"] and not tested["published"]
-    assert tested["coverage_result"]["can_continue"]
+    assert tested["validation_passed"]
     assert tested["dataframe"].first().email == "****************"
     assert state.metadata == snapshot
     assert all(row["rule_type"] != "contract_validation" for row in plan.results)
@@ -292,7 +292,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     inputs = reads(live)
     published = orchestrate_write(inputs[0]["dataframe"], execution_plan=live, sources=inputs,
         **coordinates["targets"][0], write_mode="overwrite", spark_session=state.spark, verbose=False)
-    assert published["published"] and published["coverage_result"]["can_continue"]
+    assert published["published"]
     assert state.business["curated_orders"].first().email == "****************"
     assert {row["pipeline_role"] for row in state.metadata["METADATA_DATA_LINEAGE"]} == {"source", "target"}
     assert state.metadata["METADATA_SOURCE_OBSERVATION"]

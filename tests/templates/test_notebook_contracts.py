@@ -358,7 +358,6 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
         "sensitive_result",
         "source_drift_results",
         "dq_result",
-        "coverage_result",
         "orchestration_stages",
     }
     for path in paths:

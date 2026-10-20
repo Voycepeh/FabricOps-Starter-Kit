@@ -81,7 +81,7 @@ def _contract_review(row, roles=("source", "target")):
             "counts": {key: len(value) for key, value in groups.items()}}
 
 
-def _inspector(row, roles):
+def _inspector(row, roles, results=()):
     review = _contract_review(row, roles)
     labels = {"schema": "Schema", "grain": "Grain", "data_quality": "Data Quality", "freshness": "Freshness",
               "source_drift": "Source Drift", "sensitive_data": "Sensitive Data"}
@@ -115,6 +115,14 @@ def _inspector(row, roles):
         inactive = sum(rule.get("is_active") is False for rule in rules)
         sections.append(f'<details><summary>{html.escape(title)} · {len(rules)} checks · {inactive} inactive</summary>{content}</details>')
     sections.append("<details><summary>Processing and ownership</summary>" + _value({key: review["payload"]["table"][key] for key in ("processing", "writer") if key in review["payload"]["table"]}) + "</details>")
+    actual = [result for result in results if result.get("contract_id") == row.get("contract_id")
+              and result.get("contract_version") == row.get("contract_version")
+              and result.get("table_id") == row.get("table_id")]
+    sections.append("<details><summary>Execution results · " + str(len(actual)) + "</summary>" +
+                    (_table(actual, [("guardrail_type", "Guardrail"), ("guardrail_rule_id", "Rule"),
+                                     ("execution_type", "Mode"), ("status", "Result"), ("can_continue", "Can continue"),
+                                     ("result_payload_json", "Evaluation details")]) if actual else
+                     "<p>Not executed in this plan. Saved definitions are configuration only.</p>") + "</details>")
     raw = html.escape(json.dumps(review["payload"], indent=2, ensure_ascii=False))
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
@@ -138,7 +146,9 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
     -------
     dict
         Interactive state with execution_mode (initially testing), tables, controls,
-        select_contract, set_mode and build_plan. Each table starts unselected.
+        select_contract, set_mode, build_plan and refresh. Each table starts unselected.
+        After executing the built plan, refresh shows its exact-version results
+        in expandable sections alongside saved definitions and disabled states.
         Explicitly select No Contract for bootstrap; build_plan validates every
         choice and freezes the plan to pass to all Read and Write calls.
         UI edits after build_plan require a new plan and a new run of Read/Transform/Write.
@@ -224,6 +234,7 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
             if state["execution_mode"] == "live" and selected is not table["active"]:
                 raise ValueError("Live requires the active frozen version.")
             choice = {"contract_id": contract_id, "contract_version": contract_version}
+        state.pop("execution_plan", None)
         table.update(selected=selected, choice=choice,
                      review=_contract_review(selected, table["identity"]["roles"]) if selected else None)
         refresh()
@@ -232,6 +243,7 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
     def set_mode(mode):
         if mode not in {"testing", "live"}:
             raise ValueError("Mode must be testing or live.")
+        state.pop("execution_plan", None)
         state["execution_mode"] = mode
         if mode == "live":
             for table in state["tables"].values():
@@ -247,11 +259,14 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
         return state
 
     def build_plan():
-        return create_pipeline_execution_plan(
+        plan = create_pipeline_execution_plan(
             execution_mode=state["execution_mode"], sources=sources, targets=targets,
             selections={key: table["choice"] for key, table in state["tables"].items() if table["choice"] is not None},
             context=runtime, spark_session=spark,
         )
+
+        state["execution_plan"] = plan
+        return plan
 
     state.update(select_contract=select_contract, set_mode=set_mode, build_plan=build_plan)
     root = header = mode_control = None
@@ -282,11 +297,13 @@ def widget_select_data_contract(*, sources, targets, spark_session=None, context
                 selected = table["selected"]
                 controls["version"].value = (f'{selected["contract_id"]}\n{selected["contract_version"]}' if selected else
                                              ("none" if table["choice"] else ""))
-                controls["inspector"].value = (_inspector(selected, table["identity"]["roles"]) if selected else
+                controls["inspector"].value = (_inspector(selected, table["identity"]["roles"],
+                    state["execution_plan"].results if state.get("execution_plan") else ()) if selected else
                                                 ("<p>Explicit No Contract: no saved Guardrails selected.</p>" if table["choice"] else "<p>Select a frozen contract to inspect its saved definitions.</p>"))
         finally:
             refreshing = False
 
+    state["refresh"] = refresh
     try:
         widgets = require_ipywidgets()
         from IPython import display as ip

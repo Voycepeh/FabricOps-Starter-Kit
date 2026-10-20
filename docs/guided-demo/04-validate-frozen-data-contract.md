@@ -21,7 +21,9 @@ Selection does not edit or activate a contract.
 
 5. Run `EXECUTION_PLAN = CONTRACTS["build_plan"]()` after selecting versions. All Reads and Writes must use this same plan.
 
-Guardrail Coverage requires complete applicable checks for each selected contract in the source → target relationship. An explicit **No Contract** choice exempts only that participant; it cannot bypass an active contract or excuse missing or failed checks on another participant. Missing selections remain errors.
+**Data Contract → Configured Guardrails → Testing/Live Execution → Results**
+
+The selected payload determines applicable checks. Empty Guardrail lists and intentionally disabled optional checks impose no extra requirement. Warn reports a failure and permits continuation. Block prevents Live publication; a configured check that cannot execute also fails closed. Explicit No Contract cannot bypass an active contract. Missing selections remain errors.
 
 ### Run Read → Transform → Write → Inspect
 
@@ -30,13 +32,14 @@ Testing reads real data and runs the transformation normally. The prepared Write
 ```python
 result = writes["curated_orders"]
 print(result["execution_mode"], result["publication_status"])
-print(result["validation_passed"], result["coverage_result"])
+print(result["validation_passed"], result["source_guardrail_results"])
+CONTRACTS["refresh"]()  # Expand exact-version execution results in the inspector.
 display(result["dataframe"].limit(10))
 print(result["dry_run"])
 print(result["checks_not_exercised"])
 ```
 
-A failed Guardrail remains a diagnostic result in Testing. Inspect `schema_result`, `grain_result`, `dq_result`, `source_drift_results`, `sensitive_result` and `coverage_result`. DQ diagnostics retain exact counts and configured tolerances, with bounded samples by default and optional lazy full violations.
+A failed Guardrail remains a diagnostic result in Testing. Inspect `schema_result`, `grain_result`, `dq_result`, `source_drift_results`, `sensitive_result`. DQ diagnostics retain exact counts and configured tolerances, with bounded samples by default and optional lazy full violations.
 
 Testing never writes target data, `METADATA_DATA_LINEAGE`, `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_GUARDRAIL_RESULTS`, `METADATA_SOURCE_OBSERVATION`, persistent token mappings, checkpoints or durable staging. It never activates contracts or registers successful contract-validation evidence for activation. Evaluation results stay in the plan's in-memory journal.
 
@@ -53,7 +56,7 @@ Without a successful historical Live publication, Source Drift may report its fi
 
 ### Live publication is a separate decision
 
-After Governance has activated the appropriate frozen versions, switch the whole pipeline to green **Live**, build a new plan, and rerun Read → Transform → Write. Live rejects inactive candidates and preserves Warn/Block, coverage, ownership, retry and recovery checks. A successful Live write commits authoritative Lineage at the existing boundary. Publication and metadata updates across Fabric stores are separate operations.
+After Governance has activated the appropriate frozen versions, switch the whole pipeline to green **Live**, build a new plan, and rerun Read → Transform → Write. Live rejects inactive candidates and preserves Warn/Block, required Guardrail execution, ownership, retry and recovery checks. A successful Live write commits authoritative Lineage at the existing boundary. Publication and metadata updates across Fabric stores are separate operations.
 
 Pass the complete in-memory Testing Write reports to `widget_activate_data_contract(testing_results=list(writes.values()))` in the separate Governance review. It matches the exact contract ID, version and immutable payload, requires explicit review approval and Data Agreement linkage, then asks for confirmation. Testing itself never registers evidence, activates a contract or authorizes Live.
 

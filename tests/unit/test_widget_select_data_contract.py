@@ -67,6 +67,7 @@ def test_bootstrap_never_requires_lineage_and_no_contract_is_explicit(monkeypatc
     """An empty contract store does not implicitly choose No Contract or read Lineage."""
     context, state, reads = _render(monkeypatch, [], lineage_state=lineage_state)
     assert state["execution_mode"] == "testing"
+    assert callable(state["refresh"])
     assert all(table["choice"] is None for table in state["tables"].values())
     state["select_contract"]("source", no_contract=True)
     assert state["tables"]["target"]["choice"] is None
@@ -166,3 +167,33 @@ for name in kit.__all__:
 assert callable(kit.create_pipeline_execution_plan)
 '''
     subprocess.run([sys.executable, "-c", code], check=True, capture_output=True, text=True)
+
+
+def test_inspector_shows_only_exact_contract_results_and_escapes_details():
+    """Saved states and matching evaluations remain distinct expandable sections."""
+    row = _row(2)
+    result = {"table_id": "source", "contract_id": "contract-source", "contract_version": 2,
+              "guardrail_type": "data_quality", "guardrail_rule_id": "rule-2", "execution_type": "testing",
+              "status": "warning", "can_continue": True, "result_payload_json": '<script>unsafe</script>'}
+    rendered = module._inspector(row, ["source"], [result, {**result, "contract_version": 1}])
+    assert "Execution results · 1" in rendered and "warning" in rendered and "testing" in rendered
+    assert "&lt;script&gt;unsafe&lt;/script&gt;" in rendered and "<script>unsafe" not in rendered
+    assert "2 checks · 1 inactive" in rendered and "decimal(18,4)" in rendered
+    assert "Not executed in this plan" in module._inspector(row, ["target"])
+
+
+def test_inspector_refresh_uses_built_plan_and_mode_change_clears_results(monkeypatch):
+    """A visible mode or selection change cannot display results from the old plan."""
+    from types import SimpleNamespace
+    _, state, _ = _render(monkeypatch, [_row(active=True)], interactive=True)
+    state["select_contract"]("source", "contract-source", 1)
+    state["select_contract"]("target", no_contract=True)
+    plan = SimpleNamespace(results=[])
+    monkeypatch.setattr(module, "create_pipeline_execution_plan", lambda **kw: plan)
+    assert state["build_plan"]() is plan
+    plan.results.append({"table_id": "source", "contract_id": "contract-source", "contract_version": 1,
+                         "guardrail_type": "schema", "status": "passed"})
+    state["refresh"]()
+    assert "Execution results · 1" in state["_controls"]["source"]["inspector"].value
+    state["set_mode"]("live")
+    assert "Not executed in this plan" in state["_controls"]["source"]["inspector"].value

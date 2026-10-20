@@ -4,7 +4,6 @@ from typing import Any, Iterable
 from datetime import UTC, datetime
 from fabricops_kit.pipeline.check_dq import check_dq
 from fabricops_kit.pipeline.check_grain import check_grain
-from fabricops_kit.pipeline.check_guardrail_coverage import check_guardrail_coverage
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
 from fabricops_kit.pipeline.check_source_drift import check_source_drift
@@ -15,6 +14,7 @@ from fabricops_kit.pipeline.shared import (
     ExecutionSummary,
     execution_result,
     tested_contract_identities,
+    source_guardrail_results,
     _run_orchestration_stage,
     prepare_pipeline_execution,
     pipeline_guardrail_types,
@@ -29,7 +29,7 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
     ----------
     execution_plan : PipelineExecutionPlan
         Same required plan as all participating Reads. Testing evaluates Guardrails,
-        Coverage, processing, ownership, incremental safety and SCD input checks
+        processing, ownership, incremental safety and SCD input checks
         without publication, staging, mappings, metadata or activation evidence.
         Live enforces active frozen contracts and stops on Block before publication.
     dataframe : object
@@ -76,8 +76,10 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
     dict
         Prepared dataframe, selected contract, execution_mode, Guardrail outcomes,
         schema_result, sensitive_result, source_drift_results, grain_result,
-        dq_result, coverage_result, write_metrics, published, persistence_status and explicit dry-run
+        dq_result, source_guardrail_results, write_metrics, published, persistence_status and explicit dry-run
         limits. Testing failures remain diagnostic results, never publication success.
+        source_guardrail_results lists the configured Read rules required by the
+        contributing sources; disabled and unconfigured checks impose no requirement.
         Live returns the actual publication outcome. Metadata commits across Fabric
         stores are separate lifecycle operations, not one atomic transaction.
 
@@ -117,7 +119,7 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
         raise ValueError("Write requires an explicit target participant.")
     active = pipeline_guardrail_types(context, target_id)
     drift_ids = [source_id for source_id in source_ids if "source_drift" in pipeline_guardrail_types(context, source_id)]
-    governed = any(context["_pipeline_contracts"].values())
+    source_checks = source_guardrail_results(context, sources)
     names = []
     if "schema" in active:
         names.append("Schema")
@@ -129,8 +131,6 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
         names.append("Grain")
     if "data_quality" in active:
         names.append("Data Quality")
-    if governed:
-        names.append("Guardrail Coverage")
     if not execution_plan.permits_persistence:
         names.append("Processing")
     else:
@@ -138,7 +138,7 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
     stages = []
     if verbose:
         print(f"FabricOps WRITE · {table_name} · {execution_plan.execution_mode.title()}")
-    print_pipeline_contract(context, target_id, operation="Write", guardrails=[name for name in names if name not in {"Write", "Profile", "Guardrail Coverage", "Processing"}], verbose=verbose)
+    print_pipeline_contract(context, target_id, operation="Write", guardrails=[name for name in names if name not in {"Write", "Profile", "Processing"}], verbose=verbose)
     def run(stage, function):
         result, record = _run_orchestration_stage(operation="WRITE", name=table_name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose, allow_blocked=not execution_plan.permits_persistence)
         stages.append(record)
@@ -150,10 +150,11 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
         if "sensitive_data" in active:
             sensitive = run("Sensitive Data", lambda: check_sensitive_data(dataframe, table_id=target_id, existing_mapping=existing_mapping, spark_session=spark_session, verbose=False, context=context))
         prepared = sensitive["dataframe"]
-        drift = run("Source Drift", lambda: [check_source_drift(source_id, target_table_id=target_id, spark_session=spark_session, verbose=False, context=context) if source_id in drift_ids else dict(skipped) for source_id in source_ids]) if drift_ids else [dict(skipped) for _ in source_ids]
+        evaluated_drift = run("Source Drift", lambda: [check_source_drift(source_id, target_table_id=target_id, spark_session=spark_session, verbose=False, context=context) for source_id in drift_ids]) if drift_ids else []
+        drift_by_source = dict(zip(drift_ids, evaluated_drift, strict=True))
+        drift = [drift_by_source.get(source_id, dict(skipped)) for source_id in source_ids]
         grain_result = run("Grain", lambda: check_grain(prepared, table_id=target_id, scope="write_prepared_input", spark_session=spark_session, verbose=False, context=context)) if "grain" in active else dict(skipped)
         dq_result = run("Data Quality", lambda: check_dq(prepared, table_id=target_id, spark_session=spark_session, verbose=False, context=context, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
-        coverage = run("Guardrail Coverage", lambda: check_guardrail_coverage(target_table_id=target_id, source_table_ids=source_ids, spark_session=spark_session, verbose=False, context=context)) if governed else dict(skipped)
         common_results = {
             "table_id": target_id,
             **execution_result(context, target_id, stages=stages),
@@ -162,7 +163,7 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
             "source_drift_results": drift,
             "grain_result": grain_result,
             "dq_result": dq_result,
-            "coverage_result": coverage,
+            "source_guardrail_results": source_checks,
             "orchestration_stages": stages,
         }
         if not execution_plan.permits_persistence:
@@ -182,7 +183,7 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
             dry_run = run("Processing", evaluate_processing)
             profile = profile_table(dataframe=prepared, frequency_enabled=frequency_enabled,
                                     frequency_top_n=frequency_top_n, spark_session=spark_session)
-            passed = all(stage["status"] != "blocked" for stage in [
+            passed = all(item["can_continue"] for item in source_checks) and all(stage["status"] != "blocked" for stage in [
                 *stages, *(stage for source in sources for stage in source.get("orchestration_stages", []))
             ])
             duration = summary.finish([("Mode", "Testing"), ("Target", target),

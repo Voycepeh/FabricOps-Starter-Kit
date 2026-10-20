@@ -8,7 +8,6 @@ import pytest
 from fabricops_kit import profile_table, scan_sql_access, orchestrate_read, orchestrate_write
 from fabricops_kit.pipeline.check_dq import check_dq
 from fabricops_kit.pipeline.check_freshness import check_freshness
-from fabricops_kit.pipeline.check_guardrail_coverage import check_guardrail_coverage
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
 from fabricops_kit.pipeline.check_source_drift import check_source_drift
@@ -74,7 +73,6 @@ def test_get_spark_session_raises_when_no_session_is_available(monkeypatch):
         check_source_drift,
         check_dq,
         check_sensitive_data,
-        check_guardrail_coverage,
         profile_table,
         pipeline_read,
         pipeline_write,

@@ -127,7 +127,7 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
     **`orchestrate_write()` checks the prepared input before publishing the target.**
 
     1. Run configured Schema and Sensitive Data checks, then Source Drift checks for participating sources.
-    2. Check Grain and Data Quality after Sensitive Data treatment, then check Guardrail Coverage for governed publication.
+    2. Check Grain and Data Quality after Sensitive Data treatment, enforcing the selected Data Contract policies before publication.
     3. In Live mode, publish through the selected Write strategy, record lineage in `METADATA_DATA_LINEAGE`, and profile the complete persisted target.
 
     Testing mode runs checks and profiles the prepared input in memory, with no business or metadata persistence at any stage. The Grain check covers prepared input; it does not guarantee resulting-table uniqueness for Append or SCD strategies.
