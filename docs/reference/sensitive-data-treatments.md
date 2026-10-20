@@ -10,7 +10,6 @@ Input DataFrame
 → Sensitive Data treatment
 → Source Drift
 → Data Quality
-→ Guardrail Coverage
 → Write
 → Profile
 ```

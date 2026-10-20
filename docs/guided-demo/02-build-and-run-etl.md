@@ -256,9 +256,8 @@ writes["target"] = orchestrate_write(
     3. **Source Drift** on participating sources
     4. **Grain** on the prepared target input
     5. **Data Quality**
-    6. **Guardrail Coverage**
 
-    Absent Guardrails do not produce individual skipped-stage messages. A pipeline using explicit No Contract prints one message and proceeds to Write. Guardrail Coverage remains mandatory whenever contracts participate.
+    Absent Guardrails do not produce individual skipped-stage messages. A pipeline using explicit No Contract prints one message and proceeds to Write. Live stops on configured blocking failures and required checks that cannot execute.
 
     With **Testing**, FabricOps evaluates the prepared input and supported strategy checks, returning `published=False`. No stage writes business data, Catalogue, Profile, frequency rows, Guardrail Results, Lineage, Source Observation, mappings or staging. With **Live**, passing required checks permits publication and metadata commits at their existing lifecycle boundaries. These independent Fabric operations are not one atomic transaction.
 

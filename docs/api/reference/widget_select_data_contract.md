@@ -59,7 +59,9 @@ Required describes the Python signature. An optional parameter may still be need
 
 dict
     Interactive state with execution_mode (initially testing), tables, controls,
-    select_contract, set_mode and build_plan. Each table starts unselected.
+    select_contract, set_mode, build_plan and refresh. Each table starts unselected.
+    After executing the built plan, refresh shows its exact-version results
+    in expandable sections alongside saved definitions and disabled states.
     Explicitly select No Contract for bootstrap; build_plan validates every
     choice and freezes the plan to pass to all Read and Write calls.
     UI edits after build_plan require a new plan and a new run of Read/Transform/Write.
@@ -91,9 +93,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_select_data_contract.py:122`
+`fabricops_kit/widgets/widget_select_data_contract.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L122-L337">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_data_contract.py#L130-L354">View on GitHub</a>
 </div>
 
 

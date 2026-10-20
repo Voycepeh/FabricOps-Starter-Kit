@@ -179,14 +179,6 @@ def test_ntz_profile_retains_wall_clock_minimum_and_maximum(spark_session, zone)
     assert profile.MAX_VALUE == "2026-10-07 11:30:00"
 
 
-def test_coverage_gate_uses_latest_instant_across_offsets():
-    """An older success cannot override a newer blocking Guardrail result."""
-    from fabricops_kit.pipeline.check_guardrail_coverage import _latest_can_continue
-    rows = [{"status": "passed", "can_continue": True, "_committed_at": "2026-10-07T10:30:00+08:00"},
-            {"status": "failed", "can_continue": False, "_committed_at": "2026-10-07T03:00:00Z"}]
-    assert not _latest_can_continue(rows)
-
-
 def test_warehouse_bounds_normalize_all_explicit_offsets():
     """Z, positive, and negative offsets express the same Warehouse instant."""
     for value in ["2026-10-07T02:30:00Z", "2026-10-07T10:30:00+08:00", "2026-10-06T22:30:00-04:00"]:

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" role="img" aria-labelledby="pipeline-boundaries-title pipeline-boundaries-desc">
 <title id="pipeline-boundaries-title">What happens at the FabricOps Read and Write boundaries</title>
-<desc id="pipeline-boundaries-desc">A governed Data Contract enters the Read boundary, which performs four checks: Freshness, Schema, Grain, and Data Quality before project-owned PySpark. The Write boundary then performs five checks: Schema, Sensitive Data, Source Drift, Grain, and Data Quality, followed by Guardrail Coverage before publishing. Full dataset profiling is recorded around both governed boundaries and lineage is recorded on write.</desc>
+<desc id="pipeline-boundaries-desc">A governed Data Contract enters the Read boundary, which performs four checks: Freshness, Schema, Grain, and Data Quality before project-owned PySpark. The Write boundary then performs five checks: Schema, Sensitive Data, Source Drift, Grain, and Data Quality before publishing. Full dataset profiling is recorded around both governed boundaries and lineage is recorded on write.</desc>
 <defs>
   <marker id="pipeline-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
     <path d="M0,0 L8,4 L0,8 Z" fill="#667085"/>
@@ -64,14 +64,13 @@
 
 <g>
   <rect x="696" y="126" width="184" height="214" rx="6" class="box"/>
-  <text x="716" y="152" class="eyebrow">WRITE · 5 + COVERAGE</text>
+  <text x="716" y="152" class="eyebrow">WRITE · 5 CHECKS</text>
   <text x="716" y="181" class="mono">orchestrate_write()</text>
   <text x="716" y="208" class="body">1. Schema</text>
   <text x="716" y="230" class="body">2. Sensitive Data</text>
   <text x="716" y="252" class="body">3. Source Drift</text>
   <text x="716" y="274" class="body">4. Grain</text>
   <text x="716" y="296" class="body">5. Data Quality</text>
-  <text x="716" y="318" class="body">Coverage gate</text>
 </g>
 
 <g>

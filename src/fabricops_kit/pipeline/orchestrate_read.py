@@ -30,6 +30,8 @@ def orchestrate_read(*, execution_plan, store: str, schema: str | None, table_na
         in memory. It cannot persist Catalogue, Profile, frequency, Guardrail Results
         or recover durable Source Observation state. Live preserves these lifecycle
         boundaries. Environment names determine routing only.
+        Empty or disabled optional Guardrails add no execution requirement.
+        A configured check that cannot execute blocks Live and remains a Testing diagnostic.
     store : str
         Configured source store key.
     schema : str or None

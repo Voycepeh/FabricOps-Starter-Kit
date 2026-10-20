@@ -113,14 +113,14 @@ def test_testing_all_strategies_have_zero_durable_mutations(runtime, spark_sessi
     assert all(spy.call_count == 0 for spy in spies.values())
 
 
-def test_testing_real_guardrails_use_in_memory_coverage_without_activation_evidence(runtime, spark_session):
-    """Coverage consumes exact source and target rule results without metadata writes."""
+def test_testing_real_guardrails_return_results_without_activation_evidence(runtime, spark_session):
+    """Read and Write retain exact rule results without metadata writes."""
     make, _, spies, _ = runtime
     plan = make(contracted=True)
     source = read(plan, spark_session)
     result = write(plan, source, spark_session)
-    assert result["coverage_result"]["can_continue"]
-    assert len(result["coverage_result"]["coverage"]) == 4
+    assert "coverage_result" not in result
+    assert len(result["source_guardrail_results"]) == 2
     assert len(plan.results) == 4
     assert all(row["rule_type"] != "contract_validation" for row in plan.results)
     assert result["validation_passed"] and not result["published"]
@@ -136,7 +136,6 @@ def test_testing_failed_guardrail_returns_violations_without_publication(runtime
     result = write(plan, source, spark_session, dataframe=bad)
     assert result["dq_result"]["can_continue"] is False
     assert result["validation_passed"] is False
-    assert result["coverage_result"]["can_continue"] is False
     assert not result["published"]
     assert all(spy.call_count == 0 for spy in spies.values())
 
@@ -230,9 +229,8 @@ def test_mixed_relationship_respects_explicit_no_contract(runtime, spark_session
     if mode == "live":
         monkeypatch.setattr(orchestrator, "profile_table", lambda **kw: {"row_count": 2})
     result = write(plan, read(plan, spark_session), spark_session)
-    assert result["coverage_result"]["can_continue"]
-    assert len(result["coverage_result"]["coverage"]) == 2
-    assert any(item["explicit_no_contract"] for item in result["coverage_result"]["readiness"])
+    assert len(plan.results) == 2
+    assert all(item["can_continue"] for item in result["source_guardrail_results"])
     assert result["published"] is (mode == "live")
     if mode == "testing":
         assert result["validation_passed"]
@@ -289,7 +287,6 @@ def test_failed_read_cannot_reuse_prior_successful_dq_evidence(runtime, spark_se
     assert failed["dq_result"]["can_continue"] is False
     result = write(plan, failed, spark_session)
     assert not result["validation_passed"]
-    assert not result["coverage_result"]["can_continue"]
     from fabricops_kit.widgets.widget_activate_data_contract import _diagnostic_review
     assert not _diagnostic_review([result], rows[0], "dev")["available"]
     # Reevaluation can recover without creating a new plan or retaining stale failures.
@@ -319,6 +316,147 @@ def test_no_contract_target_does_not_exempt_failed_source_checks(runtime, spark_
         source = read(plan, spark_session)
         result = write(plan, source, spark_session)
         assert not result["validation_passed"]
-        assert not result["coverage_result"]["can_continue"]
         assert all(spy.call_count == 0 for spy in spies.values())
     assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 0
+
+
+@pytest.mark.parametrize("mode", ["testing", "live"])
+@pytest.mark.parametrize("disabled", [False, True])
+def test_empty_or_disabled_contract_checks_do_not_require_minimum_coverage(runtime, spark_session, monkeypatch, mode, disabled):
+    """An authored empty or disabled set imposes no extra publication decision."""
+    make, rows, spies, _ = runtime
+    make(mode, contracted=True)
+    originals = []
+    for row in rows:
+        payload = json.loads(row["contract_payload_json"])
+        payload["guardrails"] = [{**rule, "is_active": False} for rule in payload["guardrails"]] if disabled else []
+        row["contract_payload_json"] = json.dumps(payload)
+        originals.append(row["contract_payload_json"])
+    plan = make(mode, contracted=True)
+    monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
+    orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
+    if mode == "live":
+        monkeypatch.setattr(orchestrator, "profile_table", lambda **kw: {"row_count": 2})
+    result = write(plan, read(plan, spark_session), spark_session)
+    assert result["published"] is (mode == "live")
+    assert result["source_guardrail_results"] == [] and plan.results == []
+    assert "coverage_result" not in result
+    assert not any("Coverage" in stage["stage"] for stage in result["orchestration_stages"])
+    assert [row["contract_payload_json"] for row in rows] == originals
+    if mode == "testing":
+        assert result["validation_passed"]
+        assert all(spy.call_count == 0 for spy in spies.values())
+
+
+@pytest.mark.parametrize("mode", ["testing", "live"])
+def test_required_guardrail_that_skips_cannot_authorize_publication(runtime, spark_session, monkeypatch, mode):
+    """A configured check that cannot execute fails closed even without a gate."""
+    make, _, spies, _ = runtime
+    plan = make(mode, contracted=True)
+    source = read(plan, spark_session)
+    orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
+    monkeypatch.setattr(orchestrator, "check_dq", lambda *a, **kw: {"status": "skipped", "can_continue": True})
+    if mode == "live":
+        with pytest.raises(RuntimeError, match="configured Guardrail did not execute"):
+            write(plan, source, spark_session)
+    else:
+        result = write(plan, source, spark_session)
+        assert not result["validation_passed"] and not result["published"]
+        assert result["dq_result"]["evaluation_status"] == "not_fully_evaluated"
+        assert all(spy.call_count == 0 for spy in spies.values())
+    assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 0
+
+
+@pytest.mark.parametrize("mode", ["testing", "live"])
+def test_warn_failures_report_and_permit_configured_write(runtime, spark_session, monkeypatch, mode):
+    """Warn retains violations and allows Live publication after configured checks."""
+    make, rows, spies, _ = runtime
+    make(mode, contracted=True)
+    for row in rows:
+        payload = json.loads(row["contract_payload_json"])
+        payload["guardrails"][1]["action"] = "Warn"
+        row["contract_payload_json"] = json.dumps(payload)
+    plan = make(mode, contracted=True)
+    monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
+    orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
+    if mode == "live":
+        monkeypatch.setattr(orchestrator, "profile_table", lambda **kw: {"row_count": 1})
+    source = read(plan, spark_session)
+    result = write(plan, source, spark_session, dataframe=spark_session.createDataFrame([(None,)], "id long"))
+    assert result["dq_result"]["status"] == "warning"
+    assert result["dq_result"]["can_continue"]
+    assert result["published"] is (mode == "live")
+    if mode == "testing":
+        assert result["validation_passed"]
+        assert all(spy.call_count == 0 for spy in spies.values())
+
+
+@pytest.mark.parametrize("key", ["coverage_gate", "coverage_policy", "coverage_gate_policy", "guardrail_coverage"])
+@pytest.mark.parametrize("location", ["contract", "table", "guardrail"])
+def test_legacy_coverage_settings_require_explicit_new_contract_migration(key, location):
+    """Never silently discard a legacy requirement or mutate its frozen payload."""
+    from fabricops_kit.data_contract.shared import validate_contract_definitions
+    record = frozen(TARGET_ID)
+    payload = json.loads(record["contract_payload_json"])
+    validate_contract_definitions(payload)
+    definition = {"contract": payload, "table": payload["table"], "guardrail": payload["guardrails"][0]}[location]
+    definition[key] = {"action": "Block", "required": ["schema"]}
+    original = json.dumps(payload, sort_keys=True)
+    with pytest.raises(ValueError, match="requires migration"):
+        validate_contract_definitions(payload)
+    assert json.dumps(payload, sort_keys=True) == original
+
+
+@pytest.mark.parametrize("field,value", [("contract_version", 99), ("contract_id", "other"),
+    ("guardrail_version", 99), ("table_id", "other"), ("guardrail_type", "grain")])
+def test_live_rejects_source_results_for_another_contract_or_rule(runtime, spark_session, field, value):
+    """Configured source rules require exact identities rather than any passing result."""
+    make, _, spies, _ = runtime
+    plan = make("live", contracted=True)
+    source = read(plan, spark_session)
+    for result in source["guardrail_outcomes"]:
+        result[field] = value
+    with pytest.raises(RuntimeError, match="configured .* Guardrail has no successful Read result"):
+        write(plan, source, spark_session)
+    assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 0
+
+
+def test_caught_live_read_failure_cannot_publish_using_an_earlier_success(runtime, spark_session, monkeypatch):
+    """Required Read execution survives removal of the independent coverage stage."""
+    make, _, spies, _ = runtime
+    plan = make("live", contracted=True)
+    earlier_source = read(plan, spark_session)
+    bad = spark_session.createDataFrame([(None,)], "id long")
+    monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: bad)
+    with pytest.raises(RuntimeError, match="Data Quality"):
+        read(plan, spark_session)
+    with pytest.raises(RuntimeError, match="configured data_quality Guardrail has no successful Read result"):
+        write(plan, earlier_source, spark_session)
+    assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 0
+
+
+def test_legacy_coverage_guardrail_is_rejected_without_rewriting_other_policies():
+    """Unsupported authored enforcement must be reviewed in a new contract version."""
+    from fabricops_kit.data_contract.shared import validate_contract_definitions
+    payload = json.loads(frozen(TARGET_ID)["contract_payload_json"])
+    payload["guardrails"].append({"guardrail_type": "guardrail_coverage", "action": "Block", "is_active": True,
+                                  "guardrail_rule_id": "old-coverage", "rule_parameters": {}})
+    original = json.dumps(payload, sort_keys=True)
+    with pytest.raises(ValueError, match="unsupported Guardrail definition"):
+        validate_contract_definitions(payload)
+    assert json.dumps(payload, sort_keys=True) == original
+
+
+@pytest.mark.parametrize("column_name", ["coverage_gate", "coverage_policy", "coverage_gate_policy", "guardrail_coverage"])
+def test_legacy_setting_names_are_valid_column_names_in_schema_mappings(column_name):
+    """Data keys must not be interpreted as obsolete execution configuration."""
+    from fabricops_kit.data_contract.shared import validate_contract_definitions
+    payload = json.loads(frozen(TARGET_ID)["contract_payload_json"])
+    payload["table"]["columns"][0]["column_name"] = column_name
+    payload["guardrails"] = payload["guardrails"][:1]
+    payload["guardrails"][0]["rule_parameters"]["data_types"] = {column_name: "bigint"}
+    original = json.dumps(payload, sort_keys=True)
+    validate_contract_definitions(payload)
+    rows = shared.contract_guardrail_rows({"contract_payload": payload}, environment_name="dev", table_id=TARGET_ID)
+    assert json.loads(rows[0]["rule_parameters_json"])["data_types"] == {column_name: "bigint"}
+    assert json.dumps(payload, sort_keys=True) == original

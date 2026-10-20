@@ -116,8 +116,33 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
                   f"{summary.get('DQ_FAILED_ROW_PERCENT', 0):.2f}% with violations; "
                   f"{summary.get('DQ_NOT_APPLICABLE_ROW_COUNT', 0)} not applicable. Tolerances determine continuation.")
         status = _orchestration_status(result)
+        if stage in {"Schema", "Grain", "Data Quality", "Sensitive Data", "Source Drift", "Freshness"}:
+            items = result if isinstance(result, list) else [result]
+            normalized = []
+            for item in items:
+                unavailable = (
+                    not isinstance(item, dict) or str(item.get("status") or "").lower() not in {
+                        "passed", "pass", "success", "succeeded", "baseline_created", "warning", "warn",
+                        "failed", "fail", "failure", "error", "blocked", "block", "skip", "skipped", "not_applicable"
+                    }
+                    or (str(item["status"]).lower() in {"skip", "skipped", "not_applicable"}
+                        and not (stage == "Freshness" and item.get("rule_type") == "skip"))
+                    or item.get("evaluation_status") == "not_fully_evaluated"
+                )
+                normalized.append({**(item if isinstance(item, dict) else {}),
+                                   "status": "blocked", "can_continue": False,
+                                   "evaluation_status": "not_fully_evaluated",
+                                   "reason": "A configured Guardrail did not execute."} if unavailable else item)
+            result = normalized if isinstance(result, list) else normalized[0]
+            if not normalized:
+                result = {"status": "blocked", "can_continue": False,
+                          "evaluation_status": "not_fully_evaluated",
+                          "reason": "A configured Guardrail did not execute."}
+            status = _orchestration_status(result)
         if status == "blocked" and not allow_blocked:
-            reason = result.get("reason") if isinstance(result, dict) else None
+            blocked_items = result if isinstance(result, list) else [result]
+            reason = next((item.get("reason") for item in blocked_items
+                           if isinstance(item, dict) and item.get("reason")), None)
             detail = f" Reason: {reason}" if reason else ""
             raise RuntimeError(f"Stage returned blocking status.{detail}")
     except Exception as exc:
@@ -157,8 +182,10 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
         marker, label = outcomes[status]
         print(f"[{index}/{total}] {stage} ... {marker} {label} ({duration:.2f}s)")
     record = {"name": name, "stage": stage, "status": status, "duration_seconds": duration}
-    if isinstance(result, dict) and result.get("evaluation_status"):
-        record.update(evaluation_status=result["evaluation_status"], reason=result.get("reason"))
+    details = result if isinstance(result, list) else [result]
+    incomplete = next((item for item in details if isinstance(item, dict) and item.get("evaluation_status")), None)
+    if incomplete:
+        record.update(evaluation_status=incomplete["evaluation_status"], reason=incomplete.get("reason"))
     return result, record
 
 
@@ -2360,6 +2387,60 @@ def tested_contract_identities(context, table_ids):
     }
 
 
+def source_guardrail_results(context, sources):
+    """Enforce each configured Read rule before consuming its source in Write.
+
+    No Contract, empty rule lists and disabled checks impose no requirement.
+    Results must belong to this plan and exact frozen rule revision; a caught
+    failed Read cannot authorize publication using an earlier successful result.
+    """
+    plan = context["execution_plan"]
+    outcomes = []
+    for source in sources:
+        table_id = source["table_id"]
+        contract = context["_pipeline_contracts"].get(table_id)
+        if contract is None:
+            continue
+        for rule in context["_pipeline_rules"].get(table_id, []):
+            kind = rule["guardrail_type"]
+            if kind not in {"schema", "grain", "freshness", "data_quality"}:
+                continue
+            if kind == "freshness" and rule.get("rule_type") == "skip":
+                continue
+            def matches(row):
+                if kind == "grain":
+                    try:
+                        scope = json.loads(row.get("result_payload_json") or "{}").get("validation_scope")
+                    except (TypeError, ValueError, AttributeError):
+                        return False
+                    if scope not in {"read_full", "read_incremental_batch"}:
+                        return False
+                return all(row.get(key) == value for key, value in {
+                    "table_id": table_id, "contract_id": contract["contract_id"],
+                    "contract_version": contract["contract_version"], "guardrail_type": kind,
+                    "guardrail_rule_id": rule["guardrail_rule_id"],
+                    "guardrail_version": rule.get("guardrail_version", 1),
+                }.items())
+            saved = [row for row in source.get("guardrail_outcomes", []) if matches(row)]
+            current = [row for row in plan.results if matches(row)]
+            def permits(rows):
+                if not rows:
+                    return False
+                latest = max(metadata_timestamp_sort_key(row.get("_committed_at")) for row in rows)
+                return all(row.get("can_continue") is True and str(row.get("status")).lower() in {
+                    "passed", "pass", "warning", "warn", "baseline_created"
+                } for row in rows if metadata_timestamp_sort_key(row.get("_committed_at")) == latest)
+            allowed = permits(saved) and permits(current)
+            outcome = {"table_id": table_id, "guardrail_rule_id": rule["guardrail_rule_id"],
+                       "guardrail_type": kind, "action": rule.get("action"), "can_continue": allowed,
+                       "status": ("warning" if any(str(row.get("status")).lower() in {"warn", "warning"}
+                                                  for row in saved) else "passed") if allowed else "blocked"}
+            outcomes.append(outcome)
+            if not allowed and plan.permits_persistence:
+                raise RuntimeError(f"Source {table_id!r} configured {kind} Guardrail has no successful Read result for this plan and contract revision.")
+    return outcomes
+
+
 def pipeline_guardrail_types(context, table_id):
     """Return configured active Guardrail types for a resolved participant."""
     return {str(row.get("guardrail_type") or "").lower() for row in context["_pipeline_rules"].get(table_id, [])}
@@ -2371,7 +2452,7 @@ def print_pipeline_contract(context, table_id, *, operation, guardrails, verbose
         return
     contract = context["_pipeline_contracts"].get(table_id)
     if contract is None and any(context["_pipeline_contracts"].values()):
-        print("No target Data Contract selected; checking participating Guardrails and contract coverage.")
+        print("No target Data Contract selected; enforcing configured source Guardrails.")
     elif contract is None:
         print(f"No Data Contract selected; no Guardrails. Continuing with {operation.title()}.")
     elif guardrails:

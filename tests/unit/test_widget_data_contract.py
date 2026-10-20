@@ -2783,7 +2783,8 @@ def test_guardrail_summary_tracks_working_controls_before_save(widget_runtime):
     controls = state["_controls"]
     assert "freshness" in controls["sidebar_rule_buttons"]
     controls["table_guardrails"]["freshness"]["enabled"].value = False
-    assert "freshness" not in controls["sidebar_rule_buttons"]
+    assert "freshness" in controls["sidebar_rule_buttons"]
+    assert "Disabled · intentionally not executed" in _sidebar_text(controls["guardrail_sidebar"])
     assert widget_runtime["calls"]["guardrails"] == []
 
 
@@ -2969,8 +2970,8 @@ def test_sidebar_paths_shared_rules_details_and_editor_navigation(widget_runtime
     assert "treatment must succeed" in write
     assert "Passed" not in write and "Skipped" not in write
     sidebar = _sidebar_text(controls["guardrail_sidebar"])
-    assert "publication requirement" in sidebar and "has not run validation" in sidebar
-    assert "Disabled" not in sidebar and "Profile" not in sidebar
+    assert "Guardrail Coverage" not in sidebar
+    assert "State:</b> Enabled" in sidebar and "Profile" not in sidebar
     controls["grain_policy"].value = "Warn"
     for group in controls["sidebar_groups"].values():
         assert "Grain · column_0 + column_1 · Warn" in _sidebar_text(group)

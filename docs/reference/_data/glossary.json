@@ -49,7 +49,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "The pipeline-wide mode that evaluates real data and prepared processing without durable mutations.",
-    "long_definition": "Testing evaluates the configured pipeline and eligible frozen Data Contracts, returns rule and coverage diagnostics and supported processing dry-run outcomes, and never publishes data or persists metadata, mappings, checkpoints, staging or activation evidence. It cannot verify real publication permissions, target transactions or cross-store finalization.",
+    "long_definition": "Testing evaluates the configured pipeline and eligible frozen Data Contracts, returns rule diagnostics and supported processing dry-run outcomes, and never publishes data or persists metadata, mappings, checkpoints, staging or activation evidence. It cannot verify real publication permissions, target transactions or cross-store finalization.",
     "preferred_usage": "Use Testing for the execution mode, independently of the configured environment name.",
     "avoid_usage": "successful Live publication when only dry-run checks passed"
   },
@@ -59,7 +59,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "The deliberate pipeline-wide mode that permits governed publication and operational metadata commits.",
-    "long_definition": "Live requires the active frozen Data Contract wherever one exists, enforces Guardrails, processing, ownership and coverage, and publishes only when continuation is permitted. Explicit No Contract can bootstrap when no active version is bypassed. Publication and metadata commits retain their separate lifecycle and recovery boundaries across Fabric stores.",
+    "long_definition": "Live requires the active frozen Data Contract wherever one exists, enforces Guardrails, processing and ownership, and publishes only when continuation is permitted. Explicit No Contract can bootstrap when no active version is bypassed. Publication and metadata commits retain their separate lifecycle and recovery boundaries across Fabric stores.",
     "preferred_usage": "Use Live for the execution decision in any configured environment; scheduled runs select it explicitly.",
     "avoid_usage": "an execution default inferred from an environment name"
   },
@@ -84,7 +84,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "Versioned rules that FabricOps checks during governed pipeline execution.",
-    "long_definition": "FabricOps Guardrails are executable definitions inside METADATA_DATA_CONTRACT.contract_payload_json for an exact version. Source contracts support five Guardrails: Schema, Grain, Freshness, Source Drift, and Data Quality. Target contracts support four: Schema, Grain, Data Quality, and Sensitive Data treatment. orchestrate_read runs four checks: Freshness, Schema, Grain, and Data Quality. orchestrate_write runs five checks: Schema, Sensitive Data, Source Drift on participating sources, Grain, and Data Quality, followed by Guardrail Coverage before publication. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Grain, Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.",
+    "long_definition": "FabricOps Guardrails are executable definitions inside METADATA_DATA_CONTRACT.contract_payload_json for an exact version. Source contracts support five Guardrails: Schema, Grain, Freshness, Source Drift, and Data Quality. Target contracts support four: Schema, Grain, Data Quality, and Sensitive Data treatment. orchestrate_read runs four checks: Freshness, Schema, Grain, and Data Quality. orchestrate_write runs five checks: Schema, Sensitive Data, Source Drift on participating sources, Grain, and Data Quality before publication. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Grain, Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.",
     "preferred_usage": "Use guardrails for the governed rules FabricOps evaluates; use singular only for grammar.",
     "avoid_usage": "generic policy when a FabricOps Guardrail is meant"
   },
@@ -109,7 +109,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "Evaluating active Guardrails during a pipeline run and applying their configured action.",
-    "long_definition": "FabricOps orchestrate_read() and orchestrate_write() resolve the selected Data Contract and run its Guardrails at the relevant boundary. Schema violations and Sensitive Data treatment failures block; Grain, Freshness, Source Drift, and Data Quality follow their saved Warn or Block action. Guardrail Coverage gates publication.",
+    "long_definition": "FabricOps orchestrate_read() and orchestrate_write() resolve the selected Data Contract and run its Guardrails at the relevant boundary. Schema violations and Sensitive Data treatment failures block; Grain, Freshness, Source Drift, and Data Quality follow their saved Warn or Block action. Live stops when an applicable configured Guardrail blocks or cannot execute; disabled optional checks do not impose additional requirements.",
     "preferred_usage": "Use enforcement for applying active Guardrails during execution.",
     "avoid_usage": "validation when the runtime action on a Guardrail result is meant"
   },
@@ -628,20 +628,6 @@
     "tooltip_labels": [
       "Data Contract status",
       "Contract Status"
-    ]
-  },
-  {
-    "id": "guardrail-coverage",
-    "term": "guardrail coverage",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "A write-side check that confirms required governed expectations are present before publishing a target.",
-    "long_definition": "FabricOps checks Guardrail Coverage before the target write so required contract protections are not silently omitted from the governed pipeline.",
-    "preferred_usage": "Use guardrail coverage for the write-side completeness check over required governed protections.",
-    "avoid_usage": "data quality coverage when the broader contract protection check is meant",
-    "tooltip_labels": [
-      "Guardrail Coverage",
-      "guardrail coverage"
     ]
   },
   {

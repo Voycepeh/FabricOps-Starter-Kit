@@ -6,6 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Breaking changes
+
+- Removed the separate Coverage Gate stage and `coverage_result` return field from the Live public `orchestrate_write()` interface. Both orchestrators use selected Data Contract Guardrails; no minimum active-check count is required. Their shared execution-plan signatures are unchanged. The internal `check_guardrail_coverage()` implementation is removed; it was already excluded from the supported public API. The Preview `widget_select_data_contract()` inspector adds available execution results and a `refresh` callback.
+- Existing canonical Data Contracts remain usable without changing policies. Legacy Coverage Gate settings require a new draft that expresses required protections as configured Guardrails, followed by Freeze → Testing → Activation. Frozen payloads are never rewritten. See [the migration guidance](src/README.md#contract-driven-guardrails-migration).
+
+### Changed
+
+- Configured blocking failures and checks that cannot execute prevent Live publication. Warn decisions, intentionally disabled checks, contract integrity, writer ownership, SCD and incremental safeguards remain enforced. Testing retains diagnostics without persistent data or metadata writes.
+- Living Pipeline 02 and 02A–02C demos, contract inspection, glossary and current API guidance reflect contract-driven Guardrails. Frozen release references and notebook snapshots retain historical behavior.
+
 ## [0.2.5] - 2026-10-17
 
 ### Added

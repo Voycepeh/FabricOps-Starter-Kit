@@ -159,7 +159,7 @@ def test_pipeline_execution_and_checks_are_internal() -> None:
 
     removed = {
         "check_schema", "check_freshness", "check_source_drift", "check_dq",
-        "check_sensitive_data", "check_guardrail_coverage", "pipeline_read", "pipeline_write",
+        "check_sensitive_data", "pipeline_read", "pipeline_write",
     }
     assert removed.isdisjoint(fabricops_kit.__all__)
     assert removed.isdisjoint(pipeline.__all__)

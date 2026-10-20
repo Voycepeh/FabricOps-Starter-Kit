@@ -26,7 +26,7 @@ def test_orchestrators_are_the_public_pipeline_execution_entrypoints() -> None:
     assert callable(fabricops_kit.orchestrate_read)
     assert callable(fabricops_kit.orchestrate_write)
     for name in ("pipeline_read", "pipeline_write", "check_freshness", "check_schema",
-                 "check_dq", "check_source_drift", "check_sensitive_data", "check_guardrail_coverage"):
+                 "check_dq", "check_source_drift", "check_sensitive_data"):
         assert not hasattr(fabricops_kit, name)
 
 

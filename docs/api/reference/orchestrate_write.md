@@ -73,7 +73,7 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `dataframe` | `Any` | Yes | `—` | Transformed Spark DataFrame; Sensitive Data treatment prepares the input. |
-| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Same required plan as all participating Reads. Testing evaluates Guardrails, Coverage, processing, ownership, incremental safety and SCD input checks without publication, staging, mappings, metadata or activation evidence. Live enforces active frozen contracts and stops on Block before publication. |
+| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Same required plan as all participating Reads. Testing evaluates Guardrails, processing, ownership, incremental safety and SCD input checks without publication, staging, mappings, metadata or activation evidence. Live enforces active frozen contracts and stops on Block before publication. |
 | `sources` | `Iterable[dict[str, Any]]` | Yes | `—` | Read results from this exact plan for the sources actually feeding this target. |
 | `store` | `str` | Yes | `—` | Configured target store key. |
 | `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
@@ -109,8 +109,10 @@ result = orchestrate_write(transformed_df, execution_plan=plan, sources=[source]
 dict
     Prepared dataframe, selected contract, execution_mode, Guardrail outcomes,
     schema_result, sensitive_result, source_drift_results, grain_result,
-    dq_result, coverage_result, write_metrics, published, persistence_status and explicit dry-run
+    dq_result, source_guardrail_results, write_metrics, published, persistence_status and explicit dry-run
     limits. Testing failures remain diagnostic results, never publication success.
+    source_guardrail_results lists the configured Read rules required by the
+    contributing sources; disabled and unconfigured checks impose no requirement.
     Live returns the actual publication outcome. Metadata commits across Fabric
     stores are separate lifecycle operations, not one atomic transaction.
 
@@ -131,7 +133,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:25`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L25-L227">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L25-L228">View on GitHub</a>
 </div>
 
 
@@ -147,7 +149,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 191 |
+| Live-critical dependencies | 185 |
 
 ### Release history
 
@@ -215,13 +217,6 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.write_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.pipeline.check_dq.check_dq</code></li>
 <li><code>fabricops_kit.pipeline.check_grain.check_grain</code></li>
-<li><code>fabricops_kit.pipeline.check_guardrail_coverage._contract</code></li>
-<li><code>fabricops_kit.pipeline.check_guardrail_coverage._current_activity_results</code></li>
-<li><code>fabricops_kit.pipeline.check_guardrail_coverage._label</code></li>
-<li><code>fabricops_kit.pipeline.check_guardrail_coverage._latest_can_continue</code></li>
-<li><code>fabricops_kit.pipeline.check_guardrail_coverage._payload</code></li>
-<li><code>fabricops_kit.pipeline.check_guardrail_coverage._rules</code></li>
-<li><code>fabricops_kit.pipeline.check_guardrail_coverage.check_guardrail_coverage</code></li>
 <li><code>fabricops_kit.pipeline.check_schema.check_schema</code></li>
 <li><code>fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data</code></li>
 <li><code>fabricops_kit.pipeline.check_source_drift.check_source_drift</code></li>
@@ -343,6 +338,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.resolve_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.schema_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.select_table_guardrail_rule</code></li>
+<li><code>fabricops_kit.pipeline.shared.source_guardrail_results</code></li>
 <li><code>fabricops_kit.pipeline.shared.stage_pipeline_write_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared.tested_contract_identities</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
