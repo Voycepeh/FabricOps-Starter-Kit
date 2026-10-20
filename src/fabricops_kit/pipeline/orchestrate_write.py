@@ -71,8 +71,10 @@ def orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], stor
         configures GovernanceConfig.sensitive_data_token_mapping, Enforce
         automatically reuses and inserts assignments in that restricted Delta
         store. Validate reads the store without writing it. Without that setting,
-        mapping management remains caller-owned. Returned mappings retain
-        established identities absent from the current batch. After consuming the
+        mapping management remains caller-owned. Caller-owned mappings retain
+        established identities absent from the current batch; managed mappings
+        return only assignments used in the current batch. Do not combine a
+        configured mapping store with existing_mapping. After consuming the
         prepared DataFrame and persisting the mapping, call its unpersist()
         method to release its cache. Failed orchestration releases it automatically.
     spark_session : object, optional

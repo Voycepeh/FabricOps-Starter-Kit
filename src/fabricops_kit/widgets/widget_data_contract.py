@@ -576,7 +576,9 @@ def widget_data_contract(
     separate until Governance accepts a suggestion. Manual Description or Classification
     edits mark dependent advice stale for explicit re-run. AI never saves, freezes,
     activates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.
-    Sensitive Data defaults to full masking; partial preservation is optional.
+    Sensitive Data offers Mask for categorical/text columns, Bucket for numeric
+    columns, and Tokenize/Remove for either. Dates offer Tokenize/Remove; complex
+    types offer Remove. Text defaults to full masking; partial preservation is optional.
     Numeric buckets use approved fixed ranges or an anchored interval width.
     Text grouping and distribution-derived boundaries belong in Engineering
     exploration and transformations. AI suggestions receive governed metadata,
@@ -3059,13 +3061,14 @@ def widget_data_contract(
                 )
                 pii_reason.value = str(sensitive_parameters.get("pii_reason") or "")
                 sensitive_enabled.value = bool(sensitive and sensitive.get("is_active", True))
-                sensitive_treatment.options = _SENSITIVE_TREATMENT_OPTIONS
+                allowed_treatments = contracts.sensitive_data_treatments_for_type(str(datatype_choice.value or contract_type or observed_type))
+                sensitive_treatment.options = tuple(option for option in _SENSITIVE_TREATMENT_OPTIONS if option[1] in allowed_treatments)
                 _set_selection_value(
                     sensitive_treatment,
                     _valid_dropdown_value(
-                        ("tokenize", "mask", "bucket", "remove"),
-                        sensitive_parameters.get("treatment") or "mask",
-                        fallback="tokenize",
+                        allowed_treatments,
+                        sensitive_parameters.get("treatment") or allowed_treatments[0],
+                        fallback=None if sensitive_parameters.get("treatment") in {"mask", "tokenize", "bucket", "remove"} else allowed_treatments[0],
                     ),
                     control_name="sensitive_treatment",
                     table_name=str(table.get("table_name") or ""),
@@ -3098,9 +3101,9 @@ def widget_data_contract(
                     )
                     pii_reason.value = pending["pii_reason"]
                     sensitive_treatment.value = _valid_dropdown_value(
-                        ("tokenize", "mask", "bucket", "remove"),
+                        allowed_treatments,
                         pending["sensitive_treatment"],
-                        fallback="tokenize",
+                        fallback=None,
                     )
                     mask_mode.value = pending["mask_mode"]
                     bucket_mode.value = pending["bucket_mode"]
@@ -3595,20 +3598,38 @@ def widget_data_contract(
             suggestion = ai_state["columns"].get(str(column_select.value or ""), {}).get("sensitive_data", {})
             if not suggestion or suggestion.get("error"):
                 return
-            pii_type.value = str(suggestion["pii_type"])
-            pii_reason.value = str(suggestion["reason"])
-            sensitive_enabled.value = suggestion["pii_type"] != "none"
-            sensitive_treatment.value = str(suggestion.get("treatment") or "mask")
+            allowed = contracts.sensitive_data_treatments_for_type(str(datatype_choice.value or ""))
+            treatment = str(suggestion.get("treatment") or sensitive_treatment.value or allowed[0])
             parameters = suggestion.get("parameters", {})
-            mask_start.value = str(parameters.get("preserve_start", 0))
-            mask_end.value = str(parameters.get("preserve_end", 0))
-            mask_character.value = str(parameters.get("mask_character", "*"))
-            mask_mode.value = "partial" if int(mask_start.value) or int(mask_end.value) else "full"
-            bucket_mode.value = "width" if "bin_width" in parameters else "ranges"
-            bucket_width.value = str(parameters.get("bin_width", 10))
-            bucket_origin.value = str(parameters.get("bin_origin", 0))
-            bucket_bins.value = ", ".join(map(str, parameters.get("bins", [])))
-            bucket_labels.value = ", ".join(map(str, parameters.get("labels", [])))
+            try:
+                if suggestion["pii_type"] != "none":
+                    if treatment not in allowed:
+                        raise ValueError("This treatment does not apply to the column datatype. Use Bucket for numeric values, Mask for text/categories, or Tokenize/Remove for supported scalar values.")
+                    parameters = contracts.validate_sensitive_data_parameters({"scope": "column", "treatment": treatment, **parameters})
+            except (TypeError, ValueError) as exc:
+                set_status(str(exc), error=True)
+                return
+            previous_treatment = sensitive_treatment.value
+            hydrating["active"] = True
+            try:
+                pii_type.value = str(suggestion["pii_type"])
+                pii_reason.value = str(suggestion["reason"])
+                sensitive_enabled.value = suggestion["pii_type"] != "none"
+                sensitive_treatment.value = treatment
+                mask_start.value = str(parameters.get("preserve_start", 0))
+                mask_end.value = str(parameters.get("preserve_end", 0))
+                mask_character.value = str(parameters.get("mask_character", "*"))
+                mask_mode.value = "partial" if int(mask_start.value) or int(mask_end.value) else "full"
+                bucket_mode.value = "width" if "bin_width" in parameters else "ranges"
+                bucket_width.value = str(parameters.get("bin_width", 10))
+                bucket_origin.value = str(parameters.get("bin_origin", 0))
+                bucket_bins.value = ", ".join(map(str, parameters.get("bins", [])))
+                bucket_labels.value = ", ".join(map(str, parameters.get("labels", [])))
+            finally:
+                hydrating["active"] = False
+            update_sensitive_fields({"owner": sensitive_treatment, "old": previous_treatment})
+            sync_sensitive()
+            refresh_sensitive_rule_preview()
 
         accept_column_description.on_click(accept_description_clicked)
         accept_sensitive.on_click(accept_sensitive_clicked)
@@ -3751,10 +3772,8 @@ def widget_data_contract(
                 return None
             if str(pii_type.value or "none") == "none" and sensitive_enabled.value:
                 raise ValueError("Enable a Sensitive Data rule only for Direct or Indirect PII.")
-            if sensitive_treatment.value == "bucket" and sensitive_enabled.value:
-                data_type = str(datatype_choice.value or "").lower().split("(", 1)[0].strip()
-                if data_type not in {"byte", "tinyint", "short", "smallint", "int", "integer", "long", "bigint", "float", "double", "decimal", "numeric"}:
-                    raise ValueError("Buckets require a numeric column. Define text groups in the transformation step.")
+            if sensitive_enabled.value and sensitive_treatment.value not in contracts.sensitive_data_treatments_for_type(str(datatype_choice.value or "")):
+                raise ValueError("Select a treatment supported by this datatype: Bucket for numeric values, Mask for text/categories, or Tokenize/Remove.")
             parameters: dict[str, Any] = {
                 "scope": "column", "treatment": sensitive_treatment.value,
             }
@@ -4096,16 +4115,18 @@ def widget_data_contract(
                 "bigint", "float", "double", "decimal", "numeric",
             }
             selected_treatment = sensitive_treatment.value
-            options = [("Mask", "mask"), ("Tokenize", "tokenize"), ("Remove column", "remove")]
-            if numeric or selected_treatment == "bucket":
-                options.insert(2, ("Bucket numeric values" if numeric else "Bucket (requires numeric input)", "bucket"))
+            allowed = contracts.sensitive_data_treatments_for_type(data_type)
+            options = tuple(option for option in _SENSITIVE_TREATMENT_OPTIONS if option[1] in allowed)
             was_hydrating = hydrating["active"]
             hydrating["active"] = True
             try:
                 sensitive_treatment.options = tuple(options)
-                sensitive_treatment.value = selected_treatment
+                sensitive_treatment.value = selected_treatment if selected_treatment in allowed else None
             finally:
                 hydrating["active"] = was_hydrating
+            if editable and sensitive_enabled.value and sensitive_treatment.value is None:
+                set_validation_error(f"column.{column_select.value}.sensitive", "The saved treatment does not apply to this datatype. Select a supported treatment before saving.")
+            update_sensitive_fields()
             temporal = base_type in {"date", "timestamp", "timestamp_ntz"}
             boolean = base_type in {"bool", "boolean"}
             scalar = base_type in {"string", "varchar", "char"} or numeric or temporal or boolean

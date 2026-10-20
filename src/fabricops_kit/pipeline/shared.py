@@ -1302,18 +1302,40 @@ def _parameters(rule: dict[str, Any]) -> dict[str, Any]:
     return parsed
 
 
-def _build_token_mapping(dataframe, *, column_name, column_id, table_id, existing_mapping,
-                         config=None, env=None, context=None, execution_type="enforce"):
-    """Build and materialize one validated caller-owned token mapping."""
+def _validate_token_mapping(mapping):
+    """Reject missing or conflicting assignments in the supplied lookup scope."""
     from pyspark.sql import functions as F
 
-    required = {"table_id", "column_id", "original_value", "token_value"}
+    checked = mapping.cache()
+    try:
+        if checked.where(F.col("original_value").isNull() | F.col("token_value").isNull()).limit(1).count():
+            raise ValueError("Existing token mappings must contain non-null original and token values.")
+        if checked.groupBy("original_value").agg(F.countDistinct("token_value").alias("count")).where(F.col("count") > 1).limit(1).count():
+            raise ValueError("Existing mapping assigns multiple tokens to one original value.")
+        if checked.groupBy("token_value").agg(F.countDistinct("original_value").alias("count")).where(F.col("count") > 1).limit(1).count():
+            raise ValueError("Existing mapping reuses one token for multiple original values.")
+    finally:
+        checked.unpersist()
+
+
+def _build_token_mapping(dataframe, *, column_name, column_id, table_id, existing_mapping,
+                         config=None, env=None, context=None, execution_type="enforce"):
+    """Materialize batch lookups for a vault, or cumulative caller-owned assignments."""
+    from pyspark.sql import functions as F
+
+    required = ["table_id", "column_id", "original_value", "token_value"]
+    original_type = dataframe.schema[column_name].dataType.simpleString()
+    originals = dataframe.where(F.col(column_name).isNotNull()).select(
+        F.col(column_name).cast("string").alias("original_value")
+    ).distinct()
     target = dict(getattr(getattr(config, "governance_config", None), "sensitive_data_token_mapping", {}) or {})
-    vault = None
+    vault, saved, established = None, None, None
     io_context = {**(context or {}), "config": config, "env": env, "_fabricops_suppress_io_log": True}
     if target:
         from delta.tables import DeltaTable
 
+        if existing_mapping is not None:
+            raise ValueError("Use the configured token mapping store or existing_mapping, not both.")
         _store, _table, _schema, path = resolve_configured_lakehouse_table(
             target["store"], target["table_name"], target.get("schema"), context=io_context,
         )
@@ -1322,85 +1344,54 @@ def _build_token_mapping(dataframe, *, column_name, column_id, table_id, existin
         vault = DeltaTable.forPath(dataframe.sparkSession, path)
         saved = read_lakehouse_table(target["table_name"], store=target["store"], schema=target.get("schema"),
                                     spark_session=dataframe.sparkSession, context=io_context)
-        if not required | {"original_data_type"} <= set(saved.columns):
+        if not set(required + ["original_data_type"]) <= set(saved.columns):
             raise ValueError("Token mapping store requires table_id, column_id, original_value, token_value and original_data_type.")
-        if any(saved.schema[name].dataType.simpleString() != "string" for name in required | {"original_data_type"}):
+        if any(saved.schema[name].dataType.simpleString() != "string" for name in required + ["original_data_type"]):
             raise ValueError("Token mapping store columns must use string data types.")
-        if existing_mapping is not None and not required <= set(existing_mapping.columns):
-            raise ValueError("existing_mapping is missing required columns.")
-        saved = saved.where((F.col("table_id") == table_id) & (F.col("column_id") == column_id)).select(*sorted(required))
-        existing_mapping = saved if existing_mapping is None else saved.unionByName(existing_mapping.select(*sorted(required)))
-    if existing_mapping is None:
-        established = None
-    else:
-        missing = sorted(required - set(existing_mapping.columns))
+        saved = saved.where((F.col("table_id") == table_id) & (F.col("column_id") == column_id)).select(*required)
+        established = saved.join(originals, "original_value", "left_semi").dropDuplicates()
+    elif existing_mapping is not None:
+        missing = sorted(set(required) - set(existing_mapping.columns))
         if missing:
             raise ValueError("existing_mapping is missing required column(s): " + ", ".join(missing) + ".")
-        established = (
-            existing_mapping.where((F.col("table_id") == table_id) & (F.col("column_id") == column_id))
-            .select("table_id", "column_id", "original_value", "token_value")
-            .dropDuplicates()
-            )
-        if established.where(F.col("original_value").isNull() | F.col("token_value").isNull()).limit(1).count():
-            raise ValueError("Existing token mappings must contain non-null original and token values.")
-        if (
-            established.groupBy("original_value")
-            .agg(F.countDistinct("token_value").alias("count"))
-            .where(F.col("count") > 1)
-            .limit(1)
-            .count()
-        ):
-            raise ValueError("Existing mapping assigns multiple tokens to one original value.")
-        if (
-            established.groupBy("token_value")
-            .agg(F.countDistinct("original_value").alias("count"))
-            .where(F.col("count") > 1)
-            .limit(1)
-            .count()
-        ):
-            raise ValueError("Existing mapping reuses one token for multiple original values.")
+        established = existing_mapping.where((F.col("table_id") == table_id) & (F.col("column_id") == column_id)).select(*required).dropDuplicates()
+        _validate_token_mapping(established)
 
-    original_type = dataframe.schema[column_name].dataType.simpleString()
-    originals = (
-        dataframe.where(F.col(column_name).isNotNull())
-        .select(F.col(column_name).cast("string").alias("original_value"))
-        .dropDuplicates()
-    )
-    unmatched = (
-        originals
-        if established is None
-        else originals.join(established.select("original_value"), on="original_value", how="left_anti")
-    )
+    unmatched = originals if established is None else originals.join(established.select("original_value"), "original_value", "left_anti")
     generated = unmatched.withColumn("token_value", F.expr("uuid()"))
-    generated = (
-        generated.withColumn("table_id", F.lit(table_id))
-        .withColumn("column_id", F.lit(column_id))
-        .select("table_id", "column_id", "original_value", "token_value")
-    )
-    available_mapping = generated if established is None else established.unionByName(generated)
-    mapping = (
-        available_mapping.withColumn("original_data_type", F.lit(original_type))
-        .cache()
-    )
+    generated = generated.withColumn("table_id", F.lit(table_id)).withColumn("column_id", F.lit(column_id)).select(*required)
+    available = generated if established is None else established.unionByName(generated)
+    mapping = available.withColumn("original_data_type", F.lit(original_type)).cache()
+    canonical = None
     try:
         mapping.count()
-        if vault is not None and execution_type == "enforce":
-            # Insert-only preserves established identities; allocations for a scope must be serialized.
-            condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in ("table_id", "column_id", "original_value"))
-            vault.alias("target").merge(mapping.alias("source"), condition).whenNotMatchedInsert(
-                values={name: f"source.`{name}`" for name in (*sorted(required), "original_data_type")}
-            ).execute()
-            canonical = read_lakehouse_table(target["table_name"], store=target["store"], schema=target.get("schema"),
-                                            spark_session=dataframe.sparkSession, context=io_context)
-            # Validate the authoritative assignments after the merge, not a cached proposal.
-            resolved = _build_token_mapping(dataframe, column_name=column_name, column_id=column_id,
-                                           table_id=table_id, existing_mapping=canonical)
-            mapping.unpersist()
-            return resolved
+        if vault is not None:
+            # Only proposed new assignments enter the Delta merge. Historical rows are never merged again.
+            new_assignments = mapping.join(unmatched, "original_value", "left_semi")
+            if execution_type == "enforce" and new_assignments.limit(1).count():
+                condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in ("table_id", "column_id", "original_value"))
+                vault.alias("target").merge(new_assignments.alias("source"), condition).whenNotMatchedInsert(
+                    values={name: f"source.`{name}`" for name in required + ["original_data_type"]}
+                ).execute()
+                saved = read_lakehouse_table(target["table_name"], store=target["store"], schema=target.get("schema"),
+                                            spark_session=dataframe.sparkSession, context=io_context).where(
+                    (F.col("table_id") == table_id) & (F.col("column_id") == column_id)
+                ).select(*required)
+                canonical = originals.join(saved, "original_value", "left").withColumn("original_data_type", F.lit(original_type)).cache()
+                canonical.count()
+            current = canonical if canonical is not None else mapping
+            # Check reverse collisions only for tokens used by this batch, including collisions with absent identities.
+            related = saved.join(current.select("token_value").distinct(), "token_value", "left_semi").select(*required)
+            _validate_token_mapping(current.select(*required).unionByName(related).dropDuplicates())
+            if canonical is not None:
+                mapping.unpersist()
+                return canonical
+        return mapping
     except Exception:
+        if canonical is not None:
+            canonical.unpersist()
         mapping.unpersist()
         raise
-    return mapping
 
 
 def _apply_token_mapping(dataframe, *, column_name, column_id, table_id, mapping):
@@ -1469,10 +1460,29 @@ def _bucket_column(dataframe, *, column_name, parameters):
         raise ValueError("Sensitive Data bucket treatment requires a numeric column.")
     value = F.col(column_name)
     if "bin_width" in parameters:
-        width, origin = parameters["bin_width"], parameters["bin_origin"]
-        lower = F.floor((value - F.lit(origin)) / F.lit(width)) * F.lit(width) + F.lit(origin)
-        label = F.concat(F.lit("["), lower.cast("string"), F.lit(", "),
-                         (lower + F.lit(width)).cast("string"), F.lit(")"))
+        from decimal import Decimal
+        from pyspark.sql.types import DecimalType, DoubleType, FloatType
+
+        width, origin = Decimal(str(parameters["bin_width"])), Decimal(str(parameters["bin_origin"]))
+        source_type = dataframe.schema[column_name].dataType
+        needed_scale = max(0, -width.as_tuple().exponent, -origin.as_tuple().exponent)
+        working_scale = max(getattr(source_type, "scale", 0), needed_scale,
+                            18 if isinstance(source_type, (FloatType, DoubleType)) else 0)
+        if working_scale > 36:
+            raise ValueError("Fixed-width buckets exceed supported decimal precision; use wider intervals or transform the column first.")
+        exact = value.cast("string").cast(DecimalType(36, working_scale))
+        shifted = exact if not origin else exact - F.lit(origin)
+        lower = exact - F.pmod(shifted, F.lit(width))
+        upper = lower + F.lit(width)
+        bounds = dataframe.select(shifted.alias("shifted"), lower.alias("lower"), upper.alias("upper"))
+        if any(getattr(field.dataType, "scale", 0) < working_scale for field in bounds.schema.fields):
+            raise ValueError("Fixed-width buckets exceed supported decimal precision; use wider intervals or transform the column first.")
+        def bound_label(expression):
+            return F.regexp_replace(F.regexp_replace(expression.cast("string"), r"(\.\d*?)0+$", "$1"), r"\.$", "")
+        invalid = ~exact.cast(source_type).eqNullSafe(value) | lower.isNull() | upper.isNull()
+        label = F.when(value.isNotNull() & invalid, F.raise_error("Numeric value exceeds supported bucket precision.")).otherwise(
+            F.concat(F.lit("["), bound_label(lower), F.lit(", "), bound_label(upper), F.lit(")"))
+        )
         return dataframe.withColumn(column_name, F.when(value.isNull(), F.lit(None)).otherwise(label))
     bins = parameters["bins"]
     labels = parameters["labels"]

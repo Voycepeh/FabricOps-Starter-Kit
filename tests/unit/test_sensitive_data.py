@@ -270,9 +270,9 @@ def test_fixed_width_buckets_are_stable_across_batches(spark_session):
                                                  'bin_width': 10, 'bin_origin': 0})
     frame = spark_session.createDataFrame([(-1,), (0,), (9,), (10,), (None,)], 'value int')
     result = shared._bucket_column(frame, column_name='value', parameters=params)
-    assert [r.value for r in result.collect()] == ['[-10.0, 0.0)', '[0.0, 10.0)', '[0.0, 10.0)', '[10.0, 20.0)', None]
+    assert [r.value for r in result.collect()] == ['[-10, 0)', '[0, 10)', '[0, 10)', '[10, 20)', None]
     later = spark_session.createDataFrame([(9,), (1000,)], ['value'])
-    assert shared._bucket_column(later, column_name='value', parameters=params).first().value == '[0.0, 10.0)'
+    assert shared._bucket_column(later, column_name='value', parameters=params).first().value == '[0, 10)'
 
 
 @pytest.mark.parametrize('extra', [
@@ -302,14 +302,16 @@ def test_returned_token_mapping_retains_absent_identities(spark_session):
 
 
 @pytest.mark.parametrize('mode', ['validate', 'enforce'])
-def test_managed_token_mapping_uses_restricted_target_without_validation_writes(monkeypatch, spark_session, mode):
+@pytest.mark.parametrize('collision', [False, True])
+def test_managed_token_mapping_uses_restricted_target_without_validation_writes(monkeypatch, spark_session, mode, collision):
     """Exercise real token generation and reuse around a mocked Delta vault merge."""
     import sys
     import types
     from fabricops_kit.config import GovernanceConfig
 
     fields = ['table_id', 'column_id', 'original_value', 'token_value', 'original_data_type']
-    stored = spark_session.createDataFrame([('t', 'c', 'known', 'stable', 'string')], fields)
+    stored = spark_session.createDataFrame([('t', 'c', 'known', 'stable', 'string'),
+        ('t', 'c', 'absent', 'stable' if collision else 'reserved', 'string')], fields)
     merges = []
     reads = []
 
@@ -328,7 +330,7 @@ def test_managed_token_mapping_uses_restricted_target_without_validation_writes(
 
         def execute(self):
             nonlocal stored
-            merges.append(True)
+            merges.append(self.pending.count())
             new = self.pending.join(stored.select('table_id', 'column_id', 'original_value'),
                                     ['table_id', 'column_id', 'original_value'], 'left_anti')
             stored = stored.unionByName(new).cache()
@@ -352,19 +354,27 @@ def test_managed_token_mapping_uses_restricted_target_without_validation_writes(
         'store': 'Sensitive', 'schema': 'vault', 'table_name': 'tokens',
     }))
     frame = spark_session.createDataFrame([('known',), ('new',)], ['value'])
+    if collision:
+        with pytest.raises(ValueError, match='reuses one token'):
+            shared._build_token_mapping(frame, column_name='value', column_id='c', table_id='t',
+                existing_mapping=None, config=config, env='dev', execution_type=mode)
+        stored.unpersist()
+        return
     mapping = shared._build_token_mapping(frame, column_name='value', column_id='c', table_id='t',
         existing_mapping=None, config=config, env='dev', execution_type=mode)
     try:
         values = {r.original_value: r.token_value for r in mapping.collect()}
+        assert set(values) == {'known', 'new'}
         assert values['known'] == 'stable'
         assert values['new'] != 'new'
-        assert bool(merges) is (mode == 'enforce')
-        assert {r.original_value for r in stored.collect()} == ({'known', 'new'} if mode == 'enforce' else {'known'})
+        assert merges == ([1] if mode == 'enforce' else [])
+        assert {r.original_value for r in stored.collect()} == ({'known', 'new', 'absent'} if mode == 'enforce' else {'known', 'absent'})
         if mode == 'enforce':
             again = shared._build_token_mapping(frame, column_name='value', column_id='c', table_id='t',
-                existing_mapping=None, config=config, env='dev', execution_type='validate')
+                existing_mapping=None, config=config, env='dev', execution_type='enforce')
             try:
                 assert {r.original_value: r.token_value for r in again.collect()} == values
+                assert merges == [1]  # Reusing known assignments must not perform another Delta merge.
             finally:
                 again.unpersist()
     finally:
@@ -380,3 +390,39 @@ def test_managed_token_mapping_configuration_requires_separate_store():
         GovernanceConfig(sensitive_data_token_mapping={'store': 'Metadata', 'table_name': 'tokens'})
     with pytest.raises(ValueError, match='requires store'):
         GovernanceConfig(sensitive_data_token_mapping={'store': 'Sensitive'})
+
+
+@pytest.mark.parametrize('origin', [0.0, 0.05])
+def test_fixed_width_decimal_boundaries_are_exact(spark_session, origin):
+    """A value exactly on a decimal boundary belongs to its own lower-inclusive band."""
+    from decimal import Decimal
+
+    values = [('1.20', '[1.2, 1.3)'), ('1.30', '[1.3, 1.4)'), ('2.40', '[2.4, 2.5)'), ('-0.10', '[-0.1, 0)')]
+    if origin:
+        values = [('1.25', '[1.25, 1.35)'), ('1.35', '[1.35, 1.45)'), ('-0.05', '[-0.05, 0.05)')]
+    frame = spark_session.createDataFrame([(Decimal(value),) for value, _label in values], 'value decimal(10,2)')
+    result = shared._bucket_column(frame, column_name='value', parameters={'bin_width': 0.1, 'bin_origin': origin})
+    assert [row.value for row in result.collect()] == [label for _value, label in values]
+
+
+def test_fixed_width_float_boundaries_and_nulls(spark_session):
+    """Floating sources use decimal interval arithmetic and keep nulls."""
+    frame = spark_session.createDataFrame([(1.2,), (1.3,), (None,)], 'value double')
+    result = shared._bucket_column(frame, column_name='value', parameters={'bin_width': 0.1, 'bin_origin': 0.0})
+    assert [row.value for row in result.collect()] == ['[1.2, 1.3)', '[1.3, 1.4)', None]
+
+
+def test_fixed_width_high_precision_values_just_below_boundaries(spark_session):
+    """Shifting high-precision decimals must not round them across an interval edge."""
+    from decimal import Decimal
+
+    frame = spark_session.createDataFrame([(Decimal('1.249999999999999999'),)], 'value decimal(38,18)')
+    result = shared._bucket_column(frame, column_name='value', parameters={'bin_width': 0.1, 'bin_origin': 0.05})
+    assert result.first().value == '[1.15, 1.25)'
+
+
+def test_fixed_width_rejects_origin_that_reduces_decimal_precision(spark_session):
+    """A large origin cannot silently round a small value into another interval."""
+    frame = spark_session.createDataFrame([(1e-17,)], 'value double')
+    with pytest.raises(ValueError, match='supported decimal precision'):
+        shared._bucket_column(frame, column_name='value', parameters={'bin_width': 1e20, 'bin_origin': 1e20})

@@ -15,7 +15,7 @@ def _context() -> dict:
         "table_name": "customers",
         "columns": [
             {"column_id": "email-id", "column_name": "EMAIL", "data_type": "string"},
-            {"column_id": "postal-id", "column_name": "POSTAL_CODE", "data_type": "string"},
+            {"column_id": "postal-id", "column_name": "POSTAL_CODE", "data_type": "long"},
             {"column_id": "total-id", "column_name": "ORDER_TOTAL", "data_type": "decimal"},
         ],
     }
@@ -305,3 +305,16 @@ def test_sensitive_suggestions_always_use_block():
         'treatment': 'remove', 'action': 'Warn', 'parameters': {},
     }]))
     assert result[0]['action'] == 'Block'
+
+
+@pytest.mark.parametrize('column,treatment,parameters', [
+    ('EMAIL', 'bucket', {'bins': [0, 10], 'labels': ['low', 'high']}),
+    ('POSTAL_CODE', 'mask', {'preserve_start': 0, 'preserve_end': 0, 'mask_character': '*'}),
+])
+def test_ai_rejects_treatments_incompatible_with_datatype(column, treatment, parameters):
+    """Reject unusable suggestions before the editor can offer acceptance."""
+    with pytest.raises(ValueError, match='datatype'):
+        module.suggest_sensitive_data(_context(), prompt='Policy', invoke=_invoke([{
+            'column': column, 'pii_type': 'direct', 'reason': 'Identifies an entity',
+            'treatment': treatment, 'action': 'Block', 'parameters': parameters,
+        }]))

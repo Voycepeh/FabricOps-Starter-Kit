@@ -158,7 +158,7 @@ def test_simplified_mask_and_fixed_buckets_reach_the_public_write_workflow(monke
     result = orchestrate_write(frame, sources=[], store='Silver', schema='dbo', table_name='customers',
         write_mode='overwrite', contracts={'tables': {'target-id': {'mode': mode}}},
         spark_session=spark_session, verbose=False)
-    assert [(r.email, r.age) for r in result['dataframe'].collect()] == [('***', '[20.0, 30.0)'), ('A***E', '[30.0, 40.0)')]
+    assert [(r.email, r.age) for r in result['dataframe'].collect()] == [('***', '[20, 30)'), ('A***E', '[30, 40)')]
     assert later['check_dq'].call_args.args[0] is result['dataframe']
     assert result['published'] is (mode == 'enforce')
     assert len(evidence) == 2 and all(item['action'] == 'Block' for item in evidence)

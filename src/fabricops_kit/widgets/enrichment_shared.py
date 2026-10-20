@@ -14,6 +14,7 @@ from fabricops_kit.config.shared import metadata_timestamp_sort_key
 from fabricops_kit.data_contract.shared import (
     normalize_guardrail_action,
     validate_sensitive_data_parameters,
+    sensitive_data_treatments_for_type,
 )
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
@@ -208,7 +209,8 @@ def suggest_sensitive_data(
         "Use pii_type values direct, indirect, or none. For none, treatment must be null, action must be null, "
         "and parameters must be an empty object. "
         "Allowed treatments: tokenize, mask, bucket, remove. Action must be Block. "
-        "Bucket is numeric only; use fixed approved ranges, never inferred quantiles. "
+        "Bucket is numeric only; Mask is for text or categorical columns. Tokenize works for numeric or categorical identifiers; Remove works for either. "
+        "Use fixed approved ranges, never inferred quantiles. "
         "Prefer full mask with preserve_start=0, preserve_end=0, mask_character='*'. "
         "Classification is only an input signal, not an automatic rule. Use the supplied profile summaries and top-three frequent values as evidence. Do not include raw values in the response.\n\n"
         f"Context:\n{json.dumps(context, sort_keys=True, default=str)}"
@@ -263,6 +265,9 @@ def suggest_sensitive_data(
                 "treatment": candidate.get("treatment"),
                 **dict(candidate.get("parameters") or {}),
             })
+            column_type = next(row.get("data_type", "") for row in context["columns"] if row["column_name"] == column_name)
+            if parameters["treatment"] not in sensitive_data_treatments_for_type(column_type):
+                raise ValueError("Treatment does not apply to the column datatype.")
             normalize_guardrail_action(candidate.get("action"))
             action = "Block"
         except (TypeError, ValueError) as exc:
