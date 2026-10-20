@@ -59,6 +59,7 @@ def orchestrate_write(
     existing_mapping=None,
     spark_session=None,
     verbose: bool=True,
+    dq_diagnostics: str='sample',
 ) -> dict[str, Any]:
 ```
 
@@ -91,6 +92,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `existing_mapping` | `pyspark.sql.DataFrame` | No | `None` | Previously returned Sensitive Data token mappings. Existing assignments are reused; the returned sensitive_result contains the support_mapping for the caller to persist and supply on later runs. After consuming the prepared DataFrame and persisting the mapping, call its unpersist() method to release its cache. Failed orchestration releases it automatically. |
 | `spark_session` | `object` | No | `None` | Spark session used by every stage. |
 | `verbose` | `bool` | No | `True` | Print stage start, outcome, duration, and failure attribution. |
+| `dq_diagnostics` | `str` | No | `'sample'` | Sample captures at most ten illustrative source records per DQ rule with exact metrics in the same aggregation. None captures metrics only. Full also returns every failure as a lazy diagnostic DataFrame. |
 
 </div>
 
@@ -152,12 +154,13 @@ Both contract modes evaluate the same configured Guardrails using contracts
 and rules resolved once per call. Absent Guardrails remain skipped in the
 result fields but are omitted from stdout and orchestration_stages.
 Contract-free Development prints one decision and proceeds to Write.
-Data Quality uses native Spark expressions over the prepared input after
-Sensitive Data treatment. ``dq_result["dataframe"]`` adds row status and
-failed rule IDs; these tags are not automatically added to the published
-target. Rule summaries are appended to ``METADATA_GUARDRAIL_RESULTS``;
-``dq_result["failed_values"]`` remains a lazy, caller-owned detail DataFrame.
-Later actions on either DQ DataFrame can repeat Spark computation.
+DQ summaries retain exact observed pass/fail counts independently of the
+authored tolerance decision. Sample mode stores at most ten illustrative
+source records per rule in METADATA_GUARDRAIL_RESULTS.result_payload_json;
+dq_result["failed_values"] contains only those captured examples. None
+suppresses examples; full returns an unbounded lazy failure DataFrame.
+dq_result["dataframe"] retains lazy row tags. The top-level source/prepared
+DataFrame and published target do not acquire those tags automatically.
 Validate resolves the exact selected frozen candidate and records
 execution_type=validate evidence for activation, including a completion
 record for every covered contract after Guardrail Coverage passes, then returns without writing;
@@ -186,7 +189,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:23`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L23-L252">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L23-L260">View on GitHub</a>
 </div>
 
 
@@ -202,7 +205,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 183 |
+| Live-critical dependencies | 187 |
 
 ### Release history
 
@@ -326,11 +329,14 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._custom_expression_column</code></li>
 <li><code>fabricops_kit.pipeline.shared._custom_expression_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._custom_expression_tree</code></li>
+<li><code>fabricops_kit.pipeline.shared._dq_applicable_expression</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_checks_from_counts</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_empty_failed_values</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_failed_expression</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_failed_value_schema</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_failed_values_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared._dq_sample_failed_values</code></li>
+<li><code>fabricops_kit.pipeline.shared._dq_sample_record</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_tagged_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._evaluate_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared._guardrail_schema_check_base</code></li>
@@ -366,6 +372,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.commit_pipeline_write_success</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.display_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.dq_tolerance_parameter</code></li>
 <li><code>fabricops_kit.pipeline.shared.evaluate_source_drift_guardrail</code></li>
 <li><code>fabricops_kit.pipeline.shared.execute_lakehouse_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.get_current_source_observation</code></li>

@@ -260,6 +260,9 @@ def test_check_dq_runtime_persists_summaries_and_returns_failed_values(spark_ses
         "DQ_STATUS": "failed", "DQ_RULE_COUNT": 2, "DQ_FAILED_RULE_COUNT": 2,
         "DQ_WARNING_RULE_COUNT": 1, "DQ_ERROR_RULE_COUNT": 1, "DQ_FAILED_ROW_COUNT": 1,
         "DQ_FAILED_ROW_PERCENT": 50.0, "DQ_CHECKED_AT": result["summary"]["DQ_CHECKED_AT"],
+        "DQ_CHECKED_ROW_COUNT": 2, "DQ_PASSED_ROW_COUNT": 1, "DQ_PASSED_ROW_PERCENT": 50.0,
+        "DQ_VIOLATING_RULE_COUNT": 2,
+        "DQ_TOTAL_ROW_COUNT": 2, "DQ_NOT_APPLICABLE_ROW_COUNT": 0,
     }
     summaries = next(rows for table, rows in writes if table == "METADATA_GUARDRAIL_RESULTS")
     evidence = result["failed_values"].collect()

@@ -4,6 +4,33 @@ import pytest
 import importlib
 
 
+def test_dq_stage_prints_observed_percentages_independently_of_decision(capsys):
+    """A passed tolerance decision must still display the observed violation rate."""
+    from fabricops_kit.pipeline.shared import _run_orchestration_stage
+
+    _run_orchestration_stage(operation="READ", name="orders", index=1, total=1, stage="Data Quality",
+                             function=lambda: {"status": "passed", "summary": {
+                                 "DQ_PASSED_ROW_PERCENT": 99.0, "DQ_FAILED_ROW_PERCENT": 1.0,
+                                 "DQ_NOT_APPLICABLE_ROW_COUNT": 2,
+                             }}, verbose=True)
+    output = capsys.readouterr().out
+    assert "99.00% pass" in output and "1.00% with violations" in output
+    assert "2 not applicable" in output and "Passed" in output
+
+
+@pytest.mark.parametrize("operation", ["read", "write"])
+def test_invalid_dq_diagnostics_fails_before_io(operation):
+    """Do not run a source read or target write with an invalid diagnostics choice."""
+    module = importlib.import_module(f"fabricops_kit.pipeline.orchestrate_{operation}")
+    with patch.object(module, "resolve_table_id", side_effect=AssertionError("unexpected IO")):
+        with pytest.raises(ValueError, match="dq_diagnostics"):
+            options = {"store": "Bronze", "schema": "demo", "table_name": "orders", "dq_diagnostics": "invalid"}
+            if operation == "read":
+                module.orchestrate_read(**options)
+            else:
+                module.orchestrate_write(object(), sources=[], write_mode="overwrite", **options)
+
+
 
 @pytest.fixture(autouse=True)
 def planned_stages(monkeypatch):

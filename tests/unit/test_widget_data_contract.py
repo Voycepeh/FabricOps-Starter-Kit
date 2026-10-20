@@ -2317,7 +2317,7 @@ def test_single_column_business_rule_hydrates_column_rule(widget_runtime, monkey
     assert controls["business_saved"].value
 
     controls["top_nav"].value = "Column"
-    assert controls["dq_max_missing"].value == "0"
+    assert float(controls["dq_max_missing"].value) == 0
     assert controls["dq_family_controls"]["completeness"]["enabled"].value is True
     assert "DQ Rule added to the current draft" in state["message"]
 
@@ -2417,6 +2417,7 @@ def test_value_lists_create_independent_whitelist_and_blacklist_rules(widget_run
 
     assert len(family["display"]) == 2
     controls["dq_whitelist_values"].value = "Active, Inactive, Pending"
+    controls["dq_whitelist_max_failure"].value = "2"
     controls["dq_blacklist_values"].value = "Unknown, N/A"
     assert "3 values" in controls["dq_whitelist_count"].value
     assert "2 values" in controls["dq_blacklist_count"].value
@@ -2438,7 +2439,9 @@ def test_value_lists_create_independent_whitelist_and_blacklist_rules(widget_run
         for record in rules
     }
     assert by_mode["allow"]["values"] == ["Active", "Inactive", "Pending"]
+    assert by_mode["allow"]["maximum_failure_percent"] == 2
     assert by_mode["block"]["values"] == ["Unknown", "N/A"]
+    assert "maximum_failure_percent" not in by_mode["block"]
     assert all(record["action"] == "Block" for record in rules)
 
 
@@ -2448,7 +2451,8 @@ def test_dq_parameter_checkboxes_align_with_the_fields_they_modify(widget_runtim
     controls = state["_controls"]
 
     completeness_row = controls["dq_family_controls"]["completeness"]["display"][0]
-    lower_row, upper_row = controls["dq_family_controls"]["range"]["display"]
+    lower_row, upper_row, tolerance = controls["dq_family_controls"]["range"]["display"]
+    assert tolerance is controls["dq_range_max_failure"]
 
     assert completeness_row.children == (
         controls["dq_max_missing"], controls["dq_blank_missing"]
@@ -2474,6 +2478,7 @@ def test_range_is_directly_authored_and_saves_without_ai(widget_runtime):
     controls["dq_minimum_inclusive"].value = True
     controls["dq_maximum"].value = "100"
     controls["dq_maximum_inclusive"].value = False
+    controls["dq_range_max_failure"].value = "1.5"
 
     assert len(widget_runtime["calls"]["guardrails"]) == before
     controls["save_data_contract"].click()
@@ -2489,7 +2494,33 @@ def test_range_is_directly_authored_and_saves_without_ai(widget_runtime):
         "minimum_inclusive": True,
         "maximum": "100",
         "maximum_inclusive": False,
+        "maximum_failure_percent": 1.5,
     }
+
+
+def test_business_rule_tolerance_control_follows_selected_rule(widget_runtime, monkeypatch):
+    """Business Rules expose the applicable percentage and keep prohibited values strict."""
+    state, _ = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    monkeypatch.setattr(module, "suggest_business_rule", lambda *_args, **_kwargs: [
+        {"rule_type": "pattern", "columns": ["column_0"],
+         "parameters": {"columns": ["column_0"], "pattern": "^[0-9]+$", "maximum_failure_percent": 2}},
+        {"rule_type": "value_set", "columns": ["column_0"],
+         "parameters": {"columns": ["column_0"], "mode": "block", "values": ["forbidden"]}},
+    ])
+    controls["business_requirement"].value = "Allow 2% format violations; prohibited values are never acceptable."
+    controls["resolve_business_rule"].click()
+    assert controls["business_tolerance"].layout.display == ""
+    assert float(controls["business_tolerance"].value) == 2
+    controls["business_tolerance"].value = "3"
+    controls["business_proposal_select"].value = 1
+    assert controls["business_tolerance"].layout.display == "none"
+    controls["business_proposal_select"].value = 0
+    assert float(controls["business_tolerance"].value) == 3
+    controls["apply_business_rule"].click()
+    staged = [row for records in state["_pending_guardrails"].values() for row in records.values()]
+    pattern = next(row for row in staged if row.get("rule_type") == "pattern")
+    assert module._parameters(pattern)["maximum_failure_percent"] == 3
 
 
 def test_schedule_is_read_from_catalogue_without_cross_workspace_discovery(widget_runtime):

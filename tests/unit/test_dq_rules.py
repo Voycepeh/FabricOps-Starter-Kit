@@ -124,7 +124,7 @@ def test_uniqueness_threshold_allows_minimum_distinct_percentage(spark_session):
     failing_check = governance._evaluate_dq_rules(df, "items", [failing])["checks"][0]
 
     assert passing_check["passed"] is True
-    assert passing_check["failed_count"] == 0
+    assert passing_check["failed_count"] == 2
     assert failing_check["passed"] is False
     assert failing_check["failed_count"] == 2
 
@@ -416,7 +416,7 @@ def test_null_rate_zero_is_strict_and_positive_threshold_allows_expected_rate(sp
     permissive = _rule("completeness", columns=["value"], maximum_missing_percent=25)
 
     assert governance._evaluate_dq_rules(df, "values", [strict])["checks"][0]["failed_count"] == 1
-    assert governance._evaluate_dq_rules(df, "values", [permissive])["checks"][0]["failed_count"] == 0
+    assert governance._evaluate_dq_rules(df, "values", [permissive])["checks"][0]["failed_count"] == 1
 
 
 @pytest.mark.parametrize(

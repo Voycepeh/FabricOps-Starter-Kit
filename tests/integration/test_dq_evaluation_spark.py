@@ -21,7 +21,7 @@ def _rule(kind, columns, **parameters):
     return shared._validate_dq_rules([rule])[0]
 
 
-def _runtime(monkeypatch, frame, rules):
+def _runtime(monkeypatch, frame, rules, *, diagnostics="full"):
     """Run the real DQ runtime with only metadata transport replaced."""
     writes = []
     monkeypatch.setattr(shared, "_load_active_dq_rules", lambda *_args, **_kwargs: rules)
@@ -33,7 +33,7 @@ def _runtime(monkeypatch, frame, rules):
     result = shared.check_dq_runtime(
         frame, framework_config(), "dev", "orders", table_id="orders", store="Bronze",
         store_type="lakehouse", schema_name=None, run_id="dq-test", rules_df=[{}],
-        row_identity_columns=["row_id"],
+        row_identity_columns=["row_id"], diagnostics=diagnostics,
     )
     assert writes == ["METADATA_GUARDRAIL_RESULTS"]
     return result
@@ -98,12 +98,13 @@ def test_permissive_thresholds_preserve_exact_overlapping_row_counts(spark_sessi
     counts = _action_counts(monkeypatch)
     persisted_before = spark_session.sparkContext._jsc.sc().getPersistentRDDs().size()
     result = _runtime(monkeypatch, frame, rules)
-    assert counts["aggregations"] == 2
-    assert result["summary"]["DQ_FAILED_ROW_COUNT"] == 3
-    assert result["checks"][0]["failed_count"] == 0
+    assert counts["aggregations"] == 1
+    assert result["summary"]["DQ_FAILED_ROW_COUNT"] == 4
+    assert result["checks"][0]["failed_count"] == 2
+    assert result["checks"][0]["passed"] is True
     tags = {row.row_id: row._dq_failed_rules for row in result["dataframe"].collect()}
-    assert tags == {1: "range,value_set", 2: "", 3: "range,value_set", 4: "value_set"}
-    assert {row.rule_type for row in result["failed_values"].collect()} == {"range", "value_set"}
+    assert tags == {1: "completeness,range,value_set", 2: "completeness", 3: "range,value_set", 4: "value_set"}
+    assert {row.rule_type for row in result["failed_values"].collect()} == {"completeness", "range", "value_set"}
     assert spark_session.sparkContext._jsc.sc().getPersistentRDDs().size() == persisted_before
 
 
@@ -119,13 +120,13 @@ def test_composite_null_keys_share_metrics_but_keep_threshold_decisions(spark_se
     ]
     counts = _action_counts(monkeypatch)
     result = _runtime(monkeypatch, frame, rules)
-    assert [check["failed_count"] for check in result["checks"]] == [2, 0]
+    assert [check["failed_count"] for check in result["checks"]] == [2, 2]
     assert result["summary"]["DQ_FAILED_ROW_COUNT"] == 2
     assert counts == {"aggregations": 1, "predicates": 1}
     details = result["failed_values"].collect()
-    assert len(details) == 4
-    assert {row.rule_id for row in details} == {"uniqueness"}
-    assert len({row.failure_event_id for row in details}) == 2
+    assert len(details) == 8
+    assert {row.rule_id for row in details} == {"uniqueness", "tolerated"}
+    assert len({row.failure_event_id for row in details}) == 4
     assert result["failed_values"].schema == shared._dq_failed_value_schema()
 
 
@@ -219,7 +220,7 @@ def test_many_distinct_predicates_and_skewed_keys_share_one_aggregation(spark_se
     assert counts == {"aggregations": 1, "predicates": 22}
 
 
-def test_temporary_flag_cache_is_released_after_evaluation_failure(spark_session, monkeypatch):
+def test_evaluation_failure_leaves_no_cached_frames(spark_session, monkeypatch):
     """A failed aggregation must not leak cached DQ flags in the Spark session."""
     from pyspark.sql.classic.dataframe import DataFrame
 
@@ -233,3 +234,98 @@ def test_temporary_flag_cache_is_released_after_evaluation_failure(spark_session
             _rule("range", ["value"], minimum=2),
         ])
     assert spark_session.sparkContext._jsc.sc().getPersistentRDDs().size() == before
+
+
+def test_conditional_tolerance_uses_matching_rows_and_preserves_observed_failures(spark_session, monkeypatch):
+    """A large unrelated population must not dilute a conditional rule's percentage."""
+    frame = spark_session.sql(
+        "SELECT id AS row_id, CASE WHEN id < 10 THEN 'approved' ELSE 'draft' END AS status, "
+        "CASE WHEN id < 2 THEN NULL ELSE 'ok' END AS value FROM range(1000)"
+    )
+    rule = _rule("conditional_completeness", ["status", "value"], condition_operator="=",
+                 condition_value="approved", treat_blank_as_missing=False,
+                 maximum_missing_percent=20, severity="error")
+    result = _runtime(monkeypatch, frame, [rule], diagnostics="none")
+    check = result["checks"][0]
+    assert (check["failed_count"], check["applicable_count"], check["not_applicable_count"]) == (2, 10, 990)
+    assert check["failed_percent"] == 20
+    assert check["passed_percent"] == 80
+    assert check["passed"] is True
+    assert result["can_continue"] is True
+    assert result["summary"]["DQ_FAILED_ROW_COUNT"] == 2
+    assert result["summary"]["DQ_CHECKED_ROW_COUNT"] == 10
+    assert result["summary"]["DQ_NOT_APPLICABLE_ROW_COUNT"] == 990
+    assert result["summary"]["DQ_FAILED_ROW_PERCENT"] == 20
+    assert result["failed_values"].collect() == []
+    assert result["dataframe"].where("row_id < 2").select("_dq_check_status").first()[0] == "warning"
+    rule["maximum_missing_percent"] = 19.9
+    assert _runtime(monkeypatch, frame, [rule], diagnostics="none")["can_continue"] is False
+
+
+def test_nulls_ignored_by_value_checks_are_not_counted_as_passes(spark_session, monkeypatch):
+    """The denominator must agree with the row predicate's null handling."""
+    frame = spark_session.sql("SELECT * FROM VALUES (1, NULL), (2, -1), (3, 1) AS t(row_id, value)")
+    rule = _rule("range", ["value"], minimum=0, maximum_failure_percent=50)
+    result = _runtime(monkeypatch, frame, [rule], diagnostics="none")
+    check = result["checks"][0]
+    assert (check["applicable_count"], check["not_applicable_count"], check["passed_count"]) == (2, 1, 1)
+    assert check["failed_percent"] == check["passed_percent"] == 50
+    assert check["passed"] is True
+
+
+def test_sampled_diagnostics_are_bounded_and_do_not_recompute_source(spark_session, monkeypatch):
+    """Capture examples alongside metrics; displaying them uses a tiny relation."""
+    from pyspark.sql import functions as F
+
+    frame = spark_session.range(1_000_000).select(
+        F.col("id").alias("row_id"), F.lit(-1).alias("value"), F.lit("unrelated").alias("other")
+    )
+    rules = [_rule("range", ["value"], minimum=0, rule_id=f"r-{i}", guardrail_rule_id=f"gr-{i}") for i in range(20)]
+    counts = _action_counts(monkeypatch)
+    result = _runtime(monkeypatch, frame, rules, diagnostics="sample")
+    assert counts == {"aggregations": 1, "predicates": 1}
+
+    assert result["summary"]["DQ_FAILED_ROW_COUNT"] == 1_000_000
+    assert all(1 <= len(check["failure_examples"]) <= 10 for check in result["checks"])
+    assert all(set(example) == {"source_record_id", "row_identity", "values"}
+               for check in result["checks"] for example in check["failure_examples"])
+    assert all(item["column_name"] == "value" for check in result["checks"]
+               for example in check["failure_examples"] for item in example["values"])
+    captured = result["failed_values"].collect()
+    assert len(captured) <= 200
+    assert {row.rule_id for row in captured} == {rule["rule_id"] for rule in rules}
+    plan = result["failed_values"]._jdf.queryExecution().optimizedPlan().toString()
+    assert "1000000" not in plan and "Window" not in plan
+    assert counts == {"aggregations": 1, "predicates": 1}
+
+
+def test_default_samples_are_saved_in_rule_payload_even_when_within_tolerance(spark_session, monkeypatch):
+    """Audit payloads preserve observed percentages and bounded examples together."""
+    import json
+
+    frame = spark_session.sql("SELECT * FROM VALUES (1, -1), (2, 1) AS t(row_id, value)")
+    stored = []
+    original_create = spark_session.createDataFrame
+
+    def capture(data, *args, **kwargs):
+        if isinstance(data, list) and data and isinstance(data[0], dict) and "result_payload_json" in data[0]:
+            stored.extend(data)
+        return original_create(data, *args, **kwargs)
+
+    monkeypatch.setattr(spark_session, "createDataFrame", capture)
+    rule = _rule("range", ["value"], minimum=0, maximum_failure_percent=50, severity="error")
+    # No diagnostics override: exercise the actual default, not a test-only selection.
+    monkeypatch.setattr(shared, "_load_active_dq_rules", lambda *_args, **_kwargs: [rule])
+    monkeypatch.setattr(shared, "write_lakehouse_table", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr("fabricops_kit.config.audit.resolve_runtime_context",
+                        lambda **_kwargs: resolved_runtime_context(activity_id="dq-default-test"))
+    result = shared.check_dq_runtime(frame, framework_config(), "dev", "orders", table_id="orders",
+                                     store="Bronze", store_type="lakehouse", schema_name=None,
+                                     rules_df=[{}], row_identity_columns=["row_id"])
+    assert result["diagnostics"]["mode"] == "sample"
+    assert result["can_continue"] is True
+    payload = json.loads(stored[0]["result_payload_json"])
+    assert payload["failed_count"] == 1 and payload["failed_percent"] == 50
+    assert payload["passed"] is True
+    assert len(payload["failure_examples"]) == 1
+    assert result["failed_values"].collect()[0].raw_value == "-1"

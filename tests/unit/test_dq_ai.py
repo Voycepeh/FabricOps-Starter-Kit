@@ -33,6 +33,18 @@ def _context():
     })
 
 
+def test_ai_retains_only_a_meaningful_explicit_failure_tolerance():
+    """Preserve allowed-value tolerances and reject percentage weakening of prohibited values."""
+    payload = [{"rule_type": "value_set", "columns": ["amount"],
+                "parameters": {"mode": "allow", "values": [1, 2], "maximum_failure_percent": 2}}]
+    result = suggest_dq_rules(_context(), prompt="Allow at most 2% outside the accepted domain.",
+                              invoke=lambda _prompt: json.dumps(payload))
+    assert result[0]["parameters"]["maximum_failure_percent"] == 2
+    payload[0]["parameters"]["mode"] = "block"
+    with pytest.raises(ValueError, match="prohibited values are strict"):
+        suggest_dq_rules(_context(), prompt="configured", invoke=lambda _prompt: json.dumps(payload))
+
+
 def test_ai_dq_context_excludes_internal_identifiers_and_raw_rows():
     """Send governed evidence without internal identifiers or raw rows."""
     context = _context()

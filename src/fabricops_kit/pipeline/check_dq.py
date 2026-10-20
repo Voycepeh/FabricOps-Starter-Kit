@@ -21,6 +21,7 @@ def check_dq(
     verbose: bool = True,
     context=None,
     execution_type="enforce",
+    diagnostics="sample",
 ) -> dict:
     """Evaluate the resolved contract stage and return its continuation decision."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
@@ -80,6 +81,7 @@ def check_dq(
         contract_id=str(contract.get("contract_id") or ""),
         contract_version=int(contract.get("contract_version") or 0),
         execution_type=execution_type,
+        diagnostics=diagnostics,
     )
     print_guardrail_result(
         "Data Quality",
@@ -97,5 +99,8 @@ def check_dq(
         print(f"  Contract selected; evaluated {len(checks)} active DQ rule(s).")
         print(f"  Rule outcomes {len(checks) - len(failed)} passed, {len(failed)} warning/failed.")
         print("  Evidence appended to METADATA_GUARDRAIL_RESULTS for each evaluated rule.")
-        print("  Failed values stay caller-visible only and are not persisted automatically.")
+        summary = result.get("summary", {})
+        print(f"  Applicable rows {summary.get('DQ_PASSED_ROW_PERCENT', 0):.2f}% pass, {summary.get('DQ_FAILED_ROW_PERCENT', 0):.2f}% with violations.")
+        print("  Failure examples disabled." if diagnostics == "none" else
+              "  Up to 10 examples per rule are stored with summaries; full diagnostics are opt-in.")
     return result

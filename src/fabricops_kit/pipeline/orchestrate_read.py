@@ -17,7 +17,7 @@ from fabricops_kit.pipeline.shared import (
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 
 
-def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = "full", query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session=None, verbose: bool = True) -> dict[str, Any]:
+def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = "full", query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session=None, verbose: bool = True, dq_diagnostics: str = "sample") -> dict[str, Any]:
     """Execute the standard FabricOps governed Read lifecycle.
 
     Parameters
@@ -59,6 +59,11 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     verbose : bool, default=True
         Print stage start, outcome, duration, and failure attribution.
 
+    dq_diagnostics : {"sample", "none", "full"}, default="sample"
+        Sample captures at most ten illustrative source records per DQ rule
+        with exact metrics in the same aggregation. None captures metrics only.
+        Full also returns every failure as a lazy diagnostic DataFrame.
+
     Returns
     -------
     dict
@@ -82,12 +87,13 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     canonical ``02_pipeline``. Absent capability fields remain skipped in the
     returned result; orchestration_stages and stdout show executed stages only.
     A contract-free Development run prints one concise Guardrail decision.
-    Data Quality uses native Spark expressions over the returned batch. Its
-    ``dq_result["dataframe"]`` adds ``_dq_check_status`` and ``_dq_failed_rules``;
-    the top-level DataFrame keeps its source columns. Rule summaries are
-    appended to ``METADATA_GUARDRAIL_RESULTS``. ``dq_result["failed_values"]``
-    is a lazy, caller-owned detail DataFrame and is not persisted automatically.
-    Later actions on either DQ DataFrame can repeat Spark computation.
+    DQ summaries retain exact observed pass/fail counts independently of the
+    authored tolerance decision. Sample mode stores at most ten illustrative
+    source records per rule in METADATA_GUARDRAIL_RESULTS.result_payload_json;
+    dq_result["failed_values"] contains only those captured examples. None
+    suppresses examples; full returns an unbounded lazy failure DataFrame.
+    dq_result["dataframe"] retains lazy row tags. The top-level source/prepared
+    DataFrame and published target do not acquire those tags automatically.
     Grain checks only the returned rows (the incremental batch in incremental mode),
     using the configured physical row key; SCD2 history requires a version-aware
     key, such as business key plus effective timestamp.
@@ -126,6 +132,8 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     ):
         if isinstance(value, bool) or not isinstance(value, int) or value < 1:
             raise ValueError(f"{name} must be a positive integer.")
+    if dq_diagnostics not in {"none", "sample", "full"}:
+        raise ValueError("dq_diagnostics must be 'none', 'sample', or 'full'.")
     summary = ExecutionSummary("READ", verbose=verbose)
     table_id = resolve_table_id(store=store, schema=schema, table_name=table_name)
     context = prepare_pipeline_execution([table_id], spark_session=spark_session)
@@ -154,7 +162,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     freshness = run("Freshness", lambda: check_freshness(table_id, spark_session=spark_session, verbose=False, context=context)) if "freshness" in active else dict(skipped)
     schema_result = run("Schema", lambda: check_schema(dataframe, table_id=table_id, spark_session=spark_session, verbose=False, context=context)) if "schema" in active else dict(skipped)
     grain_result = run("Grain", lambda: check_grain(dataframe, table_id=table_id, scope="read_full" if read_mode == "full" else "read_incremental_batch", spark_session=spark_session, verbose=False, context=context)) if "grain" in active else dict(skipped)
-    dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, spark_session=spark_session, verbose=False, context=context)) if "data_quality" in active else dict(skipped)
+    dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, spark_session=spark_session, verbose=False, context=context, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
     profile = run("Profile", lambda: profile_table(dataframe=dataframe, store=store, schema=schema, table_name=table_name, grain_discovery_enabled=grain_discovery_enabled, grain_discovery_max_columns=grain_discovery_max_columns, grain_discovery_max_candidates=grain_discovery_max_candidates, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, spark_session=spark_session)) if read_mode == "full" else dict(skipped, reason="Incremental batch")
     if metrics["rows_read"] is None and read_mode == "full":
         metrics["rows_read"] = profile.get("row_count")
