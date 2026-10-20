@@ -664,7 +664,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["business_saved"].value == ""
     assert controls["row_key_columns"].value == ()
     assert controls["business_enabled"].description == "Enabled"
-    assert controls["business_block"].description == "Block on failure"
+    assert controls["business_block"].description == "On failure"
     table_summary = controls["left_pane"].children[0].value
     assert "Scheduled refresh" in table_summary
     assert "Daily · 08:00 · Asia/Singapore" in table_summary
@@ -978,12 +978,12 @@ def test_column_without_dq_rule_resets_editor_instead_of_leaking_prior_rule(widg
     state = widget_runtime["open"]()
     controls = state["_controls"]
     families = controls["dq_family_controls"]
-    assert controls["dq_max_missing"].value == "0"
+    assert controls["dq_completeness_failure"].value == "0"
     assert families["completeness"]["block"].value is True
 
     controls["column_select"].value = "col-1"
 
-    assert controls["dq_max_missing"].value == "0"
+    assert controls["dq_completeness_failure"].value == "0"
     assert families["completeness"]["block"].value is False
 
 
@@ -1971,7 +1971,7 @@ def test_invalid_dq_input_is_reported_in_status_without_persisting(widget_runtim
     state = widget_runtime["open"]()
     controls = state["_controls"]
     before = len(widget_runtime["calls"]["guardrails"])
-    controls["dq_max_missing"].value = "not-a-number"
+    controls["dq_completeness_failure"].value = "not-a-number"
 
 
     assert len(widget_runtime["calls"]["guardrails"]) == before
@@ -2317,7 +2317,7 @@ def test_single_column_business_rule_hydrates_column_rule(widget_runtime, monkey
     assert controls["business_saved"].value
 
     controls["top_nav"].value = "Column"
-    assert float(controls["dq_max_missing"].value) == 0
+    assert float(controls["dq_completeness_failure"].value) == 0
     assert controls["dq_family_controls"]["completeness"]["enabled"].value is True
     assert "DQ Rule added to the current draft" in state["message"]
 
@@ -2381,18 +2381,18 @@ def test_custom_business_rule_requires_engineering_review_before_freeze(
     assert "Engineering review approved" in controls["engineering_review_status"].value
 
 
-def test_column_uniqueness_supports_strict_or_minimum_percentage(widget_runtime):
-    """Author a single-column uniqueness rule with a configurable minimum unique percentage."""
+def test_column_uniqueness_failure_rate_round_trips(widget_runtime):
+    """Author and hydrate one accepted duplicate-row failure rate."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
     families = controls["dq_family_controls"]
 
     assert "uniqueness" in families
-    assert controls["dq_min_unique"].value == "100"
+    assert controls["dq_uniqueness_failure"].value == "0"
 
     families["uniqueness"]["enabled"].value = True
     families["uniqueness"]["block"].value = True
-    controls["dq_min_unique"].value = "95"
+    controls["dq_uniqueness_failure"].value = "5"
 
     assert widget_runtime["calls"]["guardrails"] == []
     controls["save_data_contract"].click()
@@ -2405,8 +2405,18 @@ def test_column_uniqueness_supports_strict_or_minimum_percentage(widget_runtime)
     assert saved["action"] == "Block"
     assert module._parameters(saved) == {
         "columns": ["column_0"],
-        "minimum_unique_percent": 95.0,
+        "maximum_failure_percent": 5.0,
     }
+    reopened = widget_runtime["open"]()["_controls"]
+    assert float(reopened["dq_uniqueness_failure"].value) == 5
+    assert reopened["dq_family_controls"]["uniqueness"]["block"].value is True
+    reopened["column_select"].value = "col-1"
+    assert float(reopened["dq_uniqueness_failure"].value) == 0
+    reopened["column_select"].value = "col-0"
+    assert float(reopened["dq_uniqueness_failure"].value) == 5
+    assert "dq_min_unique" not in reopened and "dq_max_missing" not in reopened
+    for family in reopened["dq_family_controls"].values():
+        assert tuple(family["block"].options) == (("Warn", False), ("Block", True))
 
 
 def test_value_lists_create_independent_whitelist_and_blacklist_rules(widget_runtime):
@@ -2455,7 +2465,7 @@ def test_dq_parameter_checkboxes_align_with_the_fields_they_modify(widget_runtim
     assert tolerance is controls["dq_range_max_failure"]
 
     assert completeness_row.children == (
-        controls["dq_max_missing"], controls["dq_blank_missing"]
+        controls["dq_completeness_failure"], controls["dq_blank_missing"]
     )
     assert lower_row.children == (
         controls["dq_minimum"], controls["dq_minimum_inclusive"]
@@ -2941,7 +2951,7 @@ def test_sidebar_paths_shared_rules_details_and_editor_navigation(widget_runtime
         assert "column_0: long" in content and "column_1: timestamp" in content
         assert "additional columns Warn" in content
         assert "Data Quality · 3 rules across 2 columns" in content
-        assert "Maximum missing percent" in content
+        assert "Accepted failure rate %" in content
         assert "Operator" in content
     assert "treatment must succeed" in write
     assert "Passed" not in write and "Skipped" not in write
@@ -2976,7 +2986,7 @@ def test_sidebar_unsaved_parameters_types_counts_and_reopen(widget_runtime):
     completeness["parameters"][0].value = "17"
     completeness["block"].value = True
     content = _sidebar_text(controls["sidebar_groups"]["write"])
-    assert "Maximum missing percent:</b> 17.0" in content
+    assert "Accepted failure rate %:</b> 17.0" in content
     assert "Policy:</b> Block" in content
     controls["required"].value = False
     assert "Schema · 0 required columns" in _sidebar_text(controls["sidebar_groups"]["read"])
@@ -2987,7 +2997,7 @@ def test_sidebar_unsaved_parameters_types_counts_and_reopen(widget_runtime):
     controls["row_key_columns"].value = ("column_0",)
     controls["save_data_contract"].click()
     reopened = widget_runtime["open"]()["_controls"]
-    assert "Maximum missing percent:</b> 17.0" in _sidebar_text(reopened["sidebar_groups"]["write"])
+    assert "Accepted failure rate %:</b> 17.0" in _sidebar_text(reopened["sidebar_groups"]["write"])
     assert "Grain · column_0 · Block" in _sidebar_text(reopened["sidebar_groups"]["read"])
 
 
@@ -3169,3 +3179,47 @@ def test_rejected_save_retains_pending_widget_edits(widget_runtime, monkeypatch)
     assert state["dirty"]
     assert state["_pending_enrichment"]
     assert any(item.get("value") == "Unsaved description" for item in state["current"]["enrichment"])
+
+
+@pytest.mark.parametrize("old_limit,expected", [(100, "0"), (95, "")])
+def test_legacy_uniqueness_hydration_requires_explicit_tolerance(widget_runtime, old_limit, expected):
+    """Never silently reinterpret a saved distinct-key tolerance."""
+    widget_runtime["guardrails"].append({
+        "guardrail_rule_id": "legacy-unique", "guardrail_version": 1,
+        "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "uniqueness",
+        "rule_parameters_json": json.dumps({"columns": ["column_0"], "minimum_unique_percent": old_limit}),
+        "action": "Warn", "is_active": True,
+    })
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    assert controls["dq_uniqueness_failure"].value == expected
+    if not expected:
+        controls["dq_family_controls"]["uniqueness"]["block"].value = True
+        controls["save_data_contract"].click()
+        assert not widget_runtime["calls"]["draft"]
+        assert "legacy distinct-key" in str(state["_validation_errors"])
+        controls["dq_uniqueness_failure"].value = "5"
+        controls["save_data_contract"].click()
+        saved = next(rule for rule in widget_runtime["calls"]["guardrails"][-1] if rule.get("guardrail_rule_id") == "legacy-unique")
+        assert module._parameters(saved) == {"columns": ["column_0"], "maximum_failure_percent": 5.0}
+
+
+def test_saved_business_uniqueness_uses_same_failure_rate_editor(widget_runtime):
+    """Table rules and column rules hydrate the same accepted failure percentage."""
+    widget_runtime["guardrails"].append({
+        "guardrail_rule_id": "table-unique", "guardrail_version": 1,
+        "guardrail_type": "data_quality", "column_id": None, "rule_type": "uniqueness",
+        "rule_parameters_json": json.dumps({"columns": ["column_0", "column_1"], "maximum_failure_percent": 4}),
+        "action": "Block", "is_active": True,
+    })
+    controls = widget_runtime["open"]()["_controls"]
+    controls["business_saved"].value = "table-unique"
+    assert controls["business_tolerance"].description == "Accepted failure rate %"
+    assert float(controls["business_tolerance"].value) == 4
+    assert controls["business_block"].value is True
+    controls["business_tolerance"].value = "3"
+    controls["apply_business_rule"].click()
+    controls["save_data_contract"].click()
+    reopened = widget_runtime["open"]()["_controls"]
+    reopened["business_saved"].value = "table-unique"
+    assert float(reopened["business_tolerance"].value) == 3

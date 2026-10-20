@@ -8,7 +8,7 @@ from fabricops_kit.pipeline.shared import dq_tolerance_parameter, _validate_dq_r
 @pytest.mark.parametrize("kind,mode,field", [
     ("completeness", "", "maximum_missing_percent"),
     ("conditional_completeness", "", "maximum_missing_percent"),
-    ("uniqueness", "", "minimum_unique_percent"),
+    ("uniqueness", "", "maximum_failure_percent"),
     ("value_set", "allow", "maximum_failure_percent"),
     ("conditional_values", "allow", "maximum_failure_percent"),
     ("value_set", "block", None), ("conditional_values", "block", None),
@@ -34,7 +34,7 @@ def test_row_tolerance_rejects_invalid_percentages(value):
     {"rule_type": "value_set", "mode": "block", "values": ["forbidden"], "maximum_failure_percent": 1},
     {"rule_type": "conditional_values", "columns": ["status", "value"], "condition_operator": "=",
      "condition_value": "active", "mode": "block", "values": ["forbidden"], "maximum_failure_percent": 0},
-    {"rule_type": "uniqueness", "maximum_failure_percent": 2},
+    {"rule_type": "uniqueness", "minimum_unique_percent": 98, "maximum_failure_percent": 2},
     {"rule_type": "completeness", "maximum_missing_percent": 1,
      "treat_blank_as_missing": False, "maximum_failure_percent": 2},
 ])

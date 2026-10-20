@@ -64,7 +64,7 @@ _TABS = ("Table", "Column", "Business Rules", "Review")
 _COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range")
 _DQ_HELP = {
     "completeness": "Limit missing values, with explicit blank-text handling.",
-    "uniqueness": "Require one column, or a table-level column combination, to be unique.",
+    "uniqueness": "All rows in duplicate key groups fail. For legacy distinct-key limits, explicitly set an accepted failure rate before updating.",
     "value_set": "Allowed Values checks whether a column value belongs to an approved governed set.",
     "range": "Value Rules apply numeric or date conditions such as below, above, between, or outside bounds.",
     "pattern": "Require populated text to match a governed regular expression.",
@@ -566,8 +566,10 @@ def widget_data_contract(
     optional enforcement are independent. Enabling Grain defaults to Block.
     The sidebar shows the shared configured rules for Read and Write; it does
     not execute validation. Rule buttons open the existing authoring controls.
-    DQ Completeness uses maximum missing percent; Uniqueness uses minimum
-    distinct-key percent (distinct key combinations divided by total rows).
+    DQ authoring uses Warn/Block and accepted failure rate percent.
+    Completeness counts missing rows; Uniqueness counts all duplicate-group rows.
+    Legacy distinct-key limits retain their runtime meaning and require an explicit
+    failure rate when edited.
     Allowed values, range, pattern, relationship, and custom row rules can use
     maximum failure percent. Conditional rules use matching applicable rows;
     null values ignored by value checks are not counted as passing rows.
@@ -2293,7 +2295,7 @@ def widget_data_contract(
                         detail.append(("Scope", "Source Read · no refresh expected; no age validation" if rule.get("rule_type") == "skip" or params.get("refresh_expectation") == "static" else "Source returned by orchestrate_read(); latest timestamp relative to run time"))
                     if kind == "source_drift":
                         detail.append(("Scope", str(table.get("table_name") or "This source") + " → consuming target; compared with the target's accepted Source Observation"))
-                    detail.extend((key.replace("_", " ").capitalize(), value) for key, value in params.items() if key not in {"columns", "engineering_reviewed_by", "engineering_review_note"})
+                    detail.extend((("Accepted failure rate %" if key in {"maximum_missing_percent", "maximum_failure_percent"} else key.replace("_", " ").capitalize()), value) for key, value in params.items() if key not in {"columns", "engineering_reviewed_by", "engineering_review_note"})
                 text = "".join(f"<div><b>{escaped(key)}:</b> {escaped(value)}</div>" for key, value in detail)
                 description = (", ".join(affected_names) + " · " if affected_names else "Table · ") + str(rule.get("rule_type") or labels[kind]).replace("_", " ") + " · " + policy
                 button = widgets.Button(description=description, tooltip="Edit " + description, layout=widgets.Layout(width="100%", min_width="0", height="auto"))
@@ -2755,15 +2757,15 @@ def widget_data_contract(
             control.add_class("fabricops-dq-checkbox")
             return control
 
-        dq_max_missing = widgets.Text(
+        dq_completeness_failure = widgets.Text(
             value="0", disabled=not editable,
-            **shared.widget_common(widgets, "Maximum missing %"),
+            **shared.widget_common(widgets, "Accepted failure rate %"),
         )
         dq_blank_missing = dq_checkbox("Count blank text as missing")
         dq_blank_missing.value = False
-        dq_min_unique = widgets.Text(
-            value="100", disabled=not editable,
-            **shared.widget_common(widgets, "Minimum distinct-key %"),
+        dq_uniqueness_failure = widgets.Text(
+            value="0", disabled=not editable,
+            **shared.widget_common(widgets, "Accepted failure rate %"),
         )
         dq_whitelist_values = widgets.Text(
             disabled=not editable,
@@ -2806,31 +2808,31 @@ def widget_data_contract(
         dq_maximum_inclusive.value = True
         dq_whitelist_max_failure = widgets.Text(
             value="0", disabled=not editable,
-            **shared.widget_common(widgets, "Whitelist failure %"),
+            **shared.widget_common(widgets, "Accepted failure rate %"),
         )
         dq_range_max_failure = widgets.Text(
             value="0", disabled=not editable,
-            **shared.widget_common(widgets, "Maximum failure %"),
+            **shared.widget_common(widgets, "Accepted failure rate %"),
         )
         dq_family_controls = {
             "completeness": {
                 "enabled": dq_checkbox("Enabled"),
-                "block": dq_checkbox("Block on failure"),
-                "parameters": (dq_max_missing, dq_blank_missing),
+                "block": widgets.ToggleButtons(options=[("Warn", False), ("Block", True)], value=False, description="On failure", disabled=not editable),
+                "parameters": (dq_completeness_failure, dq_blank_missing),
             },
             "uniqueness": {
                 "enabled": dq_checkbox("Enabled"),
-                "block": dq_checkbox("Block on failure"),
-                "parameters": (dq_min_unique,),
+                "block": widgets.ToggleButtons(options=[("Warn", False), ("Block", True)], value=False, description="On failure", disabled=not editable),
+                "parameters": (dq_uniqueness_failure,),
             },
             "value_set": {
                 "enabled": dq_checkbox("Enabled"),
-                "block": dq_checkbox("Block on failure"),
+                "block": widgets.ToggleButtons(options=[("Warn", False), ("Block", True)], value=False, description="On failure", disabled=not editable),
                 "parameters": (dq_whitelist_values, dq_blacklist_values, dq_whitelist_max_failure),
             },
             "range": {
                 "enabled": dq_checkbox("Enabled"),
-                "block": dq_checkbox("Block on failure"),
+                "block": widgets.ToggleButtons(options=[("Warn", False), ("Block", True)], value=False, description="On failure", disabled=not editable),
                 "parameters": (
                     dq_minimum, dq_minimum_inclusive,
                     dq_maximum, dq_maximum_inclusive, dq_range_max_failure,
@@ -2838,7 +2840,7 @@ def widget_data_contract(
             },
         }
         dq_parameter_controls = (
-            dq_max_missing, dq_blank_missing, dq_min_unique, dq_whitelist_max_failure, dq_range_max_failure,
+            dq_completeness_failure, dq_blank_missing, dq_uniqueness_failure, dq_whitelist_max_failure, dq_range_max_failure,
             dq_whitelist_values, dq_blacklist_values,
             dq_minimum, dq_minimum_inclusive, dq_maximum, dq_maximum_inclusive,
         )
@@ -2857,7 +2859,7 @@ def widget_data_contract(
             column_description, column_classification, datatype_choice,
             pii_type, pii_reason, sensitive_treatment,
             mask_start, mask_end, mask_character, bucket_bins, bucket_labels,
-            dq_max_missing, dq_min_unique, dq_whitelist_values, dq_blacklist_values,
+            dq_completeness_failure, dq_uniqueness_failure, dq_whitelist_values, dq_blacklist_values,
             dq_minimum, dq_maximum,
         ):
             control.layout.width = "100%"
@@ -2912,7 +2914,7 @@ def widget_data_contract(
             controls = dq_family_controls[kind]
             defaults = {
                 "completeness": ("0", False),
-                "uniqueness": ("100",),
+                "uniqueness": ("0",),
                 "value_set": ("", "", "0"),
                 "range": ("", True, "", True, "0"),
             }[kind]
@@ -2961,7 +2963,7 @@ def widget_data_contract(
                     bool(params.get("treat_blank_as_missing", False)),
                 ),
                 "uniqueness": (
-                    str(params.get("minimum_unique_percent", 100)),
+                    str(params.get("maximum_failure_percent", 0)) if params.get("minimum_unique_percent", 100) == 100 else "",
                 ),
                 "range": (
                     "" if params.get("minimum") is None else str(params["minimum"]),
@@ -3834,22 +3836,24 @@ def widget_data_contract(
                     return
                 params: dict[str, Any] = {"columns": [str(selected.get("column_name") or cid)]}
                 if kind == "completeness":
-                    threshold = float(dq_max_missing.value)
+                    threshold = float(dq_completeness_failure.value)
                     if not 0 <= threshold <= 100:
-                        raise ValueError("Maximum missing % must be between 0 and 100.")
+                        raise ValueError("Accepted failure rate % must be between 0 and 100.")
                     params.update({
                         "maximum_missing_percent": threshold,
                         "treat_blank_as_missing": bool(dq_blank_missing.value),
                     })
                 elif kind == "uniqueness":
-                    threshold = float(dq_min_unique.value)
+                    if not dq_uniqueness_failure.value.strip():
+                        raise ValueError("Set Accepted failure rate % explicitly: a legacy distinct-key limit cannot be converted exactly.")
+                    threshold = float(dq_uniqueness_failure.value)
                     if not 0 <= threshold <= 100:
-                        raise ValueError("uniqueness minimum unique % must be between 0 and 100.")
-                    params["minimum_unique_percent"] = threshold
+                        raise ValueError("Accepted failure rate % must be between 0 and 100.")
+                    params["maximum_failure_percent"] = threshold
                 elif kind == "range":
                     tolerance = float(dq_range_max_failure.value)
                     if not 0 <= tolerance <= 100:
-                        raise ValueError("Maximum failure % must be between 0 and 100.")
+                        raise ValueError("Accepted failure rate % must be between 0 and 100.")
                     params["maximum_failure_percent"] = tolerance
                     if not dq_minimum.value.strip() and not dq_maximum.value.strip():
                         raise ValueError("range requires a minimum or maximum.")
@@ -3980,7 +3984,7 @@ def widget_data_contract(
             )
 
         dq_family_controls["completeness"]["display"] = (
-            dq_option_row(dq_max_missing, dq_blank_missing),
+            dq_option_row(dq_completeness_failure, dq_blank_missing),
         )
         dq_family_controls["value_set"]["display"] = (
             widgets.VBox(
@@ -4255,11 +4259,11 @@ def widget_data_contract(
         business_enabled = widgets.Checkbox(
             value=True, description="Enabled", disabled=not editable
         )
-        business_block = widgets.Checkbox(
-            description="Block on failure", disabled=not editable
+        business_block = widgets.ToggleButtons(
+            options=[("Warn", False), ("Block", True)], value=False, description="On failure", disabled=not editable
         )
         business_tolerance = widgets.Text(
-            value="0", disabled=not editable, **shared.widget_common(widgets, "Maximum failure %"),
+            value="0", disabled=not editable, **shared.widget_common(widgets, "Accepted failure rate %"),
         )
         business_tolerance_hint = widgets.HTML()
         business_rule_controls = widgets.VBox([
@@ -4507,13 +4511,14 @@ def widget_data_contract(
             tolerance_field = dq_tolerance_parameter(rule_type, str(params.get("mode") or ""))
             business_tolerance.layout.display = "" if tolerance_field else "none"
             if tolerance_field:
-                labels = {"maximum_missing_percent": "Maximum missing %", "minimum_unique_percent": "Minimum distinct-key %",
-                          "maximum_failure_percent": "Maximum failure %"}
-                business_tolerance.description = labels[tolerance_field]
-                business_tolerance.value = str(proposal.get("_tolerance_draft", params.get(tolerance_field, 100 if tolerance_field == "minimum_unique_percent" else 0)))
+                business_tolerance.description = "Accepted failure rate %"
+                existing_value = params.get(tolerance_field, 0)
+                if rule_type == "uniqueness" and "minimum_unique_percent" in params:
+                    existing_value = "" if params["minimum_unique_percent"] != 100 else 0
+                business_tolerance.value = str(proposal.get("_tolerance_draft", existing_value))
                 denominator = "matching applicable rows" if rule_type.startswith("conditional_") else "applicable rows"
                 business_tolerance_hint.value = (
-                    "<small>Distinct key combinations / total rows. Use 100% for strict DQ uniqueness.</small>"
+                    "<small>All rows in duplicate key groups fail. Legacy distinct-key limits require an explicit accepted failure rate when edited.</small>"
                     if rule_type == "uniqueness" else f"<small>Percentage of {denominator}. Actual violations remain visible within tolerance.</small>"
                 )
             else:
@@ -4741,6 +4746,7 @@ def widget_data_contract(
                         value = float(business_tolerance.value)
                         if not 0 <= value <= 100:
                             raise ValueError("DQ percentage must be between 0 and 100.")
+                        params.pop("minimum_unique_percent", None)
                         params[field] = value
                     record = guardrail_record(
                         "data_quality",
@@ -4773,6 +4779,7 @@ def widget_data_contract(
                     value = float(business_tolerance.value)
                     if not 0 <= value <= 100:
                         raise ValueError("DQ percentage must be between 0 and 100.")
+                    params.pop("minimum_unique_percent", None)
                     params[field] = value
                 if str(proposal.get("rule_type") or "") == "custom_expression":
                     params.update({
@@ -5365,8 +5372,8 @@ def widget_data_contract(
             "bucket_bins": bucket_bins, "bucket_labels": bucket_labels,
             "dq_family_controls": dq_family_controls,
             "dq_parameter_controls": dq_parameter_controls,
-            "dq_max_missing": dq_max_missing, "dq_blank_missing": dq_blank_missing,
-            "dq_min_unique": dq_min_unique,
+            "dq_completeness_failure": dq_completeness_failure, "dq_blank_missing": dq_blank_missing,
+            "dq_uniqueness_failure": dq_uniqueness_failure,
             "dq_whitelist_max_failure": dq_whitelist_max_failure, "dq_range_max_failure": dq_range_max_failure,
             "dq_whitelist_values": dq_whitelist_values,
             "dq_blacklist_values": dq_blacklist_values,

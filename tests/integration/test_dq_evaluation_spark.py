@@ -329,3 +329,17 @@ def test_default_samples_are_saved_in_rule_payload_even_when_within_tolerance(sp
     assert payload["passed"] is True
     assert len(payload["failure_examples"]) == 1
     assert result["failed_values"].collect()[0].raw_value == "-1"
+
+
+def test_uniqueness_tolerance_counts_every_duplicate_member(spark_session, monkeypatch):
+    """Use duplicate members, not excess copies, at the authored boundary."""
+    frame = spark_session.sql("SELECT id AS row_id, CASE WHEN id < 2 THEN 0 ELSE id END AS key FROM range(100)")
+    rules = [_rule("uniqueness", ["key"], maximum_failure_percent=2, severity="error")]
+    result = _runtime(monkeypatch, frame, rules)
+    check = result["checks"][0]
+    assert check["failed_count"] == 2
+    assert check["observed_value"] == 2
+    assert check["threshold_operator"] == "<="
+    assert check["passed"] is True
+    rules[0]["maximum_failure_percent"] = 1.99
+    assert _runtime(monkeypatch, frame, rules)["checks"][0]["passed"] is False

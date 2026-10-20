@@ -442,3 +442,18 @@ def test_business_rule_resolver_rejects_single_object_response():
             prompt="configured",
             invoke=lambda _prompt: json.dumps(payload),
         )
+
+
+def test_ai_uniqueness_uses_duplicate_row_failure_rate():
+    """New proposals use the same accepted failure direction as other row rules."""
+    payload = [{"requirement": "Allow 2% duplicate rows", "rule_type": "uniqueness",
+                "columns": ["status"], "parameters": {"maximum_failure_percent": 2}}]
+    result = suggest_business_rule(_business_context(), requirement="Allow 2% duplicate rows",
+                                   relevant_columns=["status"], prompt="configured",
+                                   invoke=lambda _prompt: json.dumps(payload))
+    assert result[0]["parameters"]["maximum_failure_percent"] == 2
+    payload[0]["parameters"] = {"minimum_unique_percent": 98}
+    with pytest.raises(ValueError, match="percentage"):
+        suggest_business_rule(_business_context(), requirement="Allow duplicates",
+                              relevant_columns=["status"], prompt="configured",
+                              invoke=lambda _prompt: json.dumps(payload))

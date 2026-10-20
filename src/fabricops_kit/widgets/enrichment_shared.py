@@ -561,7 +561,7 @@ Do not invent columns. Do not return a rule that is already represented in exist
 Allowed rule_type values: completeness, uniqueness, value_set, range, pattern, column_relationship, conditional_completeness, conditional_values, custom_expression.
 Resolve against every canonical FabricOps DQ pattern before using custom_expression. Use custom_expression if and only if none of the canonical patterns can faithfully represent that atomic requirement without changing its meaning.
 Completeness: exactly one column; parameters maximum_missing_percent and treat_blank_as_missing.
-Uniqueness: one or more columns; optional minimum_unique_percent, default 100 (distinct key combinations / total rows). This is a repeatable uniqueness constraint, not the table Grain & Row Key. Do not infer or replace Grain & Row Key from a DQ Rule. Grain is a separate singular table definition authored in the Table workspace.
+Uniqueness: one or more columns; optional maximum_failure_percent, default 0 (all rows in duplicate key groups / total rows). This is a repeatable uniqueness constraint, not the table Grain & Row Key. Do not infer or replace Grain & Row Key from a DQ Rule. Grain is a separate singular table definition authored in the Table workspace.
 Value Set: exactly one column; parameters mode (allow or block) and non-empty values. Interpret whitelist as mode=allow and blacklist as mode=block. If Governance explicitly requires both for the same column, return two independent value_set rules.
 Range: exactly one column; parameters minimum and/or maximum plus minimum_inclusive and maximum_inclusive booleans.
 Pattern: exactly one column; parameter pattern containing the governed regular expression. Translate the stated business-language text format into the regex; regex is an implementation detail, not something Governance is expected to author manually.
@@ -570,7 +570,7 @@ Conditional Completeness: exactly two columns, condition column then required ta
 Conditional Values: exactly two columns, condition column then target column; parameters condition_operator (= or !=), condition_value, mode (allow or block), and non-empty values.
 Custom Expression: only when no pattern above is sufficient; parameters expression_language="pyspark" and expression.
 A custom expression must be one safe PySpark boolean Column expression using only F.col("known_column"), F.lit(...), literals, comparisons, &, |, ~, arithmetic (+, -, *, /, %), and approved null/text methods already supported by FabricOps. Do not return imports, assignments, SQL, UDFs, eval/exec, file/network access, arbitrary Python calls, exponentiation, floor division, or matrix multiplication.
-Percent tolerance: preserve it only when the business requirement explicitly states it. Completeness and conditional completeness use maximum_missing_percent; conditional percentages use only matching applicable rows. Uniqueness uses minimum_unique_percent. Allowed-value, range, pattern, relationship, and custom row rules may use maximum_failure_percent. Prohibited-value rules (mode=block) are strict and must not carry a percentage. Never invent a tolerance. These DQ percentages do not apply to Required/Schema, Grain, Sensitive Data, Freshness, or Source Drift.
+Percent tolerance: preserve it only when the business requirement explicitly states it. Completeness and conditional completeness use maximum_missing_percent; conditional percentages use only matching applicable rows. Uniqueness uses maximum_failure_percent and counts all rows in duplicate key groups. Allowed-value, range, pattern, relationship, and custom row rules may use maximum_failure_percent. Prohibited-value rules (mode=block) are strict and must not carry a percentage. Never invent a tolerance. These DQ percentages do not apply to Required/Schema, Grain, Sensitive Data, Freshness, or Source Drift.
 Observed profile and frequency values are evidence, not automatic contractual requirements. Never turn observed values into whitelist or blacklist entries, mappings, patterns, or thresholds unless the business requirement explicitly states them.
 Do not force a known pattern when it would weaken, broaden, or otherwise change the atomic requirement.
 
@@ -629,7 +629,7 @@ Context:
                 "business_requirement": atomic_requirement,
             })
         elif rule_type == "uniqueness":
-            if set(parameters) - {"minimum_unique_percent"}:
+            if set(parameters) - {"maximum_failure_percent"}:
                 raise ValueError(
                     "Uniqueness proposal does not accept rule-specific parameters."
                 )

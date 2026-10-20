@@ -1736,7 +1736,7 @@ def dq_tolerance_parameter(rule_type: str, mode: str = "") -> str | None:
     if rule_type in {"completeness", "conditional_completeness"}:
         return "maximum_missing_percent"
     if rule_type == "uniqueness":
-        return "minimum_unique_percent"
+        return "maximum_failure_percent"
     if rule_type in {"value_set", "conditional_values"}:
         return "maximum_failure_percent" if mode == "allow" else None
     if rule_type in {"range", "pattern", "column_relationship", "custom_expression"}:
@@ -3754,10 +3754,10 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
             rule["maximum_missing_percent"] = threshold
             if not isinstance(rule.get("treat_blank_as_missing"), bool):
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires boolean treat_blank_as_missing.")
-        if rtype == "uniqueness":
+        if rtype == "uniqueness" and "minimum_unique_percent" in rule:
             if isinstance(rule.get("minimum_unique_percent"), bool):
                 raise ValueError("minimum_unique_percent must be a percentage between 0 and 100.")
-            threshold = float(rule.get("minimum_unique_percent", 100))
+            threshold = float(rule["minimum_unique_percent"])
             if not 0 <= threshold <= 100:
                 raise ValueError(
                     f"DQ rule '{rule['rule_id']}' minimum_unique_percent must be between 0 and 100."
@@ -3807,6 +3807,8 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires expression.")
             rule["columns"] = sorted(_custom_expression_columns(expression))
         tolerance = dq_tolerance_parameter(rtype, str(rule.get("mode") or ""))
+        if rtype == "uniqueness" and "minimum_unique_percent" in rule and "maximum_failure_percent" not in rule:
+            tolerance = "minimum_unique_percent"
         for field in {"maximum_missing_percent", "minimum_unique_percent", "maximum_failure_percent"}:
             if field in rule and field != tolerance:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' does not support {field}; prohibited-value rules are strict.")
@@ -4325,7 +4327,7 @@ def _evaluate_dq_rules(df, table_name: str, rules: list[dict[str, Any]], *, samp
                 _dq_applicable_expression(rule).alias(applicable_flags[name]),
             ])
         rule_flags.append(shared_flags[signature])
-        if rule["rule_type"] == "uniqueness":
+        if rule["rule_type"] == "uniqueness" and "minimum_unique_percent" in rule:
             keys = tuple(sorted(set(rule["columns"])))
             if keys not in distinct_flags:
                 name = f"{prefix}distinct_{len(distinct_flags)}"
@@ -4385,7 +4387,9 @@ def _dq_checks_from_counts(table_name, rules, rule_flags, distinct_flags, applic
         failed_percent = (failed / applicable) * 100 if applicable else 0.0
         parameter = dq_tolerance_parameter(rule["rule_type"], str(rule.get("mode") or ""))
         threshold = float(rule.get(parameter, 0)) if parameter else 0.0
-        if rule["rule_type"] == "uniqueness":
+        if rule["rule_type"] == "uniqueness" and "minimum_unique_percent" in rule:
+            threshold = float(rule["minimum_unique_percent"])
+            parameter = "minimum_unique_percent"
             keys = tuple(sorted(set(rule["columns"])))
             distinct = int(counts[distinct_flags[keys]] or 0)
             observed = (distinct / total) * 100 if total else 100.0
