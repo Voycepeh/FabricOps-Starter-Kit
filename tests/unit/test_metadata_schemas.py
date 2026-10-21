@@ -23,7 +23,7 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_DATA_STEWARD": "governance",
         "METADATA_DATA_AGREEMENT": "governance",
         "METADATA_DATA_CONTRACT": "governance",
-        "METADATA_ACTIVATED_PIPELINE": "governance",
+        "METADATA_ACTIVATION_STATE": "governance",
         "METADATA_DATA_CATALOGUE": "engineering",
         "METADATA_DATA_PROFILED": "engineering",
         "METADATA_DATA_PROFILED_FREQUENCY": "engineering",

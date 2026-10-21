@@ -18,7 +18,7 @@ from .config import (
     setup_notebook,
 )
 from .data_agent import create_data_agent
-from .activated_pipeline import activate_pipeline, set_pipeline_active, package_activated_pipeline, verify_pipeline_deployment
+from .activated_pipeline import package_activated_pipeline, verify_pipeline_deployment
 from .io import (
     read_lakehouse_csv,
     read_lakehouse_excel,
@@ -75,8 +75,7 @@ IO_EXPORTS = (
 )
 
 PIPELINE_EXPORTS = (
-    "activate_pipeline", "set_pipeline_active", "package_activated_pipeline", "verify_pipeline_deployment",
-    "finalize_pipeline",
+    "package_activated_pipeline", "verify_pipeline_deployment",
     "setup_pipeline",
     "profile_table",
     "resolve_table_id",
@@ -124,5 +123,3 @@ def _load_package_version() -> str:
 __version__ = _load_package_version()
 
 __all__ = [*ACCESS_EXPORTS, *CONFIG_EXPORTS, *DATA_AGENT_EXPORTS, *IO_EXPORTS, *PIPELINE_EXPORTS, *WIDGET_EXPORTS]
-
-from fabricops_kit.pipeline.finalize_pipeline import finalize_pipeline

@@ -22,7 +22,7 @@ Reusable immutable frozen table definition with Enrichment and executable Guardr
 
 **Relationships:**
 
-`METADATA_ACTIVATED_PIPELINE` **(N → M)**
+`METADATA_ACTIVATION_STATE` **(N → M)**
 via Not defined in the current implementation.
 
 `METADATA_DATA_CATALOGUE` **(N → 1)**

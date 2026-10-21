@@ -127,120 +127,70 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, interactive=False, spark_session=None, context=None, pipeline_id=None, executable_sha256=None, dependencies=None, configuration=None, deployment_path=None, activated_pipeline_id=None, replace_selection=False):
-    """Set up an immutable pipeline plan interactively or without human intervention.
+def setup_pipeline(*, sources, targets, execution_mode="testing", selections=None, interactive=None,
+                   spark_session=None, context=None, pipeline_id=None, executable_sha256=None,
+                   dependencies=None, configuration=None, testing_writes=False):
+    """Prepare Author → Test → Activate → Live execution without running guardrails.
 
-    Parameters
-    ----------
-    sources : list of dict
-        Explicit source participants: store/schema/table_name or registered table_id.
-        Historical Lineage is optional and cannot introduce additional participants.
-    targets : list of dict
-        Explicit target participants with the same coordinate or table_id shape.
-    execution_mode : {"bootstrap", "testing", "live"}, optional
-        Defaults to Bootstrap without interaction. Bootstrap creates and profiles
-        initial outputs only while no participating frozen contract exists.
-        Interactive setup defaults to Testing. Governed headless modes are explicit.
-    selections : dict, optional
-        Exact per-table contract_id/contract_version; Testing also permits explicit
-        no_contract=True. Required for headless Testing and forbidden for Live.
-        Live contracts resolve exclusively from an approved deployment manifest.
-    interactive : bool, optional
-        Defaults to False. If True, explicitly enable interactive contract Testing.
-        If False, return the immutable plan directly without loading notebook UI
-        packages or enumerating unrelated contract versions.
-    pipeline_id : str, optional
-        Stable project-owned logical identity, portable across environments. Required
-        for qualifying Testing evidence; never use a run or workspace identifier.
-    executable_sha256 : str, optional
-        Optional expected fingerprint of the deployed notebook's executable cells.
-        Fabric observes the actual definition; a mismatched pin is rejected. Outputs,
-        display metadata and physical bindings are excluded. Unavailable identity
-        leaves Testing incomplete. Keep helpers in the notebook or pinned packages.
-    dependencies : dict, optional
-        Installed Python distribution names to exact runtime versions. They are
-        checked against installed package metadata; missing/mismatched or unsupported
-        dependency identities prevent successful Testing evidence. Do not
-        include credentials, paths or physical environment bindings. Supply an
-        explicit empty dict when no additional project dependencies exist; omitted
-        dependency identity cannot qualify as successful Testing evidence.
-    configuration : dict, optional
-        Declared behavior-changing transformation settings supplied outside notebook
-        code. Supply {} when none exist. Missing identity prevents successful Testing;
-        Live must supply the exact tested values. Exclude secrets and physical bindings.
-    deployment_path : str, optional
-        Explicit shared mounted deployment directory containing approved.json,
-        executable.bin and verified deployment.json. Required for Live.
-    activated_pipeline_id : str, optional
-        Exact approved version to persist as the environment's Live selection.
-        Omit on subsequent manual/scheduled Live runs to reuse the saved selection.
-    replace_selection : bool, optional
-        Explicitly replace a different saved version after verifying its deployment.
-    spark_session : object, optional
-        Spark session for metadata reads.
-    context : dict, optional
-        Configured environment routing and notebook identity.
+    Testing is interactive by default. Set interactive=False for automation and
+    provide exact contract_id/contract_version choices keyed by global table_id,
+    or omit selections for contract-free exploration. Select every participant's
+    frozen contract or No Contract for all; partial governance is rejected.
+    Stable pipeline_id is required and independent of notebook name or path.
 
-    Returns
-    -------
-    dict or PipelineExecutionPlan
-        Headless execution returns the immutable plan. Interactive execution returns
-        state with execution_mode (initially testing), tables, controls,
-        select_contract, set_mode, build_plan and refresh. Each table starts unselected.
-        After executing the built plan, refresh shows its exact-version results
-        in expandable sections alongside saved definitions and disabled states.
-        Bootstrap needs no selections or build action and returns its plan directly.
-        For interactive Testing, build_plan validates every choice and freezes
-        the plan to pass to all Read and Write calls.
-        Mode and selection edits are rejected after build_plan; create a new widget
-        for the next run. Repeated build_plan calls return the same plan and journal.
-        The widget never changes notebook globals, edits or activates contracts.
+    testing_writes=True explicitly permits real Testing writes to the declared
+    target destinations, provided no Live pipeline owns them. Such writes have
+    real side effects, including target metadata, mappings and checkpoints.
+    False evaluates without publication. Guardrail diagnostics and run records
+    always persist to the central configured Metadata store.
 
-    Raises
-    ------
-    ValueError
-        For frozen/active contracts blocking Bootstrap, missing notebook identity,
-        invalid payloads, unavailable selections or
-        Live selection, manifest, executable/dependency or deployment-binding mismatches.
-    RuntimeError
-        For ambiguous active versions, metadata-read failure, or edits to a built plan.
+    Live is headless and resolves the environment's approved configuration
+    automatically. It rejects manual contract choices and pins one activation
+    revision. Notebook code, dependencies, transformation configuration, table
+    identity, destinations and ownership must match approval. Operational
+    differences allowed by the orchestrators warn and persist in the run record.
+
+    Returns an immutable PipelineExecutionPlan, or Testing widget state with
+    select_contract, build_plan and refresh. Execute the complete pipeline inside
+    ``with plan:``; exit automatically persists success, failure or incompleteness.
+    This explicit boundary includes transformations and read-only pipelines.
+    Without the boundary, operation results remain incomplete and ineligible.
+    Missing executable/dependency identity also prevents qualifying success.
+
+    Raises ValueError for unsafe configuration or partial contract selection,
+    RuntimeError for metadata failures, stale authority or a reused run boundary.
+    Approval neither deploys notebooks nor writes business data.
 
     Examples
     --------
-    >>> plan = setup_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS)
-    >>> selection = setup_pipeline(sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, interactive=True)
-    >>> testing_plan = selection["build_plan"]()
-    >>> scheduled_plan = setup_pipeline(
-    ...     sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, interactive=False,
-    ...     execution_mode="testing", selections=EXACT_SELECTIONS,
-    ... )
-
-    Finalize every plan with finalize_pipeline(), including Read-only pipelines.
-    Live resolves only the saved exact Activated Pipeline version. Supply an
-    explicit deployment_path, and activated_pipeline_id once to save selection.
-    Subsequent unattended Live calls omit that ID; a changed version never replaces
-    the saved selection silently. replace_selection=True is an explicit switch.
+    >>> plan = setup_pipeline(sources=SOURCES, targets=TARGETS, pipeline_id="hr-employees",
+    ...     interactive=False, selections=SELECTIONS, dependencies={}, configuration={})
+    >>> with plan:
+    ...     source = orchestrate_read(execution_plan=plan, **READ_CONFIG)
+    ...     transformed = transform(source["dataframe"])
+    ...     result = orchestrate_write(transformed, execution_plan=plan, sources=[source], **WRITE_CONFIG)
 
     """
+    if not str(pipeline_id or "").strip():
+        raise ValueError("setup_pipeline requires a stable pipeline_id.")
+    if execution_mode not in {"testing", "live"}:
+        raise ValueError("execution_mode must be testing or live.")
+    if interactive is None:
+        interactive = execution_mode == "testing"
     if execution_mode == "live":
         if selections is not None:
             raise ValueError("Live rejects manual contract selections; contracts come exclusively from the Activated Pipeline manifest.")
-        if not deployment_path or not pipeline_id:
-            raise ValueError("Live requires pipeline_id and a verified deployment_path; no Bootstrap fallback is permitted.")
+        if interactive or testing_writes:
+            raise ValueError("Live is headless; Testing write authorization is not a Live option.")
         from fabricops_kit.activated_pipeline.shared import build_live_pipeline_plan
-        return build_live_pipeline_plan(deployment_path=deployment_path, pipeline_id=pipeline_id,
-            sources=list(sources), targets=list(targets), activated_pipeline_id=activated_pipeline_id,
-            replace_selection=replace_selection, configuration=configuration, context=context, spark_session=spark_session)
-    if deployment_path is not None or activated_pipeline_id is not None or replace_selection:
-        raise ValueError("Deployment selection is only valid with explicit execution_mode='live'.")
+        return build_live_pipeline_plan(pipeline_id=pipeline_id, sources=list(sources), targets=list(targets),
+            configuration=configuration, context=context, spark_session=spark_session)
     if not interactive:
-        mode = "bootstrap" if execution_mode is None else execution_mode
-        if mode == "testing" and selections is None:
-            raise ValueError("Headless Testing requires explicit selections.")
+        mode = execution_mode
         return build_pipeline_execution_plan(
             execution_mode=mode, sources=sources, targets=targets,
             selections=selections, context=context, spark_session=spark_session,
-            pipeline_id=pipeline_id, executable_sha256=executable_sha256, dependencies=dependencies, configuration=configuration,
+            pipeline_id=pipeline_id, executable_sha256=executable_sha256, dependencies=dependencies, configuration=configuration, testing_writes=testing_writes,
         )
     if execution_mode is not None and execution_mode != "testing":
         raise ValueError("Interactive contract selection is only available for Testing.")
@@ -264,7 +214,7 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         raise
     state: dict[str, Any] = {"execution_mode": "testing", "environment": env, "tables": {}, "_controls": {}}
     for table_id, identity in identities.items():
-        matching = [row for row in rows if row.get("table_id") == table_id and row.get("environment_name") == env]
+        matching = [row for row in rows if row.get("table_id") == table_id]
         versions = sorted([row for row in matching if str(row.get("status") or "").lower() == "frozen"],
                           key=lambda row: int(row["contract_version"]), reverse=True)
         keys = [(row["contract_id"], row["contract_version"]) for row in versions]
@@ -308,13 +258,16 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         return state
 
     def build_plan():
+        if state.get("execution_plan") is None and not state.get("writes_confirmed", False):
+            if testing_writes:
+                raise ValueError("Confirm real Testing writes and their destinations before building the plan.")
         if state.get("execution_plan") is not None:
             return state["execution_plan"]
         plan = build_pipeline_execution_plan(
             execution_mode=state["execution_mode"], sources=sources, targets=targets,
             selections={key: table["choice"] for key, table in state["tables"].items() if table["choice"] is not None},
             context=runtime, spark_session=spark,
-            pipeline_id=pipeline_id, executable_sha256=executable_sha256, dependencies=dependencies, configuration=configuration,
+            pipeline_id=pipeline_id, executable_sha256=executable_sha256, dependencies=dependencies, configuration=configuration, testing_writes=testing_writes,
         )
 
         state["execution_plan"] = plan
@@ -333,8 +286,9 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         try:
             root.add_class("pipeline-testing")
             mode_control.disabled = state.get("execution_plan") is not None
+            write_authorized.disabled = not testing_writes or state.get("execution_plan") is not None
             mode_control.value = state["execution_mode"]
-            header.value = '<h3>Pipeline Data Contracts · Testing</h3><p>Business publication is disabled. METADATA_PIPELINE_RUN and Guardrail diagnostics are persisted.</p>'
+            header.value = '<h3>Pipeline Data Contracts · Testing</h3><p>Choose contract mappings and explicitly authorize any real Testing writes. Run records and Guardrail diagnostics persist.</p>'
             for table_id, controls in state["_controls"].items():
                 table = state["tables"][table_id]
                 versions = table["versions"]
@@ -372,6 +326,11 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         from IPython import display as ip
     except ModuleNotFoundError:
         return state
+    destinations = [item for item in identities.values() if "target" in item["roles"]]
+    write_authorized = widgets.Checkbox(value=False, indent=False,
+        description="I authorize real Testing writes to the displayed destinations", disabled=not testing_writes)
+    write_authorized.observe(lambda change: state.update(writes_confirmed=change["new"]), names="value")
+    state["write_authorized"] = write_authorized
     style = widgets.HTML('''<style>
 .pipeline-contracts { --mode:#0f6cbd; }
 .pipeline-testing { --mode:#6750a4; }
@@ -409,7 +368,9 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
     root = form_page(
         widgets, title="Pipeline setup", tone="engineering",
         description="Select exact frozen Data Contract versions for Testing.",
-        children=[style, header, mode_control, *sections],
+        children=[style, header, mode_control,
+                  widgets.HTML("<p>Testing writes: " + ("REAL writes with side effects" if testing_writes else "Evaluation only") + "</p><pre>" + html.escape(json.dumps(destinations, indent=2)) + "</pre>"),
+                  write_authorized, *sections],
     )
     root.add_class("pipeline-contracts")
     state["widget"], state["mode_control"] = root, mode_control

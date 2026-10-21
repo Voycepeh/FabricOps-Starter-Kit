@@ -20,7 +20,7 @@ Canonical operating guide for Codex and agent contributions in this repository. 
   - `METADATA_DATA_PROFILED_FREQUENCY` stores frequency-distribution rows linked to profile snapshots where applicable.
   - `METADATA_DATA_LINEAGE` stores registered source/target pipeline participation.
   - `METADATA_DATA_CONTRACT.contract_payload_json` stores authored descriptive Enrichment and executable Guardrails for one exact contract version; frozen payloads are immutable.
-  - `METADATA_ACTIVATED_PIPELINE` stores immutable whole-pipeline approval versions, exact Agreements, complete Testing references and manifest-backed reusable frozen contracts; only active state and audit fields change on explicit switching/deactivation.
+  - `METADATA_ACTIVATION_STATE` stores one central atomic authority snapshot containing environment activation revisions, immutable pipeline approval history, exact Agreements, complete Testing references, table contracts, writer ownership and running execution reservations.
   - `METADATA_PIPELINE_RUN` stores one logical pipeline execution across all declared operations, candidate identity, status and safe failures, and the activated version for Live.
   - `METADATA_GUARDRAIL_RESULTS` stores Guardrail evaluation results and continuation decisions.
   - `METADATA_GUARDRAIL_ROW_RESULTS` stores row-level failures linked to Guardrail Results where applicable.

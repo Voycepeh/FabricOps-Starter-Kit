@@ -217,14 +217,14 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "preserving publication boundaries" in normalized["step_4"]
 
     assert "# step 5. activate the tested pipeline and promote to production" in normalized["step_5"]
-    assert "exact currently effective data agreement" in normalized["step_5"]
-    assert "approve the exact whole pipeline" in normalized["step_5"]
-    assert "fabric deployment pipeline" in normalized["step_5"]
-    assert "deploy the notebook" in normalized["step_5"]
+    assert "exact effective data agreement" in normalized["step_5"]
+    assert "review the affected release" in normalized["step_5"]
+    assert "fabric or ci tooling" in normalized["step_5"]
+    assert "deploy the tested notebook" in normalized["step_5"]
 
     assert "# step 6. run the pipeline in production" in normalized["step_6"]
     assert "same tested workflow in the production environment" in normalized["step_6"]
-    assert "saved activated pipeline manifest" in normalized["step_6"]
+    assert "approved environment activated pipeline manifest" in normalized["step_6"]
     assert "read → transform → write" in normalized["step_6"]
 
     lifecycle_steps = (
@@ -365,13 +365,13 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
                 if f"{orchestrator}(" not in cell.source:
                     continue
                 tree = ast.parse(cell.source)
-                displays = [node for node in tree.body if isinstance(node, ast.Expr)
+                displays = [node for node in ast.walk(tree) if isinstance(node, ast.Expr)
                             and isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Name)
                             and node.value.func.id == "display"]
                 assert len(displays) == 1, (path.name, cell.id)
                 preview = ast.unparse(displays[0])
                 assert "['dataframe'].limit(10)" in preview
-                assert cell.source.index(f"{orchestrator}(") < cell.source.index("\ndisplay(")
+                assert cell.source.index(f"{orchestrator}(") < cell.source.index("display(")
                 if orchestrator == "orchestrate_write":
                     assert all(key in cell.source for key in ("dq_result", "sensitive_result", "support_mapping"))
                     assert "# from fabricops_kit import read_" in cell.source

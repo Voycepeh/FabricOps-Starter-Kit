@@ -128,42 +128,15 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 )
 
 METADATA_TABLE_MODELS = {
-    'METADATA_PIPELINE_RUN': {'purpose': 'One complete logical run and candidate identity across all operations; successful Testing is '
-            'approval evidence, Bootstrap never is. Live runs reference their exact Activated Pipeline '
-            'version.',
- 'grain': 'One logical execution attempt.',
- 'primary_key': ['run_id'],
- 'foreign_keys': [{'local_field': 'activated_pipeline_id',
-                   'referenced_table': 'METADATA_ACTIVATED_PIPELINE',
-                   'referenced_field': 'activated_pipeline_id',
-                   'cardinality': 'N:1',
-                   'statement': 'Live runs reference their approved immutable version; Testing and Bootstrap '
-                                'leave this empty.'}],
- 'relationships': []},
-    'METADATA_ACTIVATED_PIPELINE': {'purpose': 'Immutable whole-pipeline approval linked to exact successful Testing, candidate manifest, '
-            'reusable frozen contracts and one exact effective Agreement. Only is_active changes during '
-            'explicit switching/deactivation.',
- 'grain': 'One immutable approved version of one stable logical pipeline.',
- 'primary_key': ['activated_pipeline_id'],
- 'foreign_keys': [{'local_field': 'testing_run_id',
-                   'referenced_table': 'METADATA_PIPELINE_RUN',
-                   'referenced_field': 'run_id',
-                   'cardinality': 'N:1',
-                   'statement': 'One exact complete successful Testing run authorizes Governance review.'},
-                  {'local_field': 'agreement_id',
-                   'referenced_table': 'METADATA_DATA_AGREEMENT',
-                   'referenced_field': 'agreement_id',
-                   'cardinality': 'N:1',
-                   'statement': 'Together with agreement_version identifies the exact approved Agreement.'},
-                  {'local_field': 'agreement_version',
-                   'referenced_table': 'METADATA_DATA_AGREEMENT',
-                   'referenced_field': 'agreement_version',
-                   'cardinality': 'N:1',
-                   'statement': 'Exact Agreement version frozen in the approved manifest.'}],
- 'relationships': [{'cardinality': 'N:M', 'related_table': 'METADATA_DATA_CONTRACT',
-                    'statement': 'manifest_json embeds exact immutable contract identities and payload '
-                                 'hashes for every declared source and target. Contracts are reusable; there '
-                                 'is no direct contract-to-Agreement linkage.'}]},
+    "METADATA_PIPELINE_RUN": {
+        "purpose": "One complete logical run, exact table mappings, operation results, warnings and pinned activation revision.",
+        "grain": "One pipeline execution attempt.", "primary_key": ["run_id"], "foreign_keys": [], "relationships": [],
+    },
+    "METADATA_ACTIVATION_STATE": {
+        "purpose": "Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership and running execution reservations.",
+        "grain": "One central authority row containing environment snapshots.",
+        "primary_key": ["authority_id"], "foreign_keys": [], "relationships": [],
+    },
     "METADATA_DATA_STEWARD": {
         "purpose": "Know who is responsible for the data.",
         "grain": "One registered Data Steward.",
@@ -191,7 +164,7 @@ METADATA_TABLE_MODELS = {
         "grain": "One Draft or Frozen version of one table contract; Frozen contents are immutable.",
         "primary_key": ["contract_id", "contract_version"],
         "foreign_keys": [{"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "A contract defines one Catalogue table."}],
-        "relationships": [{"cardinality": "N:M", "related_table": "METADATA_ACTIVATED_PIPELINE", "statement": "Many activated manifests may reuse this exact frozen contract; manifest references are not scalar foreign keys."}],
+        "relationships": [{"cardinality": "N:M", "related_table": "METADATA_ACTIVATION_STATE", "statement": "Many activated manifests may reuse this exact frozen contract; manifest references are not scalar foreign keys."}],
     },
     "METADATA_DATA_CATALOGUE": {
         "purpose": "The current structural registry of known table and column assets. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.",
@@ -273,7 +246,7 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
-    "METADATA_ACTIVATED_PIPELINE",
+    "METADATA_ACTIVATION_STATE",
     "METADATA_DATA_CATALOGUE",
     "METADATA_SOURCE_OBSERVATION",
     "METADATA_DATA_PROFILED",
@@ -354,9 +327,8 @@ METADATA_COLUMN_OWNERS = {
         "__default__": ["fabricops_kit.widgets.widget_data_contract.widget_data_contract", "fabricops_kit.data_contract.shared.create_contract_draft", "fabricops_kit.data_contract.shared.save_contract_draft", "fabricops_kit.data_contract.shared.freeze_contract"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
-    "METADATA_ACTIVATED_PIPELINE": {
-        "__default__": ["fabricops_kit.activated_pipeline.shared.approve_pipeline"],
-        "is_active": ["fabricops_kit.activated_pipeline.shared.commit_pipeline_activation", "fabricops_kit.activated_pipeline.set_pipeline_active.set_pipeline_active"],
+    "METADATA_ACTIVATION_STATE": {
+        "__default__": ["fabricops_kit.activated_pipeline.shared.commit_activation_state"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
     "METADATA_DATA_CATALOGUE": {
@@ -1609,39 +1581,26 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function', 'module': 'widgets.widget_activate_pipeline', 'function_type': 'callable',
   'summary_override': 'Review complete persisted Testing and activate an exact whole pipeline.',
   'symbol_name': 'widget_activate_pipeline', 'template_notebook': '01_governance', 'template_segment': 'Pipeline activation',
-  'use_when': 'Use after finalizing successful whole-pipeline Testing.',
+  'use_when': 'Use after successful whole-pipeline Testing inside with plan:.',
   'expanded_purpose': 'Shows exact contracts/rules, executable and configuration identity, diagnostics, warnings, Agreement and fingerprint before explicit Governance confirmation. Activation neither deploys nor publishes.',
-  'related_functions': ['activate_pipeline', 'setup_pipeline']},
+  'related_functions': ['setup_pipeline']},
 
 
 
 
- {'kind': 'function', 'module': 'pipeline.finalize_pipeline', 'function_type': 'callable',
-  'symbol_name': 'finalize_pipeline', 'template_notebook': '02_pipeline',
-  'template_segment': 'Finalize complete pipeline run',
-  'summary_override': 'Seal and persist complete logical pipeline run evidence.',
-  'related_functions': ['setup_pipeline', 'orchestrate_read', 'orchestrate_write'],
-  'use_when': 'Call after every declared operation, including Read-only pipelines.'},
+
 
  {'kind': 'function',
  'module': 'pipeline.setup_pipeline',
  'function_type': 'callable',
- 'summary_override': 'Bootstrap initial outputs or explicitly set up contract Testing/Live for each '
-                     'participant.',
- 'symbol_name': 'setup_pipeline',
- 'template_notebook': '02_pipeline',
- 'template_segment': 'Select notebook Data Contracts',
- 'use_when': 'Use before Read, including first-time bootstrap without historical Lineage.',
+ 'summary_override': 'Prepare Testing or resolve an approved environment configuration for Live.',
+ 'symbol_name': 'setup_pipeline', 'template_notebook': '02_pipeline',
+ 'template_segment': 'Configure the pipeline and whole-run boundary',
+ 'use_when': 'Use before reads, transformations and writes; execute them inside with plan:.',
  'related_functions': ['widget_data_contract', 'orchestrate_read', 'orchestrate_write'],
- 'return_interpretation': 'Default Bootstrap returns a plan with no UI or choices while no participant has frozen or active contracts. Explicit interactive Testing selects contracts and calls build_plan(); pass the '
-                          'same immutable plan to every Read and Write. For scheduled runs, set interactive=False with execution_mode and selections; the same builder returns the plan directly.',
- 'expanded_purpose': 'A read-only inspector displays every saved Schema column and individual Guardrail '
-                     'definition, including inactive and non-applicable rules. Testing uses red accents and Live '
-                     'green; no global overrides are installed.',
- 'common_failure_causes': ['Bootstrap would bypass a frozen or active contract.', 'Missing notebook identity or explicit participant configuration.',
-                           'Ambiguous active versions.',
-                           'Invalid or mismatched frozen JSON.',
-                           'Live is missing an exact Activated Pipeline, verified deployment or saved selection.']},
+ 'return_interpretation': 'Interactive Testing returns a selector with build_plan(); headless execution returns an immutable plan. with plan: records the whole-run outcome automatically.',
+ 'expanded_purpose': 'Select every participant contract or explore without contracts. Live resolves and pins one approved revision from the central authority.',
+ 'common_failure_causes': ['Partial contract selections.', 'Unsafe Testing write destination.', 'Missing complete Testing or approved Live configuration.']},
 
 
 
@@ -1743,22 +1702,8 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     },
 }
 
-PUBLIC_SYMBOL_DOCS.extend([{'kind': 'function',
-  'module': 'activated_pipeline.activate_pipeline',
-  'function_type': 'callable',
-  'summary_override': 'Approve an exact successfully tested whole pipeline.',
-  'symbol_name': 'activate_pipeline',
-  'template_notebook': '01_governance, 02_pipeline',
-  'template_segment': 'Pipeline activation and deployment',
-  'related_functions': ['setup_pipeline', 'widget_activate_pipeline']},
- {'kind': 'function',
-  'module': 'activated_pipeline.set_pipeline_active',
-  'function_type': 'callable',
-  'summary_override': 'Explicitly switch or deactivate an immutable approved version.',
-  'symbol_name': 'set_pipeline_active',
-  'template_notebook': '01_governance, 02_pipeline',
-  'template_segment': 'Pipeline activation and deployment',
-  'related_functions': ['setup_pipeline', 'widget_activate_pipeline']},
+PUBLIC_SYMBOL_DOCS.extend([
+
  {'kind': 'function',
   'module': 'activated_pipeline.package_activated_pipeline',
   'function_type': 'callable',

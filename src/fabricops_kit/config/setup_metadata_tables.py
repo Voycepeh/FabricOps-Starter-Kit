@@ -386,13 +386,20 @@ def setup_metadata_tables(
                     raise RuntimeError(
                         f"Unable to read metadata table {table_name!r}. Original {type(exc).__name__}: {exc}"
                     ) from exc
-                empty_frame = spark.createDataFrame([], schema=schema)
+                initial_rows = []
+                if table_name == "METADATA_ACTIVATION_STATE":
+                    from fabricops_kit.config.audit import build_runtime_audit_fields
+                    from fabricops_kit.activated_pipeline.shared import empty_activation_state
+                    initial_rows = [{"authority_id": "central", "token": "initial",
+                                     "snapshot_json": empty_activation_state(),
+                                     **build_runtime_audit_fields(config=normalized, env=env, runtime_context=context)}]
+                empty_frame = spark.createDataFrame(initial_rows, schema=schema)
                 write_lakehouse_table(
                     empty_frame,
                     table_name,
                     store="Metadata",
                     schema=resolved_metadata_schema,
-                    mode="overwrite",
+                    mode="errorifexists" if table_name == "METADATA_ACTIVATION_STATE" else "overwrite",
                     verbose=False,
                     context=context,
                 )

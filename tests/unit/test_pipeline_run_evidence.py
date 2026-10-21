@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import pytest
 
 from fabricops_kit.pipeline import shared
-from fabricops_kit import finalize_pipeline
+from fabricops_kit.pipeline.shared import finalize_pipeline_run
 
 
 @pytest.fixture
@@ -70,11 +70,12 @@ def runtime(monkeypatch):
     monkeypatch.setattr(shared, "read_lakehouse_table", read_run)
 
     def make(mode="testing", roles=("source", "source", "target", "target"), executable="a" * 64, dependencies="{}", activity="fabric-activity", notebook_name="notebook"):
-        identities = {f"table{i}": {"store": "Bronze" if role == "source" else "Silver", "table_name": f"table{i}",
+        identities = {f"table{i}": {"table_id": f"table{i}", "store": "Bronze" if role == "source" else "Silver", "table_name": f"table{i}",
                                    "schema": "physical", "logical_id": f"asset{i}", "roles": [role]}
                       for i, role in enumerate(roles)}
         plan = shared.PipelineExecutionPlan(mode, "canary", "notebook", f"run-{len(saved)}", json.dumps(identities),
-                                            "{}", json.dumps(dict.fromkeys(identities)), {"config": {}, "env": "canary", "activity_id": activity, "notebook_name": notebook_name},
+                                            "{}", json.dumps({key: {"table_id": key, "contract_id": "contract-" + key, "contract_version": 1,
+                            "contract_payload_json": json.dumps({"table": {"table_id": key, "columns": []}})} for key in identities}), {"config": {}, "env": "canary", "activity_id": activity, "notebook_name": notebook_name},
                                             pipeline_id="orders", executable_sha256=executable, dependencies_json=dependencies)
         shared.persist_pipeline_run(plan)
         return plan
@@ -99,10 +100,10 @@ def test_read_only_and_multiple_inputs_outputs_finalize_once(runtime):
         for index in range(len(roles)):
             operation(plan, index)
             assert saved[plan.plan_id]["status"] == "incomplete"
-        result = finalize_pipeline(plan)
+        result = finalize_pipeline_run(plan)
         assert result["status"] == "succeeded"
         count = len(writes)
-        assert finalize_pipeline(plan) == result and len(writes) == count
+        assert finalize_pipeline_run(plan) == result and len(writes) == count
         with pytest.raises(RuntimeError, match="closed"):
             operation(plan, 0)
 
@@ -112,18 +113,18 @@ def test_missing_failed_blocking_duplicate_and_external_failures(runtime):
     make, operation, saved, _, _ = runtime
     plan = make()
     operation(plan, 0)
-    assert finalize_pipeline(plan)["status"] == "incomplete"
+    assert finalize_pipeline_run(plan)["status"] == "incomplete"
     plan = make(roles=("source",))
     operation(plan, 0, stages=[{"stage": "Schema", "status": "blocked"}])
-    assert finalize_pipeline(plan)["status"] == "failed"
+    assert finalize_pipeline_run(plan)["status"] == "failed"
     plan = make(roles=("source",))
     operation(plan, 0)
     with pytest.raises(ValueError, match="Duplicate"):
         operation(plan, 0)
-    assert finalize_pipeline(plan)["status"] == "failed"
+    assert finalize_pipeline_run(plan)["status"] == "failed"
     plan = make(roles=("source",))
     operation(plan, 0)
-    assert finalize_pipeline(plan, failed=True)["status"] == "failed"
+    assert finalize_pipeline_run(plan, failed=True)["status"] == "failed"
     assert not any(row["execution_mode"] == "testing" and row["status"] == "succeeded" for row in saved.values())
 
 
@@ -136,7 +137,7 @@ def test_operation_exception_is_safe_and_unfinalized_success_is_incomplete(runti
             raise OSError("password=hidden")
     assert saved[plan.plan_id]["status"] == "failed"
     assert "hidden" not in saved[plan.plan_id]["operation_summary_json"]
-    assert finalize_pipeline(plan)["status"] == "failed"
+    assert finalize_pipeline_run(plan)["status"] == "failed"
     plan = make(roles=("source",))
     operation(plan, 0)
     assert saved[plan.plan_id]["status"] == "incomplete"
@@ -156,7 +157,7 @@ def test_evidence_write_failures_poison_the_plan(runtime, point):
         elif point == "operation":
             operation(plan, 0)
         else:
-            finalize_pipeline(plan)
+            finalize_pipeline_run(plan)
     failure["enabled"] = False
     with pytest.raises(RuntimeError, match="persistence failed"):
         if point == "start":
@@ -164,18 +165,17 @@ def test_evidence_write_failures_poison_the_plan(runtime, point):
             failure["enabled"] = True
             make()
         else:
-            finalize_pipeline(plan)
+            finalize_pipeline_run(plan)
     assert not any(row["execution_mode"] == "testing" and row["status"] == "succeeded" for row in saved.values())
 
 
-@pytest.mark.parametrize("mode,executable,status", [("bootstrap", "a" * 64, "bootstrap_completed"),
-                                                     ("testing", "", "incomplete")])
+@pytest.mark.parametrize("mode,executable,status", [("testing", "", "incomplete")])
 def test_bootstrap_and_unavailable_fingerprint_never_qualify(runtime, mode, executable, status):
     """Bootstrap is honest initial publication, never Testing activation evidence."""
     make, operation, _, _, _ = runtime
     plan = make(mode=mode, roles=("source",), executable=executable)
     operation(plan, 0)
-    result = finalize_pipeline(plan)
+    result = finalize_pipeline_run(plan)
     assert result["status"] == status
 
 
@@ -224,7 +224,7 @@ def test_missing_dependency_identity_persists_incomplete_evidence(runtime, monke
     make, operation, saved, _, _ = runtime
     plan = make(roles=("source",))
     operation(plan, 0)
-    result = finalize_pipeline(plan)
+    result = finalize_pipeline_run(plan)
     assert result["status"] == "incomplete" and not result["candidate_fingerprint"]
     assert saved[plan.plan_id]["status"] == "incomplete"
 
@@ -237,7 +237,7 @@ def test_mutated_engine_or_dependency_identity_cannot_qualify(runtime, monkeypat
     operation(plan, 0)
     real_version = metadata.version
     monkeypatch.setattr(metadata, "version", lambda name: "changed" if name == "pandas" else real_version(name))
-    result = finalize_pipeline(plan)
+    result = finalize_pipeline_run(plan)
     assert result["status"] == "failed"
     assert "candidate_changed_during_run" in result["operation_summary_json"]
 
@@ -250,10 +250,10 @@ def test_secret_inputs_and_unidentified_dependencies_cannot_qualify(runtime, sec
     with pytest.raises(ValueError, match="secrets"):
         operation(plan, 0, read_parameters={secret_key: "hidden-secret"})
     assert "hidden-secret" not in json.dumps(saved[plan.plan_id], default=str)
-    assert finalize_pipeline(plan)["status"] == "failed"
+    assert finalize_pipeline_run(plan)["status"] == "failed"
     plan = make(roles=("source",))
     operation(plan, 0, query="SELECT * FROM externally_bound_table")
-    assert finalize_pipeline(plan)["status"] == "incomplete"
+    assert finalize_pipeline_run(plan)["status"] == "incomplete"
 
 
 def test_failed_guardrail_persistence_links_diagnostics_but_cannot_qualify(runtime, monkeypatch):
@@ -276,7 +276,7 @@ def test_failed_guardrail_persistence_links_diagnostics_but_cannot_qualify(runti
                         "status": "passed", "rule_context": {"guardrail_type": "schema"}},
                 context={**plan.runtime_context, "execution_plan": plan})
     assert plan.results[0]["run_id"] == plan.plan_id
-    assert finalize_pipeline(plan)["status"] == "failed"
+    assert finalize_pipeline_run(plan)["status"] == "failed"
     assert saved[plan.plan_id]["status"] != "succeeded"
 
 
@@ -290,7 +290,7 @@ def test_partial_operation_snapshot_failure_cannot_be_finalized(runtime):
             failure["enabled"] = True
     failure["enabled"] = False
     with pytest.raises(RuntimeError, match="persistence failed"):
-        finalize_pipeline(plan)
+        finalize_pipeline_run(plan)
     assert saved[plan.plan_id]["status"] == "incomplete"
 
 
@@ -300,7 +300,7 @@ def test_omitted_project_dependency_manifest_cannot_qualify(runtime, dependencie
     make, operation, _, _, _ = runtime
     plan = make(roles=("source",), dependencies=dependencies)
     operation(plan, 0)
-    assert finalize_pipeline(plan)["status"] == "incomplete"
+    assert finalize_pipeline_run(plan)["status"] == "incomplete"
 
 
 def test_run_schema_has_only_independent_lifecycle_fields():
@@ -332,7 +332,7 @@ def test_distinct_attempts_keep_activity_identity_and_survive_notebook_rename(ru
             result={"guardrail_rule_id": "schema-rule", "guardrail_version": 1, "can_continue": True,
                     "status": "passed", "rule_context": {"guardrail_type": "schema"}},
             context={**plan.runtime_context, "activity_id": plan.plan_id, "execution_plan": plan})
-        result = finalize_pipeline(plan)
+        result = finalize_pipeline_run(plan)
         assert result["_activity_id"] == "same-fabric-activity" and result["run_id"] != "same-fabric-activity"
         assert result["pipeline_id"] == "orders" and result["_notebook_name"] == name
         runs.append(result["run_id"])
@@ -356,7 +356,7 @@ def test_failed_source_iterator_is_a_recorded_write_attempt(runtime):
         with pytest.raises((OSError, ValueError)):
             orchestrate_write(None, execution_plan=plan, sources=broken_sources(), store="Silver", schema="physical",
                               table_name="table1", write_mode="overwrite")
-        assert finalize_pipeline(plan)["status"] == "failed"
+        assert finalize_pipeline_run(plan)["status"] == "failed"
 
 
 def test_concurrent_duplicate_operations_cannot_both_complete(runtime, monkeypatch):
@@ -386,7 +386,7 @@ def test_concurrent_duplicate_operations_cannot_both_complete(runtime, monkeypat
         first.result(timeout=5)
         with pytest.raises(ValueError, match="Duplicate"):
             second.result(timeout=5)
-    assert finalize_pipeline(plan)["status"] == "failed"
+    assert finalize_pipeline_run(plan)["status"] == "failed"
     assert saved[plan.plan_id]["status"] == "failed"
 
 
@@ -407,7 +407,7 @@ def test_finalization_waits_for_an_in_flight_operation(runtime, monkeypatch):
     with ThreadPoolExecutor(max_workers=2) as pool:
         active = pool.submit(operation, plan, 0)
         assert entered.wait(5)
-        final = pool.submit(finalize_pipeline, plan)
+        final = pool.submit(finalize_pipeline_run, plan)
         release.set()
         active.result(timeout=5)
         assert final.result(timeout=5)["status"] == "succeeded"
@@ -420,7 +420,7 @@ def test_project_dependencies_are_checked_against_installed_versions(runtime, re
     make, operation, _, _, _ = runtime
     plan = make(roles=("source",), dependencies=json.dumps({"numpy": required}))
     operation(plan, 0)
-    result = finalize_pipeline(plan)
+    result = finalize_pipeline_run(plan)
     assert result["status"] == "incomplete" and not result["candidate_fingerprint"]
     assert json.loads(result["candidate_json"])["dependencies"]["numpy"] == {"required": required, "observed": version("numpy")}
 
@@ -433,7 +433,7 @@ def test_valid_dependency_names_containing_secret_are_not_credentials(runtime, m
     make, operation, _, _, _ = runtime
     plan = make(roles=("source",), dependencies='{"azure-keyvault-secrets":"4.10.0"}')
     operation(plan, 0)
-    assert finalize_pipeline(plan)["status"] == "succeeded"
+    assert finalize_pipeline_run(plan)["status"] == "succeeded"
 
 
 def test_missing_project_distribution_retains_non_successful_diagnostics(runtime):
@@ -441,7 +441,7 @@ def test_missing_project_distribution_retains_non_successful_diagnostics(runtime
     make, operation, _, _, _ = runtime
     plan = make(roles=("source",), dependencies='{"nonexistent-fabricops-review-package":"1.0.0"}')
     operation(plan, 0)
-    assert finalize_pipeline(plan)["status"] == "incomplete"
+    assert finalize_pipeline_run(plan)["status"] == "incomplete"
 
 
 def test_lost_final_commit_acknowledgement_confirms_exact_durable_snapshot(runtime):
@@ -450,10 +450,10 @@ def test_lost_final_commit_acknowledgement_confirms_exact_durable_snapshot(runti
     plan = make(roles=("source",))
     operation(plan, 0)
     failure["after_commit"] = True
-    result = finalize_pipeline(plan)
+    result = finalize_pipeline_run(plan)
     assert result == saved[plan.plan_id] and result["status"] == "succeeded"
     assert not plan.evidence["persistence_failed"] and plan.evidence["sealed"]
-    assert finalize_pipeline(plan) == result
+    assert finalize_pipeline_run(plan) == result
 
 
 def test_unreachable_readback_reports_unknown_client_outcome(runtime):
@@ -463,11 +463,11 @@ def test_unreachable_readback_reports_unknown_client_outcome(runtime):
     operation(plan, 0)
     failure.update(after_commit=True, read_unavailable=True)
     with pytest.raises(RuntimeError, match="outcome is unknown"):
-        finalize_pipeline(plan)
+        finalize_pipeline_run(plan)
     assert plan.evidence["persistence_failed"] and not plan.evidence["sealed"]
     assert saved[plan.plan_id]["status"] == "succeeded"
     with pytest.raises(RuntimeError, match="persistence failed"):
-        finalize_pipeline(plan)
+        finalize_pipeline_run(plan)
 
 
 def test_exact_contract_identity_changes_exact_but_not_portable_fingerprint(runtime):
@@ -486,7 +486,7 @@ def test_exact_contract_identity_changes_exact_but_not_portable_fingerprint(runt
 def test_secondary_metadata_failure_preserves_original_publication_details(runtime):
     """Do not erase an earlier committed publication when diagnostics also fail."""
     make, _, _, _, failure = runtime
-    plan = make(mode="bootstrap", roles=("target",))
+    plan = make(mode="testing", roles=("target",))
     with pytest.raises(RuntimeError) as raised:
         with shared.PipelineOperation(plan, "target", {"store": "Silver", "schema": "physical", "table_name": "table0", "sources": []}):
             error = RuntimeError("Profile failed")
@@ -504,7 +504,7 @@ def test_secondary_metadata_failure_preserves_original_publication_details(runti
 def test_post_publication_evidence_failure_retains_published_flag(runtime):
     """An evidence error cannot imply that an already completed Write rolled back."""
     make, operation, _, _, failure = runtime
-    plan = make(mode="bootstrap", roles=("target",))
+    plan = make(mode="testing", roles=("target",))
     with pytest.raises(RuntimeError) as raised:
         with shared.PipelineOperation(plan, "target", {"store": "Silver", "schema": "physical", "table_name": "table0", "sources": []}) as journal:
             journal.complete([{"stage": "Write", "status": "passed"}, {"stage": "Profile", "status": "passed"}])
@@ -520,7 +520,7 @@ def test_invalid_dependency_urls_and_values_are_not_persisted(runtime):
         "valid-distribution": "https://user:other-private-credential@internal-host/package",
     }))
     operation(plan, 0)
-    result = finalize_pipeline(plan)
+    result = finalize_pipeline_run(plan)
     assert result["status"] == "incomplete"
     assert "private-credential" not in json.dumps(result, default=str)
     assert "internal-host" not in json.dumps(result, default=str)
@@ -537,7 +537,7 @@ def test_unavailable_engine_source_identity_persists_incomplete_testing(runtime,
         monkeypatch.setattr(Path, "rglob", lambda *args: (_ for _ in ()).throw(OSError("unreadable")))
     plan = make(roles=("source",))
     operation(plan, 0)
-    row = finalize_pipeline(plan)
+    row = finalize_pipeline_run(plan)
     assert row["status"] == "incomplete" and not row["candidate_fingerprint"]
     assert json.loads(row["candidate_json"])["engine_sha256"] is None
 

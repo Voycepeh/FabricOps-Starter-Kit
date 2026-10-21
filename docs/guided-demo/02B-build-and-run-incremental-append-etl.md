@@ -239,7 +239,7 @@ Pause this target's scheduled and interactive writers. Keep the existing tables 
     ```
 
     For the reported mismatch, the missing set must be exactly M009–M012. Review that set and explicitly choose to execute the existing `orchestrate_write()` call with `missing` as its DataFrame, the Full Read result in `sources`, `write_mode="append"`, and the fresh Live plan. Do not execute the ordinary incremental write in this repair run. Do not bypass Guardrails or notebook ownership.
-5. Read Silver back and verify exactly 12 distinct movements, no null or duplicate keys, and multiset equality in both directions between all transformed source business columns and Silver. Retain the checkpoint history; this repair fills the physical gap without deleting metadata or rewinding watermarks. Call `finalize_pipeline(plan)` after the declared repair operations complete. If publication or finalization fails, stop and retry the exact prepared batch under a fresh plan/run; do not replay a sealed or failed plan or assume that an error means no rows were written.
+5. Read Silver back and verify exactly 12 distinct movements, no null or duplicate keys, and multiset equality in both directions between all transformed source business columns and Silver. Retain the checkpoint history; this repair fills the physical gap without deleting metadata or rewinding watermarks. Execute the declared repair operations inside `with plan:` so the whole-run outcome is recorded automatically. If publication or finalization fails, stop and retry the exact prepared batch under a fresh plan/run; do not replay a sealed or failed plan or assume that an error means no rows were written.
 6. Restore Incremental Read, build a fresh plan, and run Day 3. It should return an empty scope and keep Silver at 12 rows. Repeat Day 2 and Day 3 to verify stable results.
 
 Source Observation records use the same `run_id` as `METADATA_PIPELINE_RUN`; multiple runs may retain the same real `_activity_id`. New runs isolate pending source state, while exact batch receipts allow recovery across run IDs. Run `setup_metadata_tables()` to add nullable `run_id` and `publication_payload_json` columns without resetting existing history.
@@ -259,7 +259,7 @@ An Incremental demo cannot be reset by rerunning Day 1 or deleting only the Silv
 3. Remove only the `METADATA_SOURCE_OBSERVATION` rows for the `inventory_movements` → `inventory_movements_incremental` relationship and the current environment. Do not clear observations for other pipelines.
 4. Set `DEMO_DAY = 1`.
 5. Rerun [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) to restore the eight-row Day 1 Bronze source. Day 1 of this notebook does not load its own CSV.
-6. Run the notebook through a fresh selector, keep the Bootstrap defaults before contracts exist, then continue. The Incremental Read bootstraps again and Append recreates the eight-row Silver target.
+6. Run the notebook through a fresh selector, choose No Contract for every table and explicitly authorize safe real Testing writes before contracts exist, then continue. The Incremental Read bootstraps again and Append recreates the eight-row Silver target.
 
 !!! warning "Keep incremental state aligned"
 

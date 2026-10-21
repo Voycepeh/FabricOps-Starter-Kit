@@ -73,7 +73,7 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `dataframe` | `Any` | Yes | `—` | Transformed Spark DataFrame; Sensitive Data treatment prepares the input. |
-| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Same required plan as all participating Reads. Bootstrap publishes and profiles initial outputs only while no participating frozen or active contract exists. Testing evaluates Guardrails, processing, ownership, incremental safety and SCD input checks without publication, staging or durable mappings. Run evidence and Guardrail diagnostics are persisted; finalize_pipeline seals the complete run. Live enforces active frozen contracts and stops on Block before publication. |
+| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Same required plan as all participating Reads. Execute all reads, transformations and writes inside with plan: for automatic whole-run completion. Testing evaluates processing, guardrails and incremental safety. Explicit testing_writes=True permits real publication to declared safe destinations, with mappings, checkpoints and normal metadata side effects. Otherwise Testing evaluates without publication. Live enforces the pinned approved contracts and ownership and stops on Block before publication. |
 | `sources` | `Iterable[dict[str, Any]]` | Yes | `—` | Read results from this exact plan for the sources actually feeding this target. |
 | `store` | `str` | Yes | `—` | Configured target store key. |
 | `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
@@ -86,7 +86,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `grain_discovery_max_candidates` | `int` | No | `8` | Positive maximum retained candidates at the smallest valid key width. |
 | `frequency_enabled` | `bool` | No | `True` | Calculate optional frequency distributions during profiling. |
 | `frequency_top_n` | `int \| None` | No | `5` | Maximum frequency rows per column. |
-| `existing_mapping` | `object` | No | `None` | Caller-managed Sensitive Data mapping; incompatible with a configured vault. Existing assignments are reused. The returned sensitive_result.support_mapping remains caller-owned; persist it only in Live workflows, then unpersist() its cache after consumption. A configured restricted mapping store is read-only during Testing and reused/updated during Live. Failures release the cache. |
+| `existing_mapping` | `object` | No | `None` | Caller-managed Sensitive Data mapping; incompatible with a configured vault. Existing assignments are reused. The returned sensitive_result.support_mapping remains caller-owned; persist it only in explicitly authorized write workflows, then unpersist() its cache after consumption. A configured restricted mapping store is read-only during evaluation-only Testing and reused/updated during authorized writes. Failures release the cache. |
 | `spark_session` | `object` | No | `None` | Spark session used throughout. |
 | `verbose` | `bool` | No | `True` | Print concise stages and outcome. |
 | `dq_diagnostics` | `str` | No | `'sample'` | Exact metrics with bounded samples, no samples or lazy full violations. |
@@ -133,7 +133,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:26`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L26-L238">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L26-L239">View on GitHub</a>
 </div>
 
 
@@ -149,7 +149,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 206 |
+| Live-critical dependencies | 205 |
 
 ### Release history
 
@@ -160,15 +160,15 @@ No related guides documented.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
-<li><code>fabricops_kit.activated_pipeline.shared.activation_version</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.bound_pipeline_participants</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.environment_activation</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.load_live_deployment</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.read_activation_state</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_manifest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_testing_destinations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_live_plan</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
 <li><code>fabricops_kit.config.audit._context_get</code></li>
@@ -304,7 +304,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._previous_source_target_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
-<li><code>fabricops_kit.pipeline.shared._require_bootstrap_contracts_absent</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared._rule_review_status</code></li>
 <li><code>fabricops_kit.pipeline.shared._run_orchestration_stage</code></li>
@@ -343,13 +342,13 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_candidate</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
 <li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_guardrail_result</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_pipeline_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_pipeline_data_contract</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_pipeline_participants</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_scd1_business_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_scd2_tracked_columns</code></li>

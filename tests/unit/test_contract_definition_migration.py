@@ -207,7 +207,7 @@ def test_missing_or_malformed_definitions_cannot_be_frozen(field, value):
 @pytest.mark.parametrize("column_available", [True, False])
 def test_new_draft_inherits_frozen_definitions_without_reading_side_tables(monkeypatch, column_available):
     """New draft creation deep-copies all definitions and rebinds only the new version."""
-    identity = contracts.contract_lifecycle_id("orders", "dev")
+    identity = contracts.contract_lifecycle_id("orders")
     payload = _payload()
     payload["contract"]["contract_id"] = identity
     payload["enrichment"]["table"] = [_enrichment(contract_id=identity, enrichment_type="Grain", value="One row per order")]

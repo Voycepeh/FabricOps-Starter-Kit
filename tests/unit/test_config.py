@@ -377,6 +377,7 @@ def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
 
 def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch):
     """Verify setup metadata tables routes bootstrap writes through Lakehouse IO."""
+    monkeypatch.setattr("fabricops_kit.config.audit.build_runtime_audit_fields", lambda **kw: {})
     from fabricops_kit.config.metadata_schemas import (
         CANONICAL_METADATA_TABLES,
         metadata_table_schema_registry,
@@ -415,7 +416,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
             self.pending_schema = None
 
         def createDataFrame(self, rows, schema=None):  # noqa: N802
-            assert rows == []
+            assert rows == [] or rows[0].get("authority_id") == "central"
             self.pending_schema = schema
             self.pending_columns = schema.fieldNames()
             return DataFrame(self, self.pending_columns)
@@ -425,7 +426,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     def read_table(table_name, *, store, schema=None, spark_session=None, context=None):
         assert store == "Metadata"
         assert schema == ("governance" if table_name in {
-            "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_ACTIVATED_PIPELINE",
+            "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_ACTIVATION_STATE",
         } else "engineering")
         assert context["env"] == "dev"
         if table_name not in spark.tables:
@@ -437,7 +438,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     ):
         assert store == "Metadata"
         assert schema in {"governance", "engineering"}
-        assert mode == "overwrite"
+        assert mode == ("errorifexists" if table_name == "METADATA_ACTIVATION_STATE" else "overwrite")
         assert options is None
         assert verbose is False
         spark.created_tables.append(table_name)
@@ -860,6 +861,7 @@ def test_setup_evolves_existing_tables_with_new_readable_identity_columns(monkey
 
 def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypatch):
     """Verify newly created metadata tables use the canonical schema registry."""
+    monkeypatch.setattr("fabricops_kit.config.audit.build_runtime_audit_fields", lambda **kw: {})
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
@@ -888,7 +890,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
 
     class Spark:
         def createDataFrame(self, rows, schema=None):  # noqa: N802
-            assert rows == []
+            assert rows == [] or rows[0].get("authority_id") == "central"
             return Frame(schema)
 
     def read_table(table_name, **_kwargs):
@@ -897,7 +899,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
         return existing[table_name]
 
     def write_table(frame, table_name, **kwargs):
-        assert kwargs.get("mode") == "overwrite"
+        assert kwargs.get("mode") == ("errorifexists" if table_name == "METADATA_ACTIVATION_STATE" else "overwrite")
         created[table_name] = frame.schema
         existing[table_name] = frame
 

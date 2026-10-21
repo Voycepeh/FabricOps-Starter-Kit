@@ -29,12 +29,13 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
     Parameters
     ----------
     execution_plan : PipelineExecutionPlan
-        Same required plan as all participating Reads. Bootstrap publishes and
-        profiles initial outputs only while no participating frozen or active
-        contract exists. Testing evaluates Guardrails,
-        processing, ownership, incremental safety and SCD input checks
-        without publication, staging or durable mappings. Run evidence and Guardrail diagnostics are persisted; finalize_pipeline seals the complete run.
-        Live enforces active frozen contracts and stops on Block before publication.
+        Same required plan as all participating Reads. Execute all reads,
+        transformations and writes inside with plan: for automatic whole-run
+        completion. Testing evaluates processing, guardrails and incremental safety.
+        Explicit testing_writes=True permits real publication to declared safe
+        destinations, with mappings, checkpoints and normal metadata side effects.
+        Otherwise Testing evaluates without publication. Live enforces the pinned
+        approved contracts and ownership and stops on Block before publication.
     dataframe : object
         Transformed Spark DataFrame; Sensitive Data treatment prepares the input.
     sources : iterable of dict
@@ -52,9 +53,9 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
     existing_mapping : object, optional
         Caller-managed Sensitive Data mapping; incompatible with a configured vault.
         Existing assignments are reused. The returned sensitive_result.support_mapping
-        remains caller-owned; persist it only in Live workflows, then unpersist() its
+        remains caller-owned; persist it only in explicitly authorized write workflows, then unpersist() its
         cache after consumption. A configured restricted mapping store is read-only
-        during Testing and reused/updated during Live. Failures release the cache.
+        during evaluation-only Testing and reused/updated during authorized writes. Failures release the cache.
     repartition_by : int, optional
         Physical write partition count for Live.
     grain_discovery_enabled : bool

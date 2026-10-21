@@ -41,13 +41,12 @@ def _metadata_io_context(config: Any, env: str) -> dict[str, Any]:
     return {"config": config, "env": env, "_fabricops_suppress_io_log": True}
 
 
-def contract_lifecycle_id(table_id: str, environment_name: str) -> str:
-    """Return the stable table/environment identity for one Data Contract lifecycle."""
+def contract_lifecycle_id(table_id: str) -> str:
+    """Return the global table identity for one Data Contract lifecycle."""
     table = str(table_id or "").strip()
-    environment = str(environment_name or "").strip()
-    if not table or not environment:
-        raise ValueError("table_id and environment_name are required for a Data Contract lifecycle.")
-    return str(uuid.uuid5(_CONTRACT_NAMESPACE, f"{environment}\n{table}"))
+    if not table:
+        raise ValueError("table_id is required for a Data Contract lifecycle.")
+    return str(uuid.uuid5(_CONTRACT_NAMESPACE, table))
 
 
 def create_contract_draft(
@@ -56,7 +55,7 @@ def create_contract_draft(
     schema: str | None = None,
 ) -> dict[str, Any]:
     """Create or reopen the one mutable draft for a governed table."""
-    lifecycle_id = contract_lifecycle_id(table_id, env)
+    lifecycle_id = contract_lifecycle_id(table_id)
     runtime_context = {
         "config": config, "env": env, **dict(context or {}),
         "_fabricops_suppress_io_log": True,
@@ -92,7 +91,6 @@ def create_contract_draft(
     owned = [
         row for row in rows
         if str(row.get("contract_id") or "") == lifecycle_id
-        and str(row.get("environment_name") or "") == env
     ]
     drafts = [row for row in owned if str(row.get("status") or "").lower() == "draft"]
     if len(drafts) > 1:
@@ -423,7 +421,6 @@ def _confirm_contract_mutation(
             ),
             f"contract_id = {_sql_literal(expected['contract_id'])}",
             f"contract_version = {int(expected['contract_version'])}",
-            f"environment_name = {_sql_literal(env)}",
         ),
         contract_id=expected["contract_id"], contract_version=expected["contract_version"],
         environment_name=env,
@@ -454,8 +451,6 @@ def save_contract_draft(
     )
     if str(draft.get("status") or "").lower() != "draft":
         raise ValueError("Only a draft Data Contract version can be saved.")
-    if str(draft.get("environment_name") or "") != str(env):
-        raise ValueError("Draft Data Contract must stay in the authoring environment.")
 
     canonical = json.loads(json.dumps(dict(payload), default=str))
     canonical["contract"] = {
@@ -507,8 +502,7 @@ def save_contract_draft(
         .merge(
             frame.alias("source"),
             "target.contract_id = source.contract_id "
-            "AND target.contract_version = source.contract_version "
-            "AND target.environment_name = source.environment_name",
+            "AND target.contract_version = source.contract_version",
         )
         .whenMatchedUpdateAll(condition="target.status = 'draft'")
         .execute()
@@ -695,7 +689,7 @@ def contract_version_records(
     contract_version: int,
     environment_name: str,
 ) -> list[dict[str, Any]]:
-    """Return rows owned by exactly one contract version and environment."""
+    """Return rows owned by one global contract version; environment is provenance."""
     identity, version = validate_contract_identity(contract_id, contract_version)
     env = str(environment_name or "").strip()
     if not env:
@@ -704,7 +698,7 @@ def contract_version_records(
         row for row in row_dicts(rows)
         if str(row.get("contract_id") or "") == identity
         and int(row.get("contract_version") or 0) == version
-        and str(row.get("environment_name") or "") == env
+
     ]
 
 
@@ -747,14 +741,13 @@ def get_contract_authoring_state(
                 contract_frame,
                 f"contract_id = {_sql_literal(identity)}",
                 f"contract_version = {version}",
-                f"environment_name = {_sql_literal(env)}",
             ),
             contract_id=identity,
             contract_version=version,
             environment_name=env,
         )
-        if not matches:
-            raise ValueError("The exact Data Contract version does not exist.")
+        if len(matches) != 1:
+            raise ValueError("The exact global Data Contract version is missing or duplicated.")
         draft = matches[0]
     else:
         matches = contract_version_records(
@@ -831,7 +824,6 @@ def list_contract_governance_state(
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
             context=context, spark_session=spark_session,
         ),
-        f"environment_name = {_sql_literal(env)}",
     )
     tables = _latest([
         row for row in catalogue
@@ -840,7 +832,7 @@ def list_contract_governance_state(
         and row.get("is_active") is not False
     ], ("table_id",))
     versions = sorted(
-        [row for row in contracts if str(row.get("environment_name") or "") == env],
+        contracts,
         key=lambda row: (str(row.get("table_id") or ""), -int(row.get("contract_version") or 0)),
     )
     return {"tables": tables, "contracts": versions}
@@ -859,7 +851,6 @@ def get_contract_review_state(
         ),
         f"contract_id = {_sql_literal(identity)}",
         f"contract_version = {version}",
-        f"environment_name = {_sql_literal(env)}",
     )
     matches = contract_version_records(
         rows,
@@ -867,8 +858,8 @@ def get_contract_review_state(
         contract_version=version,
         environment_name=env,
     )
-    if not matches:
-        raise ValueError("The exact Data Contract version does not exist.")
+    if len(matches) != 1:
+        raise ValueError("The exact global Data Contract version is missing or duplicated.")
     contract = matches[0]
     if str(contract.get("status") or "").lower() == "draft":
         return get_contract_authoring_state(
@@ -1428,8 +1419,6 @@ def freeze_contract(
     from delta.tables import DeltaTable
     from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table
 
-    if str(draft.get("environment_name") or "") != str(env):
-        raise ValueError("Draft environment_name must match the authoring environment.")
     payload = _json_value(
         draft.get("contract_payload_json"), field="contract_payload_json", default=None
     )
@@ -1465,8 +1454,7 @@ def freeze_contract(
         .merge(
             frame.alias("source"),
             "target.contract_id = source.contract_id AND "
-            "target.contract_version = source.contract_version AND "
-            "target.environment_name = source.environment_name",
+            "target.contract_version = source.contract_version",
         )
         .whenMatchedUpdateAll(condition="target.status = 'draft'")
         .execute()

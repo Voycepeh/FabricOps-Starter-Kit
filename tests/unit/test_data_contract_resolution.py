@@ -101,7 +101,7 @@ def test_exact_contract_version_filters_and_limits_before_collect(monkeypatch):
 
     assert resolved["contract_version"] == 1
     assert frame.operations == [
-        ("filter", "`contract_id` = 'contract-a' AND `contract_version` = 1 AND `environment_name` = 'dev'"),
+        ("filter", "`contract_id` = 'contract-a' AND `contract_version` = 1"),
         ("limit", 2),
         ("collect", None),
     ]
