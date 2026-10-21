@@ -53,7 +53,7 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 | 4 | Engineering Development — Select and validate | Use the current notebook's `METADATA_DATA_LINEAGE` to discover linked `table_id` values, select one frozen version independently per table, and validate the ETL. Failed validation returns to Step 3 for a new frozen version. |
 | 5 | Governance — Link the Data Agreement and activate | Select the complete successful Testing candidate, link the exact Data Agreement version, and activate the whole pipeline for Live. |
 | 6 | Engineering Production — Promote, run, and hand off access | Promote and run the validated `02_pipeline`. Production automatically resolves the active Data Contract, publishes governed outputs, and approved consumers receive access through native Fabric controls. |
-| 7 | Consumption — Consume and productize governed data | Use `99_explore` as the consumer and analytics-engineering handoff: review governed context, discover existing consumption products, consume data directly, or publish to a target such as a Fabric Data Agent. |
+| 7 | Consumption — Consume and productize governed data | Use native Fabric interfaces or project-specific notebooks to review governed context, consume data directly, or publish to a target such as a Fabric Data Agent. |
 
 ## Canonical operating decisions
 
@@ -64,7 +64,7 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 | Development | Engineering Development supports exploration, pipeline development, profiling, testing, and review. |
 | Production | Engineering Production contains approved recurring pipelines and durable Production outputs. |
 | Standard pipeline approach | PySpark is the standard for repeatable `02_pipeline` workflows. |
-| Consumption | Approved consumers can use native Fabric permissions and interfaces directly. `99_explore` is the governed handoff for analytics and AI consumers, exposing reusable context and consumption accelerators without replacing native Fabric access. |
+| Consumption | Approved consumers can use native Fabric permissions and interfaces directly. Centralized metadata provides reusable context for analytics and AI consumers through direct PySpark or SQL reads. |
 | Consumption products | FabricOps should surface existing products that use the same or overlapping governed tables before creating another. Data Agent publishing is the first automated target; Power BI and other consumers remain parallel paths. |
 
 ## Canonical engineering boundary
@@ -114,7 +114,7 @@ Classification, treatment, contract approval, activation, promotion, and Product
 
 The active next product direction is **governed consumption**.
 
-`99_explore` keeps its current name and evolves into the handoff from governed Production data to analytics and AI consumers. Native Fabric permissions remain the access mechanism; FabricOps adds reusable consumer-facing context derived from existing authoritative metadata.
+Consumers use native Fabric interfaces or project-specific notebooks to work with governed Production data. Native Fabric permissions remain the access mechanism; reusable consumer-facing context comes from direct reads of existing authoritative metadata.
 
 The first implemented automated accelerator is **single-table Fabric Data Agent publishing**: select an activated Production table, assemble its governed context, configure the native Data Agent, and leave it ready for review and testing. Consumption-product registration and overlap discovery remain later work.
 

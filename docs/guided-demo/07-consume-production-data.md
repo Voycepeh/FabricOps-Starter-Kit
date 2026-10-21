@@ -63,7 +63,7 @@ Approved Production table
 FabricOps governed context
         |
         v
-99_explore or another consumer notebook
+Native Fabric interface or project-specific consumer notebook
         |
         +--> create_data_agent()
                 |

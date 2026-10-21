@@ -16,7 +16,6 @@ TEMPLATE_NAMES = (
     "00_env_config.ipynb",
     "01_governance.ipynb",
     "02_pipeline.ipynb",
-    "99_explore.ipynb",
 )
 HEADER_MARKER = "## Tested with FabricOps"
 HEADER_SOURCE = [

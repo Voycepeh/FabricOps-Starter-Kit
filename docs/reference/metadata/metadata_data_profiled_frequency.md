@@ -8,7 +8,7 @@ See a profiled column's frequency distribution without joining its parent Profil
 
 ## Used in Workflow Template
 
-* [`02_pipeline / optional 99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Profiling
+* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Profiling
 
 ## Model
 

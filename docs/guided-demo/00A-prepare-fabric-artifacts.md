@@ -147,7 +147,7 @@ You now have:
 - a Governance workspace with the `Metadata` Lakehouse and a published Fabric Environment containing FabricOps;
 - an Engineering Development workspace with `bronze`, `silver`, and `gold`, plus its own published Fabric Environment containing the same FabricOps wheel;
 - optionally, a matching Engineering Production workspace for Step 6, with its own Environment when you are ready to use it; and
-- optionally, a Consumer workspace for Step 7, with its own Environment when you are ready to run `99_explore`.
+- optionally, a Consumer workspace for Step 7, with its own Environment when you are ready to run project-specific consumer notebooks.
 
 The physical Fabric foundation is ready. The next step imports the FabricOps notebook templates and demo data.
 

@@ -23,7 +23,6 @@ Import the four reusable notebooks:
 | `00_env_config.ipynb` | Copy into every workspace that will run a FabricOps notebook |
 | `01_governance.ipynb` | Governance workspace |
 | `02_pipeline.ipynb` | Engineering Development workspace |
-| `99_explore.ipynb` | Consumer workspace |
 
 In Fabric, open the target workspace, choose **Import notebook**, and upload the downloaded `.ipynb` file.
 
@@ -37,7 +36,7 @@ The Governance workspace contains the `metadata` Lakehouse, its Fabric Environme
 
 The Engineering Development workspace contains `bronze`, `silver`, `gold`, its Fabric Environment, `00_env_config`, the reusable `02_pipeline`, and the three demo notebooks.
 
-The Consumer workspace should contain `00_env_config` and `99_explore`. It does not need its own Fabric store for this Guided Demo.
+Consumers can use SQL or other native Fabric interfaces directly. For a project-specific consumer notebook, copy `00_env_config` into the Consumer workspace and configure access to the existing Production stores.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">

@@ -7,7 +7,6 @@ Download these notebooks and import them into Microsoft Fabric.
 | `00_env_config.ipynb` | Configure environments and Fabric stores. |
 | `01_governance.ipynb` | Manage Governance metadata and Data Contracts. |
 | `02_pipeline.ipynb` | Reusable governed Read → PySpark Transform → Write scaffold. |
-| `99_explore.ipynb` | Explore approved Production data. |
 
 Completed learning demos are kept separately under `templates/DemoData/`:
 

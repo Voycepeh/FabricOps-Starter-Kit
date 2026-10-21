@@ -42,7 +42,7 @@
       Development and Production keep the same logical Bronze, Silver, and Gold architecture, whether those stores are implemented as Lakehouses or Warehouses. The physical Fabric objects differ by environment, but their roles and structure stay aligned 1:1. Once `02_pipeline` is validated in Development against the frozen Data Contract, that validated notebook is promoted to the Engineering Production Workspace through the deployment flow.
 
     - **Project-Specific Consumer Workspace**
-      Consumers receive approved Production access through native Fabric controls and can use the Fabric interface appropriate to their work. The planned `99_explore` notebook provides the governed handoff into analytics and AI: consumer-facing context, discovery of existing consumption products, and target-specific accelerators. Data Agent publishing is the first automated target; direct analytics and future Power BI/reporting paths reuse the same governed foundation.
+      Consumers receive approved Production access through native Fabric controls and can use the Fabric interface appropriate to their work. Consumers can query centralized metadata directly through PySpark or SQL and use project-specific notebooks for analytics and AI. Data Agent publishing is the first automated target; direct analytics and future Power BI/reporting paths reuse the same governed foundation.
 
 
     ??? info "Why use a Warehouse for Gold consumption?"
@@ -113,7 +113,7 @@ Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read
     4. **Validate the frozen Data Contract.** Engineering tests that exact version against the pipeline.
     5. **Activate and promote.** Governance activates the tested whole pipeline; Engineering promotes the validated pipeline to Production.
     6. **Run Production and grant access.** Run with Production configuration and give approved consumers access through native Fabric controls.
-    7. **Consume governed data.** Use approved Production data for analytics and AI. The planned `99_explore` notebook supports the governed handoff.
+    7. **Consume governed data.** Use approved Production data for analytics and AI. Query centralized metadata directly through PySpark or SQL when governance context is needed.
 
     ??? info "Detailed lifecycle responsibilities"
 
@@ -126,7 +126,7 @@ Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read
 
         5. **Governance activates the tested whole pipeline, then Engineering deploys it.** [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) independently validates a complete successful Testing run, exact candidate, frozen definitions and Agreement, then records explicit confirmation in `METADATA_ACTIVATED_PIPELINE`. Contracts remain Frozen and reusable. Engineering packages the manifest/definitions beside the unchanged executable, deploys and verifies environment bindings, then saves the exact version for unattended Live. Fabric Deployment Pipelines are not assumed to copy metadata rows.
         6. **Engineering runs the same workflow again in Production and hands off access.** The promoted `02_pipeline` resolves Production stores through `00_env_config`, automatically resolves the active Data Contract, applies the same Read → Transform → Write pattern and Guardrail functions, and publishes the governed output. Successful writes commit the associated runtime Lineage and Source Observation state. Approved consumers then receive access through native Fabric controls and can use standard Fabric interfaces directly.
-        7. **Analytics and AI consumers receive the governed handoff through `99_explore`.** The interface exposes consumer-facing context, surfaces existing consumption products using the same or overlapping governed tables, and supports target-specific accelerators. One-shot Data Agent publishing is the first automated target; explicit reusable relationship context later extends the same pattern to multiple tables and other consumers.
+        7. **Analytics and AI consumers use native Fabric interfaces or project-specific notebooks.** Centralized metadata provides the governed context for downstream use. One-shot Data Agent publishing is the first automated target; explicit reusable relationship context later extends the same pattern to multiple tables and other consumers.
 
 !!! tip "Validation is iterative"
 
