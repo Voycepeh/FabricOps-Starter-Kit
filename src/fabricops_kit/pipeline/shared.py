@@ -5701,17 +5701,19 @@ def _candidate_hash(value):
     return hashlib.sha256(canonical_candidate_json(value).encode("utf-8")).hexdigest()
 
 
-def _portable_candidate_value(value):
-    # These are physical bindings, never portable executable configuration.
+def _portable_candidate_value(value, *, exclude_bindings=False):
+    # Only contract definitions opt into recursive physical-binding normalization.
+    # Project configuration and nested operation parameters retain every key.
     bindings = {"environment_name", "workspace_id", "workspace_name", "lakehouse_id", "lakehouse_name",
                 "warehouse_id", "warehouse_name", "schema_name", "table_id", "contract_id",
                 "schema", "store", "table_name", "target_table_id", "notebook_id", "notebook_name", "guardrail_rule_id"}
     if isinstance(value, dict):
         if any(re.search(r"secret|password|credential|access_token|api[_-]?key|authorization|bearer|connection_string", key, re.I) for key in value):
             raise ValueError("Candidate configuration must not contain secrets.")
-        return {key: _portable_candidate_value(item) for key, item in value.items() if key not in bindings}
+        return {key: _portable_candidate_value(item, exclude_bindings=exclude_bindings)
+                for key, item in value.items() if not exclude_bindings or key not in bindings}
     if isinstance(value, (list, tuple)):
-        return [_portable_candidate_value(item) for item in value]
+        return [_portable_candidate_value(item, exclude_bindings=exclude_bindings) for item in value]
     return value
 
 
@@ -5727,7 +5729,7 @@ def _portable_contract_payload(payload, table_names):
             return [normalize(item) for item in value]
         return names.get(value, value) if isinstance(value, str) else value
 
-    return _portable_candidate_value(normalize(payload))
+    return _portable_candidate_value(normalize(payload), exclude_bindings=True)
 
 
 def pipeline_candidate(plan):
@@ -5947,7 +5949,11 @@ class PipelineOperation:
                     table.set("this", exp.Identifier(this=logical, quoted=True))
                     table.set("db", None)
                 configuration["query"] = {"sha256": hashlib.sha256(query.sql(dialect="tsql").encode()).hexdigest()}
-            configuration = _portable_candidate_value(configuration)
+            # Routing is already captured as explicit participant bindings. Only
+            # these top-level API arguments are physical; identically named keys
+            # inside read/write parameters remain part of executable identity.
+            configuration = _portable_candidate_value({key: value for key, value in configuration.items()
+                if key not in {"store", "schema", "table_name", "target_table_id"}})
             # SQL and mapping content require dependency identity support beyond this API.
             self.record["configuration_sha256"] = _candidate_hash(configuration) if (
                 args.get("existing_mapping") is None and not mapping_configured and query_available and sql_configuration

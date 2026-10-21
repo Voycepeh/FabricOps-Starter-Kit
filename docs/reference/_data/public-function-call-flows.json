@@ -1905,7 +1905,7 @@
       "raises_documentation": "Not documented yet",
       "returns_documentation": "Not documented yet",
       "signature": "def verify_pipeline_deployment(*, deployment_path, authority_environment, sources, targets, spark_session=None, context=None)",
-      "source_end_line": 40,
+      "source_end_line": 46,
       "source_path": "src/fabricops_kit/activated_pipeline/verify_pipeline_deployment.py",
       "source_start_line": 10,
       "summary": "Verify approved artifact contents and persist separate physical bindings.",
@@ -8966,9 +8966,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.pipeline.shared._merge_pipeline_run_row",
-      "source_end_line": 5823,
+      "source_end_line": 5825,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 5812,
+      "source_start_line": 5814,
       "usage": "public_flow_reachable"
     },
     {
@@ -9239,7 +9239,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._portable_candidate_value",
-      "source_end_line": 5715,
+      "source_end_line": 5717,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
       "source_start_line": 5704,
       "supports_live_contract": true,
@@ -9260,9 +9260,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._portable_contract_payload",
-      "source_end_line": 5730,
+      "source_end_line": 5732,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 5718,
+      "source_start_line": 5720,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -10298,6 +10298,7 @@
       "inbound_source_references": [
         "fabricops_kit.activated_pipeline.shared.load_live_deployment",
         "fabricops_kit.activated_pipeline.shared.tested_pipeline_manifest",
+        "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment",
         "fabricops_kit.pipeline.shared.build_pipeline_execution_plan"
       ],
       "lifecycle_status": "internal",
@@ -10436,9 +10437,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.pipeline.shared.finalize_pipeline_run",
-      "source_end_line": 6029,
+      "source_end_line": 6035,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 6006,
+      "source_start_line": 6012,
       "usage": "public_flow_reachable"
     },
     {
@@ -10693,9 +10694,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.pipeline.shared.persist_pipeline_run",
-      "source_end_line": 5879,
+      "source_end_line": 5881,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 5826,
+      "source_start_line": 5828,
       "usage": "public_flow_reachable"
     },
     {
@@ -10742,9 +10743,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared.pipeline_candidate",
-      "source_end_line": 5809,
+      "source_end_line": 5811,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 5733,
+      "source_start_line": 5735,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -15025,8 +15026,8 @@
       ],
       "metrics": {
         "depth": 6,
-        "scope": 29,
-        "width": 6
+        "scope": 30,
+        "width": 7
       },
       "qualified_name": "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment",
       "refactor_signals": [
@@ -15034,7 +15035,7 @@
           "evidence": [
             {
               "depth": 6,
-              "width": 6
+              "width": 7
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -16204,6 +16205,10 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.pipeline.shared.canonical_candidate_json",
+      "caller_qualified_name": "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.deployed_notebook_fingerprint",
       "caller_qualified_name": "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment"
     },
     {

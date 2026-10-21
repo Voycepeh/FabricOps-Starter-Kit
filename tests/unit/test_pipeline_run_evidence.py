@@ -540,3 +540,31 @@ def test_unavailable_engine_source_identity_persists_incomplete_testing(runtime,
     row = finalize_pipeline(plan)
     assert row["status"] == "incomplete" and not row["candidate_fingerprint"]
     assert json.loads(row["candidate_json"])["engine_sha256"] is None
+
+
+@pytest.mark.parametrize("key", ["schema", "store", "table_name", "environment_name", "notebook_id"])
+def test_project_configuration_keys_never_disappear_as_physical_bindings(runtime, key):
+    """Arbitrary project values remain exact even when named like routing fields."""
+    make, operation, _, _, _ = runtime
+    plan = make(roles=("source",))
+    operation(plan, 0)
+    before = shared.pipeline_candidate(replace(plan, configuration_json=json.dumps({"transform": [{key: "before"}]})))
+    after = shared.pipeline_candidate(replace(plan, configuration_json=json.dumps({"transform": [{key: "after"}]})))
+    assert before[1] and before[1] != after[1]
+    assert before[0]["project_configuration"] == {"transform": [{key: "before"}]}
+
+
+@pytest.mark.parametrize("role,parameter", [("source", "read_parameters"), ("target", "write_parameters")])
+def test_nested_operation_parameters_remain_exact_while_routing_is_portable(runtime, role, parameter):
+    """Only top-level routing arguments are excluded from operation identity."""
+    make, operation, _, _, _ = runtime
+    fingerprints = []
+    for value in ("before", "after"):
+        plan = make(roles=(role,))
+        operation(plan, 0, **{parameter: {"schema": value, "nested": {"table_name": value}}})
+        candidate, fingerprint, _ = shared.pipeline_candidate(plan)
+        configuration = candidate["operations"][0]["configuration"]
+        assert "schema" not in configuration and "store" not in configuration and "table_name" not in configuration
+        assert configuration[parameter] == {"schema": value, "nested": {"table_name": value}}
+        fingerprints.append(fingerprint)
+    assert fingerprints[0] and fingerprints[0] != fingerprints[1]

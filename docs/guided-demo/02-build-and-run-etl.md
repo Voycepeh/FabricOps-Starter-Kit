@@ -1,5 +1,13 @@
 # Step 2. Build a Pipeline
 
+### Build explicit pipeline authority before Read
+
+Declare `PIPELINE_SOURCES` and `PIPELINE_TARGETS` before calling `setup_pipeline()` and keep them aligned with every participating Read and Write. Historical `METADATA_DATA_LINEAGE` cannot authorize unrelated tables. Pass the same execution plan to all operations and call `finalize_pipeline()` after the whole pipeline, including Read-only pipelines.
+
+Start with unattended **Bootstrap** to create and profile initial outputs. After Governance builds and freezes reusable contracts, use **Testing** to select an exact frozen version for every participant. Expand the contract details to inspect columns and individual rules, including inactive and non-applicable definitions. Selection neither edits nor activates contracts. Testing persists `METADATA_PIPELINE_RUN` and Guardrail diagnostics, while business publication and ordinary operational metadata commits remain disabled.
+
+Complete the lifecycle in order: **Bootstrap → build/freeze contracts → Testing → activate pipeline → deploy/verify → unattended Live**. [Step 5](05-activate-data-contract-and-promote.md) approves the exact whole-pipeline candidate and saves the deployed activated version. Scheduled Live calls use `setup_pipeline(execution_mode="live", ...)` with that saved selection; contracts resolve exclusively from its approved manifest. Environment names, isolated passing rules and per-contract selections never grant Live authority. Start a new plan after changing code, configuration or contract selections.
+
 ### Before you begin
 
 1. Complete [Step 00B. Configure the Environment and load assets](00B-configure-environment-and-load-assets.md).
