@@ -2,7 +2,7 @@
 
 <span class="fabricops-release-status fabricops-release-status--preview">Preview</span>
 
-![Development validation of affected pipelines followed by coordinated Production activation](../assets/dependency-aware-pipeline-activation.svg){ .fabricops-solution-hero }
+![Development validation of affected pipelines followed by coordinated Production activation](../assets/governed-pipelines-development-to-production.png){ .fabricops-solution-hero }
 
 *Develop pipelines with versioned Data Contracts, validate shared dependencies, and promote them safely to Production.*
 
