@@ -2049,6 +2049,18 @@
           "signature_before": null
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
           "change_type": "removed",
           "classification": "review_required",
           "lifecycle_after": null,
@@ -2290,13 +2302,13 @@
         }
       ],
       "summary": {
-        "added": 18,
+        "added": 19,
         "modified": 12,
-        "nonbreaking": 21,
+        "nonbreaking": 22,
         "potentially_breaking": 9,
         "removed": 14,
         "review_required": 14,
-        "total": 44
+        "total": 45
       },
       "target": "working-tree"
     },
@@ -3435,15 +3447,16 @@
           "signature_before": null
         },
         {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "reasons": [
-            "Live public API removed."
+            "Optional parameter added: context.",
+            "Optional parameter added: read_parameters."
           ],
-          "signature_after": null,
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]",
           "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -3574,10 +3587,10 @@
       ],
       "summary": {
         "added": 15,
-        "modified": 2,
-        "nonbreaking": 16,
-        "potentially_breaking": 2,
-        "removed": 13,
+        "modified": 3,
+        "nonbreaking": 17,
+        "potentially_breaking": 1,
+        "removed": 12,
         "review_required": 12,
         "total": 30
       },
@@ -4564,15 +4577,15 @@
           "signature_before": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "reasons": [
-            "Live public API removed."
+            "Optional parameter added: context."
           ],
-          "signature_after": null,
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]",
           "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -4677,10 +4690,10 @@
       ],
       "summary": {
         "added": 7,
-        "modified": 4,
-        "nonbreaking": 9,
-        "potentially_breaking": 4,
-        "removed": 11,
+        "modified": 5,
+        "nonbreaking": 10,
+        "potentially_breaking": 3,
+        "removed": 10,
         "review_required": 9,
         "total": 22
       },
@@ -5679,15 +5692,15 @@
           "signature_before": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "reasons": [
-            "Live public API removed."
+            "Optional parameter added: context."
           ],
-          "signature_after": null,
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]",
           "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -5792,10 +5805,10 @@
       ],
       "summary": {
         "added": 7,
-        "modified": 4,
-        "nonbreaking": 9,
-        "potentially_breaking": 4,
-        "removed": 11,
+        "modified": 5,
+        "nonbreaking": 10,
+        "potentially_breaking": 3,
+        "removed": 10,
         "review_required": 9,
         "total": 22
       },
@@ -6107,6 +6120,18 @@
           "signature_before": "orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]"
+        },
+        {
           "change_type": "added",
           "classification": "nonbreaking",
           "lifecycle_after": "Preview",
@@ -6351,10 +6376,10 @@
         "added": 14,
         "modified": 12,
         "nonbreaking": 14,
-        "potentially_breaking": 15,
-        "removed": 18,
+        "potentially_breaking": 16,
+        "removed": 19,
         "review_required": 15,
-        "total": 44
+        "total": 45
       },
       "target": "v0.1.0"
     },
@@ -6590,16 +6615,17 @@
           "signature_before": "orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
-          "change_type": "added",
-          "classification": "nonbreaking",
+          "change_type": "modified",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
-          "lifecycle_before": null,
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "reasons": [
-            "Public API added."
+            "Parameter removed: context.",
+            "Parameter removed: read_parameters."
           ],
           "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": null
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6728,10 +6754,10 @@
         }
       ],
       "summary": {
-        "added": 13,
-        "modified": 2,
-        "nonbreaking": 13,
-        "potentially_breaking": 2,
+        "added": 12,
+        "modified": 3,
+        "nonbreaking": 12,
+        "potentially_breaking": 3,
         "removed": 15,
         "review_required": 15,
         "total": 30
@@ -6908,16 +6934,16 @@
           "signature_before": "orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
-          "change_type": "added",
-          "classification": "nonbreaking",
+          "change_type": "modified",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
-          "lifecycle_before": null,
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "reasons": [
-            "Public API added."
+            "Parameter removed: context."
           ],
           "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": null
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -7020,10 +7046,10 @@
         }
       ],
       "summary": {
-        "added": 11,
-        "modified": 4,
-        "nonbreaking": 11,
-        "potentially_breaking": 4,
+        "added": 10,
+        "modified": 5,
+        "nonbreaking": 10,
+        "potentially_breaking": 5,
         "removed": 7,
         "review_required": 7,
         "total": 22
@@ -7200,16 +7226,16 @@
           "signature_before": "orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
-          "change_type": "added",
-          "classification": "nonbreaking",
+          "change_type": "modified",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
-          "lifecycle_before": null,
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "reasons": [
-            "Public API added."
+            "Parameter removed: context."
           ],
           "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": null
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -7312,10 +7338,10 @@
         }
       ],
       "summary": {
-        "added": 11,
-        "modified": 4,
-        "nonbreaking": 11,
-        "potentially_breaking": 4,
+        "added": 10,
+        "modified": 5,
+        "nonbreaking": 10,
+        "potentially_breaking": 5,
         "removed": 7,
         "review_required": 7,
         "total": 22
@@ -16793,6 +16819,106 @@
           "lifecycle": "Live",
           "parameters": [
             {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "schema",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "table_name",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "table_id",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "query",
+              "required": false
+            },
+            {
+              "annotation": "str",
+              "default": "'full'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "read_mode",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "read_parameters",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "target_table_id",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "return_annotation": "dict[str, Any]",
+          "signature": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
+          "source_qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
               "annotation": null,
               "default": "None",
               "has_default": true,
@@ -17230,7 +17356,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:0e6d08ea6f2b53878245ac451f62fd71ab236b422bbff23ec076b3ae9ad5418e",
+      "source_digest": "sha256:069c460c03d3f193c2ff58ef1fa7e9657f87673fc53cc4d6277f38884feb94b9",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

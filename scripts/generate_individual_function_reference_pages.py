@@ -5455,10 +5455,11 @@ def main() -> None:
         },
         {
             "key": "pipeline-capabilities",
-            "title": "Profiling & Table Identity",
-            "note": "Standalone metadata utilities",
-            "description": "Profile registered tables and resolve canonical table identities. Pipeline execution and Guardrails belong to the orchestrators.",
+            "title": "Read, Profiling & Table Identity",
+            "note": "Standalone pipeline capabilities",
+            "description": "Read governed sources, profile registered tables, and resolve canonical table identities. The standard Read and Write lifecycles and Guardrails belong to the orchestrators.",
             "functions": {
+                "pipeline_read",
                 "profile_table",
                 "resolve_table_id",
             },

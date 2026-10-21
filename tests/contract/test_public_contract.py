@@ -47,6 +47,7 @@ LIVE_V010_CALLABLES = {
     "write_warehouse_table",
 }
 EXPECTED_CURRENT_LIVE_CALLABLES = LIVE_V010_CALLABLES | {
+    "pipeline_read",
     "setup_metadata_tables",
     "profile_table",
     "read_lakehouse_json",
@@ -136,16 +137,16 @@ def _signature_snapshot(function):
     return {"parameters": parameters}
 
 
-def test_supported_public_api_contract_reflects_internalized_pipeline_stages():
-    """Verify the current Live API excludes internal read and write stages."""
+def test_supported_public_api_contract_includes_restored_read_capability():
+    """Verify the current Live API includes the governed source-read capability."""
     message = (
-        "The current supported API excludes internal pipeline stages and retains the "
+        "The current supported API includes pipeline_read and retains the "
         "remaining engineering and governance functions. Update SUPPORTED_PUBLIC_API "
         "and release docs intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 15, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 15
+    assert len(SUPPORTED_PUBLIC_API) == 16, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 16
     assert APPROVED_V1_CALLABLES == EXPECTED_CURRENT_LIVE_CALLABLES
 
 
@@ -159,6 +160,26 @@ def test_supported_public_api_imports_are_callable_and_root_exported():
         assert callable(function), f"{qualified_name} must be callable"
         assert function_name in fabricops_kit.__all__
         assert getattr(fabricops_kit, function_name) is function
+
+
+def test_pipeline_read_is_exported_and_discovered_as_a_public_capability():
+    """Keep both notebook import paths and static API discovery aligned."""
+    from fabricops_kit import pipeline_read
+    from fabricops_kit.pipeline import __all__ as pipeline_exports
+    from fabricops_kit.pipeline import pipeline_read as package_read
+
+    assert callable(pipeline_read)
+    assert pipeline_read is package_read
+    assert "pipeline_read" in pipeline_exports
+    assert "pipeline_read" in flows.read_public_export_names()
+    contract = json.loads(
+        (Path(__file__).parents[2] / "docs/reference/_data/public-function-call-flows.json").read_text()
+    )
+    qualified_name = "fabricops_kit.pipeline.pipeline_read.pipeline_read"
+    row = next(item for item in contract["functions"] if item["qualified_name"] == qualified_name)
+    assert row["architecture_classification"] == "capability"
+    assert row["lifecycle_status"] == "live"
+    assert any(item["qualified_name"] == qualified_name for item in contract["public_analysis"])
 
 
 def test_supported_public_api_matches_generated_call_flow_contract():

@@ -34,6 +34,7 @@ from .pipeline import (
     setup_pipeline,
     resolve_table_id,
     profile_table,
+    pipeline_read,
     orchestrate_read,
     orchestrate_write,
 )
@@ -79,6 +80,7 @@ PIPELINE_EXPORTS = (
     "setup_pipeline",
     "profile_table",
     "resolve_table_id",
+    "pipeline_read",
     "orchestrate_read",
     "orchestrate_write",
 )
