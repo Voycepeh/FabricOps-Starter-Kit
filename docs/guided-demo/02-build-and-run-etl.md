@@ -134,7 +134,6 @@ The result is a dictionary, not only a DataFrame. Use its DataFrame for transfor
 
 ```python
 source_df = sources["source"]["dataframe"]
-display(source_df)
 ```
 
 If a transformation needs another governed source, duplicate the complete **READ 1 — Example source** block, give the Read and its dictionary key a unique name, and configure the second table. Remove a Read block when it does not contribute to the pipeline. Every source that contributes to a target should later appear in that target's `sources` list.
@@ -289,9 +288,9 @@ print(writes["target"]["total_duration_seconds"])
     Publish the updated wheel in the correct Fabric Environment and start a fresh notebook session before importing again. A previously imported function can remain bound to old code. Check the notebook cell or activity's stdout output. The orchestrator intentionally quiets physical writer logs; this does not suppress its own summary, and changing Write mode does not restore missing summary code.
 
 
-??? info "More useful inspection keys"
+??? info "Optional troubleshooting results"
 
-    Use these focused inspection options:
+    For troubleshooting, display these existing result fields next to the relevant orchestration call:
 
     ```python
     # Incremental Read scope.
