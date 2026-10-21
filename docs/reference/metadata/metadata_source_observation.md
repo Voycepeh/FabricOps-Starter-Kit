@@ -1,6 +1,6 @@
 # METADATA_SOURCE_OBSERVATION
 
-Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed means the associated physical target write succeeded and accepted it as the Source Drift baseline.
+Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed records accepted incremental progress, and drift_committed records the Source Drift baseline. Warehouse publication_observed and publication_committed rows store target-only retry receipts with empty source identity and no watermark; they also cover Full Read and source-free writes.
 
 ## Writer functions
 
@@ -18,7 +18,7 @@ Store source evidence observed by one logical pipeline for one governed target, 
 
 **Default physical schema:** `engineering`
 
-**Grain:** One observed or committed partition-state row within one logical notebook, source table, target table, and observation.
+**Grain:** One observed or committed partition-state row within one logical notebook, source table, target table, and observation; target-only Warehouse publication receipt rows have an empty source identity.
 
 **Primary key:** `observation_id` + `partition_value` + `observation_status`
 
@@ -52,7 +52,7 @@ via `source_table_id` + `target_table_id`
 | `content_fingerprint` | `string` | Metadata Source Observation field `content_fingerprint`. |
 | `is_present` | `boolean` | Whether the partition exists in this observation; false identifies a removal tombstone. |
 | `observation_status` | `string` | Metadata Source Observation field `observation_status`. |
-| `publication_payload_json` | `string` | Exact prepared-batch identity, writer activity and publication timestamp staged before the physical write. Recovery verifies this receipt against the atomic Delta commit and target marker; legacy rows without a receipt are not automatically promoted. |
+| `publication_payload_json` | `string` | Exact prepared-batch identity, writer activity and publication timestamp staged before the physical write. Recovery verifies the Delta commit and target marker for Lakehouse writes, or the exact staged activity/timestamp pair for Warehouse writes. Target-only Warehouse receipt rows never advance source watermarks; legacy activity-only rows are not automatically promoted. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

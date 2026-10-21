@@ -175,11 +175,11 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_SOURCE_OBSERVATION": {
-        "purpose": "Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed means the associated physical target write succeeded and accepted it as the Source Drift baseline.",
-        "grain": "One observed or committed partition-state row within one logical notebook, source table, target table, and observation.",
+        "purpose": "Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed records accepted incremental progress, and drift_committed records the Source Drift baseline. Warehouse publication_observed and publication_committed rows store target-only retry receipts with empty source identity and no watermark; they also cover Full Read and source-free writes.",
+        "grain": "One observed or committed partition-state row within one logical notebook, source table, target table, and observation; target-only Warehouse publication receipt rows have an empty source identity.",
         "primary_key": ["observation_id", "partition_value", "observation_status"],
         "foreign_keys": [
-            {"local_field": "source_table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "The source identity consumed by the successful write."},
+            {"local_field": "source_table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "The source identity consumed by the successful write; empty for target-only Warehouse publication receipts."},
             {"local_field": "target_table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "The governed target whose successful write accepted the source state."},
         ],
         "relationships": [],

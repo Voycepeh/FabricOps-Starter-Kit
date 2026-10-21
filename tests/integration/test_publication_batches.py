@@ -47,7 +47,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
         df.write.format('delta').mode(mode).options(**(_kwargs.get('options') or {})).save(str(tmp_path / name))
 
     def merge_metadata(records, **_kwargs):
-        if state["fail"] == "finalize" and any(r['observation_status'] == 'committed' for r in records):
+        if state["fail"] == "finalize" and any(r['observation_status'] in {'committed', 'publication_committed'} for r in records):
             raise RuntimeError('metadata finalization interrupted')
         if not getattr(shared, 'persistence_permitted', lambda _: True)(context):
             return
@@ -389,3 +389,144 @@ def test_02b_inventory_snapshots_through_incremental_read(publication_runtime, m
         assert persisted.select('_activity_id').distinct().count() == 1
     finally:
         run.spark.conf.set('spark.sql.session.timeZone', previous_zone)
+
+
+
+def test_scd1_recurring_snapshot_after_partial_publication(publication_runtime):
+    """A surviving old row marker must not suppress a newly requested snapshot."""
+    run = publication_runtime
+    run.state['mode'] = 'scd1'
+    original = run.spark.createDataFrame([(1, 'A', 1), (2, 'A', 1)], 'id long, value string, modified long')
+    run.publish(original)
+    run.publish(run.spark.createDataFrame([(1, 'B', 2)], original.schema))
+    run.state['activity'] = 'new-scheduled-activity'
+    result = run.publish(original)
+    assert result['publication_status'] == 'published'
+    assert sorted((row.id, row.value) for row in run.read('target').collect()) == [(1, 'A'), (2, 'A')]
+    assert run.publish(original)['publication_status'] == 'already_applied'
+
+
+def test_newer_read_cannot_replace_an_unpublished_checkpoint(publication_runtime):
+    """Reject ambiguous Reads before they can pair newer progress with old rows."""
+    run = publication_runtime
+    run.publish(run.stage(1))
+    earlier = run.stage(2).where('id <= 12').cache()
+    try:
+        assert earlier.count() == 4
+        key = ('dev', 'interactive', 'source', 'target')
+        newer = [{**shared._PENDING_SOURCE_OBSERVATIONS[key][0], 'observation_id': str(uuid4()),
+                  'row_count': 16, 'max_change_value': '16', '_committed_at': datetime.now(UTC)}]
+        source = run.read('source').unionByName(run.spark.createDataFrame(
+            [(i, 'initial', 1) for i in range(13, 17)], earlier.schema))
+        source.write.format('delta').mode('overwrite').save(str(run.path / 'source'))
+        with pytest.raises(RuntimeError, match='already awaiting publication'):
+            shared.resolve_incremental_source_scope(source_table_id='source', target_table_id='target', observation=newer)
+        run.publish(earlier)
+        assert run.read('target').count() == 12
+        assert not any(r['max_change_value'] == '16' and r['observation_status'] == 'committed' for r in run.history)
+        scope = shared.resolve_incremental_source_scope(source_table_id='source', target_table_id='target', observation=newer)
+        assert scope['after'] == '12'
+        run.publish(run.read('source').where('id > 12 AND id <= 16'))
+        assert sorted(row.id for row in run.read('target').collect()) == list(range(1, 17))
+    finally:
+        earlier.unpersist()
+
+
+@pytest.fixture
+def warehouse_publication_runtime(publication_runtime, monkeypatch):
+    """Mock Warehouse transport while persisting all target rows in real Delta."""
+    import re
+    from pyspark.sql import functions as F
+    run = publication_runtime
+    monkeypatch.setattr(writer, 'resolve_physical_table_identity', lambda *a, **kw: {
+        'table_id': 'target', 'table_name': 'target', 'store': 'Silver',
+        'store_type': 'warehouse', 'store_kind': 'warehouse', 'schema': 'dbo'})
+
+    def warehouse_write(df, schema, table_name, *, mode, **kw):
+        if run.state['fail'] == 'before':
+            raise RuntimeError('before physical write')
+        df.write.format('delta').mode(mode).save(str(run.path / table_name))
+
+    def warehouse_query(sql, **kw):
+        target = run.read('target')
+        if 'MAX([_committed_at])' in sql:
+            return target.agg(F.max('_committed_at').alias('fabricops_latest_publication'))
+        activity = re.search(r"\[_activity_id\] = '([^']+)'", sql).group(1)
+        stamp = datetime.fromisoformat(re.search(r"CAST\('([^']+)' AS", sql).group(1)).replace(tzinfo=UTC)
+        return target.where((F.col('_activity_id') == activity) & (F.col('_committed_at') == F.lit(stamp)))
+
+    monkeypatch.setattr(io, 'write_warehouse_table', warehouse_write)
+    monkeypatch.setattr(shared, 'read_warehouse_query', warehouse_query)
+    return run
+
+
+@pytest.mark.parametrize('source_free', [False, True])
+@pytest.mark.parametrize('failure', [None, 'before', 'finalize'])
+def test_warehouse_full_append_has_durable_retry_receipt(warehouse_publication_runtime, source_free, failure):
+    run = warehouse_publication_runtime
+    df = run.stage(1, incremental=False)
+    def publish():
+        return writer.pipeline_write(df, store='Silver', table_name='target',
+                                     source_table_ids=[] if source_free else ['source'], verbose=False)
+    run.state['fail'] = failure
+    if failure:
+        with pytest.raises(RuntimeError):
+            publish()
+    else:
+        publish()
+    run.state.update(fail=None, activity='cross-activity-retry')
+    result = publish()
+    assert run.read('target').count() == 8
+    assert result['publication_status'] == ('published' if failure == 'before' else 'metadata_recovered' if failure == 'finalize' else 'already_applied')
+    assert any(row['observation_status'] == 'publication_committed' for row in run.history)
+    assert not any(row['observation_status'] == 'committed' for row in run.history)
+    publish()
+    assert run.read('target').count() == 8
+
+
+def test_retained_published_frame_cannot_accept_a_new_read_checkpoint(publication_runtime):
+    """Reusing an old notebook variable must not turn its receipt into newer progress."""
+    run = publication_runtime
+    initial = run.stage(1)
+    old = run.spark.createDataFrame(initial.collect(), initial.schema).cache()
+    try:
+        run.publish(old)
+        next_batch = run.stage(2)
+        with pytest.raises(RuntimeError, match='does not match this Read'):
+            run.publish(old)
+        assert run.read('target').count() == 8
+        assert not any(r['max_change_value'] == '12' and r['observation_status'] == 'committed' for r in run.history)
+        run.publish(next_batch)
+        assert run.read('target').count() == 12
+    finally:
+        old.unpersist()
+
+
+
+@pytest.mark.parametrize('mode', ['scd1', 'scd2'])
+def test_warehouse_scd_retry_requires_latest_publication(warehouse_publication_runtime, monkeypatch, mode):
+    """Emulate Warehouse transactional merges and inspect their persisted rows."""
+    run = warehouse_publication_runtime
+    run.state['mode'] = mode
+    warehouse_io = import_module('fabricops_kit.io.shared')
+    def merge(df, *, schema, table_name, store, processing, context, options):
+        shared.execute_lakehouse_processing(df, schema=schema, table_name=table_name, store=store,
+                                           processing=processing, scope={'type': 'full'}, context=context)
+    monkeypatch.setattr(warehouse_io, 'execute_warehouse_processing', merge)
+    original = run.spark.createDataFrame([(1, 'A', 1), (2, 'A', 1)], 'id long, value string, modified long')
+    run.publish(original)
+    run.publish(run.spark.createDataFrame([(1, 'B', 2)], original.schema))
+    run.state['activity'] = 'new-scheduled-activity'
+    if mode == 'scd2':
+        # A historical receipt must not conceal an invalid backwards update.
+        with pytest.raises(ValueError, match='effective time later'):
+            run.publish(original)
+        current_input = run.spark.createDataFrame([(1, 'A', 3), (2, 'A', 1)], original.schema)
+    else:
+        current_input = original
+    assert run.publish(current_input)['publication_status'] == 'published'
+    assert run.publish(current_input)['publication_status'] == 'already_applied'
+    target = run.read('target')
+    assert target.count() == (2 if mode == 'scd1' else 4)
+    current = target if mode == 'scd1' else target.where('_is_current')
+    assert sorted((row.id, row.value) for row in current.collect()) == [(1, 'A'), (2, 'A')]

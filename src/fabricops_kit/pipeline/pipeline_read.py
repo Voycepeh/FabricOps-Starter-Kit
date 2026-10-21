@@ -206,6 +206,10 @@ def pipeline_read(
         registered, its configured store kind is unsupported, or a query is
         supplied for a Lakehouse source, incremental mode has no target, or
         project-owned Warehouse SQL is combined with incremental mode.
+    RuntimeError
+        If a different source state is already awaiting publication for this
+        source and target. Finish or retry that Read's prepared batch before
+        reading newer data. The rejected Read preserves the pending checkpoint.
 
     Maintainer Notes
     ----------------
@@ -237,6 +241,11 @@ def pipeline_read(
     FabricOps cannot safely compose arbitrary SQL with its target-specific
     progress predicate. Source Drift remains a separate compatibility check;
     incremental scope answers only what this target has not consumed.
+
+    Complete Read, Transform and Write for a pending incremental batch before
+    reading a newer source state for the same target in this activity. Re-reading
+    identical state is allowed. A Write already in progress freezes its own
+    observation snapshot, allowing the next Read without changing that checkpoint.
 
     This function does not execute Freshness, Source Drift, Schema, DQ, or
     Sensitive Data checks. It also does not profile

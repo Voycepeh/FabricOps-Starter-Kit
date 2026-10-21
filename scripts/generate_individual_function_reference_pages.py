@@ -209,7 +209,7 @@ METADATA_FIELD_DESCRIPTIONS = {
 }
 
 SOURCE_OBSERVATION_FIELD_DESCRIPTIONS = {
-    "publication_payload_json": "Exact prepared-batch identity, writer activity and publication timestamp staged before the physical write. Recovery verifies this receipt against the atomic Delta commit and target marker; legacy rows without a receipt are not automatically promoted.",
+    "publication_payload_json": "Exact prepared-batch identity, writer activity and publication timestamp staged before the physical write. Recovery verifies the Delta commit and target marker for Lakehouse writes, or the exact staged activity/timestamp pair for Warehouse writes. Target-only Warehouse receipt rows never advance source watermarks; legacy activity-only rows are not automatically promoted.",
     "source_table_name": "Source table name captured from the Catalogue when this observation was written; later renames do not change it.",
     "target_table_name": "Target table name captured from the Catalogue when this observation was written; later renames do not change it.",
     "table_id": "Canonical table identity shared with METADATA_DATA_CATALOGUE.",

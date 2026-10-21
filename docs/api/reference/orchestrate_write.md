@@ -149,7 +149,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 186 |
+| Live-critical dependencies | 187 |
 
 ### Release history
 
@@ -301,6 +301,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._summarize_dq_guardrail</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_token_mapping</code></li>
+<li><code>fabricops_kit.pipeline.shared._warehouse_publication_record</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>

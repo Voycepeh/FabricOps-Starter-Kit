@@ -270,6 +270,7 @@ _CURRENT_FRESHNESS_EVIDENCE: dict[tuple[str, str, str], dict[str, Any]] = {}
 _PENDING_SOURCE_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 _PENDING_SOURCE_DRIFT_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 _INCREMENTAL_SOURCE_SCOPES: dict[tuple[str, str, str, str], dict[str, Any]] = {}
+_ACTIVE_PUBLICATION_SOURCES: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 _CURRENT_TABLE_IDENTITIES: dict[str, dict[str, str | None]] = {}
 
 
@@ -956,6 +957,7 @@ class PublicationBatch:
             self.audit["_committed_at"] = datetime.now(UTC)
             self.receipt = {"batch_id": batch_id, "activity_id": self.audit["_activity_id"],
                             "committed_at": self.audit["_committed_at"].isoformat(), "input_rows": self.input_rows}
+            history_rows = []
             try:
                 history = read_lakehouse_table(
                     _SOURCE_OBSERVATION_TABLE, store="Metadata",
@@ -971,11 +973,11 @@ class PublicationBatch:
                     if receipt.get("batch_id") == batch_id and receipt not in receipts:
                         receipts.append(receipt)
                 for receipt in receipts:
-                    if _physical_target_has_publication(self.identity, receipt, context=self.context):
+                    if _accepts_publication_receipt(self, receipt):
                         self.receipt = receipt
                         self.already_applied = True
                         self.finalization_recovery = not any(
-                            row.get("observation_status") in {"committed", "drift_committed"}
+                            row.get("observation_status") in {"committed", "drift_committed", "publication_committed"}
                             and _publication_receipt(row) == receipt for row in history_rows
                         )
                         break
@@ -986,9 +988,17 @@ class PublicationBatch:
                 receipt = _find_applied_publication(
                     self.identity, batch_id, context=self.context, spark_session=self.dataframe.sparkSession,
                 )
-                if receipt:
+                if receipt and _accepts_publication_receipt(self, receipt):
                     self.receipt = receipt
                     self.already_applied = True
+            if self.already_applied:
+                _verify_retry_observations(self, history_rows)
+            self._active_sources = {
+                key: [dict(row) for row in _PENDING_SOURCE_OBSERVATIONS.get(key, [])]
+                for source_id in self.source_table_ids
+                for key in [(self.context["env"], str(self.audit["_activity_id"]), source_id, self.identity["table_id"])]
+            }
+            _ACTIVE_PUBLICATION_SOURCES.update(self._active_sources)
             return self
         except BaseException:
             if self._owns_cache:
@@ -1018,8 +1028,64 @@ class PublicationBatch:
 
     def __exit__(self, *_exc):
         """Release only the cache owned by this publication attempt."""
+        for key, captured in self._active_sources.items():
+            if _ACTIVE_PUBLICATION_SOURCES.get(key) == captured:
+                _ACTIVE_PUBLICATION_SOURCES.pop(key, None)
         if self._owns_cache:
             self.dataframe.unpersist()
+
+
+def _source_observation_signature(rows):
+    """Compare source states without activity, capture IDs or audit timestamps."""
+    fields = ("partition_value", "row_count", "min_change_value", "max_change_value", "content_fingerprint", "is_present")
+    return sorted({json.dumps({name: row.get(name) for name in fields}, sort_keys=True, default=str) for row in rows})
+
+
+def _verify_retry_observations(batch, history):
+    """Refuse to attach a newer Read's checkpoint to an already-published frame."""
+    for source_id in batch.source_table_ids:
+        key = (batch.context["env"], str(batch.audit["_activity_id"]), source_id, batch.identity["table_id"])
+        for pending, statuses in (
+            (_PENDING_SOURCE_OBSERVATIONS.get(key, []), {"observed", "committed"}),
+            (_PENDING_SOURCE_DRIFT_OBSERVATIONS.get(key, []), {"drift_observed", "drift_committed"}),
+        ):
+            if not pending:
+                continue
+            candidates = {}
+            for row in history:
+                if (row.get("environment_name") == batch.context["env"] and row.get("source_table_id") == source_id
+                        and row.get("target_table_id") == batch.identity["table_id"] and row.get("observation_status") in statuses
+                        and _publication_receipt(row) == batch.receipt):
+                    candidates.setdefault(row["observation_id"], []).append(row)
+            if not any(_source_observation_signature(pending) == _source_observation_signature(rows) for rows in candidates.values()):
+                raise RuntimeError(
+                    "The already-published prepared batch does not match this Read's pending source observations. "
+                    "Publish the DataFrame prepared from the pending Read; the checkpoint was not advanced."
+                )
+
+
+def _accepts_publication_receipt(batch, receipt):
+    """Require current target state before suppressing a keyed SCD merge."""
+    if not _physical_target_has_publication(batch.identity, receipt, context=batch.context):
+        return False
+    if batch.processing["load_strategy"] not in {"scd1", "scd2"}:
+        return True
+    if batch.identity.get("store_type") == "lakehouse":
+        from delta.tables import DeltaTable
+
+        _store, _table, _schema, path = resolve_configured_lakehouse_table(
+            batch.identity["store"], batch.identity["table_name"], batch.identity.get("schema"), context=batch.context,
+        )
+        latest = DeltaTable.forPath(batch.dataframe.sparkSession, path).history(1).select("userMetadata").first()
+        return latest["userMetadata"] == json.dumps(dict(receipt), sort_keys=True)
+    schema = str(batch.identity["schema"]).replace("]", "]]")
+    table = str(batch.identity["table_name"]).replace("]", "]]")
+    latest = read_warehouse_query(
+        f"SELECT MAX([_committed_at]) AS fabricops_latest_publication FROM [{schema}].[{table}]",
+        store=batch.identity["store"], context=batch.context,
+    ).first()["fabricops_latest_publication"]
+    instant = datetime.fromisoformat(receipt["committed_at"]).astimezone(UTC).replace(tzinfo=None)
+    return latest is not None and latest.replace(tzinfo=None) == instant
 
 
 def _find_applied_publication(identity, batch_id, *, context, spark_session):
@@ -1207,6 +1273,27 @@ def _recover_completed_source_observations(
     return [*rows, *recovered]
 
 
+def _ensure_unambiguous_source_observation(key, pending, *, accepted=()):
+    """Keep a second Read from rebinding an unpublished DataFrame's checkpoint."""
+    previous = _PENDING_SOURCE_OBSERVATIONS.get(key, [])
+    scope = _INCREMENTAL_SOURCE_SCOPES.get(key, {})
+    if not previous or scope.get("has_data") is False:
+        return
+    # An in-flight Write has already frozen these exact observations. Permit
+    # its next Read, but never replace another pending Read made in the meantime.
+    if key in _ACTIVE_PUBLICATION_SOURCES and previous == _ACTIVE_PUBLICATION_SOURCES[key]:
+        return
+    if _source_observation_signature(previous) == _source_observation_signature(accepted):
+        return
+    if _source_observation_signature(previous) != _source_observation_signature(pending):
+        raise RuntimeError(
+            "A different incremental source state is already awaiting publication for this source and target. "
+            "Publish or retry the existing Read's prepared DataFrame before reading newer data; "
+            "the newer Read was rejected and the pending checkpoint was preserved. "
+            "If that DataFrame was discarded, restart the notebook session and rerun Read, Transform and Write."
+        )
+
+
 def resolve_incremental_source_scope(
     *,
     source_table_id: str,
@@ -1309,6 +1396,7 @@ def resolve_incremental_source_scope(
     has_rows = any(int(row.get("row_count") or 0) > 0 for row in current)
     pending = [dict(row) for row in current] if has_rows else []
     key = (env, activity_id, source_table_id, target_table_id)
+    _ensure_unambiguous_source_observation(key, pending, accepted=previous)
     _PENDING_SOURCE_OBSERVATIONS[key] = pending
 
     previous_values = [
@@ -1523,6 +1611,20 @@ def snapshot_pipeline_write_observations(*, environment_name, activity_id, targe
     }
 
 
+def _warehouse_publication_record(success_context, *, audit, env, status):
+    """Persist a target-only receipt even when no source watermark was observed."""
+    if success_context.get("target_store_type") != "warehouse" or not success_context.get("publication"):
+        return []
+    receipt = success_context["publication"]
+    return [coerce_metadata_row_types(_SOURCE_OBSERVATION_TABLE, {
+        "observation_id": receipt["batch_id"], "source_table_id": "", "source_table_name": "",
+        "target_table_id": success_context["target_table_id"],
+        "target_table_name": success_context["target_table_name"], "environment_name": env,
+        "partition_value": "", "row_count": receipt.get("input_rows"),
+        "observation_status": status, "publication_payload_json": json.dumps(receipt, sort_keys=True), **audit,
+    })]
+
+
 def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[dict[str, Any]]:
     """Commit target Lineage and promote current source observations after a write."""
     if not isinstance(success_context, Mapping):
@@ -1577,6 +1679,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         activity_id=activity_id,
         context=context,
     )
+    records.extend(_warehouse_publication_record(success_context, audit=audit, env=env, status="publication_committed"))
     _merge_source_observation_records(records, config=config, context=context)
     for source_table_id in source_table_ids:
         key = (env, activity_id, source_table_id, target_table_id)
@@ -1625,6 +1728,7 @@ def stage_pipeline_write_observations(success_context: Mapping[str, Any]) -> lis
                     "publication_payload_json": (json.dumps(success_context["publication"], sort_keys=True) if success_context.get("publication") else None),
                     **audit,
                 }))
+    records.extend(_warehouse_publication_record(success_context, audit=audit, env=env, status="publication_observed"))
     _merge_source_observation_records(records, config=config, context=context)
     return records
 def _parameters(rule: dict[str, Any]) -> dict[str, Any]:

@@ -180,6 +180,8 @@ No new data so its empty write
 
 Day 1 publishes the eight-row baseline, Day 2 appends four newly eligible rows, and Day 3 leaves the 12-row target unchanged because its incremental scope is empty.
 
+Complete Read → Transform → Write for each pending batch before reading a newer source state for this target. If a newer Read reports that another state is awaiting publication, publish or retry the existing prepared DataFrame first, then repeat the newer Read. If that DataFrame was discarded, restart the notebook session and rerun Read → Transform → Write; do not reset the checkpoint. Re-reading unchanged state remains allowed.
+
 ### Data saved by the demo
 
 | Location | Table | Final state after Day 3 |

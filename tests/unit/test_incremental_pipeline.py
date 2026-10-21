@@ -615,3 +615,47 @@ def test_legacy_activity_only_staging_is_never_automatically_recovered(monkeypat
     scope = shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('130'))
     assert scope['first_run'] is True
     assert 'after' not in scope
+
+
+def test_newer_pending_read_is_rejected_without_replacing_checkpoint(monkeypatch):
+    _configure_scope(monkeypatch, [])
+    key = ('dev', 'run-1', 'source-orders', 'target-a')
+    shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('12'))
+    pending = shared._PENDING_SOURCE_OBSERVATIONS[key]
+    with pytest.raises(RuntimeError, match='already awaiting publication'):
+        shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('16'))
+    assert shared._PENDING_SOURCE_OBSERVATIONS[key] == pending
+    assert shared._INCREMENTAL_SOURCE_SCOPES[key]['through'] == '12'
+    # Re-reading the same state is unambiguous and remains supported.
+    shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('12'))
+
+
+def test_read_during_write_cannot_be_replaced_by_a_third_read(monkeypatch):
+    _configure_scope(monkeypatch, [])
+    key = ('dev', 'run-1', 'source-orders', 'target-a')
+    shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('12'))
+    monkeypatch.setitem(shared._ACTIVE_PUBLICATION_SOURCES, key, list(shared._PENDING_SOURCE_OBSERVATIONS[key]))
+    shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('16'))
+    with pytest.raises(RuntimeError, match='already awaiting publication'):
+        shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('20'))
+    assert shared._INCREMENTAL_SOURCE_SCOPES[key]['through'] == '16'
+
+
+def test_empty_scope_does_not_block_new_data(monkeypatch):
+    _configure_scope(monkeypatch, [_row(target='target-a', maximum='12')])
+    shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('12'))
+    next_scope = shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('16'))
+    assert next_scope['has_data']
+    assert next_scope['after'] == '12'
+    assert next_scope['through'] == '16'
+
+
+def test_recovered_pending_state_does_not_block_new_data(monkeypatch):
+    history = []
+    _configure_scope(monkeypatch, history)
+    shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('12'))
+    # Recovery or finalization accepted this pending state before the next Read.
+    history.append(_row(target='target-a', maximum='12'))
+    scope = shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('16'))
+    assert scope['after'] == '12'
+    assert scope['through'] == '16'

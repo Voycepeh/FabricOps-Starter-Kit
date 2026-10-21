@@ -427,6 +427,12 @@ def pipeline_write(
     in a reused interactive activity proceed through the existing writers and keyed
     SCD merges. Empty writes may have no row marker and can safely be replayed.
 
+    SCD retry suppression additionally requires the receipt to describe the latest
+    target publication. An older receipt surviving on an untouched row cannot
+    suppress a newly requested keyed merge. Warehouse writes also stage target-only
+    publication receipts when no incremental or Source Drift observations exist;
+    these receipt records never establish or advance a source watermark.
+
     Recovery promotes only staged observations carrying an exact verified receipt.
     Legacy activity-only observations require explicit physical reconciliation;
     they are never automatically promoted. Prepared rows are cached while their
@@ -550,6 +556,8 @@ def pipeline_write(
     _validate_target_writer_ownership(table_id=str(identity["table_id"]), processing=processing, audit=audit)
     success_context = {
         "target_table_id": target_table_id,
+        "target_store_type": store_kind,
+        "target_table_name": str(identity["table_name"]),
         "source_table_ids": publication_source_ids,
         "activity_id": activity_id,
         "notebook_name": audit["_notebook_name"],

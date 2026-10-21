@@ -128,7 +128,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 164 |
+| Live-critical dependencies | 166 |
 
 ### Release history
 
@@ -234,6 +234,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._dq_sample_failed_values</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_sample_record</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_tagged_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared._ensure_unambiguous_source_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared._evaluate_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared._guardrail_schema_check_base</code></li>
 <li><code>fabricops_kit.pipeline.shared._identifier</code></li>
@@ -263,6 +264,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._run_orchestration_stage</code></li>
 <li><code>fabricops_kit.pipeline.shared._select_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared._select_table_guardrail_rule</code></li>
+<li><code>fabricops_kit.pipeline.shared._source_observation_signature</code></li>
 <li><code>fabricops_kit.pipeline.shared._spark_sql_helpers</code></li>
 <li><code>fabricops_kit.pipeline.shared._string_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._summarize_dq_guardrail</code></li>
