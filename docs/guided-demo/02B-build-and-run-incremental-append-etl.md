@@ -82,7 +82,7 @@ Set a target table a read mode (incremental/full) and a Watermark Column
 
 ![Incremental Read configuration](../assets/2b/Incremental_Read.png)
 
-Day 1 first run 8 rows is read
+The inline Read preview displays the eligible rows directly below `orchestrate_read()`. The initial Day 1 run should read 8 rows.
 
 ![Incremental Read DataFrame preview](../assets/2b/Incremental_Read_inspect.png)
 
@@ -91,7 +91,7 @@ Set a single or multiple source table and Write mode = "Append"
 
 ![Incremental Write configuration](../assets/2b/Incremental_Write.png)
 
-Day 1 first run 8 rows is written
+The inline Write preview displays the submitted rows directly below `orchestrate_write()`. Verify committed rows in the Silver target separately.
 
 ![Incremental Write DataFrame preview](../assets/2b/Incremental_Write_Inspect.png)
 
