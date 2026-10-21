@@ -20,10 +20,11 @@ DEMOS = (
 @pytest.mark.parametrize("mode,passed", [("testing", True), ("testing", False), ("live", True)])
 def test_demo_executes_every_declared_operation_before_inspection(name, mode, passed, capsys):
     """Fresh sessions and failed Testing results still reach every target and the inspector."""
+    boundary = {"open": False}
     class Plan:
         run_result = {"status": "succeeded" if passed else "failed"}
-        def __enter__(self): return self
-        def __exit__(self, *args): finalize(); return False
+        def __enter__(self): boundary["open"] = True; return self
+        def __exit__(self, *args): boundary["open"] = False; finalize(); return False
     plan = Plan()
     reads, writes = [], []
     dataframe = MagicMock(name="dataframe")
@@ -40,12 +41,14 @@ def test_demo_executes_every_declared_operation_before_inspection(name, mode, pa
         return {"build_plan": build_plan, "refresh": refresh}
 
     def read(**kwargs):
+        assert boundary["open"], "Reads must execute inside the whole-run boundary"
         assert kwargs["execution_plan"] is plan
         result = {"dataframe": dataframe, "table_name": kwargs["table_name"], "plan": plan}
         reads.append(result)
         return result
 
     def write(prepared, **kwargs):
+        assert boundary["open"], "Writes must execute inside the whole-run boundary"
         assert kwargs["execution_plan"] is plan
         assert all(source["plan"] is plan for source in kwargs["sources"])
         writes.append(kwargs["table_name"])
@@ -66,6 +69,8 @@ def test_demo_executes_every_declared_operation_before_inspection(name, mode, pa
     notebook = nbformat.read(DEMO_DIR / name, as_version=4)
     for cell in notebook.cells:
         if cell.cell_type == "code" and cell.id not in {"environment", "imports"}:
+            if cell.id == "finalize-run":
+                assert not reads and not writes, "Stage definition cells must not execute the pipeline"
             source = cell.source
             exec(compile(source, f"{name}:{cell.id}", "exec"), namespace)
     assert [row["table_name"] for row in reads] == [row["table_name"] for row in namespace["PIPELINE_SOURCES"]]
@@ -83,3 +88,38 @@ def test_demo_executes_every_declared_operation_before_inspection(name, mode, pa
     output = capsys.readouterr().out
     if mode == "testing" and not passed:
         assert "validation_passed: False" in output
+
+
+@pytest.mark.parametrize("name", DEMOS)
+@pytest.mark.parametrize("failure_stage", ["transform", "write"])
+def test_notebook_execution_boundary_propagates_project_and_write_failures(name, failure_stage):
+    """Every scaffold keeps project failures inside the same boundary as its operations."""
+    boundary = {"open": False, "outcome": None}
+    class Plan:
+        def __enter__(self): boundary["open"] = True; return self
+        def __exit__(self, exc_type, *_):
+            boundary.update(open=False, outcome=exc_type)
+            return False
+    plan = Plan()
+    dataframe = MagicMock()
+    def fail(*args, **kwargs):
+        assert boundary["open"]
+        raise RuntimeError("Project failure inside " + failure_stage)
+    namespace = {
+        "PIPELINE_LIVE_ENABLED": True, "spark": object(), "F": MagicMock(), "display": Mock(),
+        "setup_pipeline": Mock(return_value=plan), "resolve_table_id": Mock(return_value="target"),
+        "orchestrate_read": Mock(return_value={"dataframe": dataframe}),
+        "orchestrate_write": fail if failure_stage == "write" else Mock(),
+    }
+    notebook = nbformat.read(DEMO_DIR / name, as_version=4)
+    for cell in notebook.cells:
+        if cell.cell_type != "code" or cell.id in {"environment", "imports"}:
+            continue
+        if cell.id == "finalize-run":
+            if failure_stage == "transform":
+                namespace["transform"] = fail
+            with pytest.raises(RuntimeError, match="Project failure"):
+                exec(compile(cell.source, f"{name}:{cell.id}", "exec"), namespace)
+            break
+        exec(compile(cell.source, f"{name}:{cell.id}", "exec"), namespace)
+    assert boundary == {"open": False, "outcome": RuntimeError}

@@ -10,6 +10,7 @@ import pytest
 
 from fabricops_kit.pipeline import shared
 from fabricops_kit.pipeline.shared import finalize_pipeline_run
+from fabricops_kit.pipeline.shared import pipeline_physical_bindings, resolve_physical_table_identity
 
 
 @pytest.fixture
@@ -54,6 +55,10 @@ def runtime(monkeypatch):
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kw: {})
     monkeypatch.setattr(shared, "resolve_physical_table_identity", lambda config, env, **kw:
                         {**kw, "table_id": kw["table_name"]})
+    monkeypatch.setattr(shared, "pipeline_physical_bindings", lambda identities, **kw: {
+        key: {"store": item["store"], "schema": item.get("schema"), "table_name": item["table_name"]}
+        for key, item in identities.items()
+    })
 
     def read_run(*args, **kwargs):
         if failure["read_unavailable"]:
@@ -75,7 +80,9 @@ def runtime(monkeypatch):
                       for i, role in enumerate(roles)}
         plan = shared.PipelineExecutionPlan(mode, "canary", "notebook", f"run-{len(saved)}", json.dumps(identities),
                                             "{}", json.dumps({key: {"table_id": key, "contract_id": "contract-" + key, "contract_version": 1,
-                            "contract_payload_json": json.dumps({"table": {"table_id": key, "columns": []}})} for key in identities}), {"config": {}, "env": "canary", "activity_id": activity, "notebook_name": notebook_name},
+                            "contract_payload_json": json.dumps({"table": {"table_id": key, "columns": []}})} for key in identities}), {"config": {}, "env": "canary", "activity_id": activity, "notebook_name": notebook_name,
+                            "_pipeline_bindings": {key: {"store": item["store"], "schema": item.get("schema"), "table_name": item["table_name"]}
+                                                   for key, item in identities.items()}},
                                             pipeline_id="orders", executable_sha256=executable, dependencies_json=dependencies)
         shared.persist_pipeline_run(plan)
         return plan
@@ -568,3 +575,35 @@ def test_nested_operation_parameters_remain_exact_while_routing_is_portable(runt
         assert configuration[parameter] == {"schema": value, "nested": {"table_name": value}}
         fingerprints.append(fingerprint)
     assert fingerprints[0] and fingerprints[0] != fingerprints[1]
+
+
+@pytest.mark.parametrize("role", ["source", "target"])
+@pytest.mark.parametrize("mode", ["testing", "live"])
+def test_operation_cannot_switch_to_case_alias_store_in_another_physical_item(runtime, monkeypatch, role, mode):
+    """Logical ID normalization cannot authorize an untested physical destination."""
+    from fabricops_kit.config.shared import FabricStore
+    from tests.helpers import framework_config
+
+    make, _, saved, _, _ = runtime
+    config = framework_config()
+    config.path_config.paths["dev"]["silver"] = FabricStore(
+        env="dev", workspace_id="other-workspace", item_id="live-item", kind="lakehouse",
+    )
+    declared = resolve_physical_table_identity(config, "dev", store="Silver", schema=None, table_name="employees")
+    actual = resolve_physical_table_identity(config, "dev", store="silver", schema=None, table_name="employees")
+    assert declared["table_id"] == actual["table_id"]
+    identities = {declared["table_id"]: {**declared, "logical_id": "employees", "roles": [role]}}
+    bindings = pipeline_physical_bindings(identities, config=config, environment="dev")
+    assert bindings != pipeline_physical_bindings({actual["table_id"]: actual}, config=config, environment="dev")
+    original = make(roles=(role,))
+    contracts = {declared["table_id"]: json.loads(original.contracts_json)["table0"]}
+    plan = replace(original, execution_mode=mode, environment="dev", participants_json=json.dumps(identities),
+                   contracts_json=json.dumps(contracts), evidence={},
+                   runtime_context={"config": config, "env": "dev", "_pipeline_bindings": bindings})
+    monkeypatch.setattr(shared, "resolve_physical_table_identity", resolve_physical_table_identity)
+    monkeypatch.setattr(shared, "pipeline_physical_bindings", pipeline_physical_bindings)
+    with pytest.raises(ValueError, match="physical destination"):
+        with plan:
+            with shared.PipelineOperation(plan, role, {"store": "silver", "schema": None, "table_name": "employees", "sources": []}):
+                pytest.fail("A mismatched physical operation must never start")
+    assert saved[plan.plan_id]["status"] == "failed"

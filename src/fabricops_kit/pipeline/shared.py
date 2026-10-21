@@ -67,6 +67,10 @@ class PipelineExecutionPlan:
         with self.lock:
             if self.evidence.get("sealed") or self.evidence.get("boundary_open"):
                 raise RuntimeError("Run boundary is already open or closed; create a new plan.")
+            if self.evidence.get("failures") or any(
+                operation["status"] != "not_started" for operation in self.evidence["operations"].values()
+            ):
+                raise RuntimeError("Open the whole-run boundary before executing any operation; create a new plan.")
             self.evidence["boundary_open"] = True
         return self
 
@@ -5920,13 +5924,20 @@ class PipelineOperation:
                 raise RuntimeError("Execution plan is closed or evidence persistence failed; create a new plan.")
             if plan.evidence["failures"] and plan.permits_persistence:
                 raise RuntimeError("Pipeline run previously failed; create a new plan.")
-            table_id = resolve_physical_table_identity(
+            physical_identity = resolve_physical_table_identity(
                 plan.runtime_context["config"], plan.environment,
-                **{key: args[key] for key in ("store", "schema", "table_name")})["table_id"]
+                **{key: args[key] for key in ("store", "schema", "table_name")})
+            table_id = physical_identity["table_id"]
             identities = json.loads(plan.participants_json)
             identity = identities.get(table_id)
             if identity is None or self.role not in identity["roles"]:
                 raise ValueError("Operation must match a declared pipeline participant and role.")
+            actual_binding = pipeline_physical_bindings(
+                {table_id: physical_identity}, config=plan.runtime_context["config"], environment=plan.environment,
+            )[table_id]
+            expected_binding = plan.runtime_context.get("_pipeline_bindings", {}).get(table_id)
+            if actual_binding != expected_binding:
+                raise ValueError("Operation physical destination differs from the execution plan's frozen binding.")
             logical = identity.get("logical_id") or f"{identity['store']}/{identity['table_name']}"
             key = f"{self.role}:{logical}"
             if plan.evidence["operations"][key]["status"] != "not_started":

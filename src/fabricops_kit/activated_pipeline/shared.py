@@ -359,11 +359,10 @@ def review_pipeline_release(requests, *, context, spark_session=None):
     report = activation_impact(current, proposed)
     changed_destinations = [item["destination"] for table_id, item in report["tables"].items()
                             if table_id in report["changed_tables"]]
-    for other_env, other in state["environments"].items():
-        if other_env != env:
-            for run_id, run in other["runs"].items():
-                if run.get("mode") == "testing" and any(destination in run.get("destinations", []) for destination in changed_destinations):
-                    report["blocking_conflicts"].append(f"Drain Testing execution reserving a proposed destination: {run_id}.")
+    for other in state["environments"].values():
+        for run_id, run in other["runs"].items():
+            if run.get("mode") == "testing" and any(destination in run.get("destinations", []) for destination in changed_destinations):
+                report["blocking_conflicts"].append(f"Drain Testing execution reserving a proposed destination: {run_id}.")
     report["ready"] = not report["blocking_conflicts"]
     return token, state, proposed, {**report, "environment": env}
 

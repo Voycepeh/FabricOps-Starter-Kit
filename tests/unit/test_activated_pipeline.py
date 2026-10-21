@@ -239,6 +239,44 @@ def test_testing_writes_reserve_separate_destinations_and_respect_live(authority
     assert testing.plan_id not in state.current()["runs"]
 
 
+def test_same_environment_activation_respects_testing_reservation_under_another_table_identity(authority):
+    state = authority
+    plan, _ = state.candidate("TestingA")
+    testing = replace(plan, plan_id="running-testing", evidence={}, testing_writes=True)
+    service.reserve_testing_destinations(testing)
+    physical = plan.runtime_context["_pipeline_bindings"]["table0"]
+    _, run = state.candidate("LiveB", tables=["table1"], destinations={"table1": physical})
+    before = copy.deepcopy(state.central)
+    _, _, _, report = service.review_pipeline_release([state.request(run)], context=state.context)
+    assert not report["ready"]
+    assert any("running-testing" in conflict for conflict in report["blocking_conflicts"])
+    with pytest.raises(ValueError, match="Drain Testing execution"):
+        state.approve(run)
+    assert state.central == before
+    service.release_pipeline_lease(testing)
+    state.approve(run)
+    assert state.current()["tables"]["table1"]["destination"] == physical
+
+
+def test_late_empty_boundary_cannot_authorize_previously_executed_operations(authority):
+    state = authority
+    original, _ = state.candidate("A")
+    plan = replace(original, plan_id="outside-boundary", evidence={})
+    pipeline.persist_pipeline_run(plan)
+    state.operation(plan, 0)
+    with pytest.raises(RuntimeError, match="Transformation"):
+        raise RuntimeError("Transformation in a subsequent notebook cell failed")
+    with pytest.raises(RuntimeError, match="before executing any operation"):
+        with plan:
+            pass
+    run = state.saved[plan.plan_id]
+    assert run["status"] == "incomplete"
+    assert json.loads(run["operation_summary_json"])["boundary_completed"] is False
+    with pytest.raises(ValueError, match="complete successful"):
+        state.approve(run)
+    assert not state.current()["pipelines"]
+
+
 def test_mutated_executable_or_contract_cannot_authorize_activation(authority):
     state = authority
     _, run = state.candidate()
