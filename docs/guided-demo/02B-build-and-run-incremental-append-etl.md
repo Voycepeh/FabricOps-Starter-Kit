@@ -85,22 +85,24 @@ Set a target table a read mode (incremental/full) and a Watermark Column
 
 ![Incremental Read configuration](../assets/2b/Incremental_Read.png)
 
-Day 1 first run 8 rows is read
+The inline Read preview displays the eligible rows directly below `orchestrate_read()`. The initial Day 1 run should read 8 rows.
 
-![Incremental Read inspection](../assets/2b/Incremental_Read_inspect.png)
+![Incremental Read DataFrame preview](../assets/2b/Incremental_Read_inspect.png)
 
 Ocestrate Write: 
 Set a single or multiple source table and Write mode = "Append"
 
 ![Incremental Write configuration](../assets/2b/Incremental_Write.png)
 
-Day 1 first run 8 rows is written
+The inline Write preview displays the submitted rows directly below `orchestrate_write()`. Verify committed rows in the Silver target separately.
 
-![Incremental Write inspection](../assets/2b/Incremental_Write_Inspect.png)
+![Incremental Write DataFrame preview](../assets/2b/Incremental_Write_Inspect.png)
 
 ## Info How Does Incremental Load Work in FabricOps?
 
 ### FabricOps handles incremental loading through two orchestrators:
+
+Each Read and Write block displays its actual DataFrame directly after orchestration; there is no separate Inspect selector. The Read preview shows the eligible incremental batch, not the full persisted target.
 
 1. orchestrate_read() identifies and reads only new or modified records using a watermark.
 
@@ -128,11 +130,11 @@ Run through setup again with the Bootstrap defaults, then continue. Since Day 1 
 
 No new data so its empty read
 
-![Incremental Read inspection after rerunning Day 1](../assets/2b/Incremental_Read_Day1_again.png)
+![Incremental Read preview after rerunning Day 1](../assets/2b/Incremental_Read_Day1_again.png)
 
 No new data so its empty write
 
-![Incremental Write inspection after rerunning Day 1](../assets/2b/Incremental_Write_Day1_again.png)
+![Incremental Write preview after rerunning Day 1](../assets/2b/Incremental_Write_Day1_again.png)
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -150,11 +152,11 @@ Bronze Lakehouse "demo.inventory_movements" table of which 8 were already loaded
 
 4 new rows are read based on the watermark column
 
-![Day 2 incremental read inspection](../assets/2b/Incremental_Read_Day2.png)
+![Day 2 incremental Read preview](../assets/2b/Incremental_Read_Day2.png)
 
 Only this 4 rows are appended
 
-![Day 2 incremental write inspection](../assets/2b/Incremental_Write_Day2.png)
+![Day 2 incremental Write preview](../assets/2b/Incremental_Write_Day2.png)
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">

@@ -32,7 +32,7 @@ Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite 
 | Governed Read | Reads Orders, Products, and Order History in full. |
 | PySpark Transform | Produces detailed orders and a customer summary. |
 | Governed Write | Overwrites a Silver Lakehouse target and a Gold Warehouse target. |
-| Inspection | Verifies the published data and FabricOps metadata. |
+| Inline previews | Shows the actual Read and Write DataFrames directly below each orchestration call. |
 
 Run **0. Environment** and **1. Pipeline Data Contracts** with their defaults. The notebook declares all three sources and both targets, then performs this setup:
 
@@ -146,10 +146,10 @@ In the initial **Bootstrap** run or a governed **Live** run, both Write results 
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Inspect the saved results
+## Verify the published tables
 
 Verify the target tables and the recorded governance metadata.
-Open the target tables in Fabric Stores directly or use the notebook's optional inspection cell to see the dataframes 
+The notebook now displays each Read and Write DataFrame in the same code cell as its orchestrator call. To verify what was committed, open the target tables in Fabric Stores. 
 
 </div>
 </div>
