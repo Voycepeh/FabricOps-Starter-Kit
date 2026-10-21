@@ -128,7 +128,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 184 |
+| Live-critical dependencies | 183 |
 
 ### Release history
 
@@ -196,7 +196,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.pipeline_read._resolve_requested_incremental_columns</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._warehouse_incremental_query</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._warehouse_watermark_literal</code></li>
-<li><code>fabricops_kit.pipeline.pipeline_read.pipeline_read</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._audit_literal_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._automatic_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe</code></li>

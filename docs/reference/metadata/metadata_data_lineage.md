@@ -6,9 +6,11 @@ See which registered tables participated as sources and targets in pipeline acti
 
 * [`orchestrate_read`](../../api/reference/orchestrate_read.md)
 * [`orchestrate_write`](../../api/reference/orchestrate_write.md)
+* [`pipeline_read`](../../api/reference/pipeline_read.md)
 
 ## Used in Workflow Template
 
+* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Source read capability
 * [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Standard Read orchestration
 * [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Standard Write orchestration
 

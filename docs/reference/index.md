@@ -8,7 +8,7 @@ Need the complete implementation-level dependency graph? Use the [Call Flow Dash
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">30</strong>
+    <strong class="reference-kpi-value">31</strong>
     <span class="reference-kpi-title">Public functions</span>
     <p class="reference-kpi-note">Notebook-facing Starter Kit functions.</p>
   </section>
@@ -18,14 +18,14 @@ Need the complete implementation-level dependency graph? Use the [Call Flow Dash
 
 ## Find a function
 
-Use the finder below to search 30 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
+Use the finder below to search 31 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
 
 <div class="callable-finder" data-callable-finder>
   <label class="callable-finder-label" for="callable-finder-input">Search public functions</label>
   <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">
   <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, starter path, usage source, or description.</p>
   <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">lineage</span> <span class="callable-finder-chip">guardrail</span></p>
-  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 30 public functions.</p>
+  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 31 public functions.</p>
   <p class="callable-finder-empty" data-callable-finder-empty hidden>No public functions match your search.</p>
 </div>
 
@@ -36,7 +36,7 @@ Use the finder below to search 30 public functions. Config classes stay out of t
 
     - Source Python files count: 56
     - Total callables: 666
-    - Supporting functions: 322
+    - Supporting functions: 321
     - Private helpers to review: 307
 
     - [Function Call Graph](../function-call-graph.md): explanatory page for the v4 normalized public-function call-flow architecture contract.
@@ -77,9 +77,14 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 </details>
 
 <details class="reference-function-group" data-callable-group="pipeline-capabilities" data-default-open="false">
-<summary><span class="reference-function-group-title">Profiling &amp; Table Identity</span><span class="reference-function-group-meta">2 functions · Standalone metadata utilities</span></summary>
-<p class="reference-function-group-description">Profile registered tables and resolve canonical table identities. Pipeline execution and Guardrails belong to the orchestrators.</p>
+<summary><span class="reference-function-group-title">Read, Profiling &amp; Table Identity</span><span class="reference-function-group-meta">3 functions · Standalone pipeline capabilities</span></summary>
+<p class="reference-function-group-description">Read governed sources, profile registered tables, and resolve canonical table identities. The standard Read and Write lifecycles and Guardrails belong to the orchestrators.</p>
 <div class="reference-catalogue-list">
+<article id="pipeline.pipeline_read-pipeline_read" class="reference-catalogue-item" data-callable-row="true" data-callable-name="pipeline_read" data-callable-module="pipeline.pipeline_read" data-function-type="public-starter-kit" data-callable-purpose="Read one governed pipeline source through its configured Fabric store.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/pipeline_read/"><code>pipeline_read</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Read one governed pipeline source through its configured Fabric store.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span></p>
+</article>
 <article id="pipeline.profile_table-profile_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="profile_table" data-callable-module="pipeline" data-function-type="public-starter-kit" data-callable-purpose="Profile a Spark DataFrame or complete governed table and return statistical and frequency results.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/profile_table/"><code>profile_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Profile a Spark DataFrame or complete governed table and return statistical and frequency results.</p>
