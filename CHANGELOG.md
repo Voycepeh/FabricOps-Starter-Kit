@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Removed
+
+- Removed the Preview Data Catalogue Viewer widget and the optional exploration notebook template. Query the centralized metadata tables directly through PySpark or SQL, and use native Fabric interfaces or project-specific notebooks for consumption. Metadata schemas, population, profiling, lineage, and orchestration are unchanged.
+
 ### Breaking changes
 
 - Removed the separate Coverage Gate stage and `coverage_result` return field from the Live public `orchestrate_write()` interface. Both orchestrators use selected Data Contract Guardrails; no minimum active-check count is required. Their shared execution-plan signatures are unchanged. The internal `check_guardrail_coverage()` implementation is removed; it was already excluded from the supported public API. The Preview `widget_select_data_contract()` inspector adds available execution results and a `refresh` callback.

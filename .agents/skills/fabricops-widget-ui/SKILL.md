@@ -24,7 +24,7 @@ Use a restrained Fabric-inspired palette:
 | Engineering | `#0f6cbd` / `#eaf3fb` | Blue accent / pastel header |
 | Governance | `#6750a4` / `#f1edf8` | Purple accent / pastel header |
 
-Use governance styling for Data Contract authoring, activation, Data Agreement, and Data Steward. Use engineering styling for the Catalogue viewer and pipeline setup. Preserve text titles so color is never the only distinction. Treat this as a product palette, not a claim of official Microsoft design tokens.
+Use governance styling for Data Contract authoring, activation, Data Agreement, and Data Steward. Use engineering styling for pipeline setup. Preserve text titles so color is never the only distinction. Treat this as a product palette, not a claim of official Microsoft design tokens.
 
 Use Segoe UI with system fallbacks for a native Fabric feel. Use sentence case, a small type scale (21px page title, 14–15px section heading, 13px controls), and visible keyboard focus. Use status colors only for actual status or action meaning. Favor clear borders over shadows and nested decorative cards.
 
