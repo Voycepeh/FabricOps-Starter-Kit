@@ -6,24 +6,39 @@
 
 *Develop pipelines with versioned Data Contracts, validate shared dependencies, and promote them safely to Production.*
 
+## What is a Data Contract?
+
+A **Data Contract** defines the expectations for a dataset: its structure, quality rules, and how sensitive information should be handled. It gives Data Engineers and Governance teams a shared definition of what a pipeline must deliver.
+
+For example, an employee dataset may require an `employee_id` column, prohibit missing employee identifiers, and specify how personal information is protected. A pipeline can then be validated against these expectations before its output is used downstream.
+
+**A Data Contract defines what good data looks like. FabricOps helps keep that agreement consistent as pipelines evolve.**
+
 ## The problem
 
-A Data Contract is shared by pipelines that read or write its table. Upgrading one pipeline to a new version while other Live pipelines use the old version creates inconsistent governance. Passing an isolated pipeline test does not establish that the shared-table change is safe.
+Data pipelines rarely operate in isolation. One pipeline writes a table, while several others may read it and depend on its structure and quality.
+
+A pipeline change can pass its own checks in Development yet still break a downstream workload in Production. Teams must otherwise work out which pipelines are affected, confirm that they remain compatible, and coordinate when to promote the changes.
 
 ## The solution
 
 <div class="fabricops-mascot-callout">
   <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="FabricOps validation mascot" loading="eager">
-  <div><p><strong>Validate affected pipelines in Development, then promote them safely to Production.</strong> Governance reviews the impact of a Data Contract upgrade before changing what is Live.</p></div>
+  <div><p><strong>Develop confidently. Understand the impact. Promote safely.</strong> Keep connected pipelines aligned with their Data Contracts as they move from Development to Production.</p></div>
 </div>
 
-One central Governance Metadata workspace stores a global table identity and frozen Data Contract version history. Each environment independently activates a version of that shared definition.
+The proposed FabricOps promotion workflow brings together versioned Data Contracts, pipeline dependencies, and validation evidence so teams can:
 
-This page illustrates the **planned coordinated-activation capability**, not a claim that all dependency checks are implemented today.
+- **Develop independently** without disrupting Production.
+- **See what's affected** when a shared table or pipeline changes.
+- **Validate connected pipelines** rather than checking each in isolation.
+- **Promote compatible changes together** under Governance approval.
+
+This is a **Preview** of the planned dependency-aware, coordinated-promotion capability, not a claim that every dependency check is implemented today.
 
 ## From Development to Production
 
-Development is where engineers select frozen Data Contract versions and validate affected pipelines. Production is where Governance approves the tested configurations and coordinates their Live activation. The activation scope remains environment-specific even though contract definitions are centrally managed.
+In **Development**, engineers select frozen Data Contract versions, build their pipelines, and validate affected dependencies without changing Production. In **Production**, Governance reviews successful validation evidence and coordinates activation of compatible configurations. Contract definitions are centrally managed, while the active version remains specific to each environment.
 
 ## How it works
 
@@ -60,7 +75,7 @@ Development is where engineers select frozen Data Contract versions and validate
 
 ## Example
 
-??? info "Upgrade hr.employees from v3 to v4"
+??? info "Upgrade the hr.employees Data Contract from v3 to v4"
 
     **Current PROD:** Pipeline A writes the table on v3, Pipeline B reads it on v3, and Pipeline C is an affected downstream consumer.
 
