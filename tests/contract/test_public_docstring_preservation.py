@@ -22,10 +22,11 @@ def _assert_numpy_parameter_contract(function) -> None:
 
 
 def test_orchestrators_are_the_public_pipeline_execution_entrypoints() -> None:
-    """Standalone execution stages and checks have no supported root imports."""
+    """Orchestrators and the read capability remain public; other stages stay internal."""
     assert callable(fabricops_kit.orchestrate_read)
     assert callable(fabricops_kit.orchestrate_write)
-    for name in ("pipeline_read", "pipeline_write", "check_freshness", "check_schema",
+    assert callable(fabricops_kit.pipeline_read)
+    for name in ("pipeline_write", "check_freshness", "check_schema",
                  "check_dq", "check_source_drift", "check_sensitive_data"):
         assert not hasattr(fabricops_kit, name)
 
