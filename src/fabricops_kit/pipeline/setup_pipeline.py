@@ -127,7 +127,7 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, interactive=False, spark_session=None, context=None, pipeline_id=None, executable_sha256=None, dependencies=None):
+def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, interactive=False, spark_session=None, context=None, pipeline_id=None, executable_sha256=None, dependencies=None, configuration=None, deployment_path=None, activated_pipeline_id=None, replace_selection=False):
     """Set up an immutable pipeline plan interactively or without human intervention.
 
     Parameters
@@ -139,14 +139,12 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         Explicit target participants with the same coordinate or table_id shape.
     execution_mode : {"bootstrap", "testing", "live"}, optional
         Defaults to Bootstrap without interaction. Bootstrap creates and profiles
-        initial outputs only while no participating frozen or active contract exists.
+        initial outputs only while no participating frozen contract exists.
         Interactive setup defaults to Testing. Governed headless modes are explicit.
     selections : dict, optional
         Exact per-table contract_id/contract_version; Testing also permits explicit
-        no_contract=True when no active contract is bypassed. Live requires a contract
-        for every participant.
-        Required for headless Testing/Live; omitted for Bootstrap. Both paths use
-        the same immutable plan builder.
+        no_contract=True. Required for headless Testing and forbidden for Live.
+        Live contracts resolve exclusively from an approved deployment manifest.
     interactive : bool, optional
         Defaults to False. If True, explicitly enable interactive contract Testing.
         If False, return the immutable plan directly without loading notebook UI
@@ -155,8 +153,10 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         Stable project-owned logical identity, portable across environments. Required
         for qualifying Testing evidence; never use a run or workspace identifier.
     executable_sha256 : str, optional
-        SHA-256 of the complete project executable (notebook and transformation code).
-        Required for qualifying Testing evidence. Supply from the deployed artifact.
+        Optional expected fingerprint of the deployed notebook's executable cells.
+        Fabric observes the actual definition; a mismatched pin is rejected. Outputs,
+        display metadata and physical bindings are excluded. Unavailable identity
+        leaves Testing incomplete. Keep helpers in the notebook or pinned packages.
     dependencies : dict, optional
         Installed Python distribution names to exact runtime versions. They are
         checked against installed package metadata; missing/mismatched or unsupported
@@ -164,6 +164,18 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         include credentials, paths or physical environment bindings. Supply an
         explicit empty dict when no additional project dependencies exist; omitted
         dependency identity cannot qualify as successful Testing evidence.
+    configuration : dict, optional
+        Declared behavior-changing transformation settings supplied outside notebook
+        code. Supply {} when none exist. Missing identity prevents successful Testing;
+        Live must supply the exact tested values. Exclude secrets and physical bindings.
+    deployment_path : str, optional
+        Explicit shared mounted deployment directory containing approved.json,
+        executable.bin and verified deployment.json. Required for Live.
+    activated_pipeline_id : str, optional
+        Exact approved version to persist as the environment's Live selection.
+        Omit on subsequent manual/scheduled Live runs to reuse the saved selection.
+    replace_selection : bool, optional
+        Explicitly replace a different saved version after verifying its deployment.
     spark_session : object, optional
         Spark session for metadata reads.
     context : dict, optional
@@ -189,7 +201,7 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
     ValueError
         For frozen/active contracts blocking Bootstrap, missing notebook identity,
         invalid payloads, unavailable selections or
-        Live choices bypassing an active contract.
+        Live selection, manifest, executable/dependency or deployment-binding mismatches.
     RuntimeError
         For ambiguous active versions, metadata-read failure, or edits to a built plan.
 
@@ -204,20 +216,34 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
     ... )
 
     Finalize every plan with finalize_pipeline(), including Read-only pipelines.
-    Live continues to use existing active frozen Data Contract authority.
+    Live resolves only the saved exact Activated Pipeline version. Supply an
+    explicit deployment_path, and activated_pipeline_id once to save selection.
+    Subsequent unattended Live calls omit that ID; a changed version never replaces
+    the saved selection silently. replace_selection=True is an explicit switch.
 
     """
+    if execution_mode == "live":
+        if selections is not None:
+            raise ValueError("Live rejects manual contract selections; contracts come exclusively from the Activated Pipeline manifest.")
+        if not deployment_path or not pipeline_id:
+            raise ValueError("Live requires pipeline_id and a verified deployment_path; no Bootstrap fallback is permitted.")
+        from fabricops_kit.activated_pipeline.shared import build_live_pipeline_plan
+        return build_live_pipeline_plan(deployment_path=deployment_path, pipeline_id=pipeline_id,
+            sources=list(sources), targets=list(targets), activated_pipeline_id=activated_pipeline_id,
+            replace_selection=replace_selection, configuration=configuration, context=context, spark_session=spark_session)
+    if deployment_path is not None or activated_pipeline_id is not None or replace_selection:
+        raise ValueError("Deployment selection is only valid with explicit execution_mode='live'.")
     if not interactive:
         mode = "bootstrap" if execution_mode is None else execution_mode
-        if mode != "bootstrap" and selections is None:
-            raise ValueError("Headless Testing/Live requires explicit execution_mode and selections.")
+        if mode == "testing" and selections is None:
+            raise ValueError("Headless Testing requires explicit selections.")
         return build_pipeline_execution_plan(
             execution_mode=mode, sources=sources, targets=targets,
             selections=selections, context=context, spark_session=spark_session,
-            pipeline_id=pipeline_id, executable_sha256=executable_sha256, dependencies=dependencies,
+            pipeline_id=pipeline_id, executable_sha256=executable_sha256, dependencies=dependencies, configuration=configuration,
         )
-    if execution_mode is not None and execution_mode not in {"testing", "live"}:
-        raise ValueError("execution_mode must explicitly be 'testing' or 'live'.")
+    if execution_mode is not None and execution_mode != "testing":
+        raise ValueError("Interactive contract selection is only available for Testing.")
     config, env, resolved = resolve_fabric_context(context=context)
     runtime = {**resolved, "config": config, "env": env}
     if not str(runtime.get("notebook_id") or "").strip():
@@ -239,11 +265,6 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
     state: dict[str, Any] = {"execution_mode": "testing", "environment": env, "tables": {}, "_controls": {}}
     for table_id, identity in identities.items():
         matching = [row for row in rows if row.get("table_id") == table_id and row.get("environment_name") == env]
-        active = [row for row in matching if row.get("is_active") is True]
-        if len(active) > 1:
-            raise RuntimeError(f"Multiple active Data Contract versions for {table_id!r}.")
-        if active and str(active[0].get("status") or "").lower() != "frozen":
-            raise ValueError("Active Data Contract must be frozen.")
         versions = sorted([row for row in matching if str(row.get("status") or "").lower() == "frozen"],
                           key=lambda row: int(row["contract_version"]), reverse=True)
         keys = [(row["contract_id"], row["contract_version"]) for row in versions]
@@ -251,7 +272,7 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
             raise RuntimeError("Duplicate frozen contract version rows.")
         for row in versions:
             _contract_review(row, identity["roles"])
-        state["tables"][table_id] = {"identity": identity, "versions": versions, "active": active[0] if active else None,
+        state["tables"][table_id] = {"identity": identity, "versions": versions,
                                     "selected": None, "choice": None, "review": None}
 
     def require_unbuilt_plan():
@@ -266,18 +287,12 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         if no_contract:
             if contract_id is not None or contract_version is not None:
                 raise ValueError("No Contract cannot be combined with a contract identity.")
-            if table["active"]:
-                raise ValueError("No Contract cannot bypass the active contract.")
-            if state["execution_mode"] == "live":
-                raise ValueError("Live requires an active frozen Data Contract for every participant.")
             selected, choice = None, {"no_contract": True}
         else:
             matches = [row for row in table["versions"] if row["contract_id"] == contract_id and row["contract_version"] == contract_version]
             if len(matches) != 1:
                 raise ValueError("Select an available exact frozen version.")
             selected = matches[0]
-            if state["execution_mode"] == "live" and selected is not table["active"]:
-                raise ValueError("Live requires the active frozen version.")
             choice = {"contract_id": contract_id, "contract_version": contract_version}
         table.update(selected=selected, choice=choice,
                      review=_contract_review(selected, table["identity"]["roles"]) if selected else None)
@@ -286,19 +301,9 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
 
     def set_mode(mode):
         require_unbuilt_plan()
-        if mode not in {"testing", "live"}:
-            raise ValueError("Mode must be testing or live.")
+        if mode != "testing":
+            raise ValueError("Contract selection supports Testing only; use saved Activated Pipeline selection for Live.")
         state["execution_mode"] = mode
-        if mode == "live":
-            for table in state["tables"].values():
-                active = table["active"]
-                # A visible mode change selects the only eligible Live version.
-                if active:
-                    table.update(selected=active, choice={"contract_id": active["contract_id"],
-                                 "contract_version": active["contract_version"]},
-                                 review=_contract_review(active, table["identity"]["roles"]))
-                elif table["choice"] is not None:
-                    table.update(selected=None, choice=None, review=None)
         refresh()
         return state
 
@@ -309,7 +314,7 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
             execution_mode=state["execution_mode"], sources=sources, targets=targets,
             selections={key: table["choice"] for key, table in state["tables"].items() if table["choice"] is not None},
             context=runtime, spark_session=spark,
-            pipeline_id=pipeline_id, executable_sha256=executable_sha256, dependencies=dependencies,
+            pipeline_id=pipeline_id, executable_sha256=executable_sha256, dependencies=dependencies, configuration=configuration,
         )
 
         state["execution_plan"] = plan
@@ -326,21 +331,16 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
             return
         refreshing = True
         try:
-            testing = state["execution_mode"] == "testing"
-            root.remove_class("pipeline-testing" if not testing else "pipeline-live")
-            root.add_class("pipeline-testing" if testing else "pipeline-live")
+            root.add_class("pipeline-testing")
             mode_control.disabled = state.get("execution_plan") is not None
             mode_control.value = state["execution_mode"]
-            header.value = f'<h3>Pipeline Data Contracts · {"Testing" if testing else "Live"}</h3><p>' + (
-                "Business publication is disabled. METADATA_PIPELINE_RUN and Guardrail diagnostics are persisted." if testing else
-                "Successful publication and operational metadata commits are permitted.") + '</p>'
+            header.value = '<h3>Pipeline Data Contracts · Testing</h3><p>Business publication is disabled. METADATA_PIPELINE_RUN and Guardrail diagnostics are persisted.</p>'
             for table_id, controls in state["_controls"].items():
                 table = state["tables"][table_id]
-                active = table["active"]
-                versions = table["versions"] if testing else ([active] if active else [])
-                options = [("Choose explicitly…", ""), *([("No Contract", "none")] if testing and not active else [])]
+                versions = table["versions"]
+                options = [("Choose explicitly…", ""), ("No Contract", "none")]
                 options += [(f'{row.get("contract_name") or row["contract_id"]} · v{row["contract_version"]} · Frozen'
-                             + (" · Active" if row.get("is_active") else ""),
+                             ,
                              f'{row["contract_id"]}\n{row["contract_version"]}') for row in versions]
                 controls["version"].disabled = state.get("execution_plan") is not None
                 controls["version"].options = options
@@ -374,13 +374,13 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         return state
     style = widgets.HTML('''<style>
 .pipeline-contracts { --mode:#0f6cbd; }
-.pipeline-testing { --mode:#6750a4; } .pipeline-live { --mode:#176536; }
+.pipeline-testing { --mode:#6750a4; }
 .pipeline-contracts h3 { font-size:15px; color:var(--mode); margin:0; }
 .pipeline-contracts .inactive { background:#f2f5f8; color:#526477; }
 .pipeline-contracts .contract-scroll { overflow-x:auto; }
 </style>''')
     header = widgets.HTML()
-    mode_control = widgets.ToggleButtons(options=[("Testing", "testing"), ("Live", "live")], value="testing", description="Pipeline mode")
+    mode_control = widgets.ToggleButtons(options=[("Testing", "testing")], value="testing", description="Pipeline mode")
     mode_control.observe(lambda change: set_mode(change["new"]) if not refreshing else None, names="value")
     sections = []
     for table_id, table in state["tables"].items():
@@ -408,7 +408,7 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         sections.append(form_section(widgets, title=f"{roles} · {label}", children=[title, version, inspector]))
     root = form_page(
         widgets, title="Pipeline setup", tone="engineering",
-        description="Select exact Data Contract versions for Testing or Live execution.",
+        description="Select exact frozen Data Contract versions for Testing.",
         children=[style, header, mode_control, *sections],
     )
     root.add_class("pipeline-contracts")

@@ -23,12 +23,16 @@ SUPPORTED_PUBLIC_API = (
 # Preview public functions remain importable for evaluation, but are not part of
 # the supported compatibility surface until promoted in a future release.
 PREVIEW_PUBLIC_API = (
+    "fabricops_kit.activated_pipeline.activate_pipeline.activate_pipeline",
+    "fabricops_kit.activated_pipeline.set_pipeline_active.set_pipeline_active",
+    "fabricops_kit.activated_pipeline.package_activated_pipeline.package_activated_pipeline",
+    "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment",
     "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
     "fabricops_kit.data_agent.create_data_agent.create_data_agent",
     "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
     "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
     "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
-    "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
+    "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
     "fabricops_kit.access_scanner.scan_effective_access.scan_effective_access",
     "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
     "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",

@@ -86,7 +86,7 @@ def runtime(monkeypatch):
             args.setdefault("sources", [{"table_id": key} for key, item in json.loads(plan.participants_json).items()
                                         if "source" in item["roles"]])
         with shared.PipelineOperation(plan, identity["roles"][0], args) as journal:
-            journal.complete(stages or [{"stage": "Read", "status": "passed"}])
+            journal.complete(stages or [{"stage": "Read" if identity["roles"] == ["source"] else "Processing", "status": "passed"}])
 
     return make, operation, saved, writes, failure
 
@@ -307,10 +307,10 @@ def test_run_schema_has_only_independent_lifecycle_fields():
     """Keep standard audit fields and avoid redundant activation/failure columns."""
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
     fields = metadata_table_schema_registry()["METADATA_PIPELINE_RUN"].fieldNames()
-    assert fields == ["run_id", "pipeline_id", "execution_mode", "environment_name", "started_at", "completed_at",
+    assert fields == ["run_id", "activated_pipeline_id", "pipeline_id", "execution_mode", "environment_name", "started_at", "completed_at",
                       "status", "candidate_fingerprint", "candidate_json", "operation_summary_json",
                       *[name for name, *_ in AUDIT_SCHEMA_FIELDS]]
-    assert len(fields) == 18
+    assert len(fields) == 19
 
 
 def test_distinct_attempts_keep_activity_identity_and_survive_notebook_rename(runtime, monkeypatch):
@@ -486,7 +486,7 @@ def test_exact_contract_identity_changes_exact_but_not_portable_fingerprint(runt
 def test_secondary_metadata_failure_preserves_original_publication_details(runtime):
     """Do not erase an earlier committed publication when diagnostics also fail."""
     make, _, _, _, failure = runtime
-    plan = make(mode="live", roles=("target",))
+    plan = make(mode="bootstrap", roles=("target",))
     with pytest.raises(RuntimeError) as raised:
         with shared.PipelineOperation(plan, "target", {"store": "Silver", "schema": "physical", "table_name": "table0", "sources": []}):
             error = RuntimeError("Profile failed")
@@ -504,7 +504,7 @@ def test_secondary_metadata_failure_preserves_original_publication_details(runti
 def test_post_publication_evidence_failure_retains_published_flag(runtime):
     """An evidence error cannot imply that an already completed Write rolled back."""
     make, operation, _, _, failure = runtime
-    plan = make(mode="live", roles=("target",))
+    plan = make(mode="bootstrap", roles=("target",))
     with pytest.raises(RuntimeError) as raised:
         with shared.PipelineOperation(plan, "target", {"store": "Silver", "schema": "physical", "table_name": "table0", "sources": []}) as journal:
             journal.complete([{"stage": "Write", "status": "passed"}, {"stage": "Profile", "status": "passed"}])
@@ -524,3 +524,19 @@ def test_invalid_dependency_urls_and_values_are_not_persisted(runtime):
     assert result["status"] == "incomplete"
     assert "private-credential" not in json.dumps(result, default=str)
     assert "internal-host" not in json.dumps(result, default=str)
+
+
+@pytest.mark.parametrize("unavailable", ["missing", "unreadable"])
+def test_unavailable_engine_source_identity_persists_incomplete_testing(runtime, monkeypatch, unavailable):
+    """A missing source tree must never identify every engine as SHA256(empty)."""
+    from pathlib import Path
+    make, operation, _, _, _ = runtime
+    if unavailable == "missing":
+        monkeypatch.setattr(Path, "rglob", lambda *args: iter(()))
+    else:
+        monkeypatch.setattr(Path, "rglob", lambda *args: (_ for _ in ()).throw(OSError("unreadable")))
+    plan = make(roles=("source",))
+    operation(plan, 0)
+    row = finalize_pipeline(plan)
+    assert row["status"] == "incomplete" and not row["candidate_fingerprint"]
+    assert json.loads(row["candidate_json"])["engine_sha256"] is None

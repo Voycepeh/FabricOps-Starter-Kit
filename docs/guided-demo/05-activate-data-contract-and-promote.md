@@ -1,113 +1,132 @@
-# Step 5. Activate the Data Contract and promote to Production
+# Step 5. Activate the tested pipeline and promote to Production
 
-### Before you begin
-
-Complete [Step 4](04-validate-frozen-data-contract.md) and use the validated frozen contract versions.
+Complete [Step 4](04-validate-frozen-data-contract.md), including explicit finalization after all declared Reads and Writes.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Select the tested Data Contract version
+## Approve the exact whole pipeline
 
-Return to the activation cell in `01_governance` and open [`widget_activate_data_contract()`](../api/reference/widget_activate_data_contract.md). Select each exact frozen Data Contract version that passed Step 4.
+Return to `01_governance` and open [`widget_activate_pipeline()`](../api/reference/widget_activate_pipeline.md).
 
 </div>
 </div>
 
+Select a complete successful Testing candidate. Expand every source/target contract and rule, executable/dependency identity, processing configuration, operation evidence and Guardrail diagnostics. Review the warnings about permissions, publication transactions and concurrency that Testing cannot exercise. Select the exact currently effective Data Agreement and pipeline name/version, provide the exported tested notebook, then review and explicitly confirm Governance approval.
 
+The service validates all requirements independently of the widget. Bootstrap, missing operations, failed persistence, changed code/contracts/configuration, blocking diagnostics, partial tests and isolated passing rules cannot authorize activation. The full 02A demo produces **one whole-pipeline approval** covering three inputs and two outputs.
 
-Do not activate a different draft or an untested version simply because it is newer. Supply complete in-memory Testing Write reports with `testing_results=list(writes.values())`. The widget requires a passing report for the exact contract ID, version, environment and immutable payload. Partial checks and reports for other versions do not qualify.
+Contracts remain immutable and reusable after **Draft → Frozen**. `METADATA_ACTIVATED_PIPELINE` links the exact Agreement, successful Testing run and manifest. Version contents are immutable; only an explicit switch/deactivation changes the active version. There is at most one active version per stable logical pipeline. Concurrent/stale changes fail and must be reviewed again; do not blindly retry activation.
 
-Review the diagnostics and the checks that Testing could not exercise, then explicitly approve the selected version for Live. Changing the contract or agreement clears that approval. This is a separate Governance action: Testing writes no activation evidence and grants no publication authority.
+Headless Governance uses the same service:
 
-For the full `02A_full_refresh_demo` notebook, repeat activation for **five tables**: `orders`, `products`, `order_history`, `curated_orders`, and `customer_summary`. Both targets must have completed their Step 4 Testing runs with the intended source versions.
-
-### Link the Data Agreement
-
-Select the exact Data Agreement version created in Step 1 that governs this producer-to-consumer relationship.
-
-The approval path is now:
-
-```text
-Data Steward context
-        ↓
-Data Agreement
-        ↓
-real table_id from Engineering
-        ↓
-frozen Data Contract version
-        ↓
-Pipeline-wide Testing diagnostics
-        ↓
-Explicit Governance review + Agreement linkage + activation
+```python
+from fabricops_kit import activate_pipeline
+approved = activate_pipeline(
+    testing_run_id=TESTING_RUN_ID, candidate_fingerprint=TESTED_FINGERPRINT,
+    pipeline_name="Orders", pipeline_version="1",
+    agreement_id=AGREEMENT_ID, agreement_version=AGREEMENT_VERSION,
+    executable_path=EXPORTED_TESTED_NOTEBOOK,
+    governance_confirmed=True, spark_session=spark,
+)
 ```
 
-### Activate the Data Contract
-
-Review the selected `table_id`, tested Data Contract version, and linked Data Agreement version, then activate it.
-
-Activation tells Live execution which immutable contract version to enforce in the configured environment.
-
-??? tip "Activation is blocked or the expected version is missing"
-
-    | What you see | What to check |
-    | --- | --- |
-    | Candidate missing | Save and freeze that exact draft, then reopen the activation widget to refresh the available versions. |
-    | No exact-version validation or validation incomplete | Rerun all participating Reads and the target's Testing Write through successful Coverage, then supply that complete in-memory report; a passing individual check is insufficient. |
-    | Blocking validation failure | Restore the clean data or correct the implementation, then complete validation again. Changing a frozen rule requires a new draft/version. |
-    | Previously validated version is blocked after another attempt | Supply a complete passing Testing report for the exact frozen payload and explicitly approve review. |
-    | Agreement missing | Create the Data Agreement in Step 1 and select its exact version. |
-
-    Open the widget with the completed Testing reports. Review the linked agreement and use the explicit activation confirmation. Activation updates the active pointer; it does not deploy a notebook or modify the frozen JSON.
+An existing active version requires `expected_active_id` for an explicit switch. `set_pipeline_active()` switches or deactivates an existing immutable version with the same confirmation and concurrency gate. Activation neither deploys artifacts nor publishes business data.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Promote the validated pipeline
+## Package, deploy and verify
 
-`00_env_config` owns the environment-specific resolution. Your tested `02A_full_refresh_demo` copy owns this demo pipeline definition.
+Promote the unchanged tested notebook together with its exact approved definitions; keep physical bindings in external configuration.
 
 </div>
 </div>
 
+In the approval environment, package deterministic approved metadata and the tested executable into an explicit deployment directory:
 
-
-
-
-
-That separation means Engineering promotes the same tested 02A demo notebook from Development to Production while `00_env_config` maps logical Fabric Stores such as Bronze, Silver, Gold, and Metadata to their environment-specific Fabric locations.
-
-```mermaid
-flowchart LR
-    DEVENV["00 Env Config<br/>DEV"] --> PIPE["02 Pipeline"]
-    PIPE --> DEV["Development<br/>Fabric Store locations"]
-    PRODENV["00 Env Config<br/>PROD"] --> SAME["Same 02 Pipeline"]
-    SAME --> PROD["Production<br/>Fabric Store locations"]
+```python
+from fabricops_kit import package_activated_pipeline
+package_activated_pipeline(
+    approved["activated_pipeline_id"], destination=PACKAGE_DIRECTORY,
+    executable_path=EXPORTED_TESTED_NOTEBOOK, spark_session=spark,
+)
 ```
 
-In the Fabric Deployment Pipeline, select the tested notebook or engineering artifact from Development and deploy it to the Production stage.
-
-FabricOps does not require one specific deployment mechanism. The important part is that the same validated 02A demo pipeline reaches the next environment unchanged. You can do that manually, including downloading and importing the notebook, or through your organisation's normal CI/CD process.
-
-A Fabric-native option is **Deployment pipelines**. Set up a deployment pipeline, assign the Development and Production workspaces to its stages, then use it to promote the tested 02A demo pipeline between them. See [Microsoft Learn: Get started with deployment pipelines](https://learn.microsoft.com/en-us/fabric/cicd/deployment-pipelines/get-started-with-deployment-pipelines) for the current setup instructions.
+Deploy the notebook with your Fabric Deployment Pipeline or normal CI tooling, and copy the package directory alongside it to a shared mounted durable location. FabricOps does **not** assume that Deployment Pipelines copy metadata rows. The approved manifest contains the exact frozen definitions; the configured Governance authority environment must remain reachable to verify active approval and the effective Agreement. The current notebook and deployed package are verified separately so an unchanged sidecar cannot hide changed running code.
 
 ![Select the pipeline artifact for Production](../assets/05/DeploymentPipeline.png)
 
-Review the deployment selection and complete the deployment.
-
 ![Confirm the Fabric deployment](../assets/05/Deployment.png)
 
-The important boundary is:
+In the destination environment, verify explicit bindings after deploying the artifact:
 
-* activate the tested Data Contract for Production
-* promote the validated engineering artifact
-* keep environment-specific workspace IDs, item IDs, paths, schemas, and SQL endpoints in `00_env_config`
-* do not move Development output data or draft governance state into Production
+```python
+from fabricops_kit import verify_pipeline_deployment
+verify_pipeline_deployment(
+    deployment_path=DEPLOYMENT_DIRECTORY, authority_environment="dev",
+    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
+    spark_session=spark,
+)
+```
+
+This writes `deployment.json` for the configured workspace, notebook, stores and participants. It does not activate a version, select Live or publish data. `approved.json` and `executable.bin` remain deterministic approved artifacts. Bindings are outside portable identity. Store endpoint, workspace/item, schema, participant and role mismatches are rejected. A missing approval, definition, export permission or dependency fails closed.
+
+### Save the exact Live selection
+
+Select the activated version once in the destination pipeline notebook:
+
+```python
+from fabricops_kit import setup_pipeline
+plan = setup_pipeline(
+    execution_mode="live", pipeline_id=PIPELINE_ID,
+    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
+    configuration=PROJECT_CONFIGURATION, deployment_path=DEPLOYMENT_DIRECTORY,
+    activated_pipeline_id=approved["activated_pipeline_id"], spark_session=spark,
+)
+```
+
+Subsequent manual and scheduled calls omit `activated_pipeline_id` and reuse the durable environment selection without UI or human input. A saved selection never switches silently. For an intentional version change, deploy/verify its artifacts and select it explicitly with `replace_selection=True` where a different selection already exists.
+
+For the canonical notebooks, set `PIPELINE_LIVE_ENABLED=True`, `PIPELINE_DEPLOYMENT_PATH` and the one-time `PIPELINE_SELECT_ACTIVATED_VERSION` in `00_env_config` or notebook parameters. Remove the one-time version parameter after selection. Keep the tested notebook source unchanged; set `PIPELINE_CONTRACT_TESTING=True` externally to return to Testing. Default unattended Bootstrap remains for initial projects.
+
+### Migrate existing metadata
+
+1. Stop affected schedules and back up the configured metadata. Export the old contract rows, including `is_active`, Agreement IDs and versions, to an external audit file before dropping legacy fields. Keep frozen `contract_payload_json` unchanged.
+2. Run `setup_metadata_tables()` with the configured Metadata store. It creates `governance.METADATA_ACTIVATED_PIPELINE` and adds nullable `engineering.METADATA_PIPELINE_RUN.activated_pipeline_id` through the existing additive migration behavior. Review every returned setup result before continuing.
+3. Remove the legacy top-level `agreement_id`, `agreement_version` and `is_active` columns from `METADATA_DATA_CONTRACT` using your Lakehouse schema migration procedure. Delta column dropping requires column mapping and compatible reader/writer protocol versions; validate that upgrade in a non-production copy first. The new canonical schema and writers do not use these fields or provide compatibility aliases.
+4. Rerun complete Testing with the new engine and every exact frozen contract. Earlier per-contract activations and older run snapshots lacking full operation configuration never become Activated Pipeline approval automatically.
+5. Explicitly approve, package, deploy/verify, save the exact Live selection and re-enable schedules. Keep historical release snapshots unchanged.
+
+??? info "Exact Delta column-drop commands after backup"
+
+    Resolve the configured Metadata Lakehouse root and Governance schema; do not
+    use an attached/default Lakehouse shortcut. After testing reader compatibility,
+    run these maintenance commands against that explicit configured contract path:
+
+    ```sql
+    ALTER TABLE delta.`<configured-Metadata-root>/Tables/<configured-governance-schema>/METADATA_DATA_CONTRACT`
+    SET TBLPROPERTIES (
+      'delta.columnMapping.mode' = 'name',
+      'delta.minReaderVersion' = '2',
+      'delta.minWriterVersion' = '5'
+    );
+    ALTER TABLE delta.`<configured-Metadata-root>/Tables/<configured-governance-schema>/METADATA_DATA_CONTRACT`
+    DROP COLUMNS (agreement_id, agreement_version, is_active);
+    ```
+
+    Preserve any already higher protocol versions. Do not edit frozen payload JSON
+    or translate old per-contract active flags into pipeline approval. Keep the
+    exported legacy linkage file outside the current canonical metadata schema.
+
+??? info "What remains a real Fabric check"
+
+    Local tests simulate Fabric transport and activation transactions. Confirm native Delta Serializable conflict handling for concurrent first activation/switching, actual notebook definition export permissions and format, unchanged executable export/import identity, durable shared deployment files, store bindings, repeated scheduled Live, Read-only Live, Warn/Block and partial-publication recovery in Fabric. Failed Live never falls back to Bootstrap. Business publication, diagnostics and run snapshots remain separate transactions.
 
 ### Expected result
 
-The exact tested contracts are active for all three sources and both targets, and the validated pipeline artifact is deployed to Engineering Production.
+One exact tested whole pipeline is approved, its immutable manifest and definitions are packaged beside the deployed executable, bindings are verified, and the destination saves that exact version for unattended Live.
 
 **Next:** [Step 6. Run the pipeline in Production](06-run-production.md)

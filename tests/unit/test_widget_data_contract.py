@@ -288,11 +288,6 @@ def widget_runtime(monkeypatch):
         )
         return {"payload": payload}
 
-    def activate_contract_version(**_kwargs):
-        calls["activate"] += 1
-        contract["is_active"] = True
-        return {"changed": True}
-
     config = types.SimpleNamespace(
         path_config=types.SimpleNamespace(paths={
             "dev": {
@@ -314,7 +309,6 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
     monkeypatch.setattr(module.contracts, "save_contract_draft", save_contract_draft)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
-    monkeypatch.setattr(module.contracts, "activate_contract_version", activate_contract_version)
     monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
         "latest_profile": {
             "profile_snapshot_id": "snapshot-prod",

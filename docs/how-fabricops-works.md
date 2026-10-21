@@ -36,7 +36,7 @@
       This is where the engineering implementation is built and validated. Its `00_env_config` points to the Development Lakehouses, Warehouses, schemas, and other Fabric object paths. `02_pipeline` reads and profiles data, applies transformations and audit columns, validates Guardrails, writes outputs, and records engineering metadata.
 
     - **Engineering Production Workspace**
-      Runs the same validated `02_pipeline` using Production configuration. Its own `00_env_config` points to the equivalent Production Lakehouses, Warehouses, schemas, and Fabric object paths, while the pipeline resolves the activated Data Contract and produces governed Production outputs.
+      Runs the same validated `02_pipeline` using Production configuration. Its own `00_env_config` points to the equivalent Production Lakehouses, Warehouses, schemas, and Fabric object paths, while the pipeline resolves the exact Activated Pipeline manifest and produces governed Production outputs.
 
     - **Aligned environments and promotion**
       Development and Production keep the same logical Bronze, Silver, and Gold architecture, whether those stores are implemented as Lakehouses or Warehouses. The physical Fabric objects differ by environment, but their roles and structure stay aligned 1:1. Once `02_pipeline` is validated in Development against the frozen Data Contract, that validated notebook is promoted to the Engineering Production Workspace through the deployment flow.
@@ -72,7 +72,7 @@ Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read
 - **Engineering** records observed data and profiling metadata.
 - **Governance** uses that evidence to author a versioned **Data Contract**.
 - **Engineering** validates the pipeline against the frozen contract.
-- **Governance** activates the approved contract version.
+- **Governance** activates the approved whole-pipeline version.
 - **Production** enforces the active contract.
 - **Repeat** the cycle whenever changes are needed.
 
@@ -82,7 +82,7 @@ Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read
 
     `01_governance` creates the Governance side: `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT`, and the versioned `METADATA_DATA_CONTRACT`. Engineering selects that contract, validates and enforces its Guardrails, and records the outcomes in `METADATA_GUARDRAIL_RESULTS`.
 
-    If the implementation or governed definition needs refinement, Governance creates the next contract version and Engineering validates it again. Once the tested version is approved, Governance activates it for Production and the same `02_pipeline` runs against the active Data Contract.
+    If the implementation or governed definition needs refinement, Governance creates the next contract version and Engineering validates it again. Once the tested version is approved, Governance activates it for Production and the same `02_pipeline` resolves the saved exact Activated Pipeline manifest.
 
     **For the notebook-level implementation, browse the [FabricOps notebook templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks). For the schema, purpose, and relationships of each metadata table, see the [Metadata reference](reference/metadata.md).**
 
@@ -92,7 +92,7 @@ Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read
         | --- | --- | --- |
         | Establish Governance context | [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md), [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) | `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT` |
         | Register and profile the table | [`profile_table()`](api/reference/profile_table.md) | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md) |
-        | Author, validate, and activate the Data Contract | [`widget_data_contract()`](api/reference/widget_data_contract.md), [`setup_pipeline()`](api/reference/setup_pipeline.md), [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) | [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) |
+        | Author/freeze contracts, test and activate the whole pipeline | [`widget_data_contract()`](api/reference/widget_data_contract.md), [`setup_pipeline()`](api/reference/setup_pipeline.md), [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) | [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md), [`METADATA_ACTIVATED_PIPELINE`](reference/metadata/metadata_activated_pipeline.md) |
         | Execute the Data Contract and record pipeline state | [`orchestrate_read()`](api/reference/orchestrate_read.md), [`orchestrate_write()`](api/reference/orchestrate_write.md) | [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_SOURCE_OBSERVATION`](reference/metadata/metadata_source_observation.md), [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) |
 
         `table_id` connects the physical table, Engineering observations, and governed definition.
@@ -111,7 +111,7 @@ Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read
     2. **Build the pipeline.** Engineering runs, profiles, and catalogues the data in Development.
     3. **Author and freeze the Data Contract.** Governance defines the data's meaning and rules, then freezes a version for testing.
     4. **Validate the frozen Data Contract.** Engineering tests that exact version against the pipeline.
-    5. **Activate and promote.** Governance activates the tested contract; Engineering promotes the validated pipeline to Production.
+    5. **Activate and promote.** Governance activates the tested whole pipeline; Engineering promotes the validated pipeline to Production.
     6. **Run Production and grant access.** Run with Production configuration and give approved consumers access through native Fabric controls.
     7. **Consume governed data.** Use approved Production data for analytics and AI. The planned `99_explore` notebook supports the governed handoff.
 
@@ -124,7 +124,7 @@ Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read
 
             **Steps 3 ↔ 4 are intentionally iterative.** Governance authors the next contract version; Engineering selects that immutable version and reruns the pipeline against it. If the expectation needs refinement or the implementation does not satisfy the intended rule, the flow returns to Governance for another version and then back to Engineering for another validation run. The loop continues until the governed definition and the real engineering implementation agree.
 
-        5. **Governance activates the tested definition, then Engineering promotes it to Production.** [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) links the exact Data Agreement version and tags one frozen Data Contract version as active for that `table_id`. Frozen versions stay frozen; activation does not change their governed JSON. Development can validate any frozen version. Production is strict: it must resolve exactly one frozen version with `is_active=true` for each linked `table_id`. After activation, the validated engineering artifact is deployed from Engineering Development to Engineering Production through the Fabric Deployment Pipeline.
+        5. **Governance activates the tested whole pipeline, then Engineering deploys it.** [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) independently validates a complete successful Testing run, exact candidate, frozen definitions and Agreement, then records explicit confirmation in `METADATA_ACTIVATED_PIPELINE`. Contracts remain Frozen and reusable. Engineering packages the manifest/definitions beside the unchanged executable, deploys and verifies environment bindings, then saves the exact version for unattended Live. Fabric Deployment Pipelines are not assumed to copy metadata rows.
         6. **Engineering runs the same workflow again in Production and hands off access.** The promoted `02_pipeline` resolves Production stores through `00_env_config`, automatically resolves the active Data Contract, applies the same Read → Transform → Write pattern and Guardrail functions, and publishes the governed output. Successful writes commit the associated runtime Lineage and Source Observation state. Approved consumers then receive access through native Fabric controls and can use standard Fabric interfaces directly.
         7. **Analytics and AI consumers receive the governed handoff through `99_explore`.** The interface exposes consumer-facing context, surfaces existing consumption products using the same or overlapping governed tables, and supports target-specific accelerators. One-shot Data Agent publishing is the first automated target; explicit reusable relationship context later extends the same pattern to multiple tables and other consumers.
 

@@ -87,14 +87,14 @@ class _DeltaTransport:
 
 
 @pytest.fixture
-def lifecycle(monkeypatch, spark_session):
+def lifecycle(monkeypatch, spark_session, tmp_path):
     """Share one configured local metadata store across every real workflow phase."""
     from importlib import metadata
     installed_version = metadata.version
     monkeypatch.setattr(metadata, "version", lambda name: "test-delta-runtime" if name == "delta-spark" else installed_version(name))
     modules = [importlib.import_module(name) for name in (
         "fabricops_kit.widgets.widget_data_contract", "fabricops_kit.pipeline.setup_pipeline",
-        "fabricops_kit.widgets.widget_activate_data_contract", "fabricops_kit.data_contract.scheduled_refresh",
+        "fabricops_kit.widgets.widget_activate_pipeline", "fabricops_kit.data_contract.scheduled_refresh",
         "fabricops_kit.pipeline.orchestrate_read", "fabricops_kit.pipeline.orchestrate_write",
         "fabricops_kit.pipeline.pipeline_read", "fabricops_kit.pipeline.pipeline_write",
     )]
@@ -109,6 +109,22 @@ def lifecycle(monkeypatch, spark_session):
     registry = metadata_table_schema_registry()
     state = SimpleNamespace(config=config, context=context, metadata={name: [] for name in registry}, business={}, reads=[], commits={})
 
+    from fabricops_kit.activated_pipeline import shared as activation
+    executable = tmp_path / "tested.ipynb"
+    executable.write_text('{"cells":[{"cell_type":"code","source":["transform()"]}]}')
+    state.executable, state.deployment_path = executable, tmp_path / "deployment"
+    digest = runtime.notebook_executable_fingerprint(executable.read_bytes())
+    state.executable_digest = digest
+    monkeypatch.setattr(runtime, "deployed_notebook_fingerprint", lambda runtime: digest)
+    def commit_approval(row, *, expected_active_id, **kwargs):
+        versions = state.metadata["METADATA_ACTIVATED_PIPELINE"]
+        active = [item for item in versions if item["pipeline_id"] == row["pipeline_id"] and item["is_active"]]
+        if (active[0]["activated_pipeline_id"] if active else None) != expected_active_id:
+            raise ValueError("Concurrent approval")
+        for item in active:
+            item["is_active"] = False
+        versions.append(deepcopy(row))
+    monkeypatch.setattr(activation, "commit_pipeline_activation", commit_approval)
     activity_times = {}
     def audit_fields(**kwargs):
         activity = context["activity_id"]
@@ -188,7 +204,7 @@ def lifecycle(monkeypatch, spark_session):
         (2, "two@example.test", now - timedelta(hours=1), str(now.date())),
     ], "id long, email string, modified_at timestamp, day string")
     state.business["products"] = state.business["orders"]
-    state.metadata["METADATA_DATA_AGREEMENT"] = [{"agreement_id": "agreement", "agreement_version": "1", "agreement_name": "Demo", **audit}]
+    state.metadata["METADATA_DATA_AGREEMENT"] = [{"agreement_id": "agreement", "agreement_version": "1", "agreement_name": "Demo", "start_date": "2020-01-01", "expiry_date": "2099-01-01", **audit}]
     state.spark, state.read, state.write = spark_session, read, write
     return state
 
@@ -230,22 +246,15 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
     assert widget["_controls"]["table_description"].value == "Authored and hydrated"
     assert any(row.get("value") == "Contact email" for row in widget["current"]["enrichment"])
     frozen = widget["freeze"]()["contract"]
-    assert frozen["status"] == "frozen" and not frozen["is_active"]
+    assert frozen["status"] == "frozen" and "is_active" not in frozen
     return frozen
 
 
-def _activation(state, table_id, reports=None):
-    module = importlib.import_module("fabricops_kit.widgets.widget_activate_data_contract")
-    widget = module.widget_activate_data_contract(table_id=table_id, contract_version=1, testing_results=reports, spark_session=state.spark, context=state.context)
-    def walk(node):
-        yield node
-        for child in getattr(node, "children", ()):
-            yield from walk(child)
-    controls = list(walk(widget["widget"]))
-    agreement = next(item for item in controls if getattr(item, "description", "") == "Agreement")
-    agreement.value = agreement.options[0]
-    buttons = [item for item in controls if getattr(item, "description", "") == "Activate for Live"]
-    return widget, buttons
+def _activation(state):
+    """Open whole-pipeline Governance review with the real headless service."""
+    module = importlib.import_module("fabricops_kit.widgets.widget_activate_pipeline")
+    return module.widget_activate_pipeline(pipeline_id="orders-pipeline", executable_path=str(state.executable),
+        spark_session=state.spark, context=state.context)
 
 
 def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
@@ -255,11 +264,11 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     schema_source = _author_and_freeze(state, state.schema_source_id, source=True, schema_only=True)
     target = _author_and_freeze(state, state.target_id, source=False)
     frozen_json = {row["contract_id"]: row["contract_payload_json"] for row in (source, schema_source, target)}
-    before, buttons = _activation(state, state.target_id)
-    assert not before["diagnostic_review"]["available"] and buttons[0].disabled
+    before = _activation(state)
+    assert not before["eligible_runs"] and before["activate"].disabled
     assert not state.metadata["METADATA_DATA_LINEAGE"]
     selector = importlib.import_module("fabricops_kit.pipeline.setup_pipeline")
-    coordinates = {"pipeline_id": "orders-pipeline", "executable_sha256": "a" * 64, "dependencies": {}, "sources": [
+    coordinates = {"pipeline_id": "orders-pipeline", "executable_sha256": state.executable_digest, "dependencies": {}, "configuration": {}, "sources": [
         {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
         {"store": "Bronze", "schema": "dbo", "table_name": "products"}],
         "targets": [{"store": "Silver", "schema": "dbo", "table_name": "curated_orders"}]}
@@ -283,8 +292,8 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert "curated_orders" not in state.business
     from fabricops_kit import finalize_pipeline
     assert finalize_pipeline(plan, spark_session=state.spark)["status"] == "failed"
-    gate, buttons = _activation(state, state.target_id, [failed])
-    assert not gate["diagnostic_review"]["available"] and buttons[0].disabled
+    gate = _activation(state)
+    assert not gate["eligible_runs"] and gate["activate"].disabled
     selection = selector.setup_pipeline(**coordinates, interactive=True, spark_session=state.spark, context=state.context)
     for row in (source, schema_source, target):
         selection["select_contract"](row["table_id"], row["contract_id"], 1)
@@ -300,19 +309,27 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert completed["status"] == "succeeded"
     assert all(row["run_id"] == plan.plan_id for row in plan.results)
     assert all(row["rule_type"] != "contract_validation" for row in plan.results)
-    for table_id in (state.source_id, state.schema_source_id, state.target_id):
-        widget, buttons = _activation(state, table_id, [tested])
-        assert widget["diagnostic_review"]["available"] and buttons[0].disabled
-        widget["review_approval"].value = True
-        assert not buttons[0].disabled
-        buttons[0].click()
-        buttons[1].click()
-        assert widget["activation_result"]["changed"]
+    widget = _activation(state)
+    assert len(widget["eligible_runs"]) == 1 and widget["activate"].disabled, [
+        {"pipeline": item.get("pipeline_id"), "mode": item.get("execution_mode"), "status": item.get("status"),
+         "completed": bool(item.get("completed_at")), "summary": json.loads(item["operation_summary_json"]),
+         "candidate_hash_matches": __import__("fabricops_kit.activated_pipeline.shared", fromlist=["manifest_digest"]).manifest_digest(json.loads(item["candidate_json"])) == item["candidate_fingerprint"]}
+        for item in state.metadata["METADATA_PIPELINE_RUN"]]
+    widget["pipeline_name"].value = "Orders"
+    widget["pipeline_version"].value = "1"
+    widget["reviewed"].value = True
+    widget["confirmed"].value = True
+    approved = widget["perform_activation"]()
+    assert approved["testing_run_id"] == plan.plan_id
+    from fabricops_kit import package_activated_pipeline, verify_pipeline_deployment
+    package_activated_pipeline(approved["activated_pipeline_id"], destination=state.deployment_path,
+        executable_path=state.executable, spark_session=state.spark, context=state.context)
+    verify_pipeline_deployment(deployment_path=state.deployment_path, authority_environment="dev",
+        sources=coordinates["sources"], targets=coordinates["targets"], spark_session=state.spark, context=state.context)
     assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]] for row in state.metadata["METADATA_DATA_CONTRACT"])
     state.context["activity_id"] = "live"
-    selection = selector.setup_pipeline(**coordinates, interactive=True, spark_session=state.spark, context=state.context)
-    selection["set_mode"]("live")
-    live = selection["build_plan"]()
+    live = selector.setup_pipeline(**coordinates, execution_mode="live", deployment_path=state.deployment_path,
+        activated_pipeline_id=approved["activated_pipeline_id"], spark_session=state.spark, context=state.context)
     inputs = reads(live)
     published = orchestrate_write(inputs[0]["dataframe"], execution_plan=live, sources=inputs,
         **coordinates["targets"][0], write_mode="overwrite", spark_session=state.spark, verbose=False)
@@ -323,9 +340,8 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert {row["execution_type"] for row in state.metadata["METADATA_GUARDRAIL_RESULTS"]} == {"testing", "live"}
     # A new logical run under the same business activity recovers without republication.
     assert finalize_pipeline(live, spark_session=state.spark)["status"] == "succeeded"
-    selection = selector.setup_pipeline(**coordinates, interactive=True, spark_session=state.spark, context=state.context)
-    selection["set_mode"]("live")
-    live = selection["build_plan"]()
+    live = selector.setup_pipeline(**coordinates, execution_mode="live", deployment_path=state.deployment_path,
+        spark_session=state.spark, context=state.context)
     inputs = reads(live)
     lineage_count = len(state.metadata["METADATA_DATA_LINEAGE"])
     retried = orchestrate_write(inputs[0]["dataframe"], execution_plan=live, sources=inputs,
@@ -333,7 +349,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert retried["published"] and retried["write_metrics"]["measurement_source"] == "already_applied"
     assert len(state.metadata["METADATA_DATA_LINEAGE"]) == lineage_count
     next_draft = contracts.create_contract_draft(table_id=state.target_id, config=state.config, env="dev", spark_session=state.spark)
-    assert next_draft["contract_version"] == 2 and not next_draft["is_active"]
+    assert next_draft["contract_version"] == 2 and "is_active" not in next_draft
     assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]] for row in state.metadata["METADATA_DATA_CONTRACT"] if row["status"] == "frozen")
 
 

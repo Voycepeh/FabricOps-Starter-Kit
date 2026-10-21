@@ -142,7 +142,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         "widget_render_data_steward",
         "widget_render_data_agreement",
         "widget_data_contract",
-        "widget_activate_data_contract",
+        "widget_activate_pipeline",
     }
 
     assert required_functions <= {
@@ -160,13 +160,13 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     assert 'store="Metadata"' not in source
     assert 'TABLE_ID = table_selection["table_id"]' not in source
     assert source.count("widget_data_contract(spark_session=spark)") == 1
-    assert source.count("widget_activate_data_contract(testing_results=testing_reports, spark_session=spark)") == 1
+    assert source.count("widget_activate_pipeline(spark_session=spark)") == 1
     assert "Data Steward" in source
     assert "Data Agreement" in source
     assert "**Table**, **Columns**, and **Review**" in source
     assert "Freezing creates an immutable candidate for Engineering validation" in source
     assert "Governance authoring and Engineering validation intentionally loop" in source
-    assert "Activation makes that contract the governed Production definition" in source
+    assert "Activation creates an immutable" in source
     assert "does **not** promote or deploy `02_pipeline`" in source
     for demoted_widget in (
         "widget_enrich_table_metadata",
@@ -181,7 +181,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     assert "setup_pipeline" not in authoring_cell
     assert "widget_data_contract(" in authoring_cell
     assert "setup_pipeline" not in activation_cell
-    assert "widget_activate_data_contract(" in activation_cell
+    assert "widget_activate_pipeline(" in activation_cell
     assert "setup_pipeline" not in source
     assert "METADATA_SCHEMA" not in source
 
@@ -216,21 +216,21 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "METADATA_GUARDRAIL_RESULTS" in step_4
     assert "preserving publication boundaries" in normalized["step_4"]
 
-    assert "# step 5. activate the data contract and promote to production" in normalized["step_5"]
-    assert "link the data agreement" in normalized["step_5"]
-    assert "activate the data contract" in normalized["step_5"]
+    assert "# step 5. activate the tested pipeline and promote to production" in normalized["step_5"]
+    assert "exact currently effective data agreement" in normalized["step_5"]
+    assert "approve the exact whole pipeline" in normalized["step_5"]
     assert "fabric deployment pipeline" in normalized["step_5"]
-    assert "deploy it to the production stage" in normalized["step_5"]
+    assert "deploy the notebook" in normalized["step_5"]
 
     assert "# step 6. run the pipeline in production" in normalized["step_6"]
     assert "same tested workflow in the production environment" in normalized["step_6"]
-    assert "**live** requires the active frozen data contract" in normalized["step_6"]
+    assert "saved activated pipeline manifest" in normalized["step_6"]
     assert "read → transform → write" in normalized["step_6"]
 
     lifecycle_steps = (
         "author and freeze the data contract",
         "validate the frozen data contract",
-        "activate the data contract and promote",
+        "activate the tested pipeline and promote",
         "run the pipeline in production",
     )
     lifecycle_positions = [normalized["overview"].index(step) for step in lifecycle_steps]
@@ -499,9 +499,9 @@ def test_guided_demo_explains_bootstrap_then_explicit_contract_testing():
     step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
 
     assert "there is no Data Contract yet" in step_2a
-    assert "CONTRACT_TESTING = False" in step_2a
+    assert 'globals().get("PIPELINE_CONTRACT_TESTING", False)' in step_2a
     assert "without human interaction" in step_2a
-    assert "CONTRACT_TESTING = True" in step_2a
+    assert "PIPELINE_CONTRACT_TESTING=True" in step_2a
     assert "skipped check fields remain in the returned dictionaries" in step_2a
     assert "individual Guardrail stages are omitted" in step_2a
     assert "pipeline-wide switch in red **Testing**" in step_4

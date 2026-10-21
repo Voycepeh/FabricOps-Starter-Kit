@@ -1,6 +1,6 @@
 # METADATA_PIPELINE_RUN
 
-Persist one logical execution attempt with candidate identity, operation outcomes and safe failures. run_id distinguishes attempts; standard _activity_id preserves the Fabric activity and may be shared by several attempts. pipeline_id survives notebook renames and environment copies. Activation eligibility is not a stored flag. Bootstrap is separate from successful Testing; Live keeps existing contract authority.
+One complete logical run and candidate identity across all operations; successful Testing is approval evidence, Bootstrap never is. Live runs reference their exact Activated Pipeline version.
 
 ## Writer functions
 
@@ -16,20 +16,21 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One logical pipeline run across all participating sources and targets.
+**Grain:** One logical execution attempt.
 
 **Primary key:** `run_id`
 
 **Relationships:**
 
-No immediate table relationship is defined in the current implementation.
+`METADATA_ACTIVATED_PIPELINE` **(N → 1)**
+via `activated_pipeline_id`
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 18 |
-| Business columns | 10 |
+| Total columns | 19 |
+| Business columns | 11 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -37,6 +38,7 @@ No immediate table relationship is defined in the current implementation.
 | Column | Data type | Description |
 | --- | --- | --- |
 | `run_id` | `string` | Identifier stored for `run_id`. |
+| `activated_pipeline_id` | `string` | Identifier stored for `activated_pipeline_id`. |
 | `pipeline_id` | `string` | Identifier stored for `pipeline_id`. |
 | `execution_mode` | `string` | Metadata Pipeline Run field `execution_mode`. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |

@@ -51,7 +51,7 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 | 2 | Engineering Development — ETL, profile, and catalogue | Build and run `02_pipeline`, profile and catalogue governed tables, and capture Data Lineage and technical observations. |
 | 3 | Governance — Author and freeze the Data Contract | Select the governed `table_id`, author descriptive Enrichment and enforced Guardrails, review the schema and processing definition, and freeze an immutable table-centric version. Do not link a Data Agreement at authoring time. |
 | 4 | Engineering Development — Select and validate | Use the current notebook's `METADATA_DATA_LINEAGE` to discover linked `table_id` values, select one frozen version independently per table, and validate the ETL. Failed validation returns to Step 3 for a new frozen version. |
-| 5 | Governance — Link the Data Agreement and activate | Select the tested frozen version, explicitly link the required exact Data Agreement version, and activate the contract for Production. |
+| 5 | Governance — Link the Data Agreement and activate | Select the complete successful Testing candidate, link the exact Data Agreement version, and activate the whole pipeline for Live. |
 | 6 | Engineering Production — Promote, run, and hand off access | Promote and run the validated `02_pipeline`. Production automatically resolves the active Data Contract, publishes governed outputs, and approved consumers receive access through native Fabric controls. |
 | 7 | Consumption — Consume and productize governed data | Use `99_explore` as the consumer and analytics-engineering handoff: review governed context, discover existing consumption products, consume data directly, or publish to a target such as a Fabric Data Agent. |
 
@@ -90,7 +90,7 @@ Provide the user-facing implementation pattern for configuring workspaces, creat
 
 ### Shared metadata model
 
-Connects Governance intent with recorded Engineering metadata. Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Source Observation, Enrichment, Guardrails, Guardrail Results, and Data Agreement records feed the normal operating workflow. A Data Contract version freezes the governed expectation for one table, including its processing definition. Development validates frozen versions; Governance links the tested version to an exact Data Agreement version and activates it; the validated engineering artifact is promoted through the Fabric Deployment Pipeline; Production resolves the active contract.
+Connects Governance intent with recorded Engineering metadata. Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Source Observation, Enrichment, Guardrails, Guardrail Results, and Data Agreement records feed the normal operating workflow. A Data Contract version freezes the governed expectation for one table, including its processing definition. Development validates frozen versions; Governance links the complete tested pipeline to an exact Data Agreement version and activates that pipeline; the validated engineering artifact is promoted through the Fabric Deployment Pipeline; Production resolves the approved whole-pipeline manifest.
 
 The metadata model is not only documentation. It is the persistent context that allows Governance, Engineering, Production validation, downstream consumers, and future AI-assisted workflows to reason from the recorded Catalogue structure, profiles, lineage, source observations, Guardrail definitions and results, Data Agreements, Data Contracts, and governance decisions.
 

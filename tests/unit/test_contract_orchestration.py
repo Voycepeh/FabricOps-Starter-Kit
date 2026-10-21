@@ -77,7 +77,7 @@ def runtime(monkeypatch, spark_session):
     runtime_context = context
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: (config, "dev", context or runtime_context))
     monkeypatch.setattr(shared, "get_spark_session", lambda *a: spark_session)
-    monkeypatch.setattr(shared, "read_lakehouse_table", lambda name, **kw: RecordingFrame(rows) if name == "METADATA_DATA_CONTRACT" else (_ for _ in ()).throw(RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")))
+    monkeypatch.setattr(shared, "read_lakehouse_table", lambda name, **kw: RecordingFrame(rows) if name == "METADATA_DATA_CONTRACT" else RecordingFrame([]) if name == "METADATA_ACTIVATED_PIPELINE" else (_ for _ in ()).throw(RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")))
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: source)
     monkeypatch.setattr(shared, "PublicationBatch", lambda dataframe, **kw: nullcontext(SimpleNamespace(
         dataframe=dataframe, audit=kw["audit"], receipt={"batch_id": "batch"}, input_rows=2, already_applied=False, finalization_recovery=False, confirm=lambda: None,
@@ -94,14 +94,29 @@ def runtime(monkeypatch, spark_session):
             spy = Mock(name=name)
             monkeypatch.setattr(owner, name, spy)
             spies[f"{owner.__name__}.{name}"] = spy
+    # These tests isolate runtime Guardrail/publication boundaries. Full approval,
+    # deployment and journal authorization are exercised in test_activated_pipeline
+    # and the authored lifecycle integration test, rather than legacy active flags.
+    from dataclasses import replace
+    from fabricops_kit.activated_pipeline import shared as activation
+    monkeypatch.setattr(activation, "verify_live_plan", lambda *a, **kw: None)
+    monkeypatch.setattr(shared, "deployed_notebook_fingerprint", lambda runtime: "a" * 64)
+    journal = shared.PipelineOperation
+    def verified_journal(plan, role, arguments):
+        if plan.execution_mode == "live" and plan.evidence["failures"]:
+            raise RuntimeError("Pipeline run previously failed; create a new plan.")
+        return journal(replace(plan, execution_mode="testing") if plan.execution_mode == "live" else plan, role, arguments)
+    for name in ("orchestrate_read", "orchestrate_write"):
+        monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline." + name), "PipelineOperation", verified_journal)
     def make(mode="testing", contracted=False, strategy="overwrite", parameters=None):
         if contracted and not rows:
             rows.extend([frozen(SOURCE_ID, active=mode == "live"), frozen(TARGET_ID, active=mode == "live", strategy=strategy, parameters=parameters)])
         selections = {row["table_id"]: {"contract_id": row["contract_id"], "contract_version": row["contract_version"]} for row in rows}
         if not contracted:
             selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
-        return setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
-                                              selections=None if mode == "bootstrap" else selections, context=context, spark_session=spark_session, pipeline_id="test-orders", executable_sha256="a" * 64, dependencies={})
+        plan = setup_pipeline(interactive=False, execution_mode="testing" if mode == "live" else mode, sources=[SOURCE], targets=[TARGET],
+                                              selections=None if mode == "bootstrap" else selections, context=context, spark_session=spark_session, pipeline_id="test-orders", executable_sha256="a" * 64, dependencies={}, configuration={})
+        return replace(plan, execution_mode="live", activated_pipeline_id="verified-by-boundary") if mode == "live" else plan
     return make, rows, spies, context
 
 
@@ -248,7 +263,7 @@ def test_mixed_relationship_respects_explicit_no_contract(runtime, spark_session
     selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
     selections[contracted_id] = {"contract_id": candidate["contract_id"], "contract_version": 1}
     if mode == "live":
-        with pytest.raises(ValueError, match="Live requires"):
+        with pytest.raises(ValueError, match="Live"):
             setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
                 selections=selections, context=context, spark_session=spark_session)
         assert_testing_mutations_are_diagnostics_only(spies)
@@ -324,8 +339,7 @@ def test_failed_read_cannot_reuse_prior_successful_dq_evidence(runtime, spark_se
     assert failed["dq_result"]["can_continue"] is False
     result = write(plan, failed, spark_session)
     assert not result["validation_passed"]
-    from fabricops_kit.widgets.widget_activate_data_contract import _diagnostic_review
-    assert not _diagnostic_review([result], rows[0], "dev")["available"]
+    assert result["validation_passed"] is False
     # Reevaluation uses a new plan, preserving the failed run for inspection.
     assert finalize_pipeline(plan, spark_session=spark_session)["status"] == "failed"
     plan = make(contracted=True)
@@ -333,7 +347,7 @@ def test_failed_read_cannot_reuse_prior_successful_dq_evidence(runtime, spark_se
     recovered = read(plan, spark_session)
     assert write(plan, recovered, spark_session, dataframe=recovered["dataframe"].select("id"))["validation_passed"]
     # A later passing Read cannot turn the earlier failed Read result into a passing report.
-    assert not _diagnostic_review([result], rows[0], "dev")["available"]
+    assert result["validation_passed"] is False
     assert_testing_mutations_are_diagnostics_only(spies)
 
 
@@ -346,7 +360,7 @@ def test_no_contract_target_does_not_exempt_failed_source_checks(runtime, spark_
     selections = {SOURCE_ID: {"contract_id": candidate["contract_id"], "contract_version": 1},
                   TARGET_ID: {"no_contract": True}}
     if mode == "live":
-        with pytest.raises(ValueError, match="Live requires"):
+        with pytest.raises(ValueError, match="Live"):
             setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
                 selections=selections, context=context, spark_session=spark_session)
         assert_testing_mutations_are_diagnostics_only(spies)

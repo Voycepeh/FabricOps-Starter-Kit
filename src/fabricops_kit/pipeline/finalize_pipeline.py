@@ -23,7 +23,7 @@ def finalize_pipeline(execution_plan, *, failed=False, spark_session=None):
         Persisted METADATA_PIPELINE_RUN snapshot. Only a complete Testing run with
         an available candidate fingerprint and no blocking or persistence failure
         has status="succeeded". Bootstrap completes as "bootstrap_completed". This does not activate
-        anything; current Live still uses existing Data Contract authority.
+        anything; Live references its exact Activated Pipeline version.
         Repeated finalization returns the same snapshot without another write.
 
     Raises

@@ -58,23 +58,24 @@ def test_testing_can_select_inactive_candidate_but_live_cannot(plan_runtime):
     selections = {"source": {"contract_id": "contract-source", "contract_version": 2}, "target": {"contract_id": "contract-target", "contract_version": 1}}
     plan = make(selections=selections)
     assert json.loads(plan.contracts_json)["source"]["contract_version"] == 2
-    with pytest.raises(ValueError, match="active frozen"):
+    with pytest.raises(ValueError, match="Activated Pipeline"):
         make("live", selections)
     selections["source"]["contract_version"] = 1
-    assert make("live", selections).execution_mode == "live"
+    with pytest.raises(ValueError, match="Activated Pipeline"):
+        make("live", selections)
     assert json.loads(plan.contracts_json)["source"]["contract_version"] == 2
 
 
-@pytest.mark.parametrize("mode", ["testing", "live"])
-def test_no_contract_cannot_bypass_active(plan_runtime, mode):
-    """Explicit bootstrap never bypasses an existing active contract."""
+def test_testing_no_contract_is_diagnostic_only_even_when_legacy_active_flag_exists(plan_runtime):
+    """Legacy active contract columns grant no Live authority and do not choose Testing contracts."""
     rows, _, make, row = plan_runtime
     rows.append(row(active=True))
-    with pytest.raises(ValueError, match="bypass"):
-        make(mode)
+    assert json.loads(make().contracts_json)["source"] is None
+    with pytest.raises(ValueError, match="Activated Pipeline"):
+        make("live")
 
 
-@pytest.mark.parametrize("corruption", ["json", "contract_id", "version", "table", "columns", "duplicate", "multiple_active"])
+@pytest.mark.parametrize("corruption", ["json", "contract_id", "version", "table", "columns", "duplicate"])
 def test_corrupt_and_ambiguous_contracts_are_errors(plan_runtime, corruption):
     """No failed resolution is converted into an uncontracted plan."""
     rows, _, make, row = plan_runtime
@@ -110,25 +111,23 @@ def test_missing_and_unrelated_choices_rejected(plan_runtime):
         make(selections={"source": {"no_contract": True}, "target": {"no_contract": True}, "unrelated": {"no_contract": True}})
 
 
-def test_live_plan_rejects_active_version_changes_after_creation(plan_runtime):
-    """All calls revalidate Live authority before evaluating or publishing."""
+def test_live_builder_rejects_individual_contract_authority(plan_runtime):
+    """Even matching legacy active flags cannot construct a Live execution plan."""
     rows, _, make, row = plan_runtime
     rows.extend([row(active=True), row(table_id="target", active=True)])
-    plan = make("live", {"source": {"contract_id": "contract-source", "contract_version": 1}, "target": {"contract_id": "contract-target", "contract_version": 1}})
-    rows[:] = [row(version=2, active=True)]
-    with pytest.raises(ValueError, match="changed after plan creation"):
-        shared.prepare_pipeline_execution(["source"], execution_plan=plan)
+    with pytest.raises(ValueError, match="Activated Pipeline"):
+        make("live", {"source": {"contract_id": "contract-source", "contract_version": 1}, "target": {"contract_id": "contract-target", "contract_version": 1}})
 
 
 def test_missing_contract_store_is_not_an_explicit_no_contract_state(plan_runtime, monkeypatch):
     """Unreadable metadata cannot authorize bootstrap by hiding active contracts."""
     _, _, make, _ = plan_runtime
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("Table not found")))
-    with pytest.raises(RuntimeError, match="missing metadata table"):
-        make("live")
+    with pytest.raises(RuntimeError, match="missing metadata"):
+        make("bootstrap")
 
 
-@pytest.mark.parametrize("mode", ["testing", "live"])
+@pytest.mark.parametrize("mode", ["testing"])
 def test_read_only_headless_plan_needs_no_target(plan_runtime, mode):
     """Read-only participants use the same immutable plan without a business target."""
     from fabricops_kit import setup_pipeline

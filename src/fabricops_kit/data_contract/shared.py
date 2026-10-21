@@ -183,14 +183,11 @@ def create_contract_draft(
     row = coerce_metadata_row_types(DATA_CONTRACT_TABLE, {
         "contract_id": lifecycle_id,
         "contract_version": version,
-        "agreement_id": None,
-        "agreement_version": None,
         "table_id": str(table_id).strip(),
         "table_name": payload_table_name,
         "environment_name": env,
         "contract_payload_json": json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
         "status": "draft",
-        "is_active": False,
         **audit,
     })
     write_lakehouse_table(
@@ -1141,133 +1138,6 @@ def get_column_profile_context(
     ]
     return {"kind": "profile", "profile": latest, "values": top_values}
 
-def _contract_activation_changes(
-    rows: list[dict[str, Any]], selected: dict[str, Any], *, agreement_id: str, agreement_version: str
-) -> list[dict[str, Any]]:
-    """Build activation-tag updates without changing frozen lifecycle status."""
-    changes = [
-        {
-            "contract_id": row["contract_id"],
-            "contract_version": int(row["contract_version"]),
-            "environment_name": row["environment_name"],
-            "is_active": False,
-        }
-        for row in rows
-        if str(row.get("table_id") or "") == str(selected.get("table_id") or "")
-        and row.get("environment_name") == selected.get("environment_name")
-        and row.get("is_active") is True
-        and (str(row.get("contract_id")), int(row.get("contract_version") or 0))
-        != (str(selected.get("contract_id")), int(selected.get("contract_version") or 0))
-    ]
-    if selected.get("is_active") is not True:
-        changes.append({
-            "contract_id": selected["contract_id"],
-            "contract_version": int(selected["contract_version"]),
-            "environment_name": selected["environment_name"],
-            "is_active": True,
-            "agreement_id": agreement_id,
-            "agreement_version": agreement_version,
-        })
-    return changes
-
-
-def activate_contract_version(
-    *, config: Any, env: str, table_id: str, contract_id: str, contract_version: int,
-    agreement_id: str, agreement_version: str, store: str = "Metadata",
-    schema: str | None = None, spark_session: Any = None, context: Any = None,
-) -> dict[str, Any]:
-    """Tag one frozen contract version as active in the configured environment."""
-    from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table
-
-    agreement_id, agreement_version = str(agreement_id or "").strip(), str(agreement_version or "").strip()
-    if not agreement_id or not agreement_version:
-        raise ValueError("Select an exact Data Agreement version before activation.")
-    rows = row_dicts(read_lakehouse_table(
-        DATA_CONTRACT_TABLE, store=store, schema=schema, spark_session=spark_session, context=context,
-    ))
-    rows = [row for row in rows if str(row.get("environment_name") or "") == str(env)]
-    selected = [
-        row for row in rows
-        if str(row.get("contract_id") or "") == contract_id
-        and int(row.get("contract_version") or 0) == int(contract_version)
-    ]
-    if not selected:
-        raise ValueError("Selected Data Contract version does not exist.")
-    if len(selected) != 1:
-        raise RuntimeError("Selected Data Contract version has duplicate environment-scoped rows.")
-    row = selected[0]
-    if str(row.get("table_id") or "") != table_id:
-        raise ValueError("Selected Data Contract version does not belong to the selected table_id.")
-    if str(row.get("status") or "").lower() != "frozen":
-        raise ValueError("Only a frozen Data Contract version can be activated.")
-    payload = _json_value(row.get("contract_payload_json"), field="contract_payload_json", default={})
-    table = payload.get("table") if isinstance(payload, dict) else {}
-    row["table_name"] = str(table.get("table_name") or "") if isinstance(table, dict) else ""
-    payload = _json_value(row.get("contract_payload_json"), field="contract_payload_json", default=None)
-    if not isinstance(payload, dict) or payload.get("contract", {}).get("contract_id") != contract_id:
-        raise ValueError("Selected Data Contract payload identity is invalid.")
-    current = (str(row.get("agreement_id") or ""), str(row.get("agreement_version") or ""))
-    if row.get("is_active") is True and current != (agreement_id, agreement_version):
-        raise ValueError("An active Data Contract cannot be relinked to a different Data Agreement.")
-    agreements = row_dicts(read_lakehouse_table(
-        "METADATA_DATA_AGREEMENT", store=store,
-        schema=metadata_table_physical_schema(config, "METADATA_DATA_AGREEMENT"),
-        spark_session=spark_session, context=context,
-    ))
-    if not any(
-        str(item.get("agreement_id") or "") == agreement_id
-        and str(item.get("agreement_version") or "") == agreement_version
-        for item in agreements
-    ):
-        raise ValueError("Selected Data Agreement version does not exist.")
-    if len([item for item in rows if item.get("table_id") == table_id and item.get("is_active") is True]) > 1:
-        raise RuntimeError(f"Data Contract integrity error: {table_id!r} has multiple active versions.")
-    changes = _contract_activation_changes(
-        rows, row, agreement_id=agreement_id, agreement_version=agreement_version
-    )
-    if not changes:
-        return {
-            "changed": False,
-            "contract_id": contract_id,
-            "contract_version": int(contract_version),
-            "changes": [],
-        }
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - Fabric dependency
-        raise RuntimeError("Delta Lake support is required to activate a Data Contract.") from exc
-    source = spark_session.createDataFrame(changes)
-    _, _, _, path = resolve_configured_lakehouse_table(
-        store, DATA_CONTRACT_TABLE,
-        metadata_table_physical_schema(config, DATA_CONTRACT_TABLE)
-        if store == "Metadata" else schema or configured_lakehouse_schema(config, env, store),
-        context=context,
-    )
-    (
-        DeltaTable.forPath(spark_session, path)
-        .alias("target")
-        .merge(
-            source.alias("source"),
-            "target.contract_id = source.contract_id "
-            "AND target.contract_version = source.contract_version "
-            "AND target.environment_name = source.environment_name",
-        )
-        .whenMatchedUpdate(
-            set={
-                "is_active": "source.is_active",
-                "agreement_id": "coalesce(source.agreement_id, target.agreement_id)",
-                "agreement_version": "coalesce(source.agreement_version, target.agreement_version)",
-            }
-        )
-        .execute()
-    )
-    return {
-        "changed": True,
-        "contract_id": contract_id,
-        "contract_version": int(contract_version),
-        "changes": changes,
-    }
-
 
 def build_enrichment_records(
     records: Iterable[Mapping[str, Any]], *, config: Any = None, env: str
@@ -1384,7 +1254,6 @@ def freeze_contract_record(
             payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
         ),
         "status": "frozen",
-        "is_active": False,
         **dict(audit),
     }
 

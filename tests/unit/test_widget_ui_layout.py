@@ -38,7 +38,7 @@ def _install_fake_notebook_widgets(monkeypatch):
 
 LIVE_WIDGETS = {
     "widget_data_contract",
-    "widget_activate_data_contract",
+    "widget_activate_pipeline",
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_view_catalogue",
@@ -53,7 +53,8 @@ def test_live_widget_inventory_uses_the_canonical_page_composer():
         assert "form_page(" in inspect.getsource(module)
     pipeline = __import__("fabricops_kit.pipeline.setup_pipeline", fromlist=["setup_pipeline"])
     assert "pipeline-contracts" in inspect.getsource(pipeline)
-    assert "pipeline-testing" in inspect.getsource(pipeline) and "pipeline-live" in inspect.getsource(pipeline)
+    assert "pipeline-testing" in inspect.getsource(pipeline)
+    assert "build_live_pipeline_plan" in inspect.getsource(pipeline)
 
 
 def test_form_page_is_a_stable_full_width_scrolling_viewport(monkeypatch):

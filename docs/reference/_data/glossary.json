@@ -17,7 +17,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "A versioned agreement between provider and recipient Data Stewards that defines why data may be shared and used.",
-    "long_definition": "In FabricOps, a Data Agreement records the provider and recipient Data Stewards, purpose, approved uses, validity, and supporting governance context. An activated Data Contract links to the exact Data Agreement version that authorizes Live use.",
+    "long_definition": "A Data Agreement records accountable producer/consumer stewards, purpose, approved uses and validity. An Activated Pipeline links one exact Agreement version to a complete successfully tested whole pipeline.",
     "preferred_usage": "Use data agreement for the steward-to-steward governance relationship that starts the FabricOps workflow.",
     "avoid_usage": "data contract when table-level guarantees are meant"
   },
@@ -29,8 +29,8 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "A versioned set of governed expectations for one table.",
-    "long_definition": "A FabricOps Data Contract is authored for one canonical table_id. Its immutable frozen payload defines Schema, processing, Enrichment and Guardrails. Testing may select eligible frozen candidates; Live enforces the active frozen version for every participant. Activation is a separate Governance review linked to an exact Data Agreement version.",
-    "preferred_usage": "Use data contract for table-level governed expectations; describe Data Agreement linkage only at activation.",
+    "long_definition": "A table-centric Data Contract freezes Schema, processing, Enrichment and Guardrails. Draft becomes Frozen and stays immutable and reusable. An Activated Pipeline manifest references exact contract versions and payload hashes; contracts have no direct Agreement linkage or individual activation authority.",
+    "preferred_usage": "Use Data Contract for reusable frozen table expectations; Activated Pipeline is whole-pipeline Live authority.",
     "avoid_usage": "data agreement when the steward-to-steward sharing relationship is meant"
   },
   {
@@ -59,7 +59,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "The pipeline-wide mode that evaluates real data and prepared processing without durable mutations.",
-    "long_definition": "Testing evaluates eligible frozen Data Contracts and processing dry runs, persists METADATA_PIPELINE_RUN and linked METADATA_GUARDRAIL_RESULTS, and never publishes business data or commits ordinary metadata, mappings, checkpoints or staging. Explicit finalization records complete-run status for later activation work. Current Live authority is unchanged. Testing cannot verify real publication permissions, target transactions or cross-store finalization.",
+    "long_definition": "Testing evaluates every declared Read/Write and processing simulation, persisting METADATA_PIPELINE_RUN and linked METADATA_GUARDRAIL_RESULTS without business publication or ordinary metadata, mappings or checkpoints. Explicit successful whole-run finalization with complete identity may be reviewed for pipeline activation. Testing does not prove deployment permissions or target transactions.",
     "preferred_usage": "Use Testing for the execution mode, independently of the configured environment name.",
     "avoid_usage": "successful Live publication when only dry-run checks passed"
   },
@@ -69,7 +69,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "The deliberate pipeline-wide mode that permits governed publication and operational metadata commits.",
-    "long_definition": "Live requires an active frozen Data Contract for every participant, enforces Guardrails, processing and ownership, and publishes only when continuation is permitted. No Contract is rejected in Live; initial uncontracted publication uses Bootstrap. Publication and metadata commits retain their separate lifecycle and recovery boundaries across Fabric stores. Release-manifest-pinned Live enforcement follows in the pipeline activation phase.",
+    "long_definition": "Live resolves a saved exact Activated Pipeline version and contracts exclusively from its approved manifest. It verifies active Governance approval, Agreement, executable/dependencies, deployment and environment bindings, enforces Warn/Block and operational commit boundaries, and records activated_pipeline_id in METADATA_PIPELINE_RUN. It never falls back to Bootstrap.",
     "preferred_usage": "Use Live for the execution decision in any configured environment; scheduled runs select it explicitly.",
     "avoid_usage": "an execution default inferred from an environment name"
   },
@@ -745,8 +745,20 @@
     "aliases": [],
     "category": "Data Engineering concepts",
     "short_definition": "One logical pipeline execution across every declared Read and Write.",
-    "long_definition": "METADATA_PIPELINE_RUN records one run_id for a stable logical pipeline_id, candidate fingerprints, operation summary and completion status. Explicit finalization is required, including Read-only runs. Bootstrap never qualifies as successful Testing evidence. Live retains existing Data Contract authority.",
+    "long_definition": "METADATA_PIPELINE_RUN records one logical attempt across all declared Reads and Writes, stable pipeline_id, candidate identity, operations and status. Explicit finalization is required, including Read-only runs. Bootstrap is excluded from Testing approval evidence. Live references its exact activated_pipeline_id.",
     "preferred_usage": "Use pipeline run for the complete execution; distinguish it from table participation and rule-level Guardrail Results.",
     "avoid_usage": "one run per participating table"
+  },
+  {
+    "id": "activated-pipeline",
+    "term": "activated pipeline",
+    "aliases": [
+      "activated pipelines"
+    ],
+    "category": "FabricOps concepts",
+    "short_definition": "An immutable approved version of a completely and successfully tested whole pipeline.",
+    "long_definition": "METADATA_ACTIVATED_PIPELINE stores stable pipeline identity, immutable version/name, exact effective Agreement, successful Testing run and the candidate manifest/fingerprint. Its manifest embeds exact reusable frozen contracts, executable and configuration/dependency identity. One version may be active per pipeline; switching/deactivation is explicit and never silently changes saved Live selections. Activation neither deploys nor publishes.",
+    "preferred_usage": "Use Activated Pipeline for exact whole-pipeline Live authority.",
+    "avoid_usage": "activated contract as Live authority"
   }
 ]

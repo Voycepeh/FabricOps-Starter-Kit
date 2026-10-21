@@ -77,41 +77,12 @@ def install_contract_frame(monkeypatch, rows):
     return frame
 
 
-def test_active_contract_filters_and_limits_before_collect(monkeypatch):
-    frame = install_contract_frame(
-        monkeypatch,
-        [contract_row(), contract_row(table_id="other-table", contract_id="contract-other")],
-    )
-
-    resolved = shared.resolve_active_data_contract(object(), "dev", "table-a")
-
-    assert resolved["contract_id"] == "contract-a"
-    assert frame.operations == [
-        ("filter", "`table_id` = 'table-a' AND `is_active` = TRUE AND `environment_name` = 'dev'"),
-        ("limit", 2),
-        ("collect", None),
-    ]
-
-
-def test_multiple_active_contracts_still_raise_integrity_error(monkeypatch):
-    frame = install_contract_frame(
-        monkeypatch,
-        [contract_row(), contract_row(contract_id="contract-b", contract_version=2)],
-    )
-
-    with pytest.raises(RuntimeError, match="multiple active versions"):
-        shared.resolve_active_data_contract(object(), "dev", "table-a")
-
-    assert ("limit", 2) in frame.operations
-
-
-def test_optional_active_resolution_preserves_missing_and_inactive_behaviour(monkeypatch):
-    install_contract_frame(monkeypatch, [contract_row(table_id="other-table")])
-    assert shared.resolve_active_data_contract(
-        object(), "dev", "table-a", required=False
-    ) is None
-    install_contract_frame(monkeypatch, [contract_row(status="frozen", is_active=False)])
-    assert shared.resolve_active_data_contract(object(), "dev", "table-a", required=False) is None
+def test_individual_active_contract_cannot_resolve_live_authority(monkeypatch):
+    """Legacy active flags cannot bypass an explicit manifest-backed execution plan."""
+    frame = install_contract_frame(monkeypatch, [contract_row()])
+    with pytest.raises(ValueError, match="explicit execution plan"):
+        shared.resolve_pipeline_data_contract(object(), "dev", "table-a")
+    assert not frame.operations
 
 
 def test_exact_contract_version_filters_and_limits_before_collect(monkeypatch):

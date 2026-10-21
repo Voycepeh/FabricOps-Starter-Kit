@@ -38,20 +38,17 @@ Read → Transform → Write
 
 The same source reads, transformations, Guardrail checks, governed write logic, profiling, [Lineage](../reference/metadata/metadata_data_lineage.md), and [Source Observation](../reference/metadata/metadata_source_observation.md) flow run again against Production resources.
 
-The key difference is Data Contract resolution:
+Live uses the **same tested workflow in the Production environment**, with contracts resolved exclusively from the saved Activated Pipeline manifest. It verifies the exact Agreement, executable and dependency identity, current active approval, deployment state and physical bindings before execution. Read/Write behavior must match the approved operation configuration.
 
-* **Testing** explicitly selects eligible frozen candidates in any configured environment.
-* **Live** requires the active frozen Data Contract for each governed `table_id`, in any configured environment.
+Set `PIPELINE_LIVE_ENABLED=True` and `PIPELINE_DEPLOYMENT_PATH` externally in `00_env_config` or notebook parameters after Step 5. The first verified selection supplies `PIPELINE_SELECT_ACTIVATED_VERSION`; subsequent manual/scheduled runs omit it and resolve the saved exact version unattended. There is no Live contract-selection widget. A changed active version does not silently replace that selection; switching is explicit. The environment name only routes work and never infers Live.
 
-The same Guardrail functions therefore enforce the Production-active definition, and [`orchestrate_write()`](../api/reference/orchestrate_write.md) uses the active governed Processing configuration for each target.
-
-Run the `setup_pipeline()` selector cell to create a fresh widget, deliberately select **Live** for the whole pipeline and its eligible contracts, then build a new `EXECUTION_PLAN`. A previously built selector is locked; calling its `build_plan()` again reuses the existing plan. Pass that same plan to all three Reads and both Writes. Scheduled execution must call `setup_pipeline(interactive=False, execution_mode="live", ...)` explicitly. The environment only routes work; it never infers Live. All three sources and both targets need the active frozen versions prepared in Step 5.
+Pass the new `EXECUTION_PLAN` to every Read and Write. Finalize every complete run, including Read-only runs, so `METADATA_PIPELINE_RUN.activated_pipeline_id` records the approved version actually executed. Missing/tampered artifacts, stale selection, mismatched bindings, unavailable identity or manual contract overrides fail closed; Live never falls back to Bootstrap.
 
 ### Check the two independent publications
 
 Confirm both `writes["curated_orders_lakehouse"]["published"]` and `writes["customer_summary_warehouse"]["published"]` are true. Review the applicable Guardrail Results and inspect the persisted target values, including the configured Sensitive Data treatment on `curated_orders`.
 
-If a contract is missing or more than one version is active, return to Governance and correct the selection for that exact `table_id`; do not bypass enforcement or create a Production draft to continue. If a blocking Guardrail fails, resolve the data or implementation issue and rerun. The two Writes are independent: if the second fails, the first target may already be published. See [Step 2A's publication boundary](02A-full-refresh-demo.md#configure-the-governed-writes).
+If approval or a manifest contract is missing, return to Governance and resolve the exact pipeline version; do not bypass enforcement or create a Production draft to continue. If a blocking Guardrail fails, resolve the data or implementation issue and rerun. The two Writes are independent: if the second fails, the first target may already be published. See [Step 2A's publication boundary](02A-full-refresh-demo.md#configure-the-governed-writes).
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="" loading="lazy">
@@ -74,6 +71,6 @@ FabricOps remains relevant to the access boundary through its effective-access s
 
 ### Expected result
 
-Engineering Production completes the validated pipeline workflow, publishes governed Production outputs using the active Data Contract, and approved consumers can reach those outputs through native Fabric access controls and interfaces.
+Engineering Production completes the validated pipeline workflow, publishes governed Production outputs using the approved Activated Pipeline manifest, and approved consumers can reach those outputs through native Fabric access controls and interfaces.
 
 **Next:** [Step 7. Publish governed data to a Fabric Data Agent](07-consume-production-data.md)

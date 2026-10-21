@@ -23,6 +23,7 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_DATA_STEWARD": "governance",
         "METADATA_DATA_AGREEMENT": "governance",
         "METADATA_DATA_CONTRACT": "governance",
+        "METADATA_ACTIVATED_PIPELINE": "governance",
         "METADATA_DATA_CATALOGUE": "engineering",
         "METADATA_DATA_PROFILED": "engineering",
         "METADATA_DATA_PROFILED_FREQUENCY": "engineering",
@@ -55,19 +56,18 @@ def test_data_contract_uses_versioned_one_table_schema():
 
     assert "METADATA_DATA_CONTRACT_SNAPSHOT" not in CANONICAL_METADATA_TABLES
     assert schema.fieldNames() == [
-        "contract_id", "contract_version", "agreement_id", "agreement_version",
-        "table_id", "table_name", "environment_name", "contract_payload_json", "status", "is_active", *audit_names,
+        "contract_id", "contract_version",
+        "table_id", "table_name", "environment_name", "contract_payload_json", "status", *audit_names,
     ]
     assert "provider_steward_name" in metadata_table_schema_registry()["METADATA_DATA_AGREEMENT"].fieldNames()
     assert "recipient_steward_name" in metadata_table_schema_registry()["METADATA_DATA_AGREEMENT"].fieldNames()
     assert {"metadata_table_key", "schema_fingerprint", "approved_usage_json"}.isdisjoint(schema.fieldNames())
-    assert [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields[:10]] == [
+    assert [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields[:7]] == [
         ("contract_id", "StringType", False), ("contract_version", "IntegerType", False),
-        ("agreement_id", "StringType", True), ("agreement_version", "StringType", True),
         ("table_id", "StringType", False), ("table_name", "StringType", True),
         ("environment_name", "StringType", False),
         ("contract_payload_json", "StringType", True),
-        ("status", "StringType", False), ("is_active", "BooleanType", False),
+        ("status", "StringType", False),
     ]
 
 

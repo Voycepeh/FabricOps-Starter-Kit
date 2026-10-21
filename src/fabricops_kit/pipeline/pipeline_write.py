@@ -583,6 +583,8 @@ def pipeline_write(
                 "Testing found a populated target without an accepted source-to-target baseline; "
                 "reconcile the relationship before Live publication."
             )
+        from fabricops_kit.io.shared import repartition_dataframe_for_write
+        prepared_df = repartition_dataframe_for_write(prepared_df, repartition_by)
         validate_processing_input(prepared_df, _physical_processing_definition(processing))
         write_metrics.update(rows_committed=0, measurement_source="dry_run")
         return {
