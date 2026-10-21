@@ -9,9 +9,6 @@
 
 Profile a Spark DataFrame or complete governed table and return statistical and frequency results.
 
-<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">99_explore</span>
-</p>
 
 ## Usage notes
 

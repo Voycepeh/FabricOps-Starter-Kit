@@ -56,7 +56,7 @@ If approval or a manifest contract is missing, return to Governance and resolve 
 
 ## Grant direct consumer access
 
-Once the governed Production output exists, consumers do not need a FabricOps exploration notebook to use it.
+Once the governed Production output exists, consumers can query it through PySpark, SQL, or other native Fabric interfaces.
 
 </div>
 </div>

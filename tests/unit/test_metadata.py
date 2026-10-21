@@ -220,7 +220,6 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'widget_activate_pipeline',
         'widget_render_data_steward',
         'widget_render_data_agreement',
-        'widget_view_catalogue',
     ]
     assert fabricops_kit.__all__ == expected_public_callables
     assert len(fabricops_kit.__all__) == len(expected_public_callables)

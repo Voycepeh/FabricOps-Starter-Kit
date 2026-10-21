@@ -41,7 +41,6 @@ LIVE_WIDGETS = {
     "widget_activate_pipeline",
     "widget_render_data_steward",
     "widget_render_data_agreement",
-    "widget_view_catalogue",
 }
 
 

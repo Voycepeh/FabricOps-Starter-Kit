@@ -136,56 +136,6 @@ _FORM_STYLE = """<style>
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 
 
-def resolve_notebook_lineage_tables(
-    *, environment_name: str, store: str, schema: str | None,
-    spark_session: Any, context: Any, runtime_context: dict[str, Any], required: bool = True,
-) -> tuple[list[tuple[str, str]], dict[str, Any]]:
-    """Resolve current-notebook pipeline roles and table IDs from Data Lineage."""
-    runtime = config_shared.resolve_runtime_context(context=context)
-    notebook_id = str(runtime.get("notebook_id") or "").strip()
-    notebook_name = str(runtime.get("notebook_name") or notebook_id).strip()
-    workspace_id = str(runtime.get("workspace_id") or "").strip()
-    if not notebook_id:
-        raise ValueError(
-            "Unable to resolve the current notebook_id. Run 00_env_config in the Fabric notebook before selecting Data Contracts."
-        )
-    from pyspark.sql import functions as F
-
-    try:
-        lineage = read_lakehouse_table(
-            "METADATA_DATA_LINEAGE", store=store, schema=schema,
-            spark_session=spark_session, context=runtime_context,
-        )
-    except Exception as exc:
-        if required or not is_table_not_found_error(exc):
-            raise
-        return [], {
-            "notebook_id": notebook_id, "notebook_name": notebook_name,
-            "workspace_id": workspace_id or None, "environment_name": environment_name,
-        }
-    predicate = (
-        (F.col("_notebook_id") == notebook_id)
-        & (F.col("environment_name") == environment_name)
-    )
-    if workspace_id:
-        predicate &= F.col("_workspace_id") == workspace_id
-    pairs = sorted({
-        (str(row["pipeline_role"] or "").strip().title(), str(row["table_id"] or "").strip())
-        for row in lineage.filter(predicate).select("pipeline_role", "table_id").distinct().collect()
-        if row["table_id"] and row["pipeline_role"]
-    })
-    if not pairs and required:
-        scope = f" in workspace {workspace_id!r}" if workspace_id else ""
-        raise ValueError(
-            f"No METADATA_DATA_LINEAGE tables are registered for notebook_id {notebook_id!r}{scope} "
-            f"and environment {environment_name!r}. Run the baseline pipeline to register Lineage first."
-        )
-    return pairs, {
-        "notebook_id": notebook_id, "notebook_name": notebook_name,
-        "workspace_id": workspace_id or None, "environment_name": environment_name,
-    }
-
-
 def parse_data_contract_payload(row: Mapping[str, Any]) -> dict[str, Any]:
     """Parse and validate the immutable identity in one contract payload."""
     try:
@@ -420,20 +370,6 @@ def action_row(widgets: Any, controls: Iterable[Any], *, consequence: Any | None
     if callable(add_class):
         add_class("fabricops-actions")
     return row
-
-
-def resolve_agreement_details(agreement: dict[str, Any] | None) -> tuple[str, str]:
-    """Resolve a canonical agreement ID and label from agreement widget state."""
-    supplied = agreement or {}
-    row: dict[str, Any] = supplied
-    resolved = str(supplied.get("agreement_id") or "").strip()
-    if not resolved:
-        selected = supplied.get("existing_record")
-        selected_id = str(getattr(selected, "value", "") or "").strip()
-        row = (supplied.get("existing_records_by_id") or {}).get(selected_id, {})
-        resolved = str(row.get("agreement_id") or selected_id).strip()
-    label = str(row.get("agreement_name") or supplied.get("agreement_name") or resolved).strip()
-    return resolved, label
 
 
 def _html_escape(value: Any) -> str:
@@ -966,20 +902,9 @@ def enrichment_control_options(config: Any) -> tuple[list[str], list[dict[str, A
 # DQ authoring record helpers migrated to widget ownership.
 
 
-# Shared catalogue-selection widget implementation.
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 PROFILE_TABLE = "METADATA_DATA_PROFILED"
 PROFILE_FREQUENCY_TABLE = "METADATA_DATA_PROFILED_FREQUENCY"
-
-
-def dataset_label(row: dict[str, Any], role: str | None = None) -> str:
-    """Build the consistent physical dataset label, optionally tagged by role."""
-    location = " / ".join(
-        str(row.get(field) or "").strip()
-        for field in ("layer", "schema_name", "table_name")
-        if str(row.get(field) or "").strip()
-    ) or str(row.get("table_id") or "")
-    return f"[{role}] {location}" if role else location
 
 
 # ---------------------------------------------------------------------------

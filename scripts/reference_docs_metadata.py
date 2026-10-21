@@ -72,10 +72,6 @@ WIDGET_USAGE_NOTE = """Widget helpers provide a front-end notebook interface so 
 
 They help users write values into the correct underlying metadata tables without manually editing those tables directly."""
 
-CATALOGUE_WIDGET_USAGE_NOTE = """Catalogue viewer widgets let users select governed datasets and load catalogue and profile Spark DataFrames for native Fabric notebook rendering.
-
-They are read-only selectors and do not modify metadata."""
-
 SETUP_NOTEBOOK_USAGE_NOTE = """Use this in the setup notebook to capture and render the key runtime information required by downstream Starter Kit notebooks.
 
 This helps confirm the active environment, configured stores, notebook context, and runtime values before later notebooks depend on them."""
@@ -546,7 +542,6 @@ METADATA_COLUMN_OWNERS = {
 USAGE_NOTE_BY_FUNCTION = {
     "setup_notebook": SETUP_NOTEBOOK_USAGE_NOTE,
     "setup_metadata_tables": SETUP_METADATA_USAGE_NOTE,
-    "widget_view_catalogue": CATALOGUE_WIDGET_USAGE_NOTE,
 }
 
 
@@ -642,9 +637,8 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
   'segment_intro': 'Persistent Governance lifecycle before and after Engineering evidence production.',
   'segments': [{'symbols': ['widget_render_data_steward',
                             'widget_render_data_agreement',
-                            'widget_data_contract',
-                            'widget_view_catalogue'],
-                'title': 'Agreement, Data Contract authoring, catalogue review, and activation'}],
+                            'widget_data_contract'],
+                'title': 'Agreement, Data Contract authoring, and activation'}],
   'template_path': 'templates/notebooks/01_governance.ipynb'},
  {'notebook_key': '02_pipeline',
   'notebook_label': '`02_pipeline`',
@@ -655,13 +649,6 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                {'symbols': ['orchestrate_write'],
                 'title': 'Run the standard governed Write lifecycle'}],
   'template_path': 'templates/notebooks/02_pipeline.ipynb'},
- {'notebook_key': '99_explore',
-  'notebook_label': '`99_explore`',
-  'segment_intro': 'Optional discovery, profiling, troubleshooting, investigation, and ad hoc '
-                   'analysis support.',
-  'segments': [{'symbols': ['profile_table', 'widget_view_catalogue'],
-                'title': 'Exploration'}],
-  'template_path': 'templates/notebooks/99_explore.ipynb'},
  {'notebook_key': 'example_pipeline_demo',
   'notebook_label': '`example_pipeline_demo`',
   'segment_intro': 'Demo data seeding for the real pipeline template.',
@@ -677,7 +664,7 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
 
 PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function', 'module': 'consumption.create_data_agent', 'function_type': 'callable',
-  'symbol_name': 'create_data_agent', 'template_notebook': '99_explore', 'template_segment': 'Create Data Agent',
+  'symbol_name': 'create_data_agent', 'template_notebook': '', 'template_segment': 'Create Data Agent',
   'summary_override': 'Create and configure one native Fabric Data Agent from an activated Production table.',
   'purpose': 'Complete the governed single-table Step 7 handoff without manually composing context or instructions.', 'use_when': 'Use to create a Data Agent from one activated Production table.',
   'do_not_use_when': 'Do not use for multi-table agents, relationship authoring, evaluation, or automatic publication.',
@@ -1102,7 +1089,7 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Read a Delta table from a configured Fabric lakehouse target.',
   'symbol_name': 'read_lakehouse_table',
-  'template_notebook': '02_pipeline / 99_explore',
+  'template_notebook': '02_pipeline',
   'template_segment': 'Fabric IO',
   'use_when': 'Use when reading managed Delta tables from configured Lakehouse Tables storage.',
   'do_not_use_when': 'Do not use for lakehouse Files paths or warehouse SQL serving-engine reads.',
@@ -1150,7 +1137,7 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Read a CSV file from a configured Fabric-resolved path through Spark CSV.',
   'symbol_name': 'read_lakehouse_csv',
-  'template_notebook': '02_pipeline / optional 99_explore',
+  'template_notebook': '02_pipeline',
   'template_segment': 'Fabric IO',
   'use_when': 'Use when reading a CSV file from a configured Fabric-resolved path.',
   'do_not_use_when': 'Do not use for Delta tables, Parquet files, Excel files, or warehouse SQL '
@@ -1183,7 +1170,7 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Read JSON data from a configured Lakehouse Files path through Spark JSON.',
   'symbol_name': 'read_lakehouse_json',
-  'template_notebook': '02_pipeline / optional 99_explore',
+  'template_notebook': '02_pipeline',
   'template_segment': 'Fabric IO',
   'use_when': 'Use when reading JSON files or folders from a configured Lakehouse Files path.',
   'do_not_use_when': 'Do not use for managed Delta tables, CSV files, Excel files, Parquet files, or warehouse SQL tables.',
@@ -1206,7 +1193,7 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Read a Parquet path from a configured Fabric-resolved path through Spark Parquet.',
   'symbol_name': 'read_lakehouse_parquet',
-  'template_notebook': '02_pipeline / optional 99_explore',
+  'template_notebook': '02_pipeline',
   'template_segment': 'Fabric IO',
   'use_when': 'Use when reading a Parquet file or path from a configured Fabric lakehouse Files '
               'path.',
@@ -1242,7 +1229,7 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Read an Excel file from a configured Fabric-resolved path through pandas.read_excel.',
   'symbol_name': 'read_lakehouse_excel',
-  'template_notebook': '02_pipeline / optional 99_explore',
+  'template_notebook': '02_pipeline',
   'template_segment': 'Fabric IO',
   'use_when': 'Use when reading .xlsx files from a configured Fabric-resolved path, '
               'especially small reference files, mapping tables, or manually maintained business '
@@ -1281,7 +1268,7 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Read a table from a configured Fabric warehouse target.',
   'symbol_name': 'read_warehouse_table',
-  'template_notebook': '02_pipeline / optional 99_explore',
+  'template_notebook': '02_pipeline',
   'template_segment': 'Fabric IO',
   'use_when': 'Use when reading a table from a configured Fabric warehouse target.',
   'do_not_use_when': 'Do not use for lakehouse Delta tables or lakehouse Files CSV, Parquet, or '
@@ -1315,7 +1302,7 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.',
   'symbol_name': 'read_warehouse_query',
-  'template_notebook': '02_pipeline / optional 99_explore',
+  'template_notebook': '02_pipeline',
   'template_segment': 'Fabric IO',
   'use_when': 'Use when projection or filtering should run in the Fabric Warehouse SQL serving engine before Spark receives rows.',
   'do_not_use_when': 'Do not use for lakehouse Delta tables, lakehouse Files paths, or non-SELECT warehouse mutations.',
@@ -1373,7 +1360,7 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Profile a Spark DataFrame or complete governed table and return statistical and frequency results.',
   'symbol_name': 'profile_table',
-  'template_notebook': '02_pipeline / optional 99_explore',
+  'template_notebook': '02_pipeline',
   'template_segment': 'Profiling',
   'use_when': 'Use for non-persistent DataFrame profiling or governed table profiling and metadata persistence.',
   'do_not_use_when': 'Do not associate a partial incremental batch with a complete-source governed profile.',
@@ -1611,16 +1598,7 @@ PUBLIC_SYMBOL_DOCS = [
   'use_when': 'Use after finalizing successful whole-pipeline Testing.',
   'expanded_purpose': 'Shows exact contracts/rules, executable and configuration identity, diagnostics, warnings, Agreement and fingerprint before explicit Governance confirmation. Activation neither deploys nor publishes.',
   'related_functions': ['activate_pipeline', 'setup_pipeline']},
- {'kind': 'function',
-  'module': 'widgets.widget_view_catalogue',
-  'function_type': 'callable',
-  'summary_override': 'Select catalogue evidence through an explicit pipeline, agreement, or explore dataset scope.',
-  'symbol_name': 'widget_view_catalogue',
-  'template_notebook': '01_governance, 02_pipeline, 99_explore',
-  'template_segment': 'Catalogue review',
-  'use_when': 'Use with mode pipeline for current-notebook lineage, agreement for selected-agreement contracts, or explore for direct current-environment browsing.',
-  'related_functions': ['profile_table'],
-  'return_interpretation': 'Call state["get_views"]() to receive exactly catalogue, profile, frequency, and guardrail_results for the selected table_id.'},
+
 
 
 

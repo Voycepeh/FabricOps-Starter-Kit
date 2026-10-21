@@ -129,8 +129,8 @@ def test_official_governance_workflow_inventory():
         "00_env_config.ipynb",
         "01_governance.ipynb",
         "02_pipeline.ipynb",
-        "99_explore.ipynb",
     } <= names
+    assert "99_explore.ipynb" not in names
     assert "02A_data_contract_validation.ipynb" not in names
     assert {"01_agreement.ipynb", "03_review.ipynb"}.isdisjoint(names)
 
