@@ -73,6 +73,7 @@ IO_EXPORTS = (
 )
 
 PIPELINE_EXPORTS = (
+    "finalize_pipeline",
     "setup_pipeline",
     "profile_table",
     "resolve_table_id",
@@ -120,3 +121,5 @@ def _load_package_version() -> str:
 __version__ = _load_package_version()
 
 __all__ = [*ACCESS_EXPORTS, *CONFIG_EXPORTS, *DATA_AGENT_EXPORTS, *IO_EXPORTS, *PIPELINE_EXPORTS, *WIDGET_EXPORTS]
+
+from fabricops_kit.pipeline.finalize_pipeline import finalize_pipeline

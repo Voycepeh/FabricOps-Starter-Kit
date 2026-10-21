@@ -9,6 +9,7 @@ import pytest
 
 DEMO_DIR = Path(__file__).resolve().parents[2] / "templates" / "DemoData"
 DEMOS = (
+    "../notebooks/02_pipeline.ipynb",
     "02A_full_refresh_demo.ipynb",
     "02B_incremental_append_demo.ipynb",
     "02C_scd_demo.ipynb",
@@ -22,6 +23,7 @@ def test_demo_executes_every_declared_operation_before_inspection(name, mode, pa
     plan = object()
     reads, writes = [], []
     dataframe = MagicMock(name="dataframe")
+    finalize = Mock(return_value={"status": "succeeded" if passed else "failed"})
     refresh = Mock()
     build_plan = Mock(return_value=plan)
 
@@ -48,7 +50,7 @@ def test_demo_executes_every_declared_operation_before_inspection(name, mode, pa
     forbidden = Mock(side_effect=AssertionError("Notebook exited or published outside the orchestrators"))
     namespace = {
         "F": MagicMock(), "spark": object(), "display": Mock(),
-        "setup_pipeline": select, "orchestrate_read": read, "orchestrate_write": write,
+        "finalize_pipeline": finalize, "setup_pipeline": select, "orchestrate_read": read, "orchestrate_write": write,
         "resolve_table_id": Mock(return_value="inventory-target"),
         "read_lakehouse_csv": forbidden, "read_lakehouse_table": forbidden,
         "write_lakehouse_table": forbidden,
@@ -61,6 +63,7 @@ def test_demo_executes_every_declared_operation_before_inspection(name, mode, pa
             exec(compile(source, f"{name}:{cell.id}", "exec"), namespace)
     assert [row["table_name"] for row in reads] == [row["table_name"] for row in namespace["PIPELINE_SOURCES"]]
     assert writes == [row["table_name"] for row in namespace["PIPELINE_TARGETS"]]
+    finalize.assert_called_once_with(plan, spark_session=namespace["spark"])
     assert len(namespace["writes"]) == len(writes)
     assert all(result["validation_passed"] is passed for result in namespace["writes"].values())
     if mode == "testing":

@@ -34,6 +34,7 @@ def _row(version=1, *, table_id="source", active=False):
 
 
 def _render(monkeypatch, rows, *, interactive=False, metadata_error=None, lineage_state="empty", targets=None):
+    monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.shared"), "persist_pipeline_run", lambda *a, **kw: None)
     context = {"config": object(), "env": "canary-east", "notebook_id": "notebook-1"}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: (context_obj["config"], "canary-east", context_obj))
     context_obj = context
@@ -225,7 +226,8 @@ def test_headless_uses_builder_without_loading_ui_or_listing_contracts(monkeypat
     assert module.setup_pipeline(sources=[{"table_id": "source"}], targets=[], interactive=False,
                                   execution_mode="testing", selections=selections) is sentinel
     builder.assert_called_once_with(execution_mode="testing", sources=[{"table_id": "source"}],
-                                    targets=[], selections=selections, context=None, spark_session=None)
+                                    targets=[], selections=selections, context=None, spark_session=None,
+                                    pipeline_id=None, executable_sha256=None, dependencies=None)
     forbidden.assert_not_called()
 
 

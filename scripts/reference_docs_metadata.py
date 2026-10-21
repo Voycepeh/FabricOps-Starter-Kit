@@ -132,6 +132,11 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 )
 
 METADATA_TABLE_MODELS = {
+    "METADATA_PIPELINE_RUN": {
+        "purpose": "Persist one logical execution attempt with candidate identity, operation outcomes and safe failures. run_id distinguishes attempts; standard _activity_id preserves the Fabric activity and may be shared by several attempts. pipeline_id survives notebook renames and environment copies. Activation eligibility is not a stored flag. Bootstrap is separate from successful Testing; Live keeps existing contract authority.",
+        "grain": "One logical pipeline run across all participating sources and targets.",
+        "primary_key": ["run_id"], "foreign_keys": [], "relationships": [],
+    },
     "METADATA_DATA_STEWARD": {
         "purpose": "Know who is responsible for the data.",
         "grain": "One registered Data Steward.",
@@ -231,6 +236,7 @@ METADATA_TABLE_MODELS = {
         "grain": "One persisted Live Guardrail outcome for one exact Data Contract version; Testing returns outcomes in memory only.",
         "primary_key": ["guardrail_result_id"],
         "foreign_keys": [
+            {"local_field": "run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Planned execution results belong to one logical pipeline run; standalone historical results may have no run record."},
             {"local_field": "contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Together with contract_version, identifies the immutable payload containing the evaluated guardrail_rule_id and guardrail_version."},
             {"local_field": "contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "Results retain the exact evaluated contract version and rule revision even after a new draft is authored."},
         ],
@@ -239,6 +245,7 @@ METADATA_TABLE_MODELS = {
 }
 
 METADATA_REFERENCE_ORDER = [
+    "METADATA_PIPELINE_RUN",
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
@@ -478,6 +485,10 @@ METADATA_COLUMN_OWNERS = {
         "severity": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "reason": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "result_payload_json": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
+    },
+    "METADATA_PIPELINE_RUN": {
+        "__default__": ["fabricops_kit.pipeline.shared.persist_pipeline_run"],
+        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
     "METADATA_SOURCE_OBSERVATION": {
         "__default__": [
@@ -874,7 +885,7 @@ PUBLIC_SYMBOL_DOCS = [
  'do_not_use_when': 'Use lower-level capabilities directly when intentionally composing a non-standard lifecycle.',
  'parameters': 'Explicit execution_plan and source coordinates, read strategy, query and profiling controls.',
  'returns': 'Governed source DataFrame and table identity together with every stage result.',
- 'side_effects': 'Testing evaluates in memory with zero persistence. Live commits Guardrail Results and full-read '
+ 'side_effects': 'Testing persists METADATA_PIPELINE_RUN and Guardrail diagnostics; business publication and ordinary metadata remain disabled. Live commits Guardrail Results and full-read '
                  'Catalogue/Profile metadata.',
  'preferred_example': 'source = orchestrate_read(execution_plan=plan, store="Bronze", schema="demo", '
                       'table_name="orders")',
@@ -891,7 +902,7 @@ PUBLIC_SYMBOL_DOCS = [
  'parameters': 'Explicit execution_plan, transformed DataFrame, participating Read results, target coordinates '
                'and strategy.',
  'returns': 'Prepared input, Guardrail outcomes, execution mode and actual publication/persistence status.',
- 'side_effects': 'Testing performs no durable mutations. Live publishes and commits metadata at existing '
+ 'side_effects': 'Testing persists run evidence and Guardrail diagnostics only. Live publishes and commits metadata at existing '
                  'lifecycle boundaries.',
  'preferred_example': 'result = orchestrate_write(transformed_df, execution_plan=plan, sources=[source], '
                       'store="Silver", schema="demo", table_name="orders", write_mode="overwrite")',
@@ -1574,7 +1585,7 @@ PUBLIC_SYMBOL_DOCS = [
  'related_functions': ['widget_data_contract', 'setup_pipeline'],
  'expanded_purpose': 'Matches the exact frozen payload to a complete in-memory Testing report, requires '
                      'deliberate Governance review approval and confirmation, then links an exact Data Agreement '
-                     'and activates the frozen version. Testing never registers successful activation evidence.',
+                     'and activates the frozen version. Testing retains complete-run evidence for a later activation workflow; current contract activation still reviews in-memory reports.',
  'when_to_use': 'Use only after complete passing Testing diagnostics for the exact immutable version are '
                 'available.',
  'do_not_use_when': 'Do not use to author or freeze contracts, run pipeline validation, or promote and deploy '
@@ -1598,6 +1609,13 @@ PUBLIC_SYMBOL_DOCS = [
   'return_interpretation': 'Call state["get_views"]() to receive exactly catalogue, profile, frequency, and guardrail_results for the selected table_id.'},
 
 
+
+ {'kind': 'function', 'module': 'pipeline.finalize_pipeline', 'function_type': 'callable',
+  'symbol_name': 'finalize_pipeline', 'template_notebook': '02_pipeline',
+  'template_segment': 'Finalize complete pipeline run',
+  'summary_override': 'Seal and persist complete logical pipeline run evidence.',
+  'related_functions': ['setup_pipeline', 'orchestrate_read', 'orchestrate_write'],
+  'use_when': 'Call after every declared operation, including Read-only pipelines.'},
 
  {'kind': 'function',
  'module': 'pipeline.setup_pipeline',

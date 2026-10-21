@@ -73,7 +73,7 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `dataframe` | `Any` | Yes | `—` | Transformed Spark DataFrame; Sensitive Data treatment prepares the input. |
-| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Same required plan as all participating Reads. Bootstrap publishes and profiles initial outputs only while no participating frozen or active contract exists. Testing evaluates Guardrails, processing, ownership, incremental safety and SCD input checks without publication, staging, mappings, metadata or activation evidence. Live enforces active frozen contracts and stops on Block before publication. |
+| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Same required plan as all participating Reads. Bootstrap publishes and profiles initial outputs only while no participating frozen or active contract exists. Testing evaluates Guardrails, processing, ownership, incremental safety and SCD input checks without publication, staging or durable mappings. Run evidence and Guardrail diagnostics are persisted; finalize_pipeline seals the complete run. Live enforces active frozen contracts and stops on Block before publication. |
 | `sources` | `Iterable[dict[str, Any]]` | Yes | `—` | Read results from this exact plan for the sources actually feeding this target. |
 | `store` | `str` | Yes | `—` | Configured target store key. |
 | `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
@@ -131,9 +131,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:25`
+`fabricops_kit/pipeline/orchestrate_write.py:26`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L25-L230">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L26-L235">View on GitHub</a>
 </div>
 
 

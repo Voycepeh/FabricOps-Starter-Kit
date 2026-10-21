@@ -79,6 +79,9 @@ class _DeltaTransport:
 @pytest.fixture
 def lifecycle(monkeypatch, spark_session):
     """Share one configured local metadata store across every real workflow phase."""
+    from importlib import metadata
+    installed_version = metadata.version
+    monkeypatch.setattr(metadata, "version", lambda name: "test-delta-runtime" if name == "delta-spark" else installed_version(name))
     modules = [importlib.import_module(name) for name in (
         "fabricops_kit.widgets.widget_data_contract", "fabricops_kit.pipeline.setup_pipeline",
         "fabricops_kit.widgets.widget_activate_data_contract", "fabricops_kit.data_contract.scheduled_refresh",
@@ -244,7 +247,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert not before["diagnostic_review"]["available"] and buttons[0].disabled
     assert not state.metadata["METADATA_DATA_LINEAGE"]
     selector = importlib.import_module("fabricops_kit.pipeline.setup_pipeline")
-    coordinates = {"sources": [
+    coordinates = {"pipeline_id": "orders-pipeline", "executable_sha256": "a" * 64, "dependencies": {}, "sources": [
         {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
         {"store": "Bronze", "schema": "dbo", "table_name": "products"}],
         "targets": [{"store": "Silver", "schema": "dbo", "table_name": "curated_orders"}]}
@@ -264,7 +267,10 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
         write_mode="overwrite", spark_session=state.spark, verbose=False)
     assert not failed["validation_passed"] and not failed["published"]
     assert failed["grain_result"]["can_continue"] is False
-    assert state.metadata == snapshot and "curated_orders" not in state.business
+    assert_ordinary_metadata_unchanged(state.metadata, snapshot)
+    assert "curated_orders" not in state.business
+    from fabricops_kit import finalize_pipeline
+    assert finalize_pipeline(plan, spark_session=state.spark)["status"] == "failed"
     gate, buttons = _activation(state, state.target_id, [failed])
     assert not gate["diagnostic_review"]["available"] and buttons[0].disabled
     selection = selector.setup_pipeline(**coordinates, interactive=True, spark_session=state.spark, context=state.context)
@@ -277,7 +283,10 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert tested["validation_passed"] and not tested["published"]
     assert tested["validation_passed"]
     assert tested["dataframe"].first().email == "****************"
-    assert state.metadata == snapshot
+    assert_ordinary_metadata_unchanged(state.metadata, snapshot)
+    completed = finalize_pipeline(plan, spark_session=state.spark)
+    assert completed["status"] == "succeeded"
+    assert all(row["run_id"] == plan.plan_id for row in plan.results)
     assert all(row["rule_type"] != "contract_validation" for row in plan.results)
     for table_id in (state.source_id, state.schema_source_id, state.target_id):
         widget, buttons = _activation(state, table_id, [tested])
@@ -299,8 +308,13 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert state.business["curated_orders"].first().email == "****************"
     assert {row["pipeline_role"] for row in state.metadata["METADATA_DATA_LINEAGE"]} == {"source", "target"}
     assert state.metadata["METADATA_SOURCE_OBSERVATION"]
-    assert {row["execution_type"] for row in state.metadata["METADATA_GUARDRAIL_RESULTS"]} == {"live"}
-    # Same activity retry does not republish, but idempotently finalizes metadata.
+    assert {row["execution_type"] for row in state.metadata["METADATA_GUARDRAIL_RESULTS"]} == {"testing", "live"}
+    # A new logical run under the same business activity recovers without republication.
+    assert finalize_pipeline(live, spark_session=state.spark)["status"] == "succeeded"
+    selection = selector.setup_pipeline(**coordinates, interactive=True, spark_session=state.spark, context=state.context)
+    selection["set_mode"]("live")
+    live = selection["build_plan"]()
+    inputs = reads(live)
     lineage_count = len(state.metadata["METADATA_DATA_LINEAGE"])
     retried = orchestrate_write(inputs[0]["dataframe"], execution_plan=live, sources=inputs,
         **coordinates["targets"][0], write_mode="overwrite", spark_session=state.spark, verbose=False)
@@ -309,3 +323,10 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     next_draft = contracts.create_contract_draft(table_id=state.target_id, config=state.config, env="dev", spark_session=state.spark)
     assert next_draft["contract_version"] == 2 and not next_draft["is_active"]
     assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]] for row in state.metadata["METADATA_DATA_CONTRACT"] if row["status"] == "frozen")
+
+
+def assert_ordinary_metadata_unchanged(current, before):
+    """Allow run evidence and Guardrail diagnostics while protecting ordinary metadata."""
+    for name, rows in before.items():
+        if name not in {"METADATA_PIPELINE_RUN", "METADATA_GUARDRAIL_RESULTS"}:
+            assert current[name] == rows

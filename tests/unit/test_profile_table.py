@@ -867,6 +867,8 @@ def test_discovery_limits_are_validated_before_any_work(monkeypatch, entrypoint,
     monkeypatch.setattr(module, boundary, prepare)
     kwargs = dict(store="Silver", schema="dbo", table_name="orders", grain_discovery_enabled=False)
     if entrypoint.startswith("orchestrate_"):
+        from contextlib import nullcontext
+        monkeypatch.setattr(module, "PipelineOperation", lambda _plan, _role, arguments: nullcontext(Mock(arguments=arguments)))
         kwargs["execution_plan"] = None
     if entrypoint == "orchestrate_write":
         kwargs.update(dataframe=object(), sources=[], write_mode="overwrite")

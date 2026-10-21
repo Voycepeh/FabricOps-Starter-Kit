@@ -41,7 +41,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="testing">
 <summary><strong>Testing</strong> — The pipeline-wide mode that evaluates real data and prepared processing without durable mutations.</summary>
-<p>Testing evaluates the configured pipeline and eligible frozen Data Contracts, returns rule diagnostics and supported processing dry-run outcomes, and never publishes data or persists metadata, mappings, checkpoints, staging or activation evidence. It cannot verify real publication permissions, target transactions or cross-store finalization.</p>
+<p>Testing evaluates eligible frozen Data Contracts and processing dry runs, persists METADATA_PIPELINE_RUN and linked METADATA_GUARDRAIL_RESULTS, and never publishes business data or commits ordinary metadata, mappings, checkpoints or staging. Explicit finalization records complete-run status for later activation work. Current Live authority is unchanged. Testing cannot verify real publication permissions, target transactions or cross-store finalization.</p>
 </details>
 
 <details id="live">
@@ -323,6 +323,11 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <summary><strong>Pipeline</strong> — A repeatable sequence of steps that moves, transforms, validates, or writes data.</summary>
 <p>In FabricOps, 02_pipeline provides the standard Read → Transform → Write flow, with governed orchestration around project-owned transformation logic.</p>
 <p><strong>Also known as:</strong> pipelines</p>
+</details>
+
+<details id="pipeline-run">
+<summary><strong>pipeline run</strong> — One logical pipeline execution across every declared Read and Write.</summary>
+<p>METADATA_PIPELINE_RUN records one run_id for a stable logical pipeline_id, candidate fingerprints, operation summary and completion status. Explicit finalization is required, including Read-only runs. Bootstrap never qualifies as successful Testing evidence. Live retains existing Data Contract authority.</p>
 </details>
 
 <details id="pyspark">
