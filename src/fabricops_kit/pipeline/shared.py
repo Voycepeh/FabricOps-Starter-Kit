@@ -57,6 +57,11 @@ def persistence_permitted(context):
     return plan is None or plan.permits_persistence
 
 
+def source_observation_run_id(context):
+    """Reuse the pipeline attempt identity without replacing Fabric activity audit."""
+    return getattr((context or {}).get("execution_plan"), "plan_id", None)
+
+
 def execution_result(context, table_id, *, stages=()):
     """Describe execution authority and publication limits without Spark actions."""
     plan = context["execution_plan"]
@@ -967,7 +972,8 @@ class PublicationBatch:
             # activity and of caller-provided run-consistent audit timestamps.
             self.audit["_committed_at"] = datetime.now(UTC)
             self.receipt = {"batch_id": batch_id, "activity_id": self.audit["_activity_id"],
-                            "committed_at": self.audit["_committed_at"].isoformat(), "input_rows": self.input_rows}
+                            "committed_at": self.audit["_committed_at"].isoformat(), "input_rows": self.input_rows,
+                            "run_id": source_observation_run_id(self.context)}
             history_rows = []
             try:
                 history = read_lakehouse_table(
@@ -1004,10 +1010,11 @@ class PublicationBatch:
                     self.already_applied = True
             if self.already_applied:
                 _verify_retry_observations(self, history_rows)
+            _verify_publication_progress(self, history_rows)
             self._active_sources = {
                 key: [dict(row) for row in _PENDING_SOURCE_OBSERVATIONS.get(key, [])]
                 for source_id in self.source_table_ids
-                for key in [(self.context["env"], str(self.audit["_activity_id"]), source_id, self.identity["table_id"])]
+                for key in [(self.context["env"], source_observation_run_id(self.context) or str(self.audit["_activity_id"]), source_id, self.identity["table_id"])]
             }
             _ACTIVE_PUBLICATION_SOURCES.update(self._active_sources)
             return self
@@ -1055,7 +1062,7 @@ def _source_observation_signature(rows):
 def _verify_retry_observations(batch, history):
     """Refuse to attach a newer Read's checkpoint to an already-published frame."""
     for source_id in batch.source_table_ids:
-        key = (batch.context["env"], str(batch.audit["_activity_id"]), source_id, batch.identity["table_id"])
+        key = (batch.context["env"], source_observation_run_id(batch.context) or str(batch.audit["_activity_id"]), source_id, batch.identity["table_id"])
         for pending, statuses in (
             (_PENDING_SOURCE_OBSERVATIONS.get(key, []), {"observed", "committed"}),
             (_PENDING_SOURCE_DRIFT_OBSERVATIONS.get(key, []), {"drift_observed", "drift_committed"}),
@@ -1073,6 +1080,29 @@ def _verify_retry_observations(batch, history):
                     "The already-published prepared batch does not match this Read's pending source observations. "
                     "Publish the DataFrame prepared from the pending Read; the checkpoint was not advanced."
                 )
+
+
+def _verify_publication_progress(batch, history):
+    """Reject a retained batch after another run has advanced its source checkpoint."""
+    execution_id = source_observation_run_id(batch.context) or str(batch.audit["_activity_id"])
+    for source_id in batch.source_table_ids:
+        scope = _INCREMENTAL_SOURCE_SCOPES.get((batch.context["env"], execution_id, source_id, batch.identity["table_id"]))
+        if not scope or not scope.get("has_data"):
+            continue
+        accepted = _latest_source_target_observation(
+            history, source_table_id=source_id, target_table_id=batch.identity["table_id"], environment_name=batch.context["env"],
+        )
+        progress = max((row["max_change_value"] for row in accepted if row.get("max_change_value") is not None), key=_progress_key, default=None)
+        expected = [scope.get("after")]
+        if batch.already_applied:
+            expected.append(scope.get("through"))
+        if not any((progress is None and value is None) or (
+            progress is not None and value is not None and _progress_key(progress) == _progress_key(value)
+        ) for value in expected):
+            raise RuntimeError(
+                "The source checkpoint advanced after this batch's Read in another pipeline run. "
+                "Start a new run and repeat Read, Transform and Write; the retained batch was not published."
+            )
 
 
 def _accepts_publication_receipt(batch, receipt):
@@ -1207,14 +1237,15 @@ def _merge_source_observation_records(
         metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE), context=context,
     )
     target = DeltaTable.forPath(spark, path)
-    if any(row.get("publication_payload_json") for row in records) and "publication_payload_json" not in target.toDF().columns:
-        raise RuntimeError("Run setup_metadata_tables() to add publication_payload_json before finalizing Source Observation; publication progress was not committed.")
+    if any(row.get("publication_payload_json") for row in records) and not {"publication_payload_json", "run_id"} <= set(target.toDF().columns):
+        raise RuntimeError("Run setup_metadata_tables() to add publication_payload_json and run_id before finalizing Source Observation; publication progress was not committed.")
     (
         target.alias("target")
         .merge(
             frame.alias("source"),
             "target.environment_name = source.environment_name "
             "AND target._activity_id = source._activity_id "
+            "AND target.run_id <=> source.run_id "
             "AND target.source_table_id = source.source_table_id "
             "AND target.target_table_id = source.target_table_id "
             "AND target.observation_id = source.observation_id "
@@ -1301,7 +1332,7 @@ def _ensure_unambiguous_source_observation(key, pending, *, accepted=()):
             "A different incremental source state is already awaiting publication for this source and target. "
             "Publish or retry the existing Read's prepared DataFrame before reading newer data; "
             "the newer Read was rejected and the pending checkpoint was preserved. "
-            "If that DataFrame was discarded, restart the notebook session and rerun Read, Transform and Write."
+            "If that DataFrame was discarded, create a fresh pipeline plan/run and rerun Read, Transform and Write; standalone callers can restart their notebook session."
         )
 
 
@@ -1315,7 +1346,7 @@ def resolve_incremental_source_scope(
     """Resolve and stage the unconsumed scope for one source-to-target relationship."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
-    activity_id = str(audit["_activity_id"])
+    activity_id = source_observation_run_id(context) or str(audit["_activity_id"])
     current = observation_rows(observation)
     if not current:
         raise ValueError(f"Current source observation for {source_table_id!r} is empty.")
@@ -1479,7 +1510,7 @@ def check_source_drift_for_target(
     """Evaluate source-governed drift against a target-specific baseline."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
-    activity_id = str(audit["_activity_id"])
+    activity_id = source_observation_run_id(context) or str(audit["_activity_id"])
     rules_df = load_table_guardrail_rules(
         config,
         env,
@@ -1631,6 +1662,7 @@ def _warehouse_publication_record(success_context, *, audit, env, status):
         "observation_id": receipt["batch_id"], "source_table_id": "", "source_table_name": "",
         "target_table_id": success_context["target_table_id"],
         "target_table_name": success_context["target_table_name"], "environment_name": env,
+        "run_id": source_observation_run_id(success_context.get("context")),
         "partition_value": "", "row_count": receipt.get("input_rows"),
         "observation_status": status, "publication_payload_json": json.dumps(receipt, sort_keys=True), **audit,
     })]
@@ -1674,6 +1706,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
                     "source_table_name": _CURRENT_TABLE_IDENTITIES.get(source_table_id, {}).get("table_name") or resolve_catalogue_table_identity(config, env, source_table_id, context=context).get("table_name"),
                     "target_table_name": _CURRENT_TABLE_IDENTITIES.get(target_table_id, {}).get("table_name") or resolve_catalogue_table_identity(config, env, target_table_id, context=context).get("table_name"),
                     "observation_status": observation_status,
+                    "run_id": source_observation_run_id(context),
                     "publication_payload_json": (json.dumps(success_context["publication"], sort_keys=True) if success_context.get("publication") else None),
                     **audit,
                 }))
@@ -1693,7 +1726,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     records.extend(_warehouse_publication_record(success_context, audit=audit, env=env, status="publication_committed"))
     _merge_source_observation_records(records, config=config, context=context)
     for source_table_id in source_table_ids:
-        key = (env, activity_id, source_table_id, target_table_id)
+        key = (env, source_observation_run_id(context) or activity_id, source_table_id, target_table_id)
         captured = snapshot[source_table_id]
         if _PENDING_SOURCE_OBSERVATIONS.get(key, []) == captured["incremental"]:
             _PENDING_SOURCE_OBSERVATIONS.pop(key, None)
@@ -1736,6 +1769,7 @@ def stage_pipeline_write_observations(success_context: Mapping[str, Any]) -> lis
                     "source_table_name": _CURRENT_TABLE_IDENTITIES.get(source_table_id, {}).get("table_name") or resolve_catalogue_table_identity(config, env, source_table_id, context=context).get("table_name"),
                     "target_table_name": _CURRENT_TABLE_IDENTITIES.get(target_table_id, {}).get("table_name") or resolve_catalogue_table_identity(config, env, target_table_id, context=context).get("table_name"),
                     "observation_status": observation_status,
+                    "run_id": source_observation_run_id(context),
                     "publication_payload_json": (json.dumps(success_context["publication"], sort_keys=True) if success_context.get("publication") else None),
                     **audit,
                 }))
@@ -5409,7 +5443,7 @@ def capture_source_observation(
                 )
             latest_value = _max_column_value(freshness_frame, freshness_column)
         _CURRENT_FRESHNESS_EVIDENCE[
-            (env, str(audit["_activity_id"]), governed_table_id)
+            (env, source_observation_run_id(context) or str(audit["_activity_id"]), governed_table_id)
         ] = {
             "source_table_id": governed_table_id,
             "environment_name": env,
@@ -5457,6 +5491,7 @@ def capture_source_observation(
                         "source_table_id": governed_table_id,
                         "target_table_id": "",
                         "environment_name": env,
+                        "run_id": source_observation_run_id(context),
                         "observation_status": "observed",
                         **audit,
                     },
@@ -5483,7 +5518,7 @@ def capture_source_observation(
         )
         set_current_source_observation(
             environment_name=env,
-            activity_id=str(audit["_activity_id"]),
+            activity_id=source_observation_run_id(context) or str(audit["_activity_id"]),
             table_id=governed_table_id,
             observation=drift_observation,
         )

@@ -70,6 +70,7 @@ _ROW_RESULT_COLUMNS = [
 
 _SOURCE_OBSERVATION_COLUMNS = [
     "observation_id",
+    "run_id",
     "source_table_id",
     "source_table_name",
     "target_table_id",

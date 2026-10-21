@@ -56,7 +56,6 @@ def runtime(monkeypatch, spark_session):
     installed_version = metadata.version
     monkeypatch.setattr(metadata, "version", lambda name: "test-delta-runtime" if name == "delta-spark" else installed_version(name))
     import sys
-    from types import SimpleNamespace
 
     class Merge:
         def alias(self, name): return self

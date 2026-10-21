@@ -243,7 +243,7 @@ def pipeline_read(
     incremental scope answers only what this target has not consumed.
 
     Complete Read, Transform and Write for a pending incremental batch before
-    reading a newer source state for the same target in this activity. Re-reading
+    reading a newer source state for the same target in this pipeline run. Re-reading
     identical state is allowed. A Write already in progress freezes its own
     observation snapshot, allowing the next Read without changing that checkpoint.
 

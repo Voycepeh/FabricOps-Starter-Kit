@@ -209,7 +209,8 @@ METADATA_FIELD_DESCRIPTIONS = {
 }
 
 SOURCE_OBSERVATION_FIELD_DESCRIPTIONS = {
-    "publication_payload_json": "Exact prepared-batch identity, writer activity and publication timestamp staged before the physical write. Recovery verifies the Delta commit and target marker for Lakehouse writes, or the exact staged activity/timestamp pair for Warehouse writes. Target-only Warehouse receipt rows never advance source watermarks; legacy activity-only rows are not automatically promoted.",
+    "run_id": "Logical pipeline attempt ID shared with METADATA_PIPELINE_RUN.run_id. The real Fabric activity remains in _activity_id. Null or empty for legacy and standalone observations; recovered records retain the original run identity.",
+    "publication_payload_json": "Exact prepared-batch identity, originating pipeline run, real Fabric activity and publication timestamp staged before the physical write. Recovery verifies the Delta commit and target marker for Lakehouse writes, or the exact staged activity/timestamp pair for Warehouse writes. Target-only Warehouse receipt rows never advance source watermarks; legacy activity-only rows are not automatically promoted.",
     "source_table_name": "Source table name captured from the Catalogue when this observation was written; later renames do not change it.",
     "target_table_name": "Target table name captured from the Catalogue when this observation was written; later renames do not change it.",
     "table_id": "Canonical table identity shared with METADATA_DATA_CATALOGUE.",

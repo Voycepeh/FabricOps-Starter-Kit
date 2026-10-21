@@ -52,8 +52,8 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
         if not getattr(shared, 'persistence_permitted', lambda _: True)(context):
             return
         for record in records:
-            key = tuple(record.get(k) for k in ('observation_id', 'partition_value', 'observation_status', 'target_table_id'))
-            history[:] = [r for r in history if tuple(r.get(k) for k in ('observation_id', 'partition_value', 'observation_status', 'target_table_id')) != key]
+            key = tuple(record.get(k) for k in ('observation_id', 'partition_value', 'observation_status', 'target_table_id', 'run_id'))
+            history[:] = [r for r in history if tuple(r.get(k) for k in ('observation_id', 'partition_value', 'observation_status', 'target_table_id', 'run_id')) != key]
             history.append(dict(record))
 
     def audit(**_kwargs):
@@ -83,7 +83,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
     monkeypatch.setattr(io, 'write_lakehouse_table', write)
     monkeypatch.setattr(shared, 'write_lakehouse_table', write)
     for mapping in (shared._PENDING_SOURCE_OBSERVATIONS, shared._PENDING_SOURCE_DRIFT_OBSERVATIONS,
-                    shared._INCREMENTAL_SOURCE_SCOPES, shared._CURRENT_TABLE_IDENTITIES):
+                    shared._INCREMENTAL_SOURCE_SCOPES, shared._ACTIVE_PUBLICATION_SOURCES, shared._CURRENT_TABLE_IDENTITIES):
         mapping.clear()
     shared._CURRENT_TABLE_IDENTITIES.update(source={'table_name': 'source'}, target=identity())
 
@@ -511,7 +511,7 @@ def test_warehouse_scd_retry_requires_latest_publication(warehouse_publication_r
     warehouse_io = import_module('fabricops_kit.io.shared')
     def merge(df, *, schema, table_name, store, processing, context, options):
         shared.execute_lakehouse_processing(df, schema=schema, table_name=table_name, store=store,
-                                           processing=processing, scope={'type': 'full'}, context=context)
+                                           processing=processing, scope={'type': 'full_dataset'}, context=context)
     monkeypatch.setattr(warehouse_io, 'execute_warehouse_processing', merge)
     original = run.spark.createDataFrame([(1, 'A', 1), (2, 'A', 1)], 'id long, value string, modified long')
     run.publish(original)
@@ -530,3 +530,74 @@ def test_warehouse_scd_retry_requires_latest_publication(warehouse_publication_r
     assert target.count() == (2 if mode == 'scd1' else 4)
     current = target if mode == 'scd1' else target.where('_is_current')
     assert sorted((row.id, row.value) for row in current.collect()) == [(1, 'A'), (2, 'A')]
+
+
+@pytest.mark.parametrize('mode', ['append', 'scd1', 'scd2'])
+def test_distinct_runs_share_real_activity_and_isolate_source_state(publication_runtime, mode):
+    run = publication_runtime
+    run.state['mode'] = mode
+    for day, expected in [(1, 8), (2, 9), (3, 10)]:
+        run.context['execution_plan'].plan_id = f'pipeline-run-{day}'
+        run.publish(run.stage(day, incremental=mode == 'append'))
+        assert run.read('target').count() == (expected if mode == 'scd2' else 8 if mode == 'scd1' or day == 1 else 12)
+    assert {row._activity_id for row in run.read('target').select('_activity_id').collect()} == {'interactive'}
+    if mode == 'append':
+        accepted = [row for row in run.history if row['observation_status'] == 'committed']
+        assert {row['run_id'] for row in accepted} == {'pipeline-run-1', 'pipeline-run-2'}
+        import json
+        assert {json.loads(row['publication_payload_json'])['run_id'] for row in accepted} == {'pipeline-run-1', 'pipeline-run-2'}
+
+
+def test_new_run_recovers_old_run_publication_without_duplicate_append(publication_runtime):
+    run = publication_runtime
+    run.context['execution_plan'].plan_id = 'original-run'
+    run.publish(run.stage(1))
+    run.state['fail'] = 'finalize'
+    with pytest.raises(RuntimeError):
+        run.publish(run.stage(2))
+    assert run.read('target').count() == 12
+    run.context['execution_plan'].plan_id = 'retry-run'
+    run.state['fail'] = None
+    result = run.publish(run.stage(3))
+    assert result['publication_status'] == 'empty_incremental_scope'
+    assert run.read('target').count() == 12
+    accepted = [row for row in run.history if row['observation_status'] == 'committed' and row['max_change_value'] == '12']
+    assert accepted and all(row['run_id'] == 'original-run' for row in accepted)
+
+
+def test_new_run_exact_retry_can_finalize_at_same_checkpoint(publication_runtime):
+    run = publication_runtime
+    run.context['execution_plan'].plan_id = 'baseline-run'
+    run.publish(run.stage(1))
+    run.context['execution_plan'].plan_id = 'old-run'
+    old_scope = run.stage(2)
+    old = run.spark.createDataFrame(old_scope.collect(), old_scope.schema)
+    run.context['execution_plan'].plan_id = 'new-run'
+    run.publish(run.stage(2))
+    assert run.read('target').count() == 12
+    run.context['execution_plan'].plan_id = 'old-run'
+    # The exact receipt proves these rows already arrived, so this is a safe
+    # metadata-only retry at the same upper watermark, never another append.
+    assert run.publish(old)['publication_status'] == 'already_applied'
+    assert run.read('target').count() == 12
+
+
+def test_retained_old_run_cannot_append_after_a_later_run_advances_checkpoint(publication_runtime):
+    run = publication_runtime
+    run.context['execution_plan'].plan_id = 'baseline-run'
+    run.publish(run.stage(1))
+    run.context['execution_plan'].plan_id = 'old-run'
+    old_scope = run.stage(2)
+    old = run.spark.createDataFrame(old_scope.collect(), old_scope.schema)
+    prior = shared._PENDING_SOURCE_OBSERVATIONS[('dev', 'old-run', 'source', 'target')][0]
+    run.context['execution_plan'].plan_id = 'new-run'
+    newer = [{**prior, 'observation_id': str(uuid4()), 'row_count': 16, 'max_change_value': '16'}]
+    shared.resolve_incremental_source_scope(source_table_id='source', target_table_id='target', observation=newer)
+    extra = run.spark.createDataFrame([(i, 'initial', 1) for i in range(13, 17)], old.schema)
+    run.publish(old.unionByName(extra))
+    assert run.read('target').count() == 16
+    run.context['execution_plan'].plan_id = 'old-run'
+    with pytest.raises(RuntimeError, match='checkpoint advanced'):
+        run.publish(old)
+    assert run.read('target').count() == 16
+    assert max(int(row['max_change_value']) for row in run.history if row['observation_status'] == 'committed') == 16

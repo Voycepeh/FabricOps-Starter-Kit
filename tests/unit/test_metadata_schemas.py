@@ -186,6 +186,7 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
     fields = metadata_table_schema_registry()["METADATA_SOURCE_OBSERVATION"].fieldNames()
     assert fields == [
         "observation_id",
+        "run_id",
         "source_table_id",
         "source_table_name",
         "target_table_id",

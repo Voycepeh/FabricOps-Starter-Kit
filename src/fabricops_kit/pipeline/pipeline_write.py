@@ -419,9 +419,12 @@ def pipeline_write(
     keeps multiple target writes in one activity exact and independent.
 
     Retries identify the exact prepared business-row multiset, processing definition,
-    source membership, environment and target. Before publication, target-specific
-    Source Observations stage a receipt binding that batch to a fresh activity and
-    timestamp pair. Both audit literals materialize in the same physical transaction
+    source membership, environment and target. The pipeline plan ID scopes transient
+    source state and is persisted as Source Observation run_id. The original writer
+    run_id is retained in the batch receipt, allowing verified cross-run recovery
+    while preserving the real Fabric activity audit. Before publication, target-specific
+    Source Observations bind that batch to the real Fabric activity and a fresh
+    publication timestamp. Both audit literals materialize in the same physical transaction
     as the business rows; an activity marker alone never proves publication.
     A verified retry skips mutation and idempotently finalizes metadata. New batches
     in a reused interactive activity proceed through the existing writers and keyed
@@ -485,6 +488,7 @@ def pipeline_write(
     from fabricops_kit.io.shared import execute_warehouse_processing
     from fabricops_kit.pipeline.shared import (
         PublicationBatch,
+        source_observation_run_id,
         commit_pipeline_write_success,
         execute_lakehouse_processing,
         stage_pipeline_write_observations,
@@ -518,11 +522,12 @@ def pipeline_write(
     publication_source_ids = _source_table_ids(source_table_ids)
     audit = resolve_target_audit_fields(context)
     activity_id = str(audit["_activity_id"])
+    execution_id = source_observation_run_id(context) or activity_id
     target_table_id = str(identity["table_id"])
     strategy = str(processing.get("load_strategy") or "")
     incremental_scopes = incremental_publication_scopes(
         environment_name=env,
-        activity_id=activity_id,
+        activity_id=execution_id,
         target_table_id=target_table_id,
         source_table_ids=publication_source_ids,
     )
@@ -564,7 +569,7 @@ def pipeline_write(
         "notebook_id": audit["_notebook_id"],
         "context": context,
         "observation_snapshot": snapshot_pipeline_write_observations(
-            environment_name=env, activity_id=activity_id, target_table_id=target_table_id,
+            environment_name=env, activity_id=execution_id, target_table_id=target_table_id,
             source_table_ids=publication_source_ids,
         ),
     }

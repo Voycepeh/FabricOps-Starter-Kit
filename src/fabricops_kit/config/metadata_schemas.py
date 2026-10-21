@@ -330,6 +330,7 @@ def metadata_table_schema_registry() -> dict[str, Any]:
             "METADATA_SOURCE_OBSERVATION",
             [
                 ("observation_id", "string"),
+                ("run_id", "string"),
                 ("source_table_id", "string"),
                 ("source_table_name", "string"),
                 ("target_table_id", "string"),
