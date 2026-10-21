@@ -28,33 +28,40 @@ Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite 
 | Notebook section | What happens |
 | --- | --- |
 | Environment | Loads the shared Fabric configuration and imports the functions used by this demo. |
-| Data Contract | Defaults to Bootstrap without UI; explicitly enable Testing after the contracts are frozen. |
+| Setup Pipeline | Initialize context, declare participants and start execution tracking. |
+| Data Contract Configuration | Choose all exact frozen versions or No Contract for all tables in Testing. |
 | Governed Read | Reads Orders, Products, and Order History in full. |
 | PySpark Transform | Produces detailed orders and a customer summary. |
 | Governed Write | Overwrites a Silver Lakehouse target and a Gold Warehouse target. |
-| Inline previews | Shows the actual Read and Write DataFrames directly below each orchestration call. |
+| Finalize Pipeline | Records the complete outcome after all Reads, transformations and Writes. |
+| Optional Inspect | Reuses complete Read and Write results and refreshes the Testing inspector. |
 
-Run **0. Environment** and **1. Pipeline Data Contracts** with their defaults. The notebook declares all three sources and both targets, then performs this setup:
+Bounded DataFrame previews also remain directly below each Read and Write call.
+
+Run **0. Environment** and **1. Setup Pipeline** and **2. Data Contract Configuration** with their defaults. The notebook declares all three sources and both targets, then performs this setup:
 
 ```python
-# First run defaults to Bootstrap. Set PIPELINE_CONTRACT_TESTING=True externally
-# in 00_env_config or notebook parameters when the contracts are frozen.
-CONTRACT_TESTING = bool(globals().get("PIPELINE_CONTRACT_TESTING", False))
+# Runtime controls are configured in 00_env_config or notebook parameters.
+PIPELINE_LIVE = bool(globals().get("PIPELINE_LIVE_ENABLED", False))
+CONTRACT_TESTING = bool(globals().get("PIPELINE_CONTRACT_TESTING", True)) and not PIPELINE_LIVE
 CONTRACTS = setup_pipeline(
     pipeline_id=PIPELINE_ID, configuration=PROJECT_CONFIGURATION,
     sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
-    interactive=CONTRACT_TESTING, spark_session=spark,
+    execution_mode="live" if PIPELINE_LIVE else "testing",
+    interactive=CONTRACT_TESTING,
+    testing_writes=bool(globals().get("PIPELINE_TESTING_WRITES", False)) and not PIPELINE_LIVE,
+    spark_session=spark,
 )
 EXECUTION_PLAN = CONTRACTS["build_plan"]() if CONTRACT_TESTING else CONTRACTS
 ```
 
-With the default `False`, Run all builds a Bootstrap plan and creates/profiles initial outputs without human interaction. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Metadata routing must already be initialized by the environment setup; business targets and Catalogue records do not need to exist.
+Testing is interactive by default. For the initial Guided Demo, there is no Data Contract yet: select **No Contract for every source and target**. To create the initial output tables and profiles, configure `PIPELINE_TESTING_WRITES=True`, review the displayed safe destinations and explicitly confirm real Testing writes before building the plan. Evaluation-only Testing leaves business tables and ordinary operational metadata unchanged. Contract-free completion is `ungoverned_completed` and cannot authorize activation. There is no Bootstrap execution mode.
 
-After Governance authors and freezes the contracts, set `PIPELINE_CONTRACT_TESTING=True` externally. Pause after setup to select the exact frozen versions, then run the execution-plan cell and all Reads and Writes. Testing evaluates every declared operation without publishing targets or committing ordinary operational metadata. Run the finalization cell after all Reads, transforms and Writes (also for Read-only pipelines). `METADATA_PIPELINE_RUN` records the complete run and links Guardrail diagnostics by `run_id`; passing target diagnostics alone do not prove completion. Supply a stable `pipeline_id` and external transformation configuration. FabricOps records Data Contract versions and execution outcomes; Engineering and Microsoft Fabric own executable integrity. See the [complete-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#complete-run-evidence). Live resolves the environment revision from central `METADATA_ACTIVATION_STATE` after coordinated Governance approval. Rerun setup for a new test; rebuilding on the same selector reuses its locked plan and journal.
+Run each stage directly in order: **Environment → Setup Pipeline → Data Contract Configuration → Read → Transform → Write → Finalize Pipeline → Optional Inspect**. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Call `finalize_pipeline(EXECUTION_PLAN)` after all operations; stopped notebooks remain incomplete. A caught project error requires `finalize_pipeline(EXECUTION_PLAN, failed=True)`. Keep complete Read and Write results for inspection.
 
-Bootstrap fails closed if a participating table has a frozen contract or an existing pipeline approval, including one created after setup. It never silently drops governed requirements. UI visibility is separate from execution policy: headless Testing uses `interactive=False`, `execution_mode="testing"`, and saved exact selections.
+After Governance freezes the contracts, select an exact frozen version for every participating table and complete governed Testing. Successful finalization records `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS` for review. Live resolves coordinated approval from central `METADATA_ACTIVATION_STATE`; Engineering and Microsoft Fabric own code integrity and deployment. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#whole-run-completion).
 
-For the initial Guided Demo run, there is no Data Contract yet, so no choices are needed. Bootstrap registers Catalogue/Profile and authoritative Lineage at the normal commit boundaries. Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. The saved-data screenshots below describe a successful publishing run.
+Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. Persisted row counts and saved-data screenshots below require explicitly authorized real Testing writes or governed Live publication. Advance the demo day only after publication succeeds.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -132,7 +139,7 @@ Initialize `writes = {}`, then run both Write blocks. This demo publishes two in
 | WRITE 1 — Lakehouse Curated Orders | `transformed_df` | Silver Lakehouse · `demo.curated_orders` | `writes["curated_orders_lakehouse"]` |
 | WRITE 2 — Warehouse Customer Summary | `customer_summary_df` | Gold Warehouse · `demo.customer_summary` | `writes["customer_summary_warehouse"]` |
 
-In the initial **Bootstrap** run or a governed **Live** run, both Write results should show `published=True`. In **Testing**, both show `published=False`; inspect each `validation_passed` result instead of treating an unpublished target as a successful test. The notebook continues through both targets and refreshes the selector with `CONTRACTS["refresh"]()` when contract Testing is enabled.
+With explicitly authorized real **Testing** writes or a governed **Live** run, both Write results should show `published=True`. In evaluation-only **Testing**, both show `published=False`; inspect each `validation_passed` result instead of treating an unpublished target as a successful test. The notebook continues through both targets and refreshes the selector with `CONTRACTS["refresh"]()` when contract Testing is enabled.
 
 ![Curated Orders Write output](../assets/02/Write_Block_Output.png)
 
@@ -169,7 +176,7 @@ The notebook now displays each Read and Write DataFrame in the same code cell as
 
 ### Expected result
 
-Testing completes all three Reads and both prepared Writes without publication. After a successful Bootstrap or governed Live run, both Overwrite targets publish and the saved tables and metadata reflect that run.
+Evaluation-only Testing completes all three Reads and both prepared Writes without publication. After a run with explicitly authorized real Testing writes or governed Live publication, both Overwrite targets publish and the saved tables and metadata reflect that run.
 
 ### Data saved by the demo
 

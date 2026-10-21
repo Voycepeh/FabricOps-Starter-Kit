@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 784" role="img" aria-labelledby="dependency-aware-pipeline-activation-implementation-title dependency-aware-pipeline-activation-implementation-desc" id="dependency-aware-pipeline-activation-implementation-root">
 <title id="dependency-aware-pipeline-activation-implementation-title">Inside coordinated pipeline activation</title>
-<desc id="dependency-aware-pipeline-activation-implementation-desc">Complete Testing records are checked against shared-table dependencies, Governance approves the release, one Delta snapshot publishes consistent mappings, and Live runs pin the approved revision while blockers preserve the current activation.</desc>
+<desc id="dependency-aware-pipeline-activation-implementation-desc">Setup, Read, Transform, Write and explicit finalization produce complete Testing records, which are checked against shared-table dependencies, Governance approves the release, one Delta snapshot publishes consistent mappings, and Live runs pin the approved revision while blockers preserve the current activation.</desc>
 <defs>
       <style>#dependency-aware-pipeline-activation-implementation-root .diagram-title { font:600 28px Arial,sans-serif;fill:#101828 }
       #dependency-aware-pipeline-activation-implementation-root .tag { font:600 11px Arial,sans-serif;fill:#667085;letter-spacing:.5px }
@@ -36,18 +36,17 @@
 <text x="68" y="152" class="tag">1 · ENGINEERING / TESTING</text>
 <text x="68" y="180" class="name">Run the whole pipeline</text>
 <text x="68" y="204" class="mono">setup_pipeline()</text>
-<text x="68" y="224" class="mono">orchestrate_read()</text>
-<text x="68" y="244" class="mono">orchestrate_write()</text>
-<text x="68" y="268" class="body">Setup → Orchestrate → Finalize</text>
+<text x="68" y="230" class="body">Read → Transform → Write</text>
+<text x="68" y="256" class="mono">finalize_pipeline()</text>
 </g></a>
-<a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L5848" target="_blank" rel="noopener"><g>
+<a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L5740" target="_blank" rel="noopener"><g>
 <rect x="380" y="128" width="308" height="152" rx="6" class="state"/>
 <text x="400" y="152" class="tag">2 · CENTRAL RECORDS</text>
 <text x="400" y="180" class="name">Complete Testing evidence</text>
 <text x="400" y="208" class="mono">METADATA_PIPELINE_RUN</text>
 <text x="400" y="230" class="mono">METADATA_GUARDRAIL_RESULTS</text>
 <text x="400" y="254" class="body">Exact contracts, operations and results</text>
-<text x="400" y="272" class="body">Completed boundary + environment</text>
+<text x="400" y="272" class="body">Finalized outcome + environment</text>
 </g></a>
 <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L65" target="_blank" rel="noopener"><g>
 <rect x="736" y="128" width="336" height="152" rx="6" class="node"/>
@@ -58,21 +57,21 @@
 <text x="756" y="248" class="body">Compare contracts, writers and destinations</text>
 <text x="756" y="270" class="body">Require compatible affected-pipeline tests</text>
 </g></a>
-<a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L370" target="_blank" rel="noopener"><g>
+<a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L362" target="_blank" rel="noopener"><g>
 <rect x="736" y="344" width="336" height="124" rx="6" class="human"/>
 <text x="756" y="368" class="tag">4 · HUMAN / GOVERNANCE</text>
 <text x="756" y="396" class="name">Approve the complete release</text>
 <text x="756" y="420" class="mono">approve_pipeline_release()</text>
 <text x="756" y="448" class="body">Backend revalidates; stale review blocks.</text>
 </g></a>
-<a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L231" target="_blank" rel="noopener"><g>
+<a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L223" target="_blank" rel="noopener"><g>
 <rect x="380" y="344" width="308" height="124" rx="6" class="focal"/>
 <text x="400" y="368" class="tag">5 · FABRICOPS / COMMIT</text>
 <text x="400" y="396" class="name">Publish atomically</text>
 <text x="400" y="420" class="mono">commit_activation_state()</text>
 <text x="400" y="448" class="body">One serializable Delta transaction</text>
 </g></a>
-<a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L217" target="_blank" rel="noopener"><g>
+<a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L209" target="_blank" rel="noopener"><g>
 <rect x="48" y="344" width="284" height="124" rx="6" class="focal"/>
 <text x="68" y="368" class="tag">CENTRAL AUTHORITY</text>
 <text x="68" y="392" class="name">One authority snapshot</text>
@@ -80,15 +79,16 @@
 <text x="68" y="440" class="body">Pipeline + table mappings together</text>
 <text x="68" y="460" class="body">Environment revision + reservations</text>
 </g></a>
-<a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L458" target="_blank" rel="noopener"><g>
-<rect x="48" y="532" width="640" height="136" rx="6" class="node"/>
+<a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L450" target="_blank" rel="noopener"><g>
+<rect x="48" y="532" width="640" height="156" rx="6" class="node"/>
 <text x="68" y="556" class="tag">6 · FABRICOPS / LIVE</text>
 <text x="68" y="584" class="name">Resolve approval and pin one revision</text>
 <text x="68" y="608" class="mono">setup_pipeline(execution_mode=&quot;live&quot;)</text>
 <text x="68" y="630" class="mono">build_live_pipeline_plan() / verify_live_plan()</text>
-<text x="68" y="652" class="body">Affected running executions must drain before cutover.</text>
+<text x="68" y="652" class="mono">finalize_pipeline() → release execution reservation</text>
+<text x="68" y="676" class="body">Affected running executions must drain before cutover.</text>
 </g></a>
-<a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L285" target="_blank" rel="noopener"><g>
+<a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L277" target="_blank" rel="noopener"><g>
 <rect x="736" y="532" width="336" height="136" rx="6" class="state"/>
 <text x="756" y="556" class="tag">BLOCKED · NO SNAPSHOT CHANGE</text>
 <text x="756" y="584" class="name">Keep the current activation</text>
@@ -103,5 +103,5 @@
 <text x="324" y="737" class="body">Execution / metadata flow</text>
 <path d="M556 732 H596" class="blocked"/>
 <text x="612" y="737" class="body">Blocked release</text>
-<text x="48" y="768" class="body">Approval changes governance metadata. Notebook deployment and business-data writes remain separate.</text>
+<text x="48" y="768" class="body">FabricOps governs Data Contracts. Engineering owns code integrity, CI/CD and notebook deployment.</text>
 </svg>

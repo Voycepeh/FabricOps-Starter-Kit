@@ -40,7 +40,7 @@ In FabricOps, Data Contracts provide the governance rules used to validate pipel
 
 ## How it works
 
-**Engineers and Governance use five core functions.** Function names open the API reference; the source links open their implementation.
+**Engineers and Governance use six core functions.** Function names open the API reference; the source links open their implementation.
 
 | Function | What the user does | Implementation |
 | --- | --- | --- |
@@ -48,11 +48,14 @@ In FabricOps, Data Contracts provide the governance rules used to validate pipel
 | [`setup_pipeline()`](../api/reference/setup_pipeline.md) | Declare a stable `pipeline_id`, sources and targets. Choose frozen versions interactively in Testing; resolve the approved environment configuration headlessly in Live. | [Pipeline setup](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130) |
 | [`orchestrate_read()`](../api/reference/orchestrate_read.md) | Read each source with its applicable Freshness, Schema, Grain, Data Quality and Profile checks. | [Read orchestrator](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L22) |
 | [`orchestrate_write()`](../api/reference/orchestrate_write.md) | Evaluate prepared targets and optionally publish them. Write-side checks include Sensitive Data, Source Drift and required source Guardrail coverage. | [Write orchestrator](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L26) |
+| [`finalize_pipeline()`](../api/reference/finalize_pipeline.md) | Consolidate the complete run after all Reads, transformations and Writes; reuse setup context and release execution reservations. | [Pipeline finalization](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py) |
 | [`widget_activate_pipeline()`](../api/reference/widget_activate_pipeline.md) | Select successful Testing candidates, review affected dependencies, choose an effective Data Agreement and approve the complete release once. | [Activation widget](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L65) |
 
-The [standard 02 Pipeline notebook](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) runs Read, Transform and Write in separate cells between `setup_pipeline()` and `finalize_pipeline()`. Finalization consolidates recorded outcomes without counting business DataFrames. A successful individual operation is not sufficient. There is no manual `finalize_pipeline()` call or separate user-facing contract activation step.
+The [standard 02 Pipeline notebook](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) runs Read, Transform and Write in separate cells between `setup_pipeline()` and `finalize_pipeline()`. Finalization consolidates recorded outcomes without counting business DataFrames. A successful individual operation is not sufficient. Stopped runs remain incomplete; caught project errors must be recorded with `finalize_pipeline(plan, failed=True)`. Call `finalize_pipeline()` once at the end. The separate Governance activation widget approves the completed Testing results; it is not an extra pipeline execution stage.
 
-Testing requires frozen contracts for every participant or No Contract for all; partial selection fails. Contract-free exploration cannot activate. Testing evaluates without business publication by default. Explicit `testing_writes=True` permits real writes only to destinations protected from Live ownership and concurrent reservations.
+Testing requires frozen contracts for every participant or No Contract for all; partial selection fails. Contract-free exploration cannot activate. The same Setup → Orchestrate → Finalize notebook flow applies in DEV and PROD. Engineering and Microsoft Fabric own executable checksums, source control, CI/CD and deployment.
+
+Testing evaluates without business publication by default. Explicit `testing_writes=True` permits real writes only to destinations protected from Live ownership and concurrent reservations.
 
 ## Under the hood
 
@@ -69,16 +72,16 @@ Testing requires frozen contracts for every participant or No Contract for all; 
 
     | Internal service | Implemented responsibility |
     | --- | --- |
-    | [`tested_pipeline_manifest()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L87) | Revalidate a completed governed Testing run, exact frozen payloads, executable, dependencies, operation results, rule diagnostics and effective Data Agreement. |
-    | [`review_pipeline_release()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L336) and [`activation_impact()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L285) | Compare the proposed release with active mappings. Discover affected readers/writers, missing replacement tests, contract and destination conflicts, and executions that must drain. Propagate requirements when replacement outputs change downstream expectations. |
-    | [`approve_pipeline_release()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L370) | Require explicit Governance approval, revalidate every candidate and reject a stale review or any blocking conflict. |
-    | [`commit_activation_state()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L231) | Publish the complete authority snapshot with one serializable Delta compare-and-swap. Overlapping changes fail safely rather than partially updating pipeline and table approvals. |
-    | [`build_live_pipeline_plan()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L458) and [`verify_live_plan()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L502) | Resolve and reserve a pinned Live configuration, then enforce its executable, dependencies, Agreement, table mappings and physical destinations during execution. |
+    | [`tested_pipeline_manifest()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L85) | Revalidate a completed governed Testing run, exact frozen payloads, processing configuration, operation results, rule diagnostics and effective Data Agreement. |
+    | [`review_pipeline_release()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L328) and [`activation_impact()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L277) | Compare the proposed release with active mappings. Discover affected readers/writers, missing replacement tests, contract and destination conflicts, and executions that must drain. Propagate requirements when replacement outputs change downstream expectations. |
+    | [`approve_pipeline_release()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L362) | Require explicit Governance approval, revalidate every candidate and reject a stale review or any blocking conflict. |
+    | [`commit_activation_state()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L223) | Publish the complete authority snapshot with one serializable Delta compare-and-swap. Overlapping changes fail safely rather than partially updating pipeline and table approvals. |
+    | [`build_live_pipeline_plan()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L450) and [`verify_live_plan()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L492) | Resolve and reserve a pinned Live configuration, then enforce its Agreement, exact Data Contracts, table mappings and physical destinations during execution. |
 
     | Central metadata | What it supplies |
     | --- | --- |
     | [`METADATA_DATA_CONTRACT`](../reference/metadata/metadata_data_contract.md) | Global frozen table contract versions and immutable payloads. |
-    | [`METADATA_PIPELINE_RUN`](../reference/metadata/metadata_pipeline_run.md) | Whole-run completion, participants, exact contract mappings, executable/configuration identity, operation outcomes and environment. |
+    | [`METADATA_PIPELINE_RUN`](../reference/metadata/metadata_pipeline_run.md) | Whole-run completion, participants, exact contract mappings, Data Contract and processing configuration identity, operation outcomes and environment. |
     | [`METADATA_GUARDRAIL_RESULTS`](../reference/metadata/metadata_guardrail_results.md) | Rule-level diagnostics linked to the Testing run. |
     | [`METADATA_DATA_AGREEMENT`](../reference/metadata/metadata_data_agreement.md) | The exact effective Agreement selected for approval. |
     | [`METADATA_ACTIVATION_STATE`](../reference/metadata/metadata_activation_state.md) | One authority snapshot containing environment revisions, active pipelines, contract/writer mappings, immutable approval history and running reservations. |

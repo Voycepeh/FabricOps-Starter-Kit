@@ -51,7 +51,6 @@ def test_demo_executes_every_declared_operation_before_inspection(name, mode, pa
     forbidden = Mock(side_effect=AssertionError("Notebook exited or published outside the orchestrators"))
     namespace = {
         "PIPELINE_CONTRACT_TESTING": mode == "testing", "PIPELINE_LIVE_ENABLED": mode == "live",
-        "PIPELINE_DEPLOYMENT_PATH": "/configured/deployment" if mode == "live" else None,
         "F": MagicMock(), "spark": object(), "display": Mock(),
         "finalize_pipeline": finalize, "setup_pipeline": select, "orchestrate_read": read, "orchestrate_write": write,
         "resolve_table_id": Mock(return_value="inventory-target"),
@@ -95,3 +94,32 @@ def test_stopped_notebook_never_reaches_finalization(name):
             if cell.cell_type == "code" and cell.id not in {"environment", "imports"}:
                 exec(compile(cell.source, name, "exec"), namespace)
     finalize.assert_not_called()
+
+
+@pytest.mark.parametrize('name', DEMOS)
+def test_pipeline_templates_use_one_explicit_setup_and_finalization(name):
+    """All standard and variant templates expose the same direct execution stages."""
+    import ast
+    notebook = nbformat.read(DEMO_DIR / name, as_version=4)
+    ids = [cell.id for cell in notebook.cells]
+    stages = ['environment', 'setup-heading', 'contracts', 'contracts-heading', 'execution-plan',
+              'read-heading', 'transform', 'write-heading', 'finalize-run', 'inspect']
+    assert [ids.index(stage) for stage in stages] == sorted(ids.index(stage) for stage in stages)
+    calls = {}
+    for cell in notebook.cells:
+        if cell.cell_type != 'code' or cell.id == 'environment':
+            continue
+        tree = ast.parse(cell.source)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                calls.setdefault(node.func.id, []).append((cell.id, node))
+        assert not any(isinstance(node, ast.FunctionDef) for node in tree.body), cell.id
+    assert len(calls['setup_pipeline']) == len(calls['finalize_pipeline']) == 1
+    assert calls['setup_pipeline'][0][0] == 'contracts'
+    assert calls['finalize_pipeline'][0][0] == 'finalize-run'
+    finalize_argument = calls['finalize_pipeline'][0][1].args[0]
+    assert isinstance(finalize_argument, ast.Name) and finalize_argument.id == 'EXECUTION_PLAN'
+    for function in ('orchestrate_read', 'orchestrate_write'):
+        assert all(any(arg.arg == 'execution_plan' and isinstance(arg.value, ast.Name)
+                       and arg.value.id == finalize_argument.id for arg in call.keywords)
+                   for _, call in calls[function])

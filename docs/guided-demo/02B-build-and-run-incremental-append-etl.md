@@ -45,30 +45,33 @@ The notebook uses these governed tables throughout:
 Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparation cell. That setup can change Bronze before pipeline selection. The default pipeline setup is:
 
 ```python
-# First run defaults to Bootstrap. Set PIPELINE_CONTRACT_TESTING=True externally
-# in 00_env_config or notebook parameters when the contracts are frozen.
-CONTRACT_TESTING = bool(globals().get("PIPELINE_CONTRACT_TESTING", False))
+# Runtime controls are configured in 00_env_config or notebook parameters.
+PIPELINE_LIVE = bool(globals().get("PIPELINE_LIVE_ENABLED", False))
+CONTRACT_TESTING = bool(globals().get("PIPELINE_CONTRACT_TESTING", True)) and not PIPELINE_LIVE
 CONTRACTS = setup_pipeline(
     pipeline_id=PIPELINE_ID, configuration=PROJECT_CONFIGURATION,
     sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
-    interactive=CONTRACT_TESTING, spark_session=spark,
+    execution_mode="live" if PIPELINE_LIVE else "testing",
+    interactive=CONTRACT_TESTING,
+    testing_writes=bool(globals().get("PIPELINE_TESTING_WRITES", False)) and not PIPELINE_LIVE,
+    spark_session=spark,
 )
 EXECUTION_PLAN = CONTRACTS["build_plan"]() if CONTRACT_TESTING else CONTRACTS
 ```
 
-With the default `False`, Run all builds a Bootstrap plan and creates/profiles initial outputs without human interaction. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Metadata routing must already be initialized by the environment setup; business targets and Catalogue records do not need to exist.
+Testing is interactive by default. For the initial Guided Demo, there is no Data Contract yet: select **No Contract for every source and target**. To create the initial output tables and profiles, configure `PIPELINE_TESTING_WRITES=True`, review the displayed safe destinations and explicitly confirm real Testing writes before building the plan. Evaluation-only Testing leaves business tables and ordinary operational metadata unchanged. Contract-free completion is `ungoverned_completed` and cannot authorize activation. There is no Bootstrap execution mode.
 
-After Governance authors and freezes the contracts, set `PIPELINE_CONTRACT_TESTING=True` externally. Pause after setup to select the exact frozen versions, then run the execution-plan cell and all Reads and Writes. Testing evaluates every declared operation without publishing targets or committing ordinary operational metadata. Run the finalization cell after all Reads, transforms and Writes (also for Read-only pipelines). `METADATA_PIPELINE_RUN` records the complete run and links Guardrail diagnostics by `run_id`; passing target diagnostics alone do not prove completion. Supply a stable `pipeline_id` and external transformation configuration. FabricOps records Data Contract versions and execution outcomes; Engineering and Microsoft Fabric own executable integrity. See the [complete-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#complete-run-evidence). Live resolves the environment revision from central `METADATA_ACTIVATION_STATE` after coordinated Governance approval. Rerun setup for a new test; rebuilding on the same selector reuses its locked plan and journal.
+Run each stage directly in order: **Environment → Setup Pipeline → Data Contract Configuration → Read → Transform → Write → Finalize Pipeline → Optional Inspect**. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Call `finalize_pipeline(EXECUTION_PLAN)` after all operations; stopped notebooks remain incomplete. A caught project error requires `finalize_pipeline(EXECUTION_PLAN, failed=True)`. Keep complete Read and Write results for inspection.
 
-Bootstrap fails closed if a participating table has a frozen contract or an existing pipeline approval, including one created after setup. It never silently drops governed requirements. UI visibility is separate from execution policy: headless Testing uses `interactive=False`, `execution_mode="testing"`, and saved exact selections.
+After Governance freezes the contracts, select an exact frozen version for every participating table and complete governed Testing. Successful finalization records `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS` for review. Live resolves coordinated approval from central `METADATA_ACTIVATION_STATE`; Engineering and Microsoft Fabric own code integrity and deployment. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#whole-run-completion).
 
-The persisted row counts below describe Bootstrap runs before contracts exist, or governed Live runs after approval. Advance the day only after publication succeeds. Once contracts are frozen, Bootstrap is no longer an eligible way to publish; use Testing to evaluate changes and the governed release workflow for subsequent publication.
+Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. Persisted row counts and saved-data screenshots below require explicitly authorized real Testing writes or governed Live publication. Advance the demo day only after publication succeeds.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run Day 1 in Fabric with the Bootstrap defaults
+## Run Day 1 in Fabric with safe real Testing writes
 
 For Day 1 , we load 8 rows of data from 
 Bronze Lakehouse "demo.inventory_movements" table and load all 8 rows into
@@ -121,9 +124,9 @@ Each Read and Write block displays its actual DataFrame directly after orchestra
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Restart the session and repeat Day 1 with a fresh Bootstrap plan
+## Restart the session and repeat Day 1 with a fresh Testing plan
 
-Run through setup again with the Bootstrap defaults, then continue. Since Day 1 already committed its watermark, the Read and Write have an empty incremental scope.
+Run through setup again with safe real Testing writes, then continue. Since Day 1 already committed its watermark, the Read and Write have an empty incremental scope.
 
 </div>
 </div>
@@ -196,7 +199,7 @@ Complete Read → Transform → Write for each pending batch before reading a ne
 
 ### Metadata saved by FabricOps
 
-The following records are committed by successful **Bootstrap** or governed **Live** runs and routed to the Metadata Lakehouse configured by `00_env_config`. Testing persists `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS`; ordinary metadata remains unchanged.
+The following records are committed by successful runs with explicitly authorized real Testing writes or governed **Live** publication and routed to the Metadata Lakehouse configured by `00_env_config`. Evaluation-only Testing persists `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS`; ordinary metadata remains unchanged.
 
 | Metadata table or governed record | What this demo records |
 | --- | --- |
@@ -214,7 +217,7 @@ Pause this target's scheduled and interactive writers. Keep the existing tables 
 
 1. Upgrade the package and run `setup_metadata_tables()` through the configured environment to add nullable `publication_payload_json` and `run_id` columns. This additive setup preserves existing metadata. Restart the owning notebook's Fabric session so it loads the corrected package and has no pending state from the failed run.
 2. Read Bronze and Silver explicitly with `read_lakehouse_table()`. Verify Bronze contains exactly M001–M012, Silver has unique, non-null movement keys, and every existing Silver business row equals the corresponding transformed Bronze row. Use the notebook's Transform expression, including `movement_date`, `quantity_in` and `quantity_out`. Compare all business columns, excluding FabricOps audit columns. **Stop if any existing key has conflicting values, unexpected rows, or duplicates.** This repair applies to this immutable Append demo; it is not a general repair for mutable source history.
-3. Build a fresh **Live** plan in the same owning notebook, with the approved active source and target contracts. Select Full Read for the repair, then run the existing Transform against that complete source. Testing can validate the repair input but cannot publish it; Bootstrap remains available only before any participant has a frozen or active contract.
+3. Build a fresh **Live** plan in the same owning notebook, with the approved active source and target contracts. Select Full Read for the repair, then run the existing Transform against that complete source. Evaluation-only Testing can validate the repair input. Publication to a Live-owned destination requires the approved Live configuration; if the repair changes Read strategy, complete Testing and coordinated approval of that repair configuration first.
 4. Construct and inspect only the missing keys before choosing to publish:
 
     ```python
