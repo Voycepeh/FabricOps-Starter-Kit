@@ -6,7 +6,24 @@
 
 *Develop pipelines with versioned Data Contracts, validate shared dependencies, and promote them safely to Production.*
 
-## What is a Data Contract?
+## The problem
+
+Development may need a new Data Contract while Production still uses an earlier version. If Pipeline A writes a shared table and Pipeline B reads it, activating A alone must not leave the two Live pipelines expecting different contracts.
+
+The same problem extends downstream when a replacement pipeline changes its output contract or writer expectations. Governance needs to see the affected pipelines, their complete Testing results, and any ownership or destination conflicts before approving a release.
+
+## The solution
+
+<div class="fabricops-mascot-callout">
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="eager">
+  <div><p><strong>Author → Test → Activate → Live.</strong> Review the affected pipelines together and publish one consistent environment activation revision.</p></div>
+</div>
+
+FabricOps stores global Data Contract versions centrally and approves pipeline configurations separately for each environment. [`widget_activate_pipeline()`](../api/reference/widget_activate_pipeline.md) discovers affected active pipelines, checks their selected Testing candidates, and presents one coordinated approval.
+
+**This workflow is implemented on `main`; its lifecycle APIs remain Preview.** See the [public API lifecycle registry](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/public_api.py) for the current callable status.
+
+### What is a Data Contract?
 
 A **Data Contract** is a shared agreement between the teams producing and consuming a dataset. It defines what data a pipeline is expected to deliver, how its quality is assessed, and how sensitive information must be handled.
 
@@ -21,46 +38,52 @@ For example, an employee dataset might require a non-null `employee_id`, unique 
 
 In FabricOps, Data Contracts provide the governance rules used to validate pipeline reads and writes. **Versioning lets teams develop against proposed changes without immediately changing the contract used in Production.**
 
-## The problem
-
-A Data Contract is the **single source of truth** for a table, stored centrally in the Governance workspace under a unique `table_id`. But how should that contract be managed across environments and pipelines that depend on the same table?
-
-For example, **Development may use Data Contract v2 while Production still uses v1**. If Pipeline A is ready for v2 but Pipeline B still depends on v1, promoting A alone could create a version conflict. Upgrading the contract means understanding which pipelines are affected and when they can move together.
-
-## The solution
-
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="FabricOps validation mascot" loading="eager">
-  <div><p><strong>One governed Data Contract, controlled across environments.</strong> Validate dependent pipelines before coordinating their promotion.</p></div>
-</div>
-
-FabricOps aims to track the contract version used by each environment and pipeline, identify affected dependencies, and coordinate compatible upgrades. Governance can approve promotion once the impacted pipelines have been validated together.
-
-## From Development to Production
-
-**Development:** Build and validate pipelines against versioned Data Contracts without affecting Production.
-
-**Production:** Governance reviews validation evidence and activates compatible changes together.
-
-*Coordinated dependency-aware promotion is planned and marked Preview.*
-
 ## How it works
 
-| Responsibility | What happens |
-| --- | --- |
-| **Governance authors** | Freezes a new Data Contract version for a table. |
-| **Engineering develops and validates** | Runs affected pipelines against the proposed frozen version. |
-| **FabricOps checks** | Identifies active readers, writer ownership, version conflicts and affected downstream dependencies. |
-| **Governance promotes and activates** | Reviews complete Testing evidence and approves a coordinated switch. |
+**Engineers and Governance use five core functions.** Function names open the API reference; the source links open their implementation.
+
+| Function | What the user does | Implementation |
+| --- | --- | --- |
+| [`widget_data_contract()`](../api/reference/widget_data_contract.md) | Author, review and freeze a global table Data Contract. | [Contract widget](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L603) |
+| [`setup_pipeline()`](../api/reference/setup_pipeline.md) | Declare a stable `pipeline_id`, sources and targets. Choose frozen versions interactively in Testing; resolve the approved environment configuration headlessly in Live. | [Pipeline setup](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130) |
+| [`orchestrate_read()`](../api/reference/orchestrate_read.md) | Read each source with its applicable Freshness, Schema, Grain, Data Quality and Profile checks. | [Read orchestrator](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L22) |
+| [`orchestrate_write()`](../api/reference/orchestrate_write.md) | Evaluate prepared targets and optionally publish them. Write-side checks include Sensitive Data, Source Drift and required source Guardrail coverage. | [Write orchestrator](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L26) |
+| [`widget_activate_pipeline()`](../api/reference/widget_activate_pipeline.md) | Select successful Testing candidates and their exported tested notebooks, review affected dependencies, choose an effective Data Agreement and approve the complete release once. | [Activation widget](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L65) |
+
+The [standard 02 Pipeline notebook](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) keeps Read, Transform and Write definitions in separate cells. One execution cell runs them inside `with plan:` and records the whole-run outcome automatically. A successful individual operation is not sufficient. There is no manual `finalize_pipeline()` call or separate user-facing contract activation step.
+
+Testing requires frozen contracts for every participant or No Contract for all; partial selection fails. Contract-free exploration cannot activate. Testing evaluates without business publication by default. Explicit `testing_writes=True` permits real writes only to destinations protected from Live ownership and concurrent reservations.
 
 ## Under the hood
 
 <div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="FabricOps production mascot" loading="lazy">
-  <div><p>Explore how shared-table dependencies affect the decision to activate a new contract.</p></div>
+  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="" loading="lazy">
+  <div><p>Trace complete Testing records through dependency review, atomic metadata publication and pinned Live execution.</p></div>
 </div>
 
-??? info "Shared-table governance invariants"
+??? info "Implementation flow and source links"
+
+    [![Testing records flow through dependency review and Governance approval into one activation snapshot; new Live runs pin that revision](../assets/dependency-aware-pipeline-activation-implementation.svg){ .fabricops-solution-diagram }](../assets/dependency-aware-pipeline-activation-implementation.svg)
+
+    Open the SVG at full size to follow its implementation links. The services below run behind the public widget and pipeline setup; engineers do not call them as additional notebook APIs.
+
+    | Internal service | Implemented responsibility |
+    | --- | --- |
+    | [`tested_pipeline_manifest()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L87) | Revalidate a completed governed Testing run, exact frozen payloads, executable, dependencies, operation results, rule diagnostics and effective Data Agreement. |
+    | [`review_pipeline_release()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L336) and [`activation_impact()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L285) | Compare the proposed release with active mappings. Discover affected readers/writers, missing replacement tests, contract and destination conflicts, and executions that must drain. Propagate requirements when replacement outputs change downstream expectations. |
+    | [`approve_pipeline_release()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L370) | Require explicit Governance approval, revalidate every candidate and reject a stale review or any blocking conflict. |
+    | [`commit_activation_state()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L231) | Publish the complete authority snapshot with one serializable Delta compare-and-swap. Overlapping changes fail safely rather than partially updating pipeline and table approvals. |
+    | [`build_live_pipeline_plan()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L458) and [`verify_live_plan()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L502) | Resolve and reserve a pinned Live configuration, then enforce its executable, dependencies, Agreement, table mappings and physical destinations during execution. |
+
+    | Central metadata | What it supplies |
+    | --- | --- |
+    | [`METADATA_DATA_CONTRACT`](../reference/metadata/metadata_data_contract.md) | Global frozen table contract versions and immutable payloads. |
+    | [`METADATA_PIPELINE_RUN`](../reference/metadata/metadata_pipeline_run.md) | Whole-run completion, participants, exact contract mappings, executable/configuration identity, operation outcomes and environment. |
+    | [`METADATA_GUARDRAIL_RESULTS`](../reference/metadata/metadata_guardrail_results.md) | Rule-level diagnostics linked to the Testing run. |
+    | [`METADATA_DATA_AGREEMENT`](../reference/metadata/metadata_data_agreement.md) | The exact effective Agreement selected for approval. |
+    | [`METADATA_ACTIVATION_STATE`](../reference/metadata/metadata_activation_state.md) | One authority snapshot containing environment revisions, active pipelines, contract/writer mappings, immutable approval history and running reservations. |
+
+??? info "Shared-table rules and safe cutover"
 
     - One global `table_id` and centrally managed Data Contract version history.
     - One active contract version per environment and table.
@@ -69,13 +92,11 @@ FabricOps aims to track the contract version used by each environment and pipeli
     - Testing may select any frozen version associated with the table.
     - An activatable Testing run requires frozen contracts for every participating table; contract-free exploratory Testing is not eligible.
 
-??? info "Cascading dependency checks"
+    Every directly affected active pipeline needs complete successful Testing evidence for compatible mappings. Downstream pipelines require replacement evidence when their effective input expectations change; unchanged output expectations stop propagation. FabricOps does not infer compatibility with AI.
 
-    When a proposed activation changes a shared table's contract, FabricOps should identify active pipelines referencing that table, including the writer and readers. Affected downstream pipelines are included when their effective inputs or contract expectations change.
+    Live runs reserve and pin a revision. Activation affecting a running pipeline or reserved destination blocks until the execution drains; a notebook does not silently switch configurations midway through its run. Physical reservations are checked across environments and logical table aliases. Crashed runs retain reservations until reviewed administrative cleanup.
 
-    Every affected pipeline must have complete successful Testing evidence for compatible contract mappings. Missing tests, conflicting contract versions and competing writers block activation.
-
-    Coordinated activation must publish consistent governance metadata. It does not imply that notebook deployments, already-running executions and business-table writes are transactionally atomic.
+    Approval commits governance metadata only. Notebook deployment and business-table writes are separate operations. See the [execution, cutover and recovery guidance](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#live-cutover-and-deployment) for the operating policy and snapshot limitations.
 
 ## Example
 
@@ -84,13 +105,19 @@ FabricOps aims to track the contract version used by each environment and pipeli
     **Current PROD:** Pipeline A writes the table on v3, Pipeline B reads it on v3, and Pipeline C is an affected downstream consumer.
 
     1. Governance freezes v4 without changing the active PROD version.
-    2. Engineers test A and B on v4, and C where its expectations change.
+    2. Engineers complete governed Testing for A and B on v4, and C where its expectations change, using the intended PROD configuration and physical bindings.
     3. FabricOps collects complete successful runs and identifies missing evidence.
     4. Governance reviews and approves the affected pipeline configurations together.
     5. PROD activates the consistent v4 mappings. DEV may independently use a different active version.
 
     **Blocked case:** A passes v4 Testing but B remains Live on v3 without compatible Testing evidence. A cannot activate alone.
 
+    **Environment boundary:** DEV and PROD can use different versions from the same global history. A successful DEV run alone does not authorize PROD: the current backend requires Testing evidence from the activation environment with its exact physical destinations. Evaluation-only Testing can validate those configurations without publishing to Live-owned tables.
+
 ## Go deeper
 
-See [Plug-and-Play Data Pipelines](plug-and-play-data-pipelines.md) for the engineering workflow and [Step 5: Activate Data Contract and Promote](../guided-demo/05-activate-data-contract-and-promote.md) for the current activation walkthrough.
+- [Step 4: Validate the frozen Data Contract](../guided-demo/04-validate-frozen-data-contract.md) — produce complete governed Testing results.
+- [Step 5: Activate the tested pipeline and promote](../guided-demo/05-activate-data-contract-and-promote.md) — use the Governance activation widget.
+- [Step 6: Run in Production](../guided-demo/06-run-production.md) — resolve approved Live execution automatically.
+- [Plug-and-Play Data Pipelines](plug-and-play-data-pipelines.md) — the reusable engineering scaffold and Read/Write boundaries.
+- [Pipeline template and lifecycle guide](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md) — whole-run completion, real Testing writes, cutover and upgrade limits.

@@ -5,6 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 FEATURED_SOLUTION_PAGES = (
+    ROOT / "docs/solutions/dependency-aware-pipeline-activation.md",
     ROOT / "docs/solutions/plug-and-play-data-pipelines.md",
     ROOT / "docs/solutions/production-table-to-data-agent.md",
     ROOT / "docs/solutions/ai-assisted-data-contract-authoring.md",
