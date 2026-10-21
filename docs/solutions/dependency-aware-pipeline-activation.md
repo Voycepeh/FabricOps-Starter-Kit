@@ -8,37 +8,28 @@
 
 ## What is a Data Contract?
 
-A **Data Contract** defines the expectations for a dataset: its structure, quality rules, and how sensitive information should be handled. It gives Data Engineers and Governance teams a shared definition of what a pipeline must deliver.
-
-For example, an employee dataset may require an `employee_id` column, prohibit missing employee identifiers, and specify how personal information is protected. A pipeline can then be validated against these expectations before its output is used downstream.
-
-**A Data Contract defines what good data looks like. FabricOps helps keep that agreement consistent as pipelines evolve.**
+A **Data Contract** defines a dataset's structure, quality rules, and sensitive-data requirements. It gives engineers and Governance a shared standard to validate against.
 
 ## The problem
 
-Data pipelines rarely operate in isolation. One pipeline writes a table, while several others may read it and depend on its structure and quality.
-
-A pipeline change can pass its own checks in Development yet still break a downstream workload in Production. Teams must otherwise work out which pipelines are affected, confirm that they remain compatible, and coordinate when to promote the changes.
+Pipelines depend on one another. A change that works in Development can still break downstream pipelines in Production.
 
 ## The solution
 
 <div class="fabricops-mascot-callout">
   <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="FabricOps validation mascot" loading="eager">
-  <div><p><strong>Develop confidently. Understand the impact. Promote safely.</strong> Keep connected pipelines aligned with their Data Contracts as they move from Development to Production.</p></div>
+  <div><p><strong>Develop confidently. Promote safely.</strong> Validate affected pipelines together before changing Production.</p></div>
 </div>
 
-The proposed FabricOps promotion workflow brings together versioned Data Contracts, pipeline dependencies, and validation evidence so teams can:
-
-- **Develop independently** without disrupting Production.
-- **See what's affected** when a shared table or pipeline changes.
-- **Validate connected pipelines** rather than checking each in isolation.
-- **Promote compatible changes together** under Governance approval.
-
-This is a **Preview** of the planned dependency-aware, coordinated-promotion capability, not a claim that every dependency check is implemented today.
+FabricOps aims to identify dependencies, validate compatible Data Contracts, and coordinate promotion of affected pipelines.
 
 ## From Development to Production
 
-In **Development**, engineers select frozen Data Contract versions, build their pipelines, and validate affected dependencies without changing Production. In **Production**, Governance reviews successful validation evidence and coordinates activation of compatible configurations. Contract definitions are centrally managed, while the active version remains specific to each environment.
+**Development:** Build and validate pipelines against versioned Data Contracts without affecting Production.
+
+**Production:** Governance reviews validation evidence and activates compatible changes together.
+
+*Coordinated dependency-aware promotion is planned and marked Preview.*
 
 ## How it works
 
