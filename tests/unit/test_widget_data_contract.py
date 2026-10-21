@@ -106,6 +106,10 @@ def widget_runtime(monkeypatch):
         def add_class(self, name):
             self._dom_classes.append(name)
 
+        def remove_class(self, name):
+            if name in self._dom_classes:
+                self._dom_classes.remove(name)
+
         def close(self):
             self.closed = True
             models.pop(id(self), None)
@@ -873,11 +877,11 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children
     assert [section.children[0].value for section in table_sections[:5]] == [
-        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Grain &amp; Row Key</div>",
-        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Table definition</div>",
-        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Processing</div>",
-        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Freshness</div>",
-        "<div style=\"color:#253858;font-size:14px;font-weight:700;line-height:1.25;\">Source Drift</div>",
+        "<div class=\"fabricops-section-heading\">Grain &amp; Row Key</div>",
+        "<div class=\"fabricops-section-heading\">Table definition</div>",
+        "<div class=\"fabricops-section-heading\">Processing</div>",
+        "<div class=\"fabricops-section-heading\">Freshness</div>",
+        "<div class=\"fabricops-section-heading\">Source Drift</div>",
     ]
 
     grain_section = controls["right_pane"].children[0]
@@ -2469,7 +2473,7 @@ def test_value_lists_create_independent_whitelist_and_blacklist_rules(widget_run
 
 
 def test_dq_parameter_checkboxes_align_with_the_fields_they_modify(widget_runtime):
-    """Completeness and range option checkboxes sit on the same row as their field."""
+    """Completeness and range options stay grouped below their full-width field."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
@@ -2486,8 +2490,8 @@ def test_dq_parameter_checkboxes_align_with_the_fields_they_modify(widget_runtim
     assert upper_row.children == (
         controls["dq_maximum"], controls["dq_maximum_inclusive"]
     )
-    assert lower_row.layout.align_items == "center"
-    assert upper_row.layout.align_items == "center"
+    assert lower_row.layout.align_items == "stretch"
+    assert upper_row.layout.align_items == "stretch"
 
 
 def test_range_is_directly_authored_and_saves_without_ai(widget_runtime):
@@ -2610,7 +2614,7 @@ def test_column_selector_marks_required_columns_and_aligns_checkbox(widget_runti
     )
     assert label == "column_1 *"
     assert "option:nth-child(2)" in controls["column_option_style"].value
-    assert "color:#0f6cbd" in controls["column_option_style"].value
+    assert "color:var(--form-accent)" in controls["column_option_style"].value
     assert controls["column_header"].children[1] is controls["required"]
     assert controls["column_header"].layout.align_items == "flex-start"
     assert "fabricops-column-required" in controls["required"]._dom_classes
@@ -2711,7 +2715,7 @@ def test_table_description_matches_grain_ai_layout(widget_runtime, monkeypatch):
         "column_0 *",
         "column_1",
     ]
-    assert "color:#0f6cbd;font-size:20px" in controls["column_context"].value
+    assert "color:var(--form-accent);font-size:20px" in controls["column_context"].value
     assert "Required:" not in controls["column_context"].value
 
 
@@ -3063,9 +3067,10 @@ def test_sidebar_expand_controls_preserve_state_during_live_updates(widget_runti
     controls = widget_runtime["open"]()["_controls"]
     read = controls["sidebar_groups"]["read"]
     header, body = read.children
-    assert header.description == "When this table is read · Collapse" and header.value is True
+    assert header.description == "When this table is read" and header.value is True
     header.value = False
     assert body.layout.display == "none"
+    assert header.description == "When this table is read"
     controls["table_classification"].value = "Restricted"
     read = controls["sidebar_groups"]["read"]
     assert read.children[0].value is False
@@ -3370,3 +3375,50 @@ def test_saved_incompatible_treatment_requires_explicit_repair(widget_runtime):
     controls['pii_reason'].value = 'Numeric customer identifier'
     controls['save_data_contract'].click()
     assert widget_runtime['calls']['guardrails']
+
+
+def test_business_review_switches_sources_without_persisting_or_losing_candidates(widget_runtime, monkeypatch):
+    """Generated proposals and draft rules share one reviewer while settings stay staged."""
+    state, _ = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    monkeypatch.setattr(module, "suggest_business_rule", lambda *a, **kw: [{
+        "rule_type": "range", "columns": ["column_0"],
+        "parameters": {"minimum": 1, "maximum_failure_percent": 0},
+        "business_requirement": "Identifiers must be positive.", "executable": True,
+    }])
+    controls["business_requirement"].value = "Identifiers must be positive."
+    controls["resolve_business_rule"].click()
+    choices = controls["business_proposal_select"].options
+    controls["business_block"].value = True
+    controls["business_review_source"].value = "Current draft rules"
+    assert controls["business_proposal_select"].layout.display == "none"
+    assert controls["business_saved"].layout.display == ""
+    controls["business_review_source"].value = "Generated proposals"
+    assert controls["business_proposal_select"].options == choices
+    assert controls["business_block"].value is True
+    assert controls["business_saved"].layout.display == "none"
+    controls["apply_business_rule"].click()
+    assert controls["business_review_source"].value == "Current draft rules"
+    assert controls["apply_business_rule"].description == "Update DQ Rule"
+    assert widget_runtime["calls"]["draft"] == []
+
+
+def test_business_generation_busy_state_and_failure_restore_the_reviewer(widget_runtime, monkeypatch):
+    """A failed generation leaves no stale actionable result and restores the Generate CTA."""
+    state, _ = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+
+    def fail(*args, **kwargs):
+        assert controls["resolve_business_rule"].disabled
+        assert controls["resolve_business_rule"].description == "Generating DQ Rules…"
+        assert controls["apply_business_rule"].disabled
+        assert controls["business_rule_controls"].layout.display == "none"
+        raise ValueError("Example generation failure")
+
+    monkeypatch.setattr(module, "suggest_business_rule", fail)
+    controls["resolve_business_rule"].click()
+    assert controls["resolve_business_rule"].description == "Generate DQ Rules"
+    assert not controls["resolve_business_rule"].disabled
+    assert controls["apply_business_rule"].disabled
+    assert "Example generation failure" in controls["business_proposal"].value
+    assert widget_runtime["calls"]["draft"] == []

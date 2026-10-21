@@ -378,13 +378,14 @@ def widget_activate_data_contract(
             min_width="0",
             grid_template_columns="repeat(3, minmax(0, 1fr))",
             grid_gap="12px",
-            align_items="flex-start",
+            align_items="stretch",
         ),
     )
 
+    activation_flow.add_class("fabricops-activation-flow")
     page = shared.form_page(
         widgets,
-        title="Activate Data Contract",
+        title="Activate Data Contract", tone="governance",
         description=(
             "Review exact Testing diagnostics, approve the frozen version, and link an exact Data Agreement for Live."
         ),

@@ -602,7 +602,7 @@ def _build_catalogue_widget(
     ip.display(
         widget_shared.form_page(
             widgets,
-            title=title,
+            title=title, tone="engineering",
             description=description,
             children=[context_section, selection_section, selected_section],
         )

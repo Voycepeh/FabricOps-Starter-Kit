@@ -26,6 +26,7 @@ from fabricops_kit.widgets.shared import (
     parse_iso_date,
     serialize_custom_fields,
     standard_widget,
+    widget_common,
     to_bool,
     to_iso_date,
     config_value,
@@ -157,18 +158,20 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         supporting_documents.children = tuple(row["container"] for row in supporting_document_rows)
 
     def _add_document_row(label: str = "", location: str = "") -> None:
-        name_label = widgets.HTML(value="<b>Document name</b>", layout=widgets.Layout(width="115px"))
-        label_widget = widgets.Text(value=label, description="", layout=widgets.Layout(width="28%", min_width="180px"))
-        link_label = widgets.HTML(value="<b>Document link</b>", layout=widgets.Layout(width="110px"))
-        location_widget = widgets.Text(
-            value=location, description="", layout=widgets.Layout(width="38%", min_width="240px")
-        )
+        label_widget = widgets.Text(value=label, **widget_common(widgets, "Document name"))
+        location_widget = widgets.Text(value=location, **widget_common(widgets, "Document link"))
         remove = widgets.Button(description="Remove document")
         record = {"label": label_widget, "location": location_widget, "remove": remove}
-        record["container"] = widgets.HBox(
-            [name_label, label_widget, link_label, location_widget, remove],
-            layout=widgets.Layout(display="flex", flex_flow="row wrap", align_items="center", width="100%", gap="6px"),
+        record["container"] = widgets.GridBox(
+            [label_widget, location_widget, remove],
+            layout=widgets.Layout(
+                width="100%", grid_template_columns="minmax(0,1fr) minmax(0,2fr) auto",
+                grid_gap="12px", align_items="flex-end",
+            ),
         )
+        add_class = getattr(record["container"], "add_class", None)
+        if callable(add_class):
+            add_class("fabricops-document-row")
 
         def _remove(_: Any) -> None:
             supporting_document_rows.remove(record)
@@ -186,7 +189,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         "At least two distinct active data stewards are required before an agreement can be saved. "
         "Create or reactivate another data steward, then select Refresh active stewards."
     )
-    save = widgets.Button(description="Save Agreement")
+    save = widgets.Button(description="Save Agreement", button_style="primary")
     status = status_message(widgets)
 
     def _set_status(message: str, *, error: bool = False) -> None:
@@ -335,31 +338,27 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         selector_panel.layout = full_width_layout
         steward_panels.append(
             widgets.VBox(
-                [
-                    widgets.HTML(
-                        value=(
-                            '<div style="color:#0f548c;font-size:14px;font-weight:600;'
-                            f'margin-bottom:4px;">{FIELD_LABELS[field]}</div>'
-                        )
-                    ),
-                    selector_panel,
-                ],
+                [selector_panel],
                 layout=widgets.Layout(
                     width="49%",
                     height="auto",
                     overflow="visible",
                     min_width="280px",
                     flex="1 1 320px",
-                    border="1px solid #d7e7f5",
+                    border="1px solid #dce4ed",
                     padding="10px 12px",
                 ),
             )
         )
+    steward_panels_row = widgets.HBox(steward_panels, layout=row_layout)
+    add_class = getattr(steward_panels_row, "add_class", None)
+    if callable(add_class):
+        add_class("fabricops-steward-panels")
     steward_section = form_section(
         widgets,
         title="Provider and recipient data stewards",
         children=[
-            widgets.HBox(steward_panels, layout=row_layout),
+            steward_panels_row,
             widgets.HBox([refresh_stewards], layout=widgets.Layout(justify_content="flex-end", width="100%")),
         ],
     )
@@ -378,7 +377,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
                 [
                     widgets.HTML(
                         value=(
-                            '<div style="color:#0f548c;font-size:14px;font-weight:600;'
+                            '<div style="color:var(--form-accent);font-size:14px;font-weight:600;'
                             'margin-bottom:4px;">Custom columns</div>'
                         )
                     ),
@@ -386,7 +385,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
                 ],
                 layout=widgets.Layout(
                     width="100%", height="auto", overflow="visible",
-                    border="1px solid #d7e7f5", padding="10px 12px",
+                    border="1px solid #dce4ed", padding="10px 12px",
                 ),
             ) if custom else widgets.VBox([]),
         ],
@@ -412,7 +411,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     )
     container = form_page(
         widgets,
-        title="Data Agreement Creation Widget",
+        title="Data Agreement Creation Widget", tone="governance",
         description=(
             "Governance-level agreement: defines who is sharing data, why it may be shared, "
             "and the governing conditions. Specific datasets and technical delivery terms are "

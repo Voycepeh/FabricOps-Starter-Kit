@@ -30,7 +30,7 @@ from fabricops_kit.pipeline.shared import DQ_RULE_TYPES
 
 
 _WIDGET_LABEL_WIDTH = "150px"
-_WIDGET_FIELD_MAX_WIDTH = "722px"
+_WIDGET_FIELD_MAX_WIDTH = "100%"
 _WIDGET_STYLE = {"description_width": _WIDGET_LABEL_WIDTH}
 _WIDGET_FIELD_MIN_WIDTH = "0"
 _WIDGET_FIELD_WIDTH = "100%"
@@ -38,6 +38,100 @@ _TEXTAREA_HEIGHT = "80px"
 _AUTHORING_PANE_HEIGHT = "560px"
 _FORM_PAGE_HEIGHT = "720px"
 _STATUS_MIN_HEIGHT = "32px"
+
+_FORM_STYLE = """<style>
+.fabricops-form {
+    --form-accent:#0f6cbd; --form-tint:#eaf3fb; --form-text:#243449; --form-border:#dce4ed;
+    font:13px/1.5 'Segoe UI',Arial,sans-serif; color:var(--form-text);
+    background:#f6f8fb; border:1px solid var(--form-border); border-radius:10px;
+    padding:20px; gap:16px; container-type:inline-size; scrollbar-gutter:stable;
+}
+.fabricops-form.fabricops-governance { --form-accent:#6750a4; --form-tint:#f1edf8; }
+.fabricops-form, .fabricops-form *, .fabricops-form *::before, .fabricops-form *::after { box-sizing:border-box; }
+.fabricops-form > *, .fabricops-form .widget-box > * { flex-shrink:0; }
+.fabricops-form .widget-box, .fabricops-form .widget-gridbox { min-width:0; max-width:100%; }
+.fabricops-form .widget-vbox { gap:12px; }
+.fabricops-form .widget-hbox { gap:12px; flex-wrap:wrap; align-items:center; }
+.fabricops-form .widget-inline-hbox:not(.widget-checkbox):not(.widget-html) {
+    display:grid; grid-template-columns:minmax(0,1fr); align-items:start; gap:6px;
+    width:100% !important; min-width:0 !important; max-width:100% !important; height:auto !important; margin:0;
+}
+.fabricops-form .widget-inline-hbox > .widget-label {
+    width:100% !important; min-width:0 !important; max-width:100% !important;
+    height:auto; min-height:0; margin:0; text-align:left; justify-self:start;
+    white-space:normal; overflow-wrap:anywhere; font-size:13px; font-weight:600; line-height:1.5;
+}
+.fabricops-form .widget-label:empty { display:none; }
+.fabricops-form .widget-html.widget-inline-hbox { display:block; width:100% !important; max-width:100% !important; margin:0; padding:0; }
+.fabricops-form .widget-html-content { width:100%; max-width:none; padding:0; overflow-wrap:anywhere; line-height:1.5; }
+.fabricops-form .widget-html:not(.fabricops-status):has(> .widget-html-content:empty),
+.fabricops-form .widget-html:has(> .widget-html-content > style:only-child) { display:none; }
+.fabricops-form .fabricops-page-header {
+    background:var(--form-tint); border-left:4px solid var(--form-accent); border-radius:6px;
+    padding:16px 20px; color:var(--form-text);
+}
+.fabricops-form .fabricops-page-title { font-size:21px; font-weight:650; line-height:1.3; }
+.fabricops-form .fabricops-page-description { color:#526477; margin-top:5px; max-width:80ch; }
+.fabricops-form .fabricops-section {
+    background:#fff; border:1px solid var(--form-border) !important; border-radius:8px;
+    padding:20px !important; gap:16px;
+}
+.fabricops-form .fabricops-section-heading { font-size:14px; font-weight:650; line-height:1.4; color:var(--form-text); }
+.fabricops-form .fabricops-authoring-pane { background:#fff; border:1px solid var(--form-border); border-radius:8px; padding:16px; }
+.fabricops-form input:not([type=checkbox]), .fabricops-form select, .fabricops-form textarea {
+    width:100%; min-width:0; max-width:100%; min-height:36px; border:1px solid #b8c5d3;
+    border-radius:5px; padding:7px 10px; background:#fff; color:var(--form-text);
+    font:13px/1.5 'Segoe UI',Arial,sans-serif;
+}
+.fabricops-form .widget-textarea textarea { height:110px; min-height:96px; resize:vertical; }
+.fabricops-form .widget-select select { height:130px; padding:5px; }
+.fabricops-form .widget-select-multiple select { height:96px; }
+.fabricops-form option { padding:6px 8px; }
+.fabricops-form input:disabled, .fabricops-form select:disabled,
+.fabricops-form textarea:disabled { background:#f2f5f8; color:#657587; }
+.fabricops-form .widget-checkbox { display:flex; align-items:center; min-height:36px; min-width:0 !important; width:auto !important; max-width:100% !important; margin:0; }
+.fabricops-form .widget-checkbox > .widget-label { display:none; }
+.fabricops-form .widget-checkbox .widget-label-basic { display:flex; gap:8px; align-items:center; white-space:normal; margin:0; max-width:100%; }
+.fabricops-form .widget-checkbox .widget-label-basic > span { min-width:0; white-space:normal; overflow-wrap:anywhere; }
+.fabricops-form .widget-checkbox input { flex:0 0 14px; }
+.fabricops-form input[type=checkbox] { width:14px; min-width:14px; height:14px; accent-color:var(--form-accent); }
+.fabricops-form .widget-button, .fabricops-form .widget-toggle-button {
+    min-height:36px; height:auto; border-radius:5px; padding:7px 14px; margin:0;
+    font:600 13px/1.5 'Segoe UI',Arial,sans-serif; box-shadow:none; white-space:normal;
+}
+.fabricops-form .widget-button {
+    width:auto; min-width:120px; max-width:100%; background:#fff; color:#34465b;
+    border:1px solid #b8c5d3;
+}
+.fabricops-form .widget-button.mod-primary { background:var(--form-accent); border-color:var(--form-accent); color:#fff; }
+.fabricops-form .widget-button.mod-info { background:#fff; border-color:var(--form-accent); color:var(--form-accent); }
+.fabricops-form .widget-button.mod-danger { background:#fff; border-color:#c58a92; color:#a4262c; }
+.fabricops-form .widget-button.fabricops-confirm-danger { background:#a4262c; border-color:#a4262c; color:#fff; }
+.fabricops-form .widget-button.mod-warning { background:#fff6df; border-color:#9b7415; color:#735600; }
+.fabricops-form .widget-button:disabled {
+    background:#edf0f4; border-color:#d4dce5; color:#68788a; opacity:1; cursor:not-allowed;
+}
+.fabricops-form .widget-button:not(:disabled):hover { filter:brightness(.95); }
+.fabricops-form :is(input,select,textarea,button,summary):focus-visible { outline:2px solid var(--form-accent); outline-offset:2px; }
+.fabricops-form .widget-toggle-buttons > div { display:flex; flex-wrap:wrap; gap:4px; }
+.fabricops-form .widget-toggle-buttons .mod-active { background:var(--form-tint); color:var(--form-accent); }
+.fabricops-form .fabricops-actions { gap:10px; flex-wrap:wrap; }
+.fabricops-form summary { cursor:pointer; padding:7px 0; font-weight:600; color:var(--form-accent); }
+.fabricops-form details { min-width:0; max-width:100%; }
+.fabricops-form table { width:100%; border-collapse:collapse; font-size:12px; }
+.fabricops-form th { background:#f2f5f9; color:#526477; text-align:left; }
+.fabricops-form td, .fabricops-form th { padding:10px 12px; border-bottom:1px solid #e8edf3; overflow-wrap:anywhere; }
+.fabricops-form pre { white-space:pre-wrap; overflow-wrap:anywhere; }
+.fabricops-form .fabricops-document-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr) auto; gap:12px; align-items:end; }
+@container (max-width:800px) {
+    .fabricops-form .fabricops-authoring-workspace, .fabricops-form .fabricops-activation-flow,
+    .fabricops-form .fabricops-document-row { grid-template-columns:minmax(0,1fr) !important; }
+    .fabricops-form .fabricops-steward-panels { display:grid; grid-template-columns:minmax(0,1fr); }
+    .fabricops-form .fabricops-steward-panels > .widget-vbox { width:100% !important; min-width:0 !important; }
+}
+@media (prefers-reduced-motion:reduce) { .fabricops-form * { scroll-behavior:auto !important; } }
+</style>"""
+
 
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 
@@ -144,34 +238,14 @@ def widget_common(widgets_module: Any, description: str, *, textarea: bool = Fal
     return common
 
 
-def form_page(widgets: Any, *, title: str, description: str, children: Iterable[Any]) -> Any:
-    """Compose a full-width, bounded widget form with a consistent page header."""
-    field_style = (
-        "<style>"
-        ".fabricops-form .widget-inline-hbox:not(.widget-checkbox){display:grid;"
-        "grid-template-columns:150px minmax(0,560px);column-gap:12px;align-items:start;"
-        "width:100%;min-width:0;max-width:722px;}"
-        ".fabricops-form .widget-label{text-align:left;justify-self:start;}"
-        ".fabricops-form .widget-inline-hbox:not(.widget-checkbox)>.widget-label{"
-        "width:150px;min-width:150px;max-width:150px;margin:0;text-align:left;"
-        "white-space:normal;overflow-wrap:anywhere;}"
-        ".fabricops-form .widget-label:empty{display:none;}"
-        ".fabricops-form .widget-inline-hbox:not(.widget-checkbox):has(>.widget-label:empty){"
-        "grid-template-columns:minmax(0,560px);column-gap:0;}"
-        ".fabricops-form .widget-text input,.fabricops-form .widget-dropdown select,"
-        ".fabricops-form .widget-combobox input,.fabricops-form .widget-select select,"
-        ".fabricops-form .widget-select-multiple select,.fabricops-form .widget-textarea textarea{"
-        "width:100%;min-width:0;max-width:560px;box-sizing:border-box;}"
-        ".fabricops-form .widget-hbox{min-width:0;max-width:100%;}"
-        "</style>"
-    )
+def form_page(widgets: Any, *, title: str, description: str, children: Iterable[Any], tone: str = "engineering") -> Any:
+    """Compose a bounded notebook form with shared fields and a pastel workflow header."""
     header = widgets.HTML(
         value=(
-            field_style
-            + '<div style="background:#0f6cbd;color:#fff;padding:16px 20px;'
-            'border-radius:8px;">'
-            f'<div style="font-size:21px;font-weight:600;line-height:1.3;">{_html_escape(title)}</div>'
-            f'<div style="font-size:13px;line-height:1.4;margin-top:3px;opacity:.9;">{_html_escape(description)}</div>'
+            _FORM_STYLE
+            + '<div class="fabricops-page-header">'
+            f'<div class="fabricops-page-title">{_html_escape(title)}</div>'
+            f'<div class="fabricops-page-description">{_html_escape(description)}</div>'
             "</div>"
         ),
         layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
@@ -179,17 +253,14 @@ def form_page(widgets: Any, *, title: str, description: str, children: Iterable[
     page = widgets.VBox(
         [header, *children],
         layout=widgets.Layout(
-            width="100%",
-            min_width="0",
-            max_width="100%",
-            height=_FORM_PAGE_HEIGHT,
-            overflow="auto",
-            gap="12px",
+            width="100%", min_width="0", max_width="100%",
+            height=_FORM_PAGE_HEIGHT, overflow="auto",
         ),
     )
     add_class = getattr(page, "add_class", None)
     if callable(add_class):
         add_class("fabricops-form")
+        add_class("fabricops-governance" if tone == "governance" else "fabricops-engineering")
     return page
 
 
@@ -204,6 +275,9 @@ def status_message(widgets: Any) -> Any:
         height="auto",
         overflow="visible",
     )
+    add_class = getattr(message, "add_class", None)
+    if callable(add_class):
+        add_class("fabricops-status")
     return message
 
 
@@ -230,7 +304,11 @@ def authoring_pane(widgets: Any, *, title: str, children: Iterable[Any]) -> Any:
             f'border-bottom:1px solid #d7e7f5;padding-bottom:6px;">{_html_escape(title)}</div>'
         )
     )
-    return bounded_region(widgets, [heading, *children])
+    pane = bounded_region(widgets, [heading, *children])
+    add_class = getattr(pane, "add_class", None)
+    if callable(add_class):
+        add_class("fabricops-authoring-pane")
+    return pane
 
 
 def authoring_workspace(
@@ -273,25 +351,22 @@ def preview_region(widgets: Any, preview: Any, *, height: str = "180px") -> Any:
 
 
 def form_section(widgets: Any, *, title: str, children: Iterable[Any]) -> Any:
-    """Group naturally expanding form content in one consistent FabricOps card."""
+    """Group naturally expanding form content in one consistent FabricOps section."""
     heading = widgets.HTML(
-        value=(
-            '<div style="color:#253858;font-size:14px;font-weight:700;'
-            f'line-height:1.25;">{_html_escape(title)}</div>'
-        ),
+        value=f'<div class="fabricops-section-heading">{_html_escape(title)}</div>',
         layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
     )
-    return widgets.VBox(
+    section = widgets.VBox(
         [heading, *children],
         layout=widgets.Layout(
-            width="100%",
-            height="auto",
-            overflow="visible",
-            border="1px solid #e1e6eb",
-            padding="14px",
-            gap="10px",
+            width="100%", height="auto", overflow="visible",
+            border="1px solid #dce4ed", padding="20px",
         ),
     )
+    add_class = getattr(section, "add_class", None)
+    if callable(add_class):
+        add_class("fabricops-section")
+    return section
 
 
 def form_grid(widgets: Any, children: Iterable[Any]) -> Any:
@@ -329,7 +404,7 @@ def checkbox_group(widgets: Any, *, label: str, checkboxes: Iterable[Any]) -> An
 def action_row(widgets: Any, controls: Iterable[Any], *, consequence: Any | None = None) -> Any:
     """Position form actions and an optional consequence summary in a footer row."""
     children = ([consequence] if consequence is not None else []) + list(controls)
-    return widgets.HBox(
+    row = widgets.HBox(
         children,
         layout=widgets.Layout(
             width="100%",
@@ -340,6 +415,11 @@ def action_row(widgets: Any, controls: Iterable[Any], *, consequence: Any | None
             gap="10px",
         ),
     )
+
+    add_class = getattr(row, "add_class", None)
+    if callable(add_class):
+        add_class("fabricops-actions")
+    return row
 
 
 def resolve_agreement_details(agreement: dict[str, Any] | None) -> tuple[str, str]:
