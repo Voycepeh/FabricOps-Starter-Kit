@@ -59,6 +59,13 @@ jobs:
         with:
           python-version-file: .python-version
 
+      # Spark's Hadoop filesystem client needs a supported JDK, not the runner default.
+      - name: Set up Java for Spark tests
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
       - name: Install locked dependencies
         run: uv sync --frozen --extra docs --extra dev
 
