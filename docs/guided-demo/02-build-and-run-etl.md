@@ -36,7 +36,7 @@ The notebook follows one visible lifecycle:
 | Governed Read | Reads each configured source and runs the applicable source checks. |
 | PySpark Transform | Contains the joins, filters, derived columns, aggregations, or selections owned by your project. |
 | Governed Write | Checks and, when allowed, publishes each target using its configured load strategy. |
-| Optional inspection | Exposes selected Read and Write results while you develop or troubleshoot. |
+| Inline DataFrame previews | Displays actual rows immediately after each governed Read and Write call. |
 
 The template starts with one Read, one transformation, and one Write. Add more Read or Write blocks only when your pipeline needs them.
 
@@ -110,6 +110,9 @@ source = orchestrate_read(
     dq_diagnostics="sample",
 )
 sources["source"] = source
+
+# Inspect the rows returned by this Read.
+display(sources["source"]["dataframe"].limit(10))
 ```
 
 | Parameter | What you normally change |
@@ -211,6 +214,9 @@ writes["target"] = orchestrate_write(
     spark_session=spark,
     frequency_top_n=5,
 )
+
+# Inspect the DataFrame submitted to this Write.
+display(writes["target"]["dataframe"].limit(10))
 ```
 
 | Parameter | What you normally change |
@@ -246,35 +252,7 @@ writes["target"] = orchestrate_write(
 
     A successful Write also records the source and target pipeline participation in `METADATA_DATA_LINEAGE`. Source Observation history used by Source Drift and incremental execution is committed only through the successful write path.
 
-<div class="fabricops-section-banner" markdown="1">
-<img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
-<div class="fabricops-section-content" markdown="1">
-
-## Inspect selected results
-
-Review orchestration stages, Data Quality results, and published profiles.
-
-</div>
-</div>
-
-**Uncomment only the displays that help you understand or troubleshoot the current run.**
-
-The template keeps inspection outside the orchestration calls so the standard lifecycle remains easy to see.
-
-```python
-# Read DataFrame and ordered Read stages.
-# display(sources["source"]["dataframe"])
-# display(sources["source"]["orchestration_stages"])
-
-# Ordered Write stages and Data Quality results.
-# display(writes["target"]["orchestration_stages"])
-# display(writes["target"]["dq_result"])
-
-# Column-level profile metrics after publication.
-# display(writes["target"].get("profile_result", {}).get("profile"))
-```
-
-The guarded `.get()` call is useful because a Testing Write does not publish or return a persisted-target profile.
+Read and Write previews appear directly in their respective orchestration code cells. The printed stage summaries already provide governance outcomes; the previews show the actual records. To inspect persisted target tables, read them separately after publication.
 
 With `verbose=True` (the default), every successful Read and Write ends with a summary. `total_duration_seconds` includes the complete lifecycle, including Guardrails and profiling. Inspect the same measurements programmatically:
 
