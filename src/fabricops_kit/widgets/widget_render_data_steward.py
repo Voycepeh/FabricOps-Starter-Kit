@@ -138,7 +138,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
     if isinstance(callbacks, list) and callbacks:
         callbacks.insert(0, callbacks.pop())
 
-    save = widgets.Button(description="Save steward")
+    save = widgets.Button(description="Save steward", button_style="primary")
     status = status_message(widgets)
     required_labels = {
         "steward_name": "Steward name",
@@ -210,7 +210,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
     actions = action_row(widgets, [save])
     container = form_page(
         widgets,
-        title="Data Steward",
+        title="Data Steward", tone="governance",
         description="Create or update data stewards",
         children=[selection_section, details_section, *supporting_sections, actions, status],
     )

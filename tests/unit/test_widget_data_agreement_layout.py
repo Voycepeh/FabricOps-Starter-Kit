@@ -66,20 +66,19 @@ def test_shared_form_viewport_is_bounded_while_sections_expand_naturally():
     assert section.layout.kwargs["overflow"] == "visible"
 
     css = page.children[0].value
-    assert ".fabricops-form .widget-inline-hbox:not(.widget-checkbox){display:grid;" in css
-    assert "grid-template-columns:150px minmax(0,560px);column-gap:12px;" in css
-    assert "max-width:722px;" in css
-    assert ".fabricops-form .widget-label{text-align:left;justify-self:start;}" in css
-    assert ".fabricops-form .widget-inline-hbox:not(.widget-checkbox)>.widget-label{" in css
-    assert "width:150px;min-width:150px;max-width:150px;" in css
-    assert ".fabricops-form .widget-label:empty{display:none;}" in css
-    assert ":has(>.widget-label:empty)" in css
+    assert '.widget-inline-hbox:not(.widget-checkbox):not(.widget-html)' in css
+    assert 'grid-template-columns:minmax(0,1fr)' in css
+    assert '.fabricops-form .widget-html.widget-inline-hbox { display:block;' in css
+    assert '.fabricops-form .widget-checkbox > .widget-label { display:none; }' in css
+    assert 'fabricops-page-header' in css
+    assert '--form-tint:#eaf3fb' in css
+    assert '--form-tint:#f1edf8' in css
 
     common = shared.widget_common(_FakeWidgets, "Example")
     assert common["style"]["description_width"] == "150px"
     assert common["layout"].kwargs["width"] == "100%"
     assert common["layout"].kwargs["min_width"] == "0"
-    assert common["layout"].kwargs["max_width"] == "722px"
+    assert common["layout"].kwargs["max_width"] == "100%"
 
     empty = shared.widget_common(_FakeWidgets, "   ")
     assert empty["description"] == ""

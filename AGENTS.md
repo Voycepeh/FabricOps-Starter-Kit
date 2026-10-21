@@ -64,6 +64,7 @@ Inspect and reuse current implementations before creating parallel paths. Avoid 
 | Change | Skill |
 | --- | --- |
 | Public callable or function-level package source | `.agents/skills/fabricops-public-api-change/SKILL.md` |
+| Widget UI, form layout, visual styling, or interaction polish | `.agents/skills/fabricops-widget-ui/SKILL.md` (uses `.agents/skills/frontend-design/SKILL.md`) |
 | Notebook templates under `templates/notebooks/` | `.agents/skills/fabricops-notebook-template/SKILL.md` |
 | Documentation cleanup, structure, or presentation | `.agents/skills/fabricops-docs-maintenance/SKILL.md` |
 | Release preparation, versioning, tagging, or publishing | `.agents/skills/fabricops-release/SKILL.md` |

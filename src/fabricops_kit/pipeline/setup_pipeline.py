@@ -366,22 +366,18 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
                 raise ValueError("No Contract must explicitly be True.")
             select_contract(table_id, **choice)
     try:
-        from fabricops_kit.widgets.shared import require_ipywidgets
+        from fabricops_kit.widgets.shared import form_page, form_section, require_ipywidgets
 
         widgets = require_ipywidgets()
         from IPython import display as ip
     except ModuleNotFoundError:
         return state
     style = widgets.HTML('''<style>
-.pipeline-contracts{max-width:1000px;padding:12px;border:2px solid var(--mode);border-radius:6px;color:#17212b;background:var(--surface)}
-.pipeline-testing{--mode:#a21920;--surface:#fff5f5}.pipeline-live{--mode:#176536;--surface:#f1fbf4}
-.pipeline-contracts h3{background:var(--mode);color:white;padding:9px;margin:0;border-radius:4px}
-.pipeline-contracts summary{cursor:pointer;color:var(--mode);font-weight:600;padding:5px}
-.pipeline-contracts table{border-collapse:collapse;width:100%;background:white;font-size:12px}
-.pipeline-contracts th,.pipeline-contracts td{border:1px solid #bbc0c5;padding:5px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
-.pipeline-contracts .inactive{background:#eceff1;color:#454c53}
-.pipeline-contracts .contract-scroll{overflow-x:auto}.pipeline-contracts pre{white-space:pre-wrap}
-.pipeline-contracts .widget-toggle-buttons .mod-active{background:var(--mode);color:white}
+.pipeline-contracts { --mode:#0f6cbd; }
+.pipeline-testing { --mode:#6750a4; } .pipeline-live { --mode:#176536; }
+.pipeline-contracts h3 { font-size:15px; color:var(--mode); margin:0; }
+.pipeline-contracts .inactive { background:#f2f5f8; color:#526477; }
+.pipeline-contracts .contract-scroll { overflow-x:auto; }
 </style>''')
     header = widgets.HTML()
     mode_control = widgets.ToggleButtons(options=[("Testing", "testing"), ("Live", "live")], value="testing", description="Pipeline mode")
@@ -391,7 +387,7 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
         identity = table["identity"]
         label = " / ".join(str(identity.get(key)) for key in ("store", "schema", "table_name") if identity.get(key))
         roles = " / ".join("Read" if role == "source" else "Write" for role in identity["roles"])
-        title = widgets.HTML(f'<h4>{html.escape(roles)} · {html.escape(label)}</h4><small>{html.escape(table_id)}</small>')
+        title = widgets.HTML(f'<small>{html.escape(table_id)}</small>')
         version = widgets.Dropdown(description="Contract", layout=widgets.Layout(width="100%"), style={"description_width": "70px"})
         inspector = widgets.HTML()
         def changed(change, key=table_id):
@@ -409,8 +405,12 @@ def setup_pipeline(*, sources, targets, execution_mode=None, selections=None, in
                 select_contract(key, contract_id, int(version_number))
         version.observe(changed, names="value")
         state["_controls"][table_id] = {"version": version, "inspector": inspector}
-        sections.append(widgets.VBox([title, version, inspector]))
-    root = widgets.VBox([style, header, mode_control, *sections])
+        sections.append(form_section(widgets, title=f"{roles} · {label}", children=[title, version, inspector]))
+    root = form_page(
+        widgets, title="Pipeline setup", tone="engineering",
+        description="Select exact Data Contract versions for Testing or Live execution.",
+        children=[style, header, mode_control, *sections],
+    )
     root.add_class("pipeline-contracts")
     state["widget"], state["mode_control"] = root, mode_control
     refresh()

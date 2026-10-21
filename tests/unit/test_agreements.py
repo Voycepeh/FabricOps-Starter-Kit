@@ -344,7 +344,8 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     assert "Governance-level agreement" in agreement_header.value
     assert "Specific datasets and technical delivery terms" in agreement_header.value
     assert "schema versions" not in agreement_header.value
-    assert "background:#0f6cbd" in agreement_header.value
+    assert "fabricops-page-header" in agreement_header.value
+    assert "--form-tint:#f1edf8" in agreement_header.value
     assert agreement_controls["container"].layout.kwargs["width"] == "100%"
     assert "widgets.Tab" not in inspect.getsource(agreement_widget.widget_render_data_agreement)
     steward_section = form_flow.children[2]
@@ -356,14 +357,14 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
         strict=True,
     ):
         assert panel.layout.kwargs["width"] == "49%"
-        search_selector_summary = panel.children[1]
+        search_selector_summary = panel.children[0]
         assert len(search_selector_summary.children) == 2
         assert search_selector_summary.children[0].placeholder == "Search active stewards..."
         assert selector not in search_selector_summary.children
     assert len(agreement_controls["supporting_documents"]) == 1
     document_container = agreement_controls["supporting_documents"][0]["container"]
-    assert [child.value for child in document_container.children if isinstance(child.value, str) and "Document" in child.value] == [
-        "<b>Document name</b>", "<b>Document link</b>"
+    assert [child.description for child in document_container.children[:2]] == [
+        "Document name", "Document link"
     ]
     root = agreement_controls["container"]
     documents_container = agreement_controls["supporting_documents_container"]
@@ -382,7 +383,8 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     steward_header = steward_controls["container"].children[0]
     assert "Data Steward" in steward_header.value
     assert "Data Steward Creation Widget" not in steward_header.value
-    assert "background:#0f6cbd" in steward_header.value
+    assert "fabricops-page-header" in steward_header.value
+    assert "--form-tint:#f1edf8" in steward_header.value
 
 
 def test_steward_widget_blocks_missing_required_fields_before_persistence(monkeypatch, capsys):
