@@ -8,7 +8,18 @@
 
 ## What is a Data Contract?
 
-A **Data Contract** defines a dataset's structure, quality rules, and sensitive-data requirements. It gives engineers and Governance a shared standard to validate against.
+A **Data Contract** is a shared agreement between the teams producing and consuming a dataset. It defines what data a pipeline is expected to deliver, how its quality is assessed, and how sensitive information must be handled.
+
+A schema describes the columns and their data types. A Data Contract goes further by defining the rules and responsibilities associated with that data:
+
+- **Structure:** Which columns exist, their data types, and which fields are required.
+- **Data quality:** Expectations such as completeness, uniqueness, valid values, and acceptable failure thresholds.
+- **Sensitive data:** Which fields need protection and what treatment should be applied.
+- **Ownership and accountability:** Who is responsible for the dataset and its agreed expectations.
+
+For example, an employee dataset might require a non-null `employee_id`, unique employee records, valid department values, and protection of personal identifiers. These are explicit, testable expectations rather than assumptions that downstream users must discover themselves.
+
+In FabricOps, Data Contracts provide the governance rules used to validate pipeline reads and writes. **Versioning lets teams develop against proposed changes without immediately changing the contract used in Production.**
 
 ## The problem
 
