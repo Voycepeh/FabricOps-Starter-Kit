@@ -225,7 +225,7 @@ def test_headless_uses_builder_without_loading_ui_or_listing_contracts(monkeypat
                                   execution_mode="testing", selections=selections, pipeline_id="example") is sentinel
     builder.assert_called_once_with(execution_mode="testing", sources=[{"table_id": "source"}],
                                     targets=[], selections=selections, context=None, spark_session=None,
-                                    pipeline_id="example", executable_sha256=None, dependencies=None, configuration=None, testing_writes=False)
+                                    pipeline_id="example", configuration=None, testing_writes=False)
     forbidden.assert_not_called()
 
 

@@ -52,7 +52,7 @@ print(result["checks_not_exercised"])
 
 A failed Guardrail remains a diagnostic result in Testing. Inspect `schema_result`, `grain_result`, `dq_result`, `source_drift_results`, `sensitive_result`. DQ diagnostics retain exact counts and configured tolerances, with bounded samples by default and optional lazy full violations.
 
-Evaluation-only Testing does not write target data, `METADATA_DATA_LINEAGE`, `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_SOURCE_OBSERVATION`, persistent token mappings, checkpoints or durable staging. It persists `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS`, while retaining the in-memory inspection journal. Run all declared Reads, transformations and Writes inside `with plan:`; its exit records completion automatically, including read-only pipelines. Missing operations and blocking failures prevent successful completion. Supply a stable `pipeline_id` and deployed executable SHA-256 for qualifying Testing evidence.
+Evaluation-only Testing does not write target data, `METADATA_DATA_LINEAGE`, `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_SOURCE_OBSERVATION`, persistent token mappings, checkpoints or durable staging. It persists `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS`, while retaining the in-memory inspection journal. Run all declared Reads, transformations and Writes, then call `finalize_pipeline(plan)` to record completion, including read-only pipelines. Missing operations and blocking failures prevent successful completion. Supply a stable `pipeline_id` and the selected exact frozen Data Contract versions for governed Testing.
 
 Explicit `testing_writes=True` permits real Testing publication with mappings, checkpoints and ordinary metadata side effects. Review the destination and confirm the interactive authorization; Live-owned destinations are rejected. Evaluation-only Testing remains available without another execution requirement.
 
@@ -71,7 +71,7 @@ Without a successful historical Live publication, Source Drift may report its fi
 
 Governance approves one exact whole pipeline after successful finalization, using [`widget_activate_pipeline()`](../api/reference/widget_activate_pipeline.md). The service consumes the committed `METADATA_PIPELINE_RUN` snapshot and linked Guardrail diagnostics. Read-only and multiple-output candidates qualify only when every declared operation completed; ungoverned Testing and isolated passing rules cannot authorize activation.
 
-Keep the tested notebook executable unchanged. Use runtime configuration for the Testing/Live mode and environment bindings. Deployment is separate; headless Live automatically resolves the approved environment revision.
+Engineering and Microsoft Fabric own code integrity, checksums, source control and CI/CD. Use runtime configuration for Testing/Live mode and environment bindings. Deployment is separate; headless Live automatically resolves the approved environment revision.
 
 **Expected result:** every selected frozen definition is inspectable, diagnostics report the actual checks performed, and Testing persists run records and Guardrail diagnostics while preserving publication boundaries.
 

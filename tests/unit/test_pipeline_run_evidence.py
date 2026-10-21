@@ -74,7 +74,7 @@ def runtime(monkeypatch):
         return Rows()
     monkeypatch.setattr(shared, "read_lakehouse_table", read_run)
 
-    def make(mode="testing", roles=("source", "source", "target", "target"), executable="a" * 64, dependencies="{}", activity="fabric-activity", notebook_name="notebook"):
+    def make(mode="testing", roles=("source", "source", "target", "target"), activity="fabric-activity", notebook_name="notebook"):
         identities = {f"table{i}": {"table_id": f"table{i}", "store": "Bronze" if role == "source" else "Silver", "table_name": f"table{i}",
                                    "schema": "physical", "logical_id": f"asset{i}", "roles": [role]}
                       for i, role in enumerate(roles)}
@@ -83,7 +83,7 @@ def runtime(monkeypatch):
                             "contract_payload_json": json.dumps({"table": {"table_id": key, "columns": []}})} for key in identities}), {"config": {}, "env": "canary", "activity_id": activity, "notebook_name": notebook_name,
                             "_pipeline_bindings": {key: {"store": item["store"], "schema": item.get("schema"), "table_name": item["table_name"]}
                                                    for key, item in identities.items()}},
-                                            pipeline_id="orders", executable_sha256=executable, dependencies_json=dependencies)
+                                            pipeline_id="orders")
         shared.persist_pipeline_run(plan)
         return plan
 
@@ -176,11 +176,11 @@ def test_evidence_write_failures_poison_the_plan(runtime, point):
     assert not any(row["execution_mode"] == "testing" and row["status"] == "succeeded" for row in saved.values())
 
 
-@pytest.mark.parametrize("mode,executable,status", [("testing", "", "incomplete")])
-def test_bootstrap_and_unavailable_fingerprint_never_qualify(runtime, mode, executable, status):
+@pytest.mark.parametrize("mode,status", [("testing", "succeeded")])
+def test_testing_completion_requires_no_executable_identity(runtime, mode, status):
     """Bootstrap is honest initial publication, never Testing activation evidence."""
     make, operation, _, _, _ = runtime
-    plan = make(mode=mode, roles=("source",), executable=executable)
+    plan = make(mode=mode, roles=("source",))
     operation(plan, 0)
     result = finalize_pipeline_run(plan)
     assert result["status"] == status
@@ -193,8 +193,6 @@ def test_candidate_determinism_changes_and_physical_binding_exclusion(runtime):
     operation(plan, 0, read_mode="full", read_parameters={"b": 2, "a": 1})
     baseline = shared.pipeline_candidate(plan)[1]
     assert shared.canonical_candidate_json({"b": 2, "a": 1}) == '{"a":1,"b":2}'
-    assert shared.pipeline_candidate(replace(plan, executable_sha256="b" * 64))[1] != baseline
-    assert shared.pipeline_candidate(replace(plan, dependencies_json='{"library":"v2"}'))[1] != baseline
     identities = json.loads(plan.participants_json)
     identities["table0"].update(schema="other", store="elsewhere", table_name="renamed")
     assert shared.pipeline_candidate(replace(plan, environment="other", participants_json=json.dumps(identities)))[1] == baseline
@@ -217,36 +215,6 @@ def test_contract_payload_and_exact_hash_are_retained(runtime):
     contract["contract_payload_json"] = payload.replace('"int"', '"long"')
     after = shared.pipeline_candidate(replace(plan, contracts_json=json.dumps({"table0": contract})))
     assert before[1] != after[1] and before[2][0]["contract"]["payload_sha256"] != after[2][0]["contract"]["payload_sha256"]
-
-
-def test_missing_dependency_identity_persists_incomplete_evidence(runtime, monkeypatch):
-    """Unavailable runtime identity retains diagnostics but cannot qualify."""
-    from importlib import metadata
-    real_version = metadata.version
-    def version(name):
-        if name == "delta-spark":
-            raise metadata.PackageNotFoundError(name)
-        return real_version(name)
-    monkeypatch.setattr(metadata, "version", version)
-    make, operation, saved, _, _ = runtime
-    plan = make(roles=("source",))
-    operation(plan, 0)
-    result = finalize_pipeline_run(plan)
-    assert result["status"] == "incomplete" and not result["candidate_fingerprint"]
-    assert saved[plan.plan_id]["status"] == "incomplete"
-
-
-def test_mutated_engine_or_dependency_identity_cannot_qualify(runtime, monkeypatch):
-    """A candidate cannot silently change between setup and completion."""
-    from importlib import metadata
-    make, operation, _, _, _ = runtime
-    plan = make(roles=("source",))
-    operation(plan, 0)
-    real_version = metadata.version
-    monkeypatch.setattr(metadata, "version", lambda name: "changed" if name == "pandas" else real_version(name))
-    result = finalize_pipeline_run(plan)
-    assert result["status"] == "failed"
-    assert "candidate_changed_during_run" in result["operation_summary_json"]
 
 
 @pytest.mark.parametrize("secret_key", ["password", "api_key", "authorization"])
@@ -299,15 +267,6 @@ def test_partial_operation_snapshot_failure_cannot_be_finalized(runtime):
     with pytest.raises(RuntimeError, match="persistence failed"):
         finalize_pipeline_run(plan)
     assert saved[plan.plan_id]["status"] == "incomplete"
-
-
-@pytest.mark.parametrize("dependencies", ["null", '{"project-library":null}', '{"project-library":"latest"}'])
-def test_omitted_project_dependency_manifest_cannot_qualify(runtime, dependencies):
-    """An explicit empty dependency manifest differs from unknown project dependencies."""
-    make, operation, _, _, _ = runtime
-    plan = make(roles=("source",), dependencies=dependencies)
-    operation(plan, 0)
-    assert finalize_pipeline_run(plan)["status"] == "incomplete"
 
 
 def test_run_schema_has_only_independent_lifecycle_fields():
@@ -420,37 +379,6 @@ def test_finalization_waits_for_an_in_flight_operation(runtime, monkeypatch):
         assert final.result(timeout=5)["status"] == "succeeded"
 
 
-@pytest.mark.parametrize("required", ["0.0.1", "999.0.0"])
-def test_project_dependencies_are_checked_against_installed_versions(runtime, required):
-    """A fabricated package pin cannot identify a successfully tested candidate."""
-    from importlib.metadata import version
-    make, operation, _, _, _ = runtime
-    plan = make(roles=("source",), dependencies=json.dumps({"numpy": required}))
-    operation(plan, 0)
-    result = finalize_pipeline_run(plan)
-    assert result["status"] == "incomplete" and not result["candidate_fingerprint"]
-    assert json.loads(result["candidate_json"])["dependencies"]["numpy"] == {"required": required, "observed": version("numpy")}
-
-
-def test_valid_dependency_names_containing_secret_are_not_credentials(runtime, monkeypatch):
-    """Treat distribution names as identities, rather than secret-bearing fields."""
-    from importlib import metadata
-    real_version = metadata.version
-    monkeypatch.setattr(metadata, "version", lambda name: "4.10.0" if name == "azure-keyvault-secrets" else real_version(name))
-    make, operation, _, _, _ = runtime
-    plan = make(roles=("source",), dependencies='{"azure-keyvault-secrets":"4.10.0"}')
-    operation(plan, 0)
-    assert finalize_pipeline_run(plan)["status"] == "succeeded"
-
-
-def test_missing_project_distribution_retains_non_successful_diagnostics(runtime):
-    """Uninstalled or unverifiable dependencies leave an incomplete run."""
-    make, operation, _, _, _ = runtime
-    plan = make(roles=("source",), dependencies='{"nonexistent-fabricops-review-package":"1.0.0"}')
-    operation(plan, 0)
-    assert finalize_pipeline_run(plan)["status"] == "incomplete"
-
-
 def test_lost_final_commit_acknowledgement_confirms_exact_durable_snapshot(runtime):
     """The committed Delta transaction, not its transport acknowledgement, is authority."""
     make, operation, saved, _, failure = runtime
@@ -519,36 +447,6 @@ def test_post_publication_evidence_failure_retains_published_flag(runtime):
     assert raised.value.published is True and raised.value.failed_stage == "Run evidence"
 
 
-def test_invalid_dependency_urls_and_values_are_not_persisted(runtime):
-    """Unsupported dependency assertions must not leak URLs or credential values."""
-    make, operation, _, _, _ = runtime
-    plan = make(roles=("source",), dependencies=json.dumps({
-        "https://user:private-credential@internal-host/package": "1.0.0",
-        "valid-distribution": "https://user:other-private-credential@internal-host/package",
-    }))
-    operation(plan, 0)
-    result = finalize_pipeline_run(plan)
-    assert result["status"] == "incomplete"
-    assert "private-credential" not in json.dumps(result, default=str)
-    assert "internal-host" not in json.dumps(result, default=str)
-
-
-@pytest.mark.parametrize("unavailable", ["missing", "unreadable"])
-def test_unavailable_engine_source_identity_persists_incomplete_testing(runtime, monkeypatch, unavailable):
-    """A missing source tree must never identify every engine as SHA256(empty)."""
-    from pathlib import Path
-    make, operation, _, _, _ = runtime
-    if unavailable == "missing":
-        monkeypatch.setattr(Path, "rglob", lambda *args: iter(()))
-    else:
-        monkeypatch.setattr(Path, "rglob", lambda *args: (_ for _ in ()).throw(OSError("unreadable")))
-    plan = make(roles=("source",))
-    operation(plan, 0)
-    row = finalize_pipeline_run(plan)
-    assert row["status"] == "incomplete" and not row["candidate_fingerprint"]
-    assert json.loads(row["candidate_json"])["engine_sha256"] is None
-
-
 @pytest.mark.parametrize("key", ["schema", "store", "table_name", "environment_name", "notebook_id"])
 def test_project_configuration_keys_never_disappear_as_physical_bindings(runtime, key):
     """Arbitrary project values remain exact even when named like routing fields."""
@@ -607,3 +505,33 @@ def test_operation_cannot_switch_to_case_alias_store_in_another_physical_item(ru
             with shared.PipelineOperation(plan, role, {"store": "silver", "schema": None, "table_name": "employees", "sources": []}):
                 pytest.fail("A mismatched physical operation must never start")
     assert saved[plan.plan_id]["status"] == "failed"
+
+
+@pytest.mark.parametrize('roles', [('source',), ('source', 'source', 'target', 'target')])
+def test_public_finalize_reuses_context_and_is_idempotent(runtime, roles):
+    """The explicit notebook end boundary consolidates results without extra work."""
+    from fabricops_kit import finalize_pipeline
+    make, operation, saved, writes, _ = runtime
+    plan = make(roles=roles)
+    for index in range(len(roles)):
+        operation(plan, index)
+    assert saved[plan.plan_id]['status'] == 'incomplete'
+    result = finalize_pipeline(plan)
+    assert result['status'] == 'succeeded'
+    assert json.loads(result['operation_summary_json'])['boundary_completed']
+    count = len(writes)
+    assert finalize_pipeline(plan) == result and len(writes) == count
+
+
+@pytest.mark.parametrize('failure', ['missing_operation', 'project_exception'])
+def test_public_finalize_cannot_approve_incomplete_or_failed_runs(runtime, failure):
+    """Manual completion preserves operation coverage and caught project failures."""
+    from fabricops_kit import finalize_pipeline
+    make, operation, saved, _, _ = runtime
+    plan = make(roles=('source', 'target'))
+    operation(plan, 0)
+    if failure == 'project_exception':
+        operation(plan, 1)
+    result = finalize_pipeline(plan, failed=failure == 'project_exception')
+    assert result['status'] == ('failed' if failure == 'project_exception' else 'incomplete')
+    assert saved[plan.plan_id] == result

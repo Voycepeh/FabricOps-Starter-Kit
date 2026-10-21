@@ -110,12 +110,6 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
     state = SimpleNamespace(config=config, context=context, metadata={name: [] for name in registry}, business={}, reads=[], commits={})
 
     from fabricops_kit.activated_pipeline import shared as activation
-    executable = tmp_path / "tested.ipynb"
-    executable.write_text('{"cells":[{"cell_type":"code","source":["transform()"]}]}')
-    state.executable, state.deployment_path = executable, tmp_path / "deployment"
-    digest = runtime.notebook_executable_fingerprint(executable.read_bytes())
-    state.executable_digest = digest
-    monkeypatch.setattr(runtime, "deployed_notebook_fingerprint", lambda runtime: digest)
     state.metadata["METADATA_ACTIVATION_STATE"] = [{"authority_id": "central", "token": "initial", "snapshot_json": activation.empty_activation_state()}]
     def commit_authority(snapshot, *, expected_token, **kwargs):
         row = state.metadata["METADATA_ACTIVATION_STATE"][0]
@@ -253,7 +247,7 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
 def _activation(state):
     """Open whole-pipeline Governance review with the real headless service."""
     module = importlib.import_module("fabricops_kit.widgets.widget_activate_pipeline")
-    return module.widget_activate_pipeline(pipeline_id="orders-pipeline", executable_path=str(state.executable),
+    return module.widget_activate_pipeline(pipeline_id="orders-pipeline",
         spark_session=state.spark, context=state.context)
 
 
@@ -268,7 +262,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert not before["eligible_runs"] and before["activate"].disabled
     assert not state.metadata["METADATA_DATA_LINEAGE"]
     selector = importlib.import_module("fabricops_kit.pipeline.setup_pipeline")
-    coordinates = {"pipeline_id": "orders-pipeline", "executable_sha256": state.executable_digest, "dependencies": {}, "configuration": {}, "sources": [
+    coordinates = {"pipeline_id": "orders-pipeline", "configuration": {}, "sources": [
         {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
         {"store": "Bronze", "schema": "dbo", "table_name": "products"}],
         "targets": [{"store": "Silver", "schema": "dbo", "table_name": "curated_orders"}]}
@@ -322,11 +316,6 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     widget["confirmed"].value = True
     approved = widget["perform_activation"]()["pipelines"]["orders-pipeline"]
     assert approved["testing_run_id"] == plan.plan_id
-    from fabricops_kit import package_activated_pipeline, verify_pipeline_deployment
-    package_activated_pipeline(approved["activated_pipeline_id"], destination=state.deployment_path,
-        executable_path=state.executable, spark_session=state.spark, context=state.context)
-    verify_pipeline_deployment(deployment_path=state.deployment_path, authority_environment="dev",
-        sources=coordinates["sources"], targets=coordinates["targets"], spark_session=state.spark, context=state.context)
     assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]] for row in state.metadata["METADATA_DATA_CONTRACT"])
     state.context["activity_id"] = "live"
     live = selector.setup_pipeline(**coordinates, execution_mode="live", spark_session=state.spark, context=state.context)

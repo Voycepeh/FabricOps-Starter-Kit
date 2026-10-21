@@ -38,7 +38,7 @@
 <text x="68" y="204" class="mono">setup_pipeline()</text>
 <text x="68" y="224" class="mono">orchestrate_read()</text>
 <text x="68" y="244" class="mono">orchestrate_write()</text>
-<text x="68" y="268" class="body">All project steps inside with plan:</text>
+<text x="68" y="268" class="body">Setup → Orchestrate → Finalize</text>
 </g></a>
 <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L5848" target="_blank" rel="noopener"><g>
 <rect x="380" y="128" width="308" height="152" rx="6" class="state"/>

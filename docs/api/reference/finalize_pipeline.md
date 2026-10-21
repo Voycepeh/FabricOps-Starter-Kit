@@ -1,4 +1,4 @@
-# `verify_pipeline_deployment`
+# `finalize_pipeline`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -6,13 +6,28 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Verify deployment artifacts and persist explicit physical bindings.
+Consolidate Data Contract results and finalize execution tracking.
 
+
+## Usage notes
+
+Call after all Reads, transformations and Writes, including read-only runs.
 
 
 ## Example usage
 
-Example usage not documented yet.
+<div class="reference-example-usage" markdown="1">
+
+```python
+pipeline_result = finalize_pipeline(pipeline)
+pipeline_result["status"]
+```
+
+```text
+'succeeded'
+```
+
+</div>
 
 <details class="reference-signature-details" markdown="1">
 <summary>Signature</summary>
@@ -22,15 +37,7 @@ Example usage not documented yet.
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def verify_pipeline_deployment(
-    *,
-    deployment_path,
-    authority_environment,
-    sources,
-    targets,
-    spark_session=None,
-    context=None,
-):
+def finalize_pipeline(execution_plan, *, failed=False, spark_session=None)
 ```
 
 </div>
@@ -45,12 +52,9 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `deployment_path` | `—` | Yes | `—` | Not documented yet |
-| `authority_environment` | `—` | Yes | `—` | Not documented yet |
-| `sources` | `—` | Yes | `—` | Not documented yet |
-| `targets` | `—` | Yes | `—` | Not documented yet |
+| `execution_plan` | `—` | Yes | `—` | Not documented yet |
+| `failed` | `—` | No | `False` | Not documented yet |
 | `spark_session` | `—` | No | `None` | Not documented yet |
-| `context` | `—` | No | `None` | Not documented yet |
 
 </div>
 
@@ -66,14 +70,17 @@ Not documented yet
 
 <div class="reference-docstring-intro" markdown="1">
 
-Run after deploying the tested executable and definitions with Fabric tooling.
-Fetches the actual Fabric notebook definition and compares its executable
-identity with the approval before recording workspace/notebook/store bindings
-in deployment.json. Missing export permission or changed deployed code fails
-without creating or updating the binding file.
-It does not deploy notebooks, activate versions, select Live or publish data.
-This optional deployment record is separate from Live authority. Live resolves
-the central environment revision and verifies its tested physical bindings.
+Call after every declared Read, transformation and Write, including read-only
+runs. Reuses setup context and recorded results without counting DataFrames.
+Set failed=True for a caught project exception; orchestrator failures are
+recorded automatically. A stopped notebook remains incomplete.
+
+Returns the persisted METADATA_PIPELINE_RUN summary with exact Data Contract
+versions, status and activation revision. Repeated finalization returns the
+original snapshot without another write. Existing execution reservations are
+released after persistence. Metadata failure raises RuntimeError; invalid
+execution_plan raises ValueError. Business writes and metadata remain separate
+transactions. This function neither activates contracts nor verifies code.
 
 </div>
 
@@ -84,9 +91,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/activated_pipeline/verify_pipeline_deployment.py:10`
+`fabricops_kit/pipeline/finalize_pipeline.py:5`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/verify_pipeline_deployment.py#L10-L47">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L5-L33">View on GitHub</a>
 </div>
 
 

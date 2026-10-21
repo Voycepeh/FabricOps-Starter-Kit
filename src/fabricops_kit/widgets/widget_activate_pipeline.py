@@ -62,15 +62,15 @@ def _release_view(report, candidates):
     return result
 
 
-def widget_activate_pipeline(*, pipeline_id=None, executable_path=None, spark_session=None, context=None) -> dict[str, Any]:
+def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=None) -> dict[str, Any]:
     """Review one successful Testing run and coordinate all affected pipeline candidates.
 
     Displays environment, current/proposed table contracts, writer ownership,
     affected pipelines, missing tests, conflicts and complete release readiness.
     Extra candidate controls appear when shared-table dependencies need review.
-    Supply a deployed executable artifact path and immutable release version for
+    Supply an immutable release version for
     every selected pipeline. The backend revalidates complete Testing, exact
-    contracts, Agreement and executable identity at review and again at approval.
+    contracts, Agreement and processing configuration at review and again at approval.
 
     One explicit approval publishes the entire environment revision atomically.
     Stale review, missing tests, competing writers, contract conflicts or affected
@@ -115,8 +115,7 @@ def widget_activate_pipeline(*, pipeline_id=None, executable_path=None, spark_se
             controls = state["candidate_controls"][run_id]
             result.append({"testing_run_id": run_id, "candidate_fingerprint": row["candidate_fingerprint"],
                 "pipeline_name": row["pipeline_id"], "pipeline_version": controls["version"].value.strip(),
-                "agreement_id": agreement.value[0], "agreement_version": agreement.value[1],
-                "executable_path": controls["executable"].value.strip()})
+                "agreement_id": agreement.value[0], "agreement_version": agreement.value[1]})
         return result
 
     def refresh(*_):
@@ -129,8 +128,7 @@ def widget_activate_pipeline(*, pipeline_id=None, executable_path=None, spark_se
         for row in selected:
             controls = state["candidate_controls"].get(row["run_id"])
             if controls is None:
-                controls = {"version": widgets.Text(description="Version", layout=widgets.Layout(width="100%")),
-                            "executable": widgets.Text(description="Executable", value=executable_path or "", layout=widgets.Layout(width="100%"))}
+                controls = {"version": widgets.Text(description="Version", layout=widgets.Layout(width="100%"))}
                 for control in controls.values():
                     control.observe(invalidate, names="value")
                 state["candidate_controls"][row["run_id"]] = controls

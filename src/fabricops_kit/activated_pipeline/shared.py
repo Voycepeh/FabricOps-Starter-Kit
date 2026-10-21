@@ -1,10 +1,9 @@
-"""Whole-pipeline approval, immutable manifests and deployment verification."""
+"""Data Contract approval, coordinated activation and environment execution."""
 from __future__ import annotations
 
 import hashlib
 import json
 from datetime import date
-from pathlib import Path
 from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
@@ -12,7 +11,6 @@ from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
 from fabricops_kit.config.shared import resolve_fabric_context, get_store
 from fabricops_kit.io import read_lakehouse_table
 from fabricops_kit.io.shared import get_spark_session, resolve_configured_lakehouse_table
-from fabricops_kit.pipeline.shared import notebook_executable_fingerprint
 from fabricops_kit.pipeline.shared import PipelineExecutionPlan, canonical_candidate_json, pipeline_candidate, contract_guardrail_rows, resolve_pipeline_participants
 
 
@@ -85,7 +83,7 @@ def validate_manifest(row):
 
 
 def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_name, pipeline_version,
-                             agreement_id, agreement_version, executable_path, context, spark_session=None):
+                             agreement_id, agreement_version, context, spark_session=None):
     """Revalidate committed complete Testing evidence independently of any widget."""
     config, env, runtime = resolve_fabric_context(context=context)
     run = exact_record(metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session), run_id=testing_run_id)
@@ -96,11 +94,6 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
     candidate = json.loads(run["candidate_json"])
     if not candidate_fingerprint or candidate_fingerprint != run.get("candidate_fingerprint") or manifest_digest(candidate) != candidate_fingerprint:
         raise ValueError("Exact tested candidate fingerprint mismatch.")
-    if notebook_executable_fingerprint(Path(executable_path).read_bytes()) != candidate["executable_sha256"]:
-        raise ValueError("Project executable changed since Testing.")
-    from fabricops_kit.pipeline.shared import deployed_notebook_fingerprint
-    if deployed_notebook_fingerprint({"workspace_id": run["_workspace_id"], "notebook_id": run["_notebook_id"]}) != candidate["executable_sha256"]:
-        raise ValueError("Deployed Testing notebook changed since Testing.")
     summary = json.loads(run["operation_summary_json"])
     operations = summary["operations"]
     expected = {f"{role}:{item['participant']}" for item in candidate["participants"] for role in item["roles"]}
@@ -114,7 +107,7 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
                                          for stage in item["stages"])
         for item in operations.values()
     ):
-        raise ValueError("Testing operation evidence is failed, incomplete or lacks executable configuration; rerun Testing.")
+        raise ValueError("Testing operation evidence is failed, incomplete or lacks processing configuration; rerun Testing.")
     contracts = metadata_records("METADATA_DATA_CONTRACT", context={**runtime, "config": config, "env": run["environment_name"]}, spark_session=spark_session)
     definitions, identities, frozen = [], {}, {}
     refs = {item["participant"]: item["contract"] for item in summary["frozen_contracts"]}
@@ -158,14 +151,13 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
                 for name in required_stages
             ):
                 raise ValueError("Required operation stages are missing or incomplete; isolated passing Guardrails cannot authorize activation.")
-    dependencies = {name: item["required"] for name, item in candidate["dependencies"].items()}
     plan = PipelineExecutionPlan("testing", env, str(runtime.get("notebook_id") or "review"), "review",
         canonical_candidate_json(identities), "{}", canonical_candidate_json(frozen), {**runtime, "_pipeline_bindings": summary["physical_bindings"]},
-        pipeline_id=run["pipeline_id"], executable_sha256=candidate["executable_sha256"], dependencies_json=canonical_candidate_json(dependencies), configuration_json=canonical_candidate_json(candidate["project_configuration"]))
+        pipeline_id=run["pipeline_id"], configuration_json=canonical_candidate_json(candidate["project_configuration"]))
     plan.evidence["operations"] = operations
     current, fingerprint, _bindings = pipeline_candidate(plan)
     if fingerprint != candidate_fingerprint or current != candidate:
-        raise ValueError("Executable, dependencies, contracts or processing configuration differ from the tested candidate.")
+        raise ValueError("Contracts or processing configuration differ from the tested candidate.")
     diagnostics = [row for row in metadata_records("METADATA_GUARDRAIL_RESULTS", context={**runtime, "config": config, "env": run["environment_name"]}, spark_session=spark_session)
                    if row.get("run_id") == testing_run_id]
     if any(row.get("can_continue") is not True or row.get("execution_type") != "testing" for row in diagnostics):
@@ -480,11 +472,9 @@ def build_live_pipeline_plan(*, pipeline_id, sources, targets, configuration=Non
     physical = pipeline_physical_bindings(identities, config=config, environment=env)
     if physical != manifest["physical_bindings"]:
         raise ValueError("Live physical destinations differ from the tested approved environment bindings.")
-    dependencies = {name: item["required"] for name, item in manifest["candidate"]["dependencies"].items()}
     plan = PipelineExecutionPlan("live", env, str(runtime["notebook_id"]), str(uuid4()), canonical_candidate_json(identities),
         "{}", canonical_candidate_json(contracts), MappingProxyType({**runtime, "config": config, "env": env, "_pipeline_spark": spark_session, "_pipeline_bindings": physical}),
-        pipeline_id=pipeline_id, executable_sha256=manifest["candidate"]["executable_sha256"],
-        dependencies_json=canonical_candidate_json(dependencies), configuration_json=canonical_candidate_json(configuration),
+        pipeline_id=pipeline_id, configuration_json=canonical_candidate_json(configuration or {}),
         activated_pipeline_id=approved["activated_pipeline_id"], approved_candidate_json=canonical_candidate_json(manifest["candidate"]),
         activation_revision=current["revision"])
     current["runs"][plan.plan_id] = {"pipeline_id": pipeline_id, "tables": sorted(identities), "destinations": list(physical.values()), "revision": current["revision"], "mode": "live"}
@@ -500,9 +490,8 @@ def build_live_pipeline_plan(*, pipeline_id, sources, targets, configuration=Non
 
 
 def verify_live_plan(plan, *, spark_session=None):
-    """Check pinned approval, reservation and actual executable without switching runs."""
+    """Check pinned Data Contract approval and reservation without switching runs."""
     from dataclasses import replace
-    from fabricops_kit.pipeline.shared import deployed_notebook_fingerprint
     _token, state = read_activation_state(context=plan.runtime_context, spark_session=spark_session)
     current = environment_activation(state, plan.environment)
     lease = current["runs"].get(plan.plan_id)
@@ -524,14 +513,12 @@ def verify_live_plan(plan, *, spark_session=None):
     validate_agreement(agreement)
     if agreement_definition(agreement) != manifest["agreement"]:
         raise ValueError("Approved Data Agreement content changed.")
-    if deployed_notebook_fingerprint(plan.runtime_context) != plan.executable_sha256:
-        raise ValueError("Actual notebook executable differs from approved Testing.")
     journal = {item["operation"]: {"status": "not_started", "configuration": item["configuration"],
                "configuration_sha256": item["configuration_sha256"]} for item in manifest["candidate"]["operations"]}
     check = replace(plan, evidence={**plan.evidence, "operations": journal})
     candidate, fingerprint, _bindings = pipeline_candidate(check)
     if candidate != manifest["candidate"] or fingerprint != approved["candidate_fingerprint"]:
-        raise ValueError("Live executable, dependencies, contracts or transformation configuration differs from approval.")
+        raise ValueError("Live contracts or transformation configuration differs from approval.")
 
 
 def resolve_approved_consumer_contract(config, env, table_id, *, spark_session=None):
@@ -549,16 +536,3 @@ def resolve_approved_consumer_contract(config, env, table_id, *, spark_session=N
     if not matches or any(item != matches[0] for item in matches):
         raise ValueError("No unambiguous active pipeline contract and Agreement cover this consumer table.")
     return matches[0]
-
-
-def bound_pipeline_participants(*, sources, targets, context, spark_session=None):
-    """Capture explicit physical bindings independently of portable candidate identity."""
-    config, env, runtime = resolve_fabric_context(context=context)
-    identities = resolve_pipeline_participants(config, env, sources=sources, targets=targets, context=runtime, spark_session=spark_session)
-    result = {}
-    for table_id, item in identities.items():
-        store = get_store(config, env, item["store"])
-        result[item["logical_id"]] = {"table_id": table_id, "store": item["store"], "schema": item.get("schema"),
-            "table_name": item["table_name"], "roles": sorted(item["roles"]), "workspace_id": store.workspace_id,
-            "item_id": store.item_id, "kind": store.kind}
-    return result

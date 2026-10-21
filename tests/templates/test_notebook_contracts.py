@@ -279,10 +279,13 @@ def test_02_pipeline_is_a_small_reusable_scaffold():
     source = _notebook_source("02_pipeline.ipynb")
     headings = (
         "# 0. Environment",
-        "# 1. Pipeline Data Contracts",
-        "# 2. Read",
-        "# 3. PySpark Transform",
-        "# 4. Write",
+        "# 1. Setup Pipeline",
+        "# 2. Data Contract Configuration",
+        "# 3. Read",
+        "# 4. PySpark Transform",
+        "# 5. Write",
+        "# 6. Finalize Pipeline",
+        "# 7. Optional Inspect",
     )
     assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
     assert source.count("setup_pipeline(") == 1
@@ -357,7 +360,7 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
             cell.source for cell in notebook.cells if cell.cell_type == "code"
         )
         assert "inspect_source" not in source and "inspect_write" not in source
-        assert not {"read-inspection", "write-inspection", "inspect"} & {cell.id for cell in notebook.cells}
+        assert [cell.id for cell in notebook.cells].index("finalize-run") < [cell.id for cell in notebook.cells].index("inspect")
         for cell in notebook.cells:
             if cell.cell_type != "code":
                 continue

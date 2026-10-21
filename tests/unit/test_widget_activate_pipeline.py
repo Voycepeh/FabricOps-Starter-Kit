@@ -17,7 +17,7 @@ def render(authority, monkeypatch):
     monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: ({}, "canary", authority.context))
     monkeypatch.setattr(module, "metadata_records", importlib.import_module("fabricops_kit.activated_pipeline.shared").metadata_records)
     monkeypatch.setattr(module, "read_activation_state", authority.read)
-    return lambda **kw: module.widget_activate_pipeline(context=authority.context, executable_path=str(authority.executable), **kw)
+    return lambda **kw: module.widget_activate_pipeline(context=authority.context, **kw)
 
 
 def test_single_pipeline_review_and_one_approval(authority, render):

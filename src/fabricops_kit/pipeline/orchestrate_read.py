@@ -27,7 +27,7 @@ def orchestrate_read(*, execution_plan, store: str, schema: str | None, table_na
     execution_plan : PipelineExecutionPlan
         Required immutable plan from setup_pipeline in interactive or headless mode.
         Pass the same object to every Read and Write and execute the entire project
-        inside with plan: for automatic whole-run completion. Testing evaluates
+        then call finalize_pipeline(plan) for whole-run completion. Testing evaluates
         Freshness, Schema, Grain, Data Quality and Profile. With testing_writes=False,
         ordinary Catalogue/Profile/Source Observation commits are disabled; run
         records and Guardrail diagnostics still persist. Explicit real Testing

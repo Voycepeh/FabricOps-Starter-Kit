@@ -38,7 +38,7 @@ Read → Transform → Write
 
 The same source reads, transformations, Guardrail checks, governed write logic, profiling, [Lineage](../reference/metadata/metadata_data_lineage.md), and [Source Observation](../reference/metadata/metadata_source_observation.md) flow run again against Production resources.
 
-Live uses the **same tested workflow in the Production environment**, with contracts resolved exclusively from the approved environment Activated Pipeline manifest. It verifies the exact Agreement, executable and dependency identity, current active approval, deployment state and physical bindings before execution. Read/Write behavior must match the approved operation configuration.
+Live uses the **same tested workflow in the Production environment**, with contracts resolved exclusively from the approved environment Activated Pipeline manifest. It verifies the exact effective Agreement, Data Contract versions, current active approval and configured physical bindings before execution. Read/Write behavior must match the approved operation configuration.
 
 Set `PIPELINE_LIVE_ENABLED=True` externally in `00_env_config` or notebook parameters after Step 5. Headless setup resolves the currently approved environment revision automatically. There is no Live contract-selection widget or deployment-file selection. The environment name routes execution and never infers Live.
 

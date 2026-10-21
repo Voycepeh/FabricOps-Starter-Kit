@@ -69,7 +69,7 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Required immutable plan from setup_pipeline in interactive or headless mode. Pass the same object to every Read and Write and execute the entire project inside with plan: for automatic whole-run completion. Testing evaluates Freshness, Schema, Grain, Data Quality and Profile. With testing_writes=False, ordinary Catalogue/Profile/Source Observation commits are disabled; run records and Guardrail diagnostics still persist. Explicit real Testing writes permit normal metadata side effects to safe destinations. Live enforces one pinned approved revision. Environment names select routing. Empty or disabled optional Guardrails add no execution requirement. A configured check that cannot execute blocks Live and remains a Testing diagnostic. |
+| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Required immutable plan from setup_pipeline in interactive or headless mode. Pass the same object to every Read and Write and execute the entire project then call finalize_pipeline(plan) for whole-run completion. Testing evaluates Freshness, Schema, Grain, Data Quality and Profile. With testing_writes=False, ordinary Catalogue/Profile/Source Observation commits are disabled; run records and Guardrail diagnostics still persist. Explicit real Testing writes permit normal metadata side effects to safe destinations. Live enforces one pinned approved revision. Environment names select routing. Empty or disabled optional Guardrails add no execution requirement. A configured check that cannot execute blocks Live and remains a Testing diagnostic. |
 | `store` | `str` | Yes | `—` | Configured source store key. |
 | `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
 | `table_name` | `str` | Yes | `—` | Physical source table name. |
@@ -128,7 +128,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 182 |
+| Live-critical dependencies | 180 |
 
 ### Release history
 
@@ -290,7 +290,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.catalogue_authored_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.check_dq_runtime</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
-<li><code>fabricops_kit.pipeline.shared.deployed_notebook_fingerprint</code></li>
 <li><code>fabricops_kit.pipeline.shared.display_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.dq_tolerance_parameter</code></li>
 <li><code>fabricops_kit.pipeline.shared.execution_result</code></li>
@@ -298,7 +297,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.get_current_freshness_evidence</code></li>
 <li><code>fabricops_kit.pipeline.shared.grain_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
-<li><code>fabricops_kit.pipeline.shared.notebook_executable_fingerprint</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_candidate</code></li>

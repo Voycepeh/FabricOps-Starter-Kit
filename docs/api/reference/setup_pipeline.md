@@ -11,7 +11,7 @@ Prepare Testing or resolve an approved environment configuration for Live.
 
 ## Usage notes
 
-Use before reads, transformations and writes; execute them inside with plan:.
+Use once before Read, Transform and Write; finish with finalize_pipeline().
 
 
 ## Example usage
@@ -20,11 +20,11 @@ Use before reads, transformations and writes; execute them inside with plan:.
 
 ```python
 plan = setup_pipeline(sources=SOURCES, targets=TARGETS, pipeline_id="hr-employees",
-    interactive=False, selections=SELECTIONS, dependencies={}, configuration={})
-with plan:
-    source = orchestrate_read(execution_plan=plan, **READ_CONFIG)
-    transformed = transform(source["dataframe"])
-    result = orchestrate_write(transformed, execution_plan=plan, sources=[source], **WRITE_CONFIG)
+    interactive=False, selections=SELECTIONS, configuration={})
+source = orchestrate_read(execution_plan=plan, **READ_CONFIG)
+transformed = transform(source["dataframe"])
+result = orchestrate_write(transformed, execution_plan=plan, sources=[source], **WRITE_CONFIG)
+pipeline_result = finalize_pipeline(plan)
 ```
 
 </div>
@@ -47,8 +47,6 @@ def setup_pipeline(
     spark_session=None,
     context=None,
     pipeline_id=None,
-    executable_sha256=None,
-    dependencies=None,
     configuration=None,
     testing_writes=False,
 ):
@@ -74,8 +72,6 @@ Required describes the Python signature. An optional parameter may still be need
 | `spark_session` | `—` | No | `None` | Not documented yet |
 | `context` | `—` | No | `None` | Not documented yet |
 | `pipeline_id` | `—` | No | `None` | Not documented yet |
-| `executable_sha256` | `—` | No | `None` | Not documented yet |
-| `dependencies` | `—` | No | `None` | Not documented yet |
 | `configuration` | `—` | No | `None` | Not documented yet |
 | `testing_writes` | `—` | No | `False` | Not documented yet |
 
@@ -87,7 +83,7 @@ Not documented yet
 
 ### Return interpretation
 
-Interactive Testing returns a selector with build_plan(); headless execution returns an immutable plan. with plan: records the whole-run outcome automatically.
+Interactive Testing returns a selector with build_plan(); headless execution returns an immutable plan. finalize_pipeline(plan) records the whole-run outcome.
 
 ## Raises / Errors
 
@@ -117,16 +113,16 @@ always persist to the central configured Metadata store.
 
 Live is headless and resolves the environment's approved configuration
 automatically. It rejects manual contract choices and pins one activation
-revision. Notebook code, dependencies, transformation configuration, table
+revision. Transformation configuration, table
 identity, destinations and ownership must match approval. Operational
 differences allowed by the orchestrators warn and persist in the run record.
 
 Returns an immutable PipelineExecutionPlan, or Testing widget state with
-select_contract, build_plan and refresh. Execute the complete pipeline inside
-``with plan:``; exit automatically persists success, failure or incompleteness.
-This explicit boundary includes transformations and read-only pipelines.
-Without the boundary, operation results remain incomplete and ineligible.
-Missing executable/dependency identity also prevents qualifying success.
+select_contract, build_plan and refresh. Call finalize_pipeline(plan) after all
+Reads, transformations and Writes, including read-only pipelines. Stopped runs
+remain incomplete. Reuse the setup context without repeating configuration.
+Engineering and Microsoft Fabric own code integrity, source control, CI/CD
+and deployment. No executable export or checksum is required.
 
 Raises ValueError for unsafe configuration or partial contract selection,
 RuntimeError for metadata failures, stale authority or a reused run boundary.
@@ -143,7 +139,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L379">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L378">View on GitHub</a>
 </div>
 
 

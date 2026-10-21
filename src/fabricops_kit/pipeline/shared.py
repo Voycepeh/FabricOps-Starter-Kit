@@ -28,8 +28,6 @@ class PipelineExecutionPlan:
     contracts_json: str
     runtime_context: Any = dataclass_field(repr=False, compare=False)
     pipeline_id: str = ""
-    executable_sha256: str = ""
-    dependencies_json: str = "{}"
     configuration_json: str = "{}"
     activated_pipeline_id: str = ""
     approved_candidate_json: str = ""
@@ -5539,60 +5537,6 @@ class ExecutionSummary:
         return elapsed
 
 
-def notebook_executable_fingerprint(content):
-    """Hash executable cells, excluding outputs and physical/display notebook metadata."""
-    notebook = json.loads(content)
-    cells = []
-    for cell in notebook["cells"]:
-        if cell.get("cell_type") != "code":
-            continue
-        source = cell.get("source", "")
-        source = "".join(source) if isinstance(source, list) else source
-        for line in source.splitlines():
-            if line.strip().startswith("%run ") and line.strip() != "%run 00_env_config":
-                raise ValueError("External helper notebooks require identity support; keep executable helpers in this notebook or pinned distributions.")
-        cells.append({"source": source})
-    if not cells:
-        raise ValueError("Executable notebook has no code cells.")
-    return hashlib.sha256(json.dumps({"format": "fabricops.notebook-executable.v1", "cells": cells},
-        sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
-
-
-def deployed_notebook_fingerprint(runtime):
-    """Hash the exact deployed ipynb definition fetched from the Fabric service.
-
-    A local sidecar alone cannot prove which notebook is running. Missing identity,
-    authorization, unsupported definition or unfinished export fails closed. Keep
-    transformation/helper code in this notebook and declare external distributions.
-    """
-    import notebookutils
-    import base64
-    from urllib.request import Request, urlopen
-    workspace, notebook = str(runtime.get("workspace_id") or ""), str(runtime.get("notebook_id") or "")
-    if not all(re.fullmatch(r"[0-9a-fA-F-]{36}", value) for value in (workspace, notebook)):
-        raise ValueError("Actual Fabric workspace and notebook IDs are required for executable verification.")
-    token = notebookutils.credentials.getToken("pbi")
-    root = "https://api.fabric.microsoft.com/v1/"
-    url = f"{root}workspaces/{workspace}/notebooks/{notebook}/getDefinition?format=ipynb"
-    request = Request(url, data=b"", method="POST", headers={"Authorization": f"Bearer {token}"})
-    for _attempt in range(30):
-        with urlopen(request, timeout=30) as response:
-            payload = json.loads(response.read() or b"{}")
-            if response.status == 200 and "definition" in payload:
-                parts = [part for part in payload["definition"].get("parts", []) if part.get("path", "").endswith(".ipynb")]
-                if len(parts) != 1 or parts[0].get("payloadType") != "InlineBase64":
-                    raise ValueError("Fabric did not return one exact notebook definition.")
-                return notebook_executable_fingerprint(base64.b64decode(parts[0]["payload"], validate=True))
-            location = response.headers.get("Location") or request.full_url
-            if not location.startswith(root + "operations/") or payload.get("status") in {"Failed", "Cancelled"}:
-                raise RuntimeError("Fabric notebook definition export is unavailable.")
-            if payload.get("status") == "Succeeded":
-                location = location.rstrip("/") + "/result"
-        time.sleep(1)
-        request = Request(location, headers={"Authorization": f"Bearer {token}"})
-    raise RuntimeError("Fabric notebook definition export did not complete.")
-
-
 def pipeline_physical_bindings(identities, *, config, environment):
     """Capture execution destinations separately from global logical table identities."""
     bindings = {}
@@ -5603,7 +5547,7 @@ def pipeline_physical_bindings(identities, *, config, environment):
     return bindings
 
 
-def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections=None, context=None, spark_session=None, pipeline_id=None, executable_sha256=None, dependencies=None, configuration=None, testing_writes=False):
+def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections=None, context=None, spark_session=None, pipeline_id=None, configuration=None, testing_writes=False):
     """Freeze Testing participants, exact contracts and explicit write authority."""
     if execution_mode == "live":
         raise ValueError("Live requires an Activated Pipeline; use setup_pipeline to resolve approved environment authority.")
@@ -5611,8 +5555,6 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
 
     if execution_mode != "testing":
         raise ValueError("execution_mode must be testing or live.")
-    if dependencies is not None and not isinstance(dependencies, dict):
-        raise ValueError("dependencies must map project names to immutable identities.")
     from fabricops_kit.data_contract.shared import validate_contract_definitions
 
     config, env, runtime = resolve_fabric_context(context=context)
@@ -5649,14 +5591,6 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
     selected_count = sum(contract is not None for contract in contracts.values())
     if selected_count not in {0, len(identities)}:
         raise ValueError("Partial contract selection is prohibited; select all frozen contracts or No Contract for all tables.")
-    if execution_mode == "testing":
-        try:
-            observed_executable = deployed_notebook_fingerprint(runtime)
-        except Exception:
-            observed_executable = ""
-        if executable_sha256 and observed_executable and executable_sha256.lower() != observed_executable:
-            raise ValueError("Declared executable identity differs from the deployed Fabric notebook.")
-        executable_sha256 = observed_executable
     plan_id = str(uuid4())
     run_context = {**runtime, "config": config, "env": env, "_pipeline_spark": spark_session,
                    "_pipeline_bindings": pipeline_physical_bindings(identities, config=config, environment=env)}
@@ -5665,8 +5599,7 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
         json.dumps(identities, default=str, sort_keys=True),
         json.dumps(selections, sort_keys=True), json.dumps(contracts, default=str, sort_keys=True),
         MappingProxyType(run_context),
-        pipeline_id=str(pipeline_id or "").strip(), executable_sha256=str(executable_sha256 or "").strip().lower(),
-        dependencies_json=canonical_candidate_json(dependencies), configuration_json=canonical_candidate_json(configuration),
+        pipeline_id=str(pipeline_id or "").strip(), configuration_json=canonical_candidate_json(configuration or {}),
         testing_writes=testing_writes,
     )
     if testing_writes:
@@ -5771,54 +5704,13 @@ def pipeline_candidate(plan):
         participants.append({"participant": logical, "table_id": table_id, "roles": sorted(identity["roles"]),
                              "contract_version": contract["contract_version"] if contract else None,
                              "contract": _portable_contract_payload(json.loads(contract["contract_payload_json"]), table_names) if contract else None})
-    from importlib.metadata import PackageNotFoundError, version
-    from pathlib import Path
-
-    package = Path(__file__).parents[1]
-    engine = hashlib.sha256()
-    try:
-        engine_files = sorted(package.rglob("*.py"))
-        for path in engine_files:
-            engine.update(path.relative_to(package).as_posix().encode() + b"\0" + path.read_bytes() + b"\0")
-        engine_identity = engine.hexdigest() if engine_files else None
-    except OSError:
-        engine_identity = None
-    dependencies = {}
-    for name in ("pandas", "sqlglot", "jsonschema", "PyYAML", "pyspark", "delta-spark"):
-        try:
-            dependencies[name] = version(name)
-        except PackageNotFoundError:
-            dependencies[name] = None
-    project_dependencies = json.loads(plan.dependencies_json)
-    observed_project_dependencies = {}
-    project_dependencies_available = isinstance(project_dependencies, dict)
-    for name, required in (project_dependencies.items() if isinstance(project_dependencies, dict) else []):
-        valid_name = isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", name)
-        if not valid_name:
-            project_dependencies_available = False
-            continue  # Invalid names may be credential-bearing URLs; never persist them.
-        # Only installed Python distribution versions are verifiable here. Unsupported
-        # digests/URLs and missing versions remain diagnostic, never successful evidence.
-        valid_version = isinstance(required, str) and re.fullmatch(r"(?:[0-9]+!)?[0-9]+(?:\.[0-9]+)*(?:(?:a|b|rc)[0-9]+)?(?:\.post[0-9]+)?(?:\.dev[0-9]+)?(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?", required)
-        try:
-            observed = version(name) if valid_name else None
-        except PackageNotFoundError:
-            observed = None
-        observed_project_dependencies[str(name)] = {
-            "required": required if valid_version else None, "observed": observed,
-        }
-        project_dependencies_available = bool(project_dependencies_available and valid_name and valid_version and required == observed)
     candidate = {"format": "fabricops.pipeline-candidate.v1", "pipeline_id": plan.pipeline_id,
-                 "executable_sha256": plan.executable_sha256, "engine_sha256": engine_identity,
-                 "dependencies": observed_project_dependencies,
                  "project_configuration": _portable_candidate_value(json.loads(plan.configuration_json)),
-                 "runtime_dependencies": dependencies,
-                 "python_version": __import__("sys").version.split()[0],
                  "participants": sorted(participants, key=lambda item: item["participant"]),
                  "operations": sorted([{"operation": key, "configuration_sha256": value.get("configuration_sha256"),
                                          "configuration": value.get("configuration")}
                                        for key, value in plan.evidence["operations"].items()], key=lambda item: item["operation"])}
-    valid = bool(engine_identity) and isinstance(candidate["project_configuration"], dict) and project_dependencies_available and all(dependencies.values()) and bool(plan.pipeline_id and re.fullmatch(r"[0-9a-f]{64}", plan.executable_sha256))
+    valid = bool(plan.pipeline_id) and isinstance(candidate["project_configuration"], dict)
     valid = valid and len({item["participant"] for item in participants}) == len(participants)
     valid = valid and all(item["configuration_sha256"] for item in candidate["operations"])
     portable_fingerprint = _candidate_hash(candidate) if valid else None
@@ -5981,7 +5873,7 @@ class PipelineOperation:
                 configuration["query"] = {"sha256": hashlib.sha256(query.sql(dialect="tsql").encode()).hexdigest()}
             # Routing is already captured as explicit participant bindings. Only
             # these top-level API arguments are physical; identically named keys
-            # inside read/write parameters remain part of executable identity.
+            # inside read/write parameters remain part of processing configuration identity.
             configuration = _portable_candidate_value({key: value for key, value in configuration.items()
                 if key not in {"store", "schema", "table_name", "target_table_id"}})
             # SQL and mapping content require dependency identity support beyond this API.
