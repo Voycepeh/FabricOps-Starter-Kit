@@ -2287,28 +2287,16 @@
           ],
           "signature_after": null,
           "signature_before": "widget_select_guardrail_target(*, spark_session: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None = None, spark_session = None, store: str = 'Metadata', schema: str | None = None, context = None)",
-          "signature_before": null
         }
       ],
       "summary": {
-        "added": 19,
+        "added": 18,
         "modified": 12,
-        "nonbreaking": 22,
+        "nonbreaking": 21,
         "potentially_breaking": 9,
         "removed": 14,
         "review_required": 14,
-        "total": 45
+        "total": 44
       },
       "target": "working-tree"
     },
@@ -3570,6 +3558,18 @@
           ],
           "signature_after": null,
           "signature_before": "widget_select_data_contract(*, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None = None, spark_session = None, store: str = 'Metadata', schema: str | None = None, context = None)"
         }
       ],
       "summary": {
@@ -3577,9 +3577,9 @@
         "modified": 2,
         "nonbreaking": 16,
         "potentially_breaking": 2,
-        "removed": 12,
-        "review_required": 11,
-        "total": 29
+        "removed": 13,
+        "review_required": 12,
+        "total": 30
       },
       "target": "working-tree"
     },
@@ -4661,6 +4661,18 @@
           ],
           "signature_after": null,
           "signature_before": "widget_select_data_contract(*, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None = None, spark_session = None, store: str = 'Metadata', schema: str | None = None, context = None)"
         }
       ],
       "summary": {
@@ -4668,9 +4680,9 @@
         "modified": 4,
         "nonbreaking": 9,
         "potentially_breaking": 4,
-        "removed": 10,
-        "review_required": 8,
-        "total": 21
+        "removed": 11,
+        "review_required": 9,
+        "total": 22
       },
       "target": "working-tree"
     },
@@ -5764,6 +5776,18 @@
           ],
           "signature_after": null,
           "signature_before": "widget_select_data_contract(*, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None = None, spark_session = None, store: str = 'Metadata', schema: str | None = None, context = None)"
         }
       ],
       "summary": {
@@ -5771,9 +5795,9 @@
         "modified": 4,
         "nonbreaking": 9,
         "potentially_breaking": 4,
-        "removed": 10,
-        "review_required": 8,
-        "total": 21
+        "removed": 11,
+        "review_required": 9,
+        "total": 22
       },
       "target": "working-tree"
     },
@@ -6321,18 +6345,6 @@
           ],
           "signature_after": "widget_select_guardrail_target(*, spark_session: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
-        },
-        {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None = None, spark_session = None, store: str = 'Metadata', schema: str | None = None, context = None)"
         }
       ],
       "summary": {
@@ -6340,9 +6352,9 @@
         "modified": 12,
         "nonbreaking": 14,
         "potentially_breaking": 15,
-        "removed": 19,
-        "review_required": 16,
-        "total": 45
+        "removed": 18,
+        "review_required": 15,
+        "total": 44
       },
       "target": "v0.1.0"
     },
@@ -6701,16 +6713,28 @@
           ],
           "signature_after": "widget_select_data_contract(*, spark_session = None, context = None)",
           "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None = None, spark_session = None, store: str = 'Metadata', schema: str | None = None, context = None)",
+          "signature_before": null
         }
       ],
       "summary": {
-        "added": 12,
+        "added": 13,
         "modified": 2,
-        "nonbreaking": 12,
+        "nonbreaking": 13,
         "potentially_breaking": 2,
         "removed": 15,
         "review_required": 15,
-        "total": 29
+        "total": 30
       },
       "target": "v0.2.0"
     },
@@ -6981,16 +7005,28 @@
           ],
           "signature_after": "widget_select_data_contract(*, spark_session = None, context = None)",
           "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None = None, spark_session = None, store: str = 'Metadata', schema: str | None = None, context = None)",
+          "signature_before": null
         }
       ],
       "summary": {
-        "added": 10,
+        "added": 11,
         "modified": 4,
-        "nonbreaking": 10,
+        "nonbreaking": 11,
         "potentially_breaking": 4,
         "removed": 7,
         "review_required": 7,
-        "total": 21
+        "total": 22
       },
       "target": "v0.2.5"
     },
@@ -7261,16 +7297,28 @@
           ],
           "signature_after": "widget_select_data_contract(*, spark_session = None, context = None)",
           "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None = None, spark_session = None, store: str = 'Metadata', schema: str | None = None, context = None)",
+          "signature_before": null
         }
       ],
       "summary": {
-        "added": 10,
+        "added": 11,
         "modified": 4,
-        "nonbreaking": 10,
+        "nonbreaking": 11,
         "potentially_breaking": 4,
         "removed": 7,
         "review_required": 7,
-        "total": 21
+        "total": 22
       },
       "target": "main"
     }
@@ -17174,66 +17222,6 @@
           "signature": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
           "source_qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"
-        },
-        {
-          "certainty": "certain",
-          "extraction_error": null,
-          "lifecycle": "Preview",
-          "parameters": [
-            {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "mode",
-              "required": true
-            },
-            {
-              "annotation": "dict[str, Any] | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "agreement",
-              "required": false
-            },
-            {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
-              "annotation": "str",
-              "default": "'Metadata'",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "store",
-              "required": false
-            },
-            {
-              "annotation": "str | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "schema",
-              "required": false
-            },
-            {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "context",
-              "required": false
-            }
-          ],
-          "qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue",
-          "return_annotation": null,
-          "signature": "widget_view_catalogue(*, mode: str, agreement: dict[str, Any] | None = None, spark_session = None, store: str = 'Metadata', schema: str | None = None, context = None)",
-          "source_path": "src/fabricops_kit/widgets/widget_view_catalogue.py",
-          "source_qualified_name": "fabricops_kit.widgets.widget_view_catalogue.widget_view_catalogue"
         }
       ],
       "certainty": "certain",
@@ -17242,7 +17230,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:ae366ccc2294a7e19d4b40cb08f50751d87f0adc9bf62ace5d8ebe2083c9fa9a",
+      "source_digest": "sha256:a068c02058dff75b01b3bf1e3900d413d10e88f37da87bda16da1014b6c634a6",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

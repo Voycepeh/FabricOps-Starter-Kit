@@ -72,10 +72,6 @@ WIDGET_USAGE_NOTE = """Widget helpers provide a front-end notebook interface so 
 
 They help users write values into the correct underlying metadata tables without manually editing those tables directly."""
 
-CATALOGUE_WIDGET_USAGE_NOTE = """Catalogue viewer widgets let users select governed datasets and load catalogue and profile Spark DataFrames for native Fabric notebook rendering.
-
-They are read-only selectors and do not modify metadata."""
-
 SETUP_NOTEBOOK_USAGE_NOTE = """Use this in the setup notebook to capture and render the key runtime information required by downstream Starter Kit notebooks.
 
 This helps confirm the active environment, configured stores, notebook context, and runtime values before later notebooks depend on them."""
@@ -546,7 +542,6 @@ METADATA_COLUMN_OWNERS = {
 USAGE_NOTE_BY_FUNCTION = {
     "setup_notebook": SETUP_NOTEBOOK_USAGE_NOTE,
     "setup_metadata_tables": SETUP_METADATA_USAGE_NOTE,
-    "widget_view_catalogue": CATALOGUE_WIDGET_USAGE_NOTE,
 }
 
 
@@ -642,9 +637,8 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
   'segment_intro': 'Persistent Governance lifecycle before and after Engineering evidence production.',
   'segments': [{'symbols': ['widget_render_data_steward',
                             'widget_render_data_agreement',
-                            'widget_data_contract',
-                            'widget_view_catalogue'],
-                'title': 'Agreement, Data Contract authoring, catalogue review, and activation'}],
+                            'widget_data_contract'],
+                'title': 'Agreement, Data Contract authoring, and activation'}],
   'template_path': 'templates/notebooks/01_governance.ipynb'},
  {'notebook_key': '02_pipeline',
   'notebook_label': '`02_pipeline`',
@@ -659,7 +653,7 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
   'notebook_label': '`99_explore`',
   'segment_intro': 'Optional discovery, profiling, troubleshooting, investigation, and ad hoc '
                    'analysis support.',
-  'segments': [{'symbols': ['profile_table', 'widget_view_catalogue'],
+  'segments': [{'symbols': ['profile_table', 'read_lakehouse_table'],
                 'title': 'Exploration'}],
   'template_path': 'templates/notebooks/99_explore.ipynb'},
  {'notebook_key': 'example_pipeline_demo',
@@ -1611,16 +1605,7 @@ PUBLIC_SYMBOL_DOCS = [
   'use_when': 'Use after finalizing successful whole-pipeline Testing.',
   'expanded_purpose': 'Shows exact contracts/rules, executable and configuration identity, diagnostics, warnings, Agreement and fingerprint before explicit Governance confirmation. Activation neither deploys nor publishes.',
   'related_functions': ['activate_pipeline', 'setup_pipeline']},
- {'kind': 'function',
-  'module': 'widgets.widget_view_catalogue',
-  'function_type': 'callable',
-  'summary_override': 'Select catalogue evidence through an explicit pipeline, agreement, or explore dataset scope.',
-  'symbol_name': 'widget_view_catalogue',
-  'template_notebook': '01_governance, 02_pipeline, 99_explore',
-  'template_segment': 'Catalogue review',
-  'use_when': 'Use with mode pipeline for current-notebook lineage, agreement for selected-agreement contracts, or explore for direct current-environment browsing.',
-  'related_functions': ['profile_table'],
-  'return_interpretation': 'Call state["get_views"]() to receive exactly catalogue, profile, frequency, and guardrail_results for the selected table_id.'},
+
 
 
 

@@ -29,7 +29,6 @@ def test_widget_public_callables_live_under_widgets_package():
 
     widget_names = {
         'widget_data_contract',
-        'widget_view_catalogue',
         'widget_render_data_agreement',
         'widget_render_data_steward',
     }
@@ -49,7 +48,6 @@ def test_widget_modules_do_not_call_public_widget_functions():
     widgets_dir = root / "src" / "fabricops_kit" / "widgets"
     public_widget_names = {
         'widget_data_contract',
-        'widget_view_catalogue',
         'widget_data_contract',
         'widget_render_data_agreement',
         'widget_render_data_steward',
@@ -275,16 +273,24 @@ def test_pipeline_and_config_use_new_governance_owners():
     assert "def metadata_table_schema_registry" in metadata_schema_source
     assert "governance_review" not in config_source
 
-def test_99_explore_uses_metadata_catalogue_widget():
-    """Verify 99_explore uses the public catalogue browser widget."""
+def test_99_explore_reads_centralized_metadata_directly():
+    """Keep exploration reads on the configured Metadata store using public I/O."""
     root = Path(__file__).parents[2]
-
-    notebook = json.loads((root / "templates" / "notebooks" / "99_explore.ipynb").read_text(encoding="utf-8"))
+    notebook = json.loads((root / "templates/notebooks/99_explore.ipynb").read_text(encoding="utf-8"))
     code = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "code")
 
-    assert "get_latest_metadata_catalogue" not in code
-    assert "widget_view_catalogue" in code
-    assert 'mode="explore"' in code
-    assert "widget_view_data_contract" not in code
-    assert "METADATA_DATA_CATALOGUE" not in code
-    assert 'F.col("table_name") == source_table_name' not in code
+    import ast
+
+    tree = ast.parse("\n".join(line for line in code.splitlines() if not line.startswith("%")))
+    reads = {
+        call.args[0].value: call
+        for call in ast.walk(tree)
+        if isinstance(call, ast.Call) and isinstance(call.func, ast.Name)
+        and call.func.id == "read_lakehouse_table" and call.args
+    }
+    for table in ("METADATA_DATA_CATALOGUE", "METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY"):
+        assert table in reads
+        keywords = {keyword.arg: keyword.value for keyword in reads[table].keywords}
+        assert keywords["store"].value == "Metadata"
+        assert keywords["spark_session"].id == "spark"
+    assert "widget_view_catalogue" not in code

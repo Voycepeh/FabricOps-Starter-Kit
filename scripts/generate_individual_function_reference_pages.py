@@ -5468,7 +5468,7 @@ def main() -> None:
             "key": "governance-metadata",
             "title": "Governance & Metadata",
             "note": "Author and inspect governed context",
-            "description": "Notebook setup, metadata initialization, Data Steward and Agreement intake, Data Contract workflows, and catalogue views.",
+            "description": "Notebook setup, metadata initialization, Data Steward and Agreement intake, Data Contract workflows.",
             "functions": {
                 "setup_notebook",
                 "setup_metadata_tables",
@@ -5480,7 +5480,6 @@ def main() -> None:
                 "set_pipeline_active",
                 "package_activated_pipeline",
                 "verify_pipeline_deployment",
-                "widget_view_catalogue",
             },
             "open": False,
         },
