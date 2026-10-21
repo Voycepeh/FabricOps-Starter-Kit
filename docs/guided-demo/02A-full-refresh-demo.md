@@ -143,7 +143,7 @@ In the initial **Bootstrap** run or a governed **Live** run, both Write results 
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Inspect the saved results
+## Verify the published tables
 
 Verify the target tables and the recorded governance metadata.
 The notebook now displays each Read and Write DataFrame in the same code cell as its orchestrator call. To verify what was committed, open the target tables in Fabric Stores. 
