@@ -133,7 +133,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:26`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L26-L235">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L26-L238">View on GitHub</a>
 </div>
 
 
@@ -149,7 +149,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 186 |
+| Live-critical dependencies | 188 |
 
 ### Release history
 
@@ -223,7 +223,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.pipeline_write._persist_target_processing</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._physical_processing_definition</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._source_table_ids</code></li>
-<li><code>fabricops_kit.pipeline.pipeline_write._target_has_activity</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._target_has_rows</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._validate_target_writer_ownership</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._warehouse_target_exists</code></li>
@@ -302,6 +301,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._summarize_dq_guardrail</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_token_mapping</code></li>
+<li><code>fabricops_kit.pipeline.shared._warehouse_publication_record</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
@@ -339,7 +339,9 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.resolve_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.schema_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.select_table_guardrail_rule</code></li>
+<li><code>fabricops_kit.pipeline.shared.snapshot_pipeline_write_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_guardrail_results</code></li>
+<li><code>fabricops_kit.pipeline.shared.source_observation_run_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.stage_pipeline_write_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared.tested_contract_identities</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>

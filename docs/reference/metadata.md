@@ -58,6 +58,12 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
+        <code>METADATA_SOURCE_OBSERVATION</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__relationship-list">
         <code>METADATA_GUARDRAIL_RESULTS</code>
       </span>
     </span>
@@ -221,10 +227,10 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed means the associated physical target write succeeded and accepted it as the Source Drift baseline.</span>
+  <span class="metadata-table-card__purpose">Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. run_id joins METADATA_PIPELINE_RUN.run_id for planned executions; _activity_id retains the actual Fabric activity shared by different attempts. Legacy and standalone observations may have no run_id. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed records accepted incremental progress, and drift_committed records the Source Drift baseline. Warehouse publication_observed and publication_committed rows store target-only retry receipts with empty source identity and no watermark; they also cover Full Read and source-free writes.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One observed or committed partition-state row within one logical notebook, source table, target table, and observation.</span>
+    <span>One observed or committed partition-state row within one logical notebook, source table, target table, and observation; target-only Warehouse publication receipt rows have an empty source identity.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -232,6 +238,12 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_PIPELINE_RUN</code>
+      </span>
+    </span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">N → 1</span>
       <span class="metadata-table-card__relationship-list">

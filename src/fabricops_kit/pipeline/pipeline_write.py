@@ -236,47 +236,6 @@ def _target_has_rows(
         raise
 
 
-def _target_has_activity(
-    *, identity: dict[str, Any], activity_id: str, context: dict[str, Any], spark_session=None
-) -> bool:
-    """Return whether the physical target records the deterministic activity marker."""
-    from fabricops_kit.io import read_lakehouse_table, read_warehouse_query
-
-    store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
-    escaped_activity = activity_id.replace("'", "''")
-    try:
-        if store_kind == "lakehouse":
-            frame = read_lakehouse_table(
-                str(identity["table_name"]),
-                store=str(identity["store"]),
-                schema=identity.get("schema"),
-                spark_session=spark_session,
-                context=context,
-            ).filter(f"`_activity_id` = '{escaped_activity}'")
-        elif store_kind == "warehouse":
-            if not _warehouse_target_exists(
-                identity=identity,
-                context=context,
-                spark_session=spark_session,
-            ):
-                return False
-            schema = str(identity["schema"]).replace("]", "]]")
-            table = str(identity["table_name"]).replace("]", "]]")
-            frame = read_warehouse_query(
-                f"SELECT TOP (1) 1 AS fabricops_target_row FROM [{schema}].[{table}] "
-                f"WHERE [_activity_id] = '{escaped_activity}'",
-                store=str(identity["store"]),
-                spark_session=spark_session,
-                context=context,
-            )
-        else:
-            return False
-        return frame.limit(1).count() > 0
-    except Exception as exc:
-        if is_table_not_found_error(exc):
-            return False
-        raise
-
 
 def _source_table_ids(values: list[str] | tuple[str, ...] | None) -> list[str]:
     """Return unique canonical source identities explicitly owned by this target."""
@@ -418,8 +377,9 @@ def pipeline_write(
         Committed rows describe this invocation's physical publication only.
         An already-applied append/overwrite retry reports zero new commits.
         Warehouse connector and SCD merge metrics remain unavailable: audit-only
-        updates cannot be interpreted as business changes. No reporting count,
-        target scan, or additional Spark job is performed.
+        updates cannot be interpreted as business changes. Metrics add no reporting
+        counts or Spark jobs. Batch identity and publication verification perform
+        the separate actions required for retry safety.
         Profile the persisted target through an explicit read-back rather than
         treating the input DataFrame as persisted state.
 
@@ -443,9 +403,8 @@ def pipeline_write(
     5. Resolve processing scope.
     6. Apply FabricOps target audit fields.
     7. Validate target notebook ownership.
-    8. Detect whether this activity already produced target rows.
-    9. Perform append/overwrite or dedicated SCD processing only when the
-       activity is not already represented in the physical target.
+    8. Identify the exact prepared publication batch and its durable receipt.
+    9. Perform physical processing unless the exact batch is verified in the target.
     10. Persist the resolved target load strategy and parameters on the
         table-level ``METADATA_DATA_CATALOGUE`` row.
     11. Only after physical and Catalogue success, idempotently commit target
@@ -459,27 +418,29 @@ def pipeline_write(
     this target, rather than internal read or preparation dictionaries. This
     keeps multiple target writes in one activity exact and independent.
 
-    Append and overwrite retries use the target's persisted ``_activity_id``
-    to skip an already-applied physical mutation. SCD1 and SCD2 always run
-    their keyed change-aware merge, even when an interactive notebook reuses
-    an activity ID, so new business changes are not silently suppressed.
-    Catalogue processing, Lineage, and accepted Source Observation metadata are
-    idempotent and replayed on every retry. Empty append, empty overwrite, and
-    true SCD no-op operations may leave
-    no activity marker; repeating those operations is safe. Changing the
-    participating source set represents a different logical publication and
-    therefore requires a new activity rather than reuse of the current one.
-    Lakehouse SCD2 closes changed rows and inserts their replacement current
-    versions in one Delta ``MERGE`` so an activity marker cannot represent a
-    partially applied two-step history mutation. Warehouse SCD2 retains its
-    existing SQL transaction boundary.
+    Retries identify the exact prepared business-row multiset, processing definition,
+    source membership, environment and target. The pipeline plan ID scopes transient
+    source state and is persisted as Source Observation run_id. The original writer
+    run_id is retained in the batch receipt, allowing verified cross-run recovery
+    while preserving the real Fabric activity audit. Before publication, target-specific
+    Source Observations bind that batch to the real Fabric activity and a fresh
+    publication timestamp. Both audit literals materialize in the same physical transaction
+    as the business rows; an activity marker alone never proves publication.
+    A verified retry skips mutation and idempotently finalizes metadata. New batches
+    in a reused interactive activity proceed through the existing writers and keyed
+    SCD merges. Empty writes may have no row marker and can safely be replayed.
 
-    Before physical publication, target-specific Source Observation evidence
-    is durably staged with ``observation_status='observed'``. If a scheduled
-    activity terminates after target rows materialize but before finalization,
-    the next activity verifies the prior target ``_activity_id``, promotes that
-    staged evidence idempotently, and calculates incremental work from the
-    recovered committed baseline. Evidence for another target is not promoted.
+    SCD retry suppression additionally requires the receipt to describe the latest
+    target publication. An older receipt surviving on an untouched row cannot
+    suppress a newly requested keyed merge. Warehouse writes also stage target-only
+    publication receipts when no incremental or Source Drift observations exist;
+    these receipt records never establish or advance a source watermark.
+
+    Recovery promotes only staged observations carrying an exact verified receipt.
+    Legacy activity-only observations require explicit physical reconciliation;
+    they are never automatically promoted. Prepared rows are cached while their
+    content identity is calculated and published, then the owned cache is released.
+    This identity action is required for retry safety, not display metrics.
 
     A first incremental append has no committed baseline and therefore reads a
     complete bootstrap scope. FabricOps permits that bootstrap only for a new
@@ -526,9 +487,12 @@ def pipeline_write(
     from fabricops_kit.io import write_lakehouse_table, write_warehouse_table
     from fabricops_kit.io.shared import execute_warehouse_processing
     from fabricops_kit.pipeline.shared import (
+        PublicationBatch,
+        source_observation_run_id,
         commit_pipeline_write_success,
         execute_lakehouse_processing,
         stage_pipeline_write_observations,
+        snapshot_pipeline_write_observations,
         persistence_permitted,
         validate_processing_input,
     )
@@ -558,17 +522,12 @@ def pipeline_write(
     publication_source_ids = _source_table_ids(source_table_ids)
     audit = resolve_target_audit_fields(context)
     activity_id = str(audit["_activity_id"])
+    execution_id = source_observation_run_id(context) or activity_id
     target_table_id = str(identity["table_id"])
     strategy = str(processing.get("load_strategy") or "")
-    physical_already_applied = _target_has_activity(
-        identity=identity,
-        activity_id=activity_id,
-        context=context,
-        spark_session=spark_session,
-    )
     incremental_scopes = incremental_publication_scopes(
         environment_name=env,
-        activity_id=activity_id,
+        activity_id=execution_id,
         target_table_id=target_table_id,
         source_table_ids=publication_source_ids,
     )
@@ -599,28 +558,31 @@ def pipeline_write(
         for source_table_id, incremental_scope in incremental_scopes.items()
         if incremental_scope.get("first_run")
     ]
-    if (
-        strategy == "append"
-        and bootstrap_sources
-        and not physical_already_applied
-        and _target_has_rows(identity=identity, context=context, spark_session=spark_session)
-    ):
-        raise ValueError(
-            "Incremental append bootstrap requires a new or empty target. "
-            "The target already contains rows but no committed source-to-target baseline exists; "
-            "restore the accepted Source Observation baseline or choose a governed idempotent strategy."
-        )
     _validate_target_writer_ownership(table_id=str(identity["table_id"]), processing=processing, audit=audit)
     success_context = {
         "target_table_id": target_table_id,
+        "target_store_type": store_kind,
+        "target_table_name": str(identity["table_name"]),
         "source_table_ids": publication_source_ids,
         "activity_id": activity_id,
         "notebook_name": audit["_notebook_name"],
         "notebook_id": audit["_notebook_id"],
         "context": context,
+        "observation_snapshot": snapshot_pipeline_write_observations(
+            environment_name=env, activity_id=execution_id, target_table_id=target_table_id,
+            source_table_ids=publication_source_ids,
+        ),
     }
     prepared_df = add_target_audit_fields(df, audit)
     if not persistence_permitted(context):
+        if strategy == "append" and bootstrap_sources and _target_has_rows(
+            identity=identity, context=context, spark_session=spark_session,
+        ):
+            raise ValueError(
+                "Incremental append bootstrap requires a new or empty target. "
+                "Testing found a populated target without an accepted source-to-target baseline; "
+                "reconcile the relationship before Live publication."
+            )
         validate_processing_input(prepared_df, _physical_processing_definition(processing))
         write_metrics.update(rows_committed=0, measurement_source="dry_run")
         return {
@@ -633,132 +595,173 @@ def pipeline_write(
                 "not_verified": ["destination permissions", "target transaction", "concurrent target writes",
                                  "metadata finalization after publication"]},
         }
-    if strategy == "scd2":
-        from pyspark.sql import functions as F
+    with PublicationBatch(
+        df, identity=identity, processing=_physical_processing_definition(processing),
+        source_table_ids=publication_source_ids, audit=audit, context=context,
+    ) as batch:
+        audit = batch.audit
+        write_metrics["input_rows"] = batch.input_rows
+        if batch.input_rows == 0 and incremental_scopes and all(
+            not value.get("has_data", True) for value in incremental_scopes.values()
+        ):
+            write_metrics.update(rows_committed=0, measurement_source="empty_incremental_scope")
+            if verbose:
+                print("FabricOps Write → empty incremental scope; no publication or checkpoint commit")
+            return {"table_id": target_table_id, "strategy": strategy, "published": False,
+                    "publication_status": "empty_incremental_scope", "write_metrics": write_metrics}
+        success_context["publication"] = batch.receipt
+        io_context["_fabricops_publication_receipt"] = batch.receipt
+        if store_kind == "lakehouse" and strategy in {"append", "overwrite"}:
+            physical_options["userMetadata"] = json.dumps(batch.receipt, sort_keys=True)
+            if strategy == "append":
+                physical_options["txnAppId"] = f"fabricops-publication:{batch.receipt['batch_id']}"
+                physical_options["txnVersion"] = 0
+        prepared_df = add_target_audit_fields(batch.dataframe, audit)
+        if (
+            strategy == "append"
+            and bootstrap_sources
+            and not batch.already_applied
+            and _target_has_rows(identity=identity, context=context, spark_session=spark_session)
+        ):
+            raise ValueError(
+                "Incremental append bootstrap requires a new or empty target. "
+                "The target already contains rows but no committed source-to-target baseline exists; "
+                "restore the accepted Source Observation baseline or choose a governed idempotent strategy."
+            )
+        if strategy == "scd2":
+            from pyspark.sql import functions as F
 
-        effective = str(processing["effective_column"])
-        effective_type = prepared_df.schema[effective].dataType
-        prepared_df = (
-            prepared_df.withColumn("_effective_from", F.col(effective))
-            .withColumn("_effective_to", F.lit(None).cast(effective_type))
-            .withColumn("_is_current", F.lit(True))
+            effective = str(processing["effective_column"])
+            effective_type = prepared_df.schema[effective].dataType
+            prepared_df = (
+                prepared_df.withColumn("_effective_from", F.col(effective))
+                .withColumn("_effective_to", F.lit(None).cast(effective_type))
+                .withColumn("_is_current", F.lit(True))
+            )
+
+        stage_pipeline_write_observations(success_context)
+
+        if strategy in {"scd1", "scd2"}:
+            publication_path = "execute_lakehouse_processing" if store_kind == "lakehouse" else "execute_warehouse_processing"
+        else:
+            publication_path = "write_lakehouse_table" if store_kind == "lakehouse" else "write_warehouse_table"
+        processing_source = str(processing.get("source") or "resolved processing")
+        scope_label = "full dataset"
+        if scope.get("type") == "partition":
+            scope_label = f"partition {scope['column']} ({len(scope['values'])} value(s))"
+
+        if verbose:
+            print("FabricOps Write")
+            print(f"1. Target → {' | '.join(target_parts)}")
+            print(f"   Identity → {identity['table_id']}")
+            print(f"2. Processing → {strategy.upper()} from {processing_source}")
+            print(f"3. Scope → {scope_label}")
+            print("4. Audit + ownership → runtime audit fields applied; writer ownership validated")
+            print(f"5. Physical publication → {publication_path}")
+
+        physical_processing = (
+            _physical_processing_definition(processing)
+            if strategy in {"scd1", "scd2"}
+            else None
         )
 
-    stage_pipeline_write_observations(success_context)
-
-    if strategy in {"scd1", "scd2"}:
-        publication_path = "execute_lakehouse_processing" if store_kind == "lakehouse" else "execute_warehouse_processing"
-    else:
-        publication_path = "write_lakehouse_table" if store_kind == "lakehouse" else "write_warehouse_table"
-    processing_source = str(processing.get("source") or "resolved processing")
-    scope_label = "full dataset"
-    if scope.get("type") == "partition":
-        scope_label = f"partition {scope['column']} ({len(scope['values'])} value(s))"
-
-    if verbose:
-        print("FabricOps Write")
-        print(f"1. Target → {' | '.join(target_parts)}")
-        print(f"   Identity → {identity['table_id']}")
-        print(f"2. Processing → {strategy.upper()} from {processing_source}")
-        print(f"3. Scope → {scope_label}")
-        print("4. Audit + ownership → runtime audit fields applied; writer ownership validated")
-        print(f"5. Physical publication → {publication_path}")
-
-    physical_processing = (
-        _physical_processing_definition(processing)
-        if strategy in {"scd1", "scd2"}
-        else None
-    )
-
-    if physical_already_applied and strategy not in {"scd1", "scd2"}:
-        write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="already_applied")
-        if verbose:
-            print("5. Physical publication → already succeeded; resuming metadata finalization")
-    elif store_kind == "lakehouse":
-        if strategy in {"append", "overwrite"}:
-            write_lakehouse_table(
-                prepared_df,
-                str(identity["table_name"]),
-                store=str(identity["store"]),
-                schema=identity.get("schema"),
-                mode=strategy,
-                repartition_by=repartition_by,
-                options=physical_options,
-                verbose=False,
-                context=io_context,
-            )
-        elif strategy in {"scd1", "scd2"}:
-            execute_lakehouse_processing(
-                prepared_df,
-                table_name=str(identity["table_name"]),
-                store=str(identity["store"]),
-                schema=identity.get("schema"),
-                processing=physical_processing,
-                scope=scope,
-                context=io_context,
-            )
+        if batch.already_applied:
+            write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="already_applied")
+            if verbose:
+                label = "metadata-finalization recovery" if batch.finalization_recovery else "already-applied exact batch"
+                print(f"5. Physical publication → {label}; exact batch verified")
+        elif store_kind == "lakehouse":
+            if strategy in {"append", "overwrite"}:
+                write_lakehouse_table(
+                    prepared_df,
+                    str(identity["table_name"]),
+                    store=str(identity["store"]),
+                    schema=identity.get("schema"),
+                    mode=strategy,
+                    repartition_by=repartition_by,
+                    options=physical_options,
+                    verbose=False,
+                    context=io_context,
+                )
+            elif strategy in {"scd1", "scd2"}:
+                execute_lakehouse_processing(
+                    prepared_df,
+                    table_name=str(identity["table_name"]),
+                    store=str(identity["store"]),
+                    schema=identity.get("schema"),
+                    processing=physical_processing,
+                    scope=scope,
+                    context=io_context,
+                )
+            else:
+                raise ValueError(f"Unsupported governed load strategy {strategy!r}.")
+        elif store_kind == "warehouse":
+            if strategy in {"append", "overwrite"}:
+                write_warehouse_table(
+                    prepared_df,
+                    str(identity["schema"]),
+                    str(identity["table_name"]),
+                    store=str(identity["store"]),
+                    mode=strategy,
+                    repartition_by=repartition_by,
+                    options=physical_options,
+                    context=io_context,
+                )
+            elif strategy in {"scd1", "scd2"}:
+                execute_warehouse_processing(
+                    prepared_df,
+                    schema=str(identity["schema"]),
+                    table_name=str(identity["table_name"]),
+                    store=str(identity["store"]),
+                    processing=physical_processing,
+                    context=context,
+                    options=physical_options,
+                )
+            else:
+                raise ValueError(f"Unsupported governed load strategy {strategy!r}.")
         else:
-            raise ValueError(f"Unsupported governed load strategy {strategy!r}.")
-    elif store_kind == "warehouse":
-        if strategy in {"append", "overwrite"}:
-            write_warehouse_table(
-                prepared_df,
-                str(identity["schema"]),
-                str(identity["table_name"]),
-                store=str(identity["store"]),
-                mode=strategy,
-                repartition_by=repartition_by,
-                options=physical_options,
-                context=io_context,
-            )
-        elif strategy in {"scd1", "scd2"}:
-            execute_warehouse_processing(
-                prepared_df,
-                schema=str(identity["schema"]),
-                table_name=str(identity["table_name"]),
-                store=str(identity["store"]),
-                processing=physical_processing,
+            raise ValueError(f"Configured store has unsupported kind {store_kind or '<blank>'!r}.")
+
+        attempted_receipt = success_context["publication"]
+        batch.confirm()
+        if batch.receipt != attempted_receipt:
+            success_context["publication"] = batch.receipt
+            stage_pipeline_write_observations(success_context)
+            write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="already_applied")
+        try:
+            scheduled_refresh = _writer_scheduled_refresh(audit=audit)
+            _persist_target_processing(
+                identity=identity,
+                processing=processing,
+                scheduled_refresh=scheduled_refresh,
+                audit=audit,
+                config=config,
+                env=env,
+                dataframe=df,
                 context=context,
-                options=physical_options,
+                spark_session=spark_session,
             )
-        else:
-            raise ValueError(f"Unsupported governed load strategy {strategy!r}.")
-    else:
-        raise ValueError(f"Configured store has unsupported kind {store_kind or '<blank>'!r}.")
+            if verbose:
+                print("6. Catalogue → load strategy and Scheduled Refresh persisted")
 
-    try:
-        scheduled_refresh = _writer_scheduled_refresh(audit=audit)
-        _persist_target_processing(
-            identity=identity,
-            processing=processing,
-            scheduled_refresh=scheduled_refresh,
-            audit=audit,
-            config=config,
-            env=env,
-            dataframe=df,
-            context=context,
-            spark_session=spark_session,
-        )
-        if verbose:
-            print("6. Catalogue → load strategy and Scheduled Refresh persisted")
+            commit_pipeline_write_success(success_context)
+            if verbose:
+                print("7. Success metadata → Lineage and accepted Source Observation state committed")
+                print("Result → target published; checks and profiling remain explicit notebook steps.")
 
-        commit_pipeline_write_success(success_context)
-        if verbose:
-            print("7. Success metadata → Lineage and accepted Source Observation state committed")
-            print("Result → target published; checks and profiling remain explicit notebook steps.")
+        except Exception as exc:
+            exc.published = True
+            exc.table_id = target_table_id
+            exc.write_metrics = dict(write_metrics)
+            exc.failed_stage = "Metadata finalization"
+            exc.persistence_status = "incomplete"
+            raise
 
-    except Exception as exc:
-        exc.published = True
-        exc.table_id = target_table_id
-        exc.write_metrics = dict(write_metrics)
-        exc.failed_stage = "Metadata finalization"
-        exc.persistence_status = "incomplete"
-        raise
-
-    if strategy in {"scd1", "scd2"} and write_metrics["rows_committed"] is not None:
-        if strategy == "scd1":
-            write_metrics["rows_inserted"] = write_metrics["rows_committed"]
-        else:
-            write_metrics["versions_inserted"] = write_metrics["rows_committed"]
-        write_metrics["rows_updated" if strategy == "scd1" else "versions_expired"] = 0
-    return {"table_id": str(identity["table_id"]), "strategy": strategy, "write_metrics": write_metrics}
+        if strategy in {"scd1", "scd2"} and write_metrics["rows_committed"] is not None:
+            if strategy == "scd1":
+                write_metrics["rows_inserted"] = write_metrics["rows_committed"]
+            else:
+                write_metrics["versions_inserted"] = write_metrics["rows_committed"]
+            write_metrics["rows_updated" if strategy == "scd1" else "versions_expired"] = 0
+        return {"table_id": str(identity["table_id"]), "strategy": strategy, "write_metrics": write_metrics,
+                "published": True, "publication_status": ("metadata_recovered" if batch.finalization_recovery else "already_applied") if batch.already_applied else "published"}

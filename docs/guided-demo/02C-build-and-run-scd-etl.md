@@ -167,6 +167,20 @@ The following records are committed by successful **Bootstrap** or governed **Li
 | `METADATA_GUARDRAIL_RESULTS` | Guardrail evaluation results when a selected Data Contract supplies executable Guardrails. |
 
 
+### Diagnose a later day before changing the SCD targets
+
+Run the `DEMO_DAY` cell and the **Prepare the Bronze snapshot** cell before Read → Transform → Write. For Days 2 and 3, that cell replaces Bronze with the complete selected CSV. Changing the parameter alone does not stage a snapshot. Inspect `product_id`, `list_price`, `product_category` and `modified_datetime` for P001/P002 first in Bronze, then in the Full Read and transformed DataFrames:
+
+| Day | P002 list price | P001 category | SCD1 rows | SCD2 versions |
+| --- | ---: | --- | ---: | ---: |
+| 1 | 39.90 | Accessories | 8 | 8 |
+| 2 | 44.90 | Accessories | 8 | 9 |
+| 3 | 44.90 | Travel Accessories | 8 | 10 |
+
+Use a fresh permitted **Live** plan for governed publication. Testing keeps Silver and operational metadata unchanged; the explicit Bronze preparation is outside that plan. Retain the notebook's Bootstrap defaults only before contracts exist. Rerun each day in the same interactive session and repeat its Write: SCD2 must retain eight current products and must not add another version for unchanged business values. A new scheduled activity must produce the same results.
+
+Inspect the physical Silver tables after publication. `Not available` SCD metrics do not establish that a merge failed. For SCD2, confirm that superseded P002/P001 versions have `_is_current=False` and populated `_effective_to`, that each product has one current version, and that no `(product_id, _effective_from)` pair is duplicated. Never replace these keyed merges with overwrite to hide a mismatch. For existing checkpoint divergence, follow the [scoped reconciliation guidance](02B-build-and-run-incremental-append-etl.md#if-silver-has-eight-rows-but-the-checkpoint-already-covers-day-2); immutable Append repairs must not be applied to SCD history.
+
 ### Reset the demo
 
 Do not restart at Day 1 while either SCD target still contains later-day state. Reset the source and both targets together:

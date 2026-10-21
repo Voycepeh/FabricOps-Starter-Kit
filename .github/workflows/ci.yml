@@ -99,6 +99,40 @@ jobs:
           raise SystemExit(subprocess.call([sys.executable, "-m", "pytest", "--durations=20", *selected]))
           PY
 
+  publication-regressions:
+    name: persisted Delta publication regressions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install isolated Fabric-compatible Delta test runtime
+        run: |
+          uv venv .venv-delta --python 3.11
+          uv pip install --python .venv-delta/bin/python -e '.[dev]' -r tests/integration/requirements-delta.txt
+          mkdir -p /tmp/fabricops-delta-jars
+          curl --fail --retry 3 -L https://repo.maven.apache.org/maven2/io/delta/delta-spark_2.12/3.3.2/delta-spark_2.12-3.3.2.jar -o /tmp/fabricops-delta-jars/delta-spark.jar
+          curl --fail --retry 3 -L https://repo.maven.apache.org/maven2/io/delta/delta-storage/3.3.2/delta-storage-3.3.2.jar -o /tmp/fabricops-delta-jars/delta-storage.jar
+      - name: Verify persisted business rows, history and checkpoint recovery
+        env:
+          SPARK_LOCAL_IP: "127.0.0.1"
+          PYSPARK_PYTHON: "${{ github.workspace }}/.venv-delta/bin/python"
+          PYSPARK_SUBMIT_ARGS: "--jars /tmp/fabricops-delta-jars/delta-spark.jar,/tmp/fabricops-delta-jars/delta-storage.jar --conf spark.databricks.delta.snapshotPartitions=2 --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog pyspark-shell"
+        run: |
+          .venv-delta/bin/python -m pytest -q tests/integration/test_publication_batches.py --junitxml=/tmp/publication-regressions.xml
+          .venv-delta/bin/python - <<'PY'
+          import xml.etree.ElementTree as ET
+          suites = ET.parse("/tmp/publication-regressions.xml").getroot().findall("testsuite")
+          assert sum(int(suite.attrib["tests"]) for suite in suites) > 0
+          assert sum(int(suite.attrib["skipped"]) for suite in suites) == 0, "Persisted Delta regressions must run, not skip"
+          PY
+
   build:
     name: lint, docs and package
     runs-on: ubuntu-latest

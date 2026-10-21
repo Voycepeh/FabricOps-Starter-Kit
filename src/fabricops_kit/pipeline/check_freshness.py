@@ -6,6 +6,7 @@ from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
     freshness_check_core,
     get_current_freshness_evidence,
+    source_observation_run_id,
     load_table_guardrail_rules,
     resolve_catalogue_table_identity,
     resolve_pipeline_data_contract,
@@ -103,7 +104,7 @@ def check_freshness(
         return result
     evidence = get_current_freshness_evidence(
         environment_name=env,
-        activity_id=str(audit["_activity_id"]),
+        activity_id=source_observation_run_id(context) or str(audit["_activity_id"]),
         table_id=table_id,
     )
     freshness_column = str(evidence["freshness_column"])

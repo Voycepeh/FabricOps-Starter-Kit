@@ -132,6 +132,10 @@ def orchestrate_read(*, execution_plan, store: str, schema: str | None, table_na
         columns = getattr(source["dataframe"], "columns", None)
         metrics.setdefault("columns", len(columns) if columns is not None else None)
         summary.details([("Physical reader", reader_name), ("Rows read", metrics["rows_read"]), ("Columns", metrics["columns"])])
+        for recovered in source.get("source_observation_recovery", []):
+            summary.details([("Source Observation", recovered["status"].replace("_", " ")), ("Exact batches verified", recovered["batches"])])
+        if source.get("has_data") is False:
+            summary.details([("Scope", "Empty incremental scope")])
         dataframe, table_id = source["dataframe"], source["table_id"]
         skipped = {"status": "skipped", "can_continue": True, "checks": []}
         freshness = run("Freshness", lambda: check_freshness(table_id, spark_session=spark_session, verbose=False, context=context)) if "freshness" in active else dict(skipped)

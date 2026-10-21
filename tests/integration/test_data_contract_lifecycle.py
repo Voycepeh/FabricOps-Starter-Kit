@@ -31,6 +31,16 @@ class _DeltaTransport:
         self.boundary, self.name = boundary, name
         self.update_all, self.insert, self.updates, self.update_condition = False, False, None, None
 
+    def toDF(self):
+        """Expose the physical schema used by publication receipt checks."""
+        if self.name.startswith("METADATA_"):
+            return self.boundary.spark.createDataFrame([], metadata_table_schema_registry()[self.name])
+        return self.boundary.business[self.name]
+
+    def history(self):
+        """Expose transaction receipts retained by the local Delta transport."""
+        return self.boundary.spark.createDataFrame(self.boundary.commits.get(self.name, []), "userMetadata string")
+
     def alias(self, name):
         return self
 
@@ -97,7 +107,7 @@ def lifecycle(monkeypatch, spark_session):
              "_workspace_name": "workspace", "_notebook_id": "pipeline-id", "_notebook_name": "pipeline",
              "_metadata_lakehouse_name": "Metadata", "_activity_id": "authoring"}
     registry = metadata_table_schema_registry()
-    state = SimpleNamespace(config=config, context=context, metadata={name: [] for name in registry}, business={}, reads=[])
+    state = SimpleNamespace(config=config, context=context, metadata={name: [] for name in registry}, business={}, reads=[], commits={})
 
     activity_times = {}
     def audit_fields(**kwargs):
@@ -129,6 +139,7 @@ def lifecycle(monkeypatch, spark_session):
             state.metadata[name].extend(row.asDict(recursive=True) for row in frame.collect())
         else:
             state.business[name] = frame
+            state.commits.setdefault(name, []).append(((kwargs.get("options") or {}).get("userMetadata"),))
 
     def resolve(context=None, **kwargs):
         selected = context if context is not None else state.context
@@ -149,7 +160,8 @@ def lifecycle(monkeypatch, spark_session):
             if hasattr(module, name):
                 monkeypatch.setattr(module, name, replacement)
     monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=SimpleNamespace(
-        forPath=lambda spark, name: _DeltaTransport(state, name))))
+        forPath=lambda spark, name: _DeltaTransport(state, name),
+        isDeltaTable=lambda spark, name: name in state.business)))
     schedule = importlib.import_module("fabricops_kit.data_contract.scheduled_refresh")
     monkeypatch.setattr(schedule, "discover_scheduled_refresh", lambda **kwargs: {"status": "not_configured", "schedules": []})
     for name in ("_CURRENT_SOURCE_OBSERVATIONS", "_CURRENT_FRESHNESS_EVIDENCE", "_PENDING_SOURCE_OBSERVATIONS",

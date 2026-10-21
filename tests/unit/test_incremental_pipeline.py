@@ -415,11 +415,13 @@ def test_next_activity_recovers_staged_progress_from_materialized_target(monkeyp
         **_row(target="target-a", maximum="120"),
         "observation_status": "observed",
         "_activity_id": "run-a",
+        "publication_payload_json": '{"batch_id":"batch-a","activity_id":"run-a","committed_at":"2026-01-01T00:00:00+00:00"}',
     }
     staged_b = {
         **_row(target="target-b", maximum="90"),
         "observation_status": "observed",
         "_activity_id": "run-a",
+        "publication_payload_json": '{"batch_id":"batch-a","activity_id":"run-a","committed_at":"2026-01-01T00:00:00+00:00"}',
     }
     history = [staged_a, staged_b]
     _configure_scope(monkeypatch, history)
@@ -433,8 +435,8 @@ def test_next_activity_recovers_staged_progress_from_materialized_target(monkeyp
     )
     monkeypatch.setattr(
         shared,
-        "_physical_target_has_activity",
-        lambda identity, activity_id, **_kwargs: identity["table_id"] == "target-a" and activity_id == "run-a",
+        "_physical_target_has_publication",
+        lambda identity, receipt, **_kwargs: identity["table_id"] == "target-a" and receipt["activity_id"] == "run-a",
     )
     merged = []
     monkeypatch.setattr(
@@ -570,6 +572,7 @@ def test_recovery_uses_validated_physical_target_without_catalogue(monkeypatch):
         **_row(target="target-a", maximum="120"),
         "observation_status": "observed",
         "_activity_id": "run-a",
+        "publication_payload_json": '{"batch_id":"batch-a","activity_id":"run-a","committed_at":"2026-01-01T00:00:00+00:00"}',
     }]
     _configure_scope(monkeypatch, history)
     identity = {
@@ -585,7 +588,7 @@ def test_recovery_uses_validated_physical_target_without_catalogue(monkeypatch):
         lambda *args, **kwargs: pytest.fail("target must not require Catalogue activation"),
     )
     monkeypatch.setattr(
-        shared, "_physical_target_has_activity", lambda *args, **kwargs: True
+        shared, "_physical_target_has_publication", lambda *args, **kwargs: True
     )
     merged = []
     monkeypatch.setattr(
@@ -599,3 +602,60 @@ def test_recovery_uses_validated_physical_target_without_catalogue(monkeypatch):
     assert scope["after"] == "120"
     assert scope["first_run"] is False
     assert [row["observation_status"] for row in merged] == ["committed"]
+
+
+def test_legacy_activity_only_staging_is_never_automatically_recovered(monkeypatch):
+    """An old activity marker cannot attest any particular staged source state."""
+    history = [{**_row(target='target-a', maximum='120'),
+                'observation_status': 'observed', '_activity_id': 'reused-activity'}]
+    _configure_scope(monkeypatch, history)
+    monkeypatch.setattr(shared, 'resolve_catalogue_table_identity', lambda *a, **kw: {'table_id': 'target-a'})
+    monkeypatch.setattr(shared, '_physical_target_has_publication', lambda *a, **kw: pytest.fail('legacy evidence has no batch proof'))
+    monkeypatch.setattr(shared, '_merge_source_observation_records', lambda records, **kw: None)
+    scope = shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('130'))
+    assert scope['first_run'] is True
+    assert 'after' not in scope
+
+
+def test_newer_pending_read_is_rejected_without_replacing_checkpoint(monkeypatch):
+    _configure_scope(monkeypatch, [])
+    key = ('dev', 'run-1', 'source-orders', 'target-a')
+    shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('12'))
+    pending = shared._PENDING_SOURCE_OBSERVATIONS[key]
+    with pytest.raises(RuntimeError, match='already awaiting publication'):
+        shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('16'))
+    assert shared._PENDING_SOURCE_OBSERVATIONS[key] == pending
+    assert shared._INCREMENTAL_SOURCE_SCOPES[key]['through'] == '12'
+    # Re-reading the same state is unambiguous and remains supported.
+    shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('12'))
+
+
+def test_read_during_write_cannot_be_replaced_by_a_third_read(monkeypatch):
+    _configure_scope(monkeypatch, [])
+    key = ('dev', 'run-1', 'source-orders', 'target-a')
+    shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('12'))
+    monkeypatch.setitem(shared._ACTIVE_PUBLICATION_SOURCES, key, list(shared._PENDING_SOURCE_OBSERVATIONS[key]))
+    shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('16'))
+    with pytest.raises(RuntimeError, match='already awaiting publication'):
+        shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('20'))
+    assert shared._INCREMENTAL_SOURCE_SCOPES[key]['through'] == '16'
+
+
+def test_empty_scope_does_not_block_new_data(monkeypatch):
+    _configure_scope(monkeypatch, [_row(target='target-a', maximum='12')])
+    shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('12'))
+    next_scope = shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('16'))
+    assert next_scope['has_data']
+    assert next_scope['after'] == '12'
+    assert next_scope['through'] == '16'
+
+
+def test_recovered_pending_state_does_not_block_new_data(monkeypatch):
+    history = []
+    _configure_scope(monkeypatch, history)
+    shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('12'))
+    # Recovery or finalization accepted this pending state before the next Read.
+    history.append(_row(target='target-a', maximum='12'))
+    scope = shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('16'))
+    assert scope['after'] == '12'
+    assert scope['through'] == '16'
