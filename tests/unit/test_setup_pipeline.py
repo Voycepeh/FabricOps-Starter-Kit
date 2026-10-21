@@ -33,7 +33,7 @@ def _row(version=1, *, table_id="source", active=False):
             "contract_payload_json": json.dumps(payload)}
 
 
-def _render(monkeypatch, rows, *, interactive=False, metadata_error=None, lineage_state="empty", targets=None):
+def _render(monkeypatch, rows, *, interactive=False, metadata_error=None, lineage_state="empty", targets=None, testing_writes=False):
     monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.shared"), "persist_pipeline_run", lambda *a, **kw: None)
     context = {"config": object(), "env": "canary-east", "notebook_id": "notebook-1"}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: (context_obj["config"], "canary-east", context_obj))
@@ -43,6 +43,7 @@ def _render(monkeypatch, rows, *, interactive=False, metadata_error=None, lineag
     builder = importlib.import_module("fabricops_kit.pipeline.shared")
     monkeypatch.setattr(builder, "resolve_physical_table_identity", lambda c, e, **kw: {
         **kw, "table_id": kw["table_name"], "store_kind": "lakehouse"})
+    monkeypatch.setattr(builder, "pipeline_physical_bindings", lambda identities, **kw: {})
     reads = []
     def read(name, **kw):
         reads.append(name)
@@ -59,7 +60,7 @@ def _render(monkeypatch, rows, *, interactive=False, metadata_error=None, lineag
         monkeypatch.setattr(importlib.import_module("fabricops_kit.widgets.shared"), "require_ipywidgets", lambda: (_ for _ in ()).throw(ModuleNotFoundError()))
     state = module.setup_pipeline(
         sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}],
-        targets=targets if targets is not None else [{"store": "Silver", "schema": "demo", "table_name": "target"}], context=context, interactive=True,
+        targets=targets if targets is not None else [{"store": "Silver", "schema": "demo", "table_name": "target"}], context=context, interactive=True, pipeline_id="example", testing_writes=testing_writes,
     )
     return context, state, reads
 
@@ -221,10 +222,10 @@ def test_headless_uses_builder_without_loading_ui_or_listing_contracts(monkeypat
     monkeypatch.setattr(module, "read_lakehouse_table", forbidden)
     selections = {"source": {"contract_id": "contract-source", "contract_version": 2}}
     assert module.setup_pipeline(sources=[{"table_id": "source"}], targets=[], interactive=False,
-                                  execution_mode="testing", selections=selections) is sentinel
+                                  execution_mode="testing", selections=selections, pipeline_id="example") is sentinel
     builder.assert_called_once_with(execution_mode="testing", sources=[{"table_id": "source"}],
                                     targets=[], selections=selections, context=None, spark_session=None,
-                                    pipeline_id=None, executable_sha256=None, dependencies=None, configuration=None)
+                                    pipeline_id="example", executable_sha256=None, dependencies=None, configuration=None, testing_writes=False)
     forbidden.assert_not_called()
 
 
@@ -249,7 +250,7 @@ def test_interactive_and_headless_share_identity_validation_and_plan_snapshots(m
     scheduled = module.setup_pipeline(
         sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}],
         targets=[{"store": "Silver", "schema": "demo", "table_name": "target"}],
-        interactive=False, execution_mode="testing", selections=choices, context=context,
+        interactive=False, execution_mode="testing", selections=choices, context=context, pipeline_id="example",
     )
     assert plan.participants_json == scheduled.participants_json
     assert plan.selections_json == scheduled.selections_json
@@ -273,7 +274,7 @@ def test_participant_mismatch_rejected_in_both_paths(monkeypatch, interactive):
         module.setup_pipeline(
             sources=[{"store": "Bronze", "schema": "demo", "table_name": "source", "table_id": "wrong"}],
             targets=[], interactive=interactive, execution_mode="testing",
-            selections={"wrong": {"no_contract": True}}, context=context,
+            selections={"wrong": {"no_contract": True}}, context=context, pipeline_id="example",
         )
 
 
@@ -304,3 +305,19 @@ def test_interactive_read_only_selection_has_no_target_controls(monkeypatch):
     assert state["tables"]["source"]["identity"]["roles"] == ["source"]
     state["select_contract"]("source", "contract-source", 1)
     assert state["tables"]["source"]["selected"]["contract_version"] == 1
+
+
+def test_real_testing_write_authorization_locks_with_the_built_plan(monkeypatch):
+    """The confirmation cannot appear to disable writes after authority is frozen."""
+    from types import SimpleNamespace
+    _, state, _ = _render(monkeypatch, [], interactive=True, testing_writes=True)
+    sentinel = SimpleNamespace(results=[])
+    monkeypatch.setattr(module, "build_pipeline_execution_plan", lambda **kw: sentinel)
+    for table_id in state["tables"]:
+        state["select_contract"](table_id, no_contract=True)
+    with pytest.raises(ValueError, match="Confirm real Testing writes"):
+        state["build_plan"]()
+    authorization = state["write_authorized"]
+    authorization.value = True
+    assert state["build_plan"]() is sentinel
+    assert authorization.disabled

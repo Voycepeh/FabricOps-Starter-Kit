@@ -15,8 +15,8 @@ import pytest
 def generated_reference_artifacts_for_tests() -> None:
     """Create generated reference artifacts required by tests when absent."""
     root = Path(__file__).resolve().parents[1]
-    graph_path = root / "docs" / "reference" / "_data" / "function-call-graph.json"
-    dashboard_path = root / "docs" / "assets" / "function-call-graph-dashboard.html"
+    graph_path = root / "docs" / "reference" / "_data" / "public-function-call-flows.json"
+    dashboard_path = root / "docs" / "reference" / "index.md"
     if graph_path.exists() and dashboard_path.exists():
         return
 

@@ -24,7 +24,6 @@ GLOSSARY_GROUPS = [
             "data-contract",
             "activated-pipeline",
             "pipeline-execution-plan",
-            "bootstrap",
             "testing",
             "live",
             "enrichment",

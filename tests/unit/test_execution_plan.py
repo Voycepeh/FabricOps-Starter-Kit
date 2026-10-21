@@ -16,6 +16,7 @@ module = importlib.import_module("fabricops_kit.pipeline.shared")
 def plan_runtime(monkeypatch):
     """Supply only metadata read and configured identity boundaries."""
     monkeypatch.setattr(shared, "persist_pipeline_run", lambda *a, **kw: None)
+    monkeypatch.setattr(shared, "pipeline_physical_bindings", lambda identities, **kw: {key: {"workspace_id": "test", "item_id": "lakehouse", "kind": "lakehouse", "schema": item.get("schema"), "table_name": item["table_name"]} for key, item in identities.items()})
     rows = []
     runtime = {"config": object(), "env": "canary-east", "notebook_id": "notebook"}
     def resolve(context=None):
@@ -30,8 +31,8 @@ def plan_runtime(monkeypatch):
         return module.build_pipeline_execution_plan(execution_mode=mode,
             sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}],
             targets=[{"store": "Silver", "schema": "demo", "table_name": "target"}],
-            selections=None if mode == "bootstrap" else (selections if selections is not None else {"source": {"no_contract": True}, "target": {"no_contract": True}}),
-            context=runtime)
+            selections=selections if selections is not None else {"source": {"no_contract": True}, "target": {"no_contract": True}},
+            context=runtime, pipeline_id="example")
     def row(table_id="source", version=1, active=False):
         result = frozen(table_id, version=version, active=active)
         result["environment_name"] = runtime["env"]
@@ -40,14 +41,14 @@ def plan_runtime(monkeypatch):
 
 
 @pytest.mark.parametrize("environment", ["dev", "test", "uat", "prod", "production", "canary-east", "sandbox42"])
-@pytest.mark.parametrize("mode", ["testing", "bootstrap"])
+@pytest.mark.parametrize("mode", ["testing"])
 def test_arbitrary_environment_has_identical_explicit_bootstrap_policy(plan_runtime, environment, mode):
     """Environment identity routes execution and never decides persistence or contracts."""
     _, runtime, make, _ = plan_runtime
     runtime["env"] = environment
     plan = make(mode)
     assert plan.environment == environment
-    assert plan.permits_persistence is (mode != "testing")
+    assert plan.permits_persistence is False
     assert json.loads(plan.selections_json)["target"] == {"no_contract": True}
 
 
@@ -93,13 +94,13 @@ def test_corrupt_and_ambiguous_contracts_are_errors(plan_runtime, corruption):
         make(selections={"source": {"contract_id": "contract-source", "contract_version": 1}, "target": {"no_contract": True}})
 
 
-def test_metadata_scope_filters_other_environment_versions(plan_runtime):
-    """A shared metadata store cannot leak another environment's active contracts."""
-    rows, _, make, row = plan_runtime
-    other = row(active=True)
-    other["environment_name"] = "elsewhere"
-    rows.append(other)
-    assert json.loads(make("bootstrap").contracts_json)["source"] is None
+def test_global_contracts_are_available_across_environments(plan_runtime):
+    """A frozen contract is shared globally rather than copied per environment."""
+    rows, runtime, make, row = plan_runtime
+    rows.extend([{**row(), "environment_name": "DEV"}, {**row(table_id="target"), "environment_name": "DEV"}])
+    runtime["env"] = "PROD"
+    plan = make(selections={key: {"contract_id": "contract-" + key, "contract_version": 1} for key in ("source", "target")})
+    assert json.loads(plan.contracts_json)["source"]["environment_name"] == "DEV"
 
 
 def test_missing_and_unrelated_choices_rejected(plan_runtime):
@@ -119,11 +120,10 @@ def test_live_builder_rejects_individual_contract_authority(plan_runtime):
         make("live", {"source": {"contract_id": "contract-source", "contract_version": 1}, "target": {"contract_id": "contract-target", "contract_version": 1}})
 
 
-def test_missing_contract_store_is_not_an_explicit_no_contract_state(plan_runtime, monkeypatch):
-    """Unreadable metadata cannot authorize bootstrap by hiding active contracts."""
+def test_removed_bootstrap_mode_is_rejected(plan_runtime):
+    """Contract-free exploration uses Testing with explicit write authorization."""
     _, _, make, _ = plan_runtime
-    monkeypatch.setattr(shared, "read_lakehouse_table", lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("Table not found")))
-    with pytest.raises(RuntimeError, match="missing metadata"):
+    with pytest.raises(ValueError, match="testing or live"):
         make("bootstrap")
 
 
@@ -137,7 +137,7 @@ def test_read_only_headless_plan_needs_no_target(plan_runtime, mode):
         rows.append(row(active=True))
     plan = setup_pipeline(interactive=False, execution_mode=mode,
         sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}], targets=[],
-        selections={"source": {"contract_id": "contract-source", "contract_version": 1} if mode == "live" else {"no_contract": True}}, context=runtime)
+        selections={"source": {"contract_id": "contract-source", "contract_version": 1} if mode == "live" else {"no_contract": True}}, context=runtime, pipeline_id="example")
     assert json.loads(plan.participants_json)["source"]["roles"] == ["source"]
     assert set(json.loads(plan.contracts_json)) == {"source"}
 

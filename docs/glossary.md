@@ -25,34 +25,29 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="data-contract">
 <summary><strong>Data Contract</strong> — A versioned set of governed expectations for one table.</summary>
-<p>A table-centric Data Contract freezes Schema, processing, Enrichment and Guardrails. Draft becomes Frozen and stays immutable and reusable. An Activated Pipeline manifest references exact contract versions and payload hashes; contracts have no direct Agreement linkage or individual activation authority.</p>
+<p>A globally versioned table-centric Data Contract freezes Schema, processing, Enrichment and Guardrails. Draft becomes Frozen and stays immutable and reusable across environments. An Activated Pipeline references exact versions and payload hashes. Environment activation can differ while sharing one central contract history; contracts have no individual activation step.</p>
 <p><strong>Also known as:</strong> data contracts</p>
 </details>
 
 <details id="activated-pipeline">
 <summary><strong>activated pipeline</strong> — An immutable approved version of a completely and successfully tested whole pipeline.</summary>
-<p>METADATA_ACTIVATED_PIPELINE stores stable pipeline identity, immutable version/name, exact effective Agreement, successful Testing run and the candidate manifest/fingerprint. Its manifest embeds exact reusable frozen contracts, executable and configuration/dependency identity. One version may be active per pipeline; switching/deactivation is explicit and never silently changes saved Live selections. Activation neither deploys nor publishes.</p>
+<p>METADATA_ACTIVATION_STATE contains immutable approved pipeline manifests and the active configuration for each environment and pipeline_id. Each manifest binds successful whole-run Testing, an exact effective Agreement, global frozen contracts, executable and dependency identity, transformation settings and physical destinations. Governance approves affected pipelines together; new Live runs resolve the coordinated revision automatically. Activation neither deploys notebooks nor writes business data.</p>
 <p><strong>Also known as:</strong> activated pipelines</p>
 </details>
 
 <details id="pipeline-execution-plan">
 <summary><strong>pipeline execution plan</strong> — The validated execution decisions shared by every Read and Write in one pipeline run.</summary>
-<p>A pipeline execution plan freezes the Bootstrap, Testing or Live mode, environment and notebook identity, explicit source and target identities, exact frozen contract selections and explicit No Contract choices. setup_pipeline builds the plan for interactive and headless execution. All participating Read and Write calls consume the same plan; a built selector locks its mode and contract choices. Diagnostic results are retained separately in its in-memory journal. Bootstrap automatically uses No Contract only while no participating frozen or active version exists; Testing contract choices are explicit.</p>
-</details>
-
-<details id="bootstrap">
-<summary><strong>Bootstrap</strong> — The default noninteractive first-run mode for creating and profiling outputs before contracts are frozen.</summary>
-<p>setup_pipeline defaults to Bootstrap without UI or contract selections. Bootstrap permits initial business publication and normal Catalogue, Profile, Lineage and Source Observation commits only while no participating frozen or active Data Contract exists. Eligibility is checked at setup and before each Read/Write; unreadable metadata fails closed. Bootstrap is separate from tested and approved Live execution.</p>
+<p>An immutable Testing or Live plan fixes global participants, exact table contracts, stable pipeline identity and environment destinations. Execute the complete project inside with plan: for automatic outcome recording. Live pins one approved environment activation revision.</p>
 </details>
 
 <details id="testing">
-<summary><strong>Testing</strong> — The pipeline-wide mode that evaluates real data and prepared processing without durable mutations.</summary>
-<p>Testing evaluates every declared Read/Write and processing simulation, persisting METADATA_PIPELINE_RUN and linked METADATA_GUARDRAIL_RESULTS without business publication or ordinary metadata, mappings or checkpoints. Explicit successful whole-run finalization with complete identity may be reviewed for pipeline activation. Testing does not prove deployment permissions or target transactions.</p>
+<summary><strong>Testing</strong> — Pipeline execution against all frozen contracts, or explicit contract-free exploration.</summary>
+<p>Testing permits any frozen table contract versions, requires all-or-none contract selection, and records METADATA_PIPELINE_RUN and Guardrail Results. Explicit real writes require safe destinations separate from Live ownership. Only complete governed Testing within the whole-run boundary qualifies for activation.</p>
 </details>
 
 <details id="live">
 <summary><strong>Live</strong> — The deliberate pipeline-wide mode that permits governed publication and operational metadata commits.</summary>
-<p>Live resolves a saved exact Activated Pipeline version and contracts exclusively from its approved manifest. It verifies active Governance approval, Agreement, executable/dependencies, deployment and environment bindings, enforces Warn/Block and operational commit boundaries, and records activated_pipeline_id in METADATA_PIPELINE_RUN. It never falls back to Bootstrap.</p>
+<p>Live automatically resolves an approved environment configuration from METADATA_ACTIVATION_STATE and pins its revision. Exact contracts, writer ownership, executable, dependencies, transformation settings and physical destinations are enforced. Affected running executions drain before coordinated activation.</p>
 </details>
 
 <details id="enrichment">
@@ -333,7 +328,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-run">
 <summary><strong>pipeline run</strong> — One logical pipeline execution across every declared Read and Write.</summary>
-<p>METADATA_PIPELINE_RUN records one logical attempt across all declared Reads and Writes, stable pipeline_id, candidate identity, operations and status. Explicit finalization is required, including Read-only runs. Bootstrap is excluded from Testing approval evidence. Live references its exact activated_pipeline_id.</p>
+<p>METADATA_PIPELINE_RUN records one logical attempt across all declared Reads and Writes, stable pipeline_id, candidate identity, operations and status. The with plan: boundary automatically records whole-run completion, including read-only runs. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.</p>
 </details>
 
 <details id="pyspark">

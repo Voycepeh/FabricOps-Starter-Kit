@@ -9,7 +9,7 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
-    "METADATA_ACTIVATED_PIPELINE",
+    "METADATA_ACTIVATION_STATE",
     "METADATA_DATA_CATALOGUE",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
@@ -24,7 +24,7 @@ GOVERNANCE_METADATA_TABLES = (
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
-    "METADATA_ACTIVATED_PIPELINE",
+    "METADATA_ACTIVATION_STATE",
 )
 
 ENGINEERING_METADATA_TABLES = tuple(
@@ -177,13 +177,10 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 *audit,
             ],
         ),
-        "METADATA_ACTIVATED_PIPELINE": build_metadata_schema(
-            "METADATA_ACTIVATED_PIPELINE",
-            [("activated_pipeline_id", "string", False), ("pipeline_id", "string", False),
-             ("pipeline_name", "string", False), ("pipeline_version", "string", False),
-             ("agreement_id", "string", False), ("agreement_version", "string", False),
-             ("testing_run_id", "string", False), ("candidate_fingerprint", "string", False),
-             ("manifest_json", "string", False), ("is_active", "boolean", False), *audit],
+        "METADATA_ACTIVATION_STATE": build_metadata_schema(
+            "METADATA_ACTIVATION_STATE",
+            [("authority_id", "string", False), ("token", "string", False),
+             ("snapshot_json", "string", False), *audit],
         ),
         "METADATA_DATA_CATALOGUE": build_metadata_schema(
             "METADATA_DATA_CATALOGUE",

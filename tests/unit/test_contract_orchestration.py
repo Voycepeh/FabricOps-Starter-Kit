@@ -108,6 +108,7 @@ def runtime(monkeypatch, spark_session):
         return journal(replace(plan, execution_mode="testing") if plan.execution_mode == "live" else plan, role, arguments)
     for name in ("orchestrate_read", "orchestrate_write"):
         monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline." + name), "PipelineOperation", verified_journal)
+    monkeypatch.setattr(activation, "validate_testing_destinations", lambda *a, **kw: set())
     def make(mode="testing", contracted=False, strategy="overwrite", parameters=None):
         if contracted and not rows:
             rows.extend([frozen(SOURCE_ID, active=mode == "live"), frozen(TARGET_ID, active=mode == "live", strategy=strategy, parameters=parameters)])
@@ -115,7 +116,7 @@ def runtime(monkeypatch, spark_session):
         if not contracted:
             selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
         plan = setup_pipeline(interactive=False, execution_mode="testing" if mode == "live" else mode, sources=[SOURCE], targets=[TARGET],
-                                              selections=None if mode == "bootstrap" else selections, context=context, spark_session=spark_session, pipeline_id="test-orders", executable_sha256="a" * 64, dependencies={}, configuration={})
+                                              selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders", executable_sha256="a" * 64, dependencies={}, configuration={})
         return replace(plan, execution_mode="live", activated_pipeline_id="verified-by-boundary") if mode == "live" else plan
     return make, rows, spies, context
 
@@ -158,8 +159,8 @@ def test_testing_real_guardrails_persist_linked_diagnostics(runtime, spark_sessi
     assert len(result["source_guardrail_results"]) == 2
     assert len(plan.results) == 4
     assert all(row["run_id"] == plan.plan_id for row in plan.results)
-    from fabricops_kit import finalize_pipeline
-    finalized = finalize_pipeline(plan, spark_session=spark_session)
+    from fabricops_kit.pipeline.shared import finalize_pipeline_run
+    finalized = finalize_pipeline_run(plan, spark_session=spark_session)
     assert finalized["status"] == "succeeded"
     assert all(row["rule_type"] != "contract_validation" for row in plan.results)
     assert result["validation_passed"] and not result["published"]
@@ -198,18 +199,18 @@ def test_immutable_plan_and_cross_run_sources_are_rejected(runtime, spark_sessio
     with pytest.raises(FrozenInstanceError):
         testing.execution_mode = "live"
     source = read(testing, spark_session)
-    bootstrap = make("bootstrap")
+    other = make()
     with pytest.raises(ValueError, match="same execution plan"):
-        write(bootstrap, source, spark_session)
+        write(other, source, spark_session)
 
 
 def test_headless_requires_mode_and_every_explicit_choice(runtime):
     """Headless callers cannot infer Live or silently omit table choices."""
     _, _, _, context = runtime
-    with pytest.raises(ValueError, match="Bootstrap does not accept"):
-        setup_pipeline(interactive=False, sources=[SOURCE], targets=[TARGET], selections={}, context=context)
     with pytest.raises(ValueError, match="every participating"):
-        setup_pipeline(interactive=False, execution_mode="testing", sources=[SOURCE], targets=[TARGET], selections={}, context=context)
+        setup_pipeline(interactive=False, sources=[SOURCE], targets=[TARGET], selections={}, context=context, pipeline_id="test-orders")
+    with pytest.raises(ValueError, match="every participating"):
+        setup_pipeline(interactive=False, execution_mode="testing", sources=[SOURCE], targets=[TARGET], selections={}, context=context, pipeline_id="test-orders")
 
 
 @pytest.mark.parametrize("strategy,parameters", [("append", None), ("scd1", {"key_columns": ["id"]}),
@@ -237,7 +238,7 @@ def test_testing_observation_recovery_cannot_merge_durable_state(runtime, monkey
     create_spark.assert_not_called()
 
 
-@pytest.mark.parametrize("mode", ["bootstrap", "live"])
+@pytest.mark.parametrize("mode", ["live"])
 def test_initial_publication_publishes_and_commits_lineage(runtime, spark_session, monkeypatch, mode):
     """Initial publication uses its explicit policy without requiring historical Lineage."""
     make, _, spies, _ = runtime
@@ -265,25 +266,14 @@ def test_mixed_relationship_respects_explicit_no_contract(runtime, spark_session
     if mode == "live":
         with pytest.raises(ValueError, match="Live"):
             setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
-                selections=selections, context=context, spark_session=spark_session)
+                selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders")
         assert_testing_mutations_are_diagnostics_only(spies)
         return
-    plan = setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
-        selections=selections, context=context, spark_session=spark_session)
-    monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
-    orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
-    if mode == "live":
-        monkeypatch.setattr(orchestrator, "profile_table", lambda **kw: {"row_count": 2})
-    result = write(plan, read(plan, spark_session), spark_session)
-    assert len(plan.results) == 2
-    assert all(item["can_continue"] for item in result["source_guardrail_results"])
-    assert result["published"] is (mode == "live")
-    if mode == "testing":
-        assert result["validation_passed"]
-        assert_testing_mutations_are_diagnostics_only(spies)
-    else:
-        assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 1
-        assert spies["fabricops_kit.pipeline.shared.persist_lineage_participation"].call_count == 2
+    with pytest.raises(ValueError, match="Partial contract selection"):
+        setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
+                       selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders")
+    assert_testing_mutations_are_diagnostics_only(spies)
+
 
 
 @pytest.mark.parametrize("strategy,parameters", [("scd1", {"key_columns": ["id"]}),
@@ -332,8 +322,8 @@ def test_failed_read_cannot_reuse_prior_successful_dq_evidence(runtime, spark_se
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: changed)
     with pytest.raises(ValueError, match="Duplicate operation"):
         read(plan, spark_session)
-    from fabricops_kit import finalize_pipeline
-    assert finalize_pipeline(plan, spark_session=spark_session)["status"] == "failed"
+    from fabricops_kit.pipeline.shared import finalize_pipeline_run
+    assert finalize_pipeline_run(plan, spark_session=spark_session)["status"] == "failed"
     plan = make(contracted=True)
     failed = read(plan, spark_session)
     assert failed["dq_result"]["can_continue"] is False
@@ -341,7 +331,7 @@ def test_failed_read_cannot_reuse_prior_successful_dq_evidence(runtime, spark_se
     assert not result["validation_passed"]
     assert result["validation_passed"] is False
     # Reevaluation uses a new plan, preserving the failed run for inspection.
-    assert finalize_pipeline(plan, spark_session=spark_session)["status"] == "failed"
+    assert finalize_pipeline_run(plan, spark_session=spark_session)["status"] == "failed"
     plan = make(contracted=True)
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: initial)
     recovered = read(plan, spark_session)
@@ -362,22 +352,14 @@ def test_no_contract_target_does_not_exempt_failed_source_checks(runtime, spark_
     if mode == "live":
         with pytest.raises(ValueError, match="Live"):
             setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
-                selections=selections, context=context, spark_session=spark_session)
+                selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders")
         assert_testing_mutations_are_diagnostics_only(spies)
         return
-    plan = setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
-        selections=selections, context=context, spark_session=spark_session)
-    bad = spark_session.createDataFrame([(None,)], "id long")
-    monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: bad)
-    if mode == "live":
-        with pytest.raises(RuntimeError, match="Data Quality"):
-            read(plan, spark_session)
-    else:
-        source = read(plan, spark_session)
-        result = write(plan, source, spark_session)
-        assert not result["validation_passed"]
-        assert_testing_mutations_are_diagnostics_only(spies)
-    assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 0
+    with pytest.raises(ValueError, match="Partial contract selection"):
+        setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
+                       selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders")
+    assert_testing_mutations_are_diagnostics_only(spies)
+
 
 
 @pytest.mark.parametrize("mode", ["testing", "live"])
@@ -541,5 +523,21 @@ def test_iterable_sources_are_materialized_once_for_evidence_and_execution(runti
                                **TARGET, write_mode="overwrite", spark_session=spark_session, verbose=False,
                                grain_discovery_enabled=False, frequency_enabled=False)
     assert len(result["source_guardrail_results"]) == 2
-    from fabricops_kit import finalize_pipeline
-    assert finalize_pipeline(plan, spark_session=spark_session)["status"] == "succeeded"
+    from fabricops_kit.pipeline.shared import finalize_pipeline_run
+    assert finalize_pipeline_run(plan, spark_session=spark_session)["status"] == "succeeded"
+
+
+def test_explicit_real_testing_write_uses_the_actual_publication_path(runtime, spark_session, monkeypatch):
+    """Authorization permits one governed Testing write without a second dry-run execution."""
+    from dataclasses import replace
+    make, _, spies, _ = runtime
+    plan = replace(make("testing", contracted=True), testing_writes=True)
+    monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
+    owner = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
+    monkeypatch.setattr(owner, "profile_table", lambda **kw: {"row_count": 2})
+    with plan:
+        result = write(plan, read(plan, spark_session), spark_session)
+    assert result["published"] is True and result["execution_mode"] == "testing"
+    assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 1
+    assert plan.run_result["status"] == "succeeded"
+    assert json.loads(plan.run_result["operation_summary_json"])["testing_writes"] is True

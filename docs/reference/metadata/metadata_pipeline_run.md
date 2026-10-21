@@ -1,6 +1,6 @@
 # METADATA_PIPELINE_RUN
 
-One complete logical run and candidate identity across all operations; successful Testing is approval evidence, Bootstrap never is. Live runs reference their exact Activated Pipeline version.
+One complete logical run, exact table mappings, operation results, warnings and pinned activation revision.
 
 ## Writer functions
 
@@ -16,14 +16,13 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One logical execution attempt.
+**Grain:** One pipeline execution attempt.
 
 **Primary key:** `run_id`
 
 **Relationships:**
 
-`METADATA_ACTIVATED_PIPELINE` **(N → 1)**
-via `activated_pipeline_id`
+No immediate table relationship is defined in the current implementation.
 
 ## Column summary
 

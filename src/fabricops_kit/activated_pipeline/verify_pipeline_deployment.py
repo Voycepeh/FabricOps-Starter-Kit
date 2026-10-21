@@ -16,7 +16,8 @@ def verify_pipeline_deployment(*, deployment_path, authority_environment, source
     in deployment.json. Missing export permission or changed deployed code fails
     without creating or updating the binding file.
     It does not deploy notebooks, activate versions, select Live or publish data.
-    Every Live setup rechecks the artifacts, approval, dependencies and bindings.
+    This optional deployment record is separate from Live authority. Live resolves
+    the central environment revision and verifies its tested physical bindings.
     """
     config, env, runtime = resolve_fabric_context(context=context)
     root = Path(deployment_path).resolve(strict=True)

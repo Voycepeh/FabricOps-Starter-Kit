@@ -33,6 +33,8 @@ class PipelineExecutionPlan:
     configuration_json: str = "{}"
     activated_pipeline_id: str = ""
     approved_candidate_json: str = ""
+    testing_writes: bool = False
+    activation_revision: str = ""
     lock: Any = dataclass_field(default_factory=RLock, repr=False, compare=False)
     evidence: dict = dataclass_field(default_factory=dict, repr=False, compare=False)
     results: list = dataclass_field(default_factory=list, repr=False, compare=False)
@@ -45,13 +47,39 @@ class PipelineExecutionPlan:
                           {"status": "not_started", "configuration_sha256": None, "stages": []}
                           for identity in json.loads(self.participants_json).values() for role in identity["roles"]}
             self.evidence.update(started_at=datetime.now(UTC), operations=operations, failures=[], sealed=False, persistence_failed=False)
-        if self.execution_mode not in {"bootstrap", "testing", "live"}:
-            raise ValueError("Execution mode must be bootstrap, testing or live.")
+        if self.execution_mode not in {"testing", "live"}:
+            raise ValueError("Execution mode must be testing or live.")
 
     @property
     def permits_persistence(self):
         """Whether this run permits durable mutations."""
-        return self.execution_mode in {"bootstrap", "live"}
+        return self.execution_mode == "live" or self.testing_writes
+
+    @property
+    def run_result(self):
+        """Return the persisted whole-run outcome after the execution boundary exits."""
+        if not self.evidence.get("sealed"):
+            raise RuntimeError("The whole-run boundary has not completed.")
+        return dict(self.evidence["final_result"])
+
+    def __enter__(self):
+        """Open the explicit whole-run boundary, including project transformations."""
+        with self.lock:
+            if self.evidence.get("sealed") or self.evidence.get("boundary_open"):
+                raise RuntimeError("Run boundary is already open or closed; create a new plan.")
+            if self.evidence.get("failures") or any(
+                operation["status"] != "not_started" for operation in self.evidence["operations"].values()
+            ):
+                raise RuntimeError("Open the whole-run boundary before executing any operation; create a new plan.")
+            self.evidence["boundary_open"] = True
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        """Automatically record completion only when the entire boundary exits."""
+        self.evidence["boundary_completed"] = exc_type is None
+        finalize_pipeline_run(self, failed=exc_type is not None,
+                              spark_session=self.runtime_context.get("_pipeline_spark"))
+        return False
 
 
 def persistence_permitted(context):
@@ -2664,13 +2692,12 @@ def resolve_data_contract_version(
                 f"Data Contract {contract_id!r} version {requested_version} does not exist."
             ) from exc
         raise
-    escaped_env = str(env).replace("'", "''")
     escaped_contract_id = contract_id.replace("'", "''")
     matches = [
         _row_to_dict(row)
         for row in frame.filter(
             f"`contract_id` = '{escaped_contract_id}' "
-            f"AND `contract_version` = {requested_version} AND `environment_name` = '{escaped_env}'"
+            f"AND `contract_version` = {requested_version}"
         ).limit(2).collect()
     ]
     if not matches:
@@ -2708,11 +2735,12 @@ def prepare_pipeline_execution(table_ids, *, execution_plan, spark_session=None)
     if plan.execution_mode == "testing":
         context["activity_id"] = plan.plan_id
     context.pop("data_contract_overrides", None)
-    if plan.execution_mode == "bootstrap":
-        _require_bootstrap_contracts_absent(config, env, identities, pipeline_id=plan.pipeline_id, spark_session=spark_session)
-    elif plan.execution_mode == "live":
+    if plan.execution_mode == "live":
         from fabricops_kit.activated_pipeline.shared import verify_live_plan
         verify_live_plan(plan, spark_session=spark_session)
+    if plan.testing_writes:
+        from fabricops_kit.activated_pipeline.shared import validate_testing_destinations
+        validate_testing_destinations(plan, spark_session=spark_session)
     for table_id in identities:
         load_table_guardrail_rules(config, env, table_id=table_id, spark_session=spark_session, context=context)
     return context
@@ -3166,7 +3194,7 @@ def resolve_table_processing_definition(
         if not isinstance(writer, Mapping):
             raise ValueError("Data Contract table.writer must be an object.")
         plan = (context or {}).get("execution_plan")
-        if plan is not None and plan.execution_mode == "live":
+        if plan is not None:
             writer = {"notebook_id": plan.notebook_id,
                       "notebook_name": plan.runtime_context.get("notebook_name")}
         return {
@@ -5565,14 +5593,24 @@ def deployed_notebook_fingerprint(runtime):
     raise RuntimeError("Fabric notebook definition export did not complete.")
 
 
-def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections=None, context=None, spark_session=None, pipeline_id=None, executable_sha256=None, dependencies=None, configuration=None):
-    """Freeze Testing/Bootstrap participants; Live requires approved deployment resolution."""
+def pipeline_physical_bindings(identities, *, config, environment):
+    """Capture execution destinations separately from global logical table identities."""
+    bindings = {}
+    for table_id, item in identities.items():
+        store = get_store(config, environment, item["store"])
+        bindings[table_id] = {"workspace_id": store.workspace_id, "item_id": store.item_id,
+                              "kind": store.kind, "schema": item.get("schema"), "table_name": item["table_name"]}
+    return bindings
+
+
+def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections=None, context=None, spark_session=None, pipeline_id=None, executable_sha256=None, dependencies=None, configuration=None, testing_writes=False):
+    """Freeze Testing participants, exact contracts and explicit write authority."""
     if execution_mode == "live":
-        raise ValueError("Live requires an Activated Pipeline and verified deployment; use setup_pipeline with deployment_path, never contract selections.")
+        raise ValueError("Live requires an Activated Pipeline; use setup_pipeline to resolve approved environment authority.")
     from types import MappingProxyType
 
-    if execution_mode not in {"bootstrap", "testing", "live"}:
-        raise ValueError("execution_mode must be bootstrap, testing or live.")
+    if execution_mode != "testing":
+        raise ValueError("execution_mode must be testing or live.")
     if dependencies is not None and not isinstance(dependencies, dict):
         raise ValueError("dependencies must map project names to immutable identities.")
     from fabricops_kit.data_contract.shared import validate_contract_definitions
@@ -5584,10 +5622,11 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
     identities = resolve_pipeline_participants(
         config, env, sources=sources, targets=targets, context=runtime, spark_session=spark_session,
     )
-    if execution_mode == "bootstrap":
-        if selections is not None:
-            raise ValueError("Bootstrap does not accept contract selections; enable Testing to select contracts.")
-        _require_bootstrap_contracts_absent(config, env, identities, pipeline_id=pipeline_id, spark_session=spark_session)
+    if not str(pipeline_id or "").strip():
+        raise ValueError("A stable pipeline_id is required, independent of notebook name.")
+    if not isinstance(testing_writes, bool):
+        raise ValueError("testing_writes must be explicitly True or False.")
+    if selections is None:
         selections = {table_id: {"no_contract": True} for table_id in identities}
     if not isinstance(selections, dict) or set(selections) != set(identities):
         raise ValueError("Supply an explicit contract or No Contract choice for every participating table only.")
@@ -5607,6 +5646,9 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
         validate_contract_definitions(selected["contract_payload"])
         contract_guardrail_rows(selected, environment_name=env, table_id=table_id)
         contracts[table_id] = selected
+    selected_count = sum(contract is not None for contract in contracts.values())
+    if selected_count not in {0, len(identities)}:
+        raise ValueError("Partial contract selection is prohibited; select all frozen contracts or No Contract for all tables.")
     if execution_mode == "testing":
         try:
             observed_executable = deployed_notebook_fingerprint(runtime)
@@ -5616,7 +5658,8 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
             raise ValueError("Declared executable identity differs from the deployed Fabric notebook.")
         executable_sha256 = observed_executable
     plan_id = str(uuid4())
-    run_context = {**runtime, "config": config, "env": env}
+    run_context = {**runtime, "config": config, "env": env, "_pipeline_spark": spark_session,
+                   "_pipeline_bindings": pipeline_physical_bindings(identities, config=config, environment=env)}
     plan = PipelineExecutionPlan(
         execution_mode, env, notebook_id, plan_id,
         json.dumps(identities, default=str, sort_keys=True),
@@ -5624,8 +5667,18 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
         MappingProxyType(run_context),
         pipeline_id=str(pipeline_id or "").strip(), executable_sha256=str(executable_sha256 or "").strip().lower(),
         dependencies_json=canonical_candidate_json(dependencies), configuration_json=canonical_candidate_json(configuration),
+        testing_writes=testing_writes,
     )
-    persist_pipeline_run(plan, spark_session=spark_session)
+    if testing_writes:
+        from fabricops_kit.activated_pipeline.shared import reserve_testing_destinations
+        reserve_testing_destinations(plan, spark_session=spark_session)
+    try:
+        persist_pipeline_run(plan, spark_session=spark_session)
+    except BaseException:
+        if testing_writes:
+            from fabricops_kit.activated_pipeline.shared import release_pipeline_lease
+            release_pipeline_lease(plan, spark_session=spark_session)
+        raise
     return plan
 
 
@@ -5656,40 +5709,6 @@ def resolve_pipeline_participants(config, env, *, sources, targets, context=None
     if not identities:
         raise ValueError("Configure at least one actual source or target.")
     return identities
-
-
-def _require_bootstrap_contracts_absent(config, env, identities, *, pipeline_id=None, spark_session=None):
-    """Reject Bootstrap when any participant has frozen or active Governance requirements."""
-    try:
-        frame = read_lakehouse_table(
-            DATA_CONTRACT_TABLE, store="Metadata",
-            schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-            spark_session=spark_session, context={"config": config, "env": env},
-        )
-    except Exception as exc:
-        if is_table_not_found_error(exc):
-            raise RuntimeError("Initialize the configured metadata store before Bootstrap; missing metadata cannot authorize contract-free execution.") from exc
-        raise
-    approvals = read_lakehouse_table(
-        "METADATA_ACTIVATED_PIPELINE", store="Metadata",
-        schema=metadata_table_physical_schema(config, "METADATA_ACTIVATED_PIPELINE"),
-        spark_session=spark_session, context={"config": config, "env": env},
-    )
-    for value in approvals.collect():
-        approved = _row_to_dict(value)
-        if not approved.get("activated_pipeline_id"):
-            continue
-        manifest = json.loads(approved["manifest_json"])
-        owns_participant = any(item["definition"].get("table_id") in identities for item in manifest["contracts"])
-        if (pipeline_id and approved.get("pipeline_id") == pipeline_id) or owns_participant:
-            raise ValueError("Bootstrap cannot bypass an existing Activated Pipeline, including inactive versions; configure exact Live approval or use Testing.")
-    escaped_env = str(env).replace("'", "''")
-    for row in frame.filter(f"`environment_name` = '{escaped_env}'").collect():
-        row = _row_to_dict(row)
-        if row.get("table_id") in identities and (
-            str(row.get("status") or "").strip().lower() == "frozen"
-        ):
-            raise ValueError("Bootstrap cannot bypass a frozen or active Data Contract. Enable Testing and select exact versions, or use the configured governed Live workflow.")
 
 
 def canonical_candidate_json(value):
@@ -5748,8 +5767,8 @@ def pipeline_candidate(plan):
             "contract_id": contract["contract_id"], "contract_version": contract["contract_version"],
             "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode("utf-8")).hexdigest(),
         }
-        bindings.append({"participant": logical, "contract": exact})
-        participants.append({"participant": logical, "roles": sorted(identity["roles"]),
+        bindings.append({"participant": logical, "table_id": table_id, "contract": exact})
+        participants.append({"participant": logical, "table_id": table_id, "roles": sorted(identity["roles"]),
                              "contract_version": contract["contract_version"] if contract else None,
                              "contract": _portable_contract_payload(json.loads(contract["contract_payload_json"]), table_names) if contract else None})
     from importlib.metadata import PackageNotFoundError, version
@@ -5804,6 +5823,7 @@ def pipeline_candidate(plan):
     valid = valid and all(item["configuration_sha256"] for item in candidate["operations"])
     portable_fingerprint = _candidate_hash(candidate) if valid else None
     candidate["portable_fingerprint"] = portable_fingerprint
+    candidate["physical_bindings"] = plan.runtime_context.get("_pipeline_bindings")
     candidate["exact_contract_payloads"] = sorted(
         [{"participant": item["participant"], "contract": ({"contract_id": item["contract"]["contract_id"],
           "contract_version": item["contract"]["contract_version"], "payload_sha256": item["contract"]["payload_sha256"]} if item["contract"] else None)} for item in bindings],
@@ -5846,7 +5866,10 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
                "status": status, "candidate_fingerprint": fingerprint or "",
                "candidate_json": canonical_candidate_json(candidate),
                "operation_summary_json": canonical_candidate_json({"operations": plan.evidence["operations"],
-                    "frozen_contracts": bindings, "failures": plan.evidence["failures"]}),
+                    "frozen_contracts": bindings, "failures": plan.evidence["failures"],
+                    "activation_revision": plan.activation_revision, "warnings": plan.evidence.get("warnings", []),
+                    "boundary_completed": plan.evidence.get("boundary_completed", False),
+                    "testing_writes": plan.testing_writes, "physical_bindings": plan.runtime_context.get("_pipeline_bindings")}),
                **build_runtime_audit_fields(config=plan.runtime_context["config"], env=plan.environment,
                                             runtime_context=plan.runtime_context)}
         _merge_pipeline_run_row(plan, row, spark_session=spark_session)
@@ -5901,13 +5924,20 @@ class PipelineOperation:
                 raise RuntimeError("Execution plan is closed or evidence persistence failed; create a new plan.")
             if plan.evidence["failures"] and plan.permits_persistence:
                 raise RuntimeError("Pipeline run previously failed; create a new plan.")
-            table_id = resolve_physical_table_identity(
+            physical_identity = resolve_physical_table_identity(
                 plan.runtime_context["config"], plan.environment,
-                **{key: args[key] for key in ("store", "schema", "table_name")})["table_id"]
+                **{key: args[key] for key in ("store", "schema", "table_name")})
+            table_id = physical_identity["table_id"]
             identities = json.loads(plan.participants_json)
             identity = identities.get(table_id)
             if identity is None or self.role not in identity["roles"]:
                 raise ValueError("Operation must match a declared pipeline participant and role.")
+            actual_binding = pipeline_physical_bindings(
+                {table_id: physical_identity}, config=plan.runtime_context["config"], environment=plan.environment,
+            )[table_id]
+            expected_binding = plan.runtime_context.get("_pipeline_bindings", {}).get(table_id)
+            if actual_binding != expected_binding:
+                raise ValueError("Operation physical destination differs from the execution plan's frozen binding.")
             logical = identity.get("logical_id") or f"{identity['store']}/{identity['table_name']}"
             key = f"{self.role}:{logical}"
             if plan.evidence["operations"][key]["status"] != "not_started":
@@ -5963,8 +5993,21 @@ class PipelineOperation:
                 if not plan.activated_pipeline_id or not plan.approved_candidate_json:
                     raise ValueError("Live requires an approved Activated Pipeline manifest.")
                 approved = {item["operation"]: item for item in json.loads(plan.approved_candidate_json)["operations"]}
-                if key not in approved or self.record["configuration_sha256"] != approved[key]["configuration_sha256"] or configuration != approved[key]["configuration"]:
+                if key not in approved:
+                    raise ValueError("Live operation is absent from the approved configuration.")
+                permitted = {"repartition_by", "grain_discovery_enabled", "grain_discovery_max_columns",
+                             "grain_discovery_max_candidates", "frequency_enabled", "frequency_top_n", "dq_diagnostics"}
+                tested = approved[key]["configuration"]
+                differences = {name for name in set(configuration) | set(tested) if configuration.get(name) != tested.get(name)}
+                if differences - permitted or not self.record["configuration_sha256"]:
                     raise ValueError("Live operation configuration differs from the exact tested approved configuration.")
+                if differences:
+                    import warnings
+                    warning = {"operation": key, "operational_parameters": sorted(differences),
+                               "tested": {name: tested.get(name) for name in differences},
+                               "actual": {name: configuration.get(name) for name in differences}}
+                    plan.evidence.setdefault("warnings", []).append(warning)
+                    warnings.warn("Live operational parameters differ from Testing: " + ", ".join(sorted(differences)), stacklevel=2)
             persist_pipeline_run(plan, spark_session=args.get("spark_session"))
             return self
         except BaseException as exc:
@@ -6017,6 +6060,9 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
         if plan.evidence.get("persistence_failed"):
             raise RuntimeError("Evidence persistence failed; create a new plan.")
         if plan.evidence.get("sealed"):
+            if plan.evidence.get("lease_token"):
+                from fabricops_kit.activated_pipeline.shared import release_pipeline_lease
+                release_pipeline_lease(plan, spark_session=spark_session)
             return plan.evidence["final_result"]
         if failed:
             plan.evidence["failures"].append({"code": "project_execution_failed"})
@@ -6026,10 +6072,13 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
             operation["status"] == "failed" for operation in operations.values())
         expected = {f"{role}:{identity.get('logical_id') or identity['store'] + '/' + identity['table_name']}"
                     for identity in json.loads(plan.participants_json).values() for role in identity["roles"]}
-        complete = set(operations) == expected and all(operation["status"] == "succeeded" for operation in operations.values())
+        complete = bool(expected) and set(operations) == expected and all(operation["status"] == "succeeded" for operation in operations.values())
         status = "failed" if blocked else "succeeded" if complete else "incomplete"
-        if plan.execution_mode == "bootstrap" and status == "succeeded":
-            status = "bootstrap_completed"
+        if status == "succeeded" and not any(json.loads(plan.contracts_json).values()):
+            status = "ungoverned_completed"
         row = persist_pipeline_run(plan, spark_session=spark_session, status=status, completed_at=datetime.now(UTC))
         plan.evidence.update(sealed=True, final_result=row)
+        if plan.evidence.get("lease_token"):
+            from fabricops_kit.activated_pipeline.shared import release_pipeline_lease
+            release_pipeline_lease(plan, spark_session=spark_session)
         return row

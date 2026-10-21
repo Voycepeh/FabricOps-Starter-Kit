@@ -44,10 +44,10 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">One complete logical run and candidate identity across all operations; successful Testing is approval evidence, Bootstrap never is. Live runs reference their exact Activated Pipeline version.</span>
+  <span class="metadata-table-card__purpose">One complete logical run, exact table mappings, operation results, warnings and pinned activation revision.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One logical execution attempt.</span>
+    <span>One pipeline execution attempt.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -55,12 +55,6 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_ACTIVATED_PIPELINE</code>
-      </span>
-    </span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
@@ -122,12 +116,6 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
     <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_ACTIVATED_PIPELINE</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">N → 1</span>
       <span class="metadata-table-card__relationship-list">
         <code>METADATA_DATA_STEWARD</code>
@@ -157,7 +145,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">N → M</span>
       <span class="metadata-table-card__relationship-list">
-        <code>METADATA_ACTIVATED_PIPELINE</code>
+        <code>METADATA_ACTIVATION_STATE</code>
       </span>
     </span>
     <span class="metadata-table-card__relationship-summary">
@@ -174,37 +162,25 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
   </span>
 </a>
-<a class="metadata-table-card metadata-table-card--governance" href="metadata_activated_pipeline/" aria-label="Open METADATA_ACTIVATED_PIPELINE schema">
+<a class="metadata-table-card metadata-table-card--governance" href="metadata_activation_state/" aria-label="Open METADATA_ACTIVATION_STATE schema">
   <span class="metadata-table-card__header">
     <span class="metadata-table-card__identity">
-      <span class="metadata-table-card__title">METADATA_ACTIVATED_PIPELINE</span>
+      <span class="metadata-table-card__title">METADATA_ACTIVATION_STATE</span>
       <span class="metadata-table-card__schema">governance</span>
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Immutable whole-pipeline approval linked to exact successful Testing, candidate manifest, reusable frozen contracts and one exact effective Agreement. Only is_active changes during explicit switching/deactivation.</span>
+  <span class="metadata-table-card__purpose">Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership and running execution reservations.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One immutable approved version of one stable logical pipeline.</span>
+    <span>One central authority row containing environment snapshots.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
-    <span><code>activated_pipeline_id</code></span>
+    <span><code>authority_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_PIPELINE_RUN</code>
-      </span>
-    </span>
-    <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
-      <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_AGREEMENT</code>
-      </span>
-    </span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">N → M</span>
       <span class="metadata-table-card__relationship-list">

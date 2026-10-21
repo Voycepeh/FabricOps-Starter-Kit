@@ -1,69 +1,92 @@
-"""The Governance widget and headless service enforce the same complete-run gate."""
+"""Governance widget exercises actual candidate controls and backend release validation."""
 # ruff: noqa: D103, F811
 import importlib
+
 import pytest
-from tests.unit.test_activated_pipeline import approved_runtime  # noqa: F401
+
+from tests.unit.test_activated_pipeline import authority  # noqa: F401
 from tests.unit.test_pipeline_run_evidence import runtime  # noqa: F401
 
-# Import before fixtures patch shared services; otherwise imported function references
-# can retain a fixture closure after monkeypatch restores the shared module.
-importlib.import_module("fabricops_kit.widgets.widget_activate_pipeline")
+module = importlib.import_module("fabricops_kit.widgets.widget_activate_pipeline")
 
 
-def test_widget_review_confirmation_and_service_activation(approved_runtime, monkeypatch):
-    state=approved_runtime
-    _,run=state.candidate()
-    module=importlib.import_module('fabricops_kit.widgets.widget_activate_pipeline')
-    from fabricops_kit.activated_pipeline import shared
-    monkeypatch.setattr(module,'metadata_records',shared.metadata_records)
-    monkeypatch.setattr('IPython.display.display',lambda *a,**kw:None)
-    ui=module.widget_activate_pipeline(pipeline_id='orders',executable_path=str(state.executable),context=state.context)
-    assert [row['run_id'] for row in ui['eligible_runs']]==[run['run_id']]
-    assert ui['activate'].disabled
-    assert 'fabricops-governance' in ui['widget']._dom_classes
-    with pytest.raises(ValueError): ui['perform_activation']()
-    ui['pipeline_name'].value='Orders'
-    ui['pipeline_version'].value='1'
-    ui['reviewed'].value=True
-    ui['confirmed'].value=True
-    assert not ui['activate'].disabled
-    assert all(text in ui['details'].value for text in ['Exact frozen contracts','Code, configuration','Guardrail evidence','Warnings','Exact Agreement',run['candidate_fingerprint']])
-    row=ui['perform_activation']()
-    assert row['testing_run_id']==run['run_id'] and ui['activation_result']==row
-    assert ui['activate'].disabled
+@pytest.fixture
+def render(authority, monkeypatch):
+    from IPython import display as ip
+    monkeypatch.setattr(ip, "display", lambda *_: None)
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: ({}, "canary", authority.context))
+    monkeypatch.setattr(module, "metadata_records", importlib.import_module("fabricops_kit.activated_pipeline.shared").metadata_records)
+    monkeypatch.setattr(module, "read_activation_state", authority.read)
+    return lambda **kw: module.widget_activate_pipeline(context=authority.context, executable_path=str(authority.executable), **kw)
 
 
-def test_widget_cannot_bypass_changed_evidence(approved_runtime,monkeypatch):
-    state=approved_runtime
-    _,run=state.candidate()
-    module=importlib.import_module('fabricops_kit.widgets.widget_activate_pipeline')
-    from fabricops_kit.activated_pipeline import shared
-    monkeypatch.setattr(module,'metadata_records',shared.metadata_records)
-    monkeypatch.setattr('IPython.display.display',lambda *a,**kw:None)
-    ui=module.widget_activate_pipeline(pipeline_id='orders',executable_path=str(state.executable),context=state.context)
-    ui['pipeline_version'].value='1'
-    ui['reviewed'].value=True
-    ui['confirmed'].value=True
-    run['status']='incomplete'
-    with pytest.raises(ValueError,match='complete successful'): ui['perform_activation']()
-    assert not state.versions
-    ui['pipeline_version'].value='2'
-    assert not ui['reviewed'].value and not ui['confirmed'].value and ui['activate'].disabled
+def test_single_pipeline_review_and_one_approval(authority, render):
+    _, run = authority.candidate()
+    widget = render(pipeline_id="A")
+    assert widget["additional_runs"].layout.display == "none"
+    assert widget["activate"].disabled
+    widget["candidate_controls"][run["run_id"]]["version"].value = "1"
+    assert widget["review_release"]()["ready"]
+    with pytest.raises(ValueError, match="explicitly approve"):
+        widget["perform_activation"]()
+    widget["confirmed"].value = True
+    assert not widget["activate"].disabled
+    assert widget["perform_activation"]()["pipelines"]["A"]["testing_run_id"] == run["run_id"]
 
 
-def test_widget_filters_corrupt_and_contract_free_candidates(approved_runtime,monkeypatch):
-    import copy
+def test_dependency_controls_show_missing_tests_and_coordinated_candidates(authority, render):
+    _, a3 = authority.candidate("A"); _, b3 = authority.candidate("B", roles=("source",))
+    authority.approve(a3); authority.approve(b3)
+    _, a4 = authority.candidate("A", version=4); _, b4 = authority.candidate("B", version=4, roles=("source",))
+    widget = render(pipeline_id="A")
+    widget["run_select"].value = a4["run_id"]
+    assert widget["additional_runs"].layout.display != "none"
+    widget["candidate_controls"][a4["run_id"]]["version"].value = "4"
+    report = widget["review_release"]()
+    assert report["missing_pipelines"] == ["B"] and not report["ready"]
+    widget["additional_runs"].value = (b4["run_id"],)
+    widget["candidate_controls"][b4["run_id"]]["version"].value = "4"
+    assert widget["review_release"]()["ready"]
+    widget["confirmed"].value = True
+    result = widget["perform_activation"]()
+    assert set(result["pipelines"]) == {"A", "B"}
+
+
+def test_review_is_invalidated_when_candidate_configuration_changes(authority, render):
+    _, run = authority.candidate()
+    widget = render()
+    controls = widget["candidate_controls"][run["run_id"]]
+    controls["version"].value = "1"
+    widget["review_release"]()
+    widget["confirmed"].value = True
+    controls["version"].value = "2"
+    assert widget["activate"].disabled and not widget["confirmed"].value
+    with pytest.raises(ValueError): widget["perform_activation"]()
+
+
+def test_empty_widget_does_not_mutate_authority(authority, render):
+    token = authority.central["token"]
+    widget = render()
+    assert widget["eligible_runs"] == [] and widget["activate"].disabled
+    assert authority.central["token"] == token
+
+
+def test_unchanged_shared_contract_keeps_coordination_controls_hidden(authority, render):
+    _, a = authority.candidate("A")
+    authority.approve(a)
+    _, b = authority.candidate("B", roles=("source",))
+    widget = render(pipeline_id="B")
+    assert widget["run_select"].value == b["run_id"]
+    assert widget["additional_runs"].layout.display == "none"
+    widget["candidate_controls"][b["run_id"]]["version"].value = "1"
+    assert widget["review_release"]()["ready"]
+
+
+def test_old_or_unbounded_evidence_is_excluded_before_rendering(authority, render):
     import json
-    state=approved_runtime
-    _,run=state.candidate()
-    bad=copy.deepcopy(run);bad['run_id']='corrupt';bad['candidate_json']='invalid-json'
-    state.saved['corrupt']=bad
-    bad=copy.deepcopy(run);bad['run_id']='contract-free'
-    summary=json.loads(bad['operation_summary_json']);summary['frozen_contracts'][0]['contract']=None
-    bad['operation_summary_json']=json.dumps(summary);state.saved['contract-free']=bad
-    module=importlib.import_module('fabricops_kit.widgets.widget_activate_pipeline')
-    from fabricops_kit.activated_pipeline import shared
-    monkeypatch.setattr(module,'metadata_records',shared.metadata_records)
-    monkeypatch.setattr('IPython.display.display',lambda *a,**kw:None)
-    ui=module.widget_activate_pipeline(pipeline_id='orders',context=state.context)
-    assert [row['run_id'] for row in ui['eligible_runs']]==[run['run_id']]
+    _, run = authority.candidate()
+    summary = json.loads(run["operation_summary_json"])
+    summary.pop("boundary_completed")
+    run["operation_summary_json"] = json.dumps(summary)
+    widget = render()
+    assert widget["eligible_runs"] == [] and widget["activate"].disabled

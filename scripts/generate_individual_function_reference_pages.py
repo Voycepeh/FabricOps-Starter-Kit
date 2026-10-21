@@ -4539,6 +4539,10 @@ def generate_metadata_reference_pages() -> None:
     METADATA_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
     registry = metadata_table_schema_registry()
     canonical_tables = list(CANONICAL_METADATA_TABLES)
+    for stale_page in METADATA_REFERENCE_DIR.glob("metadata_*.md"):
+        if stale_page.stem.upper() not in canonical_tables:
+            stale_page.unlink()
+
     missing_tables = [table_name for table_name in canonical_tables if table_name not in registry]
     if missing_tables:
         raise RuntimeError(
@@ -5450,7 +5454,7 @@ def main() -> None:
             "title": "Standard Orchestration",
             "note": "Recommended",
             "description": "Complete governed read and write lifecycle for the standard FabricOps pipeline.",
-            "functions": {"setup_pipeline", "finalize_pipeline", "orchestrate_read", "orchestrate_write"},
+            "functions": {"setup_pipeline", "orchestrate_read", "orchestrate_write"},
             "open": True,
         },
         {
@@ -5477,8 +5481,6 @@ def main() -> None:
                 "widget_render_data_agreement",
                 "widget_data_contract",
                 "widget_activate_pipeline",
-                "activate_pipeline",
-                "set_pipeline_active",
                 "package_activated_pipeline",
                 "verify_pipeline_deployment",
             },

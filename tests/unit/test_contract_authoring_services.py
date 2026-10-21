@@ -9,8 +9,8 @@ import pytest
 from fabricops_kit.data_contract import shared as service
 
 
-def test_exact_contract_version_and_environment_isolation():
-    """Rows are isolated by contract version and environment."""
+def test_exact_contract_version_is_global():
+    """Rows are selected by global version; duplicate legacy environment definitions stay visible."""
     rows = [
         {"contract_id": "c", "contract_version": 1, "environment_name": "dev", "value": "one"},
         {"contract_id": "c", "contract_version": 2, "environment_name": "dev", "value": "two"},
@@ -18,7 +18,7 @@ def test_exact_contract_version_and_environment_isolation():
     ]
     assert service.contract_version_records(
         rows, contract_id="c", contract_version=2, environment_name="dev"
-    ) == [rows[1]]
+    ) == [rows[1], rows[2]]
 
 
 def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
@@ -51,7 +51,7 @@ def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
     payload = json.loads(first["contract_payload_json"])
     assert first == second
     assert "agreement_id" not in first and "agreement_version" not in first
-    assert first["contract_id"] == service.contract_lifecycle_id("orders", "dev")
+    assert first["contract_id"] == service.contract_lifecycle_id("orders")
     assert first["status"] == "draft"
     assert payload["contract"]["status"] == "draft"
     assert payload["table"]["processing"] == {"load_strategy": "overwrite"}
@@ -61,7 +61,7 @@ def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
 
 def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
     """New drafts prefer a current scan and otherwise inherit the frozen JSON."""
-    lifecycle_id = service.contract_lifecycle_id("orders", "dev")
+    lifecycle_id = service.contract_lifecycle_id("orders")
     previous_payload = {
         "contract": {"contract_id": lifecycle_id, "contract_version": 1, "status": "frozen"},
         "table": {
@@ -178,6 +178,9 @@ def test_authoring_state_resolves_contract_identity_in_requested_environment(mon
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "governance")
     monkeypatch.setattr(service, "read_lakehouse_table", lambda table, **_kwargs: tables[table])
 
+    with pytest.raises(ValueError, match="duplicated"):
+        service.get_contract_authoring_state(config=object(), env="dev", spark_session=object(), contract_id="c", contract_version=2)
+    contracts.pop()  # Reconcile the conflicting old environment-specific definition.
     state = service.get_contract_authoring_state(
         config=object(), env="dev", spark_session=object(),
         contract_id="c", contract_version=2,

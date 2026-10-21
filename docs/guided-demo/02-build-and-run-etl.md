@@ -2,11 +2,11 @@
 
 ### Build explicit pipeline authority before Read
 
-Declare `PIPELINE_SOURCES` and `PIPELINE_TARGETS` before calling `setup_pipeline()` and keep them aligned with every participating Read and Write. Historical `METADATA_DATA_LINEAGE` cannot authorize unrelated tables. Pass the same execution plan to all operations and call `finalize_pipeline()` after the whole pipeline, including Read-only pipelines.
+Declare `PIPELINE_SOURCES` and `PIPELINE_TARGETS` before calling `setup_pipeline()` and keep them aligned with every participating Read and Write. Historical `METADATA_DATA_LINEAGE` cannot authorize unrelated tables. Pass the same execution plan to all operations and execute all reads, transformations and writes inside `with plan:` for automatic whole-run completion, including read-only pipelines.
 
-Start with unattended **Bootstrap** to create and profile initial outputs. After Governance builds and freezes reusable contracts, use **Testing** to select an exact frozen version for every participant. Expand the contract details to inspect columns and individual rules, including inactive and non-applicable definitions. Selection neither edits nor activates contracts. Testing persists `METADATA_PIPELINE_RUN` and Guardrail diagnostics, while business publication and ordinary operational metadata commits remain disabled.
+Start with **Testing**. Choose any frozen version for every participant, or No Contract for all tables for exploration. Partial selection is rejected. Explicit `testing_writes=True` permits real publication to reviewed safe destinations; Live-owned destinations are blocked. Otherwise Testing evaluates without publication.
 
-Complete the lifecycle in order: **Bootstrap → build/freeze contracts → Testing → activate pipeline → deploy/verify → unattended Live**. [Step 5](05-activate-data-contract-and-promote.md) approves the exact whole-pipeline candidate and saves the deployed activated version. Scheduled Live calls use `setup_pipeline(execution_mode="live", ...)` with that saved selection; contracts resolve exclusively from its approved manifest. Environment names, isolated passing rules and per-contract selections never grant Live authority. Start a new plan after changing code, configuration or contract selections.
+Complete **Author → Test → Activate → Live**. [Step 5](05-activate-data-contract-and-promote.md) reviews the complete affected release and publishes a coordinated environment revision. Headless Live resolves that revision automatically. Deployment stays separate. Start a new plan after changing code, configuration or contract selections.
 
 ### Before you begin
 
@@ -40,7 +40,7 @@ The notebook follows one visible lifecycle:
 | Notebook section | What happens |
 | --- | --- |
 | Environment | Loads the shared Fabric configuration and imports the three public functions used by the pipeline. |
-| Data Contract | Defaults to noninteractive **Bootstrap** for initial outputs; explicitly enable contract **Testing** after Governance freezes the versions. |
+| Data Contract | Defaults to interactive **Testing**; choose all frozen contracts or No Contract for every participant. |
 | Governed Read | Reads each configured source and runs the applicable source checks. |
 | PySpark Transform | Contains the joins, filters, derived columns, aggregations, or selections owned by your project. |
 | Governed Write | Checks and, when allowed, publishes each target using its configured load strategy. |
@@ -65,9 +65,8 @@ Then run the import cell immediately below it. The import cell provides the publ
 ### Run the Data Contract block
 
 ```python
-# First run defaults to Bootstrap. Set PIPELINE_CONTRACT_TESTING=True externally
-# in 00_env_config or notebook parameters when the contracts are frozen.
-CONTRACT_TESTING = bool(globals().get("PIPELINE_CONTRACT_TESTING", False))
+# Testing is interactive by default; choose every participant explicitly.
+CONTRACT_TESTING = bool(globals().get("PIPELINE_CONTRACT_TESTING", True))
 CONTRACTS = setup_pipeline(
     pipeline_id=PIPELINE_ID, dependencies=PROJECT_DEPENDENCIES, configuration=PROJECT_CONFIGURATION,
     sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
@@ -76,11 +75,9 @@ CONTRACTS = setup_pipeline(
 EXECUTION_PLAN = CONTRACTS["build_plan"]() if CONTRACT_TESTING else CONTRACTS
 ```
 
-With the default `False`, Run all builds a Bootstrap plan and creates/profiles initial outputs without human interaction. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Metadata routing must already be initialized by the environment setup; business targets and Catalogue records do not need to exist.
+Select every frozen contract or No Contract for all tables, then build the shared plan. Define Read, Transform and Write functions in their dedicated cells; the final execution cell invokes them inside `with EXECUTION_PLAN:`. Individual successful operations cannot complete a pipeline. Read-only runs use the same boundary. A stopped notebook remains incomplete, and a propagated transformation exception records failure.
 
-After Governance authors and freezes the contracts, set `PIPELINE_CONTRACT_TESTING=True` externally. Pause after setup to select the exact frozen versions, then run the execution-plan cell and all Reads and Writes. Testing evaluates every declared operation without publishing targets or committing ordinary operational metadata. Run the finalization cell after all Reads, transforms and Writes (also for Read-only pipelines). `METADATA_PIPELINE_RUN` records the complete run and links Guardrail diagnostics by `run_id`; passing target diagnostics alone do not prove completion. Supply a stable `pipeline_id`, explicit dependencies and external transformation configuration; Fabric observes the deployed notebook identity for qualifying Testing evidence. An optional `executable_sha256` pin must match that identity. See the [complete-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#complete-run-evidence). Live resolves the exact saved Activated Pipeline manifest after explicit Governance approval, deployment and binding verification. Rerun setup for a new test; rebuilding on the same selector reuses its locked plan and journal.
-
-Bootstrap fails closed if a participating table has a frozen contract or an existing pipeline approval, including one created after setup. It never silently drops governed requirements. UI visibility is separate from execution policy: headless Testing uses `interactive=False`, `execution_mode="testing"`, and saved exact selections.
+Supply a stable `pipeline_id`, exact project dependencies and external transformation configuration. FabricOps observes the deployed notebook executable for qualifying Testing. Explicit real Testing writes require reviewed safe destinations; they can produce real data and ordinary metadata side effects. Headless Testing sets `interactive=False` and may supply saved exact selections. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#whole-run-completion).
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">

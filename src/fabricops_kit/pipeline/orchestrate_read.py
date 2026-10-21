@@ -26,13 +26,13 @@ def orchestrate_read(*, execution_plan, store: str, schema: str | None, table_na
     ----------
     execution_plan : PipelineExecutionPlan
         Required immutable plan from setup_pipeline in interactive or headless mode.
-        Pass the same object to every Read and Write. Bootstrap registers and
-        profiles initial sources while no participant has frozen or active contracts.
-        Testing evaluates configured
-        Freshness, Schema, Grain and Data Quality and returns profiles and violations
-        in memory. It cannot persist Catalogue, Profile or frequency; run evidence and Guardrail diagnostics are persisted. It cannot publish business data
-        or recover durable Source Observation state. Live preserves these lifecycle
-        boundaries. Environment names determine routing only.
+        Pass the same object to every Read and Write and execute the entire project
+        inside with plan: for automatic whole-run completion. Testing evaluates
+        Freshness, Schema, Grain, Data Quality and Profile. With testing_writes=False,
+        ordinary Catalogue/Profile/Source Observation commits are disabled; run
+        records and Guardrail diagnostics still persist. Explicit real Testing
+        writes permit normal metadata side effects to safe destinations. Live
+        enforces one pinned approved revision. Environment names select routing.
         Empty or disabled optional Guardrails add no execution requirement.
         A configured check that cannot execute blocks Live and remains a Testing diagnostic.
     store : str

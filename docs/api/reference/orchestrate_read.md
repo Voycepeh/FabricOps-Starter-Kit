@@ -69,7 +69,7 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Required immutable plan from setup_pipeline in interactive or headless mode. Pass the same object to every Read and Write. Bootstrap registers and profiles initial sources while no participant has frozen or active contracts. Testing evaluates configured Freshness, Schema, Grain and Data Quality and returns profiles and violations in memory. It cannot persist Catalogue, Profile or frequency; run evidence and Guardrail diagnostics are persisted. It cannot publish business data or recover durable Source Observation state. Live preserves these lifecycle boundaries. Environment names determine routing only. Empty or disabled optional Guardrails add no execution requirement. A configured check that cannot execute blocks Live and remains a Testing diagnostic. |
+| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Required immutable plan from setup_pipeline in interactive or headless mode. Pass the same object to every Read and Write and execute the entire project inside with plan: for automatic whole-run completion. Testing evaluates Freshness, Schema, Grain, Data Quality and Profile. With testing_writes=False, ordinary Catalogue/Profile/Source Observation commits are disabled; run records and Guardrail diagnostics still persist. Explicit real Testing writes permit normal metadata side effects to safe destinations. Live enforces one pinned approved revision. Environment names select routing. Empty or disabled optional Guardrails add no execution requirement. A configured check that cannot execute blocks Live and remains a Testing diagnostic. |
 | `store` | `str` | Yes | `—` | Configured source store key. |
 | `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
 | `table_name` | `str` | Yes | `—` | Physical source table name. |
@@ -128,7 +128,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 183 |
+| Live-critical dependencies | 182 |
 
 ### Release history
 
@@ -139,15 +139,15 @@ No related guides documented.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
-<li><code>fabricops_kit.activated_pipeline.shared.activation_version</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.bound_pipeline_participants</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.environment_activation</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.load_live_deployment</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.read_activation_state</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_manifest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_testing_destinations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_live_plan</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
 <li><code>fabricops_kit.config.audit._context_get</code></li>
@@ -270,7 +270,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._progress_key</code></li>
 <li><code>fabricops_kit.pipeline.shared._publication_receipt</code></li>
 <li><code>fabricops_kit.pipeline.shared._recover_completed_source_observations</code></li>
-<li><code>fabricops_kit.pipeline.shared._require_bootstrap_contracts_absent</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared._rule_review_status</code></li>
 <li><code>fabricops_kit.pipeline.shared._run_orchestration_stage</code></li>
@@ -304,6 +303,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_candidate</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
 <li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_guardrail_result</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_pipeline_contract</code></li>
@@ -313,7 +313,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.resolve_incremental_source_scope</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_pipeline_data_contract</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_pipeline_participants</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_source_drift_observation_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.schema_check_core</code></li>

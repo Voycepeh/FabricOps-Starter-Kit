@@ -11,7 +11,7 @@ Review complete persisted Testing and activate an exact whole pipeline.
 
 ## Usage notes
 
-Use after finalizing successful whole-pipeline Testing.
+Use after successful whole-pipeline Testing inside with plan:.
 
 
 ## Example usage
@@ -66,14 +66,19 @@ Not documented yet
 
 <div class="reference-docstring-intro" markdown="1">
 
-Shows complete successful candidates with their contracts/rules, operation
-configuration, executable/dependency identity, linked diagnostics, warnings,
-Agreement and fingerprint. The underlying activation service independently
-revalidates all requirements. Opening this widget never activates, deploys or
-publishes. Governance must review and explicitly confirm before activation.
+Displays environment, current/proposed table contracts, writer ownership,
+affected pipelines, missing tests, conflicts and complete release readiness.
+Extra candidate controls appear when shared-table dependencies need review.
+Supply a deployed executable artifact path and immutable release version for
+every selected pipeline. The backend revalidates complete Testing, exact
+contracts, Agreement and executable identity at review and again at approval.
 
-Returns widget controls, eligible runs, refresh and perform_activation actions.
-Invalid or changed evidence fails closed and is shown in the status output.
+One explicit approval publishes the entire environment revision atomically.
+Stale review, missing tests, competing writers, contract conflicts or affected
+running executions block approval. Approval never deploys or writes business
+data. Failed commits cannot expose a partial release. Returns widget state,
+refresh, review_release and perform_activation. Metadata errors raise or are
+displayed by button actions; opening the widget changes no approval.
 
 </div>
 
@@ -84,9 +89,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_activate_pipeline.py:31`
+`fabricops_kit/widgets/widget_activate_pipeline.py:65`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L31-L123">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L65-L210">View on GitHub</a>
 </div>
 
 

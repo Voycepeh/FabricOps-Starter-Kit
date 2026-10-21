@@ -143,7 +143,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:169`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L545">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L552">View on GitHub</a>
 </div>
 
 
@@ -267,7 +267,7 @@ their respective FabricOps workflows.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 19 |
+| Live-critical dependencies | 31 |
 
 ### Release history
 
@@ -280,6 +280,12 @@ their respective FabricOps workflows.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.activated_pipeline.shared.empty_activation_state</code></li>
+<li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
+<li><code>fabricops_kit.config.audit._context_get</code></li>
+<li><code>fabricops_kit.config.audit._require_audit_values</code></li>
+<li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
+<li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
@@ -296,9 +302,15 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.config.setup_metadata_tables._validate_existing_metadata_schema</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
+<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.is_table_not_found_error</code></li>
+<li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
+<li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared.validate_framework_config</code></li>
+<li><code>fabricops_kit.pipeline.shared.canonical_candidate_json</code></li>
 </ul>
 
 

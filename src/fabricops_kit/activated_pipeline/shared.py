@@ -15,7 +15,6 @@ from fabricops_kit.io.shared import get_spark_session, resolve_configured_lakeho
 from fabricops_kit.pipeline.shared import notebook_executable_fingerprint
 from fabricops_kit.pipeline.shared import PipelineExecutionPlan, canonical_candidate_json, pipeline_candidate, contract_guardrail_rows, resolve_pipeline_participants
 
-ACTIVATED_TABLE = "METADATA_ACTIVATED_PIPELINE"
 
 
 def manifest_digest(value):
@@ -62,6 +61,8 @@ def validate_manifest(row):
         if manifest.get(key) != row[key]:
             raise ValueError("Activated Pipeline immutable identity mismatch.")
     candidate = manifest["candidate"]
+    if manifest.get("physical_bindings") != candidate.get("physical_bindings"):
+        raise ValueError("Activated Pipeline physical binding integrity mismatch.")
     if manifest_digest(candidate) != row["candidate_fingerprint"] or candidate["pipeline_id"] != row["pipeline_id"]:
         raise ValueError("Activated Pipeline candidate fingerprint mismatch.")
     agreement = manifest["agreement"]
@@ -75,6 +76,9 @@ def validate_manifest(row):
         contract = item["definition"]
         actual = {"contract_id": contract["contract_id"], "contract_version": contract["contract_version"],
                   "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest()}
+        participant = next(value for value in candidate["participants"] if value["participant"] == item["participant"])
+        if contract["table_id"] != participant["table_id"]:
+            raise ValueError("Approved global table identity mismatch.")
         if actual != expected[item["participant"]] or contract.get("status") != "frozen":
             raise ValueError("Activated Pipeline exact frozen contract mismatch.")
     return manifest
@@ -87,6 +91,8 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
     run = exact_record(metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session), run_id=testing_run_id)
     if run.get("execution_mode") != "testing" or run.get("status") != "succeeded" or not run.get("completed_at"):
         raise ValueError("Activation requires a complete successful Testing run; Bootstrap and partial results cannot authorize it.")
+    if run.get("environment_name") != env:
+        raise ValueError("Testing evidence must cover the activation environment; other environments are isolated.")
     candidate = json.loads(run["candidate_json"])
     if not candidate_fingerprint or candidate_fingerprint != run.get("candidate_fingerprint") or manifest_digest(candidate) != candidate_fingerprint:
         raise ValueError("Exact tested candidate fingerprint mismatch.")
@@ -98,6 +104,10 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
     summary = json.loads(run["operation_summary_json"])
     operations = summary["operations"]
     expected = {f"{role}:{item['participant']}" for item in candidate["participants"] for role in item["roles"]}
+    if summary.get("boundary_completed") is not True:
+        raise ValueError("Testing requires a completed whole-run execution boundary.")
+    if not isinstance(summary.get("physical_bindings"), dict) or summary["physical_bindings"] != candidate.get("physical_bindings"):
+        raise ValueError("Testing destination bindings are missing or differ from the tested candidate; rerun Testing.")
     if summary.get("failures") or set(operations) != expected or not expected or any(
         item.get("status") != "succeeded" or not item.get("configuration_sha256") or not isinstance(item.get("configuration"), dict)
         or not item.get("stages") or any(stage.get("status") in {"blocked", "failed"} or stage.get("evaluation_status") == "not_fully_evaluated"
@@ -113,12 +123,15 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
         ref = refs.get(logical)
         if not ref:
             raise ValueError("Activation requires an exact frozen contract for every source and target.")
-        contract = exact_record(contracts, contract_id=ref["contract_id"], contract_version=ref["contract_version"], environment_name=run["environment_name"])
+        contract = exact_record(contracts, contract_id=ref["contract_id"], contract_version=ref["contract_version"])
         if contract.get("status") != "frozen" or hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() != ref["payload_sha256"]:
             raise ValueError("Frozen contract changed since Testing.")
         definition = {key: contract[key] for key in ("contract_id", "contract_version", "contract_payload_json", "status", "table_id", "environment_name")}
         definitions.append({"participant": logical, "definition": definition})
         table_id = contract["table_id"]
+        binding = next(item for item in summary["frozen_contracts"] if item["participant"] == logical)
+        if binding.get("table_id") != table_id:
+            raise ValueError("Testing global table identity does not match the frozen contract.")
         identities[table_id] = {"logical_id": logical, "roles": participant["roles"], "store": "bound", "table_name": "bound"}
         frozen[table_id] = definition
     rule_sets = {item["participant"]: contract_guardrail_rows(item["definition"],
@@ -129,7 +142,7 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
         logical = participant["participant"]
         for role in participant["roles"]:
             operation = operations[f"{role}:{logical}"]
-            required_stages = {"Read" if role == "source" else "Processing"}
+            required_stages = {"Read"} if role == "source" else ({"Write", "Profile"} if summary.get("testing_writes") else {"Processing"})
             if role == "source" and operation["configuration"].get("read_mode") == "full":
                 required_stages.add("Profile")
             for rule in rule_sets[logical]:
@@ -147,7 +160,7 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
                 raise ValueError("Required operation stages are missing or incomplete; isolated passing Guardrails cannot authorize activation.")
     dependencies = {name: item["required"] for name, item in candidate["dependencies"].items()}
     plan = PipelineExecutionPlan("testing", env, str(runtime.get("notebook_id") or "review"), "review",
-        canonical_candidate_json(identities), "{}", canonical_candidate_json(frozen), runtime,
+        canonical_candidate_json(identities), "{}", canonical_candidate_json(frozen), {**runtime, "_pipeline_bindings": summary["physical_bindings"]},
         pipeline_id=run["pipeline_id"], executable_sha256=candidate["executable_sha256"], dependencies_json=canonical_candidate_json(dependencies), configuration_json=canonical_candidate_json(candidate["project_configuration"]))
     plan.evidence["operations"] = operations
     current, fingerprint, _bindings = pipeline_candidate(plan)
@@ -186,83 +199,356 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
         raise ValueError("Pipeline name and version are required.")
     return {"format": "fabricops.activated-pipeline.v1", "pipeline_id": run["pipeline_id"],
             "pipeline_name": str(pipeline_name).strip(), "pipeline_version": str(pipeline_version).strip(),
-            "testing_run_id": testing_run_id, "candidate": candidate,
+            "testing_run_id": testing_run_id, "candidate": candidate, "physical_bindings": summary["physical_bindings"],
             "contracts": sorted(definitions, key=lambda item: item["participant"]),
             "agreement": agreement_definition(agreement),
             "warnings": ["Testing does not verify deployment permissions, target transactions or concurrent business writes."]
                         + [f"{key}: {stage['stage']} {stage['status']}" for key, operation in operations.items()
                            for stage in operation["stages"] if stage.get("status") in {"warning", "skipped"}]}
 
+ACTIVATION_STATE_TABLE = "METADATA_ACTIVATION_STATE"
 
-def commit_pipeline_activation(row, *, expected_active_id, context, spark_session=None):
-    """Use one serializable Delta MERGE for immutable versions and active switching."""
+
+def empty_activation_state():
+    """Return the initial central authority; only metadata setup creates this row."""
+    return canonical_candidate_json({"format": "fabricops.activation-state.v1", "environments": {}})
+
+
+def read_activation_state(*, context, spark_session=None):
+    """Read one atomic authority snapshot; missing or duplicate authority fails closed."""
+    row = exact_record(metadata_records(ACTIVATION_STATE_TABLE, context=context, spark_session=spark_session), authority_id="central")
+    state = json.loads(row["snapshot_json"])
+    if state.get("format") != "fabricops.activation-state.v1":
+        raise ValueError("Unsupported activation authority format.")
+    return row["token"], state
+
+
+def environment_activation(state, environment):
+    """Return an isolated environment's approved configurations and run reservations."""
+    return state["environments"].setdefault(environment, {"revision": "initial", "pipelines": {}, "history": {}, "tables": {}, "runs": {}})
+
+
+def commit_activation_state(state, *, expected_token, context, spark_session=None):
+    """Compare-and-swap the existing singleton using one serializable Delta MERGE.
+
+    Setup creates the singleton with the table, never by racing first insertions.
+    Both activations and run reservations update this row. An overlapping update
+    conflicts in Delta or raises inside the MERGE. No automatic activation retry.
+    A lost acknowledgement is accepted only after exact token read-back.
+    """
     from delta.tables import DeltaTable
-    config, _env, _runtime = resolve_fabric_context(context=context)
+    from uuid import uuid4
+    config, env, runtime = resolve_fabric_context(context=context)
     spark = get_spark_session(spark_session)
-    _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", ACTIVATED_TABLE,
-        metadata_table_physical_schema(config, ACTIVATED_TABLE), context=context)
-    quoted_path = path.replace("`", "``")
-    # Serializable predicate conflict detection includes concurrent first insertions.
-    spark.sql(f"ALTER TABLE delta.`{quoted_path}` SET TBLPROPERTIES ('delta.isolationLevel' = 'Serializable')")
-    source = spark.createDataFrame([coerce_metadata_row_types(ACTIVATED_TABLE, row)], schema=metadata_table_schema_registry()[ACTIVATED_TABLE])
-    def literal(value):
-        return "'" + str(value).replace("'", "''") + "'"
-    pipeline = literal(row["pipeline_id"])
-    expected = literal(expected_active_id or "")
-    active = "true" if row["is_active"] else "false"
-    # Never update immutable version fields; conflicting contents or a stale switch abort atomically.
-    selected = literal(row["activated_pipeline_id"])
-    # Guard an expected active row even after concurrent deactivation, and guard
-    # selecting/deactivating that same version against its changed active state.
-    expected_selected_state = "target.is_active = true" if expected_active_id == row["activated_pipeline_id"] else "target.is_active = false"
-    check = f"CASE WHEN target.manifest_json = source.manifest_json AND {expected_selected_state} THEN {active} ELSE CAST(raise_error('Immutable version collision or stale activation state') AS BOOLEAN) END"
-    deactivate = f"CASE WHEN target.activated_pipeline_id = {expected} AND target.is_active = true THEN false ELSE CAST(raise_error('Concurrent activation or explicit switching required') AS BOOLEAN) END"
-    audit_columns = [key for key in metadata_table_schema_registry()[ACTIVATED_TABLE].fieldNames() if key.startswith("_") and key in row]
-    audit_literals = {key: (f"CAST({literal(row[key])} AS TIMESTAMP)" if key == "_committed_at" else literal(row[key]))
-                      for key in audit_columns}
-    (DeltaTable.forPath(spark, path).alias("target")
-     .merge(source.alias("source"), f"target.pipeline_id = {pipeline} AND target.pipeline_version = source.pipeline_version")
-     .whenMatchedUpdate(set={"is_active": check, **{key: "source." + key for key in audit_columns}})
-     .whenNotMatchedInsertAll()
-     .whenNotMatchedBySourceUpdate(condition=f"target.pipeline_id = {pipeline} AND (target.is_active = true OR target.activated_pipeline_id = {expected}) AND target.activated_pipeline_id <> {selected}", set={"is_active": deactivate, **audit_literals})
-     .execute())
+    _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", ACTIVATION_STATE_TABLE,
+        metadata_table_physical_schema(config, ACTIVATION_STATE_TABLE), context=context)
+    spark.sql("ALTER TABLE delta.`" + path.replace("`", "``") + "` SET TBLPROPERTIES ('delta.isolationLevel' = 'Serializable')")
+    token = str(uuid4())
+    row = {"authority_id": "central", "token": token, "snapshot_json": canonical_candidate_json(state),
+           **build_runtime_audit_fields(config=config, env=env, runtime_context=runtime)}
+    frame = spark.createDataFrame([coerce_metadata_row_types(ACTIVATION_STATE_TABLE, row)],
+                                  schema=metadata_table_schema_registry()[ACTIVATION_STATE_TABLE])
+    expected = "'" + expected_token.replace("'", "''") + "'"
+    changes = {key: "source." + key for key in row if key != "authority_id"}
+    changes["token"] = f"CASE WHEN target.token = {expected} THEN source.token ELSE CAST(raise_error('Stale activation revision; refresh') AS STRING) END"
+    try:
+        (DeltaTable.forPath(spark, path).alias("target")
+         .merge(frame.alias("source"), "target.authority_id = source.authority_id")
+         .whenMatchedUpdate(set=changes).execute())
+    except Exception:
+        observed, _state = read_activation_state(context=context, spark_session=spark_session)
+        if observed != token:
+            raise
+    observed, _state = read_activation_state(context=context, spark_session=spark_session)
+    if observed != token:
+        raise RuntimeError("Activation state commit was not confirmed; refresh before retrying.")
+    return token
+
+
+def manifest_table_mappings(manifest):
+    """Extract global table/contract identities and read/write roles from a manifest."""
+    roles = {item["participant"]: item["roles"] for item in manifest["candidate"]["participants"]}
+    mappings = {}
+    for item in manifest["contracts"]:
+        definition = item["definition"]
+        table_id = definition["table_id"]
+        if table_id in mappings:
+            raise ValueError("Duplicate global table identity in approved participants.")
+        mappings[table_id] = {"destination": manifest["physical_bindings"][table_id], "contract_id": definition["contract_id"], "contract_version": definition["contract_version"],
+                              "payload_sha256": hashlib.sha256(definition["contract_payload_json"].encode()).hexdigest(),
+                              "roles": sorted(roles[item["participant"]])}
+    if len(mappings) != len(roles):
+        raise ValueError("Every participant must have one exact frozen contract.")
+    return mappings
+
+
+def activation_impact(current, proposed):
+    """Calculate conservative dependencies and validate the entire resulting release.
+
+    Direct references to changed contracts/ownership require replacement tests.
+    Propagation continues when a replacement changes a downstream table mapping;
+    unchanged output expectations stop propagation. No inferred compatibility.
+    """
+    active = current["pipelines"]
+    resulting = {**active, **proposed}
+    mappings = {key: manifest_table_mappings(validate_manifest(row)) for key, row in resulting.items()}
+    tables, blockers = {}, []
+    for pipeline_id, refs in mappings.items():
+        for table_id, ref in refs.items():
+            identity = {key: ref[key] for key in ("contract_id", "contract_version", "payload_sha256")}
+            table = tables.setdefault(table_id, {**identity, "destination": ref["destination"], "writer": None, "readers": []})
+            if table["destination"] != ref["destination"]:
+                blockers.append(f"Conflicting physical destination for {table_id}: {pipeline_id}.")
+            if any(table[key] != identity[key] for key in identity):
+                blockers.append(f"Conflicting contract versions for {table_id}: {pipeline_id}.")
+            if "target" in ref["roles"]:
+                if table["writer"] is not None and table["writer"] != pipeline_id:
+                    blockers.append(f"Competing writer for {table_id}: {table['writer']} and {pipeline_id}.")
+                table["writer"] = pipeline_id
+            if "source" in ref["roles"]:
+                table["readers"].append(pipeline_id)
+    destinations = {}
+    for table_id, table in tables.items():
+        destination = canonical_candidate_json(table["destination"])
+        previous = destinations.setdefault(destination, table_id)
+        if previous != table_id:
+            blockers.append(f"Conflicting table identities share a physical destination: {previous} and {table_id}.")
+    old = current["tables"]
+    changed = {key for key in set(old) | set(tables) if
+               {field: old.get(key, {}).get(field) for field in ("contract_id", "contract_version", "payload_sha256", "writer", "destination")} !=
+               {field: tables.get(key, {}).get(field) for field in ("contract_id", "contract_version", "payload_sha256", "writer", "destination")}}
+    affected = {pipeline_id for pipeline_id, row in active.items()
+                if changed.intersection(manifest_table_mappings(validate_manifest(row)))}
+    missing = affected - set(proposed)
+    blockers += [f"Missing replacement Testing candidate: {key}." for key in sorted(missing)]
+    touched = affected | set(proposed)
+    busy = [run_id for run_id, run in current["runs"].items()
+            if run["pipeline_id"] in touched or changed.intersection(run.get("tables", []))]
+    blockers += [f"Drain running execution before cutover: {key}." for key in busy]
+    relationships = [{"table_id": table_id, "writer": table["writer"], "readers": sorted(table["readers"])}
+                     for table_id, table in tables.items() if table["writer"] or table["readers"]]
+    return {"dependencies": relationships, "changed_tables": sorted(changed), "affected_pipelines": sorted(affected),
+            "missing_pipelines": sorted(missing), "blocking_conflicts": sorted(set(blockers)),
+            "tables": tables, "current_tables": old, "ready": not blockers,
+            "selected_pipelines": sorted(proposed), "current_revision": current["revision"]}
+
+
+def review_pipeline_release(requests, *, context, spark_session=None):
+    """Revalidate every Testing candidate and compute environment-specific readiness."""
+    config, env, runtime = resolve_fabric_context(context=context)
+    token, state = read_activation_state(context=context, spark_session=spark_session)
+    current = environment_activation(state, env)
+    proposed = {}
+    for request in requests:
+        manifest = tested_pipeline_manifest(**request, context=context, spark_session=spark_session)
+        pipeline_id = manifest["pipeline_id"]
+        if pipeline_id in proposed:
+            raise ValueError("Select one Testing candidate per pipeline.")
+        row = {key: manifest[key] for key in ("pipeline_id", "pipeline_name", "pipeline_version", "testing_run_id")}
+        row.update(activated_pipeline_id=manifest_digest(manifest), agreement_id=manifest["agreement"]["agreement_id"],
+                   agreement_version=manifest["agreement"]["agreement_version"], candidate_fingerprint=manifest_digest(manifest["candidate"]),
+                   manifest_json=canonical_candidate_json(manifest), is_active=True, environment_name=env,
+                   **{key: value.isoformat() if isinstance(value, date) else value
+                      for key, value in build_runtime_audit_fields(config=config, env=env, runtime_context=runtime).items()})
+        for previous in current["history"].values():
+            if previous["pipeline_id"] == pipeline_id and previous["pipeline_version"] == row["pipeline_version"] and previous["activated_pipeline_id"] != row["activated_pipeline_id"]:
+                raise ValueError("Pipeline version contents are immutable; choose a new version.")
+        proposed[pipeline_id] = row
+    if not proposed:
+        raise ValueError("Select at least one successful Testing candidate.")
+    report = activation_impact(current, proposed)
+    changed_destinations = [item["destination"] for table_id, item in report["tables"].items()
+                            if table_id in report["changed_tables"]]
+    for other in state["environments"].values():
+        for run_id, run in other["runs"].items():
+            if run.get("mode") == "testing" and any(destination in run.get("destinations", []) for destination in changed_destinations):
+                report["blocking_conflicts"].append(f"Drain Testing execution reserving a proposed destination: {run_id}.")
+    report["ready"] = not report["blocking_conflicts"]
+    return token, state, proposed, {**report, "environment": env}
+
+
+def approve_pipeline_release(requests, *, expected_token, governance_confirmed=False, context=None, spark_session=None):
+    """Revalidate and publish the complete release in one authority transaction."""
+    if governance_confirmed is not True:
+        raise ValueError("Explicit Governance approval of the complete release is required.")
+    token, state, proposed, report = review_pipeline_release(requests, context=context, spark_session=spark_session)
+    if token != expected_token:
+        raise ValueError("Activation state changed; refresh and review the release again.")
+    if not report["ready"]:
+        raise ValueError(" ".join(report["blocking_conflicts"]))
+    current = environment_activation(state, report["environment"])
+    current["pipelines"].update(proposed)
+    current["history"].update({row["activated_pipeline_id"]: row for row in proposed.values()})
+    current["tables"] = report["tables"]
+    current["revision"] = manifest_digest({"previous": current["revision"], "pipelines": current["pipelines"]})
+    commit_activation_state(state, expected_token=token, context=context, spark_session=spark_session)
+    return {"environment": report["environment"], "revision": current["revision"], "pipelines": proposed}
+
+
+def validate_testing_destinations(plan, *, spark_session=None, require_reservation=True):
+    """Prevent explicitly authorized Testing writes to any Live-owned destination."""
+    _token, state = read_activation_state(context=plan.runtime_context, spark_session=spark_session)
+    targets = {key for key, item in json.loads(plan.participants_json).items() if "target" in item["roles"]}
+    bindings = plan.runtime_context["_pipeline_bindings"]
+    from fabricops_kit.pipeline.shared import pipeline_physical_bindings
+    physical = pipeline_physical_bindings(json.loads(plan.participants_json), config=plan.runtime_context["config"], environment=plan.environment)
+    if physical != bindings:
+        raise ValueError("Testing physical destinations changed; create a new plan and review them again.")
+    for current in state["environments"].values():
+        for table_id in targets:
+            if any(item.get("destination") == bindings[table_id] for item in current["tables"].values()):
+                raise ValueError("Testing cannot write Live-owned destinations: " + table_id)
+    if require_reservation:
+        current = environment_activation(state, plan.environment)
+        reservation = current["runs"].get(plan.plan_id)
+        expected_destinations = [bindings[key] for key in sorted(targets)]
+        if not reservation or reservation.get("mode") != "testing" or reservation.get("destinations") != expected_destinations:
+            raise ValueError("Testing write reservation is missing or changed; create a new run.")
+    return targets
+
+
+def reserve_testing_destinations(plan, *, spark_session=None):
+    """Reserve Testing destinations against activation until the boundary completes."""
+    targets = validate_testing_destinations(plan, spark_session=spark_session, require_reservation=False)
+    token, state = read_activation_state(context=plan.runtime_context, spark_session=spark_session)
+    bindings = plan.runtime_context["_pipeline_bindings"]
+    destinations = [bindings[key] for key in sorted(targets)]
+    if any(item.get("destination") in destinations
+           for other in state["environments"].values() for item in other["tables"].values()):
+        raise ValueError("Testing destination became Live-owned; choose a separate destination.")
+    current = environment_activation(state, plan.environment)
+    if any(destination in run.get("destinations", []) for destination in destinations
+           for other in state["environments"].values() for run in other["runs"].values()):
+        raise ValueError("Testing destination is reserved by a running execution.")
+    current["runs"][plan.plan_id] = {"pipeline_id": plan.pipeline_id, "tables": sorted(targets),
+                                  "destinations": destinations, "mode": "testing"}
+    commit_activation_state(state, expected_token=token, context=plan.runtime_context, spark_session=spark_session)
+    plan.evidence["lease_token"] = plan.plan_id
+
+
+def release_pipeline_lease(plan, *, spark_session=None):
+    """Release only this completed run's reservation; failed release remains fail-closed."""
+    for _attempt in range(5):
+        token, state = read_activation_state(context=plan.runtime_context, spark_session=spark_session)
+        current = environment_activation(state, plan.environment)
+        if current["runs"].pop(plan.plan_id, None) is None:
+            return
+        try:
+            commit_activation_state(state, expected_token=token, context=plan.runtime_context, spark_session=spark_session)
+            plan.evidence.pop("lease_token", None)
+            return
+        except Exception:
+            if _attempt == 4:
+                raise
 
 
 def activation_version(activated_pipeline_id, *, context, spark_session=None, require_active=True):
-    """Resolve an exact approved version without choosing a newer version."""
-    row = exact_record(metadata_records(ACTIVATED_TABLE, context=context, spark_session=spark_session), activated_pipeline_id=activated_pipeline_id)
-    if require_active and row.get("is_active") is not True:
-        raise ValueError("The saved Activated Pipeline version is inactive; switch explicitly.")
-    if require_active:
-        active = [item for item in metadata_records(ACTIVATED_TABLE, context=context, spark_session=spark_session)
-                  if item.get("pipeline_id") == row["pipeline_id"] and item.get("is_active") is True]
-        if len(active) != 1:
-            raise ValueError("Activated Pipeline integrity error: multiple active versions.")
-    validate_manifest(row)
-    return row
+    """Resolve an immutable approval from the environment's atomic authority."""
+    _config, env, _runtime = resolve_fabric_context(context=context)
+    _token, state = read_activation_state(context=context, spark_session=spark_session)
+    current = environment_activation(state, env)
+    matches = [row for row in (current["pipelines"] if require_active else current["history"]).values()
+               if row["activated_pipeline_id"] == activated_pipeline_id]
+    if len(matches) != 1:
+        raise ValueError("Approved version is missing or inactive in this environment.")
+    validate_manifest(matches[0])
+    return matches[0]
 
 
-def approve_pipeline(*, manifest, governance_confirmed, expected_active_id, context, spark_session=None):
-    """Commit explicit Governance confirmation with no deployment or publication."""
-    if governance_confirmed is not True:
-        raise ValueError("Explicit Governance confirmation is required.")
+def build_live_pipeline_plan(*, pipeline_id, sources, targets, configuration=None, context=None, spark_session=None):
+    """Pin approval and reserve a Live run atomically against coordinated cutover."""
+    from types import MappingProxyType
+    from uuid import uuid4
+    from fabricops_kit.pipeline.shared import persist_pipeline_run, pipeline_physical_bindings
     config, env, runtime = resolve_fabric_context(context=context)
-    existing = metadata_records(ACTIVATED_TABLE, context=context, spark_session=spark_session)
-    versions = [row for row in existing if row["pipeline_id"] == manifest["pipeline_id"]]
-    active = [row for row in versions if row.get("is_active") is True]
-    if len(active) > 1 or (active[0]["activated_pipeline_id"] if active else None) != expected_active_id:
-        raise ValueError("Active pipeline changed or explicit switching is required.")
-    identifier = manifest_digest(manifest)
-    same_version = [row for row in versions if row["pipeline_version"] == manifest["pipeline_version"]]
-    if same_version and (len(same_version) != 1 or same_version[0]["activated_pipeline_id"] != identifier):
-        raise ValueError("Pipeline version contents are immutable; choose a new version.")
-    row = {key: manifest[key] for key in ("pipeline_id", "pipeline_name", "pipeline_version", "testing_run_id")}
-    row.update(activated_pipeline_id=identifier, agreement_id=manifest["agreement"]["agreement_id"],
-               agreement_version=manifest["agreement"]["agreement_version"], candidate_fingerprint=manifest_digest(manifest["candidate"]),
-               manifest_json=canonical_candidate_json(manifest), is_active=True,
-               **build_runtime_audit_fields(config=config, env=env, runtime_context=runtime))
-    commit_pipeline_activation(row, expected_active_id=expected_active_id, context=context, spark_session=spark_session)
-    return row
+    token, state = read_activation_state(context=context, spark_session=spark_session)
+    current = environment_activation(state, env)
+    approved = current["pipelines"].get(pipeline_id)
+    if not approved:
+        raise ValueError("No approved pipeline configuration for this environment and pipeline_id.")
+    integrity = activation_impact(current, {})
+    if integrity["tables"] != current["tables"] or integrity["blocking_conflicts"]:
+        raise ValueError("Activation snapshot has inconsistent table mappings or ownership.")
+    manifest = validate_manifest(approved)
+    validate_agreement(manifest["agreement"])
+    identities = resolve_pipeline_participants(config, env, sources=sources, targets=targets, context=runtime, spark_session=spark_session)
+    definitions = {item["definition"]["table_id"]: item["definition"] for item in manifest["contracts"]}
+    expected = {item["participant"]: sorted(item["roles"]) for item in manifest["candidate"]["participants"]}
+    if {item["logical_id"]: sorted(item["roles"]) for item in identities.values()} != expected or set(identities) != set(definitions):
+        raise ValueError("Live table identities or participant roles differ from approval.")
+    contracts = {key: {**definitions[key], "contract_payload": json.loads(definitions[key]["contract_payload_json"])} for key in identities}
+    physical = pipeline_physical_bindings(identities, config=config, environment=env)
+    if physical != manifest["physical_bindings"]:
+        raise ValueError("Live physical destinations differ from the tested approved environment bindings.")
+    dependencies = {name: item["required"] for name, item in manifest["candidate"]["dependencies"].items()}
+    plan = PipelineExecutionPlan("live", env, str(runtime["notebook_id"]), str(uuid4()), canonical_candidate_json(identities),
+        "{}", canonical_candidate_json(contracts), MappingProxyType({**runtime, "config": config, "env": env, "_pipeline_spark": spark_session, "_pipeline_bindings": physical}),
+        pipeline_id=pipeline_id, executable_sha256=manifest["candidate"]["executable_sha256"],
+        dependencies_json=canonical_candidate_json(dependencies), configuration_json=canonical_candidate_json(configuration),
+        activated_pipeline_id=approved["activated_pipeline_id"], approved_candidate_json=canonical_candidate_json(manifest["candidate"]),
+        activation_revision=current["revision"])
+    current["runs"][plan.plan_id] = {"pipeline_id": pipeline_id, "tables": sorted(identities), "destinations": list(physical.values()), "revision": current["revision"], "mode": "live"}
+    commit_activation_state(state, expected_token=token, context=context, spark_session=spark_session)
+    plan.evidence["lease_token"] = plan.plan_id
+    try:
+        verify_live_plan(plan, spark_session=spark_session)
+        persist_pipeline_run(plan, spark_session=spark_session)
+    except BaseException:
+        release_pipeline_lease(plan, spark_session=spark_session)
+        raise
+    return plan
+
+
+def verify_live_plan(plan, *, spark_session=None):
+    """Check pinned approval, reservation and actual executable without switching runs."""
+    from dataclasses import replace
+    from fabricops_kit.pipeline.shared import deployed_notebook_fingerprint
+    _token, state = read_activation_state(context=plan.runtime_context, spark_session=spark_session)
+    current = environment_activation(state, plan.environment)
+    lease = current["runs"].get(plan.plan_id)
+    if not lease or lease.get("revision") != plan.activation_revision:
+        raise ValueError("Live run has no valid pinned activation reservation.")
+    approved = current["history"].get(plan.activated_pipeline_id)
+    if not approved or approved["candidate_fingerprint"] != manifest_digest(json.loads(plan.approved_candidate_json)):
+        raise ValueError("Pinned approval is unavailable or corrupt.")
+    active = current["pipelines"].get(plan.pipeline_id)
+    if not active or active["activated_pipeline_id"] != plan.activated_pipeline_id:
+        raise ValueError("Pinned pipeline is no longer active; stop this run.")
+    manifest = validate_manifest(approved)
+    from fabricops_kit.pipeline.shared import pipeline_physical_bindings
+    physical = pipeline_physical_bindings(json.loads(plan.participants_json), config=plan.runtime_context["config"], environment=plan.environment)
+    if physical != manifest["physical_bindings"]:
+        raise ValueError("Live destinations changed during execution.")
+    agreement = exact_record(metadata_records("METADATA_DATA_AGREEMENT", context=plan.runtime_context, spark_session=spark_session),
+                             agreement_id=approved["agreement_id"], agreement_version=approved["agreement_version"])
+    validate_agreement(agreement)
+    if agreement_definition(agreement) != manifest["agreement"]:
+        raise ValueError("Approved Data Agreement content changed.")
+    if deployed_notebook_fingerprint(plan.runtime_context) != plan.executable_sha256:
+        raise ValueError("Actual notebook executable differs from approved Testing.")
+    journal = {item["operation"]: {"status": "not_started", "configuration": item["configuration"],
+               "configuration_sha256": item["configuration_sha256"]} for item in manifest["candidate"]["operations"]}
+    check = replace(plan, evidence={**plan.evidence, "operations": journal})
+    candidate, fingerprint, _bindings = pipeline_candidate(check)
+    if candidate != manifest["candidate"] or fingerprint != approved["candidate_fingerprint"]:
+        raise ValueError("Live executable, dependencies, contracts or transformation configuration differs from approval.")
+
+
+def resolve_approved_consumer_contract(config, env, table_id, *, spark_session=None):
+    """Resolve the single approved table mapping in an environment's revision."""
+    _token, state = read_activation_state(context={"config": config, "env": env}, spark_session=spark_session)
+    current = environment_activation(state, env)
+    matches = []
+    for row in current["pipelines"].values():
+        manifest = validate_manifest(row)
+        for item in manifest["contracts"]:
+            definition = item["definition"]
+            if definition["table_id"] == table_id:
+                matches.append({**definition, "contract_payload": json.loads(definition["contract_payload_json"]),
+                                "agreement_id": row["agreement_id"], "agreement_version": row["agreement_version"]})
+    if not matches or any(item != matches[0] for item in matches):
+        raise ValueError("No unambiguous active pipeline contract and Agreement cover this consumer table.")
+    return matches[0]
 
 
 def bound_pipeline_participants(*, sources, targets, context, spark_session=None):
@@ -276,122 +562,3 @@ def bound_pipeline_participants(*, sources, targets, context, spark_session=None
             "table_name": item["table_name"], "roles": sorted(item["roles"]), "workspace_id": store.workspace_id,
             "item_id": store.item_id, "kind": store.kind}
     return result
-
-
-def load_live_deployment(*, deployment_path, pipeline_id, sources, targets, activated_pipeline_id=None,
-                         replace_selection=False, context, spark_session=None):
-    """Verify packaged approval, deployment bindings and a persisted exact selection."""
-    config, env, runtime = resolve_fabric_context(context=context)
-    root = Path(deployment_path).resolve(strict=True)
-    bindings = json.loads((root / "deployment.json").read_text())
-    package = json.loads((root / "approved.json").read_text())
-    manifest = validate_manifest(package)
-    if manifest["pipeline_id"] != pipeline_id or bindings.get("pipeline_id") != pipeline_id:
-        raise ValueError("Deployment pipeline identity mismatch.")
-    authority_context = {**runtime, "config": config, "env": bindings["authority_environment"]}
-    approved = activation_version(package["activated_pipeline_id"], context=authority_context, spark_session=spark_session)
-    if approved["manifest_json"] != package["manifest_json"]:
-        raise ValueError("Packaged manifest does not match Governance approval.")
-    current_agreement = exact_record(metadata_records("METADATA_DATA_AGREEMENT", context=authority_context, spark_session=spark_session),
-        agreement_id=approved["agreement_id"], agreement_version=approved["agreement_version"])
-    validate_agreement(current_agreement)
-    if agreement_definition(current_agreement) != manifest["agreement"]:
-        raise ValueError("Exact approved Agreement content changed.")
-    actual = bound_pipeline_participants(sources=sources, targets=targets, context=context, spark_session=spark_session)
-    if bindings.get("environment_name") != env or bindings.get("notebook_id") != runtime.get("notebook_id") or bindings.get("workspace_id") != runtime.get("workspace_id") or bindings.get("participants") != actual:
-        raise ValueError("Deployment/environment bindings mismatch.")
-    if set(actual) != {item["participant"] for item in manifest["candidate"]["participants"]}:
-        raise ValueError("Approved pipeline participants mismatch.")
-    for item in manifest["candidate"]["participants"]:
-        if sorted(item["roles"]) != actual[item["participant"]]["roles"]:
-            raise ValueError("Approved pipeline role mismatch.")
-    executable = root / "executable.bin"
-    if notebook_executable_fingerprint(executable.read_bytes()) != manifest["candidate"]["executable_sha256"]:
-        raise ValueError("Deployed executable identity mismatch.")
-    from fabricops_kit.pipeline.shared import deployed_notebook_fingerprint
-    if deployed_notebook_fingerprint(runtime) != manifest["candidate"]["executable_sha256"]:
-        raise ValueError("Actual Fabric notebook differs from the approved deployed executable.")
-    selection_path = root / (hashlib.sha256((pipeline_id + "\0" + env).encode()).hexdigest() + ".selection.json")
-    if selection_path.exists():
-        selected = json.loads(selection_path.read_text())
-        if activated_pipeline_id is None:
-            activated_pipeline_id = selected.get("activated_pipeline_id")
-        elif selected.get("activated_pipeline_id") != activated_pipeline_id and not replace_selection:
-            raise ValueError("Saved selection differs; explicitly replace the selection to switch versions.")
-    elif activated_pipeline_id is None:
-        raise ValueError("No saved Live selection; explicitly select an activated version once.")
-    if activated_pipeline_id != approved["activated_pipeline_id"]:
-        raise ValueError("Saved Live selection does not match the deployed approved version.")
-    selection = canonical_candidate_json({"activated_pipeline_id": activated_pipeline_id, "pipeline_id": pipeline_id, "environment_name": env})
-    if not selection_path.exists():
-        with selection_path.open("x") as handle:
-            handle.write(selection)
-    elif replace_selection:
-        temporary = selection_path.with_suffix(".tmp")
-        temporary.write_text(selection)
-        temporary.replace(selection_path)
-    return approved, manifest, actual, bindings
-
-
-def build_live_pipeline_plan(*, deployment_path, pipeline_id, sources, targets, activated_pipeline_id=None,
-                             replace_selection=False, configuration=None, context=None, spark_session=None):
-    """Resolve a saved approved deployment into a new immutable unattended Live run."""
-    from types import MappingProxyType
-    from uuid import uuid4
-    from fabricops_kit.pipeline.shared import persist_pipeline_run
-    config, env, runtime = resolve_fabric_context(context=context)
-    approved, manifest, bindings, deployment = load_live_deployment(deployment_path=deployment_path, pipeline_id=pipeline_id,
-        sources=sources, targets=targets, activated_pipeline_id=activated_pipeline_id, replace_selection=replace_selection,
-        context=context, spark_session=spark_session)
-    identities = resolve_pipeline_participants(config, env, sources=sources, targets=targets, context=runtime, spark_session=spark_session)
-    definitions = {item["participant"]: item["definition"] for item in manifest["contracts"]}
-    contracts = {table_id: {**definitions[item["logical_id"]],
-        "contract_payload": json.loads(definitions[item["logical_id"]]["contract_payload_json"])} for table_id, item in identities.items()}
-    dependencies = {name: item["required"] for name, item in manifest["candidate"]["dependencies"].items()}
-    run_context = {**runtime, "config": config, "env": env, "_pipeline_deployment_path": str(Path(deployment_path).resolve()),
-                   "_pipeline_sources": sources, "_pipeline_targets": targets}
-    plan = PipelineExecutionPlan("live", env, str(runtime["notebook_id"]), str(uuid4()), canonical_candidate_json(identities),
-        "{}", canonical_candidate_json(contracts), MappingProxyType(run_context), pipeline_id=pipeline_id,
-        executable_sha256=manifest["candidate"]["executable_sha256"], dependencies_json=canonical_candidate_json(dependencies),
-        configuration_json=canonical_candidate_json(configuration),
-        activated_pipeline_id=approved["activated_pipeline_id"], approved_candidate_json=canonical_candidate_json(manifest["candidate"]))
-    verify_live_plan(plan, spark_session=spark_session)
-    persist_pipeline_run(plan, spark_session=spark_session)
-    return plan
-
-
-def verify_live_plan(plan, *, spark_session=None):
-    """Recheck approval, deployment and executable/dependency identity before execution."""
-    from dataclasses import replace
-    if not plan.activated_pipeline_id or not plan.approved_candidate_json:
-        raise ValueError("Live requires an approved Activated Pipeline manifest.")
-    runtime = plan.runtime_context
-    _approved, manifest, _actual, _bindings = load_live_deployment(
-        deployment_path=runtime["_pipeline_deployment_path"], pipeline_id=plan.pipeline_id,
-        sources=runtime["_pipeline_sources"], targets=runtime["_pipeline_targets"],
-        context=runtime, spark_session=spark_session)
-    if canonical_candidate_json(manifest["candidate"]) != plan.approved_candidate_json:
-        raise ValueError("Approved candidate changed during this Live run.")
-    journal = {item["operation"]: {"status": "not_started", "configuration": item["configuration"],
-                "configuration_sha256": item["configuration_sha256"]} for item in manifest["candidate"]["operations"]}
-    check = replace(plan, evidence={**plan.evidence, "operations": journal})
-    candidate, fingerprint, _bindings = pipeline_candidate(check)
-    if candidate != manifest["candidate"] or fingerprint != manifest_digest(manifest["candidate"]):
-        raise ValueError("Live executable, dependencies, contracts or configuration identity mismatch.")
-
-
-def resolve_approved_consumer_contract(config, env, table_id, *, spark_session=None):
-    """Resolve reusable contract/Agreement context through an active pipeline manifest."""
-    matches = []
-    for row in metadata_records(ACTIVATED_TABLE, context={"config": config, "env": env}, spark_session=spark_session):
-        if row.get("is_active") is not True:
-            continue
-        manifest = validate_manifest(row)
-        for item in manifest["contracts"]:
-            definition = item["definition"]
-            if definition["table_id"] == table_id:
-                matches.append({**definition, "contract_payload": json.loads(definition["contract_payload_json"]),
-                    "agreement_id": row["agreement_id"], "agreement_version": row["agreement_version"]})
-    if not matches or any(item != matches[0] for item in matches):
-        raise ValueError("No unambiguous active pipeline approval covers this consumer table.")
-    return matches[0]
