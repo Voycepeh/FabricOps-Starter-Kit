@@ -372,3 +372,45 @@ def test_stale_switch_after_explicit_deactivation_is_rejected(approved_runtime):
     set_pipeline_active(active['activated_pipeline_id'],active=False,expected_active_id=active['activated_pipeline_id'],governance_confirmed=True,context=state.context)
     with pytest.raises(ValueError,match='changed|switching'):
         state.approve(run,'2',expected_active_id=active['activated_pipeline_id'])
+
+
+@pytest.mark.parametrize('failure', ['changed', 'unavailable'])
+@pytest.mark.parametrize('already_bound', [False, True])
+def test_deployment_verification_checks_actual_fabric_notebook_before_binding(approved_runtime, monkeypatch, failure, already_bound):
+    state = approved_runtime
+    _, run = state.candidate()
+    row = state.approve(run)
+    destination = state.executable.parent / 'unverified'
+    package_activated_pipeline(row['activated_pipeline_id'], destination=destination,
+        executable_path=state.executable, context=state.context)
+    sources = [{'store':'Bronze', 'schema':'physical', 'table_name':'table0', 'logical_id':'asset0'}]
+    if already_bound:
+        verify_pipeline_deployment(deployment_path=destination, authority_environment='canary',
+            sources=sources, targets=[], context=state.context)
+    binding_path = destination / 'deployment.json'
+    before = binding_path.read_bytes() if already_bound else None
+    calls = []
+    def observe(runtime):
+        calls.append(runtime['notebook_id'])
+        if failure == 'unavailable':
+            raise RuntimeError('Fabric notebook export unavailable')
+        return 'f' * 64
+    monkeypatch.setattr(pipeline, 'deployed_notebook_fingerprint', observe)
+    with pytest.raises((ValueError, RuntimeError), match='Fabric notebook'):
+        verify_pipeline_deployment(deployment_path=destination, authority_environment='canary',
+            sources=sources, targets=[], context=state.context)
+    assert calls == ['notebook']
+    assert (binding_path.read_bytes() if binding_path.exists() else None) == before
+    assert not list(destination.glob('*.selection.json'))
+
+
+@pytest.mark.parametrize('configuration', [{'schema':'changed'}, {'transform':[{'table_name':'changed'}]}])
+def test_live_rejects_changed_project_fields_named_like_bindings(approved_runtime, configuration):
+    state = approved_runtime
+    _, run = state.candidate()
+    row = state.approve(run)
+    root, sources, targets = state.deploy(row)
+    with pytest.raises(ValueError, match='identity mismatch'):
+        setup_pipeline(execution_mode='live', pipeline_id='orders', deployment_path=root,
+            sources=sources, targets=targets, configuration=configuration,
+            activated_pipeline_id=row['activated_pipeline_id'], context=state.context)

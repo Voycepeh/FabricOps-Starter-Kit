@@ -11,7 +11,10 @@ def verify_pipeline_deployment(*, deployment_path, authority_environment, source
     """Verify approved artifact contents and persist separate physical bindings.
 
     Run after deploying the tested executable and definitions with Fabric tooling.
-    This records explicit workspace/notebook/store bindings in deployment.json.
+    Fetches the actual Fabric notebook definition and compares its executable
+    identity with the approval before recording workspace/notebook/store bindings
+    in deployment.json. Missing export permission or changed deployed code fails
+    without creating or updating the binding file.
     It does not deploy notebooks, activate versions, select Live or publish data.
     Every Live setup rechecks the artifacts, approval, dependencies and bindings.
     """
@@ -26,6 +29,9 @@ def verify_pipeline_deployment(*, deployment_path, authority_environment, source
         raise ValueError("Deployed executable identity mismatch.")
     if not runtime.get("notebook_id") or not runtime.get("workspace_id"):
         raise ValueError("Explicit deployed workspace and notebook identities are required.")
+    from fabricops_kit.pipeline.shared import deployed_notebook_fingerprint
+    if deployed_notebook_fingerprint(runtime) != manifest["candidate"]["executable_sha256"]:
+        raise ValueError("Actual Fabric notebook differs from the approved deployed executable.")
     bindings = {"pipeline_id": manifest["pipeline_id"], "authority_environment": authority_environment,
         "environment_name": env, "workspace_id": runtime["workspace_id"], "notebook_id": runtime["notebook_id"],
         "participants": bound_pipeline_participants(sources=sources, targets=targets, context=context, spark_session=spark_session)}

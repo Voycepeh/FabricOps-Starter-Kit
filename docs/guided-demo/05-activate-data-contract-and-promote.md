@@ -15,6 +15,8 @@ Return to `01_governance` and open [`widget_activate_pipeline()`](../api/referen
 
 Select a complete successful Testing candidate. Expand every source/target contract and rule, executable/dependency identity, processing configuration, operation evidence and Guardrail diagnostics. Review the warnings about permissions, publication transactions and concurrency that Testing cannot exercise. Select the exact currently effective Data Agreement and pipeline name/version, provide the exported tested notebook, then review and explicitly confirm Governance approval.
 
+Keep every project transformation setting in `PROJECT_CONFIGURATION`. All its keys, including `schema`, `store` and `table_name`, contribute to exact candidate identity. Nested Read/Write parameters also retain these keys; only the explicit top-level orchestration routing arguments are separate physical bindings.
+
 The service validates all requirements independently of the widget. Bootstrap, missing operations, failed persistence, changed code/contracts/configuration, blocking diagnostics, partial tests and isolated passing rules cannot authorize activation. The full 02A demo produces **one whole-pipeline approval** covering three inputs and two outputs.
 
 Contracts remain immutable and reusable after **Draft → Frozen**. `METADATA_ACTIVATED_PIPELINE` links the exact Agreement, successful Testing run and manifest. Version contents are immutable; only an explicit switch/deactivation changes the active version. There is at most one active version per stable logical pipeline. Concurrent/stale changes fail and must be reviewed again; do not blindly retry activation.
@@ -72,7 +74,7 @@ verify_pipeline_deployment(
 )
 ```
 
-This writes `deployment.json` for the configured workspace, notebook, stores and participants. It does not activate a version, select Live or publish data. `approved.json` and `executable.bin` remain deterministic approved artifacts. Bindings are outside portable identity. Store endpoint, workspace/item, schema, participant and role mismatches are rejected. A missing approval, definition, export permission or dependency fails closed.
+This fetches the actual deployed Fabric notebook definition and compares its executable identity with the approved manifest before writing `deployment.json` for the configured workspace, notebook, stores and participants. A changed notebook or unavailable definition export leaves the binding file untouched. It does not activate a version, select Live or publish data. `approved.json` and `executable.bin` remain deterministic approved artifacts. Bindings are outside portable identity. Store endpoint, workspace/item, schema, participant and role mismatches are rejected. A missing approval, definition, export permission or dependency fails closed.
 
 ### Save the exact Live selection
 
@@ -97,7 +99,7 @@ For the canonical notebooks, set `PIPELINE_LIVE_ENABLED=True`, `PIPELINE_DEPLOYM
 1. Stop affected schedules and back up the configured metadata. Export the old contract rows, including `is_active`, Agreement IDs and versions, to an external audit file before dropping legacy fields. Keep frozen `contract_payload_json` unchanged.
 2. Run `setup_metadata_tables()` with the configured Metadata store. It creates `governance.METADATA_ACTIVATED_PIPELINE` and adds nullable `engineering.METADATA_PIPELINE_RUN.activated_pipeline_id` through the existing additive migration behavior. Review every returned setup result before continuing.
 3. Remove the legacy top-level `agreement_id`, `agreement_version` and `is_active` columns from `METADATA_DATA_CONTRACT` using your Lakehouse schema migration procedure. Delta column dropping requires column mapping and compatible reader/writer protocol versions; validate that upgrade in a non-production copy first. The new canonical schema and writers do not use these fields or provide compatibility aliases.
-4. Rerun complete Testing with the new engine and every exact frozen contract. Earlier per-contract activations and older run snapshots lacking full operation configuration never become Activated Pipeline approval automatically.
+4. Rerun complete Testing with the new engine and every exact frozen contract. This also applies when upgrading an existing Activated Pipeline: the engine source hash changes, so previous approvals cannot authorize the upgraded engine. Earlier per-contract activations and older run snapshots lacking full operation configuration never become Activated Pipeline approval automatically.
 5. Explicitly approve, package, deploy/verify, save the exact Live selection and re-enable schedules. Keep historical release snapshots unchanged.
 
 ??? info "Exact Delta column-drop commands after backup"

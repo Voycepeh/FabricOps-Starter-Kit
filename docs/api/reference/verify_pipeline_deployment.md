@@ -67,7 +67,10 @@ Not documented yet
 <div class="reference-docstring-intro" markdown="1">
 
 Run after deploying the tested executable and definitions with Fabric tooling.
-This records explicit workspace/notebook/store bindings in deployment.json.
+Fetches the actual Fabric notebook definition and compares its executable
+identity with the approval before recording workspace/notebook/store bindings
+in deployment.json. Missing export permission or changed deployed code fails
+without creating or updating the binding file.
 It does not deploy notebooks, activate versions, select Live or publish data.
 Every Live setup rechecks the artifacts, approval, dependencies and bindings.
 
@@ -82,7 +85,7 @@ No related guides documented.
 
 `fabricops_kit/activated_pipeline/verify_pipeline_deployment.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/verify_pipeline_deployment.py#L10-L40">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/verify_pipeline_deployment.py#L10-L46">View on GitHub</a>
 </div>
 
 
