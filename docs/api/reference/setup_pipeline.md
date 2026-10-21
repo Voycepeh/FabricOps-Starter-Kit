@@ -29,7 +29,10 @@ scheduled_plan = setup_pipeline(
 ```
 
 Finalize every plan with finalize_pipeline(), including Read-only pipelines.
-Live continues to use existing active frozen Data Contract authority.
+Live resolves only the saved exact Activated Pipeline version. Supply an
+explicit deployment_path, and activated_pipeline_id once to save selection.
+Subsequent unattended Live calls omit that ID; a changed version never replaces
+the saved selection silently. replace_selection=True is an explicit switch.
 
 </div>
 
@@ -53,6 +56,10 @@ def setup_pipeline(
     pipeline_id=None,
     executable_sha256=None,
     dependencies=None,
+    configuration=None,
+    deployment_path=None,
+    activated_pipeline_id=None,
+    replace_selection=False,
 ):
 ```
 
@@ -70,14 +77,18 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `sources` | `list of dict` | Yes | `—` | Explicit source participants: store/schema/table_name or registered table_id. Historical Lineage is optional and cannot introduce additional participants. |
 | `targets` | `list of dict` | Yes | `—` | Explicit target participants with the same coordinate or table_id shape. |
-| `execution_mode` | `{"bootstrap", "testing", "live"}` | No | `None` | Defaults to Bootstrap without interaction. Bootstrap creates and profiles initial outputs only while no participating frozen or active contract exists. Interactive setup defaults to Testing. Governed headless modes are explicit. |
-| `selections` | `dict` | No | `None` | Exact per-table contract_id/contract_version; Testing also permits explicit no_contract=True when no active contract is bypassed. Live requires a contract for every participant. Required for headless Testing/Live; omitted for Bootstrap. Both paths use the same immutable plan builder. |
+| `execution_mode` | `{"bootstrap", "testing", "live"}` | No | `None` | Defaults to Bootstrap without interaction. Bootstrap creates and profiles initial outputs only while no participating frozen contract exists. Interactive setup defaults to Testing. Governed headless modes are explicit. |
+| `selections` | `dict` | No | `None` | Exact per-table contract_id/contract_version; Testing also permits explicit no_contract=True. Required for headless Testing and forbidden for Live. Live contracts resolve exclusively from an approved deployment manifest. |
 | `interactive` | `bool` | No | `False` | Defaults to False. If True, explicitly enable interactive contract Testing. If False, return the immutable plan directly without loading notebook UI packages or enumerating unrelated contract versions. |
 | `spark_session` | `object` | No | `None` | Spark session for metadata reads. |
 | `context` | `dict` | No | `None` | Configured environment routing and notebook identity. |
 | `pipeline_id` | `str` | No | `None` | Stable project-owned logical identity, portable across environments. Required for qualifying Testing evidence; never use a run or workspace identifier. |
-| `executable_sha256` | `str` | No | `None` | SHA-256 of the complete project executable (notebook and transformation code). Required for qualifying Testing evidence. Supply from the deployed artifact. |
+| `executable_sha256` | `str` | No | `None` | Optional expected fingerprint of the deployed notebook's executable cells. Fabric observes the actual definition; a mismatched pin is rejected. Outputs, display metadata and physical bindings are excluded. Unavailable identity leaves Testing incomplete. Keep helpers in the notebook or pinned packages. |
 | `dependencies` | `dict` | No | `None` | Installed Python distribution names to exact runtime versions. They are checked against installed package metadata; missing/mismatched or unsupported dependency identities prevent successful Testing evidence. Do not include credentials, paths or physical environment bindings. Supply an explicit empty dict when no additional project dependencies exist; omitted dependency identity cannot qualify as successful Testing evidence. |
+| `configuration` | `dict` | No | `None` | Declared behavior-changing transformation settings supplied outside notebook code. Supply {} when none exist. Missing identity prevents successful Testing; Live must supply the exact tested values. Exclude secrets and physical bindings. |
+| `deployment_path` | `str` | No | `None` | Explicit shared mounted deployment directory containing approved.json, executable.bin and verified deployment.json. Required for Live. |
+| `activated_pipeline_id` | `str` | No | `None` | Exact approved version to persist as the environment's Live selection. Omit on subsequent manual/scheduled Live runs to reuse the saved selection. |
+| `replace_selection` | `bool` | No | `False` | Explicitly replace a different saved version after verifying its deployment. |
 
 </div>
 
@@ -105,7 +116,7 @@ Default Bootstrap returns a plan with no UI or choices while no participant has 
 ValueError
     For frozen/active contracts blocking Bootstrap, missing notebook identity,
     invalid payloads, unavailable selections or
-    Live choices bypassing an active contract.
+    Live selection, manifest, executable/dependency or deployment-binding mismatches.
 RuntimeError
     For ambiguous active versions, metadata-read failure, or edits to a built plan.
 
@@ -115,7 +126,7 @@ RuntimeError
 - Missing notebook identity or explicit participant configuration.
 - Ambiguous active versions.
 - Invalid or mismatched frozen JSON.
-- Live attempts to bypass an active frozen contract.
+- Live is missing an exact Activated Pipeline, verified deployment or saved selection.
 
 ## See also
 

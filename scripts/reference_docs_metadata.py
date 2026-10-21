@@ -114,15 +114,15 @@ METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metad
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
     "A Data Agreement is the overarching governance agreement between the accountable data producer and consumer parties, represented by their data stewards. It defines why the data may be shared, who is accountable, the permitted purpose and scope, usage conditions, and the agreement’s review period.\n\n"
-    "A Data Contract is the immutable, versioned governed definition of one table. Authoring freezes its table identity, catalogue structure, processing definition, Enrichment, and active Guardrail expectations without an Agreement linkage. After Development validates that frozen version, activation explicitly links one exact Data Agreement version for Production.\n\n"
-    "One Data Agreement can govern multiple Data Contracts.\n\n"
+    "A Data Contract is the immutable, versioned governed definition of one table. Authoring freezes its table identity, catalogue structure, processing definition, Enrichment, and active Guardrail expectations without an Agreement linkage. An Activated Pipeline links a complete successful Testing candidate to one exact Data Agreement version. Its manifest embeds reusable exact frozen contracts.\n\n"
+    "One Data Agreement can govern multiple Activated Pipelines, each reusing frozen contracts.\n\n"
     "The agreement answers: Why and under what governance arrangement may this data be shared?\n\n"
     "The contract answers: Exactly what data will be delivered, in what structure, at what quality, and how reliably?"
 )
 
 METADATA_REFERENCE_MODEL_DIAGRAM = (
     "![FabricOps metadata model: Governance and Engineering schemas, with a "
-    "one-to-many Data Contract to Guardrail Results relationship]"
+    "manifest-backed Activated Pipeline contracts and separate run-linked Guardrail Results]"
     "(../assets/fabricops-metadata-model.png)"
 )
 
@@ -132,11 +132,42 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 )
 
 METADATA_TABLE_MODELS = {
-    "METADATA_PIPELINE_RUN": {
-        "purpose": "Persist one logical execution attempt with candidate identity, operation outcomes and safe failures. run_id distinguishes attempts; standard _activity_id preserves the Fabric activity and may be shared by several attempts. pipeline_id survives notebook renames and environment copies. Activation eligibility is not a stored flag. Bootstrap is separate from successful Testing; Live keeps existing contract authority.",
-        "grain": "One logical pipeline run across all participating sources and targets.",
-        "primary_key": ["run_id"], "foreign_keys": [], "relationships": [],
-    },
+    'METADATA_PIPELINE_RUN': {'purpose': 'One complete logical run and candidate identity across all operations; successful Testing is '
+            'approval evidence, Bootstrap never is. Live runs reference their exact Activated Pipeline '
+            'version.',
+ 'grain': 'One logical execution attempt.',
+ 'primary_key': ['run_id'],
+ 'foreign_keys': [{'local_field': 'activated_pipeline_id',
+                   'referenced_table': 'METADATA_ACTIVATED_PIPELINE',
+                   'referenced_field': 'activated_pipeline_id',
+                   'cardinality': 'N:1',
+                   'statement': 'Live runs reference their approved immutable version; Testing and Bootstrap '
+                                'leave this empty.'}],
+ 'relationships': []},
+    'METADATA_ACTIVATED_PIPELINE': {'purpose': 'Immutable whole-pipeline approval linked to exact successful Testing, candidate manifest, '
+            'reusable frozen contracts and one exact effective Agreement. Only is_active changes during '
+            'explicit switching/deactivation.',
+ 'grain': 'One immutable approved version of one stable logical pipeline.',
+ 'primary_key': ['activated_pipeline_id'],
+ 'foreign_keys': [{'local_field': 'testing_run_id',
+                   'referenced_table': 'METADATA_PIPELINE_RUN',
+                   'referenced_field': 'run_id',
+                   'cardinality': 'N:1',
+                   'statement': 'One exact complete successful Testing run authorizes Governance review.'},
+                  {'local_field': 'agreement_id',
+                   'referenced_table': 'METADATA_DATA_AGREEMENT',
+                   'referenced_field': 'agreement_id',
+                   'cardinality': 'N:1',
+                   'statement': 'Together with agreement_version identifies the exact approved Agreement.'},
+                  {'local_field': 'agreement_version',
+                   'referenced_table': 'METADATA_DATA_AGREEMENT',
+                   'referenced_field': 'agreement_version',
+                   'cardinality': 'N:1',
+                   'statement': 'Exact Agreement version frozen in the approved manifest.'}],
+ 'relationships': [{'cardinality': 'N:M', 'related_table': 'METADATA_DATA_CONTRACT',
+                    'statement': 'manifest_json embeds exact immutable contract identities and payload '
+                                 'hashes for every declared source and target. Contracts are reusable; there '
+                                 'is no direct contract-to-Agreement linkage.'}]},
     "METADATA_DATA_STEWARD": {
         "purpose": "Know who is responsible for the data.",
         "grain": "One registered Data Steward.",
@@ -156,19 +187,15 @@ METADATA_TABLE_MODELS = {
             {"local_field": "recipient_steward_id", "referenced_table": "METADATA_DATA_STEWARD", "referenced_field": "steward_id", "cardinality": "N:1", "statement": "Each Data Agreement version has one recipient steward; one steward can receive many agreement versions."},
         ],
         "relationships": [
-            {"cardinality": "1:N", "statement": "One Data Agreement lifecycle can govern many Data Contract rows through agreement_id."},
+            {"cardinality": "1:N", "statement": "One exact Data Agreement version can govern many Activated Pipeline versions."},
         ],
     },
     "METADATA_DATA_CONTRACT": {
-        "purpose": "Own descriptive Enrichment and executable Guardrails in the single authoritative contract_payload_json for one table-centric governed definition; table_name captures the table name at this contract write, alongside stable table_id, and may differ after a later rename.",
-        "grain": "One Data Contract lifecycle version for one governed table; the draft payload is overwritten on Save, becomes immutable when frozen, and is selected for Production through is_active.",
+        "purpose": "Reusable immutable frozen table definition with Enrichment and executable Guardrails. Agreement linkage belongs to Activated Pipeline.",
+        "grain": "One Draft or Frozen version of one table contract; Frozen contents are immutable.",
         "primary_key": ["contract_id", "contract_version"],
-        "foreign_keys": [
-            {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Null for draft/frozen versions; together with agreement_version, identifies the exact Agreement linked during activation."},
-            {"local_field": "agreement_version", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_version", "cardinality": "N:1", "statement": "Null for draft/frozen versions; together with agreement_id, identifies the exact Agreement linked during activation."},
-            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Each Data Contract governs one logical Catalogue table."},
-        ],
-        "relationships": [{"cardinality": "1:N", "statement": "One stable contract_id has monotonically increasing contract_version rows; each version is authored as a draft and becomes immutable when frozen."}],
+        "foreign_keys": [{"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "A contract defines one Catalogue table."}],
+        "relationships": [{"cardinality": "N:M", "related_table": "METADATA_ACTIVATED_PIPELINE", "statement": "Many activated manifests may reuse this exact frozen contract; manifest references are not scalar foreign keys."}],
     },
     "METADATA_DATA_CATALOGUE": {
         "purpose": "The current structural registry of known table and column assets. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.",
@@ -250,6 +277,7 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
+    "METADATA_ACTIVATED_PIPELINE",
     "METADATA_DATA_CATALOGUE",
     "METADATA_SOURCE_OBSERVATION",
     "METADATA_DATA_PROFILED",
@@ -327,7 +355,12 @@ METADATA_COLUMN_OWNERS = {
         ],
     },
     "METADATA_DATA_CONTRACT": {
-        "__default__": ["fabricops_kit.widgets.widget_data_contract.widget_data_contract", "fabricops_kit.data_contract.shared.create_contract_draft", "fabricops_kit.data_contract.shared.save_contract_draft", "fabricops_kit.data_contract.shared.freeze_contract", "fabricops_kit.data_contract.shared.activate_contract_version", "fabricops_kit.data_contract.migration.migrate_contract_definitions"],
+        "__default__": ["fabricops_kit.widgets.widget_data_contract.widget_data_contract", "fabricops_kit.data_contract.shared.create_contract_draft", "fabricops_kit.data_contract.shared.save_contract_draft", "fabricops_kit.data_contract.shared.freeze_contract"],
+        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+    },
+    "METADATA_ACTIVATED_PIPELINE": {
+        "__default__": ["fabricops_kit.activated_pipeline.shared.approve_pipeline"],
+        "is_active": ["fabricops_kit.activated_pipeline.shared.commit_pipeline_activation", "fabricops_kit.activated_pipeline.set_pipeline_active.set_pipeline_active"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
     "METADATA_DATA_CATALOGUE": {
@@ -1572,34 +1605,12 @@ PUBLIC_SYMBOL_DOCS = [
   'common_failure_causes': ['The table_id has no active Catalogue row.',
                             'The metadata target cannot be read or written.',
                             'A subtype-specific Guardrail value is invalid.']},
- {'kind': 'function',
- 'module': 'widgets.widget_activate_data_contract',
- 'function_type': 'callable',
- 'summary_override': 'Review exact Testing diagnostics and activate a frozen Data Contract for Live.',
- 'symbol_name': 'widget_activate_data_contract',
- 'template_notebook': '01_governance',
- 'template_segment': 'Data Contract activation',
- 'use_when': 'Use for separate Governance approval after reviewing a complete in-memory Testing report.',
- 'parameters': 'Optional table_id and contract_version, complete testing_results, Spark session and routing '
-               'context.',
- 'returns': 'Exact frozen identity, diagnostic review, explicit approval control, confirmation and activation '
-            'result.',
- 'raises': 'Raises metadata routing, exact-version diagnostic review, agreement linkage or activation errors.',
- 'related_functions': ['widget_data_contract', 'setup_pipeline'],
- 'expanded_purpose': 'Matches the exact frozen payload to a complete in-memory Testing report, requires '
-                     'deliberate Governance review approval and confirmation, then links an exact Data Agreement '
-                     'and activates the frozen version. Testing retains complete-run evidence for a later activation workflow; current contract activation still reviews in-memory reports.',
- 'when_to_use': 'Use only after complete passing Testing diagnostics for the exact immutable version are '
-                'available.',
- 'do_not_use_when': 'Do not use to author or freeze contracts, run pipeline validation, or promote and deploy '
-                    '02_pipeline.',
- 'glossary_terms': ['data contract', 'data agreement', 'guardrails', 'metadata lakehouse'],
- 'return_interpretation': 'Diagnostics qualify a version for explicit Governance review; the separate confirmed '
-                          'activation action mutates governance state.',
- 'common_failure_causes': ['No eligible frozen version.',
-                           'Missing or mismatched Testing report.',
-                           'Governance review not approved or no Data Agreement selected.',
-                           'Metadata routing or persistence failure.']},
+ {'kind': 'function', 'module': 'widgets.widget_activate_pipeline', 'function_type': 'callable',
+  'summary_override': 'Review complete persisted Testing and activate an exact whole pipeline.',
+  'symbol_name': 'widget_activate_pipeline', 'template_notebook': '01_governance', 'template_segment': 'Pipeline activation',
+  'use_when': 'Use after finalizing successful whole-pipeline Testing.',
+  'expanded_purpose': 'Shows exact contracts/rules, executable and configuration identity, diagnostics, warnings, Agreement and fingerprint before explicit Governance confirmation. Activation neither deploys nor publishes.',
+  'related_functions': ['activate_pipeline', 'setup_pipeline']},
  {'kind': 'function',
   'module': 'widgets.widget_view_catalogue',
   'function_type': 'callable',
@@ -1638,7 +1649,7 @@ PUBLIC_SYMBOL_DOCS = [
  'common_failure_causes': ['Bootstrap would bypass a frozen or active contract.', 'Missing notebook identity or explicit participant configuration.',
                            'Ambiguous active versions.',
                            'Invalid or mismatched frozen JSON.',
-                           'Live attempts to bypass an active frozen contract.']},
+                           'Live is missing an exact Activated Pipeline, verified deployment or saved selection.']},
 
 
 
@@ -1739,6 +1750,39 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "preferred_example": 'result = profile_table(dataframe=orders_df)\nstatistical_profile = result["profile"]',
     },
 }
+
+PUBLIC_SYMBOL_DOCS.extend([{'kind': 'function',
+  'module': 'activated_pipeline.activate_pipeline',
+  'function_type': 'callable',
+  'summary_override': 'Approve an exact successfully tested whole pipeline.',
+  'symbol_name': 'activate_pipeline',
+  'template_notebook': '01_governance, 02_pipeline',
+  'template_segment': 'Pipeline activation and deployment',
+  'related_functions': ['setup_pipeline', 'widget_activate_pipeline']},
+ {'kind': 'function',
+  'module': 'activated_pipeline.set_pipeline_active',
+  'function_type': 'callable',
+  'summary_override': 'Explicitly switch or deactivate an immutable approved version.',
+  'symbol_name': 'set_pipeline_active',
+  'template_notebook': '01_governance, 02_pipeline',
+  'template_segment': 'Pipeline activation and deployment',
+  'related_functions': ['setup_pipeline', 'widget_activate_pipeline']},
+ {'kind': 'function',
+  'module': 'activated_pipeline.package_activated_pipeline',
+  'function_type': 'callable',
+  'summary_override': 'Package exact approved definitions and executable deterministically.',
+  'symbol_name': 'package_activated_pipeline',
+  'template_notebook': '01_governance, 02_pipeline',
+  'template_segment': 'Pipeline activation and deployment',
+  'related_functions': ['setup_pipeline', 'widget_activate_pipeline']},
+ {'kind': 'function',
+  'module': 'activated_pipeline.verify_pipeline_deployment',
+  'function_type': 'callable',
+  'summary_override': 'Verify deployment artifacts and persist explicit physical bindings.',
+  'symbol_name': 'verify_pipeline_deployment',
+  'template_notebook': '01_governance, 02_pipeline',
+  'template_segment': 'Pipeline activation and deployment',
+  'related_functions': ['setup_pipeline', 'widget_activate_pipeline']}])
 
 for _row in PUBLIC_SYMBOL_DOCS:
     _update = FOCUSED_FUNCTION_DOC_UPDATES.get(_row.get("symbol_name"))

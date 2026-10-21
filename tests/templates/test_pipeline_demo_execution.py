@@ -17,7 +17,7 @@ DEMOS = (
 
 
 @pytest.mark.parametrize("name", DEMOS)
-@pytest.mark.parametrize("mode,passed", [("testing", True), ("testing", False), ("bootstrap", True)])
+@pytest.mark.parametrize("mode,passed", [("testing", True), ("testing", False), ("bootstrap", True), ("live", True)])
 def test_demo_executes_every_declared_operation_before_inspection(name, mode, passed, capsys):
     """Fresh sessions and failed Testing results still reach every target and the inspector."""
     plan = object()
@@ -30,7 +30,8 @@ def test_demo_executes_every_declared_operation_before_inspection(name, mode, pa
     def select(**kwargs):
         assert kwargs["sources"] and kwargs["targets"]
         if not kwargs["interactive"]:
-            assert mode == "bootstrap"
+            assert mode in {"bootstrap", "live"}
+            assert kwargs.get("execution_mode") == ("live" if mode == "live" else None)
             return plan
         return {"build_plan": build_plan, "refresh": refresh}
 
@@ -49,6 +50,8 @@ def test_demo_executes_every_declared_operation_before_inspection(name, mode, pa
 
     forbidden = Mock(side_effect=AssertionError("Notebook exited or published outside the orchestrators"))
     namespace = {
+        "PIPELINE_CONTRACT_TESTING": mode == "testing", "PIPELINE_LIVE_ENABLED": mode == "live",
+        "PIPELINE_DEPLOYMENT_PATH": "/configured/deployment" if mode == "live" else None,
         "F": MagicMock(), "spark": object(), "display": Mock(),
         "finalize_pipeline": finalize, "setup_pipeline": select, "orchestrate_read": read, "orchestrate_write": write,
         "resolve_table_id": Mock(return_value="inventory-target"),
@@ -59,7 +62,7 @@ def test_demo_executes_every_declared_operation_before_inspection(name, mode, pa
     notebook = nbformat.read(DEMO_DIR / name, as_version=4)
     for cell in notebook.cells:
         if cell.cell_type == "code" and cell.id not in {"environment", "imports"}:
-            source = cell.source.replace("CONTRACT_TESTING = False", f"CONTRACT_TESTING = {mode == 'testing'}")
+            source = cell.source
             exec(compile(source, f"{name}:{cell.id}", "exec"), namespace)
     assert [row["table_name"] for row in reads] == [row["table_name"] for row in namespace["PIPELINE_SOURCES"]]
     assert writes == [row["table_name"] for row in namespace["PIPELINE_TARGETS"]]

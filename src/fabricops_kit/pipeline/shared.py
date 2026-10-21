@@ -30,6 +30,9 @@ class PipelineExecutionPlan:
     pipeline_id: str = ""
     executable_sha256: str = ""
     dependencies_json: str = "{}"
+    configuration_json: str = "{}"
+    activated_pipeline_id: str = ""
+    approved_candidate_json: str = ""
     lock: Any = dataclass_field(default_factory=RLock, repr=False, compare=False)
     evidence: dict = dataclass_field(default_factory=dict, repr=False, compare=False)
     results: list = dataclass_field(default_factory=list, repr=False, compare=False)
@@ -2631,47 +2634,6 @@ def _contract_payload(row: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def resolve_active_data_contract(config, env: str, table_id: str, *, spark_session=None, required: bool = True) -> dict[str, Any] | None:
-    """Resolve the unambiguous active frozen contract for one logical table."""
-    try:
-        frame = read_lakehouse_table(
-            DATA_CONTRACT_TABLE, store="Metadata",
-            schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-            spark_session=spark_session, context={"config": config, "env": env},
-        )
-    except Exception as exc:
-        if is_table_not_found_error(exc):
-            raise RuntimeError(
-                "Cannot read METADATA_DATA_CONTRACT. Initialize the configured metadata store before execution; "
-                "a missing metadata table is not an explicit No Contract choice."
-            ) from exc
-        raise
-    escaped_env = str(env).replace("'", "''")
-    escaped_table_id = str(table_id).replace("'", "''")
-    active = [
-        _row_to_dict(row)
-        for row in frame.filter(
-            f"`table_id` = '{escaped_table_id}' AND `is_active` = TRUE AND `environment_name` = '{escaped_env}'"
-        ).limit(2).collect()
-    ]
-    if len(active) > 1:
-        raise RuntimeError(f"Data Contract integrity error: {table_id!r} has multiple active versions.")
-    if not active:
-        if required:
-            raise ValueError(f"No active Data Contract exists for {table_id!r}.")
-        return None
-    row = dict(active[0])
-    if str(row.get("status") or "").lower() != "frozen":
-        raise RuntimeError(
-            f"Data Contract integrity error: active version for {table_id!r} must remain frozen."
-        )
-    if not str(row.get("agreement_id") or "").strip() or not str(row.get("agreement_version") or "").strip():
-        raise RuntimeError(
-            f"Data Contract integrity error: active version for {table_id!r} has no exact Data Agreement linkage."
-        )
-    row["contract_payload"] = _contract_payload(row)
-    return row
-
 
 def resolve_data_contract_version(
     config,
@@ -2747,14 +2709,10 @@ def prepare_pipeline_execution(table_ids, *, execution_plan, spark_session=None)
         context["activity_id"] = plan.plan_id
     context.pop("data_contract_overrides", None)
     if plan.execution_mode == "bootstrap":
-        _require_bootstrap_contracts_absent(config, env, identities, spark_session=spark_session)
-    elif plan.permits_persistence:
-        for table_id, selected in context["_pipeline_contracts"].items():
-            active_contract = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=False)
-            if (active_contract is None) != (selected is None) or (active_contract is not None and any(
-                active_contract[key] != selected[key] for key in ("contract_id", "contract_version", "contract_payload_json")
-            )):
-                raise ValueError("Active contract changed after plan creation; create a new execution plan.")
+        _require_bootstrap_contracts_absent(config, env, identities, pipeline_id=plan.pipeline_id, spark_session=spark_session)
+    elif plan.execution_mode == "live":
+        from fabricops_kit.activated_pipeline.shared import verify_live_plan
+        verify_live_plan(plan, spark_session=spark_session)
     for table_id in identities:
         load_table_guardrail_rules(config, env, table_id=table_id, spark_session=spark_session, context=context)
     return context
@@ -2852,14 +2810,11 @@ def resolve_pipeline_data_contract(
     spark_session=None,
     context: Mapping[str, Any] | None = None,
 ) -> dict[str, Any] | None:
-    """Resolve the explicit plan snapshot, or active authority for an internal check."""
+    """Resolve only an explicit plan snapshot; Live snapshots come from approved manifests."""
     cache = (context or {}).get("_pipeline_contracts")
     if cache is not None and table_id in cache:
         return cache[table_id]
-    contract = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=False)
-    if cache is not None:
-        cache[table_id] = contract
-    return contract
+    raise ValueError("Data Contract resolution requires an explicit execution plan; Live authority is an Activated Pipeline manifest.")
 
 
 def resolve_catalogue_table_id(
@@ -3210,6 +3165,10 @@ def resolve_table_processing_definition(
         writer = table_definition.get("writer") or {}
         if not isinstance(writer, Mapping):
             raise ValueError("Data Contract table.writer must be an object.")
+        plan = (context or {}).get("execution_plan")
+        if plan is not None and plan.execution_mode == "live":
+            writer = {"notebook_id": plan.notebook_id,
+                      "notebook_name": plan.runtime_context.get("notebook_name")}
         return {
             **governed,
             "source": "data_contract",
@@ -5552,8 +5511,64 @@ class ExecutionSummary:
         return elapsed
 
 
-def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections=None, context=None, spark_session=None, pipeline_id=None, executable_sha256=None, dependencies=None):
-    """Freeze validated mode, participant identities and exact contract snapshots."""
+def notebook_executable_fingerprint(content):
+    """Hash executable cells, excluding outputs and physical/display notebook metadata."""
+    notebook = json.loads(content)
+    cells = []
+    for cell in notebook["cells"]:
+        if cell.get("cell_type") != "code":
+            continue
+        source = cell.get("source", "")
+        source = "".join(source) if isinstance(source, list) else source
+        for line in source.splitlines():
+            if line.strip().startswith("%run ") and line.strip() != "%run 00_env_config":
+                raise ValueError("External helper notebooks require identity support; keep executable helpers in this notebook or pinned distributions.")
+        cells.append({"source": source})
+    if not cells:
+        raise ValueError("Executable notebook has no code cells.")
+    return hashlib.sha256(json.dumps({"format": "fabricops.notebook-executable.v1", "cells": cells},
+        sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
+
+
+def deployed_notebook_fingerprint(runtime):
+    """Hash the exact deployed ipynb definition fetched from the Fabric service.
+
+    A local sidecar alone cannot prove which notebook is running. Missing identity,
+    authorization, unsupported definition or unfinished export fails closed. Keep
+    transformation/helper code in this notebook and declare external distributions.
+    """
+    import notebookutils
+    import base64
+    from urllib.request import Request, urlopen
+    workspace, notebook = str(runtime.get("workspace_id") or ""), str(runtime.get("notebook_id") or "")
+    if not all(re.fullmatch(r"[0-9a-fA-F-]{36}", value) for value in (workspace, notebook)):
+        raise ValueError("Actual Fabric workspace and notebook IDs are required for executable verification.")
+    token = notebookutils.credentials.getToken("pbi")
+    root = "https://api.fabric.microsoft.com/v1/"
+    url = f"{root}workspaces/{workspace}/notebooks/{notebook}/getDefinition?format=ipynb"
+    request = Request(url, data=b"", method="POST", headers={"Authorization": f"Bearer {token}"})
+    for _attempt in range(30):
+        with urlopen(request, timeout=30) as response:
+            payload = json.loads(response.read() or b"{}")
+            if response.status == 200 and "definition" in payload:
+                parts = [part for part in payload["definition"].get("parts", []) if part.get("path", "").endswith(".ipynb")]
+                if len(parts) != 1 or parts[0].get("payloadType") != "InlineBase64":
+                    raise ValueError("Fabric did not return one exact notebook definition.")
+                return notebook_executable_fingerprint(base64.b64decode(parts[0]["payload"], validate=True))
+            location = response.headers.get("Location") or request.full_url
+            if not location.startswith(root + "operations/") or payload.get("status") in {"Failed", "Cancelled"}:
+                raise RuntimeError("Fabric notebook definition export is unavailable.")
+            if payload.get("status") == "Succeeded":
+                location = location.rstrip("/") + "/result"
+        time.sleep(1)
+        request = Request(location, headers={"Authorization": f"Bearer {token}"})
+    raise RuntimeError("Fabric notebook definition export did not complete.")
+
+
+def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections=None, context=None, spark_session=None, pipeline_id=None, executable_sha256=None, dependencies=None, configuration=None):
+    """Freeze Testing/Bootstrap participants; Live requires approved deployment resolution."""
+    if execution_mode == "live":
+        raise ValueError("Live requires an Activated Pipeline and verified deployment; use setup_pipeline with deployment_path, never contract selections.")
     from types import MappingProxyType
 
     if execution_mode not in {"bootstrap", "testing", "live"}:
@@ -5572,7 +5587,7 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
     if execution_mode == "bootstrap":
         if selections is not None:
             raise ValueError("Bootstrap does not accept contract selections; enable Testing to select contracts.")
-        _require_bootstrap_contracts_absent(config, env, identities, spark_session=spark_session)
+        _require_bootstrap_contracts_absent(config, env, identities, pipeline_id=pipeline_id, spark_session=spark_session)
         selections = {table_id: {"no_contract": True} for table_id in identities}
     if not isinstance(selections, dict) or set(selections) != set(identities):
         raise ValueError("Supply an explicit contract or No Contract choice for every participating table only.")
@@ -5580,12 +5595,7 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
     for table_id, choice in selections.items():
         if not isinstance(choice, dict):
             raise ValueError("Every contract selection must be an explicit mapping.")
-        active = resolve_active_data_contract(config, env, table_id, spark_session=spark_session, required=False)
         if choice == {"no_contract": True}:
-            if active is not None:
-                raise ValueError(f"No Contract cannot bypass the active contract for {table_id!r}.")
-            if execution_mode == "live":
-                raise ValueError("Live requires an active frozen Data Contract for every participant; use Bootstrap for initial contract-free publication.")
             contracts[table_id] = None
             continue
         if set(choice) != {"contract_id", "contract_version"}:
@@ -5596,11 +5606,15 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
         )
         validate_contract_definitions(selected["contract_payload"])
         contract_guardrail_rows(selected, environment_name=env, table_id=table_id)
-        if execution_mode == "live" and (active is None or any(
-            selected[key] != active[key] for key in ("contract_id", "contract_version")
-        )):
-            raise ValueError(f"Live requires the active frozen contract for {table_id!r}; candidates require Testing.")
         contracts[table_id] = selected
+    if execution_mode == "testing":
+        try:
+            observed_executable = deployed_notebook_fingerprint(runtime)
+        except Exception:
+            observed_executable = ""
+        if executable_sha256 and observed_executable and executable_sha256.lower() != observed_executable:
+            raise ValueError("Declared executable identity differs from the deployed Fabric notebook.")
+        executable_sha256 = observed_executable
     plan_id = str(uuid4())
     run_context = {**runtime, "config": config, "env": env}
     plan = PipelineExecutionPlan(
@@ -5609,7 +5623,7 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
         json.dumps(selections, sort_keys=True), json.dumps(contracts, default=str, sort_keys=True),
         MappingProxyType(run_context),
         pipeline_id=str(pipeline_id or "").strip(), executable_sha256=str(executable_sha256 or "").strip().lower(),
-        dependencies_json=canonical_candidate_json(dependencies),
+        dependencies_json=canonical_candidate_json(dependencies), configuration_json=canonical_candidate_json(configuration),
     )
     persist_pipeline_run(plan, spark_session=spark_session)
     return plan
@@ -5644,7 +5658,7 @@ def resolve_pipeline_participants(config, env, *, sources, targets, context=None
     return identities
 
 
-def _require_bootstrap_contracts_absent(config, env, identities, *, spark_session=None):
+def _require_bootstrap_contracts_absent(config, env, identities, *, pipeline_id=None, spark_session=None):
     """Reject Bootstrap when any participant has frozen or active Governance requirements."""
     try:
         frame = read_lakehouse_table(
@@ -5656,11 +5670,24 @@ def _require_bootstrap_contracts_absent(config, env, identities, *, spark_sessio
         if is_table_not_found_error(exc):
             raise RuntimeError("Initialize the configured metadata store before Bootstrap; missing metadata cannot authorize contract-free execution.") from exc
         raise
+    approvals = read_lakehouse_table(
+        "METADATA_ACTIVATED_PIPELINE", store="Metadata",
+        schema=metadata_table_physical_schema(config, "METADATA_ACTIVATED_PIPELINE"),
+        spark_session=spark_session, context={"config": config, "env": env},
+    )
+    for value in approvals.collect():
+        approved = _row_to_dict(value)
+        if not approved.get("activated_pipeline_id"):
+            continue
+        manifest = json.loads(approved["manifest_json"])
+        owns_participant = any(item["definition"].get("table_id") in identities for item in manifest["contracts"])
+        if (pipeline_id and approved.get("pipeline_id") == pipeline_id) or owns_participant:
+            raise ValueError("Bootstrap cannot bypass an existing Activated Pipeline, including inactive versions; configure exact Live approval or use Testing.")
     escaped_env = str(env).replace("'", "''")
     for row in frame.filter(f"`environment_name` = '{escaped_env}'").collect():
         row = _row_to_dict(row)
         if row.get("table_id") in identities and (
-            row.get("is_active") is True or str(row.get("status") or "").strip().lower() == "frozen"
+            str(row.get("status") or "").strip().lower() == "frozen"
         ):
             raise ValueError("Bootstrap cannot bypass a frozen or active Data Contract. Enable Testing and select exact versions, or use the configured governed Live workflow.")
 
@@ -5710,6 +5737,8 @@ def pipeline_candidate(plan):
     participants, bindings = [], []
     table_names = {table_id: identity.get("logical_id") or f"{identity['store']}/{identity['table_name']}"
                    for table_id, identity in identities.items()}
+    table_names.update({contract["table_id"]: table_names[table_id] for table_id, contract in contracts.items()
+                        if contract is not None and contract.get("table_id")})
     for table_id, identity in identities.items():
         logical = identity.get("logical_id") or f"{identity['store']}/{identity['table_name']}"
         contract = contracts.get(table_id)
@@ -5726,8 +5755,13 @@ def pipeline_candidate(plan):
 
     package = Path(__file__).parents[1]
     engine = hashlib.sha256()
-    for path in sorted(package.rglob("*.py")):
-        engine.update(path.relative_to(package).as_posix().encode() + b"\0" + path.read_bytes() + b"\0")
+    try:
+        engine_files = sorted(package.rglob("*.py"))
+        for path in engine_files:
+            engine.update(path.relative_to(package).as_posix().encode() + b"\0" + path.read_bytes() + b"\0")
+        engine_identity = engine.hexdigest() if engine_files else None
+    except OSError:
+        engine_identity = None
     dependencies = {}
     for name in ("pandas", "sqlglot", "jsonschema", "PyYAML", "pyspark", "delta-spark"):
         try:
@@ -5754,14 +5788,16 @@ def pipeline_candidate(plan):
         }
         project_dependencies_available = bool(project_dependencies_available and valid_name and valid_version and required == observed)
     candidate = {"format": "fabricops.pipeline-candidate.v1", "pipeline_id": plan.pipeline_id,
-                 "executable_sha256": plan.executable_sha256, "engine_sha256": engine.hexdigest(),
+                 "executable_sha256": plan.executable_sha256, "engine_sha256": engine_identity,
                  "dependencies": observed_project_dependencies,
+                 "project_configuration": _portable_candidate_value(json.loads(plan.configuration_json)),
                  "runtime_dependencies": dependencies,
                  "python_version": __import__("sys").version.split()[0],
                  "participants": sorted(participants, key=lambda item: item["participant"]),
-                 "operations": sorted([{"operation": key, "configuration_sha256": value.get("configuration_sha256")}
+                 "operations": sorted([{"operation": key, "configuration_sha256": value.get("configuration_sha256"),
+                                         "configuration": value.get("configuration")}
                                        for key, value in plan.evidence["operations"].items()], key=lambda item: item["operation"])}
-    valid = project_dependencies_available and all(dependencies.values()) and bool(plan.pipeline_id and re.fullmatch(r"[0-9a-f]{64}", plan.executable_sha256))
+    valid = bool(engine_identity) and isinstance(candidate["project_configuration"], dict) and project_dependencies_available and all(dependencies.values()) and bool(plan.pipeline_id and re.fullmatch(r"[0-9a-f]{64}", plan.executable_sha256))
     valid = valid and len({item["participant"] for item in participants}) == len(participants)
     valid = valid and all(item["configuration_sha256"] for item in candidate["operations"])
     portable_fingerprint = _candidate_hash(candidate) if valid else None
@@ -5802,7 +5838,7 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
             status = "failed"
         if status == "succeeded" and plan.execution_mode == "testing" and not fingerprint:
             status = "incomplete"
-        row = {"run_id": plan.plan_id, "pipeline_id": plan.pipeline_id,
+        row = {"run_id": plan.plan_id, "activated_pipeline_id": plan.activated_pipeline_id or None, "pipeline_id": plan.pipeline_id,
                "execution_mode": plan.execution_mode, "environment_name": plan.environment,
                "started_at": plan.evidence["started_at"], "completed_at": completed_at,
                "status": status, "candidate_fingerprint": fingerprint or "",
@@ -5896,11 +5932,33 @@ class PipelineOperation:
                              "spark.sql.legacy.timeParserPolicy", "spark.sql.timestampType"):
                     sql_configuration[name] = spark.conf.get(name)
             configuration["spark_sql"] = sql_configuration
+            query_available = True
+            if args.get("query"):
+                import sqlglot
+                from sqlglot import exp
+                query = sqlglot.parse_one(args["query"], read="tsql")
+                for table in query.find_all(exp.Table):
+                    matches = [item for item in identities.values() if item["table_name"].casefold() == table.name.casefold()
+                               and (not table.db or str(item.get("schema") or "").casefold() == table.db.casefold())]
+                    if table.catalog or len(matches) != 1:
+                        query_available = False
+                        continue
+                    logical = matches[0].get("logical_id") or f"{matches[0]['store']}/{matches[0]['table_name']}"
+                    table.set("this", exp.Identifier(this=logical, quoted=True))
+                    table.set("db", None)
+                configuration["query"] = {"sha256": hashlib.sha256(query.sql(dialect="tsql").encode()).hexdigest()}
             configuration = _portable_candidate_value(configuration)
             # SQL and mapping content require dependency identity support beyond this API.
             self.record["configuration_sha256"] = _candidate_hash(configuration) if (
-                args.get("existing_mapping") is None and not mapping_configured and not args.get("query") and sql_configuration
+                args.get("existing_mapping") is None and not mapping_configured and query_available and sql_configuration
             ) else None
+            self.record["configuration"] = configuration
+            if plan.execution_mode == "live":
+                if not plan.activated_pipeline_id or not plan.approved_candidate_json:
+                    raise ValueError("Live requires an approved Activated Pipeline manifest.")
+                approved = {item["operation"]: item for item in json.loads(plan.approved_candidate_json)["operations"]}
+                if key not in approved or self.record["configuration_sha256"] != approved[key]["configuration_sha256"] or configuration != approved[key]["configuration"]:
+                    raise ValueError("Live operation configuration differs from the exact tested approved configuration.")
             persist_pipeline_run(plan, spark_session=args.get("spark_session"))
             return self
         except BaseException as exc:

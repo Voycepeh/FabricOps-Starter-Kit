@@ -50,8 +50,7 @@ def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
 
     payload = json.loads(first["contract_payload_json"])
     assert first == second
-    assert first["agreement_id"] is None
-    assert first["agreement_version"] is None
+    assert "agreement_id" not in first and "agreement_version" not in first
     assert first["contract_id"] == service.contract_lifecycle_id("orders", "dev")
     assert first["status"] == "draft"
     assert payload["contract"]["status"] == "draft"
@@ -225,7 +224,7 @@ def test_freeze_record_locks_saved_payload_without_version_churn():
     )
     payload = json.loads(frozen["contract_payload_json"])
     assert frozen["status"] == "frozen"
-    assert frozen["is_active"] is False
+    assert "is_active" not in frozen
     assert payload["contract"] == {
         "contract_id": "c", "contract_version": 1, "status": "frozen"
     }
@@ -576,73 +575,3 @@ def test_saved_manifest_uses_block_for_mandatory_guardrails(guardrail_type):
     )
     assert payload["guardrails"][0]["action"] == "Block"
     assert rule["action"] == "Warn"
-
-
-@pytest.fixture
-def activation_runtime(monkeypatch):
-    """Capture native activation merges against a shared multi-environment store."""
-    import sys
-    from types import SimpleNamespace
-    from unittest.mock import Mock
-    from fabricops_kit.io import shared as io_shared
-
-    rows = []
-    writes = []
-    merge = Mock()
-    merge.alias.return_value = merge
-    merge.merge.return_value = merge
-    merge.whenMatchedUpdate.return_value = merge
-    monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=SimpleNamespace(forPath=lambda *a: merge)))
-    monkeypatch.setattr(io_shared, "resolve_configured_lakehouse_table", lambda *a, **kw: (None, None, None, "path"))
-    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *a: "governance")
-    monkeypatch.setattr(service, "read_lakehouse_table", lambda name, **kw: rows if name == service.DATA_CONTRACT_TABLE else
-                        [{"agreement_id": "agreement", "agreement_version": "1"}])
-
-    def frame(changes):
-        writes.extend(changes)
-        return SimpleNamespace(alias=lambda name: changes)
-
-    def activate(contract_id, env="canary-east"):
-        return service.activate_contract_version(config=object(), env=env, table_id="orders", contract_id=contract_id,
-            contract_version=1, agreement_id="agreement", agreement_version="1",
-            spark_session=SimpleNamespace(createDataFrame=frame))
-
-    return rows, writes, merge, activate
-
-
-def _activation_row(contract_id, environment, *, active=False):
-    """Return a frozen version in one environment of a shared Metadata Lakehouse."""
-    return {"contract_id": contract_id, "contract_version": 1, "table_id": "orders", "environment_name": environment,
-            "status": "frozen", "is_active": active, "agreement_id": "agreement", "agreement_version": "1",
-            "contract_payload_json": json.dumps({"contract": {"contract_id": contract_id}, "table": {"table_id": "orders"}})}
-
-
-def test_activation_changes_only_selected_environment(activation_runtime):
-    """Other environments' active versions survive activation and retry unchanged."""
-    rows, writes, merge, activate = activation_runtime
-    rows.extend([_activation_row("old", "canary-east", active=True), _activation_row("new", "canary-east"),
-                 _activation_row("prod", "prod", active=True), _activation_row("test", "test", active=True)])
-    result = activate("new")
-    assert result["changed"]
-    assert {(row["contract_id"], row["is_active"]) for row in writes} == {("old", False), ("new", True)}
-    assert all(row["environment_name"] == "canary-east" for row in writes)
-    assert "target.environment_name = source.environment_name" in merge.merge.call_args.args[1]
-    rows[0]["is_active"], rows[1]["is_active"] = False, True
-    assert not activate("new")["changed"]
-    assert merge.execute.call_count == 1
-
-
-def test_activation_rejects_another_environment_and_same_scope_duplicates(activation_runtime):
-    """Exact selection and active-version integrity remain local to the configured environment."""
-    rows, writes, _, activate = activation_runtime
-    rows.append(_activation_row("elsewhere", "prod"))
-    with pytest.raises(ValueError, match="does not exist"):
-        activate("elsewhere")
-    rows.extend([_activation_row("candidate", "canary-east"), _activation_row("old1", "canary-east", active=True),
-                 _activation_row("old2", "canary-east", active=True)])
-    with pytest.raises(RuntimeError, match="multiple active"):
-        activate("candidate")
-    rows[:] = [_activation_row("duplicate", "canary-east"), _activation_row("duplicate", "canary-east")]
-    with pytest.raises(RuntimeError, match="duplicate"):
-        activate("duplicate")
-    assert not writes

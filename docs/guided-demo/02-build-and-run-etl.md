@@ -57,8 +57,11 @@ Then run the import cell immediately below it. The import cell provides the publ
 ### Run the Data Contract block
 
 ```python
-CONTRACT_TESTING = False  # First run: Bootstrap, no selections or UI.
+# First run defaults to Bootstrap. Set PIPELINE_CONTRACT_TESTING=True externally
+# in 00_env_config or notebook parameters when the contracts are frozen.
+CONTRACT_TESTING = bool(globals().get("PIPELINE_CONTRACT_TESTING", False))
 CONTRACTS = setup_pipeline(
+    pipeline_id=PIPELINE_ID, dependencies=PROJECT_DEPENDENCIES, configuration=PROJECT_CONFIGURATION,
     sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
     interactive=CONTRACT_TESTING, spark_session=spark,
 )
@@ -67,9 +70,9 @@ EXECUTION_PLAN = CONTRACTS["build_plan"]() if CONTRACT_TESTING else CONTRACTS
 
 With the default `False`, Run all builds a Bootstrap plan and creates/profiles initial outputs without human interaction. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Metadata routing must already be initialized by the environment setup; business targets and Catalogue records do not need to exist.
 
-After Governance authors and freezes the contracts, set `CONTRACT_TESTING = True`. Pause after setup to select the exact frozen versions, then run the execution-plan cell and all Reads and Writes. Testing evaluates every declared operation without publishing targets or committing ordinary operational metadata. Run the finalization cell after all Reads, transforms and Writes (also for Read-only pipelines). `METADATA_PIPELINE_RUN` records the complete run and links Guardrail diagnostics by `run_id`; passing target diagnostics alone do not prove completion. Supply a stable `pipeline_id` and deployed `executable_sha256` for qualifying Testing evidence. See the [complete-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#complete-run-evidence). Current Live still uses existing active frozen Data Contract authority. Rerun setup for a new test; rebuilding on the same selector reuses its locked plan and journal.
+After Governance authors and freezes the contracts, set `PIPELINE_CONTRACT_TESTING=True` externally. Pause after setup to select the exact frozen versions, then run the execution-plan cell and all Reads and Writes. Testing evaluates every declared operation without publishing targets or committing ordinary operational metadata. Run the finalization cell after all Reads, transforms and Writes (also for Read-only pipelines). `METADATA_PIPELINE_RUN` records the complete run and links Guardrail diagnostics by `run_id`; passing target diagnostics alone do not prove completion. Supply a stable `pipeline_id`, explicit dependencies and external transformation configuration; Fabric observes the deployed notebook identity for qualifying Testing evidence. An optional `executable_sha256` pin must match that identity. See the [complete-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#complete-run-evidence). Live resolves the exact saved Activated Pipeline manifest after explicit Governance approval, deployment and binding verification. Rerun setup for a new test; rebuilding on the same selector reuses its locked plan and journal.
 
-Bootstrap fails closed if any participating table has a frozen or active contract, including one frozen after setup. It never silently drops governed requirements. UI visibility is separate from execution policy: headless Testing uses `interactive=False`, `execution_mode="testing"`, and saved exact selections.
+Bootstrap fails closed if a participating table has a frozen contract or an existing pipeline approval, including one created after setup. It never silently drops governed requirements. UI visibility is separate from execution policy: headless Testing uses `interactive=False`, `execution_mode="testing"`, and saved exact selections.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">

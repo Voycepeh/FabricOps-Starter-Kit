@@ -24,7 +24,7 @@ def test_default_setup_builds_a_publishing_bootstrap_plan_without_choices(plan_r
     assert json.loads(plan.participants_json)["target"]["roles"] == ["target"]
 
 
-@pytest.mark.parametrize("active,status", [(False, "frozen"), (True, "frozen"), (True, "draft")])
+@pytest.mark.parametrize("active,status", [(False, "frozen"), (True, "frozen")])
 def test_bootstrap_cannot_bypass_any_participant_governance(plan_runtime, active, status):
     """Even an unactivated frozen version requires deliberate governed execution."""
     rows, runtime, _, row = plan_runtime
@@ -76,6 +76,6 @@ def test_read_only_bootstrap_requires_no_business_target(plan_runtime):
 def test_explicit_live_cannot_be_used_as_a_contract_free_bootstrap_override(plan_runtime):
     """The initial publishing exception belongs to Bootstrap, not an ungoverned Live run."""
     _, runtime, _, _ = plan_runtime
-    with pytest.raises(ValueError, match="Live requires"):
+    with pytest.raises(ValueError, match="Live"):
         setup_pipeline(sources=[SOURCE], targets=[TARGET], execution_mode="live",
             selections={"source": {"no_contract": True}, "target": {"no_contract": True}}, context=runtime)

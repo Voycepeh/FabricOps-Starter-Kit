@@ -425,7 +425,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     def read_table(table_name, *, store, schema=None, spark_session=None, context=None):
         assert store == "Metadata"
         assert schema == ("governance" if table_name in {
-            "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT",
+            "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_ACTIVATED_PIPELINE",
         } else "engineering")
         assert context["env"] == "dev"
         if table_name not in spark.tables:
@@ -1307,7 +1307,8 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     assert catalogue["last_profiled_at"] == "timestamp"
     assert catalogue["is_active"] == "boolean"
     assert "fabric_store_target" not in catalogue
-    assert contract["agreement_id"] == "string"
+    assert "agreement_id" not in contract
+    assert {"agreement_id", "agreement_version", "is_active"}.isdisjoint(contract)
     assert "contract_snapshot_id" not in contract
     assert "snapshot_saved_at" not in contract
     assert "contract_status" not in contract

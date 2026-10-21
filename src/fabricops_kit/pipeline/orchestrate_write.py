@@ -177,7 +177,7 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
                         return pipeline_write(
                             prepared, store=store, schema=schema, table_name=table_name,
                             load_strategy=write_mode, load_strategy_parameters=write_parameters,
-                            source_table_ids=source_ids, spark_session=spark_session, verbose=False, context=context,
+                            source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False, context=context,
                         )
                     except ValueError as exc:
                         return {"table_id": target_id, "strategy": write_mode, "published": False,
