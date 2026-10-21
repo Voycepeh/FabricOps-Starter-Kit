@@ -1,8 +1,10 @@
-# Dependency-Aware Pipeline Activation
+# Governed Pipelines from Development to Production
 
 <span class="fabricops-release-status fabricops-release-status--preview">Preview</span>
 
-![Testing all affected pipelines before coordinated Governance activation](../assets/dependency-aware-pipeline-activation.svg){ .fabricops-solution-hero }
+![Development validation of affected pipelines followed by coordinated Production activation](../assets/dependency-aware-pipeline-activation.svg){ .fabricops-solution-hero }
+
+*Develop pipelines with versioned Data Contracts, validate shared dependencies, and promote them safely to Production.*
 
 ## The problem
 
@@ -12,21 +14,25 @@ A Data Contract is shared by pipelines that read or write its table. Upgrading o
 
 <div class="fabricops-mascot-callout">
   <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="FabricOps validation mascot" loading="eager">
-  <div><p><strong>Validate every affected pipeline, then activate the change together.</strong> Governance reviews the impact of a Data Contract upgrade before changing what is Live.</p></div>
+  <div><p><strong>Validate affected pipelines in Development, then promote them safely to Production.</strong> Governance reviews the impact of a Data Contract upgrade before changing what is Live.</p></div>
 </div>
 
 One central Governance Metadata workspace stores a global table identity and frozen Data Contract version history. Each environment independently activates a version of that shared definition.
 
 This page illustrates the **planned coordinated-activation capability**, not a claim that all dependency checks are implemented today.
 
+## From Development to Production
+
+Development is where engineers select frozen Data Contract versions and validate affected pipelines. Production is where Governance approves the tested configurations and coordinates their Live activation. The activation scope remains environment-specific even though contract definitions are centrally managed.
+
 ## How it works
 
 | Responsibility | What happens |
 | --- | --- |
 | **Governance authors** | Freezes a new Data Contract version for a table. |
-| **Engineering tests** | Runs affected pipelines against the proposed frozen version. |
+| **Engineering develops and validates** | Runs affected pipelines against the proposed frozen version. |
 | **FabricOps checks** | Identifies active readers, writer ownership, version conflicts and affected downstream dependencies. |
-| **Governance activates** | Reviews complete Testing evidence and approves a coordinated switch. |
+| **Governance promotes and activates** | Reviews complete Testing evidence and approves a coordinated switch. |
 
 ## Under the hood
 
