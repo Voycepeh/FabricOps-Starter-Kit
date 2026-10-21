@@ -10,7 +10,8 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
-from fabricops_kit.pipeline.shared import resolve_active_data_contract, resolve_catalogue_table_identity
+from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity
+from fabricops_kit.activated_pipeline.shared import resolve_approved_consumer_contract
 
 FABRIC_API_ROOT = "https://api.fabric.microsoft.com/v1"
 FABRIC_AUDIENCE = "https://api.fabric.microsoft.com"
@@ -36,7 +37,7 @@ def _text(value: Any) -> str:
 def consumer_context(config: Any, table_id: str, *, spark_session: Any = None) -> dict[str, Any]:
     """Assemble safe consumer context from one active Production contract."""
     identity = resolve_catalogue_table_identity(config, "prod", table_id, spark_session=spark_session)
-    contract = resolve_active_data_contract(config, "prod", table_id, spark_session=spark_session, required=True)
+    contract = resolve_approved_consumer_contract(config, "prod", table_id, spark_session=spark_session)
     payload = contract["contract_payload"]
     table = payload["table"]
     if _text(table.get("table_id")) != _text(identity.get("table_id")):

@@ -119,25 +119,22 @@ def test_mode_changes_whole_widget_and_preserves_frozen_definition(monkeypatch):
     state["select_contract"]("source", "contract-source", 1)
     before = state["_controls"]["source"]["inspector"].value
     assert "pipeline-testing" in state["widget"]._dom_classes
-    state["set_mode"]("live")
-    assert "pipeline-live" in state["widget"]._dom_classes
-    assert "pipeline-testing" not in state["widget"]._dom_classes
+    with pytest.raises(ValueError, match="Testing only"):
+        state["set_mode"]("live")
+    assert "pipeline-testing" in state["widget"]._dom_classes
     assert state["_controls"]["source"]["inspector"].value == before
-    with pytest.raises(ValueError, match="bypass"):
-        state["select_contract"]("source", no_contract=True)
 
 
 def test_live_rejects_inactive_substitution(monkeypatch):
     """Testing candidates stay selectable; Live only accepts active frozen versions."""
     _, state, _ = _render(monkeypatch, [_row(1, active=True), _row(2)])
     state["select_contract"]("source", "contract-source", 2)
-    state["set_mode"]("live")
-    assert state["tables"]["source"]["selected"]["contract_version"] == 1
-    with pytest.raises(ValueError, match="active frozen"):
-        state["select_contract"]("source", "contract-source", 2)
+    with pytest.raises(ValueError, match="Testing only"):
+        state["set_mode"]("live")
+    assert state["tables"]["source"]["selected"]["contract_version"] == 2
 
 
-@pytest.mark.parametrize("corruption", ["json", "identity", "multiple_active", "duplicate"])
+@pytest.mark.parametrize("corruption", ["json", "identity", "duplicate"])
 def test_invalid_contracts_never_become_no_contract(monkeypatch, corruption):
     """Corrupt or ambiguous selected definitions are actionable errors."""
     row = _row(active=True)
@@ -227,7 +224,7 @@ def test_headless_uses_builder_without_loading_ui_or_listing_contracts(monkeypat
                                   execution_mode="testing", selections=selections) is sentinel
     builder.assert_called_once_with(execution_mode="testing", sources=[{"table_id": "source"}],
                                     targets=[], selections=selections, context=None, spark_session=None,
-                                    pipeline_id=None, executable_sha256=None, dependencies=None)
+                                    pipeline_id=None, executable_sha256=None, dependencies=None, configuration=None)
     forbidden.assert_not_called()
 
 
@@ -235,7 +232,7 @@ def test_headless_uses_builder_without_loading_ui_or_listing_contracts(monkeypat
 def test_headless_missing_configuration_fails_before_metadata_access(monkeypatch, configuration):
     """Headless execution never infers mode or silently chooses contracts."""
     monkeypatch.setattr(module, "build_pipeline_execution_plan", lambda **kw: pytest.fail("Builder reached"))
-    with pytest.raises(ValueError, match="requires explicit"):
+    with pytest.raises(ValueError, match="requires"):
         module.setup_pipeline(sources=[], targets=[], interactive=False, **configuration)
 
 
@@ -245,7 +242,6 @@ def test_interactive_and_headless_share_identity_validation_and_plan_snapshots(m
     builder = importlib.import_module("fabricops_kit.pipeline.shared")
     monkeypatch.setattr(builder, "resolve_fabric_context", lambda context=None: (
         context["config"], context["env"], context))
-    monkeypatch.setattr(builder, "resolve_active_data_contract", lambda *a, **kw: None)
     for table_id in ("source", "target"):
         state["select_contract"](table_id, no_contract=True)
     plan = state["build_plan"]()

@@ -49,7 +49,7 @@ def governed(monkeypatch):
         "table_id": "orders-id", "layer": "Gold", "store_type": "lakehouse",
         "schema": "dbo", "table_name": "orders",
     })
-    monkeypatch.setattr(shared, "resolve_active_data_contract", lambda *_a, **_k: _contract())
+    monkeypatch.setattr(shared, "resolve_approved_consumer_contract", lambda *_a, **_k: _contract())
     monkeypatch.setattr(shared, "get_store", lambda *_a, **_k: SimpleNamespace(
         workspace_id="source-workspace", item_id="source-item", kind="lakehouse"
     ))
@@ -77,14 +77,14 @@ def test_context_rejects_missing_table(monkeypatch):
 
 def test_context_rejects_missing_active_contract(monkeypatch):
     monkeypatch.setattr(shared, "resolve_catalogue_table_identity", lambda *_a, **_k: {"table_id": "x", "layer": "Production", "store_type": "lakehouse", "table_name": "x"})
-    monkeypatch.setattr(shared, "resolve_active_data_contract", lambda *_a, **_k: (_ for _ in ()).throw(ValueError("No active Data Contract")))
-    with pytest.raises(ValueError, match="No active Data Contract"):
+    monkeypatch.setattr(shared, "resolve_approved_consumer_contract", lambda *_a, **_k: (_ for _ in ()).throw(ValueError("No approved pipeline contract")))
+    with pytest.raises(ValueError, match="No approved pipeline contract"):
         shared.consumer_context(_config(), "x")
 
 
 def test_context_rejects_invalid_source(monkeypatch):
     monkeypatch.setattr(shared, "resolve_catalogue_table_identity", lambda *_a, **_k: {"table_id": "orders-id", "layer": "Unsupported", "store_type": "eventhouse", "table_name": "orders"})
-    monkeypatch.setattr(shared, "resolve_active_data_contract", lambda *_a, **_k: _contract())
+    monkeypatch.setattr(shared, "resolve_approved_consumer_contract", lambda *_a, **_k: _contract())
     monkeypatch.setattr(shared, "get_store", lambda *_a, **_k: SimpleNamespace(workspace_id="w", item_id="i", kind="eventhouse"))
     with pytest.raises(ValueError, match="unsupported"):
         shared.consumer_context(_config(), "orders-id")

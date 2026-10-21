@@ -13,7 +13,7 @@ Testing evaluates actual source data and returns diagnostics without durable cha
 </div>
 </div>
 
-1. Run Environment, set `CONTRACT_TESTING = True`, and rerun the `setup_pipeline()` selector cell with the exact source and target identities to create a fresh selector for this Testing run. A previously built selector is locked, and its `build_plan()` returns the same plan. Historical Lineage is not required.
+1. Run Environment, set `PIPELINE_CONTRACT_TESTING=True` externally, and rerun the `setup_pipeline()` selector cell with the exact source and target identities to create a fresh selector for this Testing run. A previously built selector is locked, and its `build_plan()` returns the same plan. Historical Lineage is not required.
 2. Leave the pipeline-wide switch in red **Testing**.
 3. Select an eligible frozen version independently for every source and target. Do not leave choices implicit. Before contracts exist, use the default noninteractive Bootstrap run instead. Testing may explicitly choose No Contract for diagnostics where no active contract is bypassed; Live never accepts it.
 4. Expand Schema to inspect every expected column and exact type. Expand Grain, Data Quality, Freshness, Source Drift and Sensitive Data to inspect individual parameters, thresholds, actions and states. Non-applicable saved rules remain visible with their boundary explanation.
@@ -61,10 +61,10 @@ Without a successful historical Live publication, Source Drift may report its fi
 
 ### Live publication is a separate decision
 
-After Governance has activated the appropriate frozen versions, rerun the selector cell to create a fresh widget, switch the whole pipeline to green **Live**, select the eligible contracts, build a new plan, and rerun Read → Transform → Write. Live rejects inactive candidates and preserves Warn/Block, required Guardrail execution, ownership, retry and recovery checks. A successful Live write commits authoritative Lineage at the existing boundary. Publication and metadata updates across Fabric stores are separate operations.
+Governance approves one exact whole pipeline after successful finalization, using [`widget_activate_pipeline()`](../api/reference/widget_activate_pipeline.md). The service consumes the committed `METADATA_PIPELINE_RUN` snapshot and linked Guardrail diagnostics. Read-only and multiple-output candidates qualify only when every declared operation completed; Bootstrap and isolated passing rules cannot authorize activation.
 
-Pass the complete in-memory Testing Write reports to `widget_activate_data_contract(testing_results=list(writes.values()))` in the separate Governance review. It matches the exact contract ID, version and immutable payload, requires explicit review approval and Data Agreement linkage, then asks for confirmation. Testing now retains complete-run records for a later activation PR. The current contract activation widget still uses its existing report review; this PR does not consume run records as authorization or change Live contract authority.
+Keep the tested notebook executable unchanged. Use runtime configuration for the Testing/Live mode and environment bindings. Deployment and saved Live selection are separate steps after approval.
 
 **Expected result:** every selected frozen definition is inspectable, diagnostics report the actual checks performed, and Testing persists run records and Guardrail diagnostics while preserving publication boundaries.
 
-**Next:** [Activate Data Contracts and promote](05-activate-data-contract-and-promote.md).
+**Next:** [Activate the pipeline and promote](05-activate-data-contract-and-promote.md).

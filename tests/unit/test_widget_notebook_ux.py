@@ -27,25 +27,11 @@ def test_focus_release_is_scoped_to_fabricops_forms():
     assert "releaseFocus(form, 100)" in script
 
 
-def test_fabric_form_css_uses_one_fixed_label_control_grid():
-    """Keep every standard FabricOps field aligned to the same label and control columns."""
+def test_keyboard_focus_is_preserved_and_styles_have_one_owner():
+    """Pointer callbacks release Fabric focus without changing keyboard navigation or injecting layout CSS."""
     script = _FABRIC_NOTEBOOK_UX_JAVASCRIPT
-
-    assert ".fabricops-form .widget-inline-hbox:not(.widget-checkbox)" in script
-    assert "display: grid !important" in script
-    assert "grid-template-columns: 150px minmax(0, 560px) !important" in script
-    assert "column-gap: 12px !important" in script
-    assert "max-width: 722px !important" in script
-    assert ".fabricops-form .widget-label" in script
-    assert "text-align: left !important" in script
-    assert "justify-self: start !important" in script
-    assert ".fabricops-form .widget-inline-hbox:not(.widget-checkbox) > .widget-label" in script
-    assert "width: 150px !important" in script
-    assert ".fabricops-form .widget-label:empty" in script
-    assert "display: none !important" in script
-    assert ":has(> .widget-label:empty)" in script
-    assert "grid-template-columns: minmax(0, 560px) !important" in script
-    assert ".fabricops-form .widget-select-multiple select" in script
-    assert "max-width: 560px !important" in script
-    assert "box-sizing: border-box !important" in script
-    assert 'STYLE_ID = "fabricops-widget-ux-style"' in script
+    assert 'document.addEventListener("pointerdown"' in script
+    assert 'document.addEventListener("keydown"' in script
+    assert 'if (!pointerAction) return;' in script
+    assert 'createElement("style")' not in script
+    assert 'grid-template-columns' not in script

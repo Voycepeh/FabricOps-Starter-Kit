@@ -3,7 +3,7 @@
 __all__ = [
     "widget_view_catalogue",
     "widget_data_contract",
-    "widget_activate_data_contract",
+    "widget_activate_pipeline",
     "widget_render_data_agreement",
     "widget_render_data_steward",
 ]
@@ -22,77 +22,24 @@ def __getattr__(name: str):
     return value
 
 
-# Microsoft Fabric can restore browser focus to an interacted ipywidget after a
-# value change or button callback. That focus restoration also scrolls the
-# notebook back to the widget, fighting normal user scrolling. Install one
-# form-scoped browser safeguard when the widgets package is imported. The CSS
-# also gives every FabricOps form a stable two-column field grid so labels and
-# controls align consistently instead of starting at the end of variable label text.
+# Fabric can restore focus after a pointer callback and pull the notebook back
+# to the widget. Keyboard interaction keeps focus for normal form navigation.
+# Form styling belongs to shared.form_page, not a second injected stylesheet.
 _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
 (() => {
-  const STYLE_ID = "fabricops-widget-ux-style";
-  if (!document.getElementById(STYLE_ID)) {
-    const style = document.createElement("style");
-    style.id = STYLE_ID;
-    style.textContent = `
-      .fabricops-form .widget-inline-hbox:not(.widget-checkbox) {
-        display: grid !important;
-        grid-template-columns: 150px minmax(0, 560px) !important;
-        column-gap: 12px !important;
-        align-items: start !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 722px !important;
-      }
-      .fabricops-form .widget-label {
-        text-align: left !important;
-        justify-self: start !important;
-      }
-      .fabricops-form .widget-inline-hbox:not(.widget-checkbox) > .widget-label {
-        display: block !important;
-        width: 150px !important;
-        min-width: 150px !important;
-        max-width: 150px !important;
-        margin: 0 !important;
-        text-align: left !important;
-        white-space: normal !important;
-        overflow-wrap: anywhere !important;
-      }
-      .fabricops-form .widget-label:empty {
-        display: none !important;
-      }
-      .fabricops-form .widget-inline-hbox:not(.widget-checkbox):has(> .widget-label:empty) {
-        grid-template-columns: minmax(0, 560px) !important;
-        column-gap: 0 !important;
-      }
-      .fabricops-form .widget-text input,
-      .fabricops-form .widget-textarea textarea,
-      .fabricops-form .widget-dropdown select,
-      .fabricops-form .widget-combobox input,
-      .fabricops-form .widget-select select,
-      .fabricops-form .widget-select-multiple select {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 560px !important;
-        box-sizing: border-box !important;
-      }
-      .fabricops-form .widget-hbox,
-      .fabricops-form .widget-vbox,
-      .fabricops-form .widget-gridbox {
-        min-width: 0 !important;
-        max-width: 100% !important;
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
   if (window.__fabricopsFocusReleaseInstalled) {
     return;
   }
   window.__fabricopsFocusReleaseInstalled = true;
 
+  let pointerAction = false;
+  document.addEventListener("pointerdown", () => { pointerAction = true; }, true);
+  document.addEventListener("keydown", () => { pointerAction = false; }, true);
+
   const releaseFocus = (form, delay) => {
+    if (!pointerAction) return;
     window.setTimeout(() => {
+      if (!pointerAction) return;
       const active = document.activeElement;
       if (active && form.contains(active) && typeof active.blur === "function") {
         active.blur();
@@ -129,8 +76,8 @@ try:
     from IPython import get_ipython
 
     if get_ipython() is not None:
-        from IPython.display import Javascript, display
+        from IPython import display as ip
 
-        display(Javascript(_FABRIC_NOTEBOOK_UX_JAVASCRIPT))
+        ip.display(ip.Javascript(_FABRIC_NOTEBOOK_UX_JAVASCRIPT))
 except (ImportError, ModuleNotFoundError):
     pass

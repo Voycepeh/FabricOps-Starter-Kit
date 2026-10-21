@@ -9,6 +9,7 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
+    "METADATA_ACTIVATED_PIPELINE",
     "METADATA_DATA_CATALOGUE",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
@@ -23,6 +24,7 @@ GOVERNANCE_METADATA_TABLES = (
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
+    "METADATA_ACTIVATED_PIPELINE",
 )
 
 ENGINEERING_METADATA_TABLES = tuple(
@@ -167,16 +169,21 @@ def metadata_table_schema_registry() -> dict[str, Any]:
             [
                 ("contract_id", "string", False),
                 ("contract_version", "integer", False),
-                ("agreement_id", "string", True),
-                ("agreement_version", "string", True),
                 ("table_id", "string", False),
                 ("table_name", "string"),
                 ("environment_name", "string", False),
                 ("contract_payload_json", "string"),
                 ("status", "string", False),
-                ("is_active", "boolean", False),
                 *audit,
             ],
+        ),
+        "METADATA_ACTIVATED_PIPELINE": build_metadata_schema(
+            "METADATA_ACTIVATED_PIPELINE",
+            [("activated_pipeline_id", "string", False), ("pipeline_id", "string", False),
+             ("pipeline_name", "string", False), ("pipeline_version", "string", False),
+             ("agreement_id", "string", False), ("agreement_version", "string", False),
+             ("testing_run_id", "string", False), ("candidate_fingerprint", "string", False),
+             ("manifest_json", "string", False), ("is_active", "boolean", False), *audit],
         ),
         "METADATA_DATA_CATALOGUE": build_metadata_schema(
             "METADATA_DATA_CATALOGUE",
@@ -289,6 +296,7 @@ def metadata_table_schema_registry() -> dict[str, Any]:
             "METADATA_PIPELINE_RUN",
             [
                 ("run_id", "string", False),
+                ("activated_pipeline_id", "string"),
                 ("pipeline_id", "string", False),
                 ("execution_mode", "string", False),
                 ("environment_name", "string", False),

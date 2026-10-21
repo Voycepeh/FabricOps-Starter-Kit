@@ -1,6 +1,6 @@
 # List of Metadata Tables
 
-![FabricOps metadata model: Governance and Engineering schemas, with a one-to-many Data Contract to Guardrail Results relationship](../assets/fabricops-metadata-model.png)
+![FabricOps metadata model: Governance and Engineering schemas, with a manifest-backed Activated Pipeline contracts and separate run-linked Guardrail Results](../assets/fabricops-metadata-model.png)
 
 FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas:
 
@@ -44,10 +44,10 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Persist one logical execution attempt with candidate identity, operation outcomes and safe failures. run_id distinguishes attempts; standard _activity_id preserves the Fabric activity and may be shared by several attempts. pipeline_id survives notebook renames and environment copies. Activation eligibility is not a stored flag. Bootstrap is separate from successful Testing; Live keeps existing contract authority.</span>
+  <span class="metadata-table-card__purpose">One complete logical run and candidate identity across all operations; successful Testing is approval evidence, Bootstrap never is. Live runs reference their exact Activated Pipeline version.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One logical pipeline run across all participating sources and targets.</span>
+    <span>One logical execution attempt.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -55,6 +55,12 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_ACTIVATED_PIPELINE</code>
+      </span>
+    </span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
@@ -116,15 +122,15 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
     <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_STEWARD</code>
+        <code>METADATA_ACTIVATED_PIPELINE</code>
       </span>
     </span>
     <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__cardinality">N → 1</span>
       <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_CONTRACT</code>
+        <code>METADATA_DATA_STEWARD</code>
       </span>
     </span>
   </span>
@@ -137,10 +143,10 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Own descriptive Enrichment and executable Guardrails in the single authoritative contract_payload_json for one table-centric governed definition; table_name captures the table name at this contract write, alongside stable table_id, and may differ after a later rename.</span>
+  <span class="metadata-table-card__purpose">Reusable immutable frozen table definition with Enrichment and executable Guardrails. Agreement linkage belongs to Activated Pipeline.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One Data Contract lifecycle version for one governed table; the draft payload is overwritten on Save, becomes immutable when frozen, and is selected for Production through is_active.</span>
+    <span>One Draft or Frozen version of one table contract; Frozen contents are immutable.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -149,9 +155,9 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
     <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__cardinality">N → M</span>
       <span class="metadata-table-card__relationship-list">
-        <code>METADATA_DATA_AGREEMENT</code>
+        <code>METADATA_ACTIVATED_PIPELINE</code>
       </span>
     </span>
     <span class="metadata-table-card__relationship-summary">
@@ -164,6 +170,45 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
         <code>METADATA_GUARDRAIL_RESULTS</code>
+      </span>
+    </span>
+  </span>
+</a>
+<a class="metadata-table-card metadata-table-card--governance" href="metadata_activated_pipeline/" aria-label="Open METADATA_ACTIVATED_PIPELINE schema">
+  <span class="metadata-table-card__header">
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_ACTIVATED_PIPELINE</span>
+      <span class="metadata-table-card__schema">governance</span>
+    </span>
+    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
+  </span>
+  <span class="metadata-table-card__purpose">Immutable whole-pipeline approval linked to exact successful Testing, candidate manifest, reusable frozen contracts and one exact effective Agreement. Only is_active changes during explicit switching/deactivation.</span>
+  <span class="metadata-table-card__meta">
+    <strong>Grain</strong>
+    <span>One immutable approved version of one stable logical pipeline.</span>
+  </span>
+  <span class="metadata-table-card__meta">
+    <strong>Primary key</strong>
+    <span><code>activated_pipeline_id</code></span>
+  </span>
+  <span class="metadata-table-card__relationships">
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_PIPELINE_RUN</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_AGREEMENT</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → M</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_DATA_CONTRACT</code>
       </span>
     </span>
   </span>

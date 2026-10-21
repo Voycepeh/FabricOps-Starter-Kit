@@ -1,6 +1,6 @@
 # METADATA_DATA_CONTRACT
 
-Own descriptive Enrichment and executable Guardrails in the single authoritative contract_payload_json for one table-centric governed definition; table_name captures the table name at this contract write, alongside stable table_id, and may differ after a later rename.
+Reusable immutable frozen table definition with Enrichment and executable Guardrails. Agreement linkage belongs to Activated Pipeline.
 
 ## Writer functions
 
@@ -16,14 +16,14 @@ Own descriptive Enrichment and executable Guardrails in the single authoritative
 
 **Default physical schema:** `governance`
 
-**Grain:** One Data Contract lifecycle version for one governed table; the draft payload is overwritten on Save, becomes immutable when frozen, and is selected for Production through is_active.
+**Grain:** One Draft or Frozen version of one table contract; Frozen contents are immutable.
 
 **Primary key:** `contract_id` + `contract_version`
 
 **Relationships:**
 
-`METADATA_DATA_AGREEMENT` **(N → 1)**
-via `agreement_id` + `agreement_version`
+`METADATA_ACTIVATED_PIPELINE` **(N → M)**
+via Not defined in the current implementation.
 
 `METADATA_DATA_CATALOGUE` **(N → 1)**
 via `table_id`
@@ -32,8 +32,8 @@ via `table_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 18 |
-| Business columns | 10 |
+| Total columns | 15 |
+| Business columns | 7 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -42,14 +42,11 @@ via `table_id`
 | --- | --- | --- |
 | `contract_id` | `string` | Stable identifier for the contract row. |
 | `contract_version` | `integer` | Version recorded for the contract row. |
-| `agreement_id` | `string` | Stable identifier for the agreement lifecycle. |
-| `agreement_version` | `string` | Canonical agreement version associated with the row. |
 | `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `contract_payload_json` | `string` | String column containing the JSON definition for this exact table/contract version and authoring environment, including Enrichment, Guardrails, and Processing; editable while draft and immutable once frozen. This is not a separate physical table. |
 | `status` | `string` | Pipeline run status recorded with the run summary. |
-| `is_active` | `boolean` | Whether the row is currently active. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

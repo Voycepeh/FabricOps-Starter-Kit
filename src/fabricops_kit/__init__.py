@@ -18,6 +18,7 @@ from .config import (
     setup_notebook,
 )
 from .data_agent import create_data_agent
+from .activated_pipeline import activate_pipeline, set_pipeline_active, package_activated_pipeline, verify_pipeline_deployment
 from .io import (
     read_lakehouse_csv,
     read_lakehouse_excel,
@@ -35,7 +36,6 @@ from .pipeline import (
     profile_table,
     orchestrate_read,
     orchestrate_write,
-    pipeline_read,
 )
 
 ACCESS_EXPORTS = (
@@ -74,18 +74,18 @@ IO_EXPORTS = (
 )
 
 PIPELINE_EXPORTS = (
+    "activate_pipeline", "set_pipeline_active", "package_activated_pipeline", "verify_pipeline_deployment",
     "finalize_pipeline",
     "setup_pipeline",
     "profile_table",
     "resolve_table_id",
     "orchestrate_read",
     "orchestrate_write",
-    "pipeline_read",
 )
 
 WIDGET_EXPORTS = (
     "widget_data_contract",
-    "widget_activate_data_contract",
+    "widget_activate_pipeline",
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_view_catalogue",

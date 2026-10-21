@@ -11,7 +11,7 @@ from scripts import generate_individual_function_reference_pages as generator
 from scripts.reference_docs_metadata import METADATA_REFERENCE_ORDER, METADATA_TABLE_MODELS
 
 
-VALID_CARDINALITIES = {"1:1", "1:N", "N:1"}
+VALID_CARDINALITIES = {"1:1", "1:N", "N:1", "N:M"}
 
 
 def _schema_fields() -> dict[str, set[str]]:
@@ -119,8 +119,10 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "[`widget_data_contract`](../../api/reference/widget_data_contract.md)" in contract_page
     assert "widget_register_data_contract.md" not in contract_page
     assert "[`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Data Contract authoring" in contract_page
-    assert contract_page.count("`METADATA_DATA_AGREEMENT` **(N → 1)**") == 1
-    assert "via `agreement_id` + `agreement_version`" in contract_page
+    assert "`METADATA_DATA_AGREEMENT` **(N → 1)**" not in contract_page
+    activated_page = first_pages["metadata_activated_pipeline.md"]
+    assert "`METADATA_DATA_AGREEMENT` **(N → 1)**" in activated_page
+    assert "via `agreement_id` + `agreement_version`" in activated_page
     assert "`METADATA_DATA_CATALOGUE` **(N → 1)**" in contract_page
     assert "via `table_id`" in contract_page
     assert "METADATA_DATA_AGREEMENT.agreement_id" not in contract_page

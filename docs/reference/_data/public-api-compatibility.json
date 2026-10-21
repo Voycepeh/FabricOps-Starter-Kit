@@ -1795,6 +1795,54 @@
           "signature_before": null
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.activate_pipeline.activate_pipeline",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "activate_pipeline(*, testing_run_id, candidate_fingerprint, pipeline_name, pipeline_version, agreement_id, agreement_version, executable_path, governance_confirmed = False, expected_active_id = None, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.package_activated_pipeline.package_activated_pipeline",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "package_activated_pipeline(activated_pipeline_id, *, destination, executable_path, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.set_pipeline_active.set_pipeline_active",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "set_pipeline_active(activated_pipeline_id, *, active, expected_active_id, governance_confirmed = False, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "verify_pipeline_deployment(*, deployment_path, authority_environment, sources, targets, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -2069,7 +2117,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None)",
+          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None, configuration = None, deployment_path = None, activated_pipeline_id = None, replace_selection = False)",
           "signature_before": null
         },
         {
@@ -2101,11 +2149,11 @@
           "classification": "nonbreaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
+          "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, testing_results: list[dict[str, Any]] | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, executable_path = None, spark_session = None, context = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -2254,13 +2302,13 @@
         }
       ],
       "summary": {
-        "added": 15,
+        "added": 19,
         "modified": 12,
-        "nonbreaking": 18,
+        "nonbreaking": 22,
         "potentially_breaking": 9,
         "removed": 14,
         "review_required": 14,
-        "total": 41
+        "total": 45
       },
       "target": "working-tree"
     },
@@ -3235,6 +3283,54 @@
           "classification": "nonbreaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.activate_pipeline.activate_pipeline",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "activate_pipeline(*, testing_run_id, candidate_fingerprint, pipeline_name, pipeline_version, agreement_id, agreement_version, executable_path, governance_confirmed = False, expected_active_id = None, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.package_activated_pipeline.package_activated_pipeline",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "package_activated_pipeline(activated_pipeline_id, *, destination, executable_path, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.set_pipeline_active.set_pipeline_active",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "set_pipeline_active(activated_pipeline_id, *, active, expected_active_id, governance_confirmed = False, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "verify_pipeline_deployment(*, deployment_path, authority_environment, sources, targets, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
           "reasons": [
             "Public API added."
@@ -3412,28 +3508,32 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None)",
+          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None, configuration = None, deployment_path = None, activated_pipeline_id = None, replace_selection = False)",
           "signature_before": null
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Preview",
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
           "reasons": [
-            "Parameter removed: agreement_id.",
-            "Parameter removed: agreement_version.",
-            "Parameter removed: contract_id.",
-            "Parameter removed: schema.",
-            "Parameter removed: store.",
-            "Optional parameter added: testing_results.",
-            "Annotation changed for context: None to Any.",
-            "Annotation changed for spark_session: None to Any.",
-            "Return annotation changed: None to dict[str, Any]."
+            "Preview public API removed."
           ],
-          "signature_after": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, testing_results: list[dict[str, Any]] | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "signature_after": null,
           "signature_before": "widget_activate_data_contract(*, table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, agreement_id: str | None = None, agreement_version: str | None = None, store: str = 'Metadata', schema: str | None = None, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, executable_path = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_before": null
         },
         {
           "change_type": "removed",
@@ -3473,13 +3573,13 @@
         }
       ],
       "summary": {
-        "added": 10,
-        "modified": 3,
-        "nonbreaking": 11,
-        "potentially_breaking": 3,
-        "removed": 11,
-        "review_required": 10,
-        "total": 24
+        "added": 15,
+        "modified": 2,
+        "nonbreaking": 16,
+        "potentially_breaking": 2,
+        "removed": 12,
+        "review_required": 11,
+        "total": 29
       },
       "target": "working-tree"
     },
@@ -4298,6 +4398,54 @@
       "baseline": "v0.2.5",
       "changes": [
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.activate_pipeline.activate_pipeline",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "activate_pipeline(*, testing_run_id, candidate_fingerprint, pipeline_name, pipeline_version, agreement_id, agreement_version, executable_path, governance_confirmed = False, expected_active_id = None, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.package_activated_pipeline.package_activated_pipeline",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "package_activated_pipeline(activated_pipeline_id, *, destination, executable_path, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.set_pipeline_active.set_pipeline_active",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "set_pipeline_active(activated_pipeline_id, *, active, expected_active_id, governance_confirmed = False, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "verify_pipeline_deployment(*, deployment_path, authority_environment, sources, targets, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
           "change_type": "removed",
           "classification": "review_required",
           "lifecycle_after": null,
@@ -4475,20 +4623,32 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None)",
+          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None, configuration = None, deployment_path = None, activated_pipeline_id = None, replace_selection = False)",
           "signature_before": null
         },
         {
-          "change_type": "modified",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
           "reasons": [
-            "Optional parameter added: testing_results."
+            "Preview public API removed."
           ],
-          "signature_after": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, testing_results: list[dict[str, Any]] | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "signature_after": null,
           "signature_before": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, executable_path = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_before": null
         },
         {
           "change_type": "removed",
@@ -4504,13 +4664,13 @@
         }
       ],
       "summary": {
-        "added": 2,
-        "modified": 5,
-        "nonbreaking": 5,
+        "added": 7,
+        "modified": 4,
+        "nonbreaking": 9,
         "potentially_breaking": 4,
-        "removed": 9,
-        "review_required": 7,
-        "total": 16
+        "removed": 10,
+        "review_required": 8,
+        "total": 21
       },
       "target": "working-tree"
     },
@@ -5341,6 +5501,54 @@
       "baseline": "main",
       "changes": [
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.activate_pipeline.activate_pipeline",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "activate_pipeline(*, testing_run_id, candidate_fingerprint, pipeline_name, pipeline_version, agreement_id, agreement_version, executable_path, governance_confirmed = False, expected_active_id = None, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.package_activated_pipeline.package_activated_pipeline",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "package_activated_pipeline(activated_pipeline_id, *, destination, executable_path, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.set_pipeline_active.set_pipeline_active",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "set_pipeline_active(activated_pipeline_id, *, active, expected_active_id, governance_confirmed = False, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "verify_pipeline_deployment(*, deployment_path, authority_environment, sources, targets, spark_session = None, context = None)",
+          "signature_before": null
+        },
+        {
           "change_type": "removed",
           "classification": "review_required",
           "lifecycle_after": null,
@@ -5518,20 +5726,32 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None)",
+          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None, configuration = None, deployment_path = None, activated_pipeline_id = None, replace_selection = False)",
           "signature_before": null
         },
         {
-          "change_type": "modified",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
           "reasons": [
-            "Optional parameter added: testing_results."
+            "Preview public API removed."
           ],
-          "signature_after": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, testing_results: list[dict[str, Any]] | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "signature_after": null,
           "signature_before": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, executable_path = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_before": null
         },
         {
           "change_type": "removed",
@@ -5547,13 +5767,13 @@
         }
       ],
       "summary": {
-        "added": 2,
-        "modified": 5,
-        "nonbreaking": 5,
+        "added": 7,
+        "modified": 4,
+        "nonbreaking": 9,
         "potentially_breaking": 4,
-        "removed": 9,
-        "review_required": 7,
-        "total": 16
+        "removed": 10,
+        "review_required": 8,
+        "total": 21
       },
       "target": "working-tree"
     },
@@ -5607,6 +5827,54 @@
           ],
           "signature_after": null,
           "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.activate_pipeline.activate_pipeline",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "activate_pipeline(*, testing_run_id, candidate_fingerprint, pipeline_name, pipeline_version, agreement_id, agreement_version, executable_path, governance_confirmed = False, expected_active_id = None, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.package_activated_pipeline.package_activated_pipeline",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "package_activated_pipeline(activated_pipeline_id, *, destination, executable_path, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.set_pipeline_active.set_pipeline_active",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "set_pipeline_active(activated_pipeline_id, *, active, expected_active_id, governance_confirmed = False, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "verify_pipeline_deployment(*, deployment_path, authority_environment, sources, targets, spark_session = None, context = None)"
         },
         {
           "change_type": "modified",
@@ -5884,7 +6152,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None)"
+          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None, configuration = None, deployment_path = None, activated_pipeline_id = None, replace_selection = False)"
         },
         {
           "change_type": "added",
@@ -5915,12 +6183,12 @@
           "classification": "review_required",
           "lifecycle_after": null,
           "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
+          "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, testing_results: list[dict[str, Any]] | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, executable_path = None, spark_session = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6072,9 +6340,9 @@
         "modified": 12,
         "nonbreaking": 14,
         "potentially_breaking": 15,
-        "removed": 15,
-        "review_required": 12,
-        "total": 41
+        "removed": 19,
+        "review_required": 16,
+        "total": 45
       },
       "target": "v0.1.0"
     },
@@ -6140,6 +6408,54 @@
           ],
           "signature_after": null,
           "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.activate_pipeline.activate_pipeline",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "activate_pipeline(*, testing_run_id, candidate_fingerprint, pipeline_name, pipeline_version, agreement_id, agreement_version, executable_path, governance_confirmed = False, expected_active_id = None, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.package_activated_pipeline.package_activated_pipeline",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "package_activated_pipeline(activated_pipeline_id, *, destination, executable_path, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.set_pipeline_active.set_pipeline_active",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "set_pipeline_active(activated_pipeline_id, *, active, expected_active_id, governance_confirmed = False, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "verify_pipeline_deployment(*, deployment_path, authority_environment, sources, targets, spark_session = None, context = None)"
         },
         {
           "change_type": "removed",
@@ -6324,27 +6640,31 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None)"
+          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None, configuration = None, deployment_path = None, activated_pipeline_id = None, replace_selection = False)"
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Preview",
-          "lifecycle_before": "Preview",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
           "reasons": [
-            "Parameter removed: testing_results.",
-            "Optional parameter added: agreement_id.",
-            "Optional parameter added: agreement_version.",
-            "Optional parameter added: contract_id.",
-            "Optional parameter added: schema.",
-            "Optional parameter added: store.",
-            "Annotation changed for context: Any to None.",
-            "Annotation changed for spark_session: Any to None.",
-            "Return annotation changed: dict[str, Any] to None."
+            "Public API added."
           ],
           "signature_after": "widget_activate_data_contract(*, table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, agreement_id: str | None = None, agreement_version: str | None = None, store: str = 'Metadata', schema: str | None = None, spark_session = None, context = None)",
-          "signature_before": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, testing_results: list[dict[str, Any]] | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, executable_path = None, spark_session = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6384,19 +6704,67 @@
         }
       ],
       "summary": {
-        "added": 11,
-        "modified": 3,
-        "nonbreaking": 11,
-        "potentially_breaking": 3,
-        "removed": 10,
-        "review_required": 10,
-        "total": 24
+        "added": 12,
+        "modified": 2,
+        "nonbreaking": 12,
+        "potentially_breaking": 2,
+        "removed": 15,
+        "review_required": 15,
+        "total": 29
       },
       "target": "v0.2.0"
     },
     {
       "baseline": "working-tree",
       "changes": [
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.activate_pipeline.activate_pipeline",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "activate_pipeline(*, testing_run_id, candidate_fingerprint, pipeline_name, pipeline_version, agreement_id, agreement_version, executable_path, governance_confirmed = False, expected_active_id = None, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.package_activated_pipeline.package_activated_pipeline",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "package_activated_pipeline(activated_pipeline_id, *, destination, executable_path, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.set_pipeline_active.set_pipeline_active",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "set_pipeline_active(activated_pipeline_id, *, active, expected_active_id, governance_confirmed = False, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "verify_pipeline_deployment(*, deployment_path, authority_environment, sources, targets, spark_session = None, context = None)"
+        },
         {
           "change_type": "added",
           "classification": "nonbreaking",
@@ -6576,19 +6944,31 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None)"
+          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None, configuration = None, deployment_path = None, activated_pipeline_id = None, replace_selection = False)"
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Preview",
-          "lifecycle_before": "Preview",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
           "reasons": [
-            "Parameter removed: testing_results."
+            "Public API added."
           ],
           "signature_after": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
-          "signature_before": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, testing_results: list[dict[str, Any]] | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, executable_path = None, spark_session = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6604,19 +6984,67 @@
         }
       ],
       "summary": {
-        "added": 9,
-        "modified": 5,
-        "nonbreaking": 9,
-        "potentially_breaking": 5,
-        "removed": 2,
-        "review_required": 2,
-        "total": 16
+        "added": 10,
+        "modified": 4,
+        "nonbreaking": 10,
+        "potentially_breaking": 4,
+        "removed": 7,
+        "review_required": 7,
+        "total": 21
       },
       "target": "v0.2.5"
     },
     {
       "baseline": "working-tree",
       "changes": [
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.activate_pipeline.activate_pipeline",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "activate_pipeline(*, testing_run_id, candidate_fingerprint, pipeline_name, pipeline_version, agreement_id, agreement_version, executable_path, governance_confirmed = False, expected_active_id = None, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.package_activated_pipeline.package_activated_pipeline",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "package_activated_pipeline(activated_pipeline_id, *, destination, executable_path, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.set_pipeline_active.set_pipeline_active",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "set_pipeline_active(activated_pipeline_id, *, active, expected_active_id, governance_confirmed = False, spark_session = None, context = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "verify_pipeline_deployment(*, deployment_path, authority_environment, sources, targets, spark_session = None, context = None)"
+        },
         {
           "change_type": "added",
           "classification": "nonbreaking",
@@ -6796,19 +7224,31 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None)"
+          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None, configuration = None, deployment_path = None, activated_pipeline_id = None, replace_selection = False)"
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Preview",
-          "lifecycle_before": "Preview",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
           "reasons": [
-            "Parameter removed: testing_results."
+            "Public API added."
           ],
           "signature_after": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
-          "signature_before": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, testing_results: list[dict[str, Any]] | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, executable_path = None, spark_session = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6824,13 +7264,13 @@
         }
       ],
       "summary": {
-        "added": 9,
-        "modified": 5,
-        "nonbreaking": 9,
-        "potentially_breaking": 5,
-        "removed": 2,
-        "review_required": 2,
-        "total": 16
+        "added": 10,
+        "modified": 4,
+        "nonbreaking": 10,
+        "potentially_breaking": 4,
+        "removed": 7,
+        "review_required": 7,
+        "total": 21
       },
       "target": "main"
     }
@@ -14914,6 +15354,278 @@
         {
           "certainty": "certain",
           "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "testing_run_id",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "candidate_fingerprint",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "pipeline_name",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "pipeline_version",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "agreement_id",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "agreement_version",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "executable_path",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "governance_confirmed",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "expected_active_id",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.activated_pipeline.activate_pipeline.activate_pipeline",
+          "return_annotation": null,
+          "signature": "activate_pipeline(*, testing_run_id, candidate_fingerprint, pipeline_name, pipeline_version, agreement_id, agreement_version, executable_path, governance_confirmed = False, expected_active_id = None, spark_session = None, context = None)",
+          "source_path": "src/fabricops_kit/activated_pipeline/activate_pipeline.py",
+          "source_qualified_name": "fabricops_kit.activated_pipeline.activate_pipeline.activate_pipeline"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "activated_pipeline_id",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "destination",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "executable_path",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.activated_pipeline.package_activated_pipeline.package_activated_pipeline",
+          "return_annotation": null,
+          "signature": "package_activated_pipeline(activated_pipeline_id, *, destination, executable_path, spark_session = None, context = None)",
+          "source_path": "src/fabricops_kit/activated_pipeline/package_activated_pipeline.py",
+          "source_qualified_name": "fabricops_kit.activated_pipeline.package_activated_pipeline.package_activated_pipeline"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "activated_pipeline_id",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "active",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "expected_active_id",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "governance_confirmed",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.activated_pipeline.set_pipeline_active.set_pipeline_active",
+          "return_annotation": null,
+          "signature": "set_pipeline_active(activated_pipeline_id, *, active, expected_active_id, governance_confirmed = False, spark_session = None, context = None)",
+          "source_path": "src/fabricops_kit/activated_pipeline/set_pipeline_active.py",
+          "source_qualified_name": "fabricops_kit.activated_pipeline.set_pipeline_active.set_pipeline_active"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "deployment_path",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "authority_environment",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "sources",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "targets",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "spark_session",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment",
+          "return_annotation": null,
+          "signature": "verify_pipeline_deployment(*, deployment_path, authority_environment, sources, targets, spark_session = None, context = None)",
+          "source_path": "src/fabricops_kit/activated_pipeline/verify_pipeline_deployment.py",
+          "source_qualified_name": "fabricops_kit.activated_pipeline.verify_pipeline_deployment.verify_pipeline_deployment"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
           "lifecycle": "Live",
           "parameters": [
             {
@@ -16279,11 +16991,43 @@
               "kind": "keyword_only",
               "name": "dependencies",
               "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "configuration",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "deployment_path",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "activated_pipeline_id",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "replace_selection",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "return_annotation": null,
-          "signature": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None)",
+          "signature": "setup_pipeline(*, sources, targets, execution_mode = None, selections = None, interactive = False, spark_session = None, context = None, pipeline_id = None, executable_sha256 = None, dependencies = None, configuration = None, deployment_path = None, activated_pipeline_id = None, replace_selection = False)",
           "source_path": "src/fabricops_kit/pipeline/setup_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline"
         },
@@ -16293,31 +17037,23 @@
           "lifecycle": "Preview",
           "parameters": [
             {
-              "annotation": "str | None",
+              "annotation": null,
               "default": "None",
               "has_default": true,
               "kind": "keyword_only",
-              "name": "table_id",
+              "name": "pipeline_id",
               "required": false
             },
             {
-              "annotation": "int | None",
+              "annotation": null,
               "default": "None",
               "has_default": true,
               "kind": "keyword_only",
-              "name": "contract_version",
+              "name": "executable_path",
               "required": false
             },
             {
-              "annotation": "list[dict[str, Any]] | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "testing_results",
-              "required": false
-            },
-            {
-              "annotation": "Any",
+              "annotation": null,
               "default": "None",
               "has_default": true,
               "kind": "keyword_only",
@@ -16325,7 +17061,7 @@
               "required": false
             },
             {
-              "annotation": "Any",
+              "annotation": null,
               "default": "None",
               "has_default": true,
               "kind": "keyword_only",
@@ -16333,11 +17069,11 @@
               "required": false
             }
           ],
-          "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
+          "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "return_annotation": "dict[str, Any]",
-          "signature": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, testing_results: list[dict[str, Any]] | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
-          "source_path": "src/fabricops_kit/widgets/widget_activate_data_contract.py",
-          "source_qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract"
+          "signature": "widget_activate_pipeline(*, pipeline_id = None, executable_path = None, spark_session = None, context = None) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/widgets/widget_activate_pipeline.py",
+          "source_qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline"
         },
         {
           "certainty": "certain",
@@ -16506,7 +17242,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:87f1f25ff8a06856bc7aeae854882f43b8c51ca9cf41d808cb85736bb7ade3cc",
+      "source_digest": "sha256:260dda9b8a46532d9084c1442d7d75fc351fc2e6d4db6dbcb5fb4d7019cb3a88",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

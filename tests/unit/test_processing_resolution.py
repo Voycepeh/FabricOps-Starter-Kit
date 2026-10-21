@@ -95,10 +95,9 @@ def test_development_current_authoring_requires_notebook_definition():
 
 
 def test_production_uses_active_contract_and_never_reads_catalogue(monkeypatch):
-    monkeypatch.setattr(shared, "resolve_active_data_contract", lambda *args, **kwargs: contract())
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *args, **kwargs: pytest.fail("Catalogue read"))
     resolved = shared.resolve_table_processing_definition(
-        object(), "prod", "students",
+        object(), "prod", "students", context={"_pipeline_contracts": {"students": contract()}},
         authored_processing={"load_strategy": "scd1", "key_columns": ["student_id"]},
     )
     assert resolved["load_strategy"] == "scd1"
@@ -109,8 +108,7 @@ def test_production_uses_active_contract_and_never_reads_catalogue(monkeypatch):
 def test_production_missing_active_contract_fails(monkeypatch):
     def fail(*args, **kwargs):
         raise ValueError("No active Data Contract")
-    monkeypatch.setattr(shared, "resolve_active_data_contract", fail)
-    with pytest.raises(ValueError, match="No active"):
+    with pytest.raises(ValueError, match="explicit execution plan"):
         shared.resolve_table_processing_definition(
             object(), "prod", "students", authored_processing={"load_strategy": "overwrite"}
         )
@@ -120,7 +118,6 @@ def test_production_missing_active_contract_fails(monkeypatch):
 def test_production_rejects_missing_or_malformed_frozen_processing(monkeypatch, processing):
     frozen = contract()
     frozen["contract_payload"]["table"]["processing"] = processing
-    monkeypatch.setattr(shared, "resolve_active_data_contract", lambda *args, **kwargs: frozen)
     with pytest.raises(ValueError):
         shared.resolve_table_processing_definition(
             object(), "prod", "students", authored_processing={"load_strategy": "overwrite"}

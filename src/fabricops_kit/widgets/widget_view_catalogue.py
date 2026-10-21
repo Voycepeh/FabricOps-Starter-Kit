@@ -72,23 +72,13 @@ def _resolve_agreement_catalogue_scope(
     agreement_id, agreement_name = widget_shared.resolve_agreement_details(agreement or {})
     if not agreement_id:
         raise ValueError("A saved agreement selection is required to view its catalogue inventory.")
-    from pyspark.sql import functions as F
-
-    contracts = read_lakehouse_table(
-        "METADATA_DATA_CONTRACT",
-        store=store,
-        schema=schema,
-        spark_session=spark_session,
-        context=runtime_context,
-    )
-    table_ids = {
-        str(row["table_id"])
-        for row in contracts.filter(F.col("agreement_id") == agreement_id)
-        .select("table_id")
-        .distinct()
-        .collect()
-        if row["table_id"]
-    }
+    from fabricops_kit.activated_pipeline.shared import metadata_records, validate_manifest
+    pipelines = metadata_records("METADATA_ACTIVATED_PIPELINE", context=runtime_context, spark_session=spark_session)
+    table_ids = set()
+    for row in pipelines:
+        if row.get("agreement_id") == agreement_id:
+            manifest = validate_manifest(row)
+            table_ids.update(item["definition"]["table_id"] for item in manifest["contracts"])
     return (
         table_ids,
         None,
@@ -602,7 +592,7 @@ def _build_catalogue_widget(
     ip.display(
         widget_shared.form_page(
             widgets,
-            title=title,
+            title=title, tone="engineering",
             description=description,
             children=[context_section, selection_section, selected_section],
         )

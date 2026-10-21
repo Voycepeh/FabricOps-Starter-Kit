@@ -4350,7 +4350,7 @@ def _metadata_relationships(
         }
 
     if include_inbound:
-        reverse_cardinality = {"1:N": "N:1", "1:1": "1:1", "N:1": "1:N"}
+        reverse_cardinality = {"1:N": "N:1", "1:1": "1:1", "N:1": "1:N", "N:M": "N:M"}
         for other_table in table_models:
             if other_table == table_name:
                 continue
@@ -4560,7 +4560,7 @@ def generate_metadata_reference_pages() -> None:
     if len(reference_order) != len(canonical_tables) or set(reference_order) != set(canonical_tables):
         raise RuntimeError("METADATA_REFERENCE_ORDER must contain every canonical metadata table exactly once")
 
-    valid_cardinalities = {"1:1", "1:N", "N:1"}
+    valid_cardinalities = {"1:1", "1:N", "N:1", "N:M"}
     field_names_by_table = {
         table_name: {row["name"] for row in metadata_table_schema_rows(schema)}
         for table_name, schema in registry.items()
@@ -5475,7 +5475,11 @@ def main() -> None:
                 "widget_render_data_steward",
                 "widget_render_data_agreement",
                 "widget_data_contract",
-                "widget_activate_data_contract",
+                "widget_activate_pipeline",
+                "activate_pipeline",
+                "set_pipeline_active",
+                "package_activated_pipeline",
+                "verify_pipeline_deployment",
                 "widget_view_catalogue",
             },
             "open": False,
