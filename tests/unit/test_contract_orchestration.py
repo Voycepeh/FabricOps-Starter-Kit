@@ -52,6 +52,23 @@ def frozen(table_id, *, version=1, active=False, strategy="overwrite", parameter
 @pytest.fixture
 def runtime(monkeypatch, spark_session):
     """Real Spark evaluations and orchestrators; replace only Fabric boundaries."""
+    from importlib import metadata
+    installed_version = metadata.version
+    monkeypatch.setattr(metadata, "version", lambda name: "test-delta-runtime" if name == "delta-spark" else installed_version(name))
+    import sys
+    from types import SimpleNamespace
+
+    class Merge:
+        def alias(self, name): return self
+        def merge(self, frame, condition):
+            self.row = frame.collect()[0].asDict(recursive=True)
+            return self
+        def whenMatchedUpdateAll(self): return self
+        def whenNotMatchedInsertAll(self): return self
+        def execute(self): run_rows.append(self.row)
+
+    run_rows = []
+    monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=SimpleNamespace(forPath=lambda *a: Merge())))
     config = framework_config()
     context = {"config": config, "env": "dev", "notebook_id": "notebook", "notebook_name": "Pipeline",
                "workspace_id": "workspace", "workspace_name": "Workspace", "user_name": "tester", "activity_id": "activity"}
@@ -85,7 +102,7 @@ def runtime(monkeypatch, spark_session):
         if not contracted:
             selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
         return setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
-                                              selections=None if mode == "bootstrap" else selections, context=context, spark_session=spark_session)
+                                              selections=None if mode == "bootstrap" else selections, context=context, spark_session=spark_session, pipeline_id="test-orders", executable_sha256="a" * 64, dependencies={})
     return make, rows, spies, context
 
 
@@ -104,7 +121,7 @@ def write(plan, source, spark, dataframe=None, strategy="overwrite", parameters=
 
 @pytest.mark.parametrize("strategy,parameters", [("overwrite", None), ("append", None),
     ("scd1", {"key_columns": ["id"]}), ("scd2", {"key_columns": ["id"], "effective_column": "id"})])
-def test_testing_all_strategies_have_zero_durable_mutations(runtime, spark_session, strategy, parameters):
+def test_testing_all_strategies_have_only_diagnostic_mutations(runtime, spark_session, strategy, parameters):
     """Read/profile/check/write paths evaluate but no durable boundary is called."""
     make, _, spies, _ = runtime
     plan = make(strategy=strategy, parameters=parameters)
@@ -114,11 +131,11 @@ def test_testing_all_strategies_have_zero_durable_mutations(runtime, spark_sessi
     assert not result["published"] and result["write_metrics"]["rows_committed"] == 0
     assert result["dry_run"]["status"] == "passed" and result["checks_not_exercised"]
     assert ("SCD business keys" in result["dry_run"]["fully_evaluated"]) is (strategy in {"scd1", "scd2"})
-    assert all(spy.call_count == 0 for spy in spies.values())
+    assert_testing_mutations_are_diagnostics_only(spies)
 
 
-def test_testing_real_guardrails_return_results_without_activation_evidence(runtime, spark_session):
-    """Read and Write retain exact rule results without metadata writes."""
+def test_testing_real_guardrails_persist_linked_diagnostics(runtime, spark_session):
+    """Read and Write persist exact rule results linked to the complete logical run."""
     make, _, spies, _ = runtime
     plan = make(contracted=True)
     source = read(plan, spark_session)
@@ -126,9 +143,13 @@ def test_testing_real_guardrails_return_results_without_activation_evidence(runt
     assert "coverage_result" not in result
     assert len(result["source_guardrail_results"]) == 2
     assert len(plan.results) == 4
+    assert all(row["run_id"] == plan.plan_id for row in plan.results)
+    from fabricops_kit import finalize_pipeline
+    finalized = finalize_pipeline(plan, spark_session=spark_session)
+    assert finalized["status"] == "succeeded"
     assert all(row["rule_type"] != "contract_validation" for row in plan.results)
     assert result["validation_passed"] and not result["published"]
-    assert all(spy.call_count == 0 for spy in spies.values())
+    assert_testing_mutations_are_diagnostics_only(spies)
 
 
 def test_testing_failed_guardrail_returns_violations_without_publication(runtime, spark_session):
@@ -141,7 +162,7 @@ def test_testing_failed_guardrail_returns_violations_without_publication(runtime
     assert result["dq_result"]["can_continue"] is False
     assert result["validation_passed"] is False
     assert not result["published"]
-    assert all(spy.call_count == 0 for spy in spies.values())
+    assert_testing_mutations_are_diagnostics_only(spies)
 
 
 def test_live_guardrail_blocking_prevents_physical_publication(runtime, spark_session):
@@ -188,7 +209,7 @@ def test_testing_incremental_bootstrap_does_not_advance_checkpoints(runtime, spa
     assert source["scope"]["first_run"]
     assert source["dataframe"].count() == 2
     assert not result["published"] and result["validation_passed"]
-    assert all(spy.call_count == 0 for spy in spies.values())
+    assert_testing_mutations_are_diagnostics_only(spies)
 
 
 def test_testing_observation_recovery_cannot_merge_durable_state(runtime, monkeypatch):
@@ -231,7 +252,7 @@ def test_mixed_relationship_respects_explicit_no_contract(runtime, spark_session
         with pytest.raises(ValueError, match="Live requires"):
             setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
                 selections=selections, context=context, spark_session=spark_session)
-        assert all(spy.call_count == 0 for spy in spies.values())
+        assert_testing_mutations_are_diagnostics_only(spies)
         return
     plan = setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
         selections=selections, context=context, spark_session=spark_session)
@@ -245,7 +266,7 @@ def test_mixed_relationship_respects_explicit_no_contract(runtime, spark_session
     assert result["published"] is (mode == "live")
     if mode == "testing":
         assert result["validation_passed"]
-        assert all(spy.call_count == 0 for spy in spies.values())
+        assert_testing_mutations_are_diagnostics_only(spies)
     else:
         assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 1
         assert spies["fabricops_kit.pipeline.shared.persist_lineage_participation"].call_count == 2
@@ -263,7 +284,7 @@ def test_testing_processing_failure_returns_prepared_diagnostics_without_mutatio
     assert not result["validation_passed"] and result["dry_run"]["status"] == "blocked"
     assert result["dataframe"] is invalid
     assert result["dry_run"]["reason"] and not result["published"]
-    assert all(spy.call_count == 0 for spy in spies.values())
+    assert_testing_mutations_are_diagnostics_only(spies)
 
 
 def test_testing_missing_dq_column_reports_unevaluated_check_without_losing_rows(runtime, spark_session):
@@ -276,7 +297,8 @@ def test_testing_missing_dq_column_reports_unevaluated_check_without_losing_rows
     assert result["dataframe"] is changed and not result["validation_passed"]
     assert result["dq_result"]["evaluation_status"] == "not_fully_evaluated"
     assert any("Data Quality:" in check for check in result["checks_not_exercised"])
-    assert not result["published"] and all(spy.call_count == 0 for spy in spies.values())
+    assert not result["published"]
+    assert_testing_mutations_are_diagnostics_only(spies)
 
 
 def test_failed_read_cannot_reuse_prior_successful_dq_evidence(runtime, spark_session, monkeypatch):
@@ -294,19 +316,26 @@ def test_failed_read_cannot_reuse_prior_successful_dq_evidence(runtime, spark_se
     read(plan, spark_session)
     changed = initial.drop("other")
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: changed)
+    with pytest.raises(ValueError, match="Duplicate operation"):
+        read(plan, spark_session)
+    from fabricops_kit import finalize_pipeline
+    assert finalize_pipeline(plan, spark_session=spark_session)["status"] == "failed"
+    plan = make(contracted=True)
     failed = read(plan, spark_session)
     assert failed["dq_result"]["can_continue"] is False
     result = write(plan, failed, spark_session)
     assert not result["validation_passed"]
     from fabricops_kit.widgets.widget_activate_data_contract import _diagnostic_review
     assert not _diagnostic_review([result], rows[0], "dev")["available"]
-    # Reevaluation can recover without creating a new plan or retaining stale failures.
+    # Reevaluation uses a new plan, preserving the failed run for inspection.
+    assert finalize_pipeline(plan, spark_session=spark_session)["status"] == "failed"
+    plan = make(contracted=True)
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: initial)
     recovered = read(plan, spark_session)
     assert write(plan, recovered, spark_session, dataframe=recovered["dataframe"].select("id"))["validation_passed"]
     # A later passing Read cannot turn the earlier failed Read result into a passing report.
-    assert not write(plan, failed, spark_session)["validation_passed"]
-    assert all(spy.call_count == 0 for spy in spies.values())
+    assert not _diagnostic_review([result], rows[0], "dev")["available"]
+    assert_testing_mutations_are_diagnostics_only(spies)
 
 
 @pytest.mark.parametrize("mode", ["testing", "live"])
@@ -321,7 +350,7 @@ def test_no_contract_target_does_not_exempt_failed_source_checks(runtime, spark_
         with pytest.raises(ValueError, match="Live requires"):
             setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
                 selections=selections, context=context, spark_session=spark_session)
-        assert all(spy.call_count == 0 for spy in spies.values())
+        assert_testing_mutations_are_diagnostics_only(spies)
         return
     plan = setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
         selections=selections, context=context, spark_session=spark_session)
@@ -334,7 +363,7 @@ def test_no_contract_target_does_not_exempt_failed_source_checks(runtime, spark_
         source = read(plan, spark_session)
         result = write(plan, source, spark_session)
         assert not result["validation_passed"]
-        assert all(spy.call_count == 0 for spy in spies.values())
+        assert_testing_mutations_are_diagnostics_only(spies)
     assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 0
 
 
@@ -363,7 +392,7 @@ def test_empty_or_disabled_contract_checks_do_not_require_minimum_coverage(runti
     assert [row["contract_payload_json"] for row in rows] == originals
     if mode == "testing":
         assert result["validation_passed"]
-        assert all(spy.call_count == 0 for spy in spies.values())
+        assert_testing_mutations_are_diagnostics_only(spies)
 
 
 @pytest.mark.parametrize("mode", ["testing", "live"])
@@ -381,7 +410,7 @@ def test_required_guardrail_that_skips_cannot_authorize_publication(runtime, spa
         result = write(plan, source, spark_session)
         assert not result["validation_passed"] and not result["published"]
         assert result["dq_result"]["evaluation_status"] == "not_fully_evaluated"
-        assert all(spy.call_count == 0 for spy in spies.values())
+        assert_testing_mutations_are_diagnostics_only(spies)
     assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 0
 
 
@@ -406,7 +435,7 @@ def test_warn_failures_report_and_permit_configured_write(runtime, spark_session
     assert result["published"] is (mode == "live")
     if mode == "testing":
         assert result["validation_passed"]
-        assert all(spy.call_count == 0 for spy in spies.values())
+        assert_testing_mutations_are_diagnostics_only(spies)
 
 
 @pytest.mark.parametrize("key", ["coverage_gate", "coverage_policy", "coverage_gate_policy", "guardrail_coverage"])
@@ -446,9 +475,9 @@ def test_caught_live_read_failure_cannot_publish_using_an_earlier_success(runtim
     earlier_source = read(plan, spark_session)
     bad = spark_session.createDataFrame([(None,)], "id long")
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: bad)
-    with pytest.raises(RuntimeError, match="Data Quality"):
+    with pytest.raises(ValueError, match="Duplicate operation"):
         read(plan, spark_session)
-    with pytest.raises(RuntimeError, match="configured data_quality Guardrail has no successful Read result"):
+    with pytest.raises(RuntimeError, match="previously failed"):
         write(plan, earlier_source, spark_session)
     assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 0
 
@@ -478,3 +507,26 @@ def test_legacy_setting_names_are_valid_column_names_in_schema_mappings(column_n
     rows = shared.contract_guardrail_rows({"contract_payload": payload}, environment_name="dev", table_id=TARGET_ID)
     assert json.loads(rows[0]["rule_parameters_json"])["data_types"] == {column_name: "bigint"}
     assert json.dumps(payload, sort_keys=True) == original
+
+
+def assert_testing_mutations_are_diagnostics_only(spies):
+    """Verify business stores and ordinary metadata stay untouched during Testing."""
+    for name, spy in spies.items():
+        if name == "fabricops_kit.pipeline.shared.write_lakehouse_table":
+            for call in spy.call_args_list:
+                assert call.args[1] == "METADATA_GUARDRAIL_RESULTS"
+        else:
+            spy.assert_not_called()
+
+
+def test_iterable_sources_are_materialized_once_for_evidence_and_execution(runtime, spark_session):
+    """Evidence hashing must not consume a generator before Write sees its inputs."""
+    make, _, _, _ = runtime
+    plan = make(contracted=True)
+    source = read(plan, spark_session)
+    result = orchestrate_write(source["dataframe"], execution_plan=plan, sources=(item for item in [source]),
+                               **TARGET, write_mode="overwrite", spark_session=spark_session, verbose=False,
+                               grain_discovery_enabled=False, frequency_enabled=False)
+    assert len(result["source_guardrail_results"]) == 2
+    from fabricops_kit import finalize_pipeline
+    assert finalize_pipeline(plan, spark_session=spark_session)["status"] == "succeeded"

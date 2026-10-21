@@ -95,6 +95,7 @@ GLOSSARY_GROUPS = [
         [
             "configuration",
             "pipeline",
+            "pipeline-run",
             "pyspark",
             "profile",
             "schema",

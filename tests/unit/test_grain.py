@@ -133,4 +133,5 @@ def test_grain_plan_guardrails_and_continuation(contract_runtime, spark_session,
         assert result["published"] is (mode == "live")
     assert any(row["guardrail_type"] == "grain" for row in plan.results)
     if mode == "testing":
-        assert all(spy.call_count == 0 for spy in spies.values())
+        from tests.unit.test_contract_orchestration import assert_testing_mutations_are_diagnostics_only
+        assert_testing_mutations_are_diagnostics_only(spies)

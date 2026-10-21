@@ -433,3 +433,15 @@ def test_static_freshness_is_an_intentional_contract_opt_out():
     result, record = _run_orchestration_stage(operation="READ", name="static", index=1, total=1,
         stage="Freshness", function=lambda: {"status": "skipped", "rule_type": "skip", "can_continue": True}, verbose=False)
     assert result["can_continue"] and record["status"] == "skipped"
+
+
+@pytest.fixture(autouse=True)
+def isolated_operation_journal(monkeypatch):
+    """Stage unit tests isolate run storage; lifecycle tests exercise the real journal."""
+    from contextlib import nullcontext
+    from importlib import import_module
+    from unittest.mock import Mock
+
+    for name in ("orchestrate_read", "orchestrate_write"):
+        monkeypatch.setattr(import_module(f"fabricops_kit.pipeline.{name}"), "PipelineOperation",
+                            lambda _plan, _role, arguments: nullcontext(Mock(arguments=arguments)))
