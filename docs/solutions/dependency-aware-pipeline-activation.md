@@ -23,16 +23,18 @@ In FabricOps, Data Contracts provide the governance rules used to validate pipel
 
 ## The problem
 
-Pipelines depend on one another. A change that works in Development can still break downstream pipelines in Production.
+A Data Contract is the **single source of truth** for a table, stored centrally in the Governance workspace under a unique `table_id`. But how should that contract be managed across environments and pipelines that depend on the same table?
+
+For example, **Development may use Data Contract v2 while Production still uses v1**. If Pipeline A is ready for v2 but Pipeline B still depends on v1, promoting A alone could create a version conflict. Upgrading the contract means understanding which pipelines are affected and when they can move together.
 
 ## The solution
 
 <div class="fabricops-mascot-callout">
   <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="FabricOps validation mascot" loading="eager">
-  <div><p><strong>Develop confidently. Promote safely.</strong> Validate affected pipelines together before changing Production.</p></div>
+  <div><p><strong>One governed Data Contract, controlled across environments.</strong> Validate dependent pipelines before coordinating their promotion.</p></div>
 </div>
 
-FabricOps aims to identify dependencies, validate compatible Data Contracts, and coordinate promotion of affected pipelines.
+FabricOps aims to track the contract version used by each environment and pipeline, identify affected dependencies, and coordinate compatible upgrades. Governance can approve promotion once the impacted pipelines have been validated together.
 
 ## From Development to Production
 
