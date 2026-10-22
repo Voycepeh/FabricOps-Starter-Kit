@@ -37,12 +37,12 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-execution-plan">
 <summary><strong>pipeline execution plan</strong> — The validated execution decisions shared by every Read and Write in one pipeline run.</summary>
-<p>An immutable Testing or Live plan fixes global participants, exact table contracts, stable pipeline identity and environment destinations. Execute the complete project inside finalize_pipeline(plan) for automatic outcome recording. Live pins one approved environment activation revision.</p>
+<p>Internal run authority fixes exact table contracts, stable pipeline identity and environment destinations. Test discovers participants from operations; Live pins an approved manifest and revision. Public Read and Write calls use the execution session automatically.</p>
 </details>
 
 <details id="testing">
 <summary><strong>Testing</strong> — Pipeline execution against all frozen contracts, or explicit contract-free exploration.</summary>
-<p>Testing permits any frozen table contract versions, requires all-or-none contract selection, and records METADATA_PIPELINE_RUN and Guardrail Results. Explicit real writes require safe destinations separate from Live ownership. Only complete governed Testing followed by finalize_pipeline() or the existing context-manager end boundary qualifies for activation.</p>
+<p>Test evaluates real reads, transformations and selected frozen Data Contract Guardrails without business or operational metadata commits. Diagnostic results remain in the execution session. Existing activation requires persisted complete Testing evidence, which evaluation-only Test cannot create.</p>
 </details>
 
 <details id="live">
@@ -328,7 +328,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-run">
 <summary><strong>pipeline run</strong> — One logical pipeline execution across every declared Read and Write.</summary>
-<p>METADATA_PIPELINE_RUN records one logical attempt across all declared Reads and Writes, stable pipeline_id, candidate identity, operations and status. The finalize_pipeline(plan) boundary automatically records whole-run completion, including read-only runs. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.</p>
+<p>METADATA_PIPELINE_RUN records one logical attempt across all declared Reads and Writes, stable pipeline_id, candidate identity, operations and status. Notebook cell events detect failure but do not establish whole-run success. Unobserved completion remains incomplete. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.</p>
 </details>
 
 <details id="pyspark">
