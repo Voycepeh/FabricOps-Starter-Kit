@@ -166,6 +166,7 @@ def test_test_diagnostics_never_claim_or_advance_shared_history(metadata,monkeyp
     before=copy.deepcopy(metadata.store)
     result=shared.schedule_table_profiling('orders','read',context=context)
     assert result['persistence_status']=='disabled' and metadata.store==before
+    assert result['row_count'] == 100
     with pytest.raises(RuntimeError,match='Test cannot claim'):
         shared.claim_table_profile('orders','standard','read',context=context)
 
@@ -340,3 +341,22 @@ def test_completion_failure_releases_cached_profile_without_advancing_schedule(m
     profile.unpersist.assert_called_once_with()
     entry = next(iter(metadata.store['state']['history'].values()))['activities']['standard']
     assert entry['last_status'] == 'failed' and 'last_success' not in entry
+
+
+def test_claim_retry_rechecks_expiry_after_slow_metadata_reads(metadata, monkeypatch):
+    """CAS retries cannot finalize a lease using the timestamp of an earlier attempt."""
+    claim = shared.claim_table_profile('orders', 'standard', 'read', context=metadata.context, now=NOW)
+    times = iter([NOW, NOW + timedelta(seconds=301)])
+
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return next(times)
+
+    monkeypatch.setattr(shared, 'datetime', Clock)
+    monkeypatch.setattr(shared, 'commit_table_profiling_state', Mock(side_effect=shared.ProfilingConflict('contention')))
+    with pytest.raises(shared.ProfilingConflict, match='expired'):
+        shared.maintain_table_profile_claim(claim, context=metadata.context, complete=True)
+    shared.commit_table_profiling_state.assert_called_once()
+    entry = metadata.store['state']['history'][claim['key']]['activities']['standard']
+    assert 'last_success' not in entry

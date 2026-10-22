@@ -146,7 +146,7 @@ Day 1 creates eight current records in each target, Day 2 creates the first hist
 
 ### Metadata saved by FabricOps
 
-The following records are committed by successful runs with approved **Live** publication and routed to the Metadata Lakehouse configured by `00_env_config`. Test retains diagnostics in memory and commits no operational metadata.
+The following records are committed by successful runs with approved **Live** publication and routed to the Metadata Lakehouse configured by `00_env_config`. Test retains diagnostics in memory during Read and Write; `finalize_pipeline(CONTRACTS)` publishes only run and Guardrail results for activation review.
 
 | Metadata table | What this demo records |
 | --- | --- |

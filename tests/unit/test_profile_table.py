@@ -862,6 +862,7 @@ def test_warehouse_discovery_stops_after_candidate_limit(monkeypatch, single_col
 @pytest.mark.parametrize("value", [0, -1, True, 1.5, "2", None])
 def test_discovery_limits_are_validated_before_any_work(monkeypatch, entrypoint, parameter, value):
     """Reject invalid limits even when discovery is disabled, before metadata or data I/O."""
+    from types import SimpleNamespace
     module = importlib.import_module(f"fabricops_kit.pipeline.{entrypoint}")
     boundary = "resolve_fabric_context" if entrypoint == "profile_table" else "prepare_pipeline_execution"
     prepare = Mock(side_effect=AssertionError("must validate before work"))
@@ -870,9 +871,9 @@ def test_discovery_limits_are_validated_before_any_work(monkeypatch, entrypoint,
     if entrypoint.startswith("orchestrate_"):
         from contextlib import nullcontext
         monkeypatch.setattr(module, "PipelineOperation", lambda _plan, _role, arguments: nullcontext(Mock(arguments=arguments)))
-        kwargs["execution_plan"] = None
+        monkeypatch.setattr(module, "current_pipeline_session", lambda: SimpleNamespace(spark=None, sources=[], operation_plan=lambda *args: None))
     if entrypoint == "orchestrate_write":
-        kwargs.update(dataframe=object(), sources=[], write_mode="overwrite")
+        kwargs.update(dataframe=object(), write_mode="overwrite")
     with pytest.raises(ValueError, match=f"{parameter} must be a positive integer"):
         getattr(module, entrypoint)(**kwargs, **{parameter: value})
     prepare.assert_not_called()

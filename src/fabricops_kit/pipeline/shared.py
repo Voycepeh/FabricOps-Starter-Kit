@@ -2219,6 +2219,8 @@ def write_guardrail_result_row(
     }
     if plan is not None:
         plan.results.append(row)
+        if not plan.permits_persistence:
+            plan.evidence.setdefault("guardrail_history", []).append(dict(row))
     if not persistence_permitted(context):
         return
     write_lakehouse_table(
@@ -4606,6 +4608,8 @@ def check_dq_runtime(
     plan = (context or {}).get("execution_plan")
     if plan is not None:
         plan.results.extend(summary_rows)
+        if not plan.permits_persistence:
+            plan.evidence.setdefault("guardrail_history", []).extend(dict(row) for row in summary_rows)
     if persistence_permitted(context):
         write_lakehouse_table(
             spark_session.createDataFrame([coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows]),
@@ -5735,8 +5739,11 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
      .whenMatchedUpdateAll().whenNotMatchedInsertAll().execute())
 
 
-def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", completed_at=None):
+def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", completed_at=None, persist_testing=False):
     """Persist one authoritative Delta snapshot; confirm lost acknowledgements by read-back."""
+    if persist_testing and (plan.execution_mode != "testing" or not plan.evidence.get("sealed")):
+        raise RuntimeError("Testing results may be published only after explicit pipeline completion.")
+    durable = plan.permits_persistence or persist_testing
     row = None
     try:
         candidate, fingerprint, bindings = pipeline_candidate(plan)
@@ -5761,8 +5768,8 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
                     "boundary_completed": plan.evidence.get("boundary_completed", False),
                     "testing_writes": plan.testing_writes, "physical_bindings": plan.runtime_context.get("_pipeline_bindings")}),
                **(build_runtime_audit_fields(config=plan.runtime_context["config"], env=plan.environment,
-                                            runtime_context=plan.runtime_context) if plan.permits_persistence else {})}
-        if plan.permits_persistence:
+                                            runtime_context=plan.runtime_context) if durable else {})}
+        if durable:
             _merge_pipeline_run_row(plan, row, spark_session=spark_session)
         return row
     except Exception as exc:
@@ -5793,6 +5800,35 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
         # Connector exception messages can contain credentials or business values.
         plan.evidence["failures"].append({"code": "evidence_persistence_failed", "exception_type": type(exc).__name__})
         raise RuntimeError("Pipeline run evidence persistence failed; create a new plan.") from exc
+
+
+def publish_pipeline_testing_results(plan, *, spark_session=None):
+    """Publish stable diagnostic IDs before the final authoritative Testing record."""
+    if plan.execution_mode != "testing" or not plan.evidence.get("sealed"):
+        raise RuntimeError("Only completed Testing sessions can publish results.")
+    if plan.evidence.get("testing_results_published"):
+        return plan.run_result
+    if plan.evidence.get("persistence_failed"):
+        raise RuntimeError("Pipeline result persistence is uncertain; inspect its committed run before retrying.")
+    audit = build_runtime_audit_fields(config=plan.runtime_context["config"], env=plan.environment,
+        runtime_context=plan.runtime_context)
+    rows = plan.evidence.get("guardrail_history", [])
+    if rows:
+        from delta.tables import DeltaTable
+        table = "METADATA_GUARDRAIL_RESULTS"
+        spark = get_spark_session(spark_session)
+        frame = spark.createDataFrame([coerce_metadata_row_types(table, {**row, **audit}) for row in rows],
+            schema=metadata_table_schema_registry()[table])
+        _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", table,
+            metadata_table_physical_schema(plan.runtime_context["config"], table), context=plan.runtime_context)
+        (DeltaTable.forPath(spark, path).alias("target")
+         .merge(frame.alias("source"), "target.guardrail_result_id = source.guardrail_result_id")
+         .whenNotMatchedInsertAll().execute())
+    final = plan.run_result
+    row = persist_pipeline_run(plan, spark_session=spark_session, status=final["status"],
+        completed_at=final["completed_at"], persist_testing=True)
+    plan.evidence.update(testing_results_published=True, final_result=row)
+    return row
 
 
 class PipelineOperation:
@@ -6147,6 +6183,8 @@ class PipelineSession:
         try:
             finalize_pipeline_run(self.plan, spark_session=self.spark, failed=failed)
         finally:
+            import atexit
+            atexit.unregister(self.close)
             self.closed = True
             self.sources.clear()
             for cache in (_CURRENT_SOURCE_OBSERVATIONS, _CURRENT_FRESHNESS_EVIDENCE,
@@ -6194,8 +6232,14 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None):
         plan.evidence["dynamic_participants"] = True
     session = PipelineSession(plan, spark, inspector=inspector)
     try:
-        from IPython import get_ipython
-        shell = get_ipython()
+        try:
+            from IPython import get_ipython
+        except ModuleNotFoundError as exc:
+            if exc.name != "IPython":
+                raise
+            shell = None
+        else:
+            shell = get_ipython()
         if shell is not None:
             from IPython import display as ip
             from fabricops_kit.widgets.shared import require_ipywidgets, form_page
@@ -6416,21 +6460,21 @@ def claim_table_profile(table_id, activity, operation, *, context, spark_session
 
 def maintain_table_profile_claim(claim, *, context, spark_session=None, complete=None, now=None):
     """Renew, fail or complete only an unexpired owned claim, with bounded CAS retries."""
-    now = now or datetime.now(UTC)
     for _attempt in range(3):
         token, state = read_table_profiling_state(context=context, spark_session=spark_session)
+        checked_at = now or datetime.now(UTC)
         entry = state["history"].get(claim["key"], {}).get("activities", {}).get(claim["activity"], {})
         owned = entry.get("claim")
-        if not owned or owned["token"] != claim["token"] or datetime.fromisoformat(owned["expires_at"]) <= now:
+        if not owned or owned["token"] != claim["token"] or datetime.fromisoformat(owned["expires_at"]) <= checked_at:
             raise ProfilingConflict("Profiling claim expired or belongs to another execution.")
         if complete is None:
-            owned["expires_at"] = (now + timedelta(seconds=PROFILING_LEASE_SECONDS)).isoformat()
+            owned["expires_at"] = (checked_at + timedelta(seconds=PROFILING_LEASE_SECONDS)).isoformat()
         else:
             entry.pop("claim")
             entry["last_status"] = "succeeded" if complete else "failed"
             entry["execution_id"] = claim.get("execution_id")
             if complete:
-                entry["last_success"] = now.isoformat()
+                entry["last_success"] = checked_at.isoformat()
                 entry["profile_snapshot_id"] = claim["token"]
         try:
             return commit_table_profiling_state(state, expected_token=token, context=context, spark_session=spark_session)
@@ -6456,7 +6500,9 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
                     spark_session=spark_session, verbose=False, activities={activity})
             else:
                 outcomes[activity] = {"status": "skipped", "reason": "Not due for this operation"}
-        return {"status": "passed", "activities": outcomes, "persistence_status": "disabled"}
+        counts = [outcome.get("row_count") for outcome in outcomes.values() if outcome.get("row_count") is not None]
+        return {"status": "passed", "activities": outcomes, "persistence_status": "disabled",
+                "row_count": counts[0] if counts else None}
     for activity in PROFILING_ACTIVITIES:
         claim = claim_table_profile(table_id, activity, operation, context=context, spark_session=spark_session)
         if claim is None:

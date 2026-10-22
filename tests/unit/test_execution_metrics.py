@@ -143,18 +143,19 @@ def test_write_summary_keeps_profile_total_separate_from_committed(mode, profile
 
 
 @pytest.mark.parametrize("incremental,rows", [(False, 8), (True, 0), (True, None)])
-def test_read_summary_reuses_profile_only_for_full_scope(incremental, rows, capsys, monkeypatch):
+@pytest.mark.parametrize("is_query", [False, True])
+def test_read_summary_reuses_profile_only_for_full_scope(incremental, rows, is_query, capsys, monkeypatch):
     module = import_module("fabricops_kit.pipeline.orchestrate_read")
     monkeypatch.setattr(module, "resolve_table_id", lambda **_kwargs: "source")
     monkeypatch.setattr(module, "prepare_pipeline_execution", lambda *_args, **_kwargs: execution_context_stub({"source": None}))
-    source = {"dataframe": SimpleNamespace(columns=["id"]), "table_id": "source", "read_metrics": {"rows_read": rows if incremental else None}, "_reader_name": "read_warehouse_query"}
+    source = {"dataframe": SimpleNamespace(columns=["id"]), "table_id": "source", "is_query": is_query, "read_metrics": {"rows_read": rows if incremental else None}, "_reader_name": "read_warehouse_query"}
     with ExitStack() as stack:
         stack.enter_context(patch.object(module, "pipeline_read", return_value=source))
         for name in ("check_freshness", "check_schema", "check_dq"):
             stack.enter_context(patch.object(module, name, return_value={"status": "passed"}))
         profile = stack.enter_context(patch.object(module, "schedule_table_profiling", return_value={"row_count": 8}))
         result = run_pipeline_operation(module.orchestrate_read, plan=PLAN, store="Gold", schema="demo", table_name="orders", read_mode="incremental" if incremental else "full")
-    assert result["read_metrics"] == {"rows_read": rows, "columns": 1}
+    assert result["read_metrics"] == {"rows_read": None if is_query and not incremental else rows, "columns": 1}
     assert "FabricOps READ Summary" in capsys.readouterr().out
     assert profile.call_count == 1
 

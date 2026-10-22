@@ -30,9 +30,10 @@ source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 transformed = transform(source["dataframe"])
 result = orchestrate_write(transformed, store="Gold", schema="demo",
                            table_name="customer_summary", write_mode="overwrite")
+pipeline_result = finalize_pipeline(CONTRACTS)
 ```
 
-`pipeline_mode` accepts exactly `Test` or `Live`. Test runs real reads, transformations and selected Guardrails without business or operational metadata commits. In a notebook, choose exact frozen contracts or No Contract in the setup interface before the first operation. Headless Test starts with No Contract; its returned session supports explicit `select_contract(table_id, contract_id, contract_version)` for automated diagnostics. Choices lock when operations start. The displayed report updates automatically, with red Test and green Live mode treatment and textual operation/Guardrail status.
+`pipeline_mode` accepts exactly `Test` or `Live`. Test runs real reads, transformations and selected Guardrails without business or operational metadata commits during Read and Write. The explicit Finalize step publishes only run and Guardrail results for activation review. In a notebook, choose exact frozen contracts or No Contract in the setup interface before the first operation. Headless Test starts with No Contract; its returned session supports explicit `select_contract(table_id, contract_id, contract_version)` for automated diagnostics. Choices lock when operations start. The displayed report updates automatically, with red Test and green Live mode treatment and textual operation/Guardrail status.
 
 Live resolves participants, frozen contracts, project configuration and physical bindings exclusively from the approved environment manifest. Every operation retains destination, strategy, contract and activation-revision validation. Spark and supported Fabric notebook context are resolved internally. Missing notebook audit identity is represented as absent, never fabricated or substituted for approval identity.
 
@@ -40,11 +41,11 @@ Live resolves participants, frozen contracts, project configuration and physical
 
 Every successful Read registers with the current execution instance. Every subsequent Write receives that execution's registered sources. These associations describe pipeline participation, not proven DataFrame transformation lineage. Context-local state and unique run IDs isolate executions; failure, repeated setup and shutdown clear source references.
 
-Fabric's supported IPython `post_run_cell` event reports cell errors, but a successful cell does not establish whole-notebook completion. No supported whole-notebook completion hook is available in the existing execution model. FabricOps therefore seals observed failures, and conservatively seals other runs as **incomplete** on repeated setup or shutdown. A successful Write, the last observed operation, and normal interpreter shutdown never manufacture whole-run success. A killed process may leave a persisted Live run incomplete and its reservation in place. Headless transformation failures without a notebook event cannot be distinguished from interruption at shutdown.
+Run `finalize_pipeline(CONTRACTS)` after all Reads, transformations and Writes, including read-only pipelines. It records the complete outcome and releases Live reservations. Pass `failed=True` for a caught project exception. Test publishes `METADATA_GUARDRAIL_RESULTS` first and its authoritative `METADATA_PIPELINE_RUN` snapshot last; normal Test operations still commit no metadata. Publication requires complete runtime audit identity. Repeating finalization with the same session is idempotent, including retries after an interrupted diagnostic publication.
 
-There is no manual plan-building, finalization or inspection cell. The internal trusted whole-run boundary still supports runtime integration, but the notebook templates cannot prove successful completion automatically. A future supported Fabric execution-owner callback is needed for that guarantee.
+A successful Write or Fabric cell does not prove whole-notebook completion. Observed errors seal failure; repeated setup and shutdown seal unfinalized runs as **incomplete**. A killed process may retain an incomplete Live record and reservation. Operators must confirm execution stopped before repairing a reservation. Headless code must call Finalize after its full transformation workflow, or use `failed=True` when it catches a project failure.
 
-Test diagnostics remain in memory. Because the existing activation service requires committed `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS`, evaluation-only Test cannot create new activation evidence. The activation checks remain strict; existing valid approvals can run Live. Restoring a new-approval workflow requires a separately specified, authorized evidence publication boundary. No diagnostic result silently authorizes Live.
+Activation still requires a complete successful Testing record, exact frozen contracts for every participant, all required operation and Guardrail results, an effective Data Agreement and explicit Governance approval. Failed, incomplete, mixed-contract and No Contract runs cannot activate. Finalization never activates or deploys a pipeline.
 
 ## Activate, deploy and run unattended
 

@@ -31,6 +31,35 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     target_table_id preserves incremental checkpoint and SCD processing support.
     dq_diagnostics accepts sample, none or full for explicit debugging.
 
+    Profiling uses independent shared Table ID schedules and scans the complete
+    persisted table. Guardrail checks run regardless of profiling eligibility.
+
+    Parameters
+    ----------
+    store : str
+        Configured source store key.
+    schema : str or None
+        Explicit physical schema; pass None for a schemaless store.
+    table_name : str
+        Physical source table name.
+    read_mode : {"full", "incremental"}
+        Full reads profile the source; incremental reads retain checkpoint bounds.
+    read_parameters : dict, optional
+        Incremental watermark_column; must agree with the selected contract.
+    target_table_id : str, optional
+        Required target for incremental reads, also a participant in the plan.
+    query : str, optional
+        Read-only Warehouse query, supported for full reads only.
+    verbose : bool
+        Print concise stage outcomes and summary.
+    dq_diagnostics : {"sample", "none", "full"}
+        Rule metrics plus bounded examples, no examples, or lazy full failures.
+
+    Returns
+    -------
+    dict
+        Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.
+
     Raises RuntimeError when no pipeline is active or a Live stage fails, and
     ValueError for an invalid operation or inconsistent approved configuration.
 
@@ -98,7 +127,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, spark_session=spark_session, verbose=False, context=context, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
         profile = run("Profile", lambda: schedule_table_profiling(table_id, "read", context=context, spark_session=spark_session))
 
-        if metrics["rows_read"] is None and read_mode == "full":
+        if metrics["rows_read"] is None and read_mode == "full" and not source.get("is_query"):
             metrics["rows_read"] = profile.get("row_count")
         duration = summary.finish([
             ("Source", ".".join(str(part) for part in (store, schema, table_name) if part)),

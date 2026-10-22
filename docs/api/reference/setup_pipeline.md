@@ -48,8 +48,8 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `pipeline_id` | `str` | Yes | `—` | Not documented yet |
-| `pipeline_mode` | `str` | Yes | `—` | Not documented yet |
+| `pipeline_id` | `str` | Yes | `—` | Stable logical pipeline identity, independent of the notebook name. |
+| `pipeline_mode` | `str` | Yes | `—` | Evaluation-only operations or execution under an approved manifest. |
 
 </div>
 
@@ -61,7 +61,7 @@ PipelineSession
 
 ### Return interpretation
 
-Returns a context-local execution session with contract selection and automatic reporting; unobserved completion remains incomplete.
+Returns a context-local execution session with contract selection and automatic reporting; finalize_pipeline records completion and publishes Testing results; interrupted runs remain incomplete.
 
 ## Raises / Errors
 
@@ -81,9 +81,9 @@ RuntimeError
 <div class="reference-docstring-notes" markdown="1">
 
 Fabric cell events identify failures, not successful notebook completion.
-Runs remain incomplete until a trusted whole-execution boundary is available.
+Call finalize_pipeline after all Reads, transformations and Writes.
 Neither a successful Write nor interpreter shutdown proves completion. Test
-results are in memory and cannot serve as persisted activation evidence.
+results stay in memory until explicit finalization publishes them.
 
 </div>
 
@@ -92,7 +92,8 @@ results are in memory and cannot serve as persisted activation evidence.
 <div class="reference-docstring-intro" markdown="1">
 
 Test evaluates reads, transformations and Guardrails without business or
-metadata commits. Select frozen contracts in the returned interface before
+metadata commits during Read and Write. finalize_pipeline publishes the final
+run and Guardrail results for activation review. Select frozen contracts in the returned interface before
 the first operation; headless Test explicitly uses No Contract. Live resolves
 only the approved environment manifest and retains revision/ownership checks.
 Spark and supported Fabric runtime identity are resolved internally. A missing
@@ -109,7 +110,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L172">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L180">View on GitHub</a>
 </div>
 
 

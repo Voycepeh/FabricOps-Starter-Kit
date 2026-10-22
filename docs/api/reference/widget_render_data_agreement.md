@@ -103,7 +103,7 @@ appends one complete agreement row only after final validation.
 
 `fabricops_kit/widgets/widget_render_data_agreement.py:44`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L44-L473">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L44-L489">View on GitHub</a>
 </div>
 
 
@@ -119,7 +119,7 @@ appends one complete agreement row only after final validation.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 62 |
+| Live-critical dependencies | 61 |
 
 ### Release history
 
@@ -184,7 +184,6 @@ appends one complete agreement row only after final validation.
 <li><code>fabricops_kit.widgets.shared.to_iso_date</code></li>
 <li><code>fabricops_kit.widgets.shared.widget_common</code></li>
 <li><code>fabricops_kit.widgets.shared.write_widget_metadata_row</code></li>
-<li><code>fabricops_kit.widgets.widget_render_data_agreement._agreement_identity_text</code></li>
 <li><code>fabricops_kit.widgets.widget_render_data_agreement._business_agreement_snapshot</code></li>
 <li><code>fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement</code></li>
 <li><code>fabricops_kit.widgets.widget_render_data_agreement._deserialize_approved_usage</code></li>

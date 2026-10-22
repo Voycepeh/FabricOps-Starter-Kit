@@ -6,10 +6,8 @@ Run **Read → Transform → Write**. Test reads real data and evaluates transfo
 
 The report updates automatically. Read and Write results retain `schema_result`, `grain_result`, `dq_result`, `source_drift_results`, `sensitive_result`, publication metrics and dry-run limits where applicable. Advanced `dq_diagnostics="full"` preserves lazy violation inspection when needed.
 
-Test does not publish business data or commit any operational metadata, mappings, checkpoints or activation changes. Results are in memory. Overwrite, append, incremental, SCD1 and SCD2 processing retain their input and safety checks, but actual publication permissions and transaction behavior require Live validation.
+Test does not publish business data or commit any operational metadata, mappings, checkpoints or activation changes. Results are in memory until the final `finalize_pipeline(CONTRACTS)` cell publishes run and Guardrail results. Overwrite, append, incremental, SCD1 and SCD2 processing retain their input and safety checks, but actual publication permissions and transaction behavior require Live validation.
 
-A successful cell or Write does not prove whole-notebook completion. Observed errors seal failure; other runs remain incomplete until a reliable execution-owner boundary is available. See [execution boundary limitations](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
+After all Reads, transformations and Writes, run `pipeline_result = finalize_pipeline(CONTRACTS)`. It publishes `METADATA_GUARDRAIL_RESULTS` and the final `METADATA_PIPELINE_RUN` snapshot. A successful cell or Write alone never establishes completion; stopped runs remain incomplete. Publication requires the configured Metadata store and complete Fabric runtime audit identity.
 
-**Activation limitation:** the existing activation service requires persisted successful whole-run Testing evidence. Evaluation-only Test cannot supply it. Existing approvals remain usable; new approvals require a separately authorized evidence publication workflow. Passing interactive diagnostics alone never authorize Live.
-
-**Next:** [Activation and promotion](05-activate-data-contract-and-promote.md).
+Only complete successful Testing with exact frozen contracts for every participant can proceed to activation review. Failed, incomplete and No Contract runs cannot authorize Live. See [execution boundaries](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).

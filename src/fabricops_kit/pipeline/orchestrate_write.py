@@ -36,6 +36,41 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     available. The result includes publication metrics and Guardrail diagnostics.
     A successful Write does not imply successful completion of the notebook.
 
+    Profiling uses independent shared Table ID schedules and scans the complete
+    persisted table. Guardrail checks run regardless of profiling eligibility.
+
+    Parameters
+    ----------
+    dataframe : object
+        Transformed Spark DataFrame; Sensitive Data treatment prepares the input.
+    store : str
+        Configured target store key.
+    schema : str or None
+        Explicit physical schema; pass None for a schemaless store.
+    table_name : str
+        Physical target table name.
+    write_mode : {"overwrite", "append", "scd1", "scd2"}
+        Proposed strategy; must match the selected contract processing definition.
+    write_parameters : dict, optional
+        Strategy parameters including SCD key_columns and SCD2 effective_column.
+    existing_mapping : object, optional
+        Caller-managed Sensitive Data mapping; incompatible with a configured vault.
+        Existing assignments are reused. The returned sensitive_result.support_mapping
+        remains caller-owned; persist it only in Live workflows, then unpersist() its
+        cache after consumption. A configured restricted mapping store is read-only
+        during evaluation-only Testing and reused/updated during Live writes. Failures release the cache.
+    repartition_by : int, optional
+        Physical write partition count for Live.
+    verbose : bool
+        Print concise stages and outcome when True; the execution widget reports automatically by default.
+    dq_diagnostics : {"sample", "none", "full"}
+        Exact metrics with bounded samples, no samples or lazy full violations.
+
+    Returns
+    -------
+    dict
+        Prepared dataframe, selected contract, execution identity, schema_result, sensitive_result, source_drift_results, grain_result, dq_result, source_guardrail_results, write_metrics, published and persistence_status. sensitive_result.support_mapping remains caller-owned; release its cache after use. Test returns processing diagnostics without business publication. Live returns its actual publication outcome.
+
     Raises RuntimeError when no pipeline is active or a Live stage fails, and
     ValueError for an invalid operation or inconsistent approved configuration.
 
