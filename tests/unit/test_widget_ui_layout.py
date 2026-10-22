@@ -154,6 +154,12 @@ def test_optional_custom_dropdown_starts_blank_and_required_keeps_default(monkey
 
     class Dropdown:
         def __init__(self, options, value=None, **kwargs):
+            values = [
+                option[1] if isinstance(option, tuple) and len(option) == 2 else option
+                for option in options
+            ]
+            if value not in values:
+                raise ValueError("dropdown value must match an underlying option value")
             self.options = options
             self.value = value
 
@@ -184,3 +190,8 @@ def test_optional_custom_dropdown_starts_blank_and_required_keeps_default(monkey
     assert fields["required"].value == "ODI"
     assert fields["required"].options == [("Select an option", ""), "ODI", "Faculty"]
     fields["required"].value = ""
+
+    empty_required = shared.render_custom_fields(
+        [{"key": "empty", "type": "dropdown", "required": True, "options": []}]
+    )
+    assert empty_required["empty"].value == ""
