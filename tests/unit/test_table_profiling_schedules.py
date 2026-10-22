@@ -146,7 +146,7 @@ def test_renewal_preserves_expensive_active_work(metadata):
 
 def test_schedule_runs_persisted_table_without_filtered_dataframe(metadata,monkeypatch):
     profiler=Mock(return_value={'row_count':100})
-    monkeypatch.setattr(importlib.import_module('fabricops_kit.pipeline.profile_table'),'execute_table_profile',profiler)
+    monkeypatch.setattr(importlib.import_module('fabricops_kit.pipeline.shared'),'execute_table_profile',profiler)
     result=shared.schedule_table_profiling('orders','read',context=metadata.context)
     assert set(result['activities'])==set(shared.PROFILING_ACTIVITIES)
     assert profiler.call_count==3
@@ -162,7 +162,7 @@ def test_schedule_runs_persisted_table_without_filtered_dataframe(metadata,monke
 def test_test_diagnostics_never_claim_or_advance_shared_history(metadata,monkeypatch):
     context={**metadata.context,'execution_plan':SimpleNamespace(plan_id='Test',permits_persistence=False)}
     profiler=Mock(return_value={'row_count':100})
-    monkeypatch.setattr(importlib.import_module('fabricops_kit.pipeline.profile_table'),'execute_table_profile',profiler)
+    monkeypatch.setattr(importlib.import_module('fabricops_kit.pipeline.shared'),'execute_table_profile',profiler)
     before=copy.deepcopy(metadata.store)
     result=shared.schedule_table_profiling('orders','read',context=context)
     assert result['persistence_status']=='disabled' and metadata.store==before
@@ -172,7 +172,7 @@ def test_test_diagnostics_never_claim_or_advance_shared_history(metadata,monkeyp
 
 
 def test_profiler_failure_does_not_consume_schedule(metadata,monkeypatch):
-    monkeypatch.setattr(importlib.import_module('fabricops_kit.pipeline.profile_table'),'execute_table_profile',Mock(side_effect=RuntimeError('profile failed')))
+    monkeypatch.setattr(importlib.import_module('fabricops_kit.pipeline.shared'),'execute_table_profile',Mock(side_effect=RuntimeError('profile failed')))
     with pytest.raises(RuntimeError,match='profile failed'):
         shared.schedule_table_profiling('orders','write',context=metadata.context)
     entry=next(iter(metadata.store['state']['history'].values()))['activities']['standard']
@@ -218,7 +218,7 @@ def test_native_authoring_rejects_invalid_days_without_a_commit(metadata,monkeyp
 @pytest.mark.parametrize('activity', ['standard','grain','frequency'])
 def test_real_profiler_activities_publish_independent_metadata(activity,spark_session,monkeypatch):
     """Calculate real Spark profiles while observing each physical mutation boundary."""
-    module=importlib.import_module('fabricops_kit.pipeline.profile_table')
+    module=importlib.import_module('fabricops_kit.pipeline.shared')
     frame=spark_session.createDataFrame([(1,'A'),(2,'A'),(3,'B')],['id','category'])
     identity={'table_id':'orders','store':'Bronze','schema':'demo','table_name':'orders','store_kind':'lakehouse'}
     monkeypatch.setattr(module,'resolve_catalogue_table_identity',lambda *args,**kwargs:dict(identity))
@@ -314,7 +314,7 @@ def test_real_commit_boundary_rejects_test_before_delta_access(metadata):
 
 def test_later_activity_failure_preserves_earlier_success_history(metadata,monkeypatch):
     profiler=Mock(side_effect=[{'row_count':100},RuntimeError('grain failed')])
-    monkeypatch.setattr(importlib.import_module('fabricops_kit.pipeline.profile_table'),'execute_table_profile',profiler)
+    monkeypatch.setattr(importlib.import_module('fabricops_kit.pipeline.shared'),'execute_table_profile',profiler)
     with pytest.raises(RuntimeError,match='grain failed'):
         shared.schedule_table_profiling('orders','read',context=metadata.context)
     activities=next(iter(metadata.store['state']['history'].values()))['activities']
@@ -327,7 +327,7 @@ def test_completion_failure_releases_cached_profile_without_advancing_schedule(m
     """A lost claim must not leak Spark cache or consume the successful interval."""
     profile = Mock()
     profiler = Mock(return_value={'row_count': 100, 'profile': profile})
-    monkeypatch.setattr(importlib.import_module('fabricops_kit.pipeline.profile_table'), 'execute_table_profile', profiler)
+    monkeypatch.setattr(importlib.import_module('fabricops_kit.pipeline.shared'), 'execute_table_profile', profiler)
     original = shared.maintain_table_profile_claim
 
     def maintain(claim, **kwargs):

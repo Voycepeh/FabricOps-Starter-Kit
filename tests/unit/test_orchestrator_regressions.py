@@ -38,7 +38,7 @@ def read_runtime(monkeypatch):
 def test_full_mode_normalized_for_reader_grain_profile_and_summary(read_runtime, mode):
     """Every accepted spelling executes the same full lifecycle and reports its count."""
     reader, grain, profile = read_runtime
-    result = run_pipeline_operation(read.orchestrate_read, plan=PLAN, store="Bronze", schema="demo", table_name="orders", read_mode=mode, verbose=False)
+    run_pipeline_operation(read.orchestrate_read, plan=PLAN, store="Bronze", schema="demo", table_name="orders", read_mode=mode, verbose=False)
     assert result["read_mode"] == "full"
     assert reader.call_args.kwargs["read_mode"] == "full"
     assert grain.call_args.kwargs["scope"] == "read_full"
@@ -49,10 +49,10 @@ def test_full_mode_normalized_for_reader_grain_profile_and_summary(read_runtime,
 
 @pytest.mark.parametrize("mode", ["incremental", "INCREMENTAL", " Incremental "])
 def test_incremental_mode_normalized_for_reader_parameters_and_grain(read_runtime, mode):
-    """Incremental spellings preserve parameters, use batch Grain, and skip Profile."""
+    """Incremental spellings preserve parameters, use batch Grain, and schedule full-table profiling."""
     reader, grain, profile = read_runtime
     parameters = {"watermark_column": "modified_at"}
-    result = run_pipeline_operation(read.orchestrate_read, plan=PLAN, store="Bronze", schema="demo", table_name="orders", read_mode=mode,
+    run_pipeline_operation(read.orchestrate_read, plan=PLAN, store="Bronze", schema="demo", table_name="orders", read_mode=mode,
                                    read_parameters=parameters, target_table_id="target", verbose=False)
     assert reader.call_args.kwargs["read_mode"] == "incremental"
     assert reader.call_args.kwargs["read_parameters"] is parameters

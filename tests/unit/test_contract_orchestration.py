@@ -20,7 +20,7 @@ from tests.helpers import run_pipeline_operation
 plan_module = importlib.import_module("fabricops_kit.pipeline.shared")
 read_module = importlib.import_module("fabricops_kit.pipeline.pipeline_read")
 write_module = importlib.import_module("fabricops_kit.pipeline.pipeline_write")
-profile_module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+profile_module = importlib.import_module("fabricops_kit.pipeline.shared")
 
 SOURCE = {"store": "Bronze", "schema": "demo", "table_name": "source"}
 TARGET = {"store": "Silver", "schema": "demo", "table_name": "target"}

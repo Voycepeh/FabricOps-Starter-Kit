@@ -34,7 +34,7 @@ def test_profile_table_public_signature_and_removed_symbols():
 
 def test_dataframe_only_profiles_without_metadata_writes_and_prints(spark_session, monkeypatch, capsys):
     """Keep identity-free profiling entirely non-persistent."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     source = spark_session.createDataFrame([(1, "A"), (2, "A"), (None, None)], ["amount", "status"])
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: pytest.fail("must not resolve metadata"))
     monkeypatch.setattr(module, "write_lakehouse_table", lambda *a, **k: pytest.fail("must not write"))
@@ -82,7 +82,7 @@ def test_profile_table_rejects_invalid_identity_forms(kwargs, message):
 
 def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, capsys):
     """Associate the supplied frame with identity without a physical read."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     source = spark_session.createDataFrame([(1,)], ["value"])
     identity = {"table_id": "lakehouse||source||dbo||orders", "store": "source", "schema": "dbo", "table_name": "orders", "store_kind": "lakehouse"}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: ({}, "dev", {}))
@@ -114,7 +114,7 @@ def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, cap
 
 def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatch, capsys):
     """Push physical Warehouse statistics and frequencies into SQL, never a full table read."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     identity = {"table_id": "warehouse||source||dbo||orders", "store": "source", "schema": "dbo", "table_name": "orders", "store_kind": "warehouse"}
     schema_rows = spark_session.createDataFrame(
         [("amount", "int", 10, 0), ("status", "varchar", None, None)],
@@ -196,7 +196,7 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
 
 def test_profile_key_candidates_prefer_smallest_unique_single_column(spark_session):
     """Return proven single-column keys without testing wider combinations."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     shared = importlib.import_module("fabricops_kit.pipeline.shared")
     source = spark_session.createDataFrame(
         [(1, "A"), (2, "A"), (3, "B")],
@@ -219,7 +219,7 @@ def test_profile_key_candidates_prefer_smallest_unique_single_column(spark_sessi
 
 def test_profile_key_candidates_find_smallest_composite_key(spark_session):
     """Test pairs only when no single column is unique and stop at the first valid width."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     shared = importlib.import_module("fabricops_kit.pipeline.shared")
     source = spark_session.createDataFrame(
         [(1, "A"), (1, "B"), (2, "A"), (2, "B")],
@@ -242,7 +242,7 @@ def test_profile_key_candidates_find_smallest_composite_key(spark_session):
 
 def test_profile_key_candidates_allow_snapshot_metadata_in_composite_key(spark_session):
     """Allow technical snapshot columns when the data proves they form the row grain."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     shared = importlib.import_module("fabricops_kit.pipeline.shared")
     source = spark_session.createDataFrame(
         [
@@ -265,7 +265,7 @@ def test_profile_key_candidates_allow_snapshot_metadata_in_composite_key(spark_s
 
 def test_profile_key_candidates_do_not_use_an_arbitrary_top_eight_shortlist(spark_session):
     """Evaluate all eligible columns rather than limiting discovery to a shortlist."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     shared = importlib.import_module("fabricops_kit.pipeline.shared")
     rows = [
         ("A", "B", "C", "D", "E", "F", "G", "H", 1, 1),
@@ -293,7 +293,7 @@ def test_profile_key_candidates_do_not_use_an_arbitrary_top_eight_shortlist(spar
 
 def test_profile_key_candidates_use_data_not_column_name_heuristics(spark_session):
     """Test arbitrary null-free columns instead of requiring identifier-like names."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     shared = importlib.import_module("fabricops_kit.pipeline.shared")
     source = spark_session.createDataFrame(
         [
@@ -321,7 +321,7 @@ def test_profile_key_candidates_use_data_not_column_name_heuristics(spark_sessio
 
 def test_key_candidate_evidence_distinguishes_resolved_and_unresolved():
     """Persist explicit discovery status instead of overloading an empty JSON array."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     resolved = module._key_candidate_evidence([
         {
             "columns": ["order_id", "line_number"],
@@ -346,7 +346,7 @@ def test_key_candidate_evidence_distinguishes_resolved_and_unresolved():
 
 def test_warehouse_percentile_query_isolated_per_numeric_column():
     """Keep each ordered percentile scope isolated for Fabric Warehouse compatibility."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     identity = {"store": "Gold", "schema": "demo", "table_name": "customer_summary"}
 
     query = module._warehouse_percentile_query(
@@ -367,7 +367,7 @@ def test_warehouse_percentile_query_isolated_per_numeric_column():
 
 def test_spark_and_warehouse_profile_backends_produce_equivalent_canonical_metrics(spark_session):
     """Keep canonical profile values equivalent across Spark and Warehouse SQL backends."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     shared = importlib.import_module("fabricops_kit.pipeline.shared")
     source = spark_session.createDataFrame(
         [(1, "A"), (2, "A"), (3, "B"), (4, "C"), (None, None)],
@@ -442,7 +442,7 @@ def test_warehouse_type_name_uses_pyspark_canonical_types(
     sql_type, precision, scale, expected
 ):
     """Normalize Warehouse physical types to the PySpark schema vocabulary."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     row = {
         "DATA_TYPE": sql_type,
         "NUMERIC_PRECISION": precision,
@@ -454,7 +454,7 @@ def test_warehouse_type_name_uses_pyspark_canonical_types(
 
 def test_supplied_dataframe_with_warehouse_identity_stays_in_spark(spark_session, monkeypatch):
     """Treat a custom or incremental Warehouse query result as the exact supplied Spark batch."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     source = spark_session.createDataFrame([(10,), (None,)], ["amount"])
     identity = {"table_id": "warehouse||source||dbo||orders", "store": "source", "schema": "dbo", "table_name": "orders", "store_kind": "warehouse"}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: ({}, "dev", {}))
@@ -477,7 +477,7 @@ def test_supplied_dataframe_with_warehouse_identity_stays_in_spark(spark_session
 
 def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
     """Keep table processing fields when structural profiling supplies null values."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     updates = []
 
     class Merge:
@@ -536,7 +536,7 @@ def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
 
 def test_profile_registration_rejects_partition_processing_parameter():
     """Target registration no longer authors partition-based incremental processing."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
 
     with pytest.raises(ValueError, match="partition_column"):
         module._processing_definition(
@@ -548,7 +548,7 @@ def test_profile_registration_rejects_partition_processing_parameter():
 
 def test_profile_snapshot_identity_is_stable_per_activity_and_distinct_between_activities(monkeypatch):
     """Use the existing Fabric activity identity as the retry boundary."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     activity = {"value": "activity-1"}
     monkeypatch.setattr(
         module,
@@ -571,7 +571,7 @@ def test_same_activity_retry_clears_catalogue_completion_before_replacement(
     spark_session, monkeypatch
 ):
     """Detect a same-activity retry before clearing its Catalogue completion marker."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     updates = []
     activities = spark_session.createDataFrame(
         [("dev", "table-1", "activity-1")],
@@ -621,7 +621,7 @@ def test_same_activity_retry_clears_catalogue_completion_before_replacement(
 
 def test_first_profile_activity_is_not_reported_as_retry(spark_session, monkeypatch):
     """Distinguish a new profiling activity from an idempotent same-activity retry."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     activities = spark_session.createDataFrame(
         [("dev", "table-1", "activity-2")],
         ["environment_name", "table_id", "_activity_id"],
@@ -674,17 +674,23 @@ def test_failed_governed_profile_removes_uncommitted_snapshot(
     spark_session, monkeypatch, capsys, failure_stage, cleanup_fails
 ):
     """Do not leave summary rows that could expose a partially persisted snapshot."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     source = spark_session.createDataFrame([(1,)], ["value"])
     identity = {
         "table_id": "lakehouse||source||dbo||orders", "store": "source",
         "schema": "dbo", "table_name": "orders", "store_kind": "lakehouse",
     }
     events = []
+    cached = []
+
+    def canonical(profile, **kwargs):
+        cached.append(profile)
+        return profile
+
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: ({}, "dev", {}))
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *a, **k: dict(identity))
     monkeypatch.setattr(module, "_profile_snapshot_id", lambda **k: "snapshot-activity-1")
-    monkeypatch.setattr(module, "_canonical_profiled_dataframe", lambda profile, **k: profile)
+    monkeypatch.setattr(module, "_canonical_profiled_dataframe", canonical)
     monkeypatch.setattr(module, "_frequency_metadata_dataframe", lambda frequency, **k: frequency)
     monkeypatch.setattr(module, "_replace_snapshot_rows", lambda **k: events.append("summary"))
     monkeypatch.setattr(module, "_stage_catalogue_profile_retry", lambda **k: events.append("stage"))
@@ -711,6 +717,7 @@ def test_failed_governed_profile_removes_uncommitted_snapshot(
     with pytest.raises(RuntimeError, match=failure_stage):
         profile_table(dataframe=source, table_id=identity["table_id"], frequency_columns=["value"])
 
+    assert cached and not cached[0].is_cached
     assert events[-1] == "cleanup"
     assert "summary" in events
     assert ("frequency" in events) is (failure_stage == "catalogue")
@@ -746,7 +753,7 @@ def test_grain_discovery_can_be_disabled_and_reenabled_independently(
     monkeypatch, backend, frequency_enabled
 ):
     """Skip discovery work while retaining candidates and ordinary profiling."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     identity = {"table_id": "table-id", "store": "source", "schema": "dbo",
                 "table_name": "orders", "store_kind": backend}
     frame, profile = Mock(), Mock()
@@ -803,7 +810,7 @@ def test_spark_discovery_respects_maximum_key_width(spark_session, max_columns):
     """A triple-only key stays unresolved when the caller limits the search to pairs."""
     from itertools import product
 
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     frame = spark_session.createDataFrame(list(product(range(2), repeat=3)), ["a", "b", "c"])
     candidates = module._spark_profile_key_candidates(frame, None, max_columns=max_columns)
     assert [candidate["columns"] for candidate in candidates] == ([["a", "b", "c"]] if max_columns == 3 else [])
@@ -812,7 +819,7 @@ def test_spark_discovery_respects_maximum_key_width(spark_session, max_columns):
 @pytest.mark.parametrize("single_column_keys", [False, True])
 def test_spark_discovery_respects_candidate_limit(spark_session, single_column_keys):
     """Limit suggestions for both single and composite keys at the smallest valid width."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     rows = [(0, 0, 0), (1, 1, 1)] if single_column_keys else [(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)]
     frame = spark_session.createDataFrame(rows, ["a", "b", "c"])
     candidates = module._spark_profile_key_candidates(frame, None, max_candidates=1)
@@ -823,7 +830,7 @@ def test_spark_discovery_respects_candidate_limit(spark_session, single_column_k
 @pytest.mark.parametrize("max_columns,expected_queries", [(1, 1), (2, 4), (3, 5)])
 def test_warehouse_discovery_respects_maximum_key_width(monkeypatch, max_columns, expected_queries):
     """Do not issue SQL for combinations wider than the caller's limit."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     summary = {"ROW_COUNT": 8, **{f"C{i}_{metric}": value for i in range(3)
                for metric, value in [("NON_NULL_COUNT", 8), ("DISTINCT_COUNT", 2)]}}
     responses = [summary, *[{"DISTINCT_COUNT": 4}] * 3, {"DISTINCT_COUNT": 8}]
@@ -841,7 +848,7 @@ def test_warehouse_discovery_respects_maximum_key_width(monkeypatch, max_columns
 @pytest.mark.parametrize("single_column_keys", [False, True])
 def test_warehouse_discovery_stops_after_candidate_limit(monkeypatch, single_column_keys):
     """Stop querying once enough valid smallest-width candidates have been found."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     summary = {"ROW_COUNT": 4, **{f"C{i}_{metric}": value for i in range(3)
                for metric, value in [("NON_NULL_COUNT", 4), ("DISTINCT_COUNT", 4 if single_column_keys else 2)]}}
     responses = [summary] if single_column_keys else [summary, {"DISTINCT_COUNT": 4}]
@@ -863,7 +870,7 @@ def test_warehouse_discovery_stops_after_candidate_limit(monkeypatch, single_col
 def test_discovery_limits_are_validated_before_any_work(monkeypatch, entrypoint, parameter, value):
     """Reject invalid limits even when discovery is disabled, before metadata or data I/O."""
     from types import SimpleNamespace
-    module = importlib.import_module(f"fabricops_kit.pipeline.{entrypoint}")
+    module = importlib.import_module("fabricops_kit.pipeline.shared" if entrypoint == "profile_table" else f"fabricops_kit.pipeline.{entrypoint}")
     boundary = "resolve_fabric_context" if entrypoint == "profile_table" else "prepare_pipeline_execution"
     prepare = Mock(side_effect=AssertionError("must validate before work"))
     monkeypatch.setattr(module, boundary, prepare)
@@ -875,14 +882,14 @@ def test_discovery_limits_are_validated_before_any_work(monkeypatch, entrypoint,
     if entrypoint == "orchestrate_write":
         kwargs.update(dataframe=object(), write_mode="overwrite")
     with pytest.raises(ValueError, match=f"{parameter} must be a positive integer"):
-        getattr(module, entrypoint)(**kwargs, **{parameter: value})
+        (profile_table if entrypoint == "profile_table" else getattr(module, entrypoint))(**kwargs, **{parameter: value})
     prepare.assert_not_called()
 
 
 @pytest.mark.parametrize("max_columns,expected_count", [(3, 0), (4, 1)])
 def test_warehouse_discovery_can_search_beyond_previous_width_limit(monkeypatch, max_columns, expected_count):
     """A caller can explicitly opt into a four-column search."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
     summary = {"ROW_COUNT": 16, **{f"C{i}_{metric}": value for i in range(4)
                for metric, value in [("NON_NULL_COUNT", 16), ("DISTINCT_COUNT", 2)]}}
     responses = [summary, *[{"DISTINCT_COUNT": 4}] * 6, *[{"DISTINCT_COUNT": 8}] * 4, {"DISTINCT_COUNT": 16}]

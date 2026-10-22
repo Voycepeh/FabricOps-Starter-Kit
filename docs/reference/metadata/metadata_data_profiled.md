@@ -4,11 +4,11 @@ See column-level profile metrics for a dataset snapshot. table_name and column_n
 
 ## Writer functions
 
-* [`profile_table`](../../api/reference/profile_table.md)
+No public writer function is traced in the current implementation.
 
 ## Used in Workflow Template
 
-* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Profiling
+No starter template or solution is traced for the public writer functions.
 
 ## Model
 

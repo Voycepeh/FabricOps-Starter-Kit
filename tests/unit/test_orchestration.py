@@ -423,7 +423,6 @@ def isolated_operation_journal(monkeypatch):
     """Stage unit tests isolate run storage; lifecycle tests exercise the real journal."""
     from contextlib import nullcontext
     from importlib import import_module
-    from unittest.mock import Mock
 
     for name in ("orchestrate_read", "orchestrate_write"):
         monkeypatch.setattr(import_module(f"fabricops_kit.pipeline.{name}"), "PipelineOperation",
