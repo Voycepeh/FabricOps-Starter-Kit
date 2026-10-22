@@ -750,5 +750,15 @@
     "long_definition": "METADATA_ACTIVATION_STATE contains immutable approved pipeline manifests and the active configuration for each environment and pipeline_id. Each manifest binds successful whole-run Testing, an exact effective Agreement, global frozen contracts, transformation settings and physical destinations. Governance approves affected pipelines together; new Live runs resolve the coordinated revision automatically. Activation neither deploys notebooks nor writes business data.",
     "preferred_usage": "Use Activated Pipeline for exact whole-pipeline Live authority.",
     "avoid_usage": "activated contract as Live authority"
+  },
+  {
+    "term": "table profiling policy",
+    "category": "FabricOps concepts",
+    "long_definition": "METADATA_TABLE_PROFILING stores independent frequency and Read/Write triggers plus per-environment/physical-context claims and last-success history. Policies are edited through Data Contract Authoring without changing immutable contract rules. Pipeline identity does not partition the shared schedule.",
+    "preferred_usage": "Describe scheduling as table-level operational configuration, independently of Guardrail enforcement.",
+    "aliases": [],
+    "id": "table-profiling-policy",
+    "short_definition": "Mutable Table ID-level operational schedules for Standard Profiling, Grain Discovery and Frequency Profiling.",
+    "avoid_usage": "contract Guardrail schedule"
   }
 ]

@@ -36,6 +36,27 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
 </style>
 
 <div class="metadata-table-grid">
+<a class="metadata-table-card metadata-table-card--engineering" href="metadata_table_profiling/" aria-label="Open METADATA_TABLE_PROFILING schema">
+  <span class="metadata-table-card__header">
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_TABLE_PROFILING</span>
+      <span class="metadata-table-card__schema">engineering</span>
+    </span>
+    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
+  </span>
+  <span class="metadata-table-card__purpose">Mutable table-level profiling policies and per-environment/physical-context activity history, renewable claims and last successful completions; independent of frozen contracts and activation authority.</span>
+  <span class="metadata-table-card__meta">
+    <strong>Grain</strong>
+    <span>One preinitialized central coordination row. snapshot_json contains Table ID policies and activity state keyed by Table ID, environment and physical bindings.</span>
+  </span>
+  <span class="metadata-table-card__meta">
+    <strong>Primary key</strong>
+    <span><code>state_id</code></span>
+  </span>
+  <span class="metadata-table-card__relationships">
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+  </span>
+</a>
 <a class="metadata-table-card metadata-table-card--engineering" href="metadata_pipeline_run/" aria-label="Open METADATA_PIPELINE_RUN schema">
   <span class="metadata-table-card__header">
     <span class="metadata-table-card__identity">
@@ -314,10 +335,10 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">See a profiled column's frequency distribution without joining its parent Profile for table and column IDs, captured names, datatype, or environment. Captured names do not follow later renames.</span>
+  <span class="metadata-table-card__purpose">Frequency distributions retain Table ID, Column ID, environment, captured names and datatype. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One flattened ranked value within one logical frequency distribution for a column Profile.</span>
+    <span>One ranked value for a column and frequency activity snapshot. The statistical Profile reference is optional.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -326,7 +347,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
     <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → 1</span>
+      <span class="metadata-table-card__cardinality">N → 1</span>
       <span class="metadata-table-card__relationship-list">
         <code>METADATA_DATA_PROFILED</code>
       </span>

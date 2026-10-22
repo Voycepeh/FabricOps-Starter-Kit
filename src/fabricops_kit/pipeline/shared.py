@@ -249,7 +249,7 @@ from ..io.shared import (
     resolve_warehouse_table_location,
 )
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
-from ..config.shared import build_table_id, get_store
+from ..config.shared import build_column_id, build_table_id, get_store
 from ..config.metadata_schemas import (
     coerce_metadata_row_types,
     metadata_table_physical_schema,
@@ -6291,3 +6291,1641 @@ def build_pipeline_audit_fields(*, config=None, env=None, runtime_context=None):
     """Allow absent notebook audit fields only for nonpersisting Test diagnostics."""
     return build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context,
         require_notebook_identity=persistence_permitted(runtime_context))
+
+
+
+PROFILING_ACTIVITIES = ("standard", "grain", "frequency")
+PROFILING_STATE_TABLE = "METADATA_TABLE_PROFILING"
+PROFILING_LEASE_SECONDS = 300
+
+
+class ProfilingConflict(RuntimeError):
+    """An optimistic profiling metadata update lost to another execution."""
+
+
+def default_profiling_policy():
+    """Return independent table-level defaults, without mutable shared state."""
+    return {"standard": {"frequency": "interval", "days": 1, "trigger": "read_or_write"},
+            "grain": {"frequency": "first", "trigger": "read_or_write"},
+            "frequency": {"frequency": "first", "trigger": "read_or_write"}}
+
+
+def validate_profiling_policy(policy):
+    """Accept exactly the three simple frequencies and operation triggers."""
+    if not isinstance(policy, dict) or set(policy) != set(PROFILING_ACTIVITIES):
+        raise ValueError("Configure Standard Profiling, Grain Discovery and Frequency Profiling independently.")
+    result = {}
+    for activity, settings in policy.items():
+        if not isinstance(settings, dict):
+            raise ValueError("Each profiling activity needs frequency and trigger.")
+        frequency, trigger = settings.get("frequency"), settings.get("trigger")
+        if frequency not in {"every", "first", "interval"}:
+            raise ValueError("Frequency must be every, first or interval.")
+        if trigger not in {"read", "write", "read_or_write"}:
+            raise ValueError("Trigger must be read, write or read_or_write.")
+        keys = {"frequency", "trigger", "days"} if frequency == "interval" else {"frequency", "trigger"}
+        if set(settings) != keys:
+            raise ValueError("Only interval frequency accepts a days value.")
+        if frequency == "interval" and (isinstance(settings["days"], bool)
+                or not isinstance(settings["days"], int) or settings["days"] <= 0):
+            raise ValueError("Profiling interval days must be a positive integer.")
+        result[activity] = dict(settings)
+    return result
+
+
+def profiling_next_eligible(settings, last_success):
+    """Calculate elapsed-time eligibility; first-only completion has no next run."""
+    if last_success is None or settings["frequency"] == "every":
+        return None
+    if settings["frequency"] == "first":
+        return None
+    try:
+        return datetime.fromisoformat(last_success) + timedelta(days=settings["days"])
+    except OverflowError:
+        return None
+
+
+def profiling_due(settings, history, operation, now):
+    """Use successful completion, never an attempt, to determine eligibility."""
+    if operation not in {"read", "write"}:
+        raise ValueError("Profiling operation must be read or write.")
+    if settings["trigger"] not in {operation, "read_or_write"}:
+        return False
+    last = history.get("last_success")
+    if not last or settings["frequency"] == "every":
+        return True
+    if settings["frequency"] == "first":
+        return False
+    return (now - datetime.fromisoformat(last)).total_seconds() >= settings["days"] * 86400
+
+
+def profiling_context_key(table_id, *, context, spark_session=None):
+    """Separate physical table bindings and environments while retaining global Table ID."""
+    config, env, runtime = resolve_fabric_context(context=context)
+    identities = context.get("_pipeline_identities") or {}
+    identity = identities.get(table_id) or resolve_catalogue_table_identity(
+        config, env, table_id, context=runtime, spark_session=spark_session)
+    physical = pipeline_physical_bindings({table_id: identity}, config=config, environment=env)[table_id]
+    descriptor = {"table_id": table_id, "environment": env, "physical": physical}
+    return _candidate_hash(descriptor), descriptor
+
+
+def read_table_profiling_state(*, context, spark_session=None):
+    """Read the preinitialized singleton through configured Metadata routing."""
+    config, _env, _runtime = resolve_fabric_context(context=context)
+    rows = read_lakehouse_table(PROFILING_STATE_TABLE, store="Metadata",
+        schema=metadata_table_physical_schema(config, PROFILING_STATE_TABLE),
+        context=context, spark_session=spark_session).collect()
+    records = [_row_to_dict(row) for row in rows]
+    if len(records) != 1 or records[0].get("state_id") != "central":
+        raise RuntimeError("Initialize exactly one METADATA_TABLE_PROFILING state with setup_metadata_tables().")
+    row = records[0]
+    state = json.loads(row["snapshot_json"])
+    if state.get("format") != "fabricops.table-profiling.v1" or not isinstance(state.get("policies"), dict) or not isinstance(state.get("history"), dict):
+        raise ValueError("Unsupported table profiling state.")
+    return row["token"], state
+
+
+def commit_table_profiling_state(state, *, expected_token, context, spark_session=None):
+    """Compare-and-swap one existing Delta row; never race missing-row insertions."""
+    if not persistence_permitted(context):
+        raise RuntimeError("Test cannot commit profiling configuration or history.")
+    from delta.tables import DeltaTable
+    config, env, runtime = resolve_fabric_context(context=context)
+    spark = get_spark_session(spark_session)
+    _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", PROFILING_STATE_TABLE,
+        metadata_table_physical_schema(config, PROFILING_STATE_TABLE), context=context)
+    spark.sql("ALTER TABLE delta.`" + path.replace("`", "``") + "` SET TBLPROPERTIES ('delta.isolationLevel' = 'Serializable')")
+    token = str(uuid4())
+    row = {"state_id": "central", "token": token, "snapshot_json": canonical_candidate_json(state),
+           **build_runtime_audit_fields(config=config, env=env, runtime_context=runtime)}
+    frame = spark.createDataFrame([coerce_metadata_row_types(PROFILING_STATE_TABLE, row)],
+        schema=metadata_table_schema_registry()[PROFILING_STATE_TABLE])
+    expected = "'" + expected_token.replace("'", "''") + "'"
+    changes = {key: "source." + key for key in row if key != "state_id"}
+    changes["token"] = f"CASE WHEN target.token = {expected} THEN source.token ELSE CAST(raise_error('Stale profiling state; refresh') AS STRING) END"
+    try:
+        (DeltaTable.forPath(spark, path).alias("target")
+         .merge(frame.alias("source"), "target.state_id = source.state_id")
+         .whenMatchedUpdate(set=changes).execute())
+    except Exception as exc:
+        observed, _ = read_table_profiling_state(context=context, spark_session=spark)
+        if observed == token:
+            return token
+        if observed != expected_token:
+            raise ProfilingConflict("Profiling state changed; refresh or retry on the next eligible operation.") from exc
+        raise
+    observed, _ = read_table_profiling_state(context=context, spark_session=spark)
+    if observed != token:
+        raise ProfilingConflict("Profiling metadata commit could not be confirmed.")
+    return token
+
+
+def save_table_profiling_policy(table_id, policy, *, expected_token, context, spark_session=None):
+    """Save operational scheduling without editing or freezing a Data Contract."""
+    policy = validate_profiling_policy(policy)
+    token, state = read_table_profiling_state(context=context, spark_session=spark_session)
+    if token != expected_token:
+        raise ProfilingConflict("Profiling settings changed; refresh before saving.")
+    state["policies"][table_id] = policy
+    return commit_table_profiling_state(state, expected_token=token, context=context, spark_session=spark_session)
+
+
+def claim_table_profile(table_id, activity, operation, *, context, spark_session=None, now=None):
+    """Claim due work atomically; expired claims recover without a successful marker."""
+    if activity not in PROFILING_ACTIVITIES:
+        raise ValueError("Unknown profiling activity.")
+    if not persistence_permitted(context):
+        raise RuntimeError("Test cannot claim profiling work.")
+    now = now or datetime.now(UTC)
+    token, state = read_table_profiling_state(context=context, spark_session=spark_session)
+    settings = validate_profiling_policy(state["policies"].get(table_id, default_profiling_policy()))[activity]
+    key, descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
+    entry = state["history"].setdefault(key, {**descriptor, "activities": {}})["activities"].setdefault(activity, {})
+    if not profiling_due(settings, entry, operation, now):
+        return None
+    if entry.get("claim") and datetime.fromisoformat(entry["claim"]["expires_at"]) > now:
+        return None
+    claim = {"token": str(uuid4()), "key": key, "activity": activity,
+             "expires_at": (now + timedelta(seconds=PROFILING_LEASE_SECONDS)).isoformat(),
+             "execution_id": getattr(context.get("execution_plan"), "plan_id", None)}
+    entry["claim"] = claim
+    entry["last_attempt"] = now.isoformat()
+    try:
+        commit_table_profiling_state(state, expected_token=token, context=context, spark_session=spark_session)
+    except ProfilingConflict:
+        return None
+    return claim
+
+
+def maintain_table_profile_claim(claim, *, context, spark_session=None, complete=None, now=None):
+    """Renew, fail or complete only an unexpired owned claim, with bounded CAS retries."""
+    for _attempt in range(3):
+        token, state = read_table_profiling_state(context=context, spark_session=spark_session)
+        checked_at = now or datetime.now(UTC)
+        entry = state["history"].get(claim["key"], {}).get("activities", {}).get(claim["activity"], {})
+        owned = entry.get("claim")
+        if not owned or owned["token"] != claim["token"] or datetime.fromisoformat(owned["expires_at"]) <= checked_at:
+            raise ProfilingConflict("Profiling claim expired or belongs to another execution.")
+        if complete is None:
+            owned["expires_at"] = (checked_at + timedelta(seconds=PROFILING_LEASE_SECONDS)).isoformat()
+        else:
+            entry.pop("claim")
+            entry["last_status"] = "succeeded" if complete else "failed"
+            entry["execution_id"] = claim.get("execution_id")
+            if complete:
+                entry["last_success"] = checked_at.isoformat()
+                entry["profile_snapshot_id"] = claim["token"]
+        try:
+            return commit_table_profiling_state(state, expected_token=token, context=context, spark_session=spark_session)
+        except ProfilingConflict:
+            continue
+    raise ProfilingConflict("Profiling claim update conflicted repeatedly; work remains recoverable.")
+
+
+def schedule_table_profiling(table_id, operation, *, context, spark_session=None):
+    """Run independently due persisted-table activities after a successful operation."""
+    from threading import Event, Thread
+    outcomes = {}
+    if not persistence_permitted(context):
+        # Test can inspect due work, but never consumes intervals or obtains claims.
+        _token, state = read_table_profiling_state(context=context, spark_session=spark_session)
+        key, _descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
+        policy = validate_profiling_policy(state["policies"].get(table_id, default_profiling_policy()))
+        history = state["history"].get(key, {}).get("activities", {})
+        for activity in PROFILING_ACTIVITIES:
+            if profiling_due(policy[activity], history.get(activity, {}), operation, datetime.now(UTC)):
+                outcomes[activity] = execute_table_profile(table_id=table_id, context=context,
+                    spark_session=spark_session, verbose=False, activities={activity})
+            else:
+                outcomes[activity] = {"status": "skipped", "reason": "Not due for this operation"}
+        counts = [outcome.get("row_count") for outcome in outcomes.values() if outcome.get("row_count") is not None]
+        return {"status": "passed", "activities": outcomes, "persistence_status": "disabled",
+                "row_count": counts[0] if counts else None}
+    for activity in PROFILING_ACTIVITIES:
+        claim = claim_table_profile(table_id, activity, operation, context=context, spark_session=spark_session)
+        if claim is None:
+            outcomes[activity] = {"status": "skipped", "reason": "Not due or claimed by another execution"}
+            continue
+        stopped = Event()
+        errors = []
+        def validate_claim():
+            if errors:
+                raise ProfilingConflict("Profiling claim renewal failed.") from errors[0]
+            # Renew before each persistence boundary as well as in the heartbeat.
+            maintain_table_profile_claim(claim, context=context, spark_session=spark_session)
+        def heartbeat():
+            while not stopped.wait(30):
+                try:
+                    validate_claim()
+                except Exception as exc:
+                    errors.append(exc)
+                    return
+        worker = Thread(target=heartbeat, daemon=True)
+        worker.start()
+        outcome = None
+        try:
+            profile_context = {**context, "activity_id": claim["token"],
+                               "_profile_snapshot_id": claim["token"], "_profile_claim_validate": validate_claim}
+            outcome = execute_table_profile(table_id=table_id, context=profile_context,
+                spark_session=spark_session, verbose=False, activities={activity})
+            stopped.set()
+            worker.join(timeout=30)
+            if worker.is_alive() or errors:
+                raise ProfilingConflict("Profiling heartbeat did not finish cleanly; completion remains unconfirmed.")
+            maintain_table_profile_claim(claim, context=context, spark_session=spark_session, complete=True)
+            outcomes[activity] = {"status": "passed", "profile_snapshot_id": claim["token"],
+                                  "row_count": outcome.get("row_count")}
+        except BaseException:
+            stopped.set()
+            worker.join(timeout=30)
+            try:
+                maintain_table_profile_claim(claim, context=context, spark_session=spark_session, complete=False)
+            except Exception:
+                pass  # An uncertain claim stays recoverable through its finite lease.
+            raise
+        finally:
+            profile = outcome.get("profile") if outcome is not None else None
+            if profile is not None and hasattr(profile, "unpersist"):
+                profile.unpersist()
+    counts = [outcome.get("row_count") for outcome in outcomes.values() if outcome.get("row_count") is not None]
+    return {"status": "passed", "activities": outcomes, "row_count": counts[0] if counts else None}
+
+
+# Persisted-table profiling implementation shared by standalone and scheduled calls.
+import math
+from itertools import combinations
+from typing import Sequence
+from uuid import NAMESPACE_URL, uuid5
+
+
+PROFILED_FREQUENCY_TABLE = "METADATA_DATA_PROFILED_FREQUENCY"
+
+
+PROFILED_COLUMNS = metadata_table_schema_registry()[PROFILED_TABLE].fieldNames()
+
+
+PROFILED_FREQUENCY_COLUMNS = metadata_table_schema_registry()[PROFILED_FREQUENCY_TABLE].fieldNames()
+
+
+CATALOGUE_COLUMNS = metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()
+
+
+LOAD_STRATEGIES = {"overwrite", "append", "scd1", "scd2"}
+
+
+_PROFILE_EXCLUDED_NAMES = {
+    "_pipeline_run_id", "_pipeline_name", "_pipeline_environment", "_source_table",
+    "_record_loaded_timestamp", "_notebook_name", "_loaded_by", "_dq_check_status",
+    "_dq_failed_rules", "_source_system", "_source_extract_timestamp", "_watermark_value",
+    "_sample_bucket", "_row_ingest_id", "_business_key_hash",
+    "_row_hash", "pipeline_ts", "ingested_at_utc", "notebook_name", "loaded_by",
+    "p_bucket", "sample_bucket", "row_ingest_id", "ingest_run_id", "pipeline_run_id",
+    "loaded_at", "run_ingest_id", "_fabricops_run_id", "_fabricops_pipeline_name",
+    "_fabricops_created_at", "_activity_id", "_committed_at", "_committed_by",
+    "_notebook_id", "_workspace_id", "_workspace_name", "_metadata_lakehouse_name",
+}
+
+
+_PROFILE_EXCLUDED_PREFIXES = ("_fabricops_", "_dq_")
+
+
+_KEY_CANDIDATE_MAX_SIZE = 3
+
+
+_KEY_CANDIDATE_MAX_RESULTS = 8
+
+
+_WAREHOUSE_NUMERIC_TYPES = {
+    "bigint", "decimal", "float", "int", "money", "numeric", "real",
+    "smallint", "smallmoney", "tinyint",
+}
+
+
+_WAREHOUSE_MIN_MAX_TYPES = _WAREHOUSE_NUMERIC_TYPES | {
+    "char", "date", "datetime", "datetime2", "datetimeoffset", "nchar",
+    "nvarchar", "smalldatetime", "time", "varchar",
+}
+
+
+_WAREHOUSE_NON_SCALAR_TYPES = {"binary", "image", "varbinary", "xml"}
+
+
+def _sql_identifier(value: str) -> str:
+    """Quote one resolved SQL Server identifier."""
+    return f"[{str(value).replace(']', ']]')}]"
+
+
+def _sql_string(value: str) -> str:
+    """Quote one internal SQL string literal."""
+    return "N'" + str(value).replace("'", "''") + "'"
+
+
+def _warehouse_type_name(row: Mapping[str, Any]) -> str:
+    """Return the canonical PySpark type name for Warehouse metadata.
+
+    Warehouse profiling may calculate statistics with SQL pushdown, but FabricOps
+    stores schema metadata in the same type vocabulary produced by PySpark
+    DataFrame schemas because downstream schema and Guardrail checks run in
+    PySpark.
+    """
+    name = str(row["DATA_TYPE"]).lower()
+    if name in {"decimal", "numeric", "money", "smallmoney"}:
+        return f"decimal({int(row['NUMERIC_PRECISION'])},{int(row['NUMERIC_SCALE'])})"
+    return {
+        "bigint": "bigint",
+        "binary": "binary",
+        "bit": "boolean",
+        "char": "string",
+        "date": "date",
+        "datetime": "timestamp",
+        "datetime2": "timestamp",
+        "datetimeoffset": "timestamp",
+        "float": "double",
+        "image": "binary",
+        "int": "int",
+        "nchar": "string",
+        "nvarchar": "string",
+        "real": "float",
+        "smalldatetime": "timestamp",
+        "smallint": "smallint",
+        "time": "string",
+        "tinyint": "smallint",
+        "uniqueidentifier": "binary",
+        "varbinary": "binary",
+        "varchar": "string",
+        "xml": "string",
+    }.get(name, "string")
+
+
+def _warehouse_columns(identity: Mapping[str, Any], *, spark_session: Any, context: dict[str, Any]):
+    """Read Warehouse columns and normalize their types to PySpark names."""
+    schema = _sql_string(str(identity["schema"]))
+    table = _sql_string(str(identity["table_name"]))
+    query = (
+        "SELECT COLUMN_NAME, DATA_TYPE, NUMERIC_PRECISION, NUMERIC_SCALE "
+        "FROM INFORMATION_SCHEMA.COLUMNS "
+        f"WHERE TABLE_SCHEMA = {schema} AND TABLE_NAME = {table}"
+    )
+    rows = []
+    for row in read_warehouse_query(
+        query, store=str(identity["store"]), spark_session=spark_session, context=context
+    ).collect():
+        value = row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
+        normalized = {str(key).upper(): item for key, item in value.items()}
+        rows.append((str(normalized["COLUMN_NAME"]), _warehouse_type_name(normalized), str(normalized["DATA_TYPE"]).lower()))
+    return rows
+
+
+def _warehouse_statistical_query(identity: Mapping[str, Any], columns: Sequence[tuple[str, str, str]]) -> str:
+    """Build one wide aggregate pass for exact Warehouse statistics."""
+    source = f"{_sql_identifier(str(identity['schema']))}.{_sql_identifier(str(identity['table_name']))}"
+    expressions = ["COUNT_BIG(*) AS ROW_COUNT"]
+    for index, (name, _canonical_type, sql_type) in enumerate(columns):
+        column = _sql_identifier(name)
+        numeric = sql_type in _WAREHOUSE_NUMERIC_TYPES
+        min_max = sql_type in _WAREHOUSE_MIN_MAX_TYPES
+        prefix = f"C{index}"
+        expressions.extend(
+            [
+                f"COUNT_BIG({column}) AS {prefix}_NON_NULL_COUNT",
+                f"COUNT_BIG(DISTINCT {column}) AS {prefix}_DISTINCT_COUNT",
+                (
+                    f"AVG(CONVERT(float, {column})) AS {prefix}_MEAN"
+                    if numeric else f"CAST(NULL AS float) AS {prefix}_MEAN"
+                ),
+                (
+                    f"STDEV(CONVERT(float, {column})) AS {prefix}_STDDEV"
+                    if numeric else f"CAST(NULL AS float) AS {prefix}_STDDEV"
+                ),
+                (
+                    f"CONVERT(varchar(max), MIN({column})) AS {prefix}_MIN_VALUE"
+                    if min_max else f"CAST(NULL AS varchar(max)) AS {prefix}_MIN_VALUE"
+                ),
+                (
+                    f"CONVERT(varchar(max), MAX({column})) AS {prefix}_MAX_VALUE"
+                    if min_max else f"CAST(NULL AS varchar(max)) AS {prefix}_MAX_VALUE"
+                ),
+            ]
+        )
+    return "SELECT\n  " + ",\n  ".join(expressions) + f"\nFROM {source}"
+
+
+def _warehouse_percentile_query(identity: Mapping[str, Any], *, column_name: str, prefix: str) -> str:
+    """Build one compact exact percentile query for one Warehouse numeric column."""
+    source = f"{_sql_identifier(str(identity['schema']))}.{_sql_identifier(str(identity['table_name']))}"
+    column = _sql_identifier(column_name)
+    return (
+        "SELECT TOP (1)\n"
+        f"  PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P25,\n"
+        f"  PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P50,\n"
+        f"  PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY CONVERT(float, {column})) OVER () AS {prefix}_P75\n"
+        f"FROM {source}"
+    )
+
+
+def _warehouse_statistical_dataframe(
+    wide_frame: Any, columns, *, spark_session: Any, percentile_values: Mapping[str, Any] | None = None, metrics=None
+):
+    """Reshape compact Warehouse aggregates and percentiles into canonical profile rows."""
+    from pyspark.sql import types as T
+
+    collected = wide_frame.collect()
+    if len(collected) != 1:
+        raise RuntimeError("Warehouse statistical profiling must return exactly one compact aggregate row.")
+    raw = collected[0].asDict(recursive=True) if hasattr(collected[0], "asDict") else dict(collected[0])
+    values = {str(key).upper(): value for key, value in raw.items()}
+    if percentile_values:
+        values.update({str(key).upper(): value for key, value in percentile_values.items()})
+    row_count = int(values.get("ROW_COUNT") or 0)
+    if metrics is not None:
+        metrics["row_count"] = row_count
+
+    def percent(numerator: int) -> float:
+        return 0.0 if row_count == 0 else round((numerator / row_count) * 100.0, 3)
+
+    rows = []
+    for index, (name, canonical_type, sql_type) in enumerate(columns):
+        prefix = f"C{index}"
+        non_null_count = int(values.get(f"{prefix}_NON_NULL_COUNT") or 0)
+        distinct_count = int(values.get(f"{prefix}_DISTINCT_COUNT") or 0)
+        numeric = sql_type in _WAREHOUSE_NUMERIC_TYPES
+        rows.append(
+            (
+                name, canonical_type, row_count, non_null_count, row_count - non_null_count,
+                percent(row_count - non_null_count), distinct_count, percent(distinct_count),
+                values.get(f"{prefix}_MEAN") if numeric else None,
+                values.get(f"{prefix}_STDDEV") if numeric else None,
+                values.get(f"{prefix}_MIN_VALUE"), values.get(f"{prefix}_P25") if numeric else None,
+                values.get(f"{prefix}_P50") if numeric else None,
+                values.get(f"{prefix}_P75") if numeric else None, values.get(f"{prefix}_MAX_VALUE"),
+            )
+        )
+    schema = T.StructType(
+        [
+            T.StructField("COLUMN_NAME", T.StringType(), False), T.StructField("DATA_TYPE", T.StringType(), False),
+            T.StructField("ROW_COUNT", T.LongType(), False), T.StructField("NON_NULL_COUNT", T.LongType(), False),
+            T.StructField("NULL_COUNT", T.LongType(), False), T.StructField("NULL_PERCENT", T.DoubleType(), False),
+            T.StructField("DISTINCT_COUNT", T.LongType(), False), T.StructField("DISTINCT_PERCENT", T.DoubleType(), False),
+            T.StructField("MEAN", T.DoubleType(), True), T.StructField("STDDEV", T.DoubleType(), True),
+            T.StructField("MIN_VALUE", T.StringType(), True), T.StructField("PERCENTILE_25", T.DoubleType(), True),
+            T.StructField("MEDIAN", T.DoubleType(), True), T.StructField("PERCENTILE_75", T.DoubleType(), True),
+            T.StructField("MAX_VALUE", T.StringType(), True),
+        ]
+    )
+    return spark_session.createDataFrame(rows, schema=schema)
+
+
+def _warehouse_frequency_query(
+    identity: Mapping[str, Any], columns: Sequence[tuple[str, str, str]], *, top_n: int | None
+) -> str:
+    """Build Warehouse-native exact frequency queries with per-column ranking."""
+    source = f"{_sql_identifier(str(identity['schema']))}.{_sql_identifier(str(identity['table_name']))}"
+    branches = []
+    for name, canonical_type, _sql_type in columns:
+        column = _sql_identifier(name)
+        limit = f"WHERE FREQUENCY_RANK <= {int(top_n)}" if top_n is not None else ""
+        branches.append(
+            "SELECT COLUMN_NAME, DATA_TYPE, VALUE, FREQUENCY_COUNT, FREQUENCY_PERCENT, FREQUENCY_RANK, "
+            f"PROFILED_ROW_COUNT, PROFILED_NON_NULL_COUNT FROM (SELECT {_sql_string(name)} AS COLUMN_NAME, "
+            f"{_sql_string(canonical_type)} AS DATA_TYPE, CONVERT(varchar(max), {column}) AS VALUE, COUNT_BIG(*) AS FREQUENCY_COUNT, "
+            f"CAST(ROUND(100.0 * COUNT_BIG(*) / NULLIF(SUM(COUNT_BIG(*)) OVER (), 0), 3) AS float) AS FREQUENCY_PERCENT, "
+            f"ROW_NUMBER() OVER (ORDER BY COUNT_BIG(*) DESC, CASE WHEN {column} IS NULL THEN 0 ELSE 1 END, CONVERT(varchar(max), {column})) AS FREQUENCY_RANK, "
+            f"SUM(COUNT_BIG(*)) OVER () AS PROFILED_ROW_COUNT, SUM(COUNT_BIG({column})) OVER () AS PROFILED_NON_NULL_COUNT "
+            f"FROM {source} GROUP BY {column}) AS ranked {limit}"
+        )
+    return "\nUNION ALL\n".join(branches)
+
+
+def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency_columns, threshold_percent, top_n, metrics=None):
+    """Calculate compact canonical profile outputs in Fabric Warehouse."""
+    from fabricops_kit.pipeline.shared import FREQUENCY_PROFILE_COLUMNS, PROFILE_DATAFRAME_COLUMNS
+
+    io_context = {**(context or {}), "_fabricops_suppress_io_log": True}
+    all_columns = _warehouse_columns(identity, spark_session=spark_session, context=io_context)
+    profile_columns = [
+        column for column in all_columns
+        if column[0] not in _PROFILE_EXCLUDED_NAMES
+        and not any(column[0].startswith(prefix) for prefix in _PROFILE_EXCLUDED_PREFIXES)
+    ]
+    if not profile_columns:
+        raise ValueError("No eligible non-technical columns found for metadata profiling.")
+    wide_profile = read_warehouse_query(
+        _warehouse_statistical_query(identity, profile_columns),
+        store=str(identity["store"]), spark_session=spark_session, context=io_context,
+    )
+    percentile_values = {}
+    for index, (name, _canonical_type, sql_type) in enumerate(profile_columns):
+        if sql_type not in _WAREHOUSE_NUMERIC_TYPES:
+            continue
+        percentile_rows = read_warehouse_query(
+            _warehouse_percentile_query(identity, column_name=name, prefix=f"C{index}"),
+            store=str(identity["store"]), spark_session=spark_session, context=io_context,
+        ).collect()
+        if percentile_rows:
+            row = percentile_rows[0]
+            values = row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
+            percentile_values.update(values)
+    profile = _warehouse_statistical_dataframe(
+        wide_profile,
+        profile_columns,
+        spark_session=spark_session,
+        percentile_values=percentile_values,
+        metrics=metrics,
+    ).select(*PROFILE_DATAFRAME_COLUMNS)
+    if frequency_columns is None:
+        scalar = {name for name, _canonical, sql_type in profile_columns if sql_type not in _WAREHOUSE_NON_SCALAR_TYPES}
+        selected = _automatic_frequency_columns(
+            profile, scalar_columns=list(scalar), threshold_percent=threshold_percent
+        )
+    else:
+        selected = list(frequency_columns)
+        available = {name for name, _canonical, _sql_type in all_columns}
+        missing = [name for name in selected if name not in available]
+        if missing:
+            raise ValueError(f"Requested columns do not exist: {', '.join(missing)}")
+    frequency = None
+    if selected:
+        selected_set = set(selected)
+        selected_metadata = [column for column in all_columns if column[0] in selected_set]
+        frequency = read_warehouse_query(
+            _warehouse_frequency_query(identity, selected_metadata, top_n=top_n),
+            store=str(identity["store"]), spark_session=spark_session, context=io_context,
+        ).select(*FREQUENCY_PROFILE_COLUMNS)
+    return profile, frequency, all_columns
+
+
+def _key_candidate_evidence(
+    candidates: Sequence[Mapping[str, Any]], *, evaluated: bool = True,
+    max_columns: int = _KEY_CANDIDATE_MAX_SIZE
+) -> dict[str, Any]:
+    """Return one explicit table-level key-discovery evidence envelope."""
+    values = [dict(candidate) for candidate in candidates]
+    return {
+        "status": "resolved" if values else ("unresolved" if evaluated else "not_evaluated"),
+        "max_combination_width": max_columns if evaluated else 0,
+        "candidates": values,
+    }
+
+
+def _key_candidate_payload(columns: Sequence[str], *, row_count: int) -> dict[str, Any]:
+    """Return one deterministic proven key-candidate evidence record."""
+    return {
+        "columns": [str(column) for column in columns],
+        "column_count": len(columns),
+        "row_count": int(row_count),
+        "distinct_count": int(row_count),
+        "uniqueness_percent": 100.0,
+        "null_count": 0,
+    }
+
+
+def _spark_profile_key_candidates(
+    dataframe: Any, statistical_profile: Any, *, metrics=None,
+    max_columns: int = _KEY_CANDIDATE_MAX_SIZE, max_candidates: int = _KEY_CANDIDATE_MAX_RESULTS
+) -> list[dict[str, Any]]:
+    """Discover the smallest null-free unique keys from all scalar Spark columns."""
+    del statistical_profile
+    from pyspark.sql import functions as F
+    from pyspark.sql.types import ArrayType, MapType, StructType
+
+    fields = [
+        field for field in dataframe.schema.fields
+        if not isinstance(field.dataType, ArrayType | MapType | StructType)
+    ]
+    if not fields:
+        return []
+
+    expressions = [F.count(F.lit(1)).cast("long").alias("__ROW_COUNT")]
+    for index, field in enumerate(fields):
+        column = F.col(f"`{field.name.replace('`', '``')}`")
+        expressions.extend([
+            F.count(column).cast("long").alias(f"C{index}_NON_NULL_COUNT"),
+            F.count_distinct(column).cast("long").alias(f"C{index}_DISTINCT_COUNT"),
+        ])
+    values = dataframe.agg(*expressions).first()
+    if values is None:
+        return []
+    row_count = int(values["__ROW_COUNT"] or 0)
+    if metrics is not None:
+        metrics["row_count"] = row_count
+    if row_count <= 0:
+        return []
+
+    rows = [
+        {
+            "column_name": field.name,
+            "row_count": row_count,
+            "distinct_count": int(values[f"C{index}_DISTINCT_COUNT"] or 0),
+        }
+        for index, field in enumerate(fields)
+        if int(values[f"C{index}_NON_NULL_COUNT"] or 0) == row_count
+    ]
+    rows.sort(
+        key=lambda item: (
+            -int(item["distinct_count"]),
+            str(item["column_name"]).casefold(),
+        )
+    )
+    singles = [
+        _key_candidate_payload([row["column_name"]], row_count=row_count)
+        for row in rows
+        if int(row["distinct_count"]) == row_count
+    ]
+    if singles:
+        return singles[:max_candidates]
+
+    candidate_columns = [str(row["column_name"]) for row in rows]
+    for size in range(2, min(max_columns, len(candidate_columns)) + 1):
+        matches = []
+        for columns in combinations(candidate_columns, size):
+            if int(dataframe.select(*columns).dropDuplicates().count()) == row_count:
+                matches.append(_key_candidate_payload(columns, row_count=row_count))
+                if len(matches) >= max_candidates:
+                    break
+        if matches:
+            return matches
+    return []
+
+
+def _warehouse_profile_key_candidates(
+    identity: Mapping[str, Any],
+    statistical_profile: Any,
+    *,
+    spark_session: Any,
+    context: dict[str, Any],
+    warehouse_columns: Sequence[tuple[str, str, str]] | None = None,
+    max_columns: int = _KEY_CANDIDATE_MAX_SIZE,
+    max_candidates: int = _KEY_CANDIDATE_MAX_RESULTS,
+) -> list[dict[str, Any]]:
+    """Discover the smallest null-free unique keys from all scalar Warehouse columns."""
+    del statistical_profile
+    discovered_columns = (
+        list(warehouse_columns)
+        if warehouse_columns is not None
+        else _warehouse_columns(
+            identity,
+            spark_session=spark_session,
+            context={**(context or {}), "_fabricops_suppress_io_log": True},
+        )
+    )
+    all_columns = [
+        column for column in discovered_columns
+        if column[2] not in _WAREHOUSE_NON_SCALAR_TYPES
+    ]
+    if not all_columns:
+        return []
+
+    source = (
+        f"{_sql_identifier(str(identity['schema']))}."
+        f"{_sql_identifier(str(identity['table_name']))}"
+    )
+    expressions = ["COUNT_BIG(*) AS ROW_COUNT"]
+    for index, (name, _canonical_type, _sql_type) in enumerate(all_columns):
+        column = _sql_identifier(name)
+        expressions.extend([
+            f"COUNT_BIG({column}) AS C{index}_NON_NULL_COUNT",
+            f"COUNT_BIG(DISTINCT {column}) AS C{index}_DISTINCT_COUNT",
+        ])
+    evidence_query = "SELECT " + ", ".join(expressions) + f" FROM {source}"
+    io_context = {**(context or {}), "_fabricops_suppress_io_log": True}
+    values = read_warehouse_query(
+        evidence_query,
+        store=str(identity["store"]),
+        spark_session=spark_session,
+        context=io_context,
+    ).collect()
+    if not values:
+        return []
+    mapped = (
+        values[0].asDict(recursive=True)
+        if hasattr(values[0], "asDict")
+        else dict(values[0])
+    )
+    normalized = {str(key).upper(): value for key, value in mapped.items()}
+    row_count = int(normalized.get("ROW_COUNT") or 0)
+    if row_count <= 0:
+        return []
+
+    rows = [
+        {
+            "column_name": name,
+            "row_count": row_count,
+            "distinct_count": int(normalized.get(f"C{index}_DISTINCT_COUNT") or 0),
+        }
+        for index, (name, _canonical_type, _sql_type) in enumerate(all_columns)
+        if int(normalized.get(f"C{index}_NON_NULL_COUNT") or 0) == row_count
+    ]
+    rows.sort(
+        key=lambda item: (
+            -int(item["distinct_count"]),
+            str(item["column_name"]).casefold(),
+        )
+    )
+    singles = [
+        _key_candidate_payload([row["column_name"]], row_count=row_count)
+        for row in rows
+        if int(row["distinct_count"]) == row_count
+    ]
+    if singles:
+        return singles[:max_candidates]
+
+    candidate_columns = [str(row["column_name"]) for row in rows]
+    for size in range(2, min(max_columns, len(candidate_columns)) + 1):
+        matches = []
+        for columns in combinations(candidate_columns, size):
+            projected = ", ".join(_sql_identifier(column) for column in columns)
+            query = (
+                "SELECT COUNT_BIG(*) AS DISTINCT_COUNT FROM "
+                f"(SELECT DISTINCT {projected} FROM {source}) AS fabricops_key_candidate"
+            )
+            values = read_warehouse_query(
+                query,
+                store=str(identity["store"]),
+                spark_session=spark_session,
+                context=io_context,
+            ).collect()
+            if values:
+                value = values[0]
+                mapped = value.asDict(recursive=True) if hasattr(value, "asDict") else dict(value)
+                distinct_count = int(
+                    next(
+                        (item for key, item in mapped.items() if str(key).upper() == "DISTINCT_COUNT"),
+                        0,
+                    ) or 0
+                )
+                if distinct_count == row_count:
+                    matches.append(_key_candidate_payload(columns, row_count=row_count))
+                    if len(matches) >= max_candidates:
+                        break
+        if matches:
+            return matches
+    return []
+
+
+def _require_non_empty_string(value: Any, name: str) -> str:
+    """Return a stripped required string or raise a clear validation error."""
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{name} must be a non-empty string.")
+    return value.strip()
+
+
+def _normalize_choice(value: Any, name: str, allowed: set[str]) -> str:
+    """Return a normalized allowed choice or raise a clear validation error."""
+    normalized = _require_non_empty_string(value, name).lower()
+    if normalized not in allowed:
+        choices = ", ".join(sorted(allowed))
+        raise ValueError(f"{name} must be one of: {choices}.")
+    return normalized
+
+
+def _processing_definition(
+    profile_role: str,
+    load_strategy: Any,
+    load_strategy_parameters: Any,
+) -> tuple[str | None, str | None]:
+    """Validate and canonically serialize one table-owned processing definition."""
+    supplied = load_strategy is not None or load_strategy_parameters is not None
+    if profile_role == "source":
+        if supplied:
+            raise ValueError("Source registration does not accept target processing arguments.")
+        return None, None
+    if load_strategy is None:
+        if load_strategy_parameters is not None:
+            raise ValueError("load_strategy is required when load_strategy_parameters is supplied.")
+        return None, None
+    strategy = _normalize_choice(load_strategy, "load_strategy", LOAD_STRATEGIES)
+    if load_strategy_parameters is None:
+        parameters: dict[str, Any] = {}
+    elif not isinstance(load_strategy_parameters, dict):
+        raise ValueError("load_strategy_parameters must be a mapping when supplied.")
+    else:
+        parameters = dict(load_strategy_parameters)
+    allowed = {
+        "overwrite": {"watermark_column"},
+        "append": {"watermark_column"},
+        "scd1": {"key_columns", "watermark_column"},
+        "scd2": {"key_columns", "effective_column", "tracked_columns", "watermark_column"},
+    }[strategy]
+    unexpected = sorted(set(parameters) - allowed)
+    if unexpected:
+        raise ValueError(f"{strategy} does not accept processing parameters: {', '.join(unexpected)}.")
+    for name in ("key_columns", "tracked_columns"):
+        if name in parameters:
+            values = parameters[name]
+            if not isinstance(values, (list, tuple)) or not values:
+                raise ValueError(f"{name} must be a non-empty sequence of column names.")
+            parameters[name] = [_require_non_empty_string(value, name) for value in values]
+    for name in ("effective_column", "watermark_column"):
+        if name in parameters:
+            parameters[name] = _require_non_empty_string(parameters[name], name)
+    if strategy in {"scd1", "scd2"} and "key_columns" not in parameters:
+        raise ValueError(f"{strategy} requires key_columns.")
+    if strategy == "scd2" and "effective_column" not in parameters:
+        raise ValueError("scd2 requires effective_column.")
+    return strategy, json.dumps(parameters, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def _validate_processing_columns(df: Any, parameters_json: str | None) -> None:
+    """Require every authored processing column name to exist in the target schema."""
+    if parameters_json is None:
+        return
+    parameters = json.loads(parameters_json)
+    available = {str(field.name) for field in df.schema.fields}
+    referenced = []
+    for name in ("effective_column", "watermark_column"):
+        if parameters.get(name):
+            referenced.append(str(parameters[name]))
+    for name in ("key_columns", "tracked_columns"):
+        referenced.extend(str(value) for value in parameters.get(name, []))
+    missing = sorted(set(referenced) - available)
+    if missing:
+        raise ValueError(f"Processing definition references columns not present in df: {', '.join(missing)}.")
+
+
+def _validate_resolved_identity(table: Any, *, config: Any, env: str) -> dict[str, str | None]:
+    """Validate a caller-supplied identity against the active Fabric config."""
+    if not isinstance(table, Mapping):
+        raise ValueError("table must be a canonical table identity mapping.")
+    required = {"table_id", "store", "schema", "table_name", "store_kind"}
+    missing = sorted(required - set(table))
+    if missing:
+        raise ValueError(f"table identity is missing required fields: {', '.join(missing)}.")
+    resolved = resolve_physical_table_identity(
+        config,
+        env,
+        store=table["store"],
+        schema=table["schema"],
+        table_name=table["table_name"],
+    )
+    supplied = {name: table[name] for name in required}
+    if supplied != resolved:
+        raise ValueError(
+            "table identity is inconsistent with the canonical identity resolved from the active Fabric config."
+        )
+    return resolved
+
+
+def _validate_frequency_profile_dataframe(source_df, frequency_profile_df, selected_columns: Sequence[str]):
+    """Return the frequency DataFrame after validating caller-provided scope."""
+    if frequency_profile_df is None:
+        return source_df, "full_source"
+    source_session = getattr(source_df, "sparkSession", None)
+    frequency_session = getattr(frequency_profile_df, "sparkSession", None)
+    if source_session is not None and frequency_session is not None and source_session is not frequency_session:
+        raise ValueError("frequency_profile_df must use the same Spark session as df.")
+    fields = getattr(getattr(frequency_profile_df, "schema", None), "fields", None)
+    if fields is None:
+        raise ValueError("frequency_profile_df must be a Spark DataFrame-like object with a schema.")
+    available_columns = {field.name for field in fields}
+    missing_columns = [column for column in selected_columns if column not in available_columns]
+    if missing_columns:
+        raise ValueError(f"frequency_profile_df is missing selected frequency columns: {', '.join(missing_columns)}")
+    return frequency_profile_df, "caller_provided"
+
+
+def _scalar_frequency_columns(df, candidate_columns: Sequence[str]) -> list[str]:
+    """Return candidate columns whose Spark types are scalar frequency types."""
+    from pyspark.sql.types import ArrayType, BinaryType, MapType, StructType
+
+    fields = {field.name: field for field in df.schema.fields}
+    return [
+        name
+        for name in candidate_columns
+        if name in fields and not isinstance(fields[name].dataType, ArrayType | MapType | StructType | BinaryType)
+    ]
+
+
+def _automatic_frequency_columns(
+    profile_df, *, scalar_columns: Sequence[str], threshold_percent: float | None
+) -> list[str]:
+    """Return automatic scalar columns that pass the frequency cardinality guard."""
+    from pyspark.sql import functions as F
+
+    non_null_count = F.col("NON_NULL_COUNT").cast("double")
+    distinct_count = F.col("DISTINCT_COUNT").cast("double")
+    raw_cardinality_percent = (distinct_count / non_null_count) * 100
+    eligible = profile_df.where(F.col("COLUMN_NAME").isin(list(scalar_columns))).where(
+        F.col("NON_NULL_COUNT").cast("long") > 0
+    )
+    if threshold_percent is not None:
+        eligible = eligible.where(raw_cardinality_percent <= F.lit(float(threshold_percent)))
+    return [row.COLUMN_NAME for row in eligible.select("COLUMN_NAME").collect()]
+
+
+def _selected_frequency_columns(
+    source_df, profile_df, frequency_columns: Sequence[str] | None, threshold_percent: float | None
+) -> list[str]:
+    """Return explicitly requested or automatically eligible frequency columns."""
+    if frequency_columns is not None:
+        return list(frequency_columns)
+    profiled_columns = [row.COLUMN_NAME for row in profile_df.select("COLUMN_NAME").collect()]
+    scalar_columns = _scalar_frequency_columns(source_df, profiled_columns)
+    return _automatic_frequency_columns(profile_df, scalar_columns=scalar_columns, threshold_percent=threshold_percent)
+
+
+def _audit_literal_columns(*, config: Any, env: str, runtime_context: dict[str, Any]) -> dict[str, Any]:
+    """Return Spark literals for the canonical runtime audit field set."""
+    from pyspark.sql import functions as F
+
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+    return {
+        "_committed_by": F.lit(audit["_committed_by"]).cast("string"),
+        "_committed_at": F.lit(audit["_committed_at"]).cast("timestamp_ltz"),
+        "_workspace_id": F.lit(audit["_workspace_id"]).cast("string"),
+        "_workspace_name": F.lit(audit["_workspace_name"]).cast("string"),
+        "_notebook_id": F.lit(audit["_notebook_id"]).cast("string"),
+        "_notebook_name": F.lit(audit["_notebook_name"]).cast("string"),
+        "_metadata_lakehouse_name": F.lit(audit["_metadata_lakehouse_name"]).cast("string"),
+        "_activity_id": F.lit(audit["_activity_id"]).cast("string"),
+    }
+
+
+def _canonical_profiled_dataframe(
+    profile_df,
+    *,
+    config: Any,
+    env: str,
+    runtime_context: dict[str, Any],
+    environment_name: str,
+    table_id: str,
+    profile_snapshot_id: str,
+):
+    """Map statistical profiler output to the normalized Profile schema."""
+    from pyspark.sql import functions as F
+    from pyspark.sql import types as T
+
+    column_id_udf = F.udf(lambda column_name: build_column_id(table_id, column_name), T.StringType())
+    profile_id_udf = F.udf(
+        lambda column_name: str(uuid5(NAMESPACE_URL, f"{profile_snapshot_id}|{build_column_id(table_id, column_name)}")),
+        T.StringType(),
+    )
+    audit_columns = _audit_literal_columns(config=config, env=env, runtime_context=runtime_context)
+    base = profile_df.select(
+        F.col("COLUMN_NAME").alias("_column_name"),
+        F.col("DATA_TYPE").alias("data_type"),
+        F.col("ROW_COUNT").cast("long").alias("row_count"),
+        F.col("NON_NULL_COUNT").cast("long").alias("non_null_count"),
+        F.col("NULL_COUNT").cast("long").alias("null_count"),
+        F.col("NULL_PERCENT").cast("double").alias("null_percent"),
+        F.col("DISTINCT_COUNT").cast("long").alias("distinct_count"),
+        F.col("DISTINCT_PERCENT").cast("double").alias("distinct_percent"),
+        F.col("MEAN").cast("double").alias("mean_value"),
+        F.col("STDDEV").cast("double").alias("stddev_value"),
+        F.col("MIN_VALUE").cast("string").alias("min_value"),
+        F.col("PERCENTILE_25").cast("double").alias("percentile_25_value"),
+        F.col("MEDIAN").cast("double").alias("median_value"),
+        F.col("PERCENTILE_75").cast("double").alias("percentile_75_value"),
+        F.col("MAX_VALUE").cast("string").alias("max_value"),
+    )
+    return base.select(
+        profile_id_udf(F.col("_column_name")).alias("profile_id"),
+        F.lit(profile_snapshot_id).cast("string").alias("profile_snapshot_id"),
+        F.lit(table_id).cast("string").alias("table_id"),
+        column_id_udf(F.col("_column_name")).alias("column_id"),
+        F.lit(environment_name).cast("string").alias("environment_name"),
+        F.col("data_type").cast("string"),
+        F.lit(str(runtime_context.get("table_name") or "")).cast("string").alias("table_name"),
+        F.col("_column_name").cast("string").alias("column_name"),
+        "row_count",
+        "non_null_count",
+        "null_count",
+        "null_percent",
+        "distinct_count",
+        "distinct_percent",
+        "mean_value",
+        "stddev_value",
+        "min_value",
+        "percentile_25_value",
+        "median_value",
+        "percentile_75_value",
+        "max_value",
+        *[column.alias(name) for name, column in audit_columns.items()],
+    ).select(*PROFILED_COLUMNS)
+
+
+def _frequency_metadata_dataframe(
+    frequency_df,
+    *,
+    profiled_df,
+    table_id: str,
+    config: Any,
+    env: str,
+    runtime_context: dict[str, Any],
+):
+    """Map flattened frequency output to the same logical column profile."""
+    from pyspark.sql import functions as F
+    from pyspark.sql import types as T
+
+    column_id_udf = F.udf(lambda column_name: build_column_id(table_id, column_name), T.StringType())
+    identities = profiled_df.select(
+        "column_id", "column_name", "table_id", "table_name", "data_type",
+        "environment_name", "profile_id", "profile_snapshot_id",
+    )
+    joined = frequency_df.withColumn("_column_id", column_id_udf(F.col("COLUMN_NAME"))).join(
+        identities,
+        (F.col("_column_id") == identities.column_id) & (frequency_df.DATA_TYPE == identities.data_type),
+        "inner",
+    )
+    audit_columns = _audit_literal_columns(config=config, env=env, runtime_context=runtime_context)
+    frequency_id_udf = F.udf(
+        lambda profile_id, rank: str(uuid5(NAMESPACE_URL, f"{profile_id}|{rank}")),
+        T.StringType(),
+    )
+    return joined.select(
+        frequency_id_udf(identities.profile_id, F.col("FREQUENCY_RANK")).alias("frequency_id"),
+        identities.profile_id.cast("string").alias("profile_id"),
+        identities.profile_snapshot_id.cast("string").alias("profile_snapshot_id"),
+        identities.table_id.cast("string").alias("table_id"),
+        identities.column_id.cast("string").alias("column_id"),
+        identities.table_name.cast("string").alias("table_name"),
+        identities.column_name.cast("string").alias("column_name"),
+        identities.data_type.cast("string").alias("data_type"),
+        identities.environment_name.cast("string").alias("environment_name"),
+        F.col("VALUE").cast("string").alias("value"),
+        F.col("FREQUENCY_COUNT").cast("long").alias("frequency_count"),
+        F.col("FREQUENCY_PERCENT").cast("double").alias("frequency_percent"),
+        F.col("FREQUENCY_RANK").cast("integer").alias("frequency_rank"),
+        F.col("PROFILED_ROW_COUNT").cast("long").alias("profiled_row_count"),
+        F.col("PROFILED_NON_NULL_COUNT").cast("long").alias("profiled_non_null_count"),
+        *[column.alias(name) for name, column in audit_columns.items()],
+    ).select(*PROFILED_FREQUENCY_COLUMNS)
+
+
+def _replace_snapshot_rows(
+    *, dataframe: Any, table_name: str, row_id: str, config: Any, env: str, spark_session: Any
+) -> None:
+    """Atomically replace one snapshot's rows using their deterministic row identities."""
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
+        raise RuntimeError(f"Delta Lake support is required for replacement {table_name} writes.") from exc
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        "Metadata", table_name, metadata_table_physical_schema(config, table_name),
+        context={"config": config, "env": env},
+    )
+    snapshot = dataframe.select("profile_snapshot_id").dropDuplicates().first()
+    if snapshot is None:
+        return
+    snapshot_id = str(snapshot["profile_snapshot_id"]).replace("'", "''")
+    (
+        DeltaTable.forPath(spark_session, path)
+        .alias("target")
+        .merge(dataframe.alias("source"), f"target.{row_id} = source.{row_id}")
+        .whenMatchedUpdateAll()
+        .whenNotMatchedInsertAll()
+        .whenNotMatchedBySourceDelete(
+            condition=f"target.profile_snapshot_id = '{snapshot_id}'"
+        )
+        .execute()
+    )
+
+
+def _replace_frequency_rows(
+    *, frequency_df: Any | None, profiled_df: Any, config: Any, env: str, spark_session: Any
+) -> None:
+    """Replace flattened Frequency rows only for the current profiling snapshot."""
+    if frequency_df is not None:
+        _replace_snapshot_rows(
+            dataframe=frequency_df, table_name=PROFILED_FREQUENCY_TABLE,
+            row_id="frequency_id", config=config, env=env, spark_session=spark_session,
+        )
+        return
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
+        raise RuntimeError(
+            "Delta Lake support is required for replacement METADATA_DATA_PROFILED_FREQUENCY writes."
+        ) from exc
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        "Metadata",
+        PROFILED_FREQUENCY_TABLE,
+        metadata_table_physical_schema(config, PROFILED_FREQUENCY_TABLE),
+        context={"config": config, "env": env},
+    )
+    snapshots = profiled_df.select("profile_snapshot_id").dropDuplicates()
+    (DeltaTable.forPath(spark_session, path).alias("target")
+     .merge(snapshots.alias("source"), "target.profile_snapshot_id = source.profile_snapshot_id")
+     .whenMatchedDelete().execute())
+
+
+def _delete_profile_snapshot(
+    *, profiled_df: Any, config: Any, env: str, spark_session: Any
+) -> None:
+    """Remove an uncommitted snapshot, deleting summary rows before orphan frequencies."""
+    from delta.tables import DeltaTable
+
+    snapshots = profiled_df.select("profile_snapshot_id").dropDuplicates()
+    for table_name in (PROFILED_TABLE, PROFILED_FREQUENCY_TABLE):
+        _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+            "Metadata", table_name, metadata_table_physical_schema(config, table_name),
+            context={"config": config, "env": env},
+        )
+        (DeltaTable.forPath(spark_session, path).alias("target")
+         .merge(snapshots.alias("source"), "target.profile_snapshot_id = source.profile_snapshot_id")
+         .whenMatchedDelete().execute())
+
+
+def _stage_catalogue_profile_retry(
+    *, profiled_df: Any, config: Any, env: str, spark_session: Any
+) -> bool:
+    """Return whether this activity is a retry and hide its prior completion marker."""
+    from delta.tables import DeltaTable
+
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        "Metadata", CATALOGUE_TABLE, metadata_table_physical_schema(config, CATALOGUE_TABLE),
+        context={"config": config, "env": env},
+    )
+    activities = profiled_df.select(
+        "environment_name", "table_id", "_activity_id"
+    ).dropDuplicates()
+    target = DeltaTable.forPath(spark_session, path)
+    same_activity_retry = bool(
+        target.toDF()
+        .select("environment_name", "table_id", "_activity_id")
+        .join(
+            activities,
+            on=["environment_name", "table_id", "_activity_id"],
+            how="inner",
+        )
+        .limit(1)
+        .count()
+    )
+    (
+        target.alias("target")
+        .merge(
+            activities.alias("source"),
+            "target.environment_name = source.environment_name "
+            "AND target.table_id = source.table_id "
+            "AND target._activity_id = source._activity_id",
+        )
+        .whenMatchedUpdate(set={"last_profiled_at": "CAST(NULL AS TIMESTAMP)"})
+        .execute()
+    )
+    return same_activity_retry
+
+
+def _profile_snapshot_id(*, config: Any, env: str, context: dict[str, Any], table_id: str) -> str:
+    """Return the stable snapshot identity for one table and Fabric activity."""
+    if context.get("_profile_snapshot_id"):
+        return str(context["_profile_snapshot_id"])
+    activity_id = build_runtime_audit_fields(
+        config=config, env=env, runtime_context=context
+    )["_activity_id"]
+    return str(uuid5(NAMESPACE_URL, f"fabricops-profile|{env}|{table_id}|{activity_id}"))
+
+
+def _catalogue_dataframe_from_profiled(
+    profiled_df,
+    *,
+    source_df: Any,
+    store_type: str,
+    layer: str,
+    schema_name: str | None,
+    table_name: str,
+    load_strategy: str | None = None,
+    load_strategy_parameters_json: str | None = None,
+    writer_workspace_id: str | None = None,
+    writer_notebook_id: str | None = None,
+    writer_notebook_name: str | None = None,
+    scheduled_refresh_json: str | None = None,
+    profile_key_candidates_json: str | None = None,
+    source_fields: Sequence[tuple[str, str]] | None = None,
+):
+    """Return one table row and one row for each observed column asset."""
+    from pyspark.sql import functions as F
+
+    first = profiled_df.select(
+        "table_id",
+        "environment_name",
+        "_committed_by",
+        "_committed_at",
+        "_workspace_id",
+        "_workspace_name",
+        "_notebook_id",
+        "_notebook_name",
+        "_metadata_lakehouse_name",
+        "_activity_id",
+    ).first()
+    if first is None:
+        return profiled_df.sparkSession.createDataFrame([], schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
+    audit = {name: first[name] for name in CATALOGUE_COLUMNS if name.startswith("_")}
+    common = {
+        "table_id": first["table_id"],
+        "environment_name": first["environment_name"],
+        "store_type": store_type,
+        "layer": layer,
+        "schema_name": schema_name,
+        "table_name": table_name,
+        "first_profiled_at": first["_committed_at"],
+        "last_profiled_at": first["_committed_at"],
+        "is_active": True,
+        **audit,
+    }
+    rows = [
+        coerce_metadata_row_types(
+            CATALOGUE_TABLE,
+            {
+                **common,
+                "metadata_level": "table",
+                "column_id": None,
+                "column_name": None,
+                "data_type": None,
+                "load_strategy": load_strategy,
+                "load_strategy_parameters_json": load_strategy_parameters_json,
+                "writer_workspace_id": writer_workspace_id,
+                "writer_notebook_id": writer_notebook_id,
+                "writer_notebook_name": writer_notebook_name,
+                "scheduled_refresh_json": scheduled_refresh_json,
+                "profile_key_candidates_json": profile_key_candidates_json,
+            },
+        )
+    ]
+    fields = source_fields or [(field.name, field.dataType.simpleString()) for field in source_df.schema.fields]
+    for column_name, data_type in fields:
+        column_id = build_column_id(first["table_id"], column_name)
+        rows.append(
+            coerce_metadata_row_types(
+                CATALOGUE_TABLE,
+                {
+                    **common,
+                    "metadata_level": "column",
+                    "column_id": column_id,
+                    "column_name": column_name,
+                    "data_type": data_type,
+                    "load_strategy": None,
+                    "load_strategy_parameters_json": None,
+                    "writer_workspace_id": None,
+                    "writer_notebook_id": None,
+                    "writer_notebook_name": None,
+                    "scheduled_refresh_json": None,
+                    "profile_key_candidates_json": None,
+                },
+            )
+        )
+    return profiled_df.sparkSession.createDataFrame(rows, schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
+
+
+def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, spark_session: Any) -> None:
+    """Upsert Catalogue rows by environment-aware asset grain and deactivate missing columns."""
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
+        raise RuntimeError(
+            "Delta Lake merge support is required for idempotent METADATA_DATA_CATALOGUE writes."
+        ) from exc
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        "Metadata",
+        CATALOGUE_TABLE,
+        metadata_table_physical_schema(config, CATALOGUE_TABLE),
+        context={"config": config, "env": env},
+    )
+    first = catalogue_df.select("environment_name", "table_id").first()
+    if first is None:
+        return
+    environment_name = str(first["environment_name"]).replace("'", "''")
+    table_id = str(first["table_id"]).replace("'", "''")
+    target = DeltaTable.forPath(spark_session, path)
+    (
+        target.alias("target")
+        .merge(
+            catalogue_df.alias("source"),
+            "target.environment_name = source.environment_name "
+            "AND target.metadata_level = source.metadata_level "
+            "AND target.table_id = source.table_id "
+            "AND coalesce(target.column_id, '') = coalesce(source.column_id, '')",
+        )
+        .whenMatchedUpdate(
+            set={
+                "store_type": "source.store_type",
+                "layer": "source.layer",
+                "schema_name": "source.schema_name",
+                "table_name": "source.table_name",
+                "column_name": "source.column_name",
+                "data_type": "source.data_type",
+                "load_strategy": "coalesce(source.load_strategy, target.load_strategy)",
+                "load_strategy_parameters_json": (
+                    "coalesce(source.load_strategy_parameters_json, target.load_strategy_parameters_json)"
+                ),
+                "writer_workspace_id": (
+                    "coalesce(source.writer_workspace_id, target.writer_workspace_id)"
+                ),
+                "writer_notebook_id": (
+                    "coalesce(source.writer_notebook_id, target.writer_notebook_id)"
+                ),
+                "writer_notebook_name": (
+                    "coalesce(source.writer_notebook_name, target.writer_notebook_name)"
+                ),
+                "scheduled_refresh_json": (
+                    "coalesce(source.scheduled_refresh_json, target.scheduled_refresh_json)"
+                ),
+                "profile_key_candidates_json": (
+                    "coalesce(source.profile_key_candidates_json, target.profile_key_candidates_json)"
+                ),
+                "last_profiled_at": "source.last_profiled_at",
+                "is_active": "true",
+                "_committed_by": "source._committed_by",
+                "_committed_at": "source._committed_at",
+                "_workspace_id": "source._workspace_id",
+                "_workspace_name": "source._workspace_name",
+                "_notebook_id": "source._notebook_id",
+                "_notebook_name": "source._notebook_name",
+                "_metadata_lakehouse_name": "source._metadata_lakehouse_name",
+                "_activity_id": "source._activity_id",
+            }
+        )
+        .whenNotMatchedInsertAll()
+        .whenNotMatchedBySourceUpdate(
+            condition=(
+                f"target.environment_name = '{environment_name}' AND target.table_id = '{table_id}' "
+                "AND target.metadata_level = 'column' AND target.is_active = true"
+            ),
+            set={"is_active": "false"},
+        )
+        .execute()
+    )
+
+
+def execute_table_profile(
+    *,
+    dataframe=None,
+    store: str | None = None,
+    schema: str | None = None,
+    table_name: str | None = None,
+    table_id: str | None = None,
+    grain_discovery_enabled: bool = True,
+    grain_discovery_max_columns: int = 3,
+    grain_discovery_max_candidates: int = 8,
+    frequency_columns=None,
+    frequency_enabled: bool = True, frequency_top_n: int | None = 5,
+    frequency_max_distinct_percent: float | None = 80.0,
+    context=None,
+    spark_session=None,
+    verbose: bool = True,
+    activities=None,
+):
+    """Execute selected persisted-table profiling activities without public workflow calls."""
+    for name, value in (
+        ("grain_discovery_max_columns", grain_discovery_max_columns),
+        ("grain_discovery_max_candidates", grain_discovery_max_candidates),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+            raise ValueError(f"{name} must be a positive integer.")
+    coordinates = (store, schema, table_name)
+    has_coordinates = any(value is not None for value in coordinates)
+    if table_id is not None and has_coordinates:
+        raise ValueError("table_id cannot be combined with store, schema, or table_name.")
+    if has_coordinates and (store is None or table_name is None):
+        raise ValueError("Provide both store and table_name when using physical identity.")
+    if dataframe is None and table_id is None and not has_coordinates:
+        raise ValueError("Provide dataframe, table_id, or both store and table_name.")
+    if frequency_max_distinct_percent is not None and (
+        not math.isfinite(frequency_max_distinct_percent)
+        or not 0.0 <= frequency_max_distinct_percent <= 100.0
+    ):
+        raise ValueError("frequency_max_distinct_percent must be finite and between 0.0 and 100.0 when supplied.")
+
+    emit = print if verbose else lambda *args, **kwargs: None
+    selected_activities = set(activities) if activities is not None else {"standard", *({"grain"} if grain_discovery_enabled else set()), *({"frequency"} if frequency_enabled else set())}
+    if not selected_activities or selected_activities - {"standard", "grain", "frequency"}:
+        raise ValueError("Select standard, grain or frequency profiling activities.")
+    grain_discovery_enabled = "grain" in selected_activities
+    frequency_enabled = "frequency" in selected_activities
+    validate_claim = (context or {}).get("_profile_claim_validate", lambda: None)
+    selected_frequency_columns = [] if not frequency_enabled else (None if frequency_columns is None else list(frequency_columns))
+    if frequency_top_n is not None and frequency_top_n <= 0:
+        raise ValueError("frequency_top_n must be greater than zero when supplied.")
+    identity = None
+    config = env = None
+    warehouse_fields = None
+    warehouse_physical = False
+    profile_input_label = "supplied DataFrame"
+    backend_label = "PySpark"
+
+    if table_id is not None or has_coordinates:
+        config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+        if table_id is not None:
+            identity = resolve_catalogue_table_identity(config, env, table_id, spark_session=spark_session, context=context)
+        else:
+            identity = resolve_physical_table_identity(
+                config, env, store=store, schema=schema, table_name=table_name
+            )
+        store_kind = str(identity.get("store_kind") or identity.get("store_type") or "").lower()
+        if store_kind not in {"lakehouse", "warehouse"}:
+            raise ValueError(f"Configured table has unsupported store kind {store_kind or '<blank>'!r}.")
+        identity["store_kind"] = store_kind
+        physical_identity = ".".join(
+            str(value)
+            for value in (identity.get("store"), identity.get("schema"), identity.get("table_name"))
+            if value
+        )
+        if dataframe is None:
+            if store_kind == "lakehouse":
+                dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), spark_session=spark_session, context=context)
+                profile_input_label = "complete persisted Lakehouse table"
+            else:
+                warehouse_physical = True
+                backend_label = "Warehouse SQL pushdown"
+                profile_input_label = "complete persisted Warehouse table"
+        else:
+            profile_input_label = "supplied DataFrame"
+
+        emit("FabricOps Profile")
+        emit(f"1. Table → {physical_identity}")
+        emit(f"   Input → {profile_input_label}")
+        emit(f"2. Profiling backend → {backend_label}")
+    else:
+        emit("FabricOps Profile")
+        emit("1. Identity → DataFrame only; no governed table_id")
+        emit("2. Profiling backend → PySpark")
+
+    if spark_session is None and dataframe is not None:
+        spark_session = dataframe.sparkSession
+    if spark_session is None:
+        spark_session = get_spark_session()
+    profile_metrics = {"row_count": None}
+    profile_key_candidates: list[dict[str, Any]] = []
+    if warehouse_physical:
+        statistical_profile, frequency_profile, warehouse_columns = _warehouse_profile_dataframes(
+            identity, spark_session=spark_session, context=context,
+            frequency_columns=selected_frequency_columns,
+            threshold_percent=frequency_max_distinct_percent, top_n=frequency_top_n, metrics=profile_metrics,
+        )
+        warehouse_fields = [(name, canonical) for name, canonical, _sql_type in warehouse_columns]
+        if identity is not None and grain_discovery_enabled:
+            profile_key_candidates = _warehouse_profile_key_candidates(
+                identity,
+                statistical_profile,
+                spark_session=spark_session,
+                context=context,
+                warehouse_columns=warehouse_columns,
+                max_columns=grain_discovery_max_columns,
+                max_candidates=grain_discovery_max_candidates,
+            )
+    else:
+        statistical_profile = build_profile_dataframe(dataframe)
+        selected_columns = _selected_frequency_columns(
+            dataframe, statistical_profile, selected_frequency_columns, frequency_max_distinct_percent
+        )
+        frequency_profile = None
+        if selected_columns:
+            frequency_profile = build_frequency_distribution_dataframe(
+                dataframe, columns=selected_columns, top_n=frequency_top_n
+            )
+        if identity is not None and grain_discovery_enabled:
+            profile_key_candidates = _spark_profile_key_candidates(
+                dataframe, statistical_profile, metrics=profile_metrics,
+                max_columns=grain_discovery_max_columns, max_candidates=grain_discovery_max_candidates,
+            )
+
+    if identity is not None:
+        emit("   Grain discovery → " + ("calculated" if grain_discovery_enabled else "disabled; saved candidates preserved"))
+    frequency_label = "calculated" if frequency_profile is not None else "skipped; no eligible/requested columns"
+    emit("3. Statistical profile → calculated")
+    emit(f"4. Frequency profile → {frequency_label}")
+
+
+    if identity is None or not persistence_permitted(context):
+        emit("5. Metadata persistence → disabled by Testing policy" if identity is not None else
+              "5. Metadata persistence → skipped; DataFrame-only profiling does not invent a table_id")
+        emit("Result → profile outputs returned; no Catalogue or profiling metadata was written.")
+        return {"profile": statistical_profile, "frequency_profile": frequency_profile, **({"grain_candidates": profile_key_candidates} if activities is not None else {}), **profile_metrics}
+
+    if selected_activities == {"grain"}:
+        validate_claim()
+        _persist_grain_candidates(identity, profile_key_candidates, max_columns=grain_discovery_max_columns,
+            config=config, env=env, context=context, spark_session=spark_session)
+        return {**({"grain_candidates": profile_key_candidates} if activities is not None else {}), **profile_metrics}
+
+    profile_snapshot_id = _profile_snapshot_id(
+        config=config, env=env, context=context, table_id=identity["table_id"]
+    )
+    profiled_df = _canonical_profiled_dataframe(
+        statistical_profile,
+        config=config,
+        env=env,
+        runtime_context={**context, "table_name": identity.get("table_name")},
+        environment_name=env,
+        table_id=identity["table_id"],
+        profile_snapshot_id=profile_snapshot_id,
+    ).cache()
+    try:
+        profiled_df.count()
+        if profile_metrics["row_count"] is None:
+            measured = profiled_df.select("row_count").first()
+            profile_metrics["row_count"] = measured["row_count"] if measured is not None else 0
+        frequency_metadata_df = None
+        if frequency_profile is not None:
+            frequency_metadata_df = _frequency_metadata_dataframe(
+                frequency_profile,
+                profiled_df=profiled_df,
+                table_id=identity["table_id"],
+                config=config,
+                env=env,
+                runtime_context=context,
+            )
+        if selected_activities == {"frequency"}:
+            from pyspark.sql import functions as F
+            # Independent Frequency snapshots have no statistical-profile foreign key.
+            # Table ID, Column ID and the activity snapshot retain complete identity.
+            if frequency_metadata_df is not None:
+                frequency_metadata_df = frequency_metadata_df.withColumn("profile_id", F.lit(None).cast("string"))
+            try:
+                validate_claim()
+                _replace_frequency_rows(frequency_df=frequency_metadata_df, profiled_df=profiled_df,
+                    config=config, env=env, spark_session=spark_session)
+                return {"frequency_profile": frequency_profile, **profile_metrics}
+            finally:
+                profiled_df.unpersist()
+
+        summary_persisted = False
+        try:
+            validate_claim()
+            same_activity_retry = _stage_catalogue_profile_retry(
+                profiled_df=profiled_df, config=config, env=env, spark_session=spark_session
+            )
+            validate_claim()
+            _replace_snapshot_rows(
+                dataframe=profiled_df, table_name=PROFILED_TABLE, row_id="profile_id",
+                config=config, env=env, spark_session=spark_session,
+            )
+            summary_persisted = True
+            profile_action = "refreshed existing activity snapshot" if same_activity_retry else "created new activity snapshot"
+            emit(f"5. Profile snapshot → {profile_action}")
+            if frequency_enabled or activities is None:
+                _replace_frequency_rows(
+                    frequency_df=frequency_metadata_df, profiled_df=profiled_df,
+                    config=config, env=env, spark_session=spark_session,
+                )
+            if frequency_metadata_df is not None:
+                frequency_action = (
+                    "refreshed existing activity rows"
+                    if same_activity_retry
+                    else "created new activity rows"
+                )
+            elif same_activity_retry:
+                frequency_action = "cleared existing activity rows; no frequency profile generated"
+            else:
+                frequency_action = "skipped; no frequency profile generated"
+            emit(f"6. Frequency profile metadata → {frequency_action}")
+            catalogue_df = _catalogue_dataframe_from_profiled(
+                profiled_df, source_df=dataframe, store_type=identity["store_kind"],
+                layer=identity["store"], schema_name=identity["schema"],
+                table_name=identity["table_name"], load_strategy=None,
+                load_strategy_parameters_json=None,
+                writer_workspace_id=None,
+                writer_notebook_id=None,
+                writer_notebook_name=None,
+                scheduled_refresh_json=None,
+                profile_key_candidates_json=json.dumps(
+                    _key_candidate_evidence(profile_key_candidates, max_columns=grain_discovery_max_columns),
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                ) if grain_discovery_enabled else None,
+                source_fields=warehouse_fields,
+            )
+            validate_claim()
+            _upsert_catalogue_identities(
+                catalogue_df=catalogue_df, config=config, env=env, spark_session=spark_session,
+            )
+        except Exception:
+            if summary_persisted:
+                try:
+                    _delete_profile_snapshot(
+                        profiled_df=profiled_df, config=config, env=env, spark_session=spark_session
+                    )
+                except Exception as cleanup_error:
+                    emit(
+                        "Warning: incomplete profiling snapshot cleanup failed; "
+                        "Catalogue completion state remains authoritative. "
+                        f"Cleanup error: {cleanup_error}"
+                    )
+            raise
+        catalogue_action = "updated" if same_activity_retry else "registered or updated"
+        emit(
+            f"7. Catalogue → {catalogue_action} table and column metadata; "
+            "existing load strategy and parameters preserved"
+        )
+        emit("Result → Profile completed and metadata saved.")
+        return {"profile": profiled_df, "frequency_profile": frequency_profile, **profile_metrics}
+    except BaseException:
+        profiled_df.unpersist()
+        raise
+
+
+def _persist_grain_candidates(identity, candidates, *, max_columns, config, env, context, spark_session):
+    """Update only discovered candidates on an existing Catalogue table identity."""
+    from delta.tables import DeltaTable
+    from pyspark.sql import functions as F
+    _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", CATALOGUE_TABLE,
+        metadata_table_physical_schema(config, CATALOGUE_TABLE), context=context)
+    table = DeltaTable.forPath(spark_session, path)
+    condition = ((F.col("table_id") == identity["table_id"]) & (F.col("environment_name") == env)
+                 & (F.col("metadata_level") == "table"))
+    if table.toDF().where(condition).limit(2).count() != 1:
+        raise RuntimeError("Grain Discovery requires one registered Catalogue table in this environment.")
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    table.update(condition=condition, set={"profile_key_candidates_json": F.lit(json.dumps(
+        _key_candidate_evidence(candidates, max_columns=max_columns), sort_keys=True, separators=(",", ":"))),
+        **{name: F.lit(value) for name, value in audit.items()}})

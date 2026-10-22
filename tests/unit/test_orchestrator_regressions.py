@@ -30,7 +30,7 @@ def read_runtime(monkeypatch):
     profile = Mock(return_value={"row_count": 3})
     monkeypatch.setattr(read, "pipeline_read", reader)
     monkeypatch.setattr(read, "check_grain", grain)
-    monkeypatch.setattr(read, "profile_table", profile)
+    monkeypatch.setattr(read, "schedule_table_profiling", profile)
     return reader, grain, profile
 
 
@@ -49,16 +49,16 @@ def test_full_mode_normalized_for_reader_grain_profile_and_summary(read_runtime,
 
 @pytest.mark.parametrize("mode", ["incremental", "INCREMENTAL", " Incremental "])
 def test_incremental_mode_normalized_for_reader_parameters_and_grain(read_runtime, mode):
-    """Incremental spellings preserve parameters, use batch Grain, and skip Profile."""
+    """Incremental spellings preserve parameters, use batch Grain, and schedule full-table profiling."""
     reader, grain, profile = read_runtime
     parameters = {"watermark_column": "modified_at"}
-    result = run_pipeline_operation(read.orchestrate_read, plan=PLAN, store="Bronze", schema="demo", table_name="orders", read_mode=mode,
+    run_pipeline_operation(read.orchestrate_read, plan=PLAN, store="Bronze", schema="demo", table_name="orders", read_mode=mode,
                                    read_parameters=parameters, target_table_id="target", verbose=False)
     assert reader.call_args.kwargs["read_mode"] == "incremental"
     assert reader.call_args.kwargs["read_parameters"] is parameters
     assert grain.call_args.kwargs["scope"] == "read_incremental_batch"
-    assert result["profile_result"]["reason"] == "Incremental batch"
-    profile.assert_not_called()
+    profile.assert_called_once()
+    assert profile.call_args.args[:2] == ("source", "read")
 
 
 @pytest.mark.parametrize("mode", [None, "", " ", "delta", 7])
@@ -90,30 +90,19 @@ def test_query_profile_does_not_receive_physical_table_identity(read_runtime, qu
     result = run_pipeline_operation(read.orchestrate_read, plan=PLAN, store="Gold", schema="demo", table_name="orders", query=query, verbose=False)
     assert result["is_query"] is True
     assert result["table_id"] == "source"
-    assert profile.call_args.kwargs["dataframe"] is result["dataframe"]
-    assert not {"table_id", "store", "schema", "table_name"} & profile.call_args.kwargs.keys()
+    assert profile.call_args.args[:2] == ("source", "read")
+    assert "dataframe" not in profile.call_args.kwargs
     assert reader.call_args.kwargs["query"] == query
 
 
-def test_query_uses_real_dataframe_profile_without_metadata_writes(read_runtime, monkeypatch, spark_session):
-    """The actual Profile path leaves all physical table metadata untouched."""
-    profile_module = import_module("fabricops_kit.pipeline.profile_table")
-    monkeypatch.setattr(read, "profile_table", profile_module.profile_table)
-    frame = spark_session.range(4).selectExpr("count(*) AS order_count")
-    reader, _grain, _profile = read_runtime
-    reader.side_effect = None
-    reader.return_value = {"table_id": "source", "dataframe": frame, "is_query": True, "read_mode": "full"}
-    metadata = []
-    for name in ("resolve_fabric_context", "_upsert_catalogue_identities", "_replace_snapshot_rows", "_replace_frequency_rows"):
-        mock = Mock(side_effect=AssertionError("query profiling must not access table metadata"))
-        monkeypatch.setattr(profile_module, name, mock)
-        metadata.append(mock)
-    result = run_pipeline_operation(read.orchestrate_read, plan=PLAN, store="Gold", schema="demo", table_name="orders",
-                                   query="SELECT COUNT(*) AS order_count FROM demo.orders",
-                                   spark_session=spark_session, frequency_enabled=False, verbose=False)
-    assert len(result["profile_result"]["profile"].collect()) == 1
-    for mock in metadata:
-        mock.assert_not_called()
+def test_query_schedules_whole_table_instead_of_query_output(read_runtime):
+    """A filtered or aggregated query remains separate from persisted-table profiling."""
+    reader, _grain, profile = read_runtime
+    result = run_pipeline_operation(read.orchestrate_read, plan=PLAN, store="Gold", schema="demo",
+        table_name="orders", query="SELECT COUNT(*) FROM demo.orders", verbose=False)
+    assert result["is_query"]
+    assert profile.call_args.args[:2] == ("source", "read")
+    assert "dataframe" not in profile.call_args.kwargs
 
 
 
@@ -134,7 +123,7 @@ def test_profile_failure_exposes_completed_publication_and_original_cause(monkey
     publish = Mock(return_value={"table_id": "target", "strategy": "append", "write_metrics": {"rows_committed": 4}})
     monkeypatch.setattr(write, "pipeline_write", publish)
     cause = ValueError("profile service unavailable")
-    monkeypatch.setattr(write, "profile_table", Mock(side_effect=cause))
+    monkeypatch.setattr(write, "schedule_table_profiling", Mock(side_effect=cause))
     with pytest.raises(RuntimeError, match="publication and checkpoint finalization already succeeded") as raised:
         run_pipeline_operation(write.orchestrate_write, SimpleNamespace(columns=["id"]), plan=PLAN, sources=[], store="Silver", schema="demo",
                                 table_name="orders", write_mode="append")

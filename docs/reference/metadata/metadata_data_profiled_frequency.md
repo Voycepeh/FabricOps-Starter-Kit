@@ -1,14 +1,14 @@
 # METADATA_DATA_PROFILED_FREQUENCY
 
-See a profiled column's frequency distribution without joining its parent Profile for table and column IDs, captured names, datatype, or environment. Captured names do not follow later renames.
+Frequency distributions retain Table ID, Column ID, environment, captured names and datatype. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.
 
 ## Writer functions
 
-* [`profile_table`](../../api/reference/profile_table.md)
+No public writer function is traced in the current implementation.
 
 ## Used in Workflow Template
 
-* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Profiling
+No starter template or solution is traced for the public writer functions.
 
 ## Model
 
@@ -16,14 +16,14 @@ See a profiled column's frequency distribution without joining its parent Profil
 
 **Default physical schema:** `engineering`
 
-**Grain:** One flattened ranked value within one logical frequency distribution for a column Profile.
+**Grain:** One ranked value for a column and frequency activity snapshot. The statistical Profile reference is optional.
 
 **Primary key:** `frequency_id`
 
 **Relationships:**
 
-`METADATA_DATA_PROFILED` **(1 → 1)**
-via `profile_id` + `profile_snapshot_id`
+`METADATA_DATA_PROFILED` **(N → 1)**
+via `profile_id`
 
 ## Column summary
 

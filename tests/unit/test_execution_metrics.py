@@ -117,7 +117,8 @@ def test_summary_duration_is_wall_clock_and_unknown_values_are_explicit(capsys):
 
 
 @pytest.mark.parametrize("mode", ["overwrite", "append", "scd1", "scd2"])
-def test_write_summary_keeps_profile_total_separate_from_committed(mode, capsys, monkeypatch):
+@pytest.mark.parametrize("profile_rows", [100, None, 0])
+def test_write_summary_keeps_profile_total_separate_from_committed(mode, profile_rows, capsys, monkeypatch):
     module = import_module("fabricops_kit.pipeline.orchestrate_write")
     monkeypatch.setattr(module, "prepare_pipeline_execution", lambda *_args, **_kwargs: execution_context_stub({"target": None}))
     frame = SimpleNamespace(columns=["id", "value"])
@@ -125,10 +126,10 @@ def test_write_summary_keeps_profile_total_separate_from_committed(mode, capsys,
         for name in ("resolve_table_id", "check_schema", "check_source_drift", "check_dq"):
             stack.enter_context(patch.object(module, name, return_value="target" if name == "resolve_table_id" else {"status": "passed"}))
         stack.enter_context(patch.object(module, "check_sensitive_data", return_value={"dataframe": frame}))
-        stack.enter_context(patch.object(module, "pipeline_write", return_value={"table_id": "target", "strategy": mode, "write_metrics": {"rows_committed": 8 if mode in {"append", "overwrite"} else None}}))
-        stack.enter_context(patch.object(module, "profile_table", return_value={"row_count": 100}))
+        stack.enter_context(patch.object(module, "pipeline_write", return_value={"table_id": "target", "strategy": mode, "write_metrics": {"total_target_rows": 42, "rows_committed": 8 if mode in {"append", "overwrite"} else None}}))
+        stack.enter_context(patch.object(module, "schedule_table_profiling", return_value={"row_count": profile_rows}))
         result = run_pipeline_operation(module.orchestrate_write, frame, plan=PLAN, sources=[], store="Silver", schema="demo", table_name="orders", write_mode=mode)
-    assert result["write_metrics"]["total_target_rows"] == 100
+    assert result["write_metrics"]["total_target_rows"] == (42 if profile_rows is None else profile_rows)
     assert result["write_metrics"]["input_rows"] is None
     assert result["write_metrics"]["input_columns"] == 2
     assert result["write_metrics"]["rows_committed"] == (8 if mode in {"append", "overwrite"} else None)
@@ -142,20 +143,21 @@ def test_write_summary_keeps_profile_total_separate_from_committed(mode, capsys,
 
 
 @pytest.mark.parametrize("incremental,rows", [(False, 8), (True, 0), (True, None)])
-def test_read_summary_reuses_profile_only_for_full_scope(incremental, rows, capsys, monkeypatch):
+@pytest.mark.parametrize("is_query", [False, True])
+def test_read_summary_reuses_profile_only_for_full_scope(incremental, rows, is_query, capsys, monkeypatch):
     module = import_module("fabricops_kit.pipeline.orchestrate_read")
     monkeypatch.setattr(module, "resolve_table_id", lambda **_kwargs: "source")
     monkeypatch.setattr(module, "prepare_pipeline_execution", lambda *_args, **_kwargs: execution_context_stub({"source": None}))
-    source = {"dataframe": SimpleNamespace(columns=["id"]), "table_id": "source", "read_metrics": {"rows_read": rows if incremental else None}, "_reader_name": "read_warehouse_query"}
+    source = {"dataframe": SimpleNamespace(columns=["id"]), "table_id": "source", "is_query": is_query, "read_metrics": {"rows_read": rows if incremental else None}, "_reader_name": "read_warehouse_query"}
     with ExitStack() as stack:
         stack.enter_context(patch.object(module, "pipeline_read", return_value=source))
         for name in ("check_freshness", "check_schema", "check_dq"):
             stack.enter_context(patch.object(module, name, return_value={"status": "passed"}))
-        profile = stack.enter_context(patch.object(module, "profile_table", return_value={"row_count": 8}))
+        profile = stack.enter_context(patch.object(module, "schedule_table_profiling", return_value={"row_count": 8}))
         result = run_pipeline_operation(module.orchestrate_read, plan=PLAN, store="Gold", schema="demo", table_name="orders", read_mode="incremental" if incremental else "full")
-    assert result["read_metrics"] == {"rows_read": rows, "columns": 1}
+    assert result["read_metrics"] == {"rows_read": None if is_query and not incremental else rows, "columns": 1}
     assert "FabricOps READ Summary" in capsys.readouterr().out
-    assert profile.call_count == (0 if incremental else 1)
+    assert profile.call_count == 1
 
 
 @pytest.mark.parametrize("key", ["userMetadata", "USERMETADATA"])

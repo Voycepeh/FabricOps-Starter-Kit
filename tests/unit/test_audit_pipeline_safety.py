@@ -100,7 +100,8 @@ def test_scd_null_keys_are_rejected_before_any_mutation(monkeypatch, spark_sessi
 
 def test_profile_forwards_explicit_session_to_catalogue_and_reader(monkeypatch):
     """Explicit-session profiling must not depend on an unrelated active session."""
-    module = import_module("fabricops_kit.pipeline.profile_table")
+    module = import_module("fabricops_kit.pipeline.shared")
+    from fabricops_kit import profile_table
     session = object()
     identity = {"table_id": "orders", "store_kind": "lakehouse", "store": "Bronze", "schema": "dbo", "table_name": "orders"}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {}))
@@ -116,7 +117,7 @@ def test_profile_forwards_explicit_session_to_catalogue_and_reader(monkeypatch):
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", resolve)
     monkeypatch.setattr(module, "read_lakehouse_table", physical_read)
     with pytest.raises(LookupError, match="stopped after forwarding"):
-        module.profile_table(table_id="orders", spark_session=session)
+        profile_table(table_id="orders", spark_session=session)
 
 
 @pytest.mark.parametrize("size", [0, 1000])

@@ -870,9 +870,10 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert table_summary.index("Scheduled refresh") < table_summary.index("Guardrails")
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children
-    assert [section.children[0].value for section in table_sections[:5]] == [
+    assert [section.children[0].value for section in table_sections[:6]] == [
         "<div class=\"fabricops-section-heading\">Grain &amp; Row Key</div>",
         "<div class=\"fabricops-section-heading\">Table definition</div>",
+        "<div class=\"fabricops-section-heading\">Profiling</div>",
         "<div class=\"fabricops-section-heading\">Processing</div>",
         "<div class=\"fabricops-section-heading\">Freshness</div>",
         "<div class=\"fabricops-section-heading\">Source Drift</div>",
@@ -1842,7 +1843,7 @@ def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_run
     assert "The latest <code>column_1</code> must be within <b>24 hours</b> of the pipeline run." in preview
     assert "<code>MAX(column_1)</code> must be on or after 1 Jan 2026 23:00." in preview
 
-    freshness_section = state["_controls"]["right_pane"].children[3]
+    freshness_section = state["_controls"]["right_pane"].children[4]
     assert freshness_section.children[1].children[0] is freshness["enabled"]
     assert freshness_section.children[1].children[1] is freshness["block"]
     freshness_primary = freshness_section.children[2]
@@ -1940,7 +1941,7 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
     assert "last successfully consumed state for that downstream target" in drift_preview
     assert "row count, <code>column_1</code> values, and a content fingerprint" in drift_preview
 
-    drift_section = state["_controls"]["right_pane"].children[4]
+    drift_section = state["_controls"]["right_pane"].children[5]
     assert drift_section.children[1].children[0] is drift["enabled"]
     assert drift_section.children[1].children[1] is drift["block"]
     drift_primary = drift_section.children[2]
@@ -2728,7 +2729,7 @@ def test_layout_avoids_blank_spacers_and_collapsed_columns(widget_runtime):
     )
 
     processing_hint = controls["processing_source"]
-    processing_section = controls["right_pane"].children[2]
+    processing_section = controls["right_pane"].children[3]
     processing_hint_row = processing_section.children[2]
     assert processing_hint_row.children == (processing_hint,)
     assert processing_hint_row.layout.align_items == "flex-start"
@@ -2978,7 +2979,7 @@ def test_sidebar_paths_shared_rules_details_and_editor_navigation(widget_runtime
     assert controls["top_nav"].value == "Table"
     assert controls["right_pane"].children[0].children[1].children[0] is controls["grain_enabled"]
     controls["configure_guardrails"].click()
-    assert len(controls["right_pane"].children) == 5
+    assert len(controls["right_pane"].children) == 6
     controls["sidebar_rule_buttons"]["schema"][0].click()
     assert controls["top_nav"].value == "Column"
     assert controls["column_select"].value == "col-0"

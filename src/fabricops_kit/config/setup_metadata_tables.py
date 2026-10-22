@@ -393,13 +393,18 @@ def setup_metadata_tables(
                     initial_rows = [{"authority_id": "central", "token": "initial",
                                      "snapshot_json": empty_activation_state(),
                                      **build_runtime_audit_fields(config=normalized, env=env, runtime_context=context)}]
+                if table_name == "METADATA_TABLE_PROFILING":
+                    from fabricops_kit.config.audit import build_runtime_audit_fields
+                    initial_rows = [{"state_id": "central", "token": "initial",
+                                     "snapshot_json": '{"format":"fabricops.table-profiling.v1","policies":{},"history":{}}',
+                                     **build_runtime_audit_fields(config=normalized, env=env, runtime_context=context)}]
                 empty_frame = spark.createDataFrame(initial_rows, schema=schema)
                 write_lakehouse_table(
                     empty_frame,
                     table_name,
                     store="Metadata",
                     schema=resolved_metadata_schema,
-                    mode="errorifexists" if table_name == "METADATA_ACTIVATION_STATE" else "overwrite",
+                    mode="errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_TABLE_PROFILING"} else "overwrite",
                     verbose=False,
                     context=context,
                 )

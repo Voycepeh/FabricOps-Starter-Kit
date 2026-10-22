@@ -22,7 +22,7 @@ def write_workflow(monkeypatch):
     monkeypatch.setattr(write_module, "resolve_table_id", lambda **_kwargs: "target-id")
     monkeypatch.setattr(write_module, "check_schema", lambda *_args, **_kwargs: {"status": "passed", "can_continue": True})
     later = {}
-    for name in ("check_dq", "pipeline_write", "profile_table"):
+    for name in ("check_dq", "pipeline_write", "schedule_table_profiling"):
         later[name] = Mock(return_value={"status": "passed", "can_continue": True, "table_id": "target-id"})
         monkeypatch.setattr(write_module, name, later[name])
     monkeypatch.setattr(sensitive_module, "resolve_fabric_context", lambda: (object(), "dev", {}))

@@ -20,7 +20,7 @@ from tests.helpers import run_pipeline_operation
 plan_module = importlib.import_module("fabricops_kit.pipeline.shared")
 read_module = importlib.import_module("fabricops_kit.pipeline.pipeline_read")
 write_module = importlib.import_module("fabricops_kit.pipeline.pipeline_write")
-profile_module = importlib.import_module("fabricops_kit.pipeline.profile_table")
+profile_module = importlib.import_module("fabricops_kit.pipeline.shared")
 
 SOURCE = {"store": "Bronze", "schema": "demo", "table_name": "source"}
 TARGET = {"store": "Silver", "schema": "demo", "table_name": "target"}
@@ -120,20 +120,23 @@ def runtime(monkeypatch, spark_session):
         plan = setup_pipeline(execution_mode="testing" if mode == "live" else mode, sources=[SOURCE], targets=[TARGET],
                                               selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders", configuration={})
         return replace(plan, execution_mode="live", activated_pipeline_id="verified-by-boundary") if mode == "live" else plan
+    for name in ("orchestrate_read", "orchestrate_write"):
+        monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline." + name), "schedule_table_profiling",
+                            lambda *args, **kwargs: {"status": "passed", "row_count": 2})
     return make, rows, spies, context
 
 
 def read(plan, spark, **kwargs):
     """Use real Read with expensive optional profiling work disabled."""
     return run_pipeline_operation(orchestrate_read, plan=plan, **SOURCE, spark_session=spark, verbose=False,
-                            grain_discovery_enabled=False, frequency_enabled=False, **kwargs)
+                              **kwargs)
 
 
 def write(plan, source, spark, dataframe=None, strategy="overwrite", parameters=None):
     """Use the real target lifecycle."""
     return run_pipeline_operation(orchestrate_write, source["dataframe"] if dataframe is None else dataframe, plan=plan,
                              sources=[source], **TARGET, write_mode=strategy, write_parameters=parameters,
-                             grain_discovery_enabled=False, frequency_enabled=False, verbose=False, spark_session=spark)
+                               verbose=False, spark_session=spark)
 
 
 @pytest.mark.parametrize("strategy,parameters", [("overwrite", None), ("append", None),
@@ -247,7 +250,7 @@ def test_initial_publication_publishes_and_commits_lineage(runtime, spark_sessio
     plan = make(mode, contracted=mode == "live")
     monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
     orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
-    monkeypatch.setattr(orchestrator, "profile_table", lambda **kw: {"row_count": 2})
+    monkeypatch.setattr(orchestrator, "schedule_table_profiling", lambda *args, **kw: {"row_count": 2})
     source = read(plan, spark_session)
     result = write(plan, source, spark_session)
     assert result["published"] and result["execution_mode"] == mode
@@ -390,7 +393,7 @@ def test_empty_or_disabled_contract_checks_do_not_require_minimum_coverage(runti
     monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
     orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
     if mode == "live":
-        monkeypatch.setattr(orchestrator, "profile_table", lambda **kw: {"row_count": 2})
+        monkeypatch.setattr(orchestrator, "schedule_table_profiling", lambda *args, **kw: {"row_count": 2})
     result = write(plan, read(plan, spark_session), spark_session)
     assert result["published"] is (mode == "live")
     assert result["source_guardrail_results"] == [] and plan.results == []
@@ -434,7 +437,7 @@ def test_warn_failures_report_and_permit_configured_write(runtime, spark_session
     monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
     orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
     if mode == "live":
-        monkeypatch.setattr(orchestrator, "profile_table", lambda **kw: {"row_count": 1})
+        monkeypatch.setattr(orchestrator, "schedule_table_profiling", lambda *args, **kw: {"row_count": 1})
     source = read(plan, spark_session)
     result = write(plan, source, spark_session, dataframe=spark_session.createDataFrame([(None,)], "id long"))
     assert result["dq_result"]["status"] == "warning"
@@ -532,8 +535,7 @@ def test_iterable_sources_are_materialized_once_for_evidence_and_execution(runti
     plan = make(contracted=True)
     source = read(plan, spark_session)
     result = run_pipeline_operation(orchestrate_write, source["dataframe"], plan=plan, sources=(item for item in [source]),
-                               **TARGET, write_mode="overwrite", spark_session=spark_session, verbose=False,
-                               grain_discovery_enabled=False, frequency_enabled=False)
+                               **TARGET, write_mode="overwrite", spark_session=spark_session, verbose=False)
     assert len(result["source_guardrail_results"]) == 2
     from fabricops_kit.pipeline.shared import finalize_pipeline_run
     assert finalize_pipeline_run(plan, spark_session=spark_session)["status"] == "incomplete"
@@ -546,7 +548,7 @@ def test_explicit_real_testing_write_uses_the_actual_publication_path(runtime, s
     plan = replace(make("testing", contracted=True), testing_writes=True)
     monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
     owner = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
-    monkeypatch.setattr(owner, "profile_table", lambda **kw: {"row_count": 2})
+    monkeypatch.setattr(owner, "schedule_table_profiling", lambda *args, **kw: {"row_count": 2})
     with plan:
         result = write(plan, read(plan, spark_session), spark_session)
     assert result["published"] is True and result["execution_mode"] == "testing"
@@ -572,10 +574,10 @@ def test_independent_contract_coverage_executes_and_records_every_table(runtime,
                           selections=choices, pipeline_id="mixed-orders", context=context, spark_session=spark_session)
     source = read(plan, spark_session)
     customer = run_pipeline_operation(orchestrate_read, plan=plan, **customers, spark_session=spark_session,
-                               grain_discovery_enabled=False, frequency_enabled=False, verbose=False)
+                                 verbose=False)
     output = spark_session.createDataFrame([(None,)], "id long") if coverage == "source_only" else source["dataframe"]
     result = run_pipeline_operation(orchestrate_write, output, plan=plan, sources=[source, customer], **TARGET,
-                               write_mode="overwrite", grain_discovery_enabled=False, frequency_enabled=False,
+                               write_mode="overwrite",
                                verbose=False, spark_session=spark_session)
     finalized = finalize_pipeline(plan)
     assert finalized["status"] == "incomplete"

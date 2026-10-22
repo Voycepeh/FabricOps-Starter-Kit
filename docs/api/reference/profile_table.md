@@ -192,9 +192,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:1095`
+`fabricops_kit/pipeline/profile_table.py:8`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1095-L1473">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L8-L192">View on GitHub</a>
 </div>
 
 
@@ -236,7 +236,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 72 |
+| Live-critical dependencies | 74 |
 
 ### Release history
 
@@ -285,37 +285,39 @@ distinct snapshot identity.
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._audit_literal_columns</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._automatic_frequency_columns</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._catalogue_dataframe_from_profiled</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._delete_profile_snapshot</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._key_candidate_evidence</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._key_candidate_payload</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._profile_snapshot_id</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._replace_frequency_rows</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._replace_snapshot_rows</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._scalar_frequency_columns</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._selected_frequency_columns</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._spark_profile_key_candidates</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._sql_identifier</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._sql_string</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._stage_catalogue_profile_retry</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._upsert_catalogue_identities</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._warehouse_columns</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._warehouse_frequency_query</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._warehouse_percentile_query</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._warehouse_profile_dataframes</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._warehouse_profile_key_candidates</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._warehouse_statistical_dataframe</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._warehouse_statistical_query</code></li>
-<li><code>fabricops_kit.pipeline.profile_table._warehouse_type_name</code></li>
+<li><code>fabricops_kit.pipeline.shared._audit_literal_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared._automatic_frequency_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared._canonical_profiled_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled</code></li>
+<li><code>fabricops_kit.pipeline.shared._delete_profile_snapshot</code></li>
+<li><code>fabricops_kit.pipeline.shared._frequency_metadata_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared._key_candidate_evidence</code></li>
+<li><code>fabricops_kit.pipeline.shared._key_candidate_payload</code></li>
+<li><code>fabricops_kit.pipeline.shared._persist_grain_candidates</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
+<li><code>fabricops_kit.pipeline.shared._profile_snapshot_id</code></li>
+<li><code>fabricops_kit.pipeline.shared._replace_frequency_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared._replace_snapshot_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
+<li><code>fabricops_kit.pipeline.shared._scalar_frequency_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared._selected_frequency_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared._spark_profile_key_candidates</code></li>
+<li><code>fabricops_kit.pipeline.shared._sql_identifier</code></li>
+<li><code>fabricops_kit.pipeline.shared._sql_string</code></li>
+<li><code>fabricops_kit.pipeline.shared._stage_catalogue_profile_retry</code></li>
+<li><code>fabricops_kit.pipeline.shared._upsert_catalogue_identities</code></li>
+<li><code>fabricops_kit.pipeline.shared._warehouse_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared._warehouse_frequency_query</code></li>
+<li><code>fabricops_kit.pipeline.shared._warehouse_percentile_query</code></li>
+<li><code>fabricops_kit.pipeline.shared._warehouse_profile_dataframes</code></li>
+<li><code>fabricops_kit.pipeline.shared._warehouse_profile_key_candidates</code></li>
+<li><code>fabricops_kit.pipeline.shared._warehouse_statistical_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared._warehouse_statistical_query</code></li>
+<li><code>fabricops_kit.pipeline.shared._warehouse_type_name</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared.execute_table_profile</code></li>
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>

@@ -6,10 +6,10 @@ from fabricops_kit.pipeline.check_grain import check_grain
 from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
-from fabricops_kit.pipeline.profile_table import profile_table
 from fabricops_kit.pipeline.shared import (
     ExecutionSummary,
     current_pipeline_session,
+    schedule_table_profiling,
     PipelineOperation,
     execution_result,
     _run_orchestration_stage,
@@ -20,7 +20,7 @@ from fabricops_kit.pipeline.shared import (
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 
 
-def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = "full", query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, verbose: bool = False, dq_diagnostics: str = "sample") -> dict[str, Any]:
+def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = "full", query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = "sample") -> dict[str, Any]:
     """Read a source using the active pipeline's contracts and runtime.
 
     Define store, schema, table_name and any full/incremental/query options.
@@ -30,6 +30,9 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     exact DataFrame lineage. Live blocks failed checks; Test never commits.
     target_table_id preserves incremental checkpoint and SCD processing support.
     dq_diagnostics accepts sample, none or full for explicit debugging.
+
+    Profiling uses independent shared Table ID schedules and scans the complete
+    persisted table. Guardrail checks run regardless of profiling eligibility.
 
     Parameters
     ----------
@@ -47,16 +50,6 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         Required target for incremental reads, also a participant in the plan.
     query : str, optional
         Read-only Warehouse query, supported for full reads only.
-    grain_discovery_enabled : bool
-        Discover candidate Grain keys during full-read profiling; contract Grain checks always run.
-    frequency_enabled : bool
-        Calculate optional frequency distributions during profiling.
-    grain_discovery_max_columns : int
-        Positive maximum width of a candidate key.
-    grain_discovery_max_candidates : int
-        Positive maximum retained candidates at the smallest valid key width.
-    frequency_top_n : int, optional
-        Maximum frequency values per column.
     verbose : bool
         Print concise stage outcomes and summary.
     dq_diagnostics : {"sample", "none", "full"}
@@ -87,12 +80,6 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         read_mode = str(read_mode or "").strip().lower()
         if read_mode not in {"full", "incremental"}:
             raise ValueError("read_mode must be 'full' or 'incremental'.")
-        for name, value in (
-            ("grain_discovery_max_columns", grain_discovery_max_columns),
-            ("grain_discovery_max_candidates", grain_discovery_max_candidates),
-        ):
-            if isinstance(value, bool) or not isinstance(value, int) or value < 1:
-                raise ValueError(f"{name} must be a positive integer.")
         if dq_diagnostics not in {"none", "sample", "full"}:
             raise ValueError("dq_diagnostics must be 'none', 'sample', or 'full'.")
         summary = ExecutionSummary("READ", verbose=verbose)
@@ -112,8 +99,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         execution_plan.results[:] = [row for row in execution_plan.results
                                     if row.get("table_id") != table_id or row.get("guardrail_type") not in read_types]
         names = ["Read", *[label for kind, label in labels if kind in active]]
-        if read_mode == "full":
-            names.append("Profile")
+        names.append("Profile")
         stages = []
         if verbose:
             print(f"FabricOps READ · {table_name} · {execution_plan.execution_mode.title()}")
@@ -139,10 +125,9 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         schema_result = run("Schema", lambda: check_schema(dataframe, table_id=table_id, spark_session=spark_session, verbose=False, context=context)) if "schema" in active else dict(skipped)
         grain_result = run("Grain", lambda: check_grain(dataframe, table_id=table_id, scope="read_full" if read_mode == "full" else "read_incremental_batch", spark_session=spark_session, verbose=False, context=context)) if "grain" in active else dict(skipped)
         dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, spark_session=spark_session, verbose=False, context=context, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
-        profile_identity = {} if source.get("is_query") else {"store": store, "schema": schema, "table_name": table_name}
-        profile = run("Profile", lambda: profile_table(verbose=False, dataframe=dataframe, **profile_identity, grain_discovery_enabled=grain_discovery_enabled, grain_discovery_max_columns=grain_discovery_max_columns, grain_discovery_max_candidates=grain_discovery_max_candidates, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, context=context, spark_session=spark_session)) if read_mode == "full" else dict(skipped, reason="Incremental batch")
+        profile = run("Profile", lambda: schedule_table_profiling(table_id, "read", context=context, spark_session=spark_session))
 
-        if metrics["rows_read"] is None and read_mode == "full":
+        if metrics["rows_read"] is None and read_mode == "full" and not source.get("is_query"):
             metrics["rows_read"] = profile.get("row_count")
         duration = summary.finish([
             ("Source", ".".join(str(part) for part in (store, schema, table_name) if part)),

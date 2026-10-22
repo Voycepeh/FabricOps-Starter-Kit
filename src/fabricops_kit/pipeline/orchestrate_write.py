@@ -8,11 +8,11 @@ from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
 from fabricops_kit.pipeline.check_source_drift import check_source_drift
 from fabricops_kit.pipeline.pipeline_write import pipeline_write
-from fabricops_kit.pipeline.profile_table import profile_table
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 from fabricops_kit.pipeline.shared import (
     ExecutionSummary,
     current_pipeline_session,
+    schedule_table_profiling,
     PipelineOperation,
     execution_result,
     tested_contract_identities,
@@ -24,7 +24,7 @@ from fabricops_kit.pipeline.shared import (
 )
 
 
-def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping=None, verbose: bool = False, dq_diagnostics: str = "sample") -> dict[str, Any]:
+def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping=None, verbose: bool = False, dq_diagnostics: str = "sample") -> dict[str, Any]:
     """Evaluate or publish a target using the active pipeline's runtime.
 
     Define the dataframe, destination, write_mode and processing parameters.
@@ -35,6 +35,9 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     Advanced repartitioning, Sensitive Data mapping and DQ diagnostics remain
     available. The result includes publication metrics and Guardrail diagnostics.
     A successful Write does not imply successful completion of the notebook.
+
+    Profiling uses independent shared Table ID schedules and scans the complete
+    persisted table. Guardrail checks run regardless of profiling eligibility.
 
     Parameters
     ----------
@@ -58,16 +61,6 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
         during evaluation-only Testing and reused/updated during Live writes. Failures release the cache.
     repartition_by : int, optional
         Physical write partition count for Live.
-    grain_discovery_enabled : bool
-        Discover candidate Grain keys during persisted-target profiling; governed checks always run.
-    frequency_enabled : bool
-        Calculate optional frequency distributions during profiling.
-    grain_discovery_max_columns : int
-        Positive maximum width of a candidate key.
-    grain_discovery_max_candidates : int
-        Positive maximum retained candidates at the smallest valid key width.
-    frequency_top_n : int, optional
-        Maximum frequency rows per column.
     verbose : bool
         Print concise stages and outcome when True; the execution widget reports automatically by default.
     dq_diagnostics : {"sample", "none", "full"}
@@ -98,12 +91,6 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     arguments = {key: value for key, value in locals().items() if key not in {"session"}}
     with PipelineOperation(execution_plan, "target", arguments) as operation:
         sources = operation.arguments["sources"]
-        for name, value in (
-            ("grain_discovery_max_columns", grain_discovery_max_columns),
-            ("grain_discovery_max_candidates", grain_discovery_max_candidates),
-        ):
-            if isinstance(value, bool) or not isinstance(value, int) or value < 1:
-                raise ValueError(f"{name} must be a positive integer.")
         if dq_diagnostics not in {"none", "sample", "full"}:
             raise ValueError("dq_diagnostics must be 'none', 'sample', or 'full'.")
         summary = ExecutionSummary("WRITE", verbose=verbose)
@@ -183,8 +170,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                                 "dry_run": {"status": "blocked", "reason": str(exc), "fully_evaluated": [],
                                             "simulated": [], "not_verified": ["target preparation and publication"]}}
                 dry_run = run("Processing", evaluate_processing)
-                profile = profile_table(verbose=False, dataframe=prepared, frequency_enabled=frequency_enabled,
-                                        frequency_top_n=frequency_top_n, context=context, spark_session=spark_session)
+                profile = {"status": "skipped", "reason": "Test did not publish a persisted target"}
                 passed = all(item["can_continue"] for item in source_checks) and all(stage["status"] != "blocked" for stage in [
                     *stages, *(stage for source in sources for stage in source.get("orchestration_stages", []))
                 ])
@@ -207,7 +193,8 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
             metrics.setdefault("input_columns", len(columns) if columns is not None else None)
             summary.details([("Strategy", strategy.title()), ("Target", target), ("Rows committed", metrics["rows_committed"]), ("Columns", metrics["input_columns"])])
             try:
-                profile = run("Profile", lambda: profile_table(verbose=False, table_id=write_result["table_id"], grain_discovery_enabled=grain_discovery_enabled, grain_discovery_max_columns=grain_discovery_max_columns, grain_discovery_max_candidates=grain_discovery_max_candidates, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, context=context, spark_session=spark_session))
+                profile = (run("Profile", lambda: schedule_table_profiling(write_result["table_id"], "write", context=context, spark_session=spark_session))
+                           if published else {"status": "skipped", "reason": "No successful publication"})
             except RuntimeError as exc:
                 exc.published = published
                 exc.table_id = write_result["table_id"]
@@ -219,7 +206,8 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                 if verbose:
                     print(message)
                 raise
-            metrics["total_target_rows"] = profile.get("row_count")
+            if profile.get("row_count") is not None:
+                metrics["total_target_rows"] = profile["row_count"]
             fields = [("Target", target), ("Strategy", strategy.title()), ("Published", "Yes" if published else "No"), ("Publication", publication_status.replace("_", " ")), ("Rows committed", metrics["rows_committed"])]
             if strategy == "scd1":
                 fields.extend((label, metrics[key]) for label, key in (("Rows inserted", "rows_inserted"), ("Rows updated", "rows_updated"), ("Rows unchanged", "rows_unchanged")))
