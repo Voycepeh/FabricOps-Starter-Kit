@@ -147,3 +147,35 @@ def test_status_and_preview_regions_reserve_bounded_space(monkeypatch):
     assert preview.layout.height == "180px"
     assert preview.layout.overflow == "auto"
     assert preview.layout.min_width == "0"
+
+
+def test_optional_custom_dropdown_starts_blank_and_required_keeps_default(monkeypatch):
+    """Optional configured dropdowns should not silently save the first option."""
+
+    class Dropdown:
+        def __init__(self, options, value=None, **kwargs):
+            self.options = options
+            self.value = value
+
+    widgets = types.SimpleNamespace(Dropdown=Dropdown, Layout=lambda **kwargs: kwargs)
+    monkeypatch.setattr(shared, "require_ipywidgets", lambda: widgets)
+
+    fields = shared.render_custom_fields(
+        [
+            {"key": "optional", "type": "dropdown", "required": False, "options": ["ODI", "Faculty"]},
+            {
+                "key": "defaulted",
+                "type": "dropdown",
+                "required": False,
+                "options": ["ODI", "Faculty"],
+                "default": "Faculty",
+            },
+            {"key": "required", "type": "dropdown", "required": True, "options": ["ODI", "Faculty"]},
+        ]
+    )
+
+    assert fields["optional"].value == ""
+    assert fields["optional"].options[0] == ("Select an option", "")
+    assert fields["defaulted"].value == "Faculty"
+    assert fields["required"].value == "ODI"
+    assert fields["required"].options == ["ODI", "Faculty"]

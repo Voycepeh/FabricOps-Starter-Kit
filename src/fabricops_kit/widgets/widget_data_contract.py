@@ -5391,11 +5391,11 @@ def widget_data_contract(
         discard_contract_button = None
         if editable:
             save_contract_button = widgets.Button(
-                description="Save and exit",
+                description="Save and clear",
                 button_style="primary",
             )
             discard_contract_button = widgets.Button(
-                description="Discard changes",
+                description="Discard and clear",
                 button_style="danger",
             )
             pending_engineering_review = any(
@@ -5503,6 +5503,7 @@ def widget_data_contract(
             def discard_contract_clicked(_button: Any) -> None:
                 try:
                     discard_data_contract_session()
+                    return_to_selector("Unsaved changes discarded. Select a governed table and contract.")
                 except (ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
 

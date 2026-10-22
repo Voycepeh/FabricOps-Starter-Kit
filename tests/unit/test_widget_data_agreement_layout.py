@@ -121,16 +121,44 @@ def test_agreement_form_has_meaningful_groups_and_fabric_safe_status(monkeypatch
     ):
         assert label in text
     assert "Approved usage</" not in text
+    assert "Save result" not in text
+    assert "Custom columns" in text
     assert {key: (box.description, box.value) for key, box in controls["approved_usage_checkboxes"].items()} == {
         "internal cross domain": ("Internal Cross Domain", False),
         "internal single domain": ("Internal Single Domain", False),
         "research": ("Research", False),
         "external": ("External", False),
     }
+    assert controls["save_button"].description == "Save and clear"
+    assert controls["discard_button"].description == "Discard and clear"
     assert controls["save_button"].click_callbacks
+    assert controls["discard_button"].click_callbacks
     assert controls["existing_record"].callbacks
     assert "execution_output" not in controls
     assert "execution_log_section" not in controls
+
+
+def test_agreement_discard_and_clear_does_not_save(monkeypatch):
+    """Discard agreement edits without appending an agreement version."""
+    writes = []
+    monkeypatch.setattr(
+        agreement_widget,
+        "_create_or_update_data_agreement",
+        lambda **kwargs: writes.append(kwargs),
+    )
+    controls = _render(monkeypatch)
+    controls["fields"]["agreement_name"].value = "Unsaved agreement"
+    controls["custom_fields"]["consumer_group"].value = "ODI"
+    controls["approved_usage_checkboxes"]["research"].value = True
+
+    controls["discard_button"].click_callbacks[0](None)
+
+    assert writes == []
+    assert controls["fields"]["agreement_name"].value == ""
+    assert controls["custom_fields"]["consumer_group"].value == ""
+    assert not any(box.value for box in controls["approved_usage_checkboxes"].values())
+    assert len(controls["supporting_documents"]) == 1
+    assert "discarded" in controls["status"].value.lower()
 
 
 def test_save_preserves_emitted_lakehouse_output_and_restores_button(monkeypatch, capsys):
@@ -196,8 +224,8 @@ def test_agreement_save_validation_error_stays_in_status_and_later_success_recov
     assert "expiry_date must be on or after start_date" not in controls["status"].value
     assert callbacks == [controls["existing_records_by_id"]["33333333-3333-4333-8333-333333333333"]]
     assert refreshes[-1][1] == "33333333-3333-4333-8333-333333333333"
-    assert controls["existing_record"].value == "33333333-3333-4333-8333-333333333333"
-    assert "Agreement ID: 33333333-3333-4333-8333-333333333333" in controls["identity_context"].value
+    assert controls["existing_record"].value == ""
+    assert controls["identity_context"].value == "Agreement ID and version are generated when saved."
 
 
 def test_steward_form_uses_simplified_visible_layout(monkeypatch):
@@ -207,8 +235,8 @@ def test_steward_form_uses_simplified_visible_layout(monkeypatch):
 
     for label in (
         "Data Steward", "Create or update data stewards", "Steward selection",
-        "Steward details", "Additional information",
-        "Select or create steward", "Save steward",
+        "Steward details", "Custom columns",
+        "Select or create steward", "Save and clear", "Discard and clear",
     ):
         assert label in text
     for removed in (
@@ -220,12 +248,38 @@ def test_steward_form_uses_simplified_visible_layout(monkeypatch):
         assert removed not in text
     assert "Optional" not in text
     assert controls["existing_record_search"].placeholder == "Search stewards..."
-    assert controls["save_button"].description == "Save steward"
+    assert controls["save_button"].description == "Save and clear"
+    assert controls["discard_button"].description == "Discard and clear"
     assert controls["save_button"].click_callbacks
+    assert controls["discard_button"].click_callbacks
     assert controls["container"].layout.kwargs["height"] == "720px"
     assert controls["container"].layout.kwargs["overflow"] == "auto"
     assert "execution_output" not in controls
     assert "execution_log_section" not in controls
+
+
+def test_steward_discard_and_clear_does_not_write(monkeypatch):
+    """Discarding form edits clears them without persisting a steward."""
+    writes = []
+    monkeypatch.setattr(
+        steward_widget,
+        "_create_or_update_data_steward",
+        lambda **kwargs: writes.append(kwargs),
+    )
+    controls = _render_steward(monkeypatch)
+    controls["fields"]["steward_name"].value = "Unsaved steward"
+    controls["fields"]["contact"].value = "unsaved@example.com"
+    controls["custom_fields"]["group"].value = "Unsaved group"
+    controls["existing_record"].value = "11111111-1111-4111-8111-111111111111"
+
+    controls["discard_button"].click_callbacks[0](None)
+
+    assert writes == []
+    assert controls["existing_record"].value == ""
+    assert controls["fields"]["steward_name"].value == ""
+    assert controls["fields"]["contact"].value == ""
+    assert controls["custom_fields"]["group"].value == ""
+    assert "discarded" in controls["status"].value.lower()
 
 
 def test_steward_additional_information_renders_only_for_custom_fields(monkeypatch):
@@ -233,7 +287,7 @@ def test_steward_additional_information_renders_only_for_custom_fields(monkeypat
     controls = _render_steward(monkeypatch, custom_fields=[])
     text = _visible_text(controls["container"])
 
-    assert "Additional information" not in text
+    assert "Custom columns" not in text
     assert controls["custom_fields"] == {}
 
 

@@ -138,7 +138,8 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
     if isinstance(callbacks, list) and callbacks:
         callbacks.insert(0, callbacks.pop())
 
-    save = widgets.Button(description="Save steward", button_style="primary")
+    save = widgets.Button(description="Save and clear", button_style="primary")
+    discard = widgets.Button(description="Discard and clear", button_style="danger")
     status = status_message(widgets)
     required_labels = {
         "steward_name": "Steward name",
@@ -155,6 +156,13 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
 
     def _sync_save_state(*_: Any) -> None:
         save.disabled = bool(_missing_required({key: widget.value for key, widget in form.items()}))
+
+    def _reset_form_fields() -> None:
+        selected.value = ""
+        for key, widget in form.items():
+            _apply_widget_value(widget, None if key in {"effective_from", "effective_to"} else "")
+        for widget in custom.values():
+            _apply_widget_value(widget, False if isinstance(widget.value, bool) else "")
 
     for widget in form.values():
         widget.observe(_sync_save_state, names="value")
@@ -182,8 +190,10 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
             _refresh_existing_options(row["steward_id"])
             for callback in after_save_callbacks:
                 callback(row)
-            status.value = f"Data steward saved successfully: {row.get('steward_name', '')}"
-            print(f"Saved data steward: {row.get('steward_name', '')} ({row['steward_id']})")
+            saved_name = row.get("steward_name", "")
+            _reset_form_fields()
+            status.value = f"Data steward saved successfully: {saved_name}. Form cleared."
+            print(f"Saved data steward: {saved_name} ({row['steward_id']})")
         except Exception as exc:
             status.value = f"Data steward was not saved: {exc}"
             print(f"Error: {exc}")
@@ -191,6 +201,13 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
             _sync_save_state()
 
     save.on_click(_save)
+
+    def _discard_and_clear(_: Any) -> None:
+        _reset_form_fields()
+        status.value = "Unsaved steward changes discarded. Form cleared."
+        _sync_save_state()
+
+    discard.on_click(_discard_and_clear)
     detail_fields = [form[field] for field in fields]
     selection_section = form_section(
         widgets, title="Steward selection", children=[selected_selector["container"]]
@@ -203,11 +220,11 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
         supporting_sections.append(
             form_section(
                 widgets,
-                title="Additional information",
+                title="Custom columns",
                 children=[form_grid(widgets, custom.values())],
             )
         )
-    actions = action_row(widgets, [save])
+    actions = action_row(widgets, [discard, save])
     container = form_page(
         widgets,
         title="Data Steward", tone="governance",
@@ -215,7 +232,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
         children=[selection_section, details_section, *supporting_sections, actions, status],
     )
     ip.display(container)
-    return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": None, "fields": form, "custom_fields": custom, "refresh_stewards_button": None, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": None, "after_save_callbacks": after_save_callbacks, "save_button": save, "status": status}
+    return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": None, "fields": form, "custom_fields": custom, "refresh_stewards_button": None, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": None, "after_save_callbacks": after_save_callbacks, "save_button": save, "discard_button": discard, "status": status}
 
 
 def _generate_steward_id() -> str:
