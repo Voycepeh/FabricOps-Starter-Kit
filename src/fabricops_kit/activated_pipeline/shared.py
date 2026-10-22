@@ -87,13 +87,16 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
     """Revalidate committed complete Testing evidence independently of any widget."""
     config, env, runtime = resolve_fabric_context(context=context)
     run = exact_record(metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session), run_id=testing_run_id)
-    if run.get("execution_mode") != "testing" or run.get("status") != "succeeded" or not run.get("completed_at"):
-        raise ValueError("Activation requires a complete successful Testing run; Bootstrap and partial results cannot authorize it.")
     if run.get("environment_name") != env:
         raise ValueError("Testing evidence must cover the activation environment; other environments are isolated.")
     candidate = json.loads(run["candidate_json"])
     if not candidate_fingerprint or candidate_fingerprint != run.get("candidate_fingerprint") or manifest_digest(candidate) != candidate_fingerprint:
         raise ValueError("Exact tested candidate fingerprint mismatch.")
+    missing = sorted(item["table_id"] for item in candidate["participants"] if item.get("contract") is None)
+    if missing:
+        raise ValueError("Activation requires an exact frozen contract for every source and target. Missing contracts for table IDs: " + ", ".join(missing))
+    if run.get("execution_mode") != "testing" or run.get("status") != "succeeded" or not run.get("completed_at"):
+        raise ValueError("Activation requires a complete successful Testing run; Bootstrap and partial results cannot authorize it.")
     summary = json.loads(run["operation_summary_json"])
     operations = summary["operations"]
     expected = {f"{role}:{item['participant']}" for item in candidate["participants"] for role in item["roles"]}
@@ -111,11 +114,12 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
     contracts = metadata_records("METADATA_DATA_CONTRACT", context={**runtime, "config": config, "env": run["environment_name"]}, spark_session=spark_session)
     definitions, identities, frozen = [], {}, {}
     refs = {item["participant"]: item["contract"] for item in summary["frozen_contracts"]}
+    missing = sorted(item["table_id"] for item in candidate["participants"] if not refs.get(item["participant"]))
+    if missing:
+        raise ValueError("Activation requires an exact frozen contract for every source and target. Missing contracts for table IDs: " + ", ".join(missing))
     for participant in candidate["participants"]:
         logical = participant["participant"]
-        ref = refs.get(logical)
-        if not ref:
-            raise ValueError("Activation requires an exact frozen contract for every source and target.")
+        ref = refs[logical]
         contract = exact_record(contracts, contract_id=ref["contract_id"], contract_version=ref["contract_version"])
         if contract.get("status") != "frozen" or hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() != ref["payload_sha256"]:
             raise ValueError("Frozen contract changed since Testing.")

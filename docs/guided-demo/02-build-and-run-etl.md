@@ -4,7 +4,7 @@
 
 Declare `PIPELINE_SOURCES` and `PIPELINE_TARGETS` before calling `setup_pipeline()` and keep them aligned with every participating Read and Write. Historical `METADATA_DATA_LINEAGE` cannot authorize unrelated tables. Pass the same execution plan to all operations and execute all reads, transformations and writes before calling `finalize_pipeline(plan)` for whole-run completion, including read-only pipelines.
 
-Start with **Testing**. Choose any frozen version for every participant, or No Contract for all tables for exploration. Partial selection is rejected. Explicit `testing_writes=True` permits real publication to reviewed safe destinations; Live-owned destinations are blocked. Otherwise Testing evaluates without publication.
+Start with **Testing**. Choose a frozen version or No Contract independently for each participant. Mixed coverage is valid; only selected contracts supply Guardrails. Explicit `testing_writes=True` permits real publication to reviewed safe destinations; Live-owned destinations are blocked. Otherwise Testing evaluates without publication.
 
 Complete **Author → Test → Activate → Live**. [Step 5](05-activate-data-contract-and-promote.md) reviews the complete affected release and publishes a coordinated environment revision. Headless Live resolves that revision automatically. Deployment stays separate. Start a new plan after changing configuration or contract selections.
 
@@ -41,7 +41,7 @@ The notebook follows one visible lifecycle:
 | --- | --- |
 | Environment | Loads the shared Fabric configuration and imports the public functions used by the pipeline. |
 | Setup Pipeline | Initializes context and resolves environment authority. |
-| Data Contract Configuration | Defaults to interactive **Testing**; choose all frozen contracts or No Contract for every participant. |
+| Data Contract Configuration | Defaults to interactive **Testing**; choose a frozen version or No Contract independently for each participant. |
 | Governed Read | Reads each configured source and runs the applicable source checks. |
 | PySpark Transform | Contains the joins, filters, derived columns, aggregations, or selections owned by your project. |
 | Governed Write | Checks and, when allowed, publishes each target using its configured load strategy. |
@@ -77,7 +77,7 @@ CONTRACTS = setup_pipeline(
 EXECUTION_PLAN = CONTRACTS["build_plan"]() if CONTRACT_TESTING else CONTRACTS
 ```
 
-Select every frozen contract or No Contract for all tables, then build the shared plan. Run each Read, Transform and Write directly in its dedicated cell, then call `finalize_pipeline(EXECUTION_PLAN)`. Individual successful operations cannot complete a pipeline. Read-only runs also require finalization. A stopped notebook remains incomplete; record caught project exceptions with `finalize_pipeline(EXECUTION_PLAN, failed=True)`.
+Explicitly select a frozen contract or No Contract for each table, then build the shared plan. Run each Read, Transform and Write directly in its dedicated cell, then call `finalize_pipeline(EXECUTION_PLAN)`. Individual successful operations cannot complete a pipeline. Read-only runs also require finalization. A stopped notebook remains incomplete; record caught project exceptions with `finalize_pipeline(EXECUTION_PLAN, failed=True)`.
 
 Supply a stable `pipeline_id` and external transformation configuration. FabricOps governs Data Contracts; Engineering and Microsoft Fabric own code integrity and deployment. Explicit real Testing writes require reviewed safe destinations; they can produce real data and ordinary metadata side effects. Headless Testing sets `interactive=False` and may supply saved exact selections. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#whole-run-completion).
 

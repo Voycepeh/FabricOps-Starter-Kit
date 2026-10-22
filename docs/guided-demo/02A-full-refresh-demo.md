@@ -29,7 +29,7 @@ Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite 
 | --- | --- |
 | Environment | Loads the shared Fabric configuration and imports the functions used by this demo. |
 | Setup Pipeline | Initialize context, declare participants and start execution tracking. |
-| Data Contract Configuration | Choose all exact frozen versions or No Contract for all tables in Testing. |
+| Data Contract Configuration | Choose an exact frozen version or No Contract independently for each table in Testing. |
 | Governed Read | Reads Orders, Products, and Order History in full. |
 | PySpark Transform | Produces detailed orders and a customer summary. |
 | Governed Write | Overwrites a Silver Lakehouse target and a Gold Warehouse target. |

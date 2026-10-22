@@ -3,6 +3,7 @@
 from contextlib import nullcontext
 from types import SimpleNamespace
 import importlib
+import hashlib
 import json
 from dataclasses import FrozenInstanceError
 from unittest.mock import Mock
@@ -268,9 +269,13 @@ def test_mixed_relationship_respects_explicit_no_contract(runtime, spark_session
                 selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders")
         assert_testing_mutations_are_diagnostics_only(spies)
         return
-    with pytest.raises(ValueError, match="Partial contract selection"):
-        setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
-                       selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders")
+    plan = setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
+                          selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders")
+    source = read(plan, spark_session)
+    result = write(plan, source, spark_session)
+    assert result["validation_passed"] and not result["published"]
+    assert {row["table_id"] for row in plan.results} == {contracted_id}
+    assert len(plan.results) == 2
     assert_testing_mutations_are_diagnostics_only(spies)
 
 
@@ -354,9 +359,15 @@ def test_no_contract_target_does_not_exempt_failed_source_checks(runtime, spark_
                 selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders")
         assert_testing_mutations_are_diagnostics_only(spies)
         return
-    with pytest.raises(ValueError, match="Partial contract selection"):
-        setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
-                       selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders")
+    plan = setup_pipeline(interactive=False, execution_mode=mode, sources=[SOURCE], targets=[TARGET],
+                          selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders")
+    bad = spark_session.createDataFrame([(None,)], "id long")
+    monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: bad)
+    source = read(plan, spark_session)
+    result = write(plan, source, spark_session)
+    assert not result["validation_passed"] and not result["published"]
+    assert {row["table_id"] for row in plan.results} == {SOURCE_ID}
+    assert shared.finalize_pipeline_run(plan)["status"] == "failed"
     assert_testing_mutations_are_diagnostics_only(spies)
 
 
@@ -540,3 +551,42 @@ def test_explicit_real_testing_write_uses_the_actual_publication_path(runtime, s
     assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 1
     assert plan.run_result["status"] == "succeeded"
     assert json.loads(plan.run_result["operation_summary_json"])["testing_writes"] is True
+
+
+@pytest.mark.parametrize("coverage", ["all", "none", "mixed", "source_only"])
+def test_independent_contract_coverage_executes_and_records_every_table(runtime, spark_session, coverage):
+    """Three participants retain exact choices and enforce only selected payloads."""
+    from fabricops_kit import finalize_pipeline
+
+    _, rows, spies, context = runtime
+    customers = {**SOURCE, "table_name": "customers"}
+    customers_id = shared.resolve_physical_table_identity(context["config"], "dev", **customers)["table_id"]
+    rows.extend([frozen(SOURCE_ID), frozen(customers_id), frozen(TARGET_ID, version=2)])
+    selected = {SOURCE_ID, customers_id, TARGET_ID} if coverage == "all" else (
+        {SOURCE_ID, TARGET_ID} if coverage == "mixed" else {SOURCE_ID} if coverage == "source_only" else set())
+    choices = {row["table_id"]: {"contract_id": row["contract_id"], "contract_version": row["contract_version"]}
+               if row["table_id"] in selected else {"no_contract": True} for row in rows}
+    plan = setup_pipeline(sources=[SOURCE, customers], targets=[TARGET], interactive=False,
+                          selections=choices, pipeline_id="mixed-orders", context=context, spark_session=spark_session)
+    source = read(plan, spark_session)
+    customer = orchestrate_read(execution_plan=plan, **customers, spark_session=spark_session,
+                               grain_discovery_enabled=False, frequency_enabled=False, verbose=False)
+    output = spark_session.createDataFrame([(None,)], "id long") if coverage == "source_only" else source["dataframe"]
+    result = orchestrate_write(output, execution_plan=plan, sources=[source, customer], **TARGET,
+                               write_mode="overwrite", grain_discovery_enabled=False, frequency_enabled=False,
+                               verbose=False, spark_session=spark_session)
+    finalized = finalize_pipeline(plan)
+    assert finalized["status"] == ("succeeded" if selected else "ungoverned_completed")
+    assert not result["published"] and result["validation_passed"]
+    assert json.loads(plan.selections_json) == choices
+    bindings = json.loads(finalized["operation_summary_json"])["frozen_contracts"]
+    assert {item["table_id"] for item in bindings} == set(choices)
+    for item in bindings:
+        table_id = item["table_id"]
+        assert item["contract"] == (None if table_id not in selected else {
+            **choices[table_id], "payload_sha256": hashlib.sha256(
+                next(row for row in rows if row["table_id"] == table_id)["contract_payload_json"].encode()).hexdigest()})
+    assert {row["table_id"] for row in plan.results} == selected
+    assert all(row["contract_id"] == choices[row["table_id"]]["contract_id"] for row in plan.results)
+    assert len(plan.results) == 2 * len(selected)
+    assert_testing_mutations_are_diagnostics_only(spies)

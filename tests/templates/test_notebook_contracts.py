@@ -207,7 +207,8 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "immutable data contract" in normalized["step_3"]
 
     assert "# step 4. test the frozen data contracts" in normalized["step_4"]
-    assert "select an eligible frozen version independently" in normalized["step_4"]
+    assert "select an eligible frozen version or no contract independently" in normalized["step_4"]
+    assert "activation eligibility requires a valid frozen contract for every participating table" in normalized["step_4"]
     assert "02A_full_refresh_demo.ipynb" in step_4
     assert "selection does not edit or activate" in normalized["step_4"]
     assert "pipeline-wide switch in red **testing**" in normalized["step_4"]
