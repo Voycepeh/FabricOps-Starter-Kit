@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from html import escape
 import json
 from typing import Any
 import uuid
@@ -314,6 +315,10 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
                 custom_fields=collect_custom_fields(widget_config, custom),
                 active_steward_ids=active_steward_ids,
             )
+        except Exception as exc:
+            _set_status(f"Error: {exc}", error=True)
+        else:
+            warnings: list[str] = []
             if row.get("_fabricops_no_change"):
                 saved_message = str(row.get("_fabricops_message", "No changes detected."))
             else:
@@ -322,14 +327,26 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
                     f"({row['agreement_id']} v{row['agreement_version']})."
                 )
                 for callback in after_save_callbacks:
-                    callback(row)
+                    try:
+                        callback(row)
+                    except Exception as exc:
+                        warnings.append(f"post-save callback failed: {exc}")
             row_lookup[row["agreement_id"]] = row
-            selected.refresh_rows(list(row_lookup.values()), row["agreement_id"])
-            identity_context.value = _agreement_identity_text(row)
-            _reset_form_fields()
-            _set_status(f"{saved_message} Form cleared.")
-        except Exception as exc:
-            _set_status(f"Error: {exc}", error=True)
+            try:
+                selected.refresh_rows(list(row_lookup.values()), row["agreement_id"])
+            except Exception as exc:
+                warnings.append(f"agreement list refresh failed: {exc}")
+            form_cleared = True
+            try:
+                _reset_form_fields()
+            except Exception as exc:
+                form_cleared = False
+                warnings.append(f"form could not be cleared: {exc}")
+            if form_cleared:
+                saved_message += " Form cleared."
+            if warnings:
+                saved_message += f" Post-save warning: {escape('; '.join(warnings))}."
+            _set_status(saved_message)
         finally:
             save.disabled = len(active_steward_ids) < 2
 
