@@ -106,10 +106,10 @@ def test_missing_contract_runs_show_diagnostics_but_cannot_be_reviewed(authority
     for table_id in missing:
         contracts[table_id] = None
     plan = replace(previous, plan_id=previous.plan_id + '-mixed', contracts_json=json.dumps(contracts), evidence={}, results=[])
-    pipeline.persist_pipeline_run(plan)
-    authority.operation(plan, 0)
-    authority.operation(plan, 1)
-    run = pipeline.finalize_pipeline_run(plan)
+    with plan:
+        authority.operation(plan, 0)
+        authority.operation(plan, 1)
+    run = plan.run_result
     assert run['status'] == ('succeeded' if len(missing) == 1 else 'ungoverned_completed')
     if not has_eligible_run:
         authority.saved.clear()
