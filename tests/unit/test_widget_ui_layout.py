@@ -147,3 +147,51 @@ def test_status_and_preview_regions_reserve_bounded_space(monkeypatch):
     assert preview.layout.height == "180px"
     assert preview.layout.overflow == "auto"
     assert preview.layout.min_width == "0"
+
+
+def test_optional_custom_dropdown_starts_blank_and_required_keeps_default(monkeypatch):
+    """Optional configured dropdowns should not silently save the first option."""
+
+    class Dropdown:
+        def __init__(self, options, value=None, **kwargs):
+            values = [
+                option[1] if isinstance(option, tuple) and len(option) == 2 else option
+                for option in options
+            ]
+            if value not in values:
+                raise ValueError("dropdown value must match an underlying option value")
+            self.options = options
+            self.value = value
+
+    widgets = types.SimpleNamespace(Dropdown=Dropdown, Layout=lambda **kwargs: kwargs)
+    monkeypatch.setattr(shared, "require_ipywidgets", lambda: widgets)
+
+    definitions = [
+        {"key": "optional", "type": "dropdown", "required": False, "options": ["ODI", "Faculty"]},
+        {
+            "key": "defaulted",
+            "type": "dropdown",
+            "required": False,
+            "options": ["ODI", "Faculty"],
+            "default": "Faculty",
+        },
+        {"key": "required", "type": "dropdown", "required": True, "options": ["ODI", "Faculty"]},
+    ]
+    fields = shared.render_custom_fields(definitions)
+
+    assert shared.collect_custom_fields(definitions, fields) == {
+        "optional": "",
+        "defaulted": "Faculty",
+        "required": "ODI",
+    }
+    assert fields["optional"].value == ""
+    assert fields["optional"].options[0] == ("Select an option", "")
+    assert fields["defaulted"].value == "Faculty"
+    assert fields["required"].value == "ODI"
+    assert fields["required"].options == [("Select an option", ""), "ODI", "Faculty"]
+    fields["required"].value = ""
+
+    empty_required = shared.render_custom_fields(
+        [{"key": "empty", "type": "dropdown", "required": True, "options": []}]
+    )
+    assert empty_required["empty"].value == ""

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from html import escape
 import json
 from typing import Any
 import uuid
@@ -189,7 +190,8 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         "At least two distinct active data stewards are required before an agreement can be saved. "
         "Create or reactivate another data steward, then select Refresh active stewards."
     )
-    save = widgets.Button(description="Save Agreement", button_style="primary")
+    save = widgets.Button(description="Save and clear", button_style="primary")
+    discard = widgets.Button(description="Discard and clear", button_style="danger")
     status = status_message(widgets)
 
     def _set_status(message: str, *, error: bool = False) -> None:
@@ -270,6 +272,24 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     if isinstance(callbacks, list) and callbacks:
         callbacks.insert(0, callbacks.pop())
 
+    def _reset_form_fields() -> None:
+        selected.value = ""
+        for key, widget in form.items():
+            value = None if key in {"start_date", "expiry_date"} else ""
+            _apply_widget_value(widget, value)
+        for widget in custom.values():
+            _apply_widget_value(widget, False if isinstance(widget.value, bool) else "")
+        supporting_document_rows.clear()
+        _add_document_row()
+        for checkbox in approved_usage_checkboxes.values():
+            checkbox.value = False
+        draft.clear()
+        identity_context.value = _agreement_identity_text(None)
+
+    def _discard_and_clear(_: Any) -> None:
+        _reset_form_fields()
+        _set_status("Unsaved agreement changes discarded. Form cleared.")
+
     def _save(_: Any) -> None:
         save.disabled = True
         status.value = ""
@@ -295,23 +315,43 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
                 custom_fields=collect_custom_fields(widget_config, custom),
                 active_steward_ids=active_steward_ids,
             )
-            if row.get("_fabricops_no_change"):
-                _set_status(str(row.get("_fabricops_message", "No changes detected.")))
-            else:
-                _set_status(
-                    f"Saved {row.get('agreement_name', '')} ({row['agreement_id']} v{row['agreement_version']})."
-                )
-                for callback in after_save_callbacks:
-                    callback(row)
-            row_lookup[row["agreement_id"]] = row
-            selected.refresh_rows(list(row_lookup.values()), row["agreement_id"])
-            identity_context.value = _agreement_identity_text(row)
         except Exception as exc:
             _set_status(f"Error: {exc}", error=True)
+        else:
+            warnings: list[str] = []
+            if row.get("_fabricops_no_change"):
+                saved_message = str(row.get("_fabricops_message", "No changes detected."))
+            else:
+                saved_message = (
+                    f"Saved {row.get('agreement_name', '')} "
+                    f"({row['agreement_id']} v{row['agreement_version']})."
+                )
+                for callback in after_save_callbacks:
+                    try:
+                        callback(row)
+                    except Exception as exc:
+                        warnings.append(f"post-save callback failed: {exc}")
+            row_lookup[row["agreement_id"]] = row
+            try:
+                selected.refresh_rows(list(row_lookup.values()), row["agreement_id"])
+            except Exception as exc:
+                warnings.append(f"agreement list refresh failed: {exc}")
+            form_cleared = True
+            try:
+                _reset_form_fields()
+            except Exception as exc:
+                form_cleared = False
+                warnings.append(f"form could not be cleared: {exc}")
+            if form_cleared:
+                saved_message += " Form cleared."
+            if warnings:
+                saved_message += f" Post-save warning: {escape('; '.join(warnings))}."
+            _set_status(saved_message)
         finally:
             save.disabled = len(active_steward_ids) < 2
 
     save.on_click(_save)
+    discard.on_click(_discard_and_clear)
     _update_steward_prerequisite()
     full_width_layout = widgets.Layout(width="100%", height="auto", overflow="visible")
     row_layout = widgets.Layout(
@@ -372,23 +412,12 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         widgets,
         title="Agreement scope or classification",
         children=[
-            checkbox_group(widgets, label="Approved usages", checkboxes=approved_usage_checkboxes.values()),
-            widgets.VBox(
-                [
-                    widgets.HTML(
-                        value=(
-                            '<div style="color:var(--form-accent);font-size:14px;font-weight:600;'
-                            'margin-bottom:4px;">Custom columns</div>'
-                        )
-                    ),
-                    form_grid(widgets, custom.values()),
-                ],
-                layout=widgets.Layout(
-                    width="100%", height="auto", overflow="visible",
-                    border="1px solid #dce4ed", padding="10px 12px",
-                ),
-            ) if custom else widgets.VBox([]),
+            checkbox_group(widgets, label="Approved usages", checkboxes=approved_usage_checkboxes.values())
         ],
+    )
+    custom_section = (
+        form_section(widgets, title="Custom columns", children=[form_grid(widgets, custom.values())])
+        if custom else None
     )
     selection_section = form_section(
         widgets,
@@ -396,18 +425,16 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         children=[selected_selector["container"], identity_context],
     )
     form_flow = widgets.VBox(
-        [selection_section, details_section, steward_section, supporting_section, scope_section],
+        [
+            selection_section, details_section, steward_section, supporting_section,
+            scope_section, *([custom_section] if custom_section is not None else []),
+        ],
         layout=full_width_layout,
     )
     actions = form_section(
         widgets,
         title="Save agreement",
-        children=[action_row(widgets, [save])],
-    )
-    result_section = form_section(
-        widgets,
-        title="Save result",
-        children=[status],
+        children=[action_row(widgets, [discard, save]), status],
     )
     container = form_page(
         widgets,
@@ -417,7 +444,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
             "and the governing conditions. Specific datasets and technical delivery terms are "
             "defined later through Data Contracts."
         ),
-        children=[form_flow, actions, result_section],
+        children=[form_flow, actions],
     )
     ip.display(container)
     return {
@@ -441,6 +468,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         "refresh_steward_options": _refresh_steward_dropdowns,
         "after_save_callbacks": after_save_callbacks,
         "save_button": save,
+        "discard_button": discard,
         "status": status,
     }
 
