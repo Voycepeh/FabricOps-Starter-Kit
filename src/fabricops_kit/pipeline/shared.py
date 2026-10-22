@@ -6147,6 +6147,8 @@ class PipelineSession:
         try:
             finalize_pipeline_run(self.plan, spark_session=self.spark, failed=failed)
         finally:
+            import atexit
+            atexit.unregister(self.close)
             self.closed = True
             self.sources.clear()
             for cache in (_CURRENT_SOURCE_OBSERVATIONS, _CURRENT_FRESHNESS_EVIDENCE,
@@ -6194,8 +6196,14 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None):
         plan.evidence["dynamic_participants"] = True
     session = PipelineSession(plan, spark, inspector=inspector)
     try:
-        from IPython import get_ipython
-        shell = get_ipython()
+        try:
+            from IPython import get_ipython
+        except ModuleNotFoundError as exc:
+            if exc.name != "IPython":
+                raise
+            shell = None
+        else:
+            shell = get_ipython()
         if shell is not None:
             from IPython import display as ip
             from fabricops_kit.widgets.shared import require_ipywidgets, form_page

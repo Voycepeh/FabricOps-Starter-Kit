@@ -223,3 +223,29 @@ def test_changed_frozen_payload_is_rejected_before_read(runtime, monkeypatch):
     with pytest.raises(RuntimeError, match='Frozen contract changed'):
         orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     assert session.closed and session.plan.run_result['status'] == 'failed'
+
+
+def test_headless_setup_works_without_optional_ipython(runtime, monkeypatch):
+    import builtins
+    original = builtins.__import__
+
+    def without_ipython(name, *args, **kwargs):
+        if name == 'IPython':
+            raise ModuleNotFoundError("No module named 'IPython'", name='IPython')
+        return original(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, '__import__', without_ipython)
+    session = setup_pipeline(pipeline_id='headless', pipeline_mode='Test')
+    assert shared.current_pipeline_session() is session
+    assert session.shell is None
+
+
+def test_closed_sessions_release_shutdown_callback(runtime, monkeypatch):
+    import atexit
+    register, unregister = Mock(), Mock()
+    monkeypatch.setattr(atexit, 'register', register)
+    monkeypatch.setattr(atexit, 'unregister', unregister)
+    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    register.assert_called_once_with(session.close)
+    session.close()
+    unregister.assert_called_once_with(session.close)

@@ -133,9 +133,50 @@ def test_agreement_form_has_meaningful_groups_and_fabric_safe_status(monkeypatch
     assert controls["discard_button"].description == "Discard and clear"
     assert controls["save_button"].click_callbacks
     assert controls["discard_button"].click_callbacks
+    assert controls["save_button"].disabled is True
     assert controls["existing_record"].callbacks
     assert "execution_output" not in controls
     assert "execution_log_section" not in controls
+
+
+def test_governance_save_sections_share_white_card_layout(monkeypatch):
+    """Keep the Steward and Agreement save controls in matching white cards."""
+    agreement = _render(monkeypatch)
+    steward = _render_steward(monkeypatch)
+    for controls, heading in ((agreement, "Save agreement"), (steward, "Save steward")):
+        actions = controls["container"].children[-1]
+        assert actions.layout.kwargs["border"] == "1px solid #dce4ed"
+        assert heading in actions.children[0].value
+        assert controls["status"] is actions.children[-1]
+
+
+def test_agreement_selector_shows_parties_and_dates_without_identity_details():
+    """Present business context in the latest agreement label."""
+    row = agreement_row(
+        agreement_id="33333333-3333-4333-8333-333333333333",
+        agreement_version="1.2.0",
+        provider_steward_name="Provider",
+        recipient_steward_name="Recipient",
+    )
+    label = agreement_widget._agreement_label(row)
+    assert label == "Orders Agreement — between Provider and Recipient — 2026-01-01 to 2026-12-31"
+    assert row["agreement_id"] not in label
+    assert row["agreement_version"] not in label
+
+
+def test_agreement_save_enables_only_after_required_inputs(monkeypatch):
+    """Require a complete agreement draft before enabling Save."""
+    controls = _render(monkeypatch)
+    assert controls["save_button"].disabled
+    for field, value in agreement_row().items():
+        if field in controls["fields"]:
+            controls["fields"][field].value = value
+    controls["approved_usage_checkboxes"]["internal cross domain"].value = True
+    controls["fields"]["agreement_name"].callbacks[-1]({"new": "Orders Agreement"})
+    assert not controls["save_button"].disabled
+    controls["fields"]["agreement_name"].value = ""
+    controls["fields"]["agreement_name"].callbacks[-1]({"new": ""})
+    assert controls["save_button"].disabled
 
 
 def test_agreement_discard_and_clear_does_not_save(monkeypatch):
@@ -175,7 +216,7 @@ def test_save_preserves_emitted_lakehouse_output_and_restores_button(monkeypatch
     controls["save_button"].click_callbacks[0](None)
 
     assert message in capsys.readouterr().out
-    assert controls["save_button"].disabled is False
+    assert controls["save_button"].disabled is True  # The form was cleared after saving.
 
 
 def test_agreement_save_validation_error_stays_in_status_and_later_success_recovers(monkeypatch, capsys):
@@ -213,19 +254,19 @@ def test_agreement_save_validation_error_stays_in_status_and_later_success_recov
     assert "cannot access local variable 'row'" not in controls["status"].value
     assert callbacks == []
     assert refreshes == []
-    assert controls["save_button"].disabled is False
+    assert controls["save_button"].disabled is True  # Required fields remain blank.
 
     controls["save_button"].click_callbacks[0](None)
 
     second_output = capsys.readouterr()
     assert second_output.out == ""
     assert second_output.err == ""
-    assert "Saved Orders Agreement (33333333-3333-4333-8333-333333333333 v1.0.0)." in controls["status"].value
+    assert "Saved Orders Agreement." in controls["status"].value
     assert "expiry_date must be on or after start_date" not in controls["status"].value
     assert callbacks == [controls["existing_records_by_id"]["33333333-3333-4333-8333-333333333333"]]
     assert refreshes[-1][1] == "33333333-3333-4333-8333-333333333333"
     assert controls["existing_record"].value == ""
-    assert controls["identity_context"].value == "Agreement ID and version are generated when saved."
+    assert "identity_context" not in controls
 
 
 def test_agreement_callback_failure_after_write_still_clears_form(monkeypatch):
@@ -396,7 +437,7 @@ def test_steward_selector_search_population_and_save_paths_remain_unchanged(monk
     controls["save_button"].click_callbacks[0](None)
     assert writes[-1]["steward_id"] == "22222222-2222-4222-8222-222222222222"
     assert writes[-1]["custom_fields"] == {"group": "Analytics"}
-    assert controls["status"].value == "Data steward saved successfully: Analytics Steward. Form cleared."
+    assert "Data steward saved successfully: Analytics Steward. Form cleared." in controls["status"].value
     assert "22222222-2222-4222-8222-222222222222" not in controls["status"].value
     assert "Writing Lakehouse steward row" in capsys.readouterr().out
 
@@ -410,4 +451,4 @@ def test_steward_selector_search_population_and_save_paths_remain_unchanged(monk
 
     assert writes[-1]["steward_id"] == "33333333-3333-4333-8333-333333333333"
     assert writes[-1]["custom_fields"] == {"group": "New group"}
-    assert controls["status"].value == "Data steward saved successfully: New Steward. Form cleared."
+    assert "Data steward saved successfully: New Steward. Form cleared." in controls["status"].value
