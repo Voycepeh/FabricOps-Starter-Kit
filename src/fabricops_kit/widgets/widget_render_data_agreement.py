@@ -323,8 +323,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
                 saved_message = str(row.get("_fabricops_message", "No changes detected."))
             else:
                 saved_message = (
-                    f"Saved {row.get('agreement_name', '')} "
-                    f"({row['agreement_id']} v{row['agreement_version']})."
+                    f"Saved {escape(_agreement_label(row))}."
                 )
                 for callback in after_save_callbacks:
                     try:
@@ -552,13 +551,11 @@ def _business_agreement_snapshot(row: dict[str, Any]) -> dict[str, Any]:
 
 def _agreement_identity_text(row: dict[str, Any] | None) -> str:
     if not row:
-        return "Agreement ID and version are generated when saved."
-    current_version = str(row.get("agreement_version") or "")
+        return "Select an existing agreement or create a new one."
+    name = escape(str(row.get("agreement_name") or "agreement"))
     return (
-        f"Agreement ID: {row.get('agreement_id', '')}<br>"
-        f"Current version: {current_version}<br>"
-        f"Next version on save: {_next_minor_version(current_version)}<br>"
-        "Saving this change will append a new version. Existing rows will not be overwritten."
+        f"Editing the latest version of <b>{name}</b>.<br>"
+        "Saving a change appends a new revision; existing records are retained."
     )
 
 
@@ -568,10 +565,25 @@ def _steward_label(row: dict[str, Any]) -> str:
 
 
 def _agreement_label(row: dict[str, Any]) -> str:
-    row_id = str(row.get("agreement_id") or "").strip()
-    name = str(row.get("agreement_name") or row_id)
-    version = str(row.get("agreement_version") or "")
-    return f"{name} ({row_id} / v{version})"
+    name = str(row.get("agreement_name") or "Unnamed agreement").strip()
+    details: list[str] = []
+    provider = str(row.get("provider_steward_name") or "").strip()
+    recipient = str(row.get("recipient_steward_name") or "").strip()
+    if provider and recipient:
+        details.append(f"between {provider} and {recipient}")
+    elif provider:
+        details.append(f"provider: {provider}")
+    elif recipient:
+        details.append(f"recipient: {recipient}")
+    start_date = str(row.get("start_date") or "").strip()[:10]
+    expiry_date = str(row.get("expiry_date") or "").strip()[:10]
+    if start_date and expiry_date:
+        details.append(f"{start_date} to {expiry_date}")
+    elif start_date:
+        details.append(f"from {start_date}")
+    elif expiry_date:
+        details.append(f"until {expiry_date}")
+    return " — ".join([name, *details])
 
 
 def _create_or_update_data_agreement(
