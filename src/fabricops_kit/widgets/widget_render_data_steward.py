@@ -187,16 +187,33 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
                 values["steward_id"] = selected.value
                 values["_existing_steward_role"] = row_lookup.get(selected.value, {}).get("steward_role", "")
             row = _create_or_update_data_steward(spark=spark, config=config, env=env, values=values, custom_fields=extras)
-            _refresh_existing_options(row["steward_id"])
-            for callback in after_save_callbacks:
-                callback(row)
-            saved_name = row.get("steward_name", "")
-            _reset_form_fields()
-            status.value = f"Data steward saved successfully: {saved_name}. Form cleared."
-            print(f"Saved data steward: {saved_name} ({row['steward_id']})")
         except Exception as exc:
             status.value = f"Data steward was not saved: {exc}"
             print(f"Error: {exc}")
+        else:
+            warnings: list[str] = []
+            try:
+                _refresh_existing_options(row["steward_id"])
+            except Exception as exc:
+                warnings.append(f"steward list refresh failed: {exc}")
+            for callback in after_save_callbacks:
+                try:
+                    callback(row)
+                except Exception as exc:
+                    warnings.append(f"post-save callback failed: {exc}")
+            form_cleared = True
+            try:
+                _reset_form_fields()
+            except Exception as exc:
+                form_cleared = False
+                warnings.append(f"form could not be cleared: {exc}")
+            saved_name = row.get("steward_name", "")
+            status.value = f"Data steward saved successfully: {saved_name}."
+            if form_cleared:
+                status.value += " Form cleared."
+            if warnings:
+                status.value += f" Post-save warning: {'; '.join(warnings)}."
+            print(f"Saved data steward: {saved_name} ({row['steward_id']})")
         finally:
             _sync_save_state()
 
