@@ -109,12 +109,11 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         label_fn=_agreement_label,
         value_fn=_row_id,
         placeholder="Search agreements...",
-        search_fields=["agreement_name", "agreement_id", "agreement_version", "domain"],
+        search_fields=["agreement_name", "provider_steward_name", "recipient_steward_name", "start_date", "expiry_date"],
         empty_label="Create new agreement",
         search_label="Search agreements",
     )
     selected = selected_selector["selector"]
-    identity_context = widgets.HTML(value=_agreement_identity_text(None))
 
     active_steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
     active_steward_ids = {
@@ -196,11 +195,28 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
 
     def _set_status(message: str, *, error: bool = False) -> None:
         colour = "#a4262c" if error else "#107c10"
-        status.value = f'<span style="color:{colour}">{message}</span>'
+        status.value = f'<span style="color:{colour}">{escape(message)}</span>'
+
+    required_fields = (
+        "agreement_name", "domain", "provider_steward_id", "recipient_steward_id",
+        "start_date", "expiry_date", "business_purpose",
+    )
+    required_custom = [
+        str(field.get("key")) for field in widget_config.get("custom_fields", []) if field.get("required")
+    ]
+
+    def _sync_save_state(*_: Any) -> None:
+        save.disabled = (
+            len(active_steward_ids) < 2
+            or any(field not in form or not str(form[field].value or "").strip() for field in required_fields)
+            or form["provider_steward_id"].value == form["recipient_steward_id"].value
+            or not any(checkbox.value for checkbox in approved_usage_checkboxes.values())
+            or any(key not in custom or custom[key].value in (None, "", []) for key in required_custom)
+        )
 
     def _update_steward_prerequisite(*, refreshed: bool = False) -> None:
-        save.disabled = len(active_steward_ids) < 2
-        if save.disabled:
+        _sync_save_state()
+        if len(active_steward_ids) < 2:
             _set_status(steward_prerequisite_message, error=True)
         elif refreshed:
             _set_status("Active data stewards refreshed.")
@@ -263,9 +279,9 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         selected_usage = _deserialize_approved_usage(row.get("approved_usage_json"), usage_options) if row else []
         for option, checkbox in approved_usage_checkboxes.items():
             checkbox.value = option in selected_usage
-        identity_context.value = _agreement_identity_text(row or None)
         draft.clear()
         draft.update(row)
+        _sync_save_state()
 
     selected.observe(_populate, names="value")
     callbacks = getattr(selected, "callbacks", None)
@@ -284,7 +300,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         for checkbox in approved_usage_checkboxes.values():
             checkbox.value = False
         draft.clear()
-        identity_context.value = _agreement_identity_text(None)
+        _sync_save_state()
 
     def _discard_and_clear(_: Any) -> None:
         _reset_form_fields()
@@ -323,8 +339,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
                 saved_message = str(row.get("_fabricops_message", "No changes detected."))
             else:
                 saved_message = (
-                    f"Saved {row.get('agreement_name', '')} "
-                    f"({row['agreement_id']} v{row['agreement_version']})."
+                    f"Saved {row.get('agreement_name', '')}."
                 )
                 for callback in after_save_callbacks:
                     try:
@@ -345,13 +360,15 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
             if form_cleared:
                 saved_message += " Form cleared."
             if warnings:
-                saved_message += f" Post-save warning: {escape('; '.join(warnings))}."
+                saved_message += f" Post-save warning: {'; '.join(warnings)}."
             _set_status(saved_message)
         finally:
-            save.disabled = len(active_steward_ids) < 2
+            _sync_save_state()
 
     save.on_click(_save)
     discard.on_click(_discard_and_clear)
+    for widget in [*form.values(), *custom.values(), *approved_usage_checkboxes.values()]:
+        widget.observe(_sync_save_state, names="value")
     _update_steward_prerequisite()
     full_width_layout = widgets.Layout(width="100%", height="auto", overflow="visible")
     row_layout = widgets.Layout(
@@ -422,7 +439,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     selection_section = form_section(
         widgets,
         title="Agreement selection",
-        children=[selected_selector["container"], identity_context],
+        children=[selected_selector["container"]],
     )
     form_flow = widgets.VBox(
         [
@@ -454,7 +471,6 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         "existing_record_search": selected_selector["search"],
         "existing_record_context": selected_selector["context"],
         "existing_records_by_id": row_lookup,
-        "identity_context": identity_context,
         "fields": form,
         "provider_steward_selector": form["provider_steward_id"],
         "recipient_steward_selector": form["recipient_steward_id"],
@@ -550,28 +566,18 @@ def _business_agreement_snapshot(row: dict[str, Any]) -> dict[str, Any]:
     return snapshot
 
 
-def _agreement_identity_text(row: dict[str, Any] | None) -> str:
-    if not row:
-        return "Agreement ID and version are generated when saved."
-    current_version = str(row.get("agreement_version") or "")
-    return (
-        f"Agreement ID: {row.get('agreement_id', '')}<br>"
-        f"Current version: {current_version}<br>"
-        f"Next version on save: {_next_minor_version(current_version)}<br>"
-        "Saving this change will append a new version. Existing rows will not be overwritten."
-    )
-
-
 def _steward_label(row: dict[str, Any]) -> str:
     parts = [str(row.get(field) or "").strip() for field in ("steward_name", "steward_role", "contact")]
     return " | ".join(part for part in parts if part) or str(row.get("steward_id") or "Unnamed steward")
 
 
 def _agreement_label(row: dict[str, Any]) -> str:
-    row_id = str(row.get("agreement_id") or "").strip()
-    name = str(row.get("agreement_name") or row_id)
-    version = str(row.get("agreement_version") or "")
-    return f"{name} ({row_id} / v{version})"
+    name = str(row.get("agreement_name") or "Unnamed agreement").strip()
+    provider = str(row.get("provider_steward_name") or "Unknown provider").strip()
+    recipient = str(row.get("recipient_steward_name") or "Unknown recipient").strip()
+    start = str(row.get("start_date") or "?")[:10]
+    end = str(row.get("expiry_date") or "?")[:10]
+    return f"{name} ({provider} → {recipient}, {start} to {end})"
 
 
 def _create_or_update_data_agreement(

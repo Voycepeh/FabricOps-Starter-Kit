@@ -333,7 +333,7 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     agreement_controls = agreement_widget.widget_render_data_agreement(spark=spark)
     steward_controls = steward_widget.widget_render_data_steward(spark=spark)
 
-    assert agreement_controls["identity_context"] is not None
+    assert "identity_context" not in agreement_controls
     assert agreement_controls["provider_steward_selector"].options
     assert agreement_controls["recipient_steward_selector"].options
     assert "recipient" not in agreement_controls["fields"]
@@ -473,7 +473,7 @@ def test_agreement_widget_always_renders_mandatory_stewards(monkeypatch):
         ([steward_row()], True),
         ([steward_row(), steward_row()], True),
         ([steward_row(), steward_row(steward_id="")], True),
-        ([steward_row(), steward_row(steward_id="22222222-2222-4222-8222-222222222222")], False),
+        ([steward_row(), steward_row(steward_id="22222222-2222-4222-8222-222222222222")], True),
     ],
 )
 def test_agreement_widget_disables_save_until_two_active_stewards_exist(monkeypatch, stewards, save_disabled):
@@ -490,7 +490,7 @@ def test_agreement_widget_disables_save_until_two_active_stewards_exist(monkeypa
 
     assert controls["container"] is not None
     assert controls["save_button"].disabled is save_disabled
-    assert ("At least two distinct active data stewards are required" in controls["status"].value) is save_disabled
+    assert ("At least two distinct active data stewards are required" in controls["status"].value) is (len({row.get("steward_id") for row in stewards if row.get("steward_id")}) < 2)
 
 
 def test_agreement_widget_refresh_updates_steward_prerequisite(monkeypatch):
@@ -511,7 +511,7 @@ def test_agreement_widget_refresh_updates_steward_prerequisite(monkeypatch):
     controls["recipient_steward_selector"].value = second["steward_id"]
     controls["refresh_stewards_button"].click_callbacks[0](None)
 
-    assert controls["save_button"].disabled is False
+    assert controls["save_button"].disabled is True  # Steward prerequisite passes; other fields are blank.
     assert controls["provider_steward_selector"].value == steward_row()["steward_id"]
     assert controls["recipient_steward_selector"].value == second["steward_id"]
 
