@@ -220,12 +220,14 @@ def test_agreement_save_validation_error_stays_in_status_and_later_success_recov
     second_output = capsys.readouterr()
     assert second_output.out == ""
     assert second_output.err == ""
-    assert "Saved Orders Agreement (33333333-3333-4333-8333-333333333333 v1.0.0)." in controls["status"].value
+    assert "Saved Orders Agreement — 2026-01-01 to 2026-12-31." in controls["status"].value
+    assert "33333333-3333-4333-8333-333333333333" not in controls["status"].value
+    assert "v1.0.0" not in controls["status"].value
     assert "expiry_date must be on or after start_date" not in controls["status"].value
     assert callbacks == [controls["existing_records_by_id"]["33333333-3333-4333-8333-333333333333"]]
     assert refreshes[-1][1] == "33333333-3333-4333-8333-333333333333"
     assert controls["existing_record"].value == ""
-    assert controls["identity_context"].value == "Agreement ID and version are generated when saved."
+    assert controls["identity_context"].value == "Select an existing agreement or create a new one."
 
 
 def test_agreement_callback_failure_after_write_still_clears_form(monkeypatch):
