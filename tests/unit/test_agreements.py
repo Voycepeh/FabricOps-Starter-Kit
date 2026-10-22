@@ -332,6 +332,7 @@ def test_searchable_selector_disambiguates_duplicate_labels_without_ids():
         rows=[{"id": "first-id"}, {"id": "second-id"}, {"id": "third-id"}],
         label_fn=lambda row: "Same agreement",
         value_fn=lambda row: row["id"],
+        empty_label="Create new agreement",
     )
 
     assert selector["search"].options == [
