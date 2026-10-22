@@ -529,11 +529,12 @@ def render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, value
         if field_type == "textarea":
             rendered[key] = widgets.Textarea(value=str(default or ""), **common)
         elif field_type == "dropdown":
-            options = field.get("options", []) or []
-            option_values = [
-                option[1] if isinstance(option, tuple) and len(option) == 2 else option
-                for option in options
+            options = [
+                (str(option[0]), option[1]) if isinstance(option, (tuple, list)) and len(option) == 2
+                else (str(option), option)
+                for option in (field.get("options", []) or [])
             ]
+            option_values = [option[1] for option in options]
             if field.get("required"):
                 value = default if default in option_values else (option_values[0] if option_values else "")
             else:
