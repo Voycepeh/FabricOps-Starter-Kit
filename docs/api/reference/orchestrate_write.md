@@ -133,7 +133,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:27`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L27-L189">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L27-L193">View on GitHub</a>
 </div>
 
 

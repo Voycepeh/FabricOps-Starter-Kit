@@ -41,7 +41,11 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     """
     session = current_pipeline_session()
     spark_session = session.spark
-    execution_plan = session.operation_plan("source", locals())
+    try:
+        execution_plan = session.operation_plan("source", locals())
+    except BaseException:
+        session.close(failed=True)
+        raise
     arguments = {key: value for key, value in locals().items() if key not in {"session"}}
     with PipelineOperation(execution_plan, "source", arguments) as operation:
         read_mode = str(read_mode or "").strip().lower()

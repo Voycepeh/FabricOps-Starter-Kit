@@ -167,3 +167,34 @@ def test_interactive_contract_controls_and_failure_event(runtime, monkeypatch):
     session.cell_completed(SimpleNamespace(error_before_exec=SyntaxError('bad cell')))
     assert session.closed and 'failed' in session.report.value
     shell.events.unregister.assert_called_once_with('post_run_cell', session.cell_completed)
+
+
+def test_concurrent_async_tasks_do_not_close_an_inherited_execution(runtime):
+    import asyncio
+    async def scenario():
+        parent = setup_pipeline(pipeline_id='same', pipeline_mode='Test')
+        async def child(name):
+            with pytest.raises(RuntimeError, match='another task'):
+                shared.current_pipeline_session()
+            session = setup_pipeline(pipeline_id='same', pipeline_mode='Test')
+            await asyncio.sleep(0)
+            orchestrate_read(store='Bronze', schema='demo', table_name=name)
+            assert [row['table_id'] for row in session.sources] == [name]
+            assert not parent.closed
+            session.close()
+            return session.plan.plan_id
+        children = await asyncio.gather(child('a'), child('b'))
+        assert len(set(children + [parent.plan.plan_id])) == 3
+        assert shared.current_pipeline_session() is parent and not parent.closed
+        parent.close()
+    asyncio.run(scenario())
+
+
+def test_invalid_participant_closes_execution_before_operation_journal(runtime, monkeypatch):
+    session = setup_pipeline(pipeline_id='invalid', pipeline_mode='Test')
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    monkeypatch.setattr(shared, 'resolve_physical_table_identity', Mock(side_effect=ValueError('invalid destination')))
+    with pytest.raises(ValueError, match='invalid destination'):
+        orchestrate_read(store='Bronze', schema='demo', table_name='invalid')
+    assert session.closed and not session.sources
+    assert session.plan.run_result['status'] == 'failed'

@@ -169,7 +169,7 @@ def run_pipeline_operation(function, *args, plan, sources=(), spark_session=None
     replace physical planning and use their own operation-journal fixtures.
     """
     from fabricops_kit.pipeline.shared import _ACTIVE_PIPELINE
-    session = SimpleNamespace(closed=False, spark=spark_session, sources=list(sources),
+    session = SimpleNamespace(closed=False, owns_current_execution=lambda: True, spark=spark_session, sources=list(sources),
                               operation_plan=lambda *unused: plan,
                               register_source=lambda result: result)
     token = _ACTIVE_PIPELINE.set(session)

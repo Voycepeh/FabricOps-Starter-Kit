@@ -47,7 +47,11 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     """
     session = current_pipeline_session()
     spark_session = session.spark
-    execution_plan = session.operation_plan("target", locals())
+    try:
+        execution_plan = session.operation_plan("target", locals())
+    except BaseException:
+        session.close(failed=True)
+        raise
     sources = tuple(session.sources)
     arguments = {key: value for key, value in locals().items() if key not in {"session"}}
     with PipelineOperation(execution_plan, "target", arguments) as operation:

@@ -5984,6 +5984,16 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
         return row
 
 
+def _pipeline_execution_owner():
+    from threading import get_ident
+    from asyncio import current_task
+    try:
+        task = current_task()
+    except RuntimeError:
+        task = None
+    return get_ident(), task
+
+
 # Each Python context owns an execution instance; names are never used as keys.
 from contextvars import ContextVar
 
@@ -6004,7 +6014,19 @@ class PipelineSession:
         self.report = None
         self.shell = None
         self.closed = False
+        self.owner = _pipeline_execution_owner()
         plan.evidence["session"] = self
+
+    def owns_current_execution(self):
+        """Reject inherited bindings in concurrent tasks or threads."""
+        current = _pipeline_execution_owner()
+        if current == self.owner:
+            return True
+        if (self.shell is not None and current[0] == self.owner[0]
+                and self.owner[1] is not None and self.owner[1].done()):
+            self.owner = current
+            return True
+        return False
 
     def select_contract(self, table_id, contract_id=None, contract_version=None, *, no_contract=False):
         """Freeze explicit exact contract choices before data operations start."""
@@ -6102,6 +6124,8 @@ class PipelineSession:
 
     def cell_completed(self, result):
         """Use IPython's supported error signal, never its per-cell success as run success."""
+        if not self.owns_current_execution():
+            return
         if getattr(result, "error_before_exec", None) is not None or getattr(result, "error_in_exec", None) is not None:
             self.close(failed=True)
         else:
@@ -6134,6 +6158,8 @@ def current_pipeline_session():
     session = _ACTIVE_PIPELINE.get()
     if session is None or session.closed:
         raise RuntimeError("Run setup_pipeline(pipeline_id=..., pipeline_mode=...) before Read or Write.")
+    if not session.owns_current_execution():
+        raise RuntimeError("This execution belongs to another task or thread; run setup_pipeline in this context.")
     return session
 
 
@@ -6143,7 +6169,7 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None):
     from types import MappingProxyType
     from fabricops_kit.config.shared import resolve_runtime_context
     previous = _ACTIVE_PIPELINE.get()
-    if previous is not None:
+    if previous is not None and previous.owns_current_execution():
         previous.close()
     config, env, runtime = resolve_fabric_context()
     runtime = {**runtime, **{key: value for key, value in resolve_runtime_context(context=runtime).items() if value is not None},
