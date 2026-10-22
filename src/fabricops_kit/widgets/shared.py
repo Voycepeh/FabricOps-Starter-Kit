@@ -535,7 +535,7 @@ def render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, value
                 for option in options
             ]
             if field.get("required"):
-                value = default if default in option_values else (option_values[0] if option_values else None)
+                value = default if default in option_values else (option_values[0] if option_values else "")
             else:
                 value = default if default in option_values else ""
             options = [("Select an option", ""), *options]
