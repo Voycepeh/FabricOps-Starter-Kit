@@ -11,7 +11,7 @@ Review complete persisted Testing and activate an exact whole pipeline.
 
 ## Usage notes
 
-Use after successful whole-pipeline Testing and finalize_pipeline().
+Use after finalize_pipeline publishes complete successful governed Testing results.
 
 
 ## Example usage

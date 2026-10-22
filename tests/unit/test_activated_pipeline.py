@@ -206,7 +206,7 @@ def test_live_run_pins_revision_and_drains_before_switch(authority, monkeypatch)
     identities = json.loads(plan.participants_json)
     monkeypatch.setattr(service, "resolve_pipeline_participants", lambda *a, **kw: identities)
     monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda *a, **kw: plan.runtime_context["_pipeline_bindings"])
-    live = service.build_live_pipeline_plan(pipeline_id="A", sources=[], targets=[], configuration={}, context=state.context)
+    live = service.build_live_pipeline_plan(pipeline_id="A", context=state.context)
     pinned = live.activation_revision
     _, next_run = state.candidate(version=4)
     with pytest.raises(ValueError, match="Drain running execution"):
@@ -327,13 +327,13 @@ def test_live_operational_differences_warn_and_unsafe_changes_fail(authority, mo
     state.approve(run)
     monkeypatch.setattr(service, "resolve_pipeline_participants", lambda *a, **kw: json.loads(plan.participants_json))
     monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda *a, **kw: plan.runtime_context["_pipeline_bindings"])
-    live = service.build_live_pipeline_plan(pipeline_id="A", sources=[], targets=[], configuration={}, context=state.context)
+    live = service.build_live_pipeline_plan(pipeline_id="A", context=state.context)
     with pytest.warns(UserWarning, match="frequency_top_n"):
         with live:
             state.operation(live, 0, frequency_top_n=2)
     summary = json.loads(live.run_result["operation_summary_json"])
     assert summary["warnings"][0]["operational_parameters"] == ["frequency_top_n"]
-    live = service.build_live_pipeline_plan(pipeline_id="A", sources=[], targets=[], configuration={}, context=state.context)
+    live = service.build_live_pipeline_plan(pipeline_id="A", context=state.context)
     with pytest.raises(ValueError, match="configuration differs"):
         with live:
             state.operation(live, 0, write_mode="append")
@@ -409,7 +409,7 @@ def test_testing_write_cannot_overwrite_an_active_read_only_consumers_input(auth
 def test_manual_finalization_qualifies_without_executable_integrity(authority, monkeypatch):
     """Explicit end boundaries preserve coordinated governance without code exports."""
     from pathlib import Path
-    from fabricops_kit import finalize_pipeline
+    from fabricops_kit.pipeline.shared import finalize_pipeline_run as finalize_pipeline
     def forbidden(*args, **kwargs):
         raise AssertionError('Engineering owns executable integrity')
     monkeypatch.setattr(Path, 'rglob', forbidden)
@@ -419,23 +419,24 @@ def test_manual_finalization_qualifies_without_executable_integrity(authority, m
     plan = replace(previous, plan_id=previous.plan_id + '-manual', evidence={}, results=[])
     pipeline.persist_pipeline_run(plan)
     state.operation(plan, 0)
+    plan.evidence["boundary_completed"] = True
     run = finalize_pipeline(plan)
     assert run['status'] == 'succeeded'
     state.approve(run)
     assert state.current()['pipelines'][plan.pipeline_id]['testing_run_id'] == plan.plan_id
 
 
-def test_public_finalize_releases_existing_live_reservation(authority):
+def test_internal_completion_releases_existing_live_reservation(authority, monkeypatch):
     """Finalization closes the same atomic reservation used for coordinated cutover."""
-    from fabricops_kit import finalize_pipeline
+    from fabricops_kit.pipeline.shared import finalize_pipeline_run as finalize_pipeline
     state = authority
     previous, run = state.candidate()
     state.approve(run)
-    plan = service.build_live_pipeline_plan(pipeline_id=previous.pipeline_id, sources=[],
-        targets=[{'store': 'Silver', 'schema': 'physical', 'table_name': 'table0', 'logical_id': 'asset0'}],
-        context=previous.runtime_context)
+    monkeypatch.setattr(service, 'resolve_pipeline_participants', lambda *args, **kwargs: json.loads(previous.participants_json))
+    plan = service.build_live_pipeline_plan(pipeline_id=previous.pipeline_id, context=previous.runtime_context)
     assert plan.plan_id in state.current()['runs']
     state.operation(plan, 0)
+    plan.evidence['boundary_completed'] = True
     assert finalize_pipeline(plan)['status'] == 'succeeded'
     assert plan.plan_id not in state.current()['runs']
 
@@ -452,6 +453,7 @@ def test_completed_testing_with_missing_contracts_cannot_activate(authority, mis
     pipeline.persist_pipeline_run(plan)
     for index in range(3):
         state.operation(plan, index)
+    plan.evidence["boundary_completed"] = True
     run = pipeline.finalize_pipeline_run(plan)
     assert run["status"] == ("ungoverned_completed" if len(missing) == 3 else "succeeded")
     before = copy.deepcopy(state.central)
@@ -460,7 +462,7 @@ def test_completed_testing_with_missing_contracts_cannot_activate(authority, mis
     assert state.central == before
 
 
-def test_live_resolves_approved_versions_after_mixed_testing(authority):
+def test_live_resolves_approved_versions_after_mixed_testing(authority, monkeypatch):
     """Later exploratory selections cannot replace the activated contract versions."""
     from fabricops_kit import setup_pipeline
 
@@ -473,22 +475,17 @@ def test_live_resolves_approved_versions_after_mixed_testing(authority):
     pipeline.persist_pipeline_run(exploratory)
     state.operation(exploratory, 0)
     state.operation(exploratory, 1)
+    exploratory.evidence["boundary_completed"] = True
     run = pipeline.finalize_pipeline_run(exploratory)
     assert run["status"] == "succeeded"
     with pytest.raises(ValueError, match="table1"):
         state.approve(run)
-    sources = [{"store": "Bronze", "schema": "physical", "table_name": "table0", "logical_id": "asset0"}]
-    targets = [{"store": "Silver", "schema": "physical", "table_name": "table1", "logical_id": "asset1"}]
-    for selections in ({}, {"table0": {"no_contract": True}}):
-        with pytest.raises(ValueError, match="Live rejects manual"):
-            setup_pipeline(execution_mode="live", pipeline_id="A", sources=sources, targets=targets,
-                           selections=selections, context=previous.runtime_context)
-    with pytest.raises(ValueError, match="identities or participant roles"):
-        setup_pipeline(execution_mode="live", pipeline_id="A", sources=sources + [{**sources[0], "table_name": "extra", "logical_id": "extra"}],
-                       targets=targets, context=previous.runtime_context)
-    live = setup_pipeline(execution_mode="live", pipeline_id="A", sources=sources, targets=targets, context=previous.runtime_context)
+    # Live receives no manual contract choices or participant lists.
+    monkeypatch.setattr(service, "resolve_pipeline_participants", lambda *args, **kwargs: json.loads(previous.participants_json))
+    live = service.build_live_pipeline_plan(pipeline_id="A", context=previous.runtime_context)
     assert {key: row["contract_version"] for key, row in json.loads(live.contracts_json).items()} == {"table0": 1, "table1": 2}
     assert live.activated_pipeline_id == state.current()["pipelines"]["A"]["activated_pipeline_id"]
-    state.operation(live, 0)
-    state.operation(live, 1)
-    assert pipeline.finalize_pipeline_run(live)["status"] == "succeeded"
+    with live:
+        state.operation(live, 0)
+        state.operation(live, 1)
+    assert live.run_result["status"] == "succeeded"

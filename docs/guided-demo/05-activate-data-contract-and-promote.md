@@ -1,6 +1,6 @@
 # Step 5. Activate the tested pipeline and promote to Production
 
-Complete [Step 4](04-validate-frozen-data-contract.md) and call `finalize_pipeline(plan)` after all operations. Testing success reports execution under the selected contract coverage. Activation eligibility additionally requires a valid frozen Data Contract for every participating table, passing required Guardrails and complete operation results, an effective Data Agreement and all existing approval requirements. Mixed-contract Testing can succeed but cannot activate. Activation rejects No Contract selections and lists the affected table IDs; select contracts for those tables and rerun complete Testing.
+Run `finalize_pipeline(CONTRACTS)` after completing Testing in [Step 4](04-validate-frozen-data-contract.md). It publishes the final `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS` for review. Activation requires complete successful Testing, frozen contracts for every participant, an effective Data Agreement and explicit Governance approval. Interactive diagnostics alone cannot activate a release.
 
 ## Review the affected release
 
@@ -16,7 +16,7 @@ The backend revalidates complete Testing and exact Data Contract and processing 
 
 Engineering and Microsoft Fabric own source control, executable checksums, CI/CD and deployment. Deploy the tested notebook with Fabric or CI tooling separately. FabricOps requires no packaging files or deployment verification call. Activation does not deploy artifacts or publish business data. Test and approve each execution environment explicitly against its configured physical destinations; global Data Contract definitions are shared, so DEV and PROD can adopt different frozen versions without copying contracts.
 
-Set `PIPELINE_LIVE_ENABLED=True` through external parameters. Headless `setup_pipeline(execution_mode="live", pipeline_id=..., sources=..., targets=..., configuration={})` resolves the approved environment revision automatically. Run Read → Transform → Write, then call `finalize_pipeline(plan)`. Changed Data Contracts, transformation settings, table identities or physical destinations fail before publication. Permitted operational differences warn and are recorded.
+Set `PIPELINE_MODE = "Live"`. `setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode=PIPELINE_MODE)` resolves approved environment participants, contracts, configuration and destinations automatically. Run Read → Transform → Write → Finalize. Changed table identities, destinations, strategies or frozen contracts fail before publication. Call `finalize_pipeline(CONTRACTS)` after the entire workflow to record completion and release its reservation; stopped notebooks remain incomplete.
 
 ## Drain and cut over
 

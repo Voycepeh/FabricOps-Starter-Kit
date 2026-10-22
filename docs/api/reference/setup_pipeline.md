@@ -11,7 +11,7 @@ Prepare Testing or resolve an approved environment configuration for Live.
 
 ## Usage notes
 
-Use once before Read, Transform and Write; finish with finalize_pipeline().
+Use once before Read, Transform and Write with pipeline_id and pipeline_mode.
 
 
 ## Example usage
@@ -19,12 +19,8 @@ Use once before Read, Transform and Write; finish with finalize_pipeline().
 <div class="reference-example-usage" markdown="1">
 
 ```python
-plan = setup_pipeline(sources=SOURCES, targets=TARGETS, pipeline_id="hr-employees",
-    interactive=False, selections=SELECTIONS, configuration={})
-source = orchestrate_read(execution_plan=plan, **READ_CONFIG)
-transformed = transform(source["dataframe"])
-result = orchestrate_write(transformed, execution_plan=plan, sources=[source], **WRITE_CONFIG)
-pipeline_result = finalize_pipeline(plan)
+contracts = setup_pipeline(pipeline_id="orders", pipeline_mode="Test")
+orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 ```
 
 </div>
@@ -37,19 +33,7 @@ pipeline_result = finalize_pipeline(plan)
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def setup_pipeline(
-    *,
-    sources,
-    targets,
-    execution_mode='testing',
-    selections=None,
-    interactive=None,
-    spark_session=None,
-    context=None,
-    pipeline_id=None,
-    configuration=None,
-    testing_writes=False,
-):
+def setup_pipeline(*, pipeline_id: str, pipeline_mode: str)
 ```
 
 </div>
@@ -64,30 +48,27 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `sources` | `—` | Yes | `—` | Not documented yet |
-| `targets` | `—` | Yes | `—` | Not documented yet |
-| `execution_mode` | `—` | No | `'testing'` | Not documented yet |
-| `selections` | `—` | No | `None` | Not documented yet |
-| `interactive` | `—` | No | `None` | Not documented yet |
-| `spark_session` | `—` | No | `None` | Not documented yet |
-| `context` | `—` | No | `None` | Not documented yet |
-| `pipeline_id` | `—` | No | `None` | Not documented yet |
-| `configuration` | `—` | No | `None` | Not documented yet |
-| `testing_writes` | `—` | No | `False` | Not documented yet |
+| `pipeline_id` | `str` | Yes | `—` | Stable logical pipeline identity, independent of the notebook name. |
+| `pipeline_mode` | `str` | Yes | `—` | Evaluation-only operations or execution under an approved manifest. |
 
 </div>
 
 ## Returns
 
-Not documented yet
+PipelineSession
+    Contract selection and automatically refreshed execution report. Read and
+    Write calls use this execution through a context-local binding.
 
 ### Return interpretation
 
-Interactive Testing returns a selector with build_plan(); headless execution returns an immutable plan. finalize_pipeline(plan) records the whole-run outcome.
+Returns a context-local execution session with contract selection and automatic reporting; finalize_pipeline records completion and publishes Testing results; interrupted runs remain incomplete.
 
 ## Raises / Errors
 
-Not documented yet
+ValueError
+    For an empty pipeline identity, unsupported mode or missing Live approval.
+RuntimeError
+    For missing environment configuration or an unavailable Spark session.
 
 ### Common failure causes
 
@@ -95,42 +76,28 @@ Not documented yet
 - Unsafe Testing write destination.
 - Missing complete governed Testing for activation or approved Live configuration.
 
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+Fabric cell events identify failures, not successful notebook completion.
+Call finalize_pipeline after all Reads, transformations and Writes.
+Neither a successful Write nor interpreter shutdown proves completion. Test
+results stay in memory until explicit finalization publishes them.
+
+</div>
+
 ## Behavior and scope
 
 <div class="reference-docstring-intro" markdown="1">
 
-Testing is interactive by default. Set interactive=False for automation and
-provide exact contract_id/contract_version choices keyed by global table_id,
-or omit selections for contract-free exploration. Each participant independently
-selects a frozen contract or No Contract (no_contract=True). Only selected
-contracts supply Guardrails; explicit No Contract never selects a default.
-METADATA_PIPELINE_RUN records every choice. Testing success describes execution
-under that coverage; activation requires valid frozen contracts for every
-participant plus all existing Guardrail, operation and Data Agreement checks.
-Stable pipeline_id is required and independent of notebook name or path.
-
-testing_writes=True explicitly permits real Testing writes to the declared
-target destinations, provided no Live pipeline owns them. Such writes have
-real side effects, including target metadata, mappings and checkpoints.
-False evaluates without publication. Guardrail diagnostics and run records
-always persist to the central configured Metadata store.
-
-Live is headless and resolves the environment's approved configuration
-automatically. It rejects manual contract choices and pins one activation
-revision. Transformation configuration, table
-identity, destinations and ownership must match approval. Operational
-differences allowed by the orchestrators warn and persist in the run record.
-
-Returns an immutable PipelineExecutionPlan, or Testing widget state with
-select_contract, build_plan and refresh. Call finalize_pipeline(plan) after all
-Reads, transformations and Writes, including read-only pipelines. Stopped runs
-remain incomplete. Reuse the setup context without repeating configuration.
-Engineering and Microsoft Fabric own code integrity, source control, CI/CD
-and deployment. No executable export or checksum is required.
-
-Raises ValueError for unsafe configuration or invalid contract selection,
-RuntimeError for metadata failures, stale authority or a reused run boundary.
-Approval neither deploys notebooks nor writes business data.
+Test evaluates reads, transformations and Guardrails without business or
+metadata commits during Read and Write. finalize_pipeline publishes the final
+run and Guardrail results for activation review. Select frozen contracts in the returned interface before
+the first operation; headless Test explicitly uses No Contract. Live resolves
+only the approved environment manifest and retains revision/ownership checks.
+Spark and supported Fabric runtime identity are resolved internally. A missing
+notebook ID is allowed: pipeline_id identifies the logical pipeline.
 
 </div>
 
@@ -143,7 +110,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L382">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L180">View on GitHub</a>
 </div>
 
 

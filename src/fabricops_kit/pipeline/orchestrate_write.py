@@ -12,6 +12,7 @@ from fabricops_kit.pipeline.profile_table import profile_table
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 from fabricops_kit.pipeline.shared import (
     ExecutionSummary,
+    current_pipeline_session,
     PipelineOperation,
     execution_result,
     tested_contract_identities,
@@ -23,23 +24,22 @@ from fabricops_kit.pipeline.shared import (
 )
 
 
-def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping=None, spark_session=None, verbose: bool = True, dq_diagnostics: str = "sample") -> dict[str, Any]:
-    """Evaluate and optionally publish a target using the shared execution plan.
+def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping=None, verbose: bool = False, dq_diagnostics: str = "sample") -> dict[str, Any]:
+    """Evaluate or publish a target using the active pipeline's runtime.
+
+    Define the dataframe, destination, write_mode and processing parameters.
+    All reads registered in this execution are associated with this target as
+    pipeline participants, not proven transformation dependencies. Test evaluates
+    processing and Guardrails without publishing or committing metadata. Live
+    requires approved contracts, ownership, destinations and a pinned revision.
+    Advanced repartitioning, Sensitive Data mapping and DQ diagnostics remain
+    available. The result includes publication metrics and Guardrail diagnostics.
+    A successful Write does not imply successful completion of the notebook.
 
     Parameters
     ----------
-    execution_plan : PipelineExecutionPlan
-        Same required plan as all participating Reads. Execute all reads,
-        transformations and writes before finalize_pipeline(plan) for whole-run
-        completion. Testing evaluates processing, guardrails and incremental safety.
-        Explicit testing_writes=True permits real publication to declared safe
-        destinations, with mappings, checkpoints and normal metadata side effects.
-        Otherwise Testing evaluates without publication. Live enforces the pinned
-        approved contracts and ownership and stops on Block before publication.
     dataframe : object
         Transformed Spark DataFrame; Sensitive Data treatment prepares the input.
-    sources : iterable of dict
-        Read results from this exact plan for the sources actually feeding this target.
     store : str
         Configured target store key.
     schema : str or None
@@ -53,9 +53,9 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
     existing_mapping : object, optional
         Caller-managed Sensitive Data mapping; incompatible with a configured vault.
         Existing assignments are reused. The returned sensitive_result.support_mapping
-        remains caller-owned; persist it only in explicitly authorized write workflows, then unpersist() its
+        remains caller-owned; persist it only in Live workflows, then unpersist() its
         cache after consumption. A configured restricted mapping store is read-only
-        during evaluation-only Testing and reused/updated during authorized writes. Failures release the cache.
+        during evaluation-only Testing and reused/updated during Live writes. Failures release the cache.
     repartition_by : int, optional
         Physical write partition count for Live.
     grain_discovery_enabled : bool
@@ -68,40 +68,35 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
         Positive maximum retained candidates at the smallest valid key width.
     frequency_top_n : int, optional
         Maximum frequency rows per column.
-    spark_session : object, optional
-        Spark session used throughout.
     verbose : bool
-        Print concise stages and outcome.
+        Print concise stages and outcome when True; the execution widget reports automatically by default.
     dq_diagnostics : {"sample", "none", "full"}
         Exact metrics with bounded samples, no samples or lazy full violations.
 
     Returns
     -------
     dict
-        Prepared dataframe, selected contract, execution_mode, Guardrail outcomes,
-        schema_result, sensitive_result, source_drift_results, grain_result,
-        dq_result, source_guardrail_results, write_metrics, published, persistence_status and explicit dry-run
-        limits. Testing failures remain diagnostic results, never publication success.
-        source_guardrail_results lists the configured Read rules required by the
-        contributing sources; disabled and unconfigured checks impose no requirement.
-        Live returns the actual publication outcome. Metadata commits across Fabric
-        stores are separate lifecycle operations, not one atomic transaction.
+        Prepared dataframe, selected contract, execution identity, schema_result, sensitive_result, source_drift_results, grain_result, dq_result, source_guardrail_results, write_metrics, published and persistence_status. sensitive_result.support_mapping remains caller-owned; release its cache after use. Test returns processing diagnostics without business publication. Live returns its actual publication outcome.
 
-    Raises
-    ------
-    ValueError
-        For inconsistent participants, plans, processing or parameter definitions.
-    RuntimeError
-        For a failed Live stage. A Profile failure after publication retains
-        published=True and write_metrics on the exception; retry recovery is unchanged.
+    Raises RuntimeError when no pipeline is active or a Live stage fails, and
+    ValueError for an invalid operation or inconsistent approved configuration.
 
     Examples
     --------
-    >>> result = orchestrate_write(transformed_df, execution_plan=plan, sources=[source],
-    ...     store="Silver", schema="demo", table_name="orders", write_mode="overwrite")
+    >>> result = orchestrate_write(summary_df, store="Gold", schema="demo",
+    ...     table_name="customer_summary", write_mode="overwrite")
 
     """
-    with PipelineOperation(execution_plan, "target", locals()) as operation:
+    session = current_pipeline_session()
+    spark_session = session.spark
+    try:
+        execution_plan = session.operation_plan("target", locals())
+    except BaseException:
+        session.close(failed=True)
+        raise
+    sources = tuple(session.sources)
+    arguments = {key: value for key, value in locals().items() if key not in {"session"}}
+    with PipelineOperation(execution_plan, "target", arguments) as operation:
         sources = operation.arguments["sources"]
         for name, value in (
             ("grain_discovery_max_columns", grain_discovery_max_columns),
@@ -170,6 +165,7 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
                 "grain_result": grain_result,
                 "dq_result": dq_result,
                 "source_guardrail_results": source_checks,
+                "source_association": "pipeline_participation",
                 "orchestration_stages": stages,
             }
             if not execution_plan.permits_persistence:
@@ -187,8 +183,8 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
                                 "dry_run": {"status": "blocked", "reason": str(exc), "fully_evaluated": [],
                                             "simulated": [], "not_verified": ["target preparation and publication"]}}
                 dry_run = run("Processing", evaluate_processing)
-                profile = profile_table(dataframe=prepared, frequency_enabled=frequency_enabled,
-                                        frequency_top_n=frequency_top_n, spark_session=spark_session)
+                profile = profile_table(verbose=False, dataframe=prepared, frequency_enabled=frequency_enabled,
+                                        frequency_top_n=frequency_top_n, context=context, spark_session=spark_session)
                 passed = all(item["can_continue"] for item in source_checks) and all(stage["status"] != "blocked" for stage in [
                     *stages, *(stage for source in sources for stage in source.get("orchestration_stages", []))
                 ])
@@ -211,7 +207,7 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
             metrics.setdefault("input_columns", len(columns) if columns is not None else None)
             summary.details([("Strategy", strategy.title()), ("Target", target), ("Rows committed", metrics["rows_committed"]), ("Columns", metrics["input_columns"])])
             try:
-                profile = run("Profile", lambda: profile_table(table_id=write_result["table_id"], grain_discovery_enabled=grain_discovery_enabled, grain_discovery_max_columns=grain_discovery_max_columns, grain_discovery_max_candidates=grain_discovery_max_candidates, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, context=context, spark_session=spark_session))
+                profile = run("Profile", lambda: profile_table(verbose=False, table_id=write_result["table_id"], grain_discovery_enabled=grain_discovery_enabled, grain_discovery_max_columns=grain_discovery_max_columns, grain_discovery_max_candidates=grain_discovery_max_candidates, frequency_enabled=frequency_enabled, frequency_top_n=frequency_top_n, context=context, spark_session=spark_session))
             except RuntimeError as exc:
                 exc.published = published
                 exc.table_id = write_result["table_id"]

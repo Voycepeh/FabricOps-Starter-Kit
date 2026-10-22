@@ -23,7 +23,7 @@ Use for the normal governed publication path after project PySpark transformatio
 <div class="reference-example-usage" markdown="1">
 
 ```python
-result = orchestrate_write(transformed_df, execution_plan=plan, sources=[source], store="Silver", schema="demo", table_name="orders", write_mode="overwrite")
+result = orchestrate_write(transformed_df, store="Silver", schema="demo", table_name="orders", write_mode="overwrite")
 ```
 
 </div>
@@ -40,8 +40,6 @@ result = orchestrate_write(transformed_df, execution_plan=plan, sources=[source]
 def orchestrate_write(
     dataframe: Any,
     *,
-    execution_plan,
-    sources: Iterable[dict[str, Any]],
     store: str,
     schema: str | None,
     table_name: str,
@@ -54,8 +52,7 @@ def orchestrate_write(
     frequency_enabled: bool=True,
     frequency_top_n: int | None=5,
     existing_mapping=None,
-    spark_session=None,
-    verbose: bool=True,
+    verbose: bool=False,
     dq_diagnostics: str='sample',
 ) -> dict[str, Any]:
 ```
@@ -73,8 +70,6 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `dataframe` | `Any` | Yes | `—` | Transformed Spark DataFrame; Sensitive Data treatment prepares the input. |
-| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Same required plan as all participating Reads. Execute all reads, transformations and writes before finalize_pipeline(plan) for whole-run completion. Testing evaluates processing, guardrails and incremental safety. Explicit testing_writes=True permits real publication to declared safe destinations, with mappings, checkpoints and normal metadata side effects. Otherwise Testing evaluates without publication. Live enforces the pinned approved contracts and ownership and stops on Block before publication. |
-| `sources` | `Iterable[dict[str, Any]]` | Yes | `—` | Read results from this exact plan for the sources actually feeding this target. |
 | `store` | `str` | Yes | `—` | Configured target store key. |
 | `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
 | `table_name` | `str` | Yes | `—` | Physical target table name. |
@@ -86,9 +81,8 @@ Required describes the Python signature. An optional parameter may still be need
 | `grain_discovery_max_candidates` | `int` | No | `8` | Positive maximum retained candidates at the smallest valid key width. |
 | `frequency_enabled` | `bool` | No | `True` | Calculate optional frequency distributions during profiling. |
 | `frequency_top_n` | `int \| None` | No | `5` | Maximum frequency rows per column. |
-| `existing_mapping` | `object` | No | `None` | Caller-managed Sensitive Data mapping; incompatible with a configured vault. Existing assignments are reused. The returned sensitive_result.support_mapping remains caller-owned; persist it only in explicitly authorized write workflows, then unpersist() its cache after consumption. A configured restricted mapping store is read-only during evaluation-only Testing and reused/updated during authorized writes. Failures release the cache. |
-| `spark_session` | `object` | No | `None` | Spark session used throughout. |
-| `verbose` | `bool` | No | `True` | Print concise stages and outcome. |
+| `existing_mapping` | `object` | No | `None` | Caller-managed Sensitive Data mapping; incompatible with a configured vault. Existing assignments are reused. The returned sensitive_result.support_mapping remains caller-owned; persist it only in Live workflows, then unpersist() its cache after consumption. A configured restricted mapping store is read-only during evaluation-only Testing and reused/updated during Live writes. Failures release the cache. |
+| `verbose` | `bool` | No | `False` | Print concise stages and outcome when True; the execution widget reports automatically by default. |
 | `dq_diagnostics` | `str` | No | `'sample'` | Exact metrics with bounded samples, no samples or lazy full violations. |
 
 </div>
@@ -98,8 +92,8 @@ Required describes the Python signature. An optional parameter may still be need
 <div class="reference-example-usage" markdown="1">
 
 ```python
-result = orchestrate_write(transformed_df, execution_plan=plan, sources=[source],
-    store="Silver", schema="demo", table_name="orders", write_mode="overwrite")
+result = orchestrate_write(summary_df, store="Gold", schema="demo",
+    table_name="customer_summary", write_mode="overwrite")
 ```
 
 </div>
@@ -107,22 +101,29 @@ result = orchestrate_write(transformed_df, execution_plan=plan, sources=[source]
 ## Returns
 
 dict
-    Prepared dataframe, selected contract, execution_mode, Guardrail outcomes,
-    schema_result, sensitive_result, source_drift_results, grain_result,
-    dq_result, source_guardrail_results, write_metrics, published, persistence_status and explicit dry-run
-    limits. Testing failures remain diagnostic results, never publication success.
-    source_guardrail_results lists the configured Read rules required by the
-    contributing sources; disabled and unconfigured checks impose no requirement.
-    Live returns the actual publication outcome. Metadata commits across Fabric
-    stores are separate lifecycle operations, not one atomic transaction.
+    Prepared dataframe, selected contract, execution identity, schema_result, sensitive_result, source_drift_results, grain_result, dq_result, source_guardrail_results, write_metrics, published and persistence_status. sensitive_result.support_mapping remains caller-owned; release its cache after use. Test returns processing diagnostics without business publication. Live returns its actual publication outcome.
+
+Raises RuntimeError when no pipeline is active or a Live stage fails, and
+ValueError for an invalid operation or inconsistent approved configuration.
 
 ## Raises / Errors
 
-ValueError
-    For inconsistent participants, plans, processing or parameter definitions.
-RuntimeError
-    For a failed Live stage. A Profile failure after publication retains
-    published=True and write_metrics on the exception; retry recovery is unchanged.
+Not documented yet
+
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+Define the dataframe, destination, write_mode and processing parameters.
+All reads registered in this execution are associated with this target as
+pipeline participants, not proven transformation dependencies. Test evaluates
+processing and Guardrails without publishing or committing metadata. Live
+requires approved contracts, ownership, destinations and a pinned revision.
+Advanced repartitioning, Sensitive Data mapping and DQ diagnostics remain
+available. The result includes publication metrics and Guardrail diagnostics.
+A successful Write does not imply successful completion of the notebook.
+
+</div>
 
 ## See also
 
@@ -131,9 +132,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:26`
+`fabricops_kit/pipeline/orchestrate_write.py:27`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L26-L239">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L27-L235">View on GitHub</a>
 </div>
 
 
@@ -149,7 +150,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 203 |
+| Live-critical dependencies | 205 |
 
 ### Release history
 
@@ -317,6 +318,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._warehouse_publication_record</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared.build_pipeline_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_candidate_json</code></li>
 <li><code>fabricops_kit.pipeline.shared.catalogue_authored_processing</code></li>
@@ -325,6 +327,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.check_source_drift_for_target</code></li>
 <li><code>fabricops_kit.pipeline.shared.commit_pipeline_write_success</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared.current_pipeline_session</code></li>
 <li><code>fabricops_kit.pipeline.shared.display_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.dq_tolerance_parameter</code></li>
 <li><code>fabricops_kit.pipeline.shared.evaluate_source_drift_guardrail</code></li>

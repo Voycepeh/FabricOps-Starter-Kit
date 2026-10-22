@@ -1,33 +1,64 @@
-"""Public end boundary for Data Contract governed pipeline execution."""
-from fabricops_kit.pipeline.shared import PipelineExecutionPlan, finalize_pipeline_run
+"""Public completion and Testing-result publication boundary for a pipeline."""
+
+from fabricops_kit.pipeline.shared import (
+    PipelineSession,
+    current_pipeline_session,
+    publish_pipeline_testing_results,
+)
 
 
-def finalize_pipeline(execution_plan, *, failed=False, spark_session=None):
-    """Consolidate orchestration outcomes and finalize the pipeline tracking record.
+def finalize_pipeline(pipeline=None, *, failed=False):
+    """Complete the pipeline and publish its run and Guardrail results.
 
-    Call after every declared Read, transformation and Write, including read-only
-    runs. Reuses setup context and recorded results without counting DataFrames.
-    Set failed=True for a caught project exception; orchestrator failures are
-    recorded automatically. A stopped notebook remains incomplete.
+    Call once after all Reads, transformations and Writes, including read-only
+    runs. Pass the session returned by setup_pipeline, or omit it to use the
+    current execution. Set failed=True when a project exception was caught.
+    A successful Write or cell never completes the whole pipeline by itself.
 
-    Returns the persisted METADATA_PIPELINE_RUN summary with exact Data Contract
-    versions, status and activation revision. Repeated finalization returns the
-    original snapshot without another write. Existing execution reservations are
-    released after persistence. Metadata failure raises RuntimeError; invalid
-    execution_plan raises ValueError. Business writes and metadata remain separate
-    transactions. This function neither activates contracts nor verifies code.
+    Test Read/Write operations do not commit business or operational metadata.
+    This explicit boundary publishes only METADATA_GUARDRAIL_RESULTS and
+    METADATA_PIPELINE_RUN, with strict runtime audit identity. Complete governed
+    Testing can then be reviewed for activation. Failed, partial and No Contract
+    runs cannot authorize activation. Live finalization releases its reservation
+    after recording the final outcome. Interrupted runs remain incomplete.
+
+    Parameters
+    ----------
+    pipeline : PipelineSession, optional
+        Execution returned by setup_pipeline. Retain it for repeat finalization.
+    failed : bool, default=False
+        Mark a caught project failure; recorded failures cannot become success.
+
+    Returns
+    -------
+    dict
+        Final METADATA_PIPELINE_RUN snapshot. Repeating with the same session
+        returns the original result without additional successful commits.
+
+    Raises
+    ------
+    ValueError
+        If pipeline is not a setup_pipeline session or audit identity is missing.
+    RuntimeError
+        If another task owns the execution or metadata publication fails. Retry
+        with the same session after a publication failure; result IDs are stable.
 
     Examples
     --------
+    >>> pipeline = setup_pipeline(pipeline_id="orders", pipeline_mode="Test")
+    >>> source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
     >>> pipeline_result = finalize_pipeline(pipeline)
-    >>> pipeline_result["status"]
-    'succeeded'
 
     """
-    if not isinstance(execution_plan, PipelineExecutionPlan):
-        raise ValueError("An explicit PipelineExecutionPlan is required.")
-    with execution_plan.lock:
-        if not execution_plan.evidence.get("sealed"):
-            execution_plan.evidence["boundary_completed"] = not failed
-        return finalize_pipeline_run(execution_plan, failed=failed,
-            spark_session=spark_session if spark_session is not None else execution_plan.runtime_context.get("_pipeline_spark"))
+    pipeline = current_pipeline_session() if pipeline is None else pipeline
+    if not isinstance(pipeline, PipelineSession):
+        raise ValueError("Pass the session returned by setup_pipeline.")
+    if not pipeline.owns_current_execution():
+        raise RuntimeError("This execution belongs to another task or thread.")
+    with pipeline.plan.lock:
+        if not pipeline.closed:
+            pipeline.plan.evidence["boundary_completed"] = not failed
+            pipeline.close(failed=failed)
+        if pipeline.plan.execution_mode == "testing":
+            publish_pipeline_testing_results(pipeline.plan, spark_session=pipeline.spark)
+        return pipeline.plan.run_result

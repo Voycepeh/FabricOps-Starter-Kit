@@ -1107,6 +1107,7 @@ def profile_table(
     frequency_max_distinct_percent: float | None = 80.0,
     context=None,
     spark_session=None,
+    verbose: bool = True,
 ):
     """Profile a Spark DataFrame or a complete governed physical table.
 
@@ -1165,6 +1166,8 @@ def profile_table(
         columns. ``None`` disables the cardinality filter.
     context : dict, optional
         Explicit pipeline context; Testing returns profiles without persistence.
+    verbose : bool, optional
+        Display profiling progress when True; orchestration uses the automatic report.
     spark_session : object, optional
         Spark session to use. When omitted, FabricOps uses the supplied
         DataFrame session or resolves the active session.
@@ -1277,6 +1280,7 @@ def profile_table(
     ):
         raise ValueError("frequency_max_distinct_percent must be finite and between 0.0 and 100.0 when supplied.")
 
+    emit = print if verbose else lambda *args, **kwargs: None
     selected_frequency_columns = [] if not frequency_enabled else (None if frequency_columns is None else list(frequency_columns))
     if frequency_top_n is not None and frequency_top_n <= 0:
         raise ValueError("frequency_top_n must be greater than zero when supplied.")
@@ -1315,14 +1319,14 @@ def profile_table(
         else:
             profile_input_label = "supplied DataFrame"
 
-        print("FabricOps Profile")
-        print(f"1. Table → {physical_identity}")
-        print(f"   Input → {profile_input_label}")
-        print(f"2. Profiling backend → {backend_label}")
+        emit("FabricOps Profile")
+        emit(f"1. Table → {physical_identity}")
+        emit(f"   Input → {profile_input_label}")
+        emit(f"2. Profiling backend → {backend_label}")
     else:
-        print("FabricOps Profile")
-        print("1. Identity → DataFrame only; no governed table_id")
-        print("2. Profiling backend → PySpark")
+        emit("FabricOps Profile")
+        emit("1. Identity → DataFrame only; no governed table_id")
+        emit("2. Profiling backend → PySpark")
 
     if spark_session is None and dataframe is not None:
         spark_session = dataframe.sparkSession
@@ -1364,17 +1368,17 @@ def profile_table(
             )
 
     if identity is not None:
-        print("   Grain discovery → " + ("calculated" if grain_discovery_enabled else "disabled; saved candidates preserved"))
+        emit("   Grain discovery → " + ("calculated" if grain_discovery_enabled else "disabled; saved candidates preserved"))
     frequency_label = "calculated" if frequency_profile is not None else "skipped; no eligible/requested columns"
-    print("3. Statistical profile → calculated")
-    print(f"4. Frequency profile → {frequency_label}")
+    emit("3. Statistical profile → calculated")
+    emit(f"4. Frequency profile → {frequency_label}")
 
     from fabricops_kit.pipeline.shared import persistence_permitted
 
     if identity is None or not persistence_permitted(context):
-        print("5. Metadata persistence → disabled by Testing policy" if identity is not None else
+        emit("5. Metadata persistence → disabled by Testing policy" if identity is not None else
               "5. Metadata persistence → skipped; DataFrame-only profiling does not invent a table_id")
-        print("Result → profile outputs returned; no Catalogue or profiling metadata was written.")
+        emit("Result → profile outputs returned; no Catalogue or profiling metadata was written.")
         return {"profile": statistical_profile, "frequency_profile": frequency_profile, **profile_metrics}
 
     profile_snapshot_id = _profile_snapshot_id(
@@ -1411,7 +1415,7 @@ def profile_table(
         )
         summary_persisted = True
         profile_action = "refreshed existing activity snapshot" if same_activity_retry else "created new activity snapshot"
-        print(f"5. Profile snapshot → {profile_action}")
+        emit(f"5. Profile snapshot → {profile_action}")
         _replace_frequency_rows(
             frequency_df=frequency_metadata_df, profiled_df=profiled_df,
             config=config, env=env, spark_session=spark_session,
@@ -1426,7 +1430,7 @@ def profile_table(
             frequency_action = "cleared existing activity rows; no frequency profile generated"
         else:
             frequency_action = "skipped; no frequency profile generated"
-        print(f"6. Frequency profile metadata → {frequency_action}")
+        emit(f"6. Frequency profile metadata → {frequency_action}")
         catalogue_df = _catalogue_dataframe_from_profiled(
             profiled_df, source_df=dataframe, store_type=identity["store_kind"],
             layer=identity["store"], schema_name=identity["schema"],
@@ -1454,16 +1458,16 @@ def profile_table(
                     profiled_df=profiled_df, config=config, env=env, spark_session=spark_session
                 )
             except Exception as cleanup_error:
-                print(
+                emit(
                     "Warning: incomplete profiling snapshot cleanup failed; "
                     "Catalogue completion state remains authoritative. "
                     f"Cleanup error: {cleanup_error}"
                 )
         raise
     catalogue_action = "updated" if same_activity_retry else "registered or updated"
-    print(
+    emit(
         f"7. Catalogue → {catalogue_action} table and column metadata; "
         "existing load strategy and parameters preserved"
     )
-    print("Result → Profile completed and metadata saved.")
+    emit("Result → Profile completed and metadata saved.")
     return {"profile": profiled_df, "frequency_profile": frequency_profile, **profile_metrics}

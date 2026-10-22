@@ -51,9 +51,10 @@ def test_live_widget_inventory_uses_the_canonical_page_composer():
         module = __import__(f"fabricops_kit.widgets.{name}", fromlist=[name])
         assert "form_page(" in inspect.getsource(module)
     pipeline = __import__("fabricops_kit.pipeline.setup_pipeline", fromlist=["setup_pipeline"])
-    assert "pipeline-contracts" in inspect.getsource(pipeline)
-    assert "pipeline-testing" in inspect.getsource(pipeline)
-    assert "build_live_pipeline_plan" in inspect.getsource(pipeline)
+    from fabricops_kit.pipeline.shared import start_pipeline_session
+    assert "start_pipeline_session" in inspect.getsource(pipeline)
+    assert "form_page(" in inspect.getsource(start_pipeline_session)
+    assert "build_live_pipeline_plan" in inspect.getsource(start_pipeline_session)
 
 
 def test_form_page_is_a_stable_full_width_scrolling_viewport(monkeypatch):

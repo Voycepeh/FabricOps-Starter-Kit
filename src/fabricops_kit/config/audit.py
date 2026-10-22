@@ -71,6 +71,7 @@ def build_runtime_audit_fields(
     committed_at: str | datetime | None = None,
     metadata_lakehouse_name: str | None = None,
     runtime_context: dict[str, Any] | None = None,
+    require_notebook_identity: bool = True,
 ) -> dict[str, Any]:
     """Build canonical runtime audit fields for metadata-table rows.
 
@@ -93,6 +94,10 @@ def build_runtime_audit_fields(
     runtime_context : dict[str, Any], optional
         Values merged over Fabric runtime context, primarily for tests or
         controlled notebook overrides.
+
+    require_notebook_identity : bool
+        Require concrete notebook audit identity for durable metadata. Evaluation-only
+        pipeline diagnostics may retain absent notebook fields as None.
 
     Returns
     -------
@@ -130,12 +135,14 @@ def build_runtime_audit_fields(
         metadata_lakehouse_field: resolved_metadata_lakehouse,
         activity_field: _first_valid("activity_id"),
     }
-    _require_audit_values(values)
+    required = values if require_notebook_identity else {key: value for key, value in values.items()
+        if key not in {notebook_id_field, notebook_field}}
+    _require_audit_values(required)
     values[user_field] = str(values[user_field]).strip()
     values[workspace_id_field] = str(values[workspace_id_field]).strip()
     values[workspace_field] = str(values[workspace_field]).strip()
-    values[notebook_id_field] = str(values[notebook_id_field]).strip()
-    values[notebook_field] = str(values[notebook_field]).strip()
+    values[notebook_id_field] = str(values[notebook_id_field]).strip() if values[notebook_id_field] is not None else None
+    values[notebook_field] = str(values[notebook_field]).strip() if values[notebook_field] is not None else None
     values[metadata_lakehouse_field] = str(values[metadata_lakehouse_field]).strip()
     values[activity_field] = str(values[activity_field]).strip()
     return values

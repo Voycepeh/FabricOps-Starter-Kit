@@ -23,10 +23,11 @@ Use for the normal governed Read path before project PySpark transformation.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-source = orchestrate_read(execution_plan=plan, store="Bronze", schema="demo", table_name="orders")
+source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 ```
 
 </div>
+
 
 <details class="reference-signature-details" markdown="1">
 <summary>Signature</summary>
@@ -38,7 +39,6 @@ source = orchestrate_read(execution_plan=plan, store="Bronze", schema="demo", ta
 ```python
 def orchestrate_read(
     *,
-    execution_plan,
     store: str,
     schema: str | None,
     table_name: str,
@@ -51,8 +51,7 @@ def orchestrate_read(
     grain_discovery_max_candidates: int=8,
     frequency_enabled: bool=True,
     frequency_top_n: int | None=5,
-    spark_session=None,
-    verbose: bool=True,
+    verbose: bool=False,
     dq_diagnostics: str='sample',
 ) -> dict[str, Any]:
 ```
@@ -69,7 +68,6 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Required immutable plan from setup_pipeline in interactive or headless mode. Pass the same object to every Read and Write and execute the entire project then call finalize_pipeline(plan) for whole-run completion. Testing evaluates Freshness, Schema, Grain, Data Quality and Profile. With testing_writes=False, ordinary Catalogue/Profile/Source Observation commits are disabled; run records and Guardrail diagnostics still persist. Explicit real Testing writes permit normal metadata side effects to safe destinations. Live enforces one pinned approved revision. Environment names select routing. Empty or disabled optional Guardrails add no execution requirement. A configured check that cannot execute blocks Live and remains a Testing diagnostic. |
 | `store` | `str` | Yes | `—` | Configured source store key. |
 | `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
 | `table_name` | `str` | Yes | `—` | Physical source table name. |
@@ -82,26 +80,46 @@ Required describes the Python signature. An optional parameter may still be need
 | `grain_discovery_max_candidates` | `int` | No | `8` | Positive maximum retained candidates at the smallest valid key width. |
 | `frequency_enabled` | `bool` | No | `True` | Calculate optional frequency distributions during profiling. |
 | `frequency_top_n` | `int \| None` | No | `5` | Maximum frequency values per column. |
-| `spark_session` | `object` | No | `None` | Spark session shared by all stages. |
-| `verbose` | `bool` | No | `True` | Print concise stage outcomes and summary. |
+| `verbose` | `bool` | No | `False` | Print concise stage outcomes and summary. |
 | `dq_diagnostics` | `str` | No | `'sample'` | Rule metrics plus bounded examples, no examples, or lazy full failures. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+```
 
 </div>
 
 ## Returns
 
 dict
-    Source dataframe and identity, selected contract, execution_mode,
-    applicable_guardrails, diagnostic results, profile, persistence_status,
-    publication_status and checks_not_exercised. Testing retains blocking
-    rule outcomes for inspection; Live stops on Block. Neither publishes data.
+    Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.
+
+Raises RuntimeError when no pipeline is active or a Live stage fails, and
+ValueError for an invalid operation or inconsistent approved configuration.
 
 ## Raises / Errors
 
-ValueError
-    For an invalid or inconsistent plan, mode, parameters or participant.
-RuntimeError
-    For a failed stage, retaining the original exception as its cause.
+Not documented yet
+
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+Define store, schema, table_name and any full/incremental/query options.
+Spark, execution authority and reporting come from setup_pipeline. The result
+retains its dataframe, canonical Table ID and Guardrail diagnostics. Reads
+register pipeline-level participation for subsequent Writes; this is not
+exact DataFrame lineage. Live blocks failed checks; Test never commits.
+target_table_id preserves incremental checkpoint and SCD processing support.
+dq_diagnostics accepts sample, none or full for explicit debugging.
+
+</div>
 
 ## See also
 
@@ -110,9 +128,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_read.py:22`
+`fabricops_kit/pipeline/orchestrate_read.py:23`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L22-L155">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L23-L152">View on GitHub</a>
 </div>
 
 
@@ -128,7 +146,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 180 |
+| Live-critical dependencies | 182 |
 
 ### Release history
 
@@ -284,12 +302,14 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._warehouse_observation_query</code></li>
 <li><code>fabricops_kit.pipeline.shared._watermark_timestamp</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared.build_pipeline_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_candidate_json</code></li>
 <li><code>fabricops_kit.pipeline.shared.capture_source_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared.catalogue_authored_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.check_dq_runtime</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared.current_pipeline_session</code></li>
 <li><code>fabricops_kit.pipeline.shared.display_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.dq_tolerance_parameter</code></li>
 <li><code>fabricops_kit.pipeline.shared.execution_result</code></li>

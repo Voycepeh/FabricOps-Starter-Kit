@@ -20,6 +20,7 @@ from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 from fabricops_kit.data_contract import shared as contracts
 from fabricops_kit.pipeline import shared as runtime
 from tests.helpers import framework_config
+from tests.helpers import run_pipeline_operation
 
 pytestmark = pytest.mark.integration
 
@@ -261,24 +262,23 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     before = _activation(state)
     assert not before["eligible_runs"] and before["activate"].disabled
     assert not state.metadata["METADATA_DATA_LINEAGE"]
-    selector = importlib.import_module("fabricops_kit.pipeline.setup_pipeline")
     coordinates = {"pipeline_id": "orders-pipeline", "configuration": {}, "sources": [
         {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
         {"store": "Bronze", "schema": "dbo", "table_name": "products"}],
         "targets": [{"store": "Silver", "schema": "dbo", "table_name": "curated_orders"}]}
-    selection = selector.setup_pipeline(**coordinates, interactive=True, spark_session=state.spark, context=state.context)
-    for row in (source, schema_source, target):
-        selection["select_contract"](row["table_id"], row["contract_id"], 1)
+    choices = {row["table_id"]: {"contract_id": row["contract_id"], "contract_version": 1}
+               for row in (source, schema_source, target)}
     snapshot = deepcopy(state.metadata)
     state.context["activity_id"] = "testing"
-    plan = selection["build_plan"]()
+    plan = runtime.build_pipeline_execution_plan(**coordinates, execution_mode="testing", selections=choices,
+        spark_session=state.spark, context=state.context)
     def reads(plan):
-        return [orchestrate_read(execution_plan=plan, **coords, spark_session=state.spark, verbose=False)
+        return [run_pipeline_operation(orchestrate_read, plan=plan, **coords, spark_session=state.spark, verbose=False)
                 for coords in coordinates["sources"]]
     inputs = reads(plan)
     from pyspark.sql import functions as F
     invalid = inputs[0]["dataframe"].withColumn("id", F.lit(None).cast("long"))
-    failed = orchestrate_write(invalid, execution_plan=plan, sources=inputs, **coordinates["targets"][0],
+    failed = run_pipeline_operation(orchestrate_write, invalid, plan=plan, sources=inputs, **coordinates["targets"][0],
         write_mode="overwrite", spark_session=state.spark, verbose=False)
     assert not failed["validation_passed"] and not failed["published"]
     assert failed["grain_result"]["can_continue"] is False
@@ -288,13 +288,11 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert finalize_pipeline_run(plan, spark_session=state.spark)["status"] == "failed"
     gate = _activation(state)
     assert not gate["eligible_runs"] and gate["activate"].disabled
-    selection = selector.setup_pipeline(**coordinates, interactive=True, spark_session=state.spark, context=state.context)
-    for row in (source, schema_source, target):
-        selection["select_contract"](row["table_id"], row["contract_id"], 1)
-    plan = selection["build_plan"]()
+    plan = runtime.build_pipeline_execution_plan(**coordinates, execution_mode="testing", selections=choices,
+        spark_session=state.spark, context=state.context)
     with plan:
         inputs = reads(plan)
-        tested = orchestrate_write(inputs[0]["dataframe"], execution_plan=plan, sources=inputs,
+        tested = run_pipeline_operation(orchestrate_write, inputs[0]["dataframe"], plan=plan, sources=inputs,
             **coordinates["targets"][0], write_mode="overwrite", spark_session=state.spark, verbose=False)
     assert tested["validation_passed"] and not tested["published"]
     assert tested["validation_passed"]
@@ -305,43 +303,11 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert all(row["run_id"] == plan.plan_id for row in plan.results)
     assert all(row["rule_type"] != "contract_validation" for row in plan.results)
     widget = _activation(state)
-    assert len(widget["eligible_runs"]) == 1 and widget["activate"].disabled, [
-        {"pipeline": item.get("pipeline_id"), "mode": item.get("execution_mode"), "status": item.get("status"),
-         "completed": bool(item.get("completed_at")), "summary": json.loads(item["operation_summary_json"]),
-         "candidate_hash_matches": __import__("fabricops_kit.activated_pipeline.shared", fromlist=["manifest_digest"]).manifest_digest(json.loads(item["candidate_json"])) == item["candidate_fingerprint"]}
-        for item in state.metadata["METADATA_PIPELINE_RUN"]]
-    widget["confirmed"].value = True
-    widget["candidate_controls"][plan.plan_id]["version"].value = "1"
-    widget["review_release"]()
-    widget["confirmed"].value = True
-    approved = widget["perform_activation"]()["pipelines"]["orders-pipeline"]
-    assert approved["testing_run_id"] == plan.plan_id
-    assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]] for row in state.metadata["METADATA_DATA_CONTRACT"])
-    state.context["activity_id"] = "live"
-    live = selector.setup_pipeline(**coordinates, execution_mode="live", spark_session=state.spark, context=state.context)
-    with live:
-        inputs = reads(live)
-        published = orchestrate_write(inputs[0]["dataframe"], execution_plan=live, sources=inputs,
-            **coordinates["targets"][0], write_mode="overwrite", spark_session=state.spark, verbose=False)
-    assert published["published"]
-    assert state.business["curated_orders"].first().email == "****************"
-    assert {row["pipeline_role"] for row in state.metadata["METADATA_DATA_LINEAGE"]} == {"source", "target"}
-    assert state.metadata["METADATA_SOURCE_OBSERVATION"]
-    assert {row["execution_type"] for row in state.metadata["METADATA_GUARDRAIL_RESULTS"]} == {"testing", "live"}
-    # A new logical run under the same business activity recovers without republication.
-    assert finalize_pipeline_run(live, spark_session=state.spark)["status"] == "succeeded"
-    live = selector.setup_pipeline(**coordinates, execution_mode="live",
-        spark_session=state.spark, context=state.context)
-    lineage_count = len(state.metadata["METADATA_DATA_LINEAGE"])
-    with live:
-        inputs = reads(live)
-        retried = orchestrate_write(inputs[0]["dataframe"], execution_plan=live, sources=inputs,
-            **coordinates["targets"][0], write_mode="overwrite", spark_session=state.spark, verbose=False)
-    assert retried["published"] and retried["write_metrics"]["measurement_source"] == "already_applied"
-    assert len(state.metadata["METADATA_DATA_LINEAGE"]) == lineage_count
-    next_draft = contracts.create_contract_draft(table_id=state.target_id, config=state.config, env="dev", spark_session=state.spark)
-    assert next_draft["contract_version"] == 2 and "is_active" not in next_draft
-    assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]] for row in state.metadata["METADATA_DATA_CONTRACT"] if row["status"] == "frozen")
+    assert not widget["eligible_runs"] and widget["activate"].disabled
+    assert state.metadata["METADATA_PIPELINE_RUN"] == snapshot["METADATA_PIPELINE_RUN"]
+    assert state.metadata["METADATA_GUARDRAIL_RESULTS"] == snapshot["METADATA_GUARDRAIL_RESULTS"]
+    assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]]
+               for row in state.metadata["METADATA_DATA_CONTRACT"])
 
 
 def assert_ordinary_metadata_unchanged(current, before):

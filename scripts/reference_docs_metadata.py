@@ -892,11 +892,11 @@ PUBLIC_SYMBOL_DOCS = [
  'template_segment': 'Standard Read orchestration',
  'use_when': 'Use for the normal governed Read path before project PySpark transformation.',
  'do_not_use_when': 'Use lower-level capabilities directly when intentionally composing a non-standard lifecycle.',
- 'parameters': 'Explicit execution_plan and source coordinates, read strategy, query and profiling controls.',
+ 'parameters': 'Source coordinates, read strategy and query options; execution context is internal.',
  'returns': 'Governed source DataFrame and table identity together with every stage result.',
- 'side_effects': 'Testing persists METADATA_PIPELINE_RUN and Guardrail diagnostics; business publication and ordinary metadata remain disabled. Live commits Guardrail Results and full-read '
+ 'side_effects': 'Test retains diagnostics in memory until finalize_pipeline publishes the run and Guardrail results; business publication remains disabled. Live commits Guardrail Results and full-read '
                  'Catalogue/Profile metadata.',
- 'preferred_example': 'source = orchestrate_read(execution_plan=plan, store="Bronze", schema="demo", '
+ 'preferred_example': 'source = orchestrate_read(store="Bronze", schema="demo", '
                       'table_name="orders")',
  'related_functions': ['orchestrate_write', 'profile_table']},
  {'kind': 'function',
@@ -908,12 +908,12 @@ PUBLIC_SYMBOL_DOCS = [
  'template_segment': 'Standard Write orchestration',
  'use_when': 'Use for the normal governed publication path after project PySpark transformation.',
  'do_not_use_when': 'Use lower-level capabilities directly when intentionally composing a non-standard lifecycle.',
- 'parameters': 'Explicit execution_plan, transformed DataFrame, participating Read results, target coordinates '
+ 'parameters': 'Transformed DataFrame, target coordinates '
                'and strategy.',
  'returns': 'Prepared input, Guardrail outcomes, execution mode and actual publication/persistence status.',
- 'side_effects': 'Testing persists run evidence and Guardrail diagnostics only. Live publishes and commits metadata at existing '
+ 'side_effects': 'Test retains diagnostics in memory until finalize_pipeline publishes run and Guardrail results. Live publishes and commits metadata at existing '
                  'lifecycle boundaries.',
- 'preferred_example': 'result = orchestrate_write(transformed_df, execution_plan=plan, sources=[source], '
+ 'preferred_example': 'result = orchestrate_write(transformed_df, '
                       'store="Silver", schema="demo", table_name="orders", write_mode="overwrite")',
  'related_functions': ['orchestrate_read', 'profile_table']},
  {'kind': 'function',
@@ -1581,7 +1581,7 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function', 'module': 'widgets.widget_activate_pipeline', 'function_type': 'callable',
   'summary_override': 'Review complete persisted Testing and activate an exact whole pipeline.',
   'symbol_name': 'widget_activate_pipeline', 'template_notebook': '01_governance', 'template_segment': 'Pipeline activation',
-  'use_when': 'Use after successful whole-pipeline Testing and finalize_pipeline().',
+  'use_when': 'Use after finalize_pipeline publishes complete successful governed Testing results.',
   'expanded_purpose': 'Shows exact contracts/rules and processing configuration identity, diagnostics, warnings, Agreement and fingerprint before explicit Governance confirmation. Activation neither deploys nor publishes.',
   'related_functions': ['setup_pipeline']},
 
@@ -1596,9 +1596,9 @@ PUBLIC_SYMBOL_DOCS = [
  'summary_override': 'Prepare Testing or resolve an approved environment configuration for Live.',
  'symbol_name': 'setup_pipeline', 'template_notebook': '02_pipeline',
  'template_segment': 'Configure the pipeline and whole-run boundary',
- 'use_when': 'Use once before Read, Transform and Write; finish with finalize_pipeline().',
+ 'use_when': 'Use once before Read, Transform and Write with pipeline_id and pipeline_mode.',
  'related_functions': ['finalize_pipeline', 'widget_data_contract', 'orchestrate_read', 'orchestrate_write'],
- 'return_interpretation': 'Interactive Testing returns a selector with build_plan(); headless execution returns an immutable plan. finalize_pipeline(plan) records the whole-run outcome.',
+ 'return_interpretation': 'Returns a context-local execution session with contract selection and automatic reporting; finalize_pipeline records completion and publishes Testing results; interrupted runs remain incomplete.',
  'expanded_purpose': 'Select a frozen contract or No Contract independently for each Testing participant. Live resolves and pins one approved revision from the central authority.',
  'common_failure_causes': ['Missing explicit table choices or invalid frozen contract selections.', 'Unsafe Testing write destination.', 'Missing complete governed Testing for activation or approved Live configuration.']},
 
@@ -1702,9 +1702,10 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     },
 }
 
+
 PUBLIC_SYMBOL_DOCS.append({'kind': 'function', 'module': 'pipeline.finalize_pipeline',
     'function_type': 'callable', 'symbol_name': 'finalize_pipeline',
-    'summary_override': 'Consolidate Data Contract results and finalize execution tracking.',
+    'summary_override': 'Complete execution and publish Testing run and Guardrail results.',
     'template_notebook': '02_pipeline', 'template_segment': 'Finalize Pipeline',
     'related_functions': ['setup_pipeline', 'orchestrate_read', 'orchestrate_write'],
     'use_when': 'Call after all Reads, transformations and Writes, including read-only runs.'})

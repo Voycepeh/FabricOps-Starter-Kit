@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 import pytest
 import importlib
 from types import SimpleNamespace
+from tests.helpers import run_pipeline_operation
 
 LIVE_PLAN = SimpleNamespace(execution_mode="live", plan_id="plan", permits_persistence=True, runtime_context={}, environment="dev", results=[], simulations=[])
 
@@ -29,9 +30,9 @@ def test_invalid_dq_diagnostics_fails_before_io(operation):
         with pytest.raises(ValueError, match="dq_diagnostics"):
             options = {"store": "Bronze", "schema": "demo", "table_name": "orders", "dq_diagnostics": "invalid"}
             if operation == "read":
-                module.orchestrate_read(execution_plan=LIVE_PLAN, **options)
+                run_pipeline_operation(module.orchestrate_read, plan=LIVE_PLAN, **options)
             else:
-                module.orchestrate_write(object(), execution_plan=LIVE_PLAN, sources=[], write_mode="overwrite", **options)
+                run_pipeline_operation(module.orchestrate_write, object(), plan=LIVE_PLAN, sources=[], write_mode="overwrite", **options)
 
 
 
@@ -58,7 +59,7 @@ def test_orchestrate_read_orders_stages_and_preserves_source(capsys):
         def call(*args, **kwargs): calls.append(name); return value
         return call
     with patch("fabricops_kit.pipeline.orchestrate_read.pipeline_read", result("read", {"dataframe": dataframe, "table_id": "source-id"})), patch("fabricops_kit.pipeline.orchestrate_read.check_freshness", result("freshness", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.check_schema", result("schema", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.check_dq", result("dq", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.profile_table", result("profile", {"profile": object()})):
-        actual = orchestrate_read(execution_plan=LIVE_PLAN, store="Bronze", schema="demo", table_name="orders", verbose=False)
+        actual = run_pipeline_operation(orchestrate_read, plan=LIVE_PLAN, store="Bronze", schema="demo", table_name="orders", verbose=False)
     assert calls == ["read", "freshness", "schema", "dq", "profile"]
     assert actual["dataframe"] is dataframe
     assert actual["table_id"] == "source-id"
@@ -87,7 +88,7 @@ def test_orchestrate_read_uses_table_name_for_heading_and_stage_metadata(capsys)
         "fabricops_kit.pipeline.orchestrate_read.profile_table",
         return_value={"status": "passed"},
     ):
-        result = orchestrate_read(execution_plan=LIVE_PLAN,
+        result = run_pipeline_operation(orchestrate_read, plan=LIVE_PLAN,
             store="Bronze", schema="demo", table_name="physical_orders"
         )
 
@@ -109,7 +110,6 @@ def test_orchestrate_read_uses_table_name_for_heading_and_stage_metadata(capsys)
             "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
             {
                 "dataframe": object(),
-                "sources": [],
                 "store": "Silver",
                 "schema": "demo",
                 "table_name": "orders",
@@ -152,7 +152,7 @@ def test_orchestrate_read_reports_selected_physical_reader(capsys):
         "fabricops_kit.pipeline.orchestrate_read.profile_table",
         return_value={"status": "passed"},
     ):
-        actual = orchestrate_read(execution_plan=LIVE_PLAN,
+        actual = run_pipeline_operation(orchestrate_read, plan=LIVE_PLAN,
             store="Product",
             schema="demo",
             table_name="order_history",
@@ -168,7 +168,7 @@ def test_orchestrate_read_attributes_failure_and_stops_later_stages():
     cause = ValueError("meaningful schema mismatch")
     with patch("fabricops_kit.pipeline.orchestrate_read.pipeline_read", return_value={"dataframe": object(), "table_id": "source-id"}), patch("fabricops_kit.pipeline.orchestrate_read.check_freshness", return_value={"status": "passed"}), patch("fabricops_kit.pipeline.orchestrate_read.check_schema", side_effect=cause), patch("fabricops_kit.pipeline.orchestrate_read.check_dq") as dq:
         with pytest.raises(RuntimeError, match="READ 'orders' failed during Schema") as raised:
-            orchestrate_read(execution_plan=LIVE_PLAN, store="Bronze", schema="demo", table_name="orders", verbose=False)
+            run_pipeline_operation(orchestrate_read, plan=LIVE_PLAN, store="Bronze", schema="demo", table_name="orders", verbose=False)
     assert raised.value.__cause__ is cause
     dq.assert_not_called()
 
@@ -191,7 +191,7 @@ def test_orchestrate_write_orders_stages_and_profiles_after_write(capsys):
         patch("fabricops_kit.pipeline.orchestrate_write.profile_table", effect("profile", {"profile":object()})),
     ]
     with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5] as write, patches[6]:
-        actual = orchestrate_write(dataframe, execution_plan=LIVE_PLAN, sources=[{"table_id":"source-id", "execution_plan_id":"plan"}], store="Silver", schema="demo", table_name="physical_target", write_mode="overwrite")
+        actual = run_pipeline_operation(orchestrate_write, dataframe, plan=LIVE_PLAN, sources=[{"table_id":"source-id", "execution_plan_id":"plan"}], store="Silver", schema="demo", table_name="physical_target", write_mode="overwrite")
     assert calls == ["schema", "sensitive", "drift", "dq", "write", "profile"]
     assert actual["published"] is True
     assert actual["table_id"] == "target-id"
@@ -236,9 +236,9 @@ def test_orchestrate_write_forwards_scd_write_parameters(capsys):
         "fabricops_kit.pipeline.orchestrate_write.profile_table",
         return_value={"profile": object()},
     ):
-        orchestrate_write(
+        run_pipeline_operation(orchestrate_write,
             object(),
-            execution_plan=LIVE_PLAN, sources=[],
+            plan=LIVE_PLAN, sources=[],
             store="Silver",
             schema="demo",
             table_name="product_mapping_scd2",
@@ -258,7 +258,7 @@ def test_orchestrate_write_preserves_guardrail_failure_and_does_not_write():
     cause = RuntimeError("blocking DQ rule: completeness 96.7%")
     with patch("fabricops_kit.pipeline.orchestrate_write.resolve_table_id", return_value="target-id"), patch("fabricops_kit.pipeline.orchestrate_write.check_schema", return_value={"status":"passed"}), patch("fabricops_kit.pipeline.orchestrate_write.check_sensitive_data", return_value={"status":"passed", "dataframe":object()}), patch("fabricops_kit.pipeline.orchestrate_write.check_source_drift", return_value={"status":"passed"}), patch("fabricops_kit.pipeline.orchestrate_write.check_dq", side_effect=cause), patch("fabricops_kit.pipeline.orchestrate_write.pipeline_write") as write:
         with pytest.raises(RuntimeError, match="WRITE 'physical_target' failed during Data Quality") as raised:
-            orchestrate_write(object(), execution_plan=LIVE_PLAN, sources=[{"table_id":"source-id", "execution_plan_id":"plan"}], store="Silver", schema="demo", table_name="physical_target", write_mode="overwrite", verbose=False)
+            run_pipeline_operation(orchestrate_write, object(), plan=LIVE_PLAN, sources=[{"table_id":"source-id", "execution_plan_id":"plan"}], store="Silver", schema="demo", table_name="physical_target", write_mode="overwrite", verbose=False)
     assert raised.value.__cause__ is cause
     write.assert_not_called()
 
@@ -278,7 +278,7 @@ def test_failed_stage_output_never_reports_passed_and_marks_later_stages_not_run
         side_effect=ValueError("schema mismatch"),
     ):
         with pytest.raises(RuntimeError):
-            orchestrate_read(execution_plan=LIVE_PLAN,
+            run_pipeline_operation(orchestrate_read, plan=LIVE_PLAN,
                 store="Bronze",
                 schema="demo",
                 table_name="orders",
@@ -373,11 +373,11 @@ def test_orchestrators_forward_independent_profile_controls(
                   grain_discovery_max_candidates=1, frequency_enabled=frequency_enabled)
     if operation == "read":
         monkeypatch.setattr(module, "pipeline_read", Mock(return_value={"dataframe": object(), "table_id": "source-id"}))
-        result = module.orchestrate_read(execution_plan=LIVE_PLAN, **kwargs)
+        result = run_pipeline_operation(module.orchestrate_read, plan=LIVE_PLAN, **kwargs)
     else:
         monkeypatch.setattr(module, "resolve_table_id", lambda **k: "target-id")
         monkeypatch.setattr(module, "pipeline_write", Mock(return_value={"table_id": "target-id"}))
-        result = module.orchestrate_write(object(), execution_plan=LIVE_PLAN, sources=[], write_mode="overwrite", **kwargs)
+        result = run_pipeline_operation(module.orchestrate_write, object(), plan=LIVE_PLAN, sources=[], write_mode="overwrite", **kwargs)
     assert profile.call_args.kwargs["grain_discovery_enabled"] is grain_discovery_enabled
     assert profile.call_args.kwargs["frequency_enabled"] is frequency_enabled
     assert profile.call_args.kwargs["grain_discovery_max_columns"] == 2

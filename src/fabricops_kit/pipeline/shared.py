@@ -456,7 +456,7 @@ def persist_lineage_participation(
     if not persistence_permitted(context):
         raise RuntimeError("Testing cannot commit Lineage.")
     config, env, resolved_context = resolve_fabric_context(context=context)
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=resolved_context)
+    audit = build_pipeline_audit_fields(config=config, env=env, runtime_context=resolved_context)
     effective_activity_id = str(activity_id or audit["_activity_id"]).strip()
     audit["_activity_id"] = effective_activity_id
     identifier = lineage_id(
@@ -1374,7 +1374,7 @@ def resolve_incremental_source_scope(
 ) -> dict[str, Any]:
     """Resolve and stage the unconsumed scope for one source-to-target relationship."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    audit = build_pipeline_audit_fields(config=config, env=env, runtime_context=context)
     activity_id = source_observation_run_id(context) or str(audit["_activity_id"])
     current = observation_rows(observation)
     if not current:
@@ -1538,7 +1538,7 @@ def check_source_drift_for_target(
 ) -> dict[str, Any]:
     """Evaluate source-governed drift against a target-specific baseline."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    audit = build_pipeline_audit_fields(config=config, env=env, runtime_context=context)
     activity_id = source_observation_run_id(context) or str(audit["_activity_id"])
     rules_df = load_table_guardrail_rules(
         config,
@@ -1709,7 +1709,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         raise ValueError("success_context is missing target, activity, or logical notebook identity.")
 
     config, env, context = resolve_fabric_context(context=success_context.get("context"))
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    audit = build_pipeline_audit_fields(config=config, env=env, runtime_context=context)
     audit["_activity_id"] = activity_id
     snapshot = success_context["observation_snapshot"]
     records: list[dict[str, Any]] = []
@@ -1774,7 +1774,7 @@ def stage_pipeline_write_observations(success_context: Mapping[str, Any]) -> lis
     if not target_table_id or not activity_id or not notebook_name:
         raise ValueError("success_context is missing target, activity, or logical notebook identity.")
     config, env, context = resolve_fabric_context(context=success_context.get("context"))
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    audit = build_pipeline_audit_fields(config=config, env=env, runtime_context=context)
     audit["_activity_id"] = activity_id
     snapshot = success_context["observation_snapshot"]
     records: list[dict[str, Any]] = []
@@ -2169,7 +2169,7 @@ def write_guardrail_result_row(
     if guardrail_version <= 0:
         raise ValueError("guardrail_version is required to persist a Guardrail result.")
     plan = (context or {}).get("execution_plan")
-    audit = build_runtime_audit_fields(config=config, env=env,
+    audit = build_pipeline_audit_fields(config=config, env=env,
                                        runtime_context=plan.runtime_context if plan is not None else context)
     resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"])
     resolved_execution_type = plan.execution_mode if plan is not None else "live"
@@ -2219,6 +2219,10 @@ def write_guardrail_result_row(
     }
     if plan is not None:
         plan.results.append(row)
+        if not plan.permits_persistence:
+            plan.evidence.setdefault("guardrail_history", []).append(dict(row))
+    if not persistence_permitted(context):
+        return
     write_lakehouse_table(
         spark_session.createDataFrame([coerce_metadata_row_types(results_table, row)]),
         results_table,
@@ -3253,7 +3257,7 @@ def resolve_scd1_business_columns(columns: list[str], key_columns: list[str]) ->
 def resolve_target_audit_fields(context: Mapping[str, Any] | None) -> dict[str, Any]:
     """Resolve one compact, run-consistent audit record for business target rows."""
     runtime_context = dict(context or {})
-    values = build_runtime_audit_fields(
+    values = build_pipeline_audit_fields(
         config=runtime_context.get("config"),
         env=runtime_context.get("env"),
         runtime_context=runtime_context,
@@ -4566,7 +4570,7 @@ def check_dq_runtime(
         result["failed_values"] = _dq_empty_failed_values(spark_session)
         return result
 
-    audit = build_runtime_audit_fields(config=config, env=env,
+    audit = build_pipeline_audit_fields(config=config, env=env,
                                        runtime_context=plan.runtime_context if plan is not None else context)
     resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"]).strip()
     if plan is not None:
@@ -4604,12 +4608,15 @@ def check_dq_runtime(
     plan = (context or {}).get("execution_plan")
     if plan is not None:
         plan.results.extend(summary_rows)
-    write_lakehouse_table(
-        spark_session.createDataFrame([coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows]),
-        "METADATA_GUARDRAIL_RESULTS", store="Metadata",
-        schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_RESULTS"),
-        context=context or {"config": config, "env": env}, mode="append",
-    )
+        if not plan.permits_persistence:
+            plan.evidence.setdefault("guardrail_history", []).extend(dict(row) for row in summary_rows)
+    if persistence_permitted(context):
+        write_lakehouse_table(
+            spark_session.createDataFrame([coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows]),
+            "METADATA_GUARDRAIL_RESULTS", store="Metadata",
+            schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_RESULTS"),
+            context=context or {"config": config, "env": env}, mode="append",
+        )
 
     if diagnostics == "full":
         result["failed_values"] = _dq_failed_values_dataframe(
@@ -5398,7 +5405,7 @@ def capture_source_observation(
         table_id=governed_table_id,
         environment_name=env,
     )
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    audit = build_pipeline_audit_fields(config=config, env=env, runtime_context=context)
 
     if (
         freshness_rule is not None
@@ -5559,8 +5566,6 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
 
     config, env, runtime = resolve_fabric_context(context=context)
     notebook_id = str(runtime.get("notebook_id") or "").strip()
-    if not notebook_id:
-        raise ValueError("An explicit notebook_id is required for pipeline execution.")
     identities = resolve_pipeline_participants(
         config, env, sources=sources, targets=targets, context=runtime, spark_session=spark_session,
     )
@@ -5734,15 +5739,18 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
      .whenMatchedUpdateAll().whenNotMatchedInsertAll().execute())
 
 
-def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", completed_at=None):
+def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", completed_at=None, persist_testing=False):
     """Persist one authoritative Delta snapshot; confirm lost acknowledgements by read-back."""
+    if persist_testing and (plan.execution_mode != "testing" or not plan.evidence.get("sealed")):
+        raise RuntimeError("Testing results may be published only after explicit pipeline completion.")
+    durable = plan.permits_persistence or persist_testing
     row = None
     try:
         candidate, fingerprint, bindings = pipeline_candidate(plan)
         base = _candidate_hash({key: value for key, value in candidate.items()
                                 if key not in {"operations", "portable_fingerprint"}})
         previous = plan.evidence.setdefault("candidate_base", base)
-        if previous != base:
+        if previous != base and not plan.evidence.get("dynamic_participants"):
             plan.evidence["failures"].append({"code": "candidate_changed_during_run"})
         if plan.evidence["failures"] or any(item["status"] == "failed" for item in plan.evidence["operations"].values()) or any(
             result.get("can_continue") is False for result in plan.results):
@@ -5759,9 +5767,10 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
                     "activation_revision": plan.activation_revision, "warnings": plan.evidence.get("warnings", []),
                     "boundary_completed": plan.evidence.get("boundary_completed", False),
                     "testing_writes": plan.testing_writes, "physical_bindings": plan.runtime_context.get("_pipeline_bindings")}),
-               **build_runtime_audit_fields(config=plan.runtime_context["config"], env=plan.environment,
-                                            runtime_context=plan.runtime_context)}
-        _merge_pipeline_run_row(plan, row, spark_session=spark_session)
+               **(build_runtime_audit_fields(config=plan.runtime_context["config"], env=plan.environment,
+                                            runtime_context=plan.runtime_context) if durable else {})}
+        if durable:
+            _merge_pipeline_run_row(plan, row, spark_session=spark_session)
         return row
     except Exception as exc:
         if row is not None:
@@ -5791,6 +5800,35 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
         # Connector exception messages can contain credentials or business values.
         plan.evidence["failures"].append({"code": "evidence_persistence_failed", "exception_type": type(exc).__name__})
         raise RuntimeError("Pipeline run evidence persistence failed; create a new plan.") from exc
+
+
+def publish_pipeline_testing_results(plan, *, spark_session=None):
+    """Publish stable diagnostic IDs before the final authoritative Testing record."""
+    if plan.execution_mode != "testing" or not plan.evidence.get("sealed"):
+        raise RuntimeError("Only completed Testing sessions can publish results.")
+    if plan.evidence.get("testing_results_published"):
+        return plan.run_result
+    if plan.evidence.get("persistence_failed"):
+        raise RuntimeError("Pipeline result persistence is uncertain; inspect its committed run before retrying.")
+    audit = build_runtime_audit_fields(config=plan.runtime_context["config"], env=plan.environment,
+        runtime_context=plan.runtime_context)
+    rows = plan.evidence.get("guardrail_history", [])
+    if rows:
+        from delta.tables import DeltaTable
+        table = "METADATA_GUARDRAIL_RESULTS"
+        spark = get_spark_session(spark_session)
+        frame = spark.createDataFrame([coerce_metadata_row_types(table, {**row, **audit}) for row in rows],
+            schema=metadata_table_schema_registry()[table])
+        _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", table,
+            metadata_table_physical_schema(plan.runtime_context["config"], table), context=plan.runtime_context)
+        (DeltaTable.forPath(spark, path).alias("target")
+         .merge(frame.alias("source"), "target.guardrail_result_id = source.guardrail_result_id")
+         .whenNotMatchedInsertAll().execute())
+    final = plan.run_result
+    row = persist_pipeline_run(plan, spark_session=spark_session, status=final["status"],
+        completed_at=final["completed_at"], persist_testing=True)
+    plan.evidence.update(testing_results_published=True, final_result=row)
+    return row
 
 
 class PipelineOperation:
@@ -5833,7 +5871,7 @@ class PipelineOperation:
                 raise ValueError("Duplicate operation: retries require a new pipeline execution plan.")
             self.record = {"status": "incomplete", "configuration_sha256": None, "stages": []}
             plan.evidence["operations"][key] = self.record
-            excluded = {"execution_plan", "spark_session", "verbose", "dataframe", "existing_mapping", "sources"}
+            excluded = {"execution_plan", "spark_session", "verbose", "dataframe", "existing_mapping", "sources", "session"}
             configuration = {name: value for name, value in args.items() if name not in excluded}
             if self.role == "target":
                 args["sources"] = tuple(args["sources"])
@@ -5908,6 +5946,9 @@ class PipelineOperation:
                     persist_pipeline_run(plan, spark_session=args.get("spark_session"), status="failed")
             finally:
                 plan.lock.release()
+                session = plan.evidence.get("session")
+                if session is not None:
+                    session.close(failed=True)
             raise
 
     def complete(self, stages):
@@ -5938,6 +5979,11 @@ class PipelineOperation:
                 raise
         finally:
             plan.lock.release()
+            session = plan.evidence.get("session")
+            if session is not None:
+                session.refresh()
+                if exc is not None:
+                    session.close(failed=True)
         return False
 
 
@@ -5962,6 +6008,7 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
         expected = {f"{role}:{identity.get('logical_id') or identity['store'] + '/' + identity['table_name']}"
                     for identity in json.loads(plan.participants_json).values() for role in identity["roles"]}
         complete = bool(expected) and set(operations) == expected and all(operation["status"] == "succeeded" for operation in operations.values())
+        complete = complete and bool(plan.evidence.get("boundary_completed"))
         status = "failed" if blocked else "succeeded" if complete else "incomplete"
         if status == "succeeded" and not any(json.loads(plan.contracts_json).values()):
             status = "ungoverned_completed"
@@ -5971,3 +6018,276 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
             from fabricops_kit.activated_pipeline.shared import release_pipeline_lease
             release_pipeline_lease(plan, spark_session=spark_session)
         return row
+
+
+def _pipeline_execution_owner():
+    from threading import get_ident
+    from asyncio import current_task
+    try:
+        task = current_task()
+    except RuntimeError:
+        task = None
+    return get_ident(), task
+
+
+# Each Python context owns an execution instance; names are never used as keys.
+from contextvars import ContextVar
+
+_ACTIVE_PIPELINE = ContextVar("fabricops_pipeline_execution", default=None)
+
+
+class PipelineSession:
+    """Own one notebook execution, contract choices and pipeline source association."""
+
+    def __init__(self, plan, spark, *, inspector=None):
+        """Bind immutable authority separately from the execution's mutable journal."""
+        self.plan, self.spark, self.inspector = plan, spark, inspector
+        self.sources = []
+        self.choices = {}
+        self.selected_contracts = {}
+        self.frozen_rows = []
+        self.controls = []
+        self.reviews = {}
+        self.report = None
+        self.shell = None
+        self.closed = False
+        self.owner = _pipeline_execution_owner()
+        plan.evidence["session"] = self
+
+    def owns_current_execution(self):
+        """Reject inherited bindings in concurrent tasks or threads."""
+        current = _pipeline_execution_owner()
+        if current == self.owner:
+            return True
+        if (self.shell is not None and current[0] == self.owner[0]
+                and self.owner[1] is not None and self.owner[1].done()):
+            self.owner = current
+            return True
+        return False
+
+    def select_contract(self, table_id, contract_id=None, contract_version=None, *, no_contract=False):
+        """Freeze explicit exact contract choices before data operations start."""
+        if self.closed or self.plan.evidence["operations"] or self.plan.execution_mode == "live":
+            raise RuntimeError("Contract choices are locked; start a new Test execution.")
+        if no_contract:
+            if contract_id is not None or contract_version is not None:
+                raise ValueError("No Contract cannot include a contract identity.")
+            self.selected_contracts.pop(table_id, None)
+            self.choices[table_id] = {"no_contract": True}
+        else:
+            matches = [row for row in self.frozen_rows if row["table_id"] == table_id
+                       and row["contract_id"] == contract_id and row["contract_version"] == contract_version]
+            if not matches and self.shell is None:
+                matches = [resolve_data_contract_version(self.plan.runtime_context["config"], self.plan.environment,
+                    table_id, contract_id, contract_version, spark_session=self.spark, context=self.plan.runtime_context)]
+            if len(matches) != 1:
+                raise ValueError("Select an available exact frozen contract version.")
+            self.selected_contracts[table_id] = dict(matches[0])
+            self.choices[table_id] = {"contract_id": contract_id, "contract_version": contract_version}
+        self.refresh()
+
+    def operation_plan(self, role, arguments):
+        """Discover Test participants from actual operations; Live stays manifest-bound."""
+        from dataclasses import replace
+        if self.closed:
+            raise RuntimeError("Pipeline execution is closed; run Setup Pipeline again.")
+        with self.plan.lock:
+            if self.plan.execution_mode == "testing":
+                identities = json.loads(self.plan.participants_json)
+                requested = [(role, resolve_physical_table_identity(
+                    self.plan.runtime_context["config"], self.plan.environment,
+                    **{key: arguments[key] for key in ("store", "schema", "table_name")}))]
+                if arguments.get("target_table_id"):
+                    requested.append(("target", resolve_catalogue_table_identity(
+                        self.plan.runtime_context["config"], self.plan.environment, arguments["target_table_id"],
+                        context=self.plan.runtime_context, spark_session=self.spark)))
+                selections = json.loads(self.plan.selections_json)
+                contracts = json.loads(self.plan.contracts_json)
+                for participant_role, identity in requested:
+                    table_id = identity["table_id"]
+                    roles = list(identities.get(table_id, {}).get("roles", []))
+                    if participant_role not in roles:
+                        logical = identity.get("logical_id") or f"{identity['store']}/{identity['table_name']}"
+                        identities[table_id] = {**identity, "logical_id": logical, "roles": [*roles, participant_role]}
+                        choice = self.choices.get(table_id, {"no_contract": True})
+                        selections[table_id] = choice
+                        if choice == {"no_contract": True}:
+                            contracts[table_id] = None
+                        else:
+                            selected = resolve_data_contract_version(self.plan.runtime_context["config"], self.plan.environment,
+                                table_id, choice["contract_id"], choice["contract_version"],
+                                spark_session=self.spark, context=self.plan.runtime_context)
+                            reviewed = self.selected_contracts.get(table_id, {})
+                            if reviewed.get("contract_payload_json") is not None and reviewed["contract_payload_json"] != selected["contract_payload_json"]:
+                                raise RuntimeError("Frozen contract changed since selection; start a new execution.")
+                            from fabricops_kit.data_contract.shared import validate_contract_definitions
+                            validate_contract_definitions(selected["contract_payload"])
+                            contract_guardrail_rows(selected, environment_name=self.plan.environment, table_id=table_id)
+                            contracts[table_id] = selected
+                        self.plan.evidence["operations"][f"{participant_role}:{logical}"] = {
+                            "status": "not_started", "configuration_sha256": None, "stages": []}
+                context = {**self.plan.runtime_context, "_pipeline_bindings": pipeline_physical_bindings(
+                    identities, config=self.plan.runtime_context["config"], environment=self.plan.environment)}
+                from types import MappingProxyType
+                self.plan = replace(self.plan, participants_json=canonical_candidate_json(identities),
+                    selections_json=canonical_candidate_json(selections), contracts_json=canonical_candidate_json(contracts),
+                    runtime_context=MappingProxyType(context))
+            return self.plan
+
+    def register_source(self, result):
+        """Associate a successful Read with this execution, without claiming exact lineage."""
+        with self.plan.lock:
+            if result.get("execution_plan_id") != self.plan.plan_id:
+                raise ValueError("Read belongs to another execution.")
+            self.sources.append(result)
+        self.refresh()
+        return result
+
+    def refresh(self):
+        """Refresh a compact report using status text as well as mode color."""
+        if self.report is None:
+            return
+        import html
+        mode = "Live" if self.plan.execution_mode == "live" else "Test"
+        color = "#107c10" if mode == "Live" else "#a4262c"
+        result = self.plan.evidence.get("final_result", {})
+        status = result.get("status") or ("failed" if self.plan.evidence["failures"] else "incomplete")
+        operations = "".join(f"<li>{html.escape(key)}: {html.escape(item['status'])}</li>"
+                             for key, item in self.plan.evidence["operations"].items())
+        checks = "".join(f"<li>{html.escape(str(row.get('guardrail_type', 'Guardrail')))}: "
+                         f"{html.escape(str(row.get('status', 'unknown')))}</li>" for row in self.plan.results)
+        failures = "".join(f"<li>{html.escape(str(row.get('code', 'execution_failed')))}</li>"
+                           for row in self.plan.evidence["failures"])
+        self.report.value = (f'<div style="font:13px Segoe UI, sans-serif;color:#243449;border-left:4px solid {color};padding:10px 14px">'
+            f'<b>{html.escape(self.plan.pipeline_id)}</b> · {mode} · {html.escape(status)}'
+            '<p>Source associations describe pipeline participation.</p>'
+            f'<ul>{operations}</ul><details><summary>Guardrail results and diagnostics</summary><ul>{checks}{failures}</ul></details></div>')
+        for table_id, (detail, row) in self.reviews.items():
+            detail.value = self.inspector(row, ("source", "target"), self.plan.results)
+        for control in self.controls:
+            control.disabled = self.closed or bool(self.plan.evidence["operations"])
+
+    def cell_completed(self, result):
+        """Use IPython's supported error signal, never its per-cell success as run success."""
+        if not self.owns_current_execution():
+            return
+        if getattr(result, "error_before_exec", None) is not None or getattr(result, "error_in_exec", None) is not None:
+            self.close(failed=True)
+        else:
+            self.refresh()
+
+    def close(self, *, failed=False):
+        """Seal failure or an incomplete boundary and discard source references."""
+        if self.closed:
+            return
+        try:
+            finalize_pipeline_run(self.plan, spark_session=self.spark, failed=failed)
+        finally:
+            import atexit
+            atexit.unregister(self.close)
+            self.closed = True
+            self.sources.clear()
+            for cache in (_CURRENT_SOURCE_OBSERVATIONS, _CURRENT_FRESHNESS_EVIDENCE,
+                          _PENDING_SOURCE_OBSERVATIONS, _PENDING_SOURCE_DRIFT_OBSERVATIONS,
+                          _INCREMENTAL_SOURCE_SCOPES, _ACTIVE_PUBLICATION_SOURCES):
+                for key in list(cache):
+                    if key[:2] == (self.plan.environment, self.plan.plan_id):
+                        cache.pop(key, None)
+            if self.shell is not None:
+                self.shell.events.unregister("post_run_cell", self.cell_completed)
+            if _ACTIVE_PIPELINE.get() is self:
+                _ACTIVE_PIPELINE.set(None)
+            self.refresh()
+
+
+def current_pipeline_session():
+    """Return only the execution bound to this Python context."""
+    session = _ACTIVE_PIPELINE.get()
+    if session is None or session.closed:
+        raise RuntimeError("Run setup_pipeline(pipeline_id=..., pipeline_mode=...) before Read or Write.")
+    if not session.owns_current_execution():
+        raise RuntimeError("This execution belongs to another task or thread; run setup_pipeline in this context.")
+    return session
+
+
+def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None):
+    """Resolve runtime services and install conservative notebook lifecycle reporting."""
+    import atexit
+    from types import MappingProxyType
+    from fabricops_kit.config.shared import resolve_runtime_context
+    previous = _ACTIVE_PIPELINE.get()
+    if previous is not None and previous.owns_current_execution():
+        previous.close()
+    config, env, runtime = resolve_fabric_context()
+    runtime = {**runtime, **{key: value for key, value in resolve_runtime_context(context=runtime).items() if value is not None},
+               "config": config, "env": env}
+    spark = get_spark_session()
+    if pipeline_mode == "Live":
+        from fabricops_kit.activated_pipeline.shared import build_live_pipeline_plan
+        plan = build_live_pipeline_plan(pipeline_id=pipeline_id, context=runtime, spark_session=spark)
+    else:
+        plan = PipelineExecutionPlan("testing", env, str(runtime.get("notebook_id") or ""), str(uuid4()),
+            "{}", "{}", "{}", MappingProxyType({**runtime, "_pipeline_spark": spark, "_pipeline_bindings": {}}),
+            pipeline_id=pipeline_id)
+        plan.evidence["dynamic_participants"] = True
+    session = PipelineSession(plan, spark, inspector=inspector)
+    try:
+        try:
+            from IPython import get_ipython
+        except ModuleNotFoundError as exc:
+            if exc.name != "IPython":
+                raise
+            shell = None
+        else:
+            shell = get_ipython()
+        if shell is not None:
+            from IPython import display as ip
+            from fabricops_kit.widgets.shared import require_ipywidgets, form_page
+            widgets = require_ipywidgets()
+            session.report = widgets.HTML()
+            children = [session.report]
+            if pipeline_mode == "Test":
+                rows = read_lakehouse_table("METADATA_DATA_CONTRACT", store="Metadata",
+                    schema=metadata_table_physical_schema(config, "METADATA_DATA_CONTRACT"),
+                    spark_session=spark, context=runtime).collect()
+                session.frozen_rows = [_row_to_dict(row) for row in rows if str(_row_to_dict(row).get("status", "")).lower() == "frozen"]
+                for table_id in sorted({row["table_id"] for row in session.frozen_rows}):
+                    versions = [row for row in session.frozen_rows if row["table_id"] == table_id]
+                    options = [("No Contract", "")] + [(f"{row.get('contract_name') or row['contract_id']} · v{row['contract_version']}",
+                        f"{row['contract_id']}\n{row['contract_version']}") for row in versions]
+                    control = widgets.Dropdown(options=options, description=str(table_id), layout=widgets.Layout(width="100%"))
+                    detail = widgets.HTML("<p>No Contract selected.</p>")
+                    def change(event, table_id=table_id, detail=detail, versions=versions):
+                        value = event["new"]
+                        if not value:
+                            session.select_contract(table_id, no_contract=True)
+                            session.reviews.pop(table_id, None)
+                            detail.value = "<p>No Contract selected.</p>"
+                        else:
+                            contract_id, version = value.split("\n")
+                            session.select_contract(table_id, contract_id, int(version))
+                            row = next(row for row in versions if row["contract_id"] == contract_id and row["contract_version"] == int(version))
+                            session.reviews[table_id] = (detail, row)
+                            detail.value = inspector(row, ("source", "target"), session.plan.results) if inspector else ""
+                    control.observe(change, names="value")
+                    session.controls.append(control)
+                    children.extend([control, detail])
+            root = form_page(widgets, title="Pipeline execution", description="Review contracts and execution outcomes.", children=children)
+            root.layout.height = "auto"
+            ip.display(root)
+            session.shell = shell
+            shell.events.register("post_run_cell", session.cell_completed)
+        _ACTIVE_PIPELINE.set(session)
+        atexit.register(session.close)
+        session.refresh()
+        return session
+    except BaseException:
+        session.close(failed=True)
+        raise
+
+
+
+def build_pipeline_audit_fields(*, config=None, env=None, runtime_context=None):
+    """Allow absent notebook audit fields only for nonpersisting Test diagnostics."""
+    return build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context,
+        require_notebook_identity=persistence_permitted(runtime_context))

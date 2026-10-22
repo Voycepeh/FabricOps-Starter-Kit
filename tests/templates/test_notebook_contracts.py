@@ -206,16 +206,11 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "freezing does not activate" in normalized["step_3"]
     assert "immutable data contract" in normalized["step_3"]
 
-    assert "# step 4. test the frozen data contracts" in normalized["step_4"]
-    assert "select an eligible frozen version or no contract independently" in normalized["step_4"]
-    assert "activation eligibility requires a valid frozen contract for every participating table" in normalized["step_4"]
-    assert "02A_full_refresh_demo.ipynb" in step_4
-    assert "selection does not edit or activate" in normalized["step_4"]
-    assert "pipeline-wide switch in red **testing**" in normalized["step_4"]
-    assert "no publication occurred" in normalized["step_4"]
-    assert "METADATA_PIPELINE_RUN" in step_4
-    assert "METADATA_GUARDRAIL_RESULTS" in step_4
-    assert "preserving publication boundaries" in normalized["step_4"]
+    assert "# step 4. evaluate frozen data contracts" in normalized["step_4"]
+    assert "no contract" in normalized["step_4"]
+    assert "test does not publish business data or commit any operational metadata" in normalized["step_4"]
+    assert "finalize_pipeline(contracts)" in normalized["step_4"]
+    assert "incomplete" in normalized["step_4"]
 
     assert "# step 5. activate the tested pipeline and promote to production" in normalized["step_5"]
     assert "exact effective data agreement" in normalized["step_5"]
@@ -281,12 +276,9 @@ def test_02_pipeline_is_a_small_reusable_scaffold():
     headings = (
         "# 0. Environment",
         "# 1. Setup Pipeline",
-        "# 2. Data Contract Configuration",
-        "# 3. Read",
-        "# 4. PySpark Transform",
-        "# 5. Write",
-        "# 6. Finalize Pipeline",
-        "# 7. Optional Inspect",
+        "# 2. Read",
+        "# 3. Transform",
+        "# 4. Write",
     )
     assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
     assert source.count("setup_pipeline(") == 1
@@ -308,7 +300,6 @@ def test_02_pipeline_preserves_migration_surfaces_and_lineage_handoff():
         "transform",
         "write-setup",
         "write-1",
-        "finalize-run",
     ]
     positions = [cell_ids.index(cell_id) for cell_id in required_order]
     assert positions == sorted(positions)
@@ -318,7 +309,7 @@ def test_02_pipeline_preserves_migration_surfaces_and_lineage_handoff():
     write = _cell_by_id("02_pipeline.ipynb", "write-1").source
     assert 'sources["source"] = source' in read
     assert 'sources["source"]["dataframe"]' in transform
-    assert 'sources=[sources["source"]]' in write
+    assert 'sources=' not in write
     assert "orchestrate_read(" not in transform
     assert "orchestrate_write(" not in transform
     assert "READ_STORE =" not in read
@@ -361,7 +352,7 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
             cell.source for cell in notebook.cells if cell.cell_type == "code"
         )
         assert "inspect_source" not in source and "inspect_write" not in source
-        assert [cell.id for cell in notebook.cells].index("finalize-run") < [cell.id for cell in notebook.cells].index("inspect")
+        assert not {"inspect", "execution-plan"}.intersection(cell.id for cell in notebook.cells)
         for cell in notebook.cells:
             if cell.cell_type != "code":
                 continue
@@ -393,7 +384,7 @@ def test_02a_preserves_the_full_refresh_pipeline():
     assert code_source.count('read_mode="full"') == 3
     assert code_source.count("write_result = orchestrate_write(") == 2
     assert code_source.count('write_mode="overwrite"') == 2
-    assert 'sources=[sources["orders"], sources["products"], sources["history"]]' in source
+    assert 'sources=' not in code_source
     assert "FROM demo.order_history" in source
     assert "customer_summary_df" in source
     assert code_source.count('display(write_result["dataframe"].limit(10))') == 2
@@ -413,7 +404,6 @@ def test_02b_has_ordered_repeat_safe_incremental_append_flow():
         "read-1",
         "transform",
         "write-1",
-        "finalize-run",
     ]
     assert [ids.index(cell_id) for cell_id in ordered] == sorted(ids.index(cell_id) for cell_id in ordered)
     assert "DEMO_DAY = 1" in _demo_cell("02B_incremental_append_demo.ipynb", "demo-day").source
@@ -425,7 +415,7 @@ def test_02b_has_ordered_repeat_safe_incremental_append_flow():
     assert 'read_parameters={"watermark_column": "modified_datetime"}' in source
     assert 'table_name="inventory_movements_incremental"' in source
     assert 'write_mode="append"' in source
-    assert 'sources=[sources["inventory_movements"]]' in source
+    assert 'sources=' not in _demo_cell('02B_incremental_append_demo.ipynb', 'write-1').source
     assert "should_process" not in source
     write = _demo_cell("02B_incremental_append_demo.ipynb", "write-1").source
     assert 'display(writes["inventory_movements_incremental"]["dataframe"].limit(10))' in write
@@ -446,7 +436,6 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
         "transform",
         "write-1",
         "write-2",
-        "finalize-run",
     ]
     assert [ids.index(cell_id) for cell_id in ordered] == sorted(ids.index(cell_id) for cell_id in ordered)
     assert "DEMO_DAY = 1" in source
@@ -457,7 +446,7 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
     assert 'read_mode="full"' in source
     assert 'write_mode="scd1"' in source
     assert 'write_mode="scd2"' in source
-    assert source.count('sources=[sources["product_master"]]') == 2
+    assert 'sources=' not in _demo_cell('02C_scd_demo.ipynb', 'write-1').source
     assert '"key_columns": ["product_id"]' in source
     assert '"effective_column": "modified_datetime"' in source
     assert '"tracked_columns": ["product_category", "list_price"]' in source
@@ -494,17 +483,11 @@ def test_guided_demo_explains_explicit_testing_writes_and_contract_selection():
     step_2a = (ROOT / "docs/guided-demo/02A-full-refresh-demo.md").read_text(encoding="utf-8")
     step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
 
-    assert "there is no Data Contract yet" in step_2a
-    assert 'globals().get("PIPELINE_CONTRACT_TESTING", True)' in step_2a
-    assert "PIPELINE_TESTING_WRITES=True" in step_2a
-    assert "No Contract for every source and target" in step_2a
-    assert "finalize_pipeline(EXECUTION_PLAN)" in step_2a
-    assert "Testing is interactive by default" in step_2a
-    assert "skipped check fields remain in the returned dictionaries" in step_2a
-    assert "individual Guardrail stages are omitted" in step_2a
-    assert "pipeline-wide switch in red **Testing**" in step_4
-    assert "every source and target" in step_4
-    assert "`validation_passed=True`" in step_4 and "`published=False`" in step_4
+    assert 'PIPELINE_MODE = "Test"' in step_2a
+    assert "PIPELINE_TESTING_WRITES" not in step_2a
+    assert "finalize_pipeline(CONTRACTS)" in step_2a
+    assert "Guardrail" in step_4 and "results are in memory" in step_4.casefold()
+
 
 
 @pytest.mark.parametrize("notebook_name", [
@@ -519,9 +502,9 @@ def test_demo_notebooks_start_with_title_and_finalize_after_write(notebook_name:
     assert ids[0] == "title"
     assert notebook.cells[0].cell_type == "markdown"
     assert ids.count("title") == 1
-    assert ids.count("finalize-run") == 1
+    assert ids[-1] == "finalize-run" and "inspect" not in ids
     last_write = max(
         index for index, cell_id in enumerate(ids)
         if cell_id.startswith("write-") and cell_id not in {"write-inspection", "write-dictionary-inspection-heading"}
     )
-    assert ids.index("finalize-run") > last_write
+    assert ids.index("transform") < last_write

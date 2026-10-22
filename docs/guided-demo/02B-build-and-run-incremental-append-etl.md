@@ -45,33 +45,22 @@ The notebook uses these governed tables throughout:
 Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparation cell. That setup can change Bronze before pipeline selection. The default pipeline setup is:
 
 ```python
-# Runtime controls are configured in 00_env_config or notebook parameters.
-PIPELINE_LIVE = bool(globals().get("PIPELINE_LIVE_ENABLED", False))
-CONTRACT_TESTING = bool(globals().get("PIPELINE_CONTRACT_TESTING", True)) and not PIPELINE_LIVE
-CONTRACTS = setup_pipeline(
-    pipeline_id=PIPELINE_ID, configuration=PROJECT_CONFIGURATION,
-    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
-    execution_mode="live" if PIPELINE_LIVE else "testing",
-    interactive=CONTRACT_TESTING,
-    testing_writes=bool(globals().get("PIPELINE_TESTING_WRITES", False)) and not PIPELINE_LIVE,
-    spark_session=spark,
-)
-EXECUTION_PLAN = CONTRACTS["build_plan"]() if CONTRACT_TESTING else CONTRACTS
+PIPELINE_ID = "02B_incremental_append_demo"
+PIPELINE_MODE = "Test"  # Test or Live
+CONTRACTS = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode=PIPELINE_MODE)
 ```
 
-Testing is interactive by default. For the initial Guided Demo, there is no Data Contract yet: select **No Contract for every source and target**. To create the initial output tables and profiles, configure `PIPELINE_TESTING_WRITES=True`, review the displayed safe destinations and explicitly confirm real Testing writes before building the plan. Evaluation-only Testing leaves business tables and ordinary operational metadata unchanged. Contract-free completion is `ungoverned_completed` and cannot authorize activation. There is no Bootstrap execution mode.
 
-Run each stage directly in order: **Environment → Setup Pipeline → Data Contract Configuration → Read → Transform → Write → Finalize Pipeline → Optional Inspect**. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Call `finalize_pipeline(EXECUTION_PLAN)` after all operations; stopped notebooks remain incomplete. A caught project error requires `finalize_pipeline(EXECUTION_PLAN, failed=True)`. Keep complete Read and Write results for inspection.
 
-After Governance freezes the contracts, select an exact frozen version for every participating table and complete governed Testing. Successful finalization records `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS` for review. Live resolves coordinated approval from central `METADATA_ACTIVATION_STATE`; Engineering and Microsoft Fabric own code integrity and deployment. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#whole-run-completion).
+After Governance freezes contracts, select exact frozen versions in Test setup before Read. Test never publishes or commits metadata. Existing approved Live configurations remain subject to activation and destination checks. See the [execution boundary and activation limits](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
 
-Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. Persisted row counts and saved-data screenshots below require explicitly authorized real Testing writes or governed Live publication. Advance the demo day only after publication succeeds.
+Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. Persisted row counts and saved-data screenshots below require approved Live publication. Advance the demo day only after publication succeeds.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run Day 1 in Fabric with safe real Testing writes
+## Run Day 1 in Fabric with approved Live publication
 
 For Day 1 , we load 8 rows of data from 
 Bronze Lakehouse "demo.inventory_movements" table and load all 8 rows into
@@ -126,7 +115,7 @@ Each Read and Write block displays its actual DataFrame directly after orchestra
 
 ## Restart the session and repeat Day 1 with a fresh Testing plan
 
-Run through setup again with safe real Testing writes, then continue. Since Day 1 already committed its watermark, the Read and Write have an empty incremental scope.
+Run through setup again with approved Live publication, then continue. Since Day 1 already committed its watermark, the Read and Write have an empty incremental scope.
 
 </div>
 </div>
@@ -199,7 +188,7 @@ Complete Read → Transform → Write for each pending batch before reading a ne
 
 ### Metadata saved by FabricOps
 
-The following records are committed by successful runs with explicitly authorized real Testing writes or governed **Live** publication and routed to the Metadata Lakehouse configured by `00_env_config`. Evaluation-only Testing persists `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS`; ordinary metadata remains unchanged.
+The following records are committed by successful runs with approved **Live** publication and routed to the Metadata Lakehouse configured by `00_env_config`. Test retains diagnostics in memory during Read and Write; `finalize_pipeline(CONTRACTS)` publishes only run and Guardrail results for activation review.
 
 | Metadata table or governed record | What this demo records |
 | --- | --- |
@@ -223,7 +212,7 @@ Pause this target's scheduled and interactive writers. Keep the existing tables 
     ```python
     existing = read_lakehouse_table(
         "inventory_movements_incremental", store="Silver", schema="demo",
-        spark_session=spark,
+
     )
     # transformed_df comes from the Full Read and the unchanged demo Transform.
     business_columns = [
@@ -242,7 +231,6 @@ Pause this target's scheduled and interactive writers. Keep the existing tables 
     ```
 
     For the reported mismatch, the missing set must be exactly M009–M012. Review that set and explicitly choose to execute the existing `orchestrate_write()` call with `missing` as its DataFrame, the Full Read result in `sources`, `write_mode="append"`, and the fresh Live plan. Do not execute the ordinary incremental write in this repair run. Do not bypass Guardrails or notebook ownership.
-5. Read Silver back and verify exactly 12 distinct movements, no null or duplicate keys, and multiset equality in both directions between all transformed source business columns and Silver. Retain the checkpoint history; this repair fills the physical gap without deleting metadata or rewinding watermarks. Execute the declared repair operations and call `finalize_pipeline(plan)` to record the whole-run outcome. If publication or finalization fails, stop and retry the exact prepared batch under a fresh plan/run; do not replay a sealed or failed plan or assume that an error means no rows were written.
 6. Restore Incremental Read, build a fresh plan, and run Day 3. It should return an empty scope and keep Silver at 12 rows. Repeat Day 2 and Day 3 to verify stable results.
 
 Source Observation records use the same `run_id` as `METADATA_PIPELINE_RUN`; multiple runs may retain the same real `_activity_id`. New runs isolate pending source state, while exact batch receipts allow recovery across run IDs. Run `setup_metadata_tables()` to add nullable `run_id` and `publication_payload_json` columns without resetting existing history.
@@ -262,7 +250,7 @@ An Incremental demo cannot be reset by rerunning Day 1 or deleting only the Silv
 3. Remove only the `METADATA_SOURCE_OBSERVATION` rows for the `inventory_movements` → `inventory_movements_incremental` relationship and the current environment. Do not clear observations for other pipelines.
 4. Set `DEMO_DAY = 1`.
 5. Rerun [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) to restore the eight-row Day 1 Bronze source. Day 1 of this notebook does not load its own CSV.
-6. Run the notebook through a fresh selector, choose No Contract for every table and explicitly authorize safe real Testing writes before contracts exist, then continue. The Incremental Read bootstraps again and Append recreates the eight-row Silver target.
+6. Run the notebook with an existing approved Live configuration, then continue. The Incremental Read bootstraps again and Append recreates the eight-row Silver target.
 
 !!! warning "Keep incremental state aligned"
 

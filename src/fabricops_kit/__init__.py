@@ -76,8 +76,8 @@ IO_EXPORTS = (
 )
 
 PIPELINE_EXPORTS = (
-    "setup_pipeline",
     "finalize_pipeline",
+    "setup_pipeline",
     "profile_table",
     "resolve_table_id",
     "pipeline_read",
