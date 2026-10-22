@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from html import escape
 import uuid
 from typing import Any
 
@@ -141,6 +142,11 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
     save = widgets.Button(description="Save and clear", button_style="primary")
     discard = widgets.Button(description="Discard and clear", button_style="danger")
     status = status_message(widgets)
+
+    def _set_status(message: str, *, error: bool = False) -> None:
+        colour = "#a4262c" if error else "#107c10"
+        status.value = f'<span style="color:{colour}">{escape(message)}</span>'
+
     required_labels = {
         "steward_name": "Steward name",
         "steward_role": "Steward role",
@@ -177,7 +183,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
             }
             missing = _missing_required(values)
             if missing:
-                status.value = "Data steward was not saved. Complete the required fields."
+                _set_status("Data steward was not saved. Complete the required fields.", error=True)
                 print("Cannot save data steward.\n\nComplete the following required fields:")
                 for label in missing:
                     print(f"• {label}")
@@ -188,7 +194,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
                 values["_existing_steward_role"] = row_lookup.get(selected.value, {}).get("steward_role", "")
             row = _create_or_update_data_steward(spark=spark, config=config, env=env, values=values, custom_fields=extras)
         except Exception as exc:
-            status.value = f"Data steward was not saved: {exc}"
+            _set_status(f"Data steward was not saved: {exc}", error=True)
             print(f"Error: {exc}")
         else:
             warnings: list[str] = []
@@ -208,11 +214,12 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
                 form_cleared = False
                 warnings.append(f"form could not be cleared: {exc}")
             saved_name = row.get("steward_name", "")
-            status.value = f"Data steward saved successfully: {saved_name}."
+            message = f"Data steward saved successfully: {saved_name}."
             if form_cleared:
-                status.value += " Form cleared."
+                message += " Form cleared."
             if warnings:
-                status.value += f" Post-save warning: {'; '.join(warnings)}."
+                message += f" Post-save warning: {'; '.join(warnings)}."
+            _set_status(message)
             print(f"Saved data steward: {saved_name} ({row['steward_id']})")
         finally:
             _sync_save_state()
@@ -221,7 +228,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
 
     def _discard_and_clear(_: Any) -> None:
         _reset_form_fields()
-        status.value = "Unsaved steward changes discarded. Form cleared."
+        _set_status("Unsaved steward changes discarded. Form cleared.")
         _sync_save_state()
 
     discard.on_click(_discard_and_clear)
@@ -241,12 +248,14 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
                 children=[form_grid(widgets, custom.values())],
             )
         )
-    actions = action_row(widgets, [discard, save])
+    actions = form_section(
+        widgets, title="Save steward", children=[action_row(widgets, [discard, save]), status]
+    )
     container = form_page(
         widgets,
         title="Data Steward", tone="governance",
         description="Create or update data stewards",
-        children=[selection_section, details_section, *supporting_sections, actions, status],
+        children=[selection_section, details_section, *supporting_sections, actions],
     )
     ip.display(container)
     return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": None, "fields": form, "custom_fields": custom, "refresh_stewards_button": None, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": None, "after_save_callbacks": after_save_callbacks, "save_button": save, "discard_button": discard, "status": status}
