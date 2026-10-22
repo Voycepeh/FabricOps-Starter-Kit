@@ -1,6 +1,6 @@
 """Warehouse type normalization tests for profile_table internals."""
 
-from fabricops_kit.pipeline.profile_table import _warehouse_type_name
+from fabricops_kit.pipeline.shared import _warehouse_type_name
 
 
 def test_warehouse_money_types_keep_decimal_precision_and_scale():

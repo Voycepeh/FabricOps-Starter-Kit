@@ -38,7 +38,7 @@ def read_runtime(monkeypatch):
 def test_full_mode_normalized_for_reader_grain_profile_and_summary(read_runtime, mode):
     """Every accepted spelling executes the same full lifecycle and reports its count."""
     reader, grain, profile = read_runtime
-    run_pipeline_operation(read.orchestrate_read, plan=PLAN, store="Bronze", schema="demo", table_name="orders", read_mode=mode, verbose=False)
+    result = run_pipeline_operation(read.orchestrate_read, plan=PLAN, store="Bronze", schema="demo", table_name="orders", read_mode=mode, verbose=False)
     assert result["read_mode"] == "full"
     assert reader.call_args.kwargs["read_mode"] == "full"
     assert grain.call_args.kwargs["scope"] == "read_full"
