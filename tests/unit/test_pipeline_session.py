@@ -198,3 +198,28 @@ def test_invalid_participant_closes_execution_before_operation_journal(runtime, 
         orchestrate_read(store='Bronze', schema='demo', table_name='invalid')
     assert session.closed and not session.sources
     assert session.plan.run_result['status'] == 'failed'
+
+
+def test_headless_selection_resolves_and_pins_exact_frozen_payload(runtime, monkeypatch):
+    session = setup_pipeline(pipeline_id='headless', pipeline_mode='Test')
+    payload = {'contract': {'contract_id':'frozen', 'contract_version':1, 'status':'frozen'},
+               'table': {'table_id':'orders', 'columns':[]}, 'guardrails':[], 'enrichment':{'table':[], 'columns':[]}}
+    row = {'table_id':'orders', 'contract_id':'frozen', 'contract_version':1,
+           'contract_payload_json':json.dumps(payload), 'contract_payload':payload}
+    resolver = Mock(return_value=row)
+    monkeypatch.setattr(shared, 'resolve_data_contract_version', resolver)
+    session.select_contract('orders', 'frozen', 1)
+    assert resolver.call_count == 1 and session.selected_contracts['orders']['contract_payload_json'] == row['contract_payload_json']
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    assert json.loads(session.plan.contracts_json)['orders']['contract_version'] == 1
+
+
+def test_changed_frozen_payload_is_rejected_before_read(runtime, monkeypatch):
+    session = setup_pipeline(pipeline_id='changed-contract', pipeline_mode='Test')
+    row = {'table_id':'orders', 'contract_id':'frozen', 'contract_version':1, 'contract_payload_json':'original'}
+    monkeypatch.setattr(shared, 'resolve_data_contract_version', Mock(return_value=row))
+    session.select_contract('orders', 'frozen', 1)
+    monkeypatch.setattr(shared, 'resolve_data_contract_version', Mock(return_value={**row,'contract_payload_json':'changed'}))
+    with pytest.raises(RuntimeError, match='Frozen contract changed'):
+        orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    assert session.closed and session.plan.run_result['status'] == 'failed'

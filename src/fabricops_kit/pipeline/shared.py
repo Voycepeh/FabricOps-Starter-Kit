@@ -6008,6 +6008,7 @@ class PipelineSession:
         self.plan, self.spark, self.inspector = plan, spark, inspector
         self.sources = []
         self.choices = {}
+        self.selected_contracts = {}
         self.frozen_rows = []
         self.controls = []
         self.reviews = {}
@@ -6035,12 +6036,17 @@ class PipelineSession:
         if no_contract:
             if contract_id is not None or contract_version is not None:
                 raise ValueError("No Contract cannot include a contract identity.")
+            self.selected_contracts.pop(table_id, None)
             self.choices[table_id] = {"no_contract": True}
         else:
             matches = [row for row in self.frozen_rows if row["table_id"] == table_id
                        and row["contract_id"] == contract_id and row["contract_version"] == contract_version]
+            if not matches and self.shell is None:
+                matches = [resolve_data_contract_version(self.plan.runtime_context["config"], self.plan.environment,
+                    table_id, contract_id, contract_version, spark_session=self.spark, context=self.plan.runtime_context)]
             if len(matches) != 1:
                 raise ValueError("Select an available exact frozen contract version.")
+            self.selected_contracts[table_id] = dict(matches[0])
             self.choices[table_id] = {"contract_id": contract_id, "contract_version": contract_version}
         self.refresh()
 
@@ -6075,6 +6081,9 @@ class PipelineSession:
                             selected = resolve_data_contract_version(self.plan.runtime_context["config"], self.plan.environment,
                                 table_id, choice["contract_id"], choice["contract_version"],
                                 spark_session=self.spark, context=self.plan.runtime_context)
+                            reviewed = self.selected_contracts.get(table_id, {})
+                            if reviewed.get("contract_payload_json") is not None and reviewed["contract_payload_json"] != selected["contract_payload_json"]:
+                                raise RuntimeError("Frozen contract changed since selection; start a new execution.")
                             from fabricops_kit.data_contract.shared import validate_contract_definitions
                             validate_contract_definitions(selected["contract_payload"])
                             contract_guardrail_rows(selected, environment_name=self.plan.environment, table_id=table_id)
