@@ -1889,7 +1889,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "finalize_pipeline(execution_plan, *, failed = False, spark_session = None)",
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
           "signature_before": null
         },
         {
@@ -1901,7 +1901,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_read(*, execution_plan, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -1913,7 +1913,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -1961,7 +1961,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None)",
+          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)",
           "signature_before": null
         },
         {
@@ -1997,7 +1997,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = 'testing', selections = None, interactive = None, spark_session = None, context = None, pipeline_id = None, configuration = None, testing_writes = False)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)",
           "signature_before": null
         },
         {
@@ -3381,7 +3381,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "finalize_pipeline(execution_plan, *, failed = False, spark_session = None)",
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
           "signature_before": null
         },
         {
@@ -3393,7 +3393,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_read(*, execution_plan, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -3405,7 +3405,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -3445,9 +3445,10 @@
             "Optional parameter added: grain_discovery_enabled.",
             "Optional parameter added: grain_discovery_max_candidates.",
             "Optional parameter added: grain_discovery_max_columns.",
+            "Optional parameter added: verbose.",
             "Default changed for frequency_top_n: None to 5."
           ],
-          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None)",
+          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)",
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_top_n: int | None = None, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)"
         },
         {
@@ -3471,7 +3472,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = 'testing', selections = None, interactive = None, spark_session = None, context = None, pipeline_id = None, configuration = None, testing_writes = False)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)",
           "signature_before": null
         },
         {
@@ -4670,7 +4671,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "finalize_pipeline(execution_plan, *, failed = False, spark_session = None)",
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
           "signature_before": null
         },
         {
@@ -4680,13 +4681,14 @@
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
+            "Parameter removed: spark_session.",
             "Optional parameter added: dq_diagnostics.",
-            "Required parameter added: execution_plan.",
             "Optional parameter added: grain_discovery_enabled.",
             "Optional parameter added: grain_discovery_max_candidates.",
-            "Optional parameter added: grain_discovery_max_columns."
+            "Optional parameter added: grain_discovery_max_columns.",
+            "Default changed for verbose: True to False."
           ],
-          "signature_after": "orchestrate_read(*, execution_plan, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -4697,14 +4699,16 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
             "Parameter removed: contracts.",
+            "Parameter removed: sources.",
+            "Parameter removed: spark_session.",
             "Optional parameter added: dq_diagnostics.",
-            "Required parameter added: execution_plan.",
             "Optional parameter added: existing_mapping.",
             "Optional parameter added: grain_discovery_enabled.",
             "Optional parameter added: grain_discovery_max_candidates.",
-            "Optional parameter added: grain_discovery_max_columns."
+            "Optional parameter added: grain_discovery_max_columns.",
+            "Default changed for verbose: True to False."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -4741,9 +4745,10 @@
             "Optional parameter added: context.",
             "Optional parameter added: grain_discovery_enabled.",
             "Optional parameter added: grain_discovery_max_candidates.",
-            "Optional parameter added: grain_discovery_max_columns."
+            "Optional parameter added: grain_discovery_max_columns.",
+            "Optional parameter added: verbose."
           ],
-          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None)",
+          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)",
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)"
         },
         {
@@ -4767,7 +4772,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = 'testing', selections = None, interactive = None, spark_session = None, context = None, pipeline_id = None, configuration = None, testing_writes = False)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)",
           "signature_before": null
         },
         {
@@ -5930,15 +5935,94 @@
     },
     {
       "baseline": "main",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
+          "reasons": [
+            "Parameter removed: execution_plan.",
+            "Parameter removed: spark_session.",
+            "Optional parameter added: pipeline."
+          ],
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
+          "signature_before": "finalize_pipeline(execution_plan, *, failed = False, spark_session = None)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Parameter removed: execution_plan.",
+            "Parameter removed: spark_session.",
+            "Default changed for verbose: True to False."
+          ],
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_read(*, execution_plan, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Parameter removed: execution_plan.",
+            "Parameter removed: sources.",
+            "Parameter removed: spark_session.",
+            "Default changed for verbose: True to False."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
+          "reasons": [
+            "Optional parameter added: verbose."
+          ],
+          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)",
+          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
+          "reasons": [
+            "Parameter removed: configuration.",
+            "Parameter removed: context.",
+            "Parameter removed: execution_mode.",
+            "Parameter removed: interactive.",
+            "Parameter removed: selections.",
+            "Parameter removed: sources.",
+            "Parameter removed: spark_session.",
+            "Parameter removed: targets.",
+            "Parameter removed: testing_writes.",
+            "Required parameter added: pipeline_mode.",
+            "Parameter became required: pipeline_id.",
+            "Annotation changed for pipeline_id: None to str."
+          ],
+          "signature_after": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)",
+          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = 'testing', selections = None, interactive = None, spark_session = None, context = None, pipeline_id = None, configuration = None, testing_writes = False)"
+        }
+      ],
       "summary": {
         "added": 0,
-        "modified": 0,
-        "nonbreaking": 0,
-        "potentially_breaking": 0,
+        "modified": 5,
+        "nonbreaking": 1,
+        "potentially_breaking": 4,
         "removed": 0,
         "review_required": 0,
-        "total": 0
+        "total": 5
       },
       "target": "working-tree"
     },
@@ -6173,7 +6257,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "finalize_pipeline(execution_plan, *, failed = False, spark_session = None)"
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
         },
         {
           "change_type": "removed",
@@ -6185,7 +6269,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_read(*, execution_plan, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -6197,7 +6281,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -6245,7 +6329,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None)"
+          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)"
         },
         {
           "change_type": "removed",
@@ -6281,7 +6365,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = 'testing', selections = None, interactive = None, spark_session = None, context = None, pipeline_id = None, configuration = None, testing_writes = False)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)"
         },
         {
           "change_type": "added",
@@ -6620,7 +6704,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "finalize_pipeline(execution_plan, *, failed = False, spark_session = None)"
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
         },
         {
           "change_type": "removed",
@@ -6632,7 +6716,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_read(*, execution_plan, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -6644,7 +6728,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -6683,10 +6767,11 @@
             "Parameter removed: grain_discovery_enabled.",
             "Parameter removed: grain_discovery_max_candidates.",
             "Parameter removed: grain_discovery_max_columns.",
+            "Parameter removed: verbose.",
             "Default changed for frequency_top_n: 5 to None."
           ],
           "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_top_n: int | None = None, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)",
-          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None)"
+          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)"
         },
         {
           "change_type": "modified",
@@ -6710,7 +6795,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = 'testing', selections = None, interactive = None, spark_session = None, context = None, pipeline_id = None, configuration = None, testing_writes = False)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)"
         },
         {
           "change_type": "added",
@@ -6881,7 +6966,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "finalize_pipeline(execution_plan, *, failed = False, spark_session = None)"
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
         },
         {
           "change_type": "modified",
@@ -6891,13 +6976,14 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
             "Parameter removed: dq_diagnostics.",
-            "Parameter removed: execution_plan.",
             "Parameter removed: grain_discovery_enabled.",
             "Parameter removed: grain_discovery_max_candidates.",
-            "Parameter removed: grain_discovery_max_columns."
+            "Parameter removed: grain_discovery_max_columns.",
+            "Optional parameter added: spark_session.",
+            "Default changed for verbose: False to True."
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, execution_plan, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -6907,15 +6993,17 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
             "Parameter removed: dq_diagnostics.",
-            "Parameter removed: execution_plan.",
             "Parameter removed: existing_mapping.",
             "Parameter removed: grain_discovery_enabled.",
             "Parameter removed: grain_discovery_max_candidates.",
             "Parameter removed: grain_discovery_max_columns.",
-            "Optional parameter added: contracts."
+            "Optional parameter added: contracts.",
+            "Required parameter added: sources.",
+            "Optional parameter added: spark_session.",
+            "Default changed for verbose: False to True."
           ],
           "signature_after": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": "orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -6951,10 +7039,11 @@
             "Parameter removed: context.",
             "Parameter removed: grain_discovery_enabled.",
             "Parameter removed: grain_discovery_max_candidates.",
-            "Parameter removed: grain_discovery_max_columns."
+            "Parameter removed: grain_discovery_max_columns.",
+            "Parameter removed: verbose."
           ],
           "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)",
-          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None)"
+          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)"
         },
         {
           "change_type": "modified",
@@ -6978,7 +7067,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, sources, targets, execution_mode = 'testing', selections = None, interactive = None, spark_session = None, context = None, pipeline_id = None, configuration = None, testing_writes = False)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)"
         },
         {
           "change_type": "added",
@@ -7042,15 +7131,94 @@
     },
     {
       "baseline": "working-tree",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
+          "reasons": [
+            "Parameter removed: pipeline.",
+            "Required parameter added: execution_plan.",
+            "Optional parameter added: spark_session."
+          ],
+          "signature_after": "finalize_pipeline(execution_plan, *, failed = False, spark_session = None)",
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Required parameter added: execution_plan.",
+            "Optional parameter added: spark_session.",
+            "Default changed for verbose: False to True."
+          ],
+          "signature_after": "orchestrate_read(*, execution_plan, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Required parameter added: execution_plan.",
+            "Required parameter added: sources.",
+            "Optional parameter added: spark_session.",
+            "Default changed for verbose: False to True."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
+          "reasons": [
+            "Parameter removed: verbose."
+          ],
+          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None)",
+          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
+          "reasons": [
+            "Parameter removed: pipeline_mode.",
+            "Optional parameter added: configuration.",
+            "Optional parameter added: context.",
+            "Optional parameter added: execution_mode.",
+            "Optional parameter added: interactive.",
+            "Optional parameter added: selections.",
+            "Required parameter added: sources.",
+            "Optional parameter added: spark_session.",
+            "Required parameter added: targets.",
+            "Optional parameter added: testing_writes.",
+            "Parameter became optional: pipeline_id.",
+            "Annotation changed for pipeline_id: str to None."
+          ],
+          "signature_after": "setup_pipeline(*, sources, targets, execution_mode = 'testing', selections = None, interactive = None, spark_session = None, context = None, pipeline_id = None, configuration = None, testing_writes = False)",
+          "signature_before": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)"
+        }
+      ],
       "summary": {
         "added": 0,
-        "modified": 0,
+        "modified": 5,
         "nonbreaking": 0,
-        "potentially_breaking": 0,
+        "potentially_breaking": 5,
         "removed": 0,
         "review_required": 0,
-        "total": 0
+        "total": 5
       },
       "target": "main"
     }
@@ -14569,7 +14737,7 @@
       "certainty": "certain",
       "lifecycle_source": "public_api_registry",
       "notes": [],
-      "revision": "b78875fce65ad0c3c4e41ed33989864b84ebb6ab",
+      "revision": "a05de67317d0a0053aa7b84ada7727f045eec092",
       "source_kind": "git_branch",
       "version": "main"
     },
@@ -15598,11 +15766,11 @@
           "parameters": [
             {
               "annotation": null,
-              "default": null,
-              "has_default": false,
+              "default": "None",
+              "has_default": true,
               "kind": "positional_or_keyword",
-              "name": "execution_plan",
-              "required": true
+              "name": "pipeline",
+              "required": false
             },
             {
               "annotation": null,
@@ -15611,19 +15779,11 @@
               "kind": "keyword_only",
               "name": "failed",
               "required": false
-            },
-            {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
           "return_annotation": null,
-          "signature": "finalize_pipeline(execution_plan, *, failed = False, spark_session = None)",
+          "signature": "finalize_pipeline(pipeline = None, *, failed = False)",
           "source_path": "src/fabricops_kit/pipeline/finalize_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline"
         },
@@ -15632,14 +15792,6 @@
           "extraction_error": null,
           "lifecycle": "Preview",
           "parameters": [
-            {
-              "annotation": null,
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "execution_plan",
-              "required": true
-            },
             {
               "annotation": "str",
               "default": null,
@@ -15737,16 +15889,8 @@
               "required": false
             },
             {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
               "annotation": "bool",
-              "default": "True",
+              "default": "False",
               "has_default": true,
               "kind": "keyword_only",
               "name": "verbose",
@@ -15763,7 +15907,7 @@
           ],
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "return_annotation": "dict[str, Any]",
-          "signature": "orchestrate_read(*, execution_plan, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "source_path": "src/fabricops_kit/pipeline/orchestrate_read.py",
           "source_qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read"
         },
@@ -15778,22 +15922,6 @@
               "has_default": false,
               "kind": "positional_or_keyword",
               "name": "dataframe",
-              "required": true
-            },
-            {
-              "annotation": null,
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "execution_plan",
-              "required": true
-            },
-            {
-              "annotation": "Iterable[dict[str, Any]]",
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "sources",
               "required": true
             },
             {
@@ -15893,16 +16021,8 @@
               "required": false
             },
             {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
               "annotation": "bool",
-              "default": "True",
+              "default": "False",
               "has_default": true,
               "kind": "keyword_only",
               "name": "verbose",
@@ -15919,7 +16039,7 @@
           ],
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "return_annotation": "dict[str, Any]",
-          "signature": "orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, spark_session = None, verbose: bool = True, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
           "source_qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
         },
@@ -16139,11 +16259,19 @@
               "kind": "keyword_only",
               "name": "spark_session",
               "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
           "return_annotation": null,
-          "signature": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None)",
+          "signature": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)",
           "source_path": "src/fabricops_kit/pipeline/profile_table.py",
           "source_qualified_name": "fabricops_kit.pipeline.profile_table.profile_table"
         },
@@ -16197,89 +16325,25 @@
           "lifecycle": "Preview",
           "parameters": [
             {
-              "annotation": null,
+              "annotation": "str",
               "default": null,
               "has_default": false,
-              "kind": "keyword_only",
-              "name": "sources",
-              "required": true
-            },
-            {
-              "annotation": null,
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "targets",
-              "required": true
-            },
-            {
-              "annotation": null,
-              "default": "'testing'",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "execution_mode",
-              "required": false
-            },
-            {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "selections",
-              "required": false
-            },
-            {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "interactive",
-              "required": false
-            },
-            {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "context",
-              "required": false
-            },
-            {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
               "kind": "keyword_only",
               "name": "pipeline_id",
-              "required": false
+              "required": true
             },
             {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
               "kind": "keyword_only",
-              "name": "configuration",
-              "required": false
-            },
-            {
-              "annotation": null,
-              "default": "False",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "testing_writes",
-              "required": false
+              "name": "pipeline_mode",
+              "required": true
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "return_annotation": null,
-          "signature": "setup_pipeline(*, sources, targets, execution_mode = 'testing', selections = None, interactive = None, spark_session = None, context = None, pipeline_id = None, configuration = None, testing_writes = False)",
+          "signature": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)",
           "source_path": "src/fabricops_kit/pipeline/setup_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline"
         },
@@ -16426,7 +16490,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:469b192220e181bbb53c940b7fc84794ea498b2a6df07738c1d135f9c9159915",
+      "source_digest": "sha256:aa0fe67ae199f30ce97eb828dadcd21114c148990e914be98e4b42ee447ffde5",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

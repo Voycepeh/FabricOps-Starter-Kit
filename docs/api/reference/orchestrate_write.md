@@ -69,21 +69,21 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `dataframe` | `Any` | Yes | `—` | Not documented yet |
-| `store` | `str` | Yes | `—` | Not documented yet |
-| `schema` | `str \| None` | Yes | `—` | Not documented yet |
-| `table_name` | `str` | Yes | `—` | Not documented yet |
-| `write_mode` | `str` | Yes | `—` | Not documented yet |
-| `write_parameters` | `dict[str, Any] \| None` | No | `None` | Not documented yet |
-| `repartition_by` | `int \| None` | No | `None` | Not documented yet |
-| `grain_discovery_enabled` | `bool` | No | `True` | Not documented yet |
-| `grain_discovery_max_columns` | `int` | No | `3` | Not documented yet |
-| `grain_discovery_max_candidates` | `int` | No | `8` | Not documented yet |
-| `frequency_enabled` | `bool` | No | `True` | Not documented yet |
-| `frequency_top_n` | `int \| None` | No | `5` | Not documented yet |
-| `existing_mapping` | `—` | No | `None` | Not documented yet |
-| `verbose` | `bool` | No | `False` | Not documented yet |
-| `dq_diagnostics` | `str` | No | `'sample'` | Not documented yet |
+| `dataframe` | `Any` | Yes | `—` | Transformed Spark DataFrame; Sensitive Data treatment prepares the input. |
+| `store` | `str` | Yes | `—` | Configured target store key. |
+| `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
+| `table_name` | `str` | Yes | `—` | Physical target table name. |
+| `write_mode` | `str` | Yes | `—` | Proposed strategy; must match the selected contract processing definition. |
+| `write_parameters` | `dict[str, Any] \| None` | No | `None` | Strategy parameters including SCD key_columns and SCD2 effective_column. |
+| `repartition_by` | `int \| None` | No | `None` | Physical write partition count for Live. |
+| `grain_discovery_enabled` | `bool` | No | `True` | Discover candidate Grain keys during persisted-target profiling; governed checks always run. |
+| `grain_discovery_max_columns` | `int` | No | `3` | Positive maximum width of a candidate key. |
+| `grain_discovery_max_candidates` | `int` | No | `8` | Positive maximum retained candidates at the smallest valid key width. |
+| `frequency_enabled` | `bool` | No | `True` | Calculate optional frequency distributions during profiling. |
+| `frequency_top_n` | `int \| None` | No | `5` | Maximum frequency rows per column. |
+| `existing_mapping` | `object` | No | `None` | Caller-managed Sensitive Data mapping; incompatible with a configured vault. Existing assignments are reused. The returned sensitive_result.support_mapping remains caller-owned; persist it only in Live workflows, then unpersist() its cache after consumption. A configured restricted mapping store is read-only during evaluation-only Testing and reused/updated during Live writes. Failures release the cache. |
+| `verbose` | `bool` | No | `False` | Print concise stages and outcome when True; the execution widget reports automatically by default. |
+| `dq_diagnostics` | `str` | No | `'sample'` | Exact metrics with bounded samples, no samples or lazy full violations. |
 
 </div>
 
@@ -100,7 +100,11 @@ result = orchestrate_write(summary_df, store="Gold", schema="demo",
 
 ## Returns
 
-Prepared input, Guardrail outcomes, execution mode and actual publication/persistence status.
+dict
+    Prepared dataframe, selected contract, execution identity, schema_result, sensitive_result, source_drift_results, grain_result, dq_result, source_guardrail_results, write_metrics, published and persistence_status. sensitive_result.support_mapping remains caller-owned; release its cache after use. Test returns processing diagnostics without business publication. Live returns its actual publication outcome.
+
+Raises RuntimeError when no pipeline is active or a Live stage fails, and
+ValueError for an invalid operation or inconsistent approved configuration.
 
 ## Raises / Errors
 
@@ -119,9 +123,6 @@ Advanced repartitioning, Sensitive Data mapping and DQ diagnostics remain
 available. The result includes publication metrics and Guardrail diagnostics.
 A successful Write does not imply successful completion of the notebook.
 
-Raises RuntimeError when no pipeline is active or a Live stage fails, and
-ValueError for an invalid operation or inconsistent approved configuration.
-
 </div>
 
 ## See also
@@ -133,7 +134,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:27`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L27-L193">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L27-L235">View on GitHub</a>
 </div>
 
 

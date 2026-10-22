@@ -249,3 +249,138 @@ def test_closed_sessions_release_shutdown_callback(runtime, monkeypatch):
     register.assert_called_once_with(session.close)
     session.close()
     unregister.assert_called_once_with(session.close)
+
+
+def test_finalization_completes_and_publishes_only_run_metadata(runtime, monkeypatch):
+    from fabricops_kit import finalize_pipeline
+    committed = []
+    monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kwargs: committed.append(dict(row)))
+    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    assert not committed
+    result = finalize_pipeline(session)
+    assert result['status'] == 'ungoverned_completed'
+    assert json.loads(result['operation_summary_json'])['boundary_completed'] is True
+    assert session.closed and not session.sources
+    assert len(committed) == 1
+    assert finalize_pipeline(session) == result and len(committed) == 1
+    runtime.writes.assert_not_called()
+
+
+def test_finalization_records_caught_failure_and_releases_live_reservation(runtime, monkeypatch):
+    from fabricops_kit import finalize_pipeline
+    activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
+    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    session.plan = replace(session.plan, execution_mode='live')
+    session.plan.evidence['lease_token'] = session.plan.plan_id
+    monkeypatch.setattr(shared, '_merge_pipeline_run_row', Mock())
+    release = Mock(side_effect=lambda plan, **kwargs: plan.evidence.pop('lease_token'))
+    monkeypatch.setattr(activation, 'release_pipeline_lease', release)
+    result = finalize_pipeline(session, failed=True)
+    assert result['status'] == 'failed'
+    assert json.loads(result['operation_summary_json'])['boundary_completed'] is False
+    release.assert_called_once()
+
+
+def test_finalization_retains_all_diagnostics_and_retries_without_duplicates(runtime, monkeypatch):
+    from fabricops_kit import finalize_pipeline
+    import sys
+    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    session.plan.evidence['guardrail_history'] = [{'guardrail_result_id': 'first', 'run_id': session.plan.plan_id}]
+    session.plan.results.clear()  # The per-operation lookup may discard earlier results.
+    stored = {}
+    attempts = []
+
+    class Frame:
+        def alias(self, name):
+            return self
+
+    class Delta:
+        def alias(self, name):
+            return self
+        def merge(self, frame, condition):
+            assert condition == 'target.guardrail_result_id = source.guardrail_result_id'
+            return self
+        def whenNotMatchedInsertAll(self):
+            return self
+        def execute(self):
+            stored['first'] = True
+            attempts.append(True)
+            if len(attempts) == 1:
+                raise OSError('lost acknowledgement')
+
+    runtime.spark.createDataFrame = Mock(return_value=Frame())
+    monkeypatch.setitem(sys.modules, 'delta.tables', SimpleNamespace(DeltaTable=SimpleNamespace(forPath=lambda *args: Delta())))
+    monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', lambda *args, **kwargs: (None, None, None, 'configured/results'))
+    monkeypatch.setattr(shared, '_merge_pipeline_run_row', Mock())
+    with pytest.raises(OSError, match='lost acknowledgement'):
+        finalize_pipeline(session)
+    shared._merge_pipeline_run_row.assert_not_called()
+    assert session.closed and not session.plan.permits_persistence
+    result = finalize_pipeline(session)
+    assert len(stored) == 1 and result['status'] == 'ungoverned_completed'
+    shared._merge_pipeline_run_row.assert_called_once()
+    rows = runtime.spark.createDataFrame.call_args.args[0]
+    assert rows[0]['guardrail_result_id'] == 'first'
+
+
+def test_active_finalization_cannot_be_claimed_from_another_task(runtime):
+    from fabricops_kit import finalize_pipeline
+    import asyncio
+
+    async def scenario():
+        session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+        async def child():
+            with pytest.raises(RuntimeError, match='another task'):
+                finalize_pipeline(session)
+        await asyncio.create_task(child())
+        assert not session.closed
+        session.close()
+
+    asyncio.run(scenario())
+
+
+def test_finalized_governed_test_can_build_new_activation_manifest(runtime, monkeypatch):
+    from fabricops_kit import finalize_pipeline
+    from datetime import date, timedelta
+    activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
+    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    payload = {'contract': {'contract_id': 'frozen', 'contract_version': 1, 'status': 'frozen'},
+               'table': {'table_id': 'orders', 'columns': []}, 'guardrails': [],
+               'enrichment': {'table': [], 'columns': []}}
+    row = {'table_id': 'orders', 'contract_id': 'frozen', 'contract_version': 1,
+           'status': 'frozen', 'environment_name': 'dev',
+           'contract_payload_json': json.dumps(payload), 'contract_payload': payload}
+    monkeypatch.setattr(shared, 'resolve_data_contract_version', Mock(return_value=row))
+    session.select_contract('orders', 'frozen', 1)
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    committed = []
+    monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kwargs: committed.append(dict(row)))
+    result = finalize_pipeline(session)
+    assert result['status'] == 'succeeded' and committed == [result]
+    agreement = {'agreement_id': 'agreement', 'agreement_version': '1.0.0',
+                 'start_date': date.today().isoformat(), 'expiry_date': (date.today() + timedelta(days=30)).isoformat()}
+    records = {'METADATA_PIPELINE_RUN': committed, 'METADATA_DATA_CONTRACT': [row],
+               'METADATA_GUARDRAIL_RESULTS': [], 'METADATA_DATA_AGREEMENT': [agreement]}
+    monkeypatch.setattr(activation, 'metadata_records', lambda table, **kwargs: records[table])
+    monkeypatch.setattr(activation, 'resolve_fabric_context', shared.resolve_fabric_context)
+    manifest = activation.tested_pipeline_manifest(testing_run_id=result['run_id'],
+        candidate_fingerprint=result['candidate_fingerprint'], pipeline_name='Orders', pipeline_version='1',
+        agreement_id='agreement', agreement_version='1.0.0', context={'config': {}, 'env': 'dev'})
+    assert manifest['testing_run_id'] == result['run_id']
+    assert manifest['candidate']['pipeline_id'] == 'orders'
+
+
+def test_finalization_requires_durable_audit_before_any_testing_publication(runtime, monkeypatch):
+    from fabricops_kit import finalize_pipeline
+    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    monkeypatch.setattr(shared, 'build_runtime_audit_fields', Mock(side_effect=ValueError('missing audit identity')))
+    commit = Mock()
+    monkeypatch.setattr(shared, '_merge_pipeline_run_row', commit)
+    with pytest.raises(ValueError, match='missing audit identity'):
+        finalize_pipeline(session)
+    commit.assert_not_called()
+    runtime.writes.assert_not_called()

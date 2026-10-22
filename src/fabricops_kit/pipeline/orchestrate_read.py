@@ -31,6 +31,42 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     target_table_id preserves incremental checkpoint and SCD processing support.
     dq_diagnostics accepts sample, none or full for explicit debugging.
 
+    Parameters
+    ----------
+    store : str
+        Configured source store key.
+    schema : str or None
+        Explicit physical schema; pass None for a schemaless store.
+    table_name : str
+        Physical source table name.
+    read_mode : {"full", "incremental"}
+        Full reads profile the source; incremental reads retain checkpoint bounds.
+    read_parameters : dict, optional
+        Incremental watermark_column; must agree with the selected contract.
+    target_table_id : str, optional
+        Required target for incremental reads, also a participant in the plan.
+    query : str, optional
+        Read-only Warehouse query, supported for full reads only.
+    grain_discovery_enabled : bool
+        Discover candidate Grain keys during full-read profiling; contract Grain checks always run.
+    frequency_enabled : bool
+        Calculate optional frequency distributions during profiling.
+    grain_discovery_max_columns : int
+        Positive maximum width of a candidate key.
+    grain_discovery_max_candidates : int
+        Positive maximum retained candidates at the smallest valid key width.
+    frequency_top_n : int, optional
+        Maximum frequency values per column.
+    verbose : bool
+        Print concise stage outcomes and summary.
+    dq_diagnostics : {"sample", "none", "full"}
+        Rule metrics plus bounded examples, no examples, or lazy full failures.
+
+    Returns
+    -------
+    dict
+        Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.
+
     Raises RuntimeError when no pipeline is active or a Live stage fails, and
     ValueError for an invalid operation or inconsistent approved configuration.
 

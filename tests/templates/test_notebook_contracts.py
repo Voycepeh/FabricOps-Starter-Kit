@@ -209,7 +209,7 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "# step 4. evaluate frozen data contracts" in normalized["step_4"]
     assert "no contract" in normalized["step_4"]
     assert "test does not publish business data or commit any operational metadata" in normalized["step_4"]
-    assert "persisted successful whole-run testing evidence" in normalized["step_4"]
+    assert "finalize_pipeline(contracts)" in normalized["step_4"]
     assert "incomplete" in normalized["step_4"]
 
     assert "# step 5. activate the tested pipeline and promote to production" in normalized["step_5"]
@@ -352,7 +352,7 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
             cell.source for cell in notebook.cells if cell.cell_type == "code"
         )
         assert "inspect_source" not in source and "inspect_write" not in source
-        assert not {"finalize-run", "inspect", "execution-plan"}.intersection(cell.id for cell in notebook.cells)
+        assert not {"inspect", "execution-plan"}.intersection(cell.id for cell in notebook.cells)
         for cell in notebook.cells:
             if cell.cell_type != "code":
                 continue
@@ -485,7 +485,7 @@ def test_guided_demo_explains_explicit_testing_writes_and_contract_selection():
 
     assert 'PIPELINE_MODE = "Test"' in step_2a
     assert "PIPELINE_TESTING_WRITES" not in step_2a
-    assert "finalize_pipeline(" not in step_2a
+    assert "finalize_pipeline(CONTRACTS)" in step_2a
     assert "Guardrail" in step_4 and "results are in memory" in step_4.casefold()
 
 
@@ -502,7 +502,7 @@ def test_demo_notebooks_start_with_title_and_finalize_after_write(notebook_name:
     assert ids[0] == "title"
     assert notebook.cells[0].cell_type == "markdown"
     assert ids.count("title") == 1
-    assert "finalize-run" not in ids and "inspect" not in ids
+    assert ids[-1] == "finalize-run" and "inspect" not in ids
     last_write = max(
         index for index, cell_id in enumerate(ids)
         if cell_id.startswith("write-") and cell_id not in {"write-inspection", "write-dictionary-inspection-heading"}

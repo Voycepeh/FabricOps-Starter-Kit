@@ -207,3 +207,5 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 **Next optional processing mode:** [Step 2B. Run the Incremental Append Demo](02B-build-and-run-incremental-append-etl.md)
 
 **Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
+
+Run `pipeline_result = finalize_pipeline(CONTRACTS)` after the last Write to record completion. Test publishes its run and Guardrail results at this step.

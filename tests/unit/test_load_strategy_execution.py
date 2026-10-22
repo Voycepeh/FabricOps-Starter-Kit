@@ -91,7 +91,7 @@ def test_target_audit_resolution_reuses_canonical_audit_builder(monkeypatch):
     })
     context = {"config": "config", "env": "dev", "activity_id": "activity-1"}
     assert shared.resolve_target_audit_fields(context) == AUDIT
-    assert calls == [{"config": "config", "env": "dev", "runtime_context": context}]
+    assert calls == [{"config": "config", "env": "dev", "runtime_context": context, "require_notebook_identity": True}]
 
 
 def _install_delta(monkeypatch, delta_table):

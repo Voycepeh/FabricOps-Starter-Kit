@@ -49,7 +49,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "Pipeline execution against all frozen contracts, or explicit contract-free exploration.",
-    "long_definition": "Test evaluates real reads, transformations and selected frozen Data Contract Guardrails without business or operational metadata commits. Diagnostic results remain in the execution session. Existing activation requires persisted complete Testing evidence, which evaluation-only Test cannot create.",
+    "long_definition": "Test evaluates real reads, transformations and selected frozen Data Contract Guardrails without business or operational metadata commits during Read and Write. finalize_pipeline publishes the completed run and Guardrail results for activation review; approval still requires complete frozen-contract coverage and all existing checks.",
     "preferred_usage": "Use Test for pipeline_mode, independently of the configured environment name.",
     "avoid_usage": "successful Live publication when only dry-run checks passed"
   },
@@ -735,7 +735,7 @@
     "aliases": [],
     "category": "Data Engineering concepts",
     "short_definition": "One logical pipeline execution across every declared Read and Write.",
-    "long_definition": "METADATA_PIPELINE_RUN records one logical attempt across all declared Reads and Writes, stable pipeline_id, candidate identity, operations and status. Notebook cell events detect failure but do not establish whole-run success. Unobserved completion remains incomplete. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.",
+    "long_definition": "METADATA_PIPELINE_RUN records one logical attempt across all declared Reads and Writes, stable pipeline_id, candidate identity, operations and status. Notebook cell events detect failure but do not establish whole-run success. finalize_pipeline records whole-run completion; unfinalized runs remain incomplete. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.",
     "preferred_usage": "Use pipeline run for the complete execution; distinguish it from table participation and rule-level Guardrail Results.",
     "avoid_usage": "one run per participating table"
   },

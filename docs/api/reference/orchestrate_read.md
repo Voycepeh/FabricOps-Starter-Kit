@@ -23,7 +23,7 @@ Use for the normal governed Read path before project PySpark transformation.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-source = orchestrate_read( store="Bronze", schema="demo", table_name="orders")
+source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 ```
 
 </div>
@@ -68,20 +68,20 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `store` | `str` | Yes | `—` | Not documented yet |
-| `schema` | `str \| None` | Yes | `—` | Not documented yet |
-| `table_name` | `str` | Yes | `—` | Not documented yet |
-| `read_mode` | `str` | No | `'full'` | Not documented yet |
-| `query` | `str \| None` | No | `None` | Not documented yet |
-| `read_parameters` | `dict[str, Any] \| None` | No | `None` | Not documented yet |
-| `target_table_id` | `str \| None` | No | `None` | Not documented yet |
-| `grain_discovery_enabled` | `bool` | No | `True` | Not documented yet |
-| `grain_discovery_max_columns` | `int` | No | `3` | Not documented yet |
-| `grain_discovery_max_candidates` | `int` | No | `8` | Not documented yet |
-| `frequency_enabled` | `bool` | No | `True` | Not documented yet |
-| `frequency_top_n` | `int \| None` | No | `5` | Not documented yet |
-| `verbose` | `bool` | No | `False` | Not documented yet |
-| `dq_diagnostics` | `str` | No | `'sample'` | Not documented yet |
+| `store` | `str` | Yes | `—` | Configured source store key. |
+| `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
+| `table_name` | `str` | Yes | `—` | Physical source table name. |
+| `read_mode` | `str` | No | `'full'` | Full reads profile the source; incremental reads retain checkpoint bounds. |
+| `query` | `str \| None` | No | `None` | Read-only Warehouse query, supported for full reads only. |
+| `read_parameters` | `dict[str, Any] \| None` | No | `None` | Incremental watermark_column; must agree with the selected contract. |
+| `target_table_id` | `str \| None` | No | `None` | Required target for incremental reads, also a participant in the plan. |
+| `grain_discovery_enabled` | `bool` | No | `True` | Discover candidate Grain keys during full-read profiling; contract Grain checks always run. |
+| `grain_discovery_max_columns` | `int` | No | `3` | Positive maximum width of a candidate key. |
+| `grain_discovery_max_candidates` | `int` | No | `8` | Positive maximum retained candidates at the smallest valid key width. |
+| `frequency_enabled` | `bool` | No | `True` | Calculate optional frequency distributions during profiling. |
+| `frequency_top_n` | `int \| None` | No | `5` | Maximum frequency values per column. |
+| `verbose` | `bool` | No | `False` | Print concise stage outcomes and summary. |
+| `dq_diagnostics` | `str` | No | `'sample'` | Rule metrics plus bounded examples, no examples, or lazy full failures. |
 
 </div>
 
@@ -97,7 +97,11 @@ orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 
 ## Returns
 
-Governed source DataFrame and table identity together with every stage result.
+dict
+    Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.
+
+Raises RuntimeError when no pipeline is active or a Live stage fails, and
+ValueError for an invalid operation or inconsistent approved configuration.
 
 ## Raises / Errors
 
@@ -115,9 +119,6 @@ exact DataFrame lineage. Live blocks failed checks; Test never commits.
 target_table_id preserves incremental checkpoint and SCD processing support.
 dq_diagnostics accepts sample, none or full for explicit debugging.
 
-Raises RuntimeError when no pipeline is active or a Live stage fails, and
-ValueError for an invalid operation or inconsistent approved configuration.
-
 </div>
 
 ## See also
@@ -129,7 +130,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:23`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L23-L116">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L23-L152">View on GitHub</a>
 </div>
 
 

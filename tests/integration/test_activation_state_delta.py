@@ -78,3 +78,40 @@ def test_persisted_overlapping_commits_cannot_both_publish(authority_delta):
     # conflict; inspect the durable bytes instead of assuming a client outcome.
     assert canonical_candidate_json(current) in {canonical_candidate_json(state) for state in [initial, *proposals]}
     assert runtime.spark.read.format("delta").load(runtime.path).count() == 1
+
+
+def test_finalization_publishes_test_results_once_with_real_delta(authority_delta, monkeypatch, tmp_path):
+    """Completed Test publishes diagnostics before its run using idempotent Delta keys."""
+    from fabricops_kit import finalize_pipeline
+    from fabricops_kit.pipeline import shared
+    runtime = authority_delta
+    tables = ('METADATA_PIPELINE_RUN', 'METADATA_GUARDRAIL_RESULTS')
+    paths = {table: str(tmp_path / table) for table in tables}
+    for table in tables:
+        runtime.spark.createDataFrame([], metadata_table_schema_registry()[table]).write.format('delta').save(paths[table])
+    monkeypatch.setattr(shared, 'build_runtime_audit_fields', service.build_runtime_audit_fields)
+    monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table',
+        lambda store, table, schema, **kwargs: ('Metadata', table, 'governance', paths[table]))
+    monkeypatch.setattr(shared, 'read_lakehouse_table',
+        lambda table, **kwargs: runtime.spark.read.format('delta').load(paths[table]))
+    plan = shared.PipelineExecutionPlan('testing', 'DEV', 'notebook', 'test-finalization',
+        canonical_candidate_json({'orders': {'store': 'Bronze', 'table_name': 'orders', 'roles': ['source']}}),
+        '{}', canonical_candidate_json({'orders': None}), runtime.context, pipeline_id='orders')
+    plan.evidence['operations']['source:Bronze/orders'].update(status='succeeded',
+        configuration_sha256='tested', configuration={}, stages=[{'stage': 'Read', 'status': 'passed'}])
+    row = {'guardrail_result_id': 'stable-result', 'guardrail_rule_id': 'rule', 'guardrail_version': 1,
+           'table_id': 'orders', 'contract_id': 'contract', 'contract_version': 1,
+           'execution_type': 'testing', 'run_id': plan.plan_id, 'environment_name': 'DEV',
+           'status': 'passed', 'can_continue': True, 'severity': 'blocking', 'result_payload_json': '{}'}
+    plan.evidence['guardrail_history'] = [row]
+    session = shared.PipelineSession(plan, runtime.spark)
+    assert all(runtime.spark.read.format('delta').load(path).count() == 0 for path in paths.values())
+    result = finalize_pipeline(session)
+    assert result['status'] == 'ungoverned_completed' and not plan.permits_persistence
+    assert finalize_pipeline(session) == result
+    stored = runtime.spark.read.format('delta').load(paths['METADATA_PIPELINE_RUN']).collect()
+    diagnostics = runtime.spark.read.format('delta').load(paths['METADATA_GUARDRAIL_RESULTS']).collect()
+    assert len(stored) == len(diagnostics) == 1
+    assert stored[0].run_id == diagnostics[0].run_id == plan.plan_id
+    assert stored[0].status == 'ungoverned_completed' and stored[0].completed_at is not None
+    assert diagnostics[0].guardrail_result_id == 'stable-result'

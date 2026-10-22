@@ -188,7 +188,7 @@ Complete Read → Transform → Write for each pending batch before reading a ne
 
 ### Metadata saved by FabricOps
 
-The following records are committed by successful runs with approved **Live** publication and routed to the Metadata Lakehouse configured by `00_env_config`. Test retains diagnostics in memory and commits no operational metadata.
+The following records are committed by successful runs with approved **Live** publication and routed to the Metadata Lakehouse configured by `00_env_config`. Test retains diagnostics in memory during Read and Write; `finalize_pipeline(CONTRACTS)` publishes only run and Guardrail results for activation review.
 
 | Metadata table or governed record | What this demo records |
 | --- | --- |

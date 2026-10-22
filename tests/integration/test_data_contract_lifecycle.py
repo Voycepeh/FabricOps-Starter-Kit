@@ -262,7 +262,6 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     before = _activation(state)
     assert not before["eligible_runs"] and before["activate"].disabled
     assert not state.metadata["METADATA_DATA_LINEAGE"]
-    selector = importlib.import_module("fabricops_kit.pipeline.setup_pipeline")
     coordinates = {"pipeline_id": "orders-pipeline", "configuration": {}, "sources": [
         {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
         {"store": "Bronze", "schema": "dbo", "table_name": "products"}],

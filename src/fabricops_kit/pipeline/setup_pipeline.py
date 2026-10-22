@@ -131,11 +131,19 @@ def setup_pipeline(*, pipeline_id: str, pipeline_mode: str):
     """Start an isolated pipeline using exactly Test or Live.
 
     Test evaluates reads, transformations and Guardrails without business or
-    metadata commits. Select frozen contracts in the returned interface before
+    metadata commits during Read and Write. finalize_pipeline publishes the final
+    run and Guardrail results for activation review. Select frozen contracts in the returned interface before
     the first operation; headless Test explicitly uses No Contract. Live resolves
     only the approved environment manifest and retains revision/ownership checks.
     Spark and supported Fabric runtime identity are resolved internally. A missing
     notebook ID is allowed: pipeline_id identifies the logical pipeline.
+
+    Parameters
+    ----------
+    pipeline_id : str
+        Stable logical pipeline identity, independent of the notebook name.
+    pipeline_mode : {"Test", "Live"}
+        Evaluation-only operations or execution under an approved manifest.
 
     Returns
     -------
@@ -146,9 +154,9 @@ def setup_pipeline(*, pipeline_id: str, pipeline_mode: str):
     Notes
     -----
     Fabric cell events identify failures, not successful notebook completion.
-    Runs remain incomplete until a trusted whole-execution boundary is available.
+    Call finalize_pipeline after all Reads, transformations and Writes.
     Neither a successful Write nor interpreter shutdown proves completion. Test
-    results are in memory and cannot serve as persisted activation evidence.
+    results stay in memory until explicit finalization publishes them.
 
     Raises
     ------

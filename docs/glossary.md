@@ -42,7 +42,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="testing">
 <summary><strong>Testing</strong> — Pipeline execution against all frozen contracts, or explicit contract-free exploration.</summary>
-<p>Test evaluates real reads, transformations and selected frozen Data Contract Guardrails without business or operational metadata commits. Diagnostic results remain in the execution session. Existing activation requires persisted complete Testing evidence, which evaluation-only Test cannot create.</p>
+<p>Test evaluates real reads, transformations and selected frozen Data Contract Guardrails without business or operational metadata commits during Read and Write. finalize_pipeline publishes the completed run and Guardrail results for activation review; approval still requires complete frozen-contract coverage and all existing checks.</p>
 </details>
 
 <details id="live">
@@ -328,7 +328,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-run">
 <summary><strong>pipeline run</strong> — One logical pipeline execution across every declared Read and Write.</summary>
-<p>METADATA_PIPELINE_RUN records one logical attempt across all declared Reads and Writes, stable pipeline_id, candidate identity, operations and status. Notebook cell events detect failure but do not establish whole-run success. Unobserved completion remains incomplete. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.</p>
+<p>METADATA_PIPELINE_RUN records one logical attempt across all declared Reads and Writes, stable pipeline_id, candidate identity, operations and status. Notebook cell events detect failure but do not establish whole-run success. finalize_pipeline records whole-run completion; unfinalized runs remain incomplete. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.</p>
 </details>
 
 <details id="pyspark">
