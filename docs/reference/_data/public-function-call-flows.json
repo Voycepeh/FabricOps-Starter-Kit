@@ -13220,9 +13220,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._agreement_identity_text",
-      "source_end_line": 545,
+      "source_end_line": 562,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 536,
+      "source_start_line": 553,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13237,9 +13237,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._agreement_label",
-      "source_end_line": 557,
+      "source_end_line": 574,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 553,
+      "source_start_line": 570,
       "usage": "detached"
     },
     {
@@ -13253,9 +13253,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._business_agreement_snapshot",
-      "source_end_line": 533,
+      "source_end_line": 550,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 524,
+      "source_start_line": 541,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -13276,9 +13276,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
-      "source_end_line": 670,
+      "source_end_line": 687,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 560,
+      "source_start_line": 577,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13296,9 +13296,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._deserialize_approved_usage",
-      "source_end_line": 521,
+      "source_end_line": 538,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 514,
+      "source_start_line": 531,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13317,9 +13317,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._deserialize_supporting_documents",
-      "source_end_line": 500,
+      "source_end_line": 517,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 491,
+      "source_start_line": 508,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13334,9 +13334,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._generate_agreement_id",
-      "source_end_line": 475,
+      "source_end_line": 492,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 472,
+      "source_start_line": 489,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -13355,9 +13355,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._next_minor_version",
-      "source_end_line": 469,
+      "source_end_line": 486,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 467,
+      "source_start_line": 484,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -13376,9 +13376,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._parse_agreement_version",
-      "source_end_line": 464,
+      "source_end_line": 481,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 459,
+      "source_start_line": 476,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -13397,9 +13397,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._serialize_approved_usage",
-      "source_end_line": 511,
+      "source_end_line": 528,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 503,
+      "source_start_line": 520,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -13419,9 +13419,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._serialize_supporting_documents",
-      "source_end_line": 488,
+      "source_end_line": 505,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 478,
+      "source_start_line": 495,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -13439,9 +13439,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement._steward_label",
-      "source_end_line": 550,
+      "source_end_line": 567,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 548,
+      "source_start_line": 565,
       "usage": "detached"
     },
     {
@@ -13487,9 +13487,9 @@
       ],
       "returns_documentation": "dict[str, Any]\n    Stable root, section, field, document, steward, and save controls.",
       "signature": "def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
-      "source_end_line": 456,
+      "source_end_line": 473,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-      "source_start_line": 43,
+      "source_start_line": 44,
       "summary": "Render a wide, single-flow data-agreement editor.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
@@ -13508,9 +13508,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
-      "source_end_line": 273,
+      "source_end_line": 290,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
-      "source_start_line": 249,
+      "source_start_line": 266,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13525,9 +13525,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_steward._generate_steward_id",
-      "source_end_line": 241,
+      "source_end_line": 258,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
-      "source_start_line": 238,
+      "source_start_line": 255,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"
@@ -13545,9 +13545,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_steward._steward_label",
-      "source_end_line": 246,
+      "source_end_line": 263,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
-      "source_start_line": 244,
+      "source_start_line": 261,
       "usage": "detached"
     },
     {
@@ -13593,7 +13593,7 @@
       ],
       "returns_documentation": "dict[str, Any]\n    Rendered widget controls keyed for notebook customization.",
       "signature": "def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
-      "source_end_line": 235,
+      "source_end_line": 252,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
       "source_start_line": 35,
       "summary": "Render append-only data steward create/update maintenance.",
