@@ -167,7 +167,7 @@ def test_save_preserves_emitted_lakehouse_output_and_restores_button(monkeypatch
 
     def save(**kwargs):
         print(message)
-        return agreement_row(agreement_id="33333333-3333-4333-8333-333333333333")
+        return agreement_row(agreement_id="33333333-3333-4333-8333-333333333333", agreement_version="1.0.0")
 
     monkeypatch.setattr(agreement_widget, "_create_or_update_data_agreement", save)
     controls = _render(monkeypatch)
@@ -228,6 +228,32 @@ def test_agreement_save_validation_error_stays_in_status_and_later_success_recov
     assert controls["identity_context"].value == "Agreement ID and version are generated when saved."
 
 
+def test_agreement_callback_failure_after_write_still_clears_form(monkeypatch):
+    """A failed observer must not make a persisted agreement appear unsaved."""
+    writes = []
+
+    def save(**kwargs):
+        writes.append(kwargs)
+        return agreement_row(agreement_id="33333333-3333-4333-8333-333333333333", agreement_version="1.0.0")
+
+    def failed_callback(_row):
+        raise RuntimeError("downstream view unavailable")
+
+    monkeypatch.setattr(agreement_widget, "_create_or_update_data_agreement", save)
+    controls = _render(monkeypatch)
+    controls["fields"]["agreement_name"].value = "Orders Agreement"
+    controls["after_save_callbacks"].append(failed_callback)
+
+    controls["save_button"].click_callbacks[0](None)
+
+    assert len(writes) == 1
+    assert "Saved Orders Agreement" in controls["status"].value
+    assert "post-save callback failed" in controls["status"].value
+    assert "Form cleared" in controls["status"].value
+    assert controls["fields"]["agreement_name"].value == ""
+    assert controls["existing_record"].value == ""
+
+
 def test_steward_form_uses_simplified_visible_layout(monkeypatch):
     """Compose steward maintenance with one form flow and hidden technical output."""
     controls = _render_steward(monkeypatch)
@@ -280,6 +306,32 @@ def test_steward_discard_and_clear_does_not_write(monkeypatch):
     assert controls["fields"]["contact"].value == ""
     assert controls["custom_fields"]["group"].value == ""
     assert "discarded" in controls["status"].value.lower()
+
+
+def test_steward_refresh_failure_after_write_still_clears_form(monkeypatch):
+    """A failed list reload must report a saved steward without inviting a duplicate."""
+    writes = []
+
+    def save(**kwargs):
+        writes.append(kwargs)
+        return {"steward_id": "33333333-3333-4333-8333-333333333333", "steward_name": "New Steward"}
+
+    monkeypatch.setattr(steward_widget, "_create_or_update_data_steward", save)
+    controls = _render_steward(monkeypatch)
+    controls["fields"]["steward_name"].value = "New Steward"
+    controls["fields"]["contact"].value = "new@example.com"
+    monkeypatch.setattr(
+        steward_widget, "list_data_stewards", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("refresh unavailable"))
+    )
+
+    controls["save_button"].click_callbacks[0](None)
+
+    assert len(writes) == 1
+    assert "Data steward saved successfully: New Steward" in controls["status"].value
+    assert "steward list refresh failed" in controls["status"].value
+    assert "Form cleared" in controls["status"].value
+    assert controls["fields"]["steward_name"].value == ""
+    assert controls["save_button"].disabled is True
 
 
 def test_steward_additional_information_renders_only_for_custom_fields(monkeypatch):
