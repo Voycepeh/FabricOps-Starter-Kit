@@ -188,10 +188,32 @@ def test_optional_custom_dropdown_starts_blank_and_required_keeps_default(monkey
     assert fields["optional"].options[0] == ("Select an option", "")
     assert fields["defaulted"].value == "Faculty"
     assert fields["required"].value == "ODI"
-    assert fields["required"].options == [("Select an option", ""), "ODI", "Faculty"]
+    assert fields["required"].options == [
+        ("Select an option", ""), ("ODI", "ODI"), ("Faculty", "Faculty")
+    ]
     fields["required"].value = ""
 
     empty_required = shared.render_custom_fields(
         [{"key": "empty", "type": "dropdown", "required": True, "options": []}]
     )
     assert empty_required["empty"].value == ""
+
+
+def test_custom_dropdown_accepts_plain_and_labelled_options_in_ipywidgets(monkeypatch):
+    """Construct the real dropdown with the same options Fabric receives."""
+    import ipywidgets
+
+    monkeypatch.setattr(shared, "require_ipywidgets", lambda: ipywidgets)
+    definitions = [
+        {"key": "group", "type": "dropdown", "options": ["ODI", "Faculty"]},
+        {"key": "tier", "type": "dropdown", "required": True,
+         "options": [["Tier one", "one"], ["Tier two", "two"]]},
+    ]
+
+    fields = shared.render_custom_fields(definitions)
+
+    assert fields["group"].value == ""
+    assert fields["group"].options == (("Select an option", ""), ("ODI", "ODI"), ("Faculty", "Faculty"))
+    assert fields["tier"].value == "one"
+    fields["group"].value = "ODI"
+    assert shared.collect_custom_fields(definitions, fields) == {"group": "ODI", "tier": "one"}
