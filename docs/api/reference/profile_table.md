@@ -192,9 +192,9 @@ profiled without creating an identity or writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_table.py:1095`
+`fabricops_kit/pipeline/profile_table.py:1097`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1095-L1473">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1097-L1281">View on GitHub</a>
 </div>
 
 
@@ -236,7 +236,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 72 |
+| Live-critical dependencies | 74 |
 
 ### Release history
 
@@ -293,6 +293,7 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._key_candidate_evidence</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._key_candidate_payload</code></li>
+<li><code>fabricops_kit.pipeline.profile_table._persist_grain_candidates</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._profile_snapshot_id</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._replace_frequency_rows</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._replace_snapshot_rows</code></li>
@@ -311,6 +312,7 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_statistical_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_statistical_query</code></li>
 <li><code>fabricops_kit.pipeline.profile_table._warehouse_type_name</code></li>
+<li><code>fabricops_kit.pipeline.profile_table.execute_table_profile</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>

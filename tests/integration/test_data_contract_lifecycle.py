@@ -180,7 +180,7 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         monkeypatch.setattr(runtime, name, {})
     for module in modules:
         if module.__name__.endswith(("orchestrate_read", "orchestrate_write")):
-            monkeypatch.setattr(module, "profile_table", lambda **kwargs: {"row_count": 2})
+            monkeypatch.setattr(module, "schedule_table_profiling", lambda *args, **kwargs: {"row_count": 2})
     monkeypatch.setattr(importlib.import_module("fabricops_kit.widgets.shared"), "pipeline_active_context", lambda: None)
     monkeypatch.setattr(importlib.import_module("IPython.display"), "display", lambda *a, **k: None)
     for layer, name in (("Bronze", "orders"), ("Bronze", "products"), ("Silver", "curated_orders")):

@@ -915,6 +915,8 @@ def _stage_catalogue_profile_retry(
 
 def _profile_snapshot_id(*, config: Any, env: str, context: dict[str, Any], table_id: str) -> str:
     """Return the stable snapshot identity for one table and Fabric activity."""
+    if context.get("_profile_snapshot_id"):
+        return str(context["_profile_snapshot_id"])
     activity_id = build_runtime_audit_fields(
         config=config, env=env, runtime_context=context
     )["_activity_id"]
@@ -1260,6 +1262,44 @@ def profile_table(
     read_lakehouse_json, read_lakehouse_parquet
 
     """
+    return execute_table_profile(
+        dataframe=dataframe,
+        store=store,
+        schema=schema,
+        table_name=table_name,
+        table_id=table_id,
+        grain_discovery_enabled=grain_discovery_enabled,
+        grain_discovery_max_columns=grain_discovery_max_columns,
+        grain_discovery_max_candidates=grain_discovery_max_candidates,
+        frequency_columns=frequency_columns,
+        frequency_enabled=frequency_enabled,
+        frequency_top_n=frequency_top_n,
+        frequency_max_distinct_percent=frequency_max_distinct_percent,
+        context=context,
+        spark_session=spark_session,
+        verbose=verbose,
+    )
+
+
+def execute_table_profile(
+    *,
+    dataframe=None,
+    store: str | None = None,
+    schema: str | None = None,
+    table_name: str | None = None,
+    table_id: str | None = None,
+    grain_discovery_enabled: bool = True,
+    grain_discovery_max_columns: int = 3,
+    grain_discovery_max_candidates: int = 8,
+    frequency_columns=None,
+    frequency_enabled: bool = True, frequency_top_n: int | None = 5,
+    frequency_max_distinct_percent: float | None = 80.0,
+    context=None,
+    spark_session=None,
+    verbose: bool = True,
+    activities=None,
+):
+    """Execute selected persisted-table profiling activities without public workflow calls."""
     for name, value in (
         ("grain_discovery_max_columns", grain_discovery_max_columns),
         ("grain_discovery_max_candidates", grain_discovery_max_candidates),
@@ -1281,6 +1321,12 @@ def profile_table(
         raise ValueError("frequency_max_distinct_percent must be finite and between 0.0 and 100.0 when supplied.")
 
     emit = print if verbose else lambda *args, **kwargs: None
+    selected_activities = set(activities) if activities is not None else {"standard", *({"grain"} if grain_discovery_enabled else set()), *({"frequency"} if frequency_enabled else set())}
+    if not selected_activities or selected_activities - {"standard", "grain", "frequency"}:
+        raise ValueError("Select standard, grain or frequency profiling activities.")
+    grain_discovery_enabled = "grain" in selected_activities
+    frequency_enabled = "frequency" in selected_activities
+    validate_claim = (context or {}).get("_profile_claim_validate", lambda: None)
     selected_frequency_columns = [] if not frequency_enabled else (None if frequency_columns is None else list(frequency_columns))
     if frequency_top_n is not None and frequency_top_n <= 0:
         raise ValueError("frequency_top_n must be greater than zero when supplied.")
@@ -1379,7 +1425,13 @@ def profile_table(
         emit("5. Metadata persistence → disabled by Testing policy" if identity is not None else
               "5. Metadata persistence → skipped; DataFrame-only profiling does not invent a table_id")
         emit("Result → profile outputs returned; no Catalogue or profiling metadata was written.")
-        return {"profile": statistical_profile, "frequency_profile": frequency_profile, **profile_metrics}
+        return {"profile": statistical_profile, "frequency_profile": frequency_profile, **({"grain_candidates": profile_key_candidates} if activities is not None else {}), **profile_metrics}
+
+    if selected_activities == {"grain"}:
+        validate_claim()
+        _persist_grain_candidates(identity, profile_key_candidates, max_columns=grain_discovery_max_columns,
+            config=config, env=env, context=context, spark_session=spark_session)
+        return {**({"grain_candidates": profile_key_candidates} if activities is not None else {}), **profile_metrics}
 
     profile_snapshot_id = _profile_snapshot_id(
         config=config, env=env, context=context, table_id=identity["table_id"]
@@ -1394,6 +1446,9 @@ def profile_table(
         profile_snapshot_id=profile_snapshot_id,
     ).cache()
     profiled_df.count()
+    if profile_metrics["row_count"] is None:
+        measured = profiled_df.select("row_count").first()
+        profile_metrics["row_count"] = measured["row_count"] if measured is not None else 0
     frequency_metadata_df = None
     if frequency_profile is not None:
         frequency_metadata_df = _frequency_metadata_dataframe(
@@ -1404,11 +1459,27 @@ def profile_table(
             env=env,
             runtime_context=context,
         )
+    if selected_activities == {"frequency"}:
+        from pyspark.sql import functions as F
+        # Independent Frequency snapshots have no statistical-profile foreign key.
+        # Table ID, Column ID and the activity snapshot retain complete identity.
+        if frequency_metadata_df is not None:
+            frequency_metadata_df = frequency_metadata_df.withColumn("profile_id", F.lit(None).cast("string"))
+        try:
+            validate_claim()
+            _replace_frequency_rows(frequency_df=frequency_metadata_df, profiled_df=profiled_df,
+                config=config, env=env, spark_session=spark_session)
+            return {"frequency_profile": frequency_profile, **profile_metrics}
+        finally:
+            profiled_df.unpersist()
+
     summary_persisted = False
     try:
+        validate_claim()
         same_activity_retry = _stage_catalogue_profile_retry(
             profiled_df=profiled_df, config=config, env=env, spark_session=spark_session
         )
+        validate_claim()
         _replace_snapshot_rows(
             dataframe=profiled_df, table_name=PROFILED_TABLE, row_id="profile_id",
             config=config, env=env, spark_session=spark_session,
@@ -1416,10 +1487,11 @@ def profile_table(
         summary_persisted = True
         profile_action = "refreshed existing activity snapshot" if same_activity_retry else "created new activity snapshot"
         emit(f"5. Profile snapshot → {profile_action}")
-        _replace_frequency_rows(
-            frequency_df=frequency_metadata_df, profiled_df=profiled_df,
-            config=config, env=env, spark_session=spark_session,
-        )
+        if frequency_enabled or activities is None:
+            _replace_frequency_rows(
+                frequency_df=frequency_metadata_df, profiled_df=profiled_df,
+                config=config, env=env, spark_session=spark_session,
+            )
         if frequency_metadata_df is not None:
             frequency_action = (
                 "refreshed existing activity rows"
@@ -1448,6 +1520,7 @@ def profile_table(
             ) if grain_discovery_enabled else None,
             source_fields=warehouse_fields,
         )
+        validate_claim()
         _upsert_catalogue_identities(
             catalogue_df=catalogue_df, config=config, env=env, spark_session=spark_session,
         )
@@ -1471,3 +1544,21 @@ def profile_table(
     )
     emit("Result → Profile completed and metadata saved.")
     return {"profile": profiled_df, "frequency_profile": frequency_profile, **profile_metrics}
+
+
+
+def _persist_grain_candidates(identity, candidates, *, max_columns, config, env, context, spark_session):
+    """Update only discovered candidates on an existing Catalogue table identity."""
+    from delta.tables import DeltaTable
+    from pyspark.sql import functions as F
+    _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", CATALOGUE_TABLE,
+        metadata_table_physical_schema(config, CATALOGUE_TABLE), context=context)
+    table = DeltaTable.forPath(spark_session, path)
+    condition = ((F.col("table_id") == identity["table_id"]) & (F.col("environment_name") == env)
+                 & (F.col("metadata_level") == "table"))
+    if table.toDF().where(condition).limit(2).count() != 1:
+        raise RuntimeError("Grain Discovery requires one registered Catalogue table in this environment.")
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    table.update(condition=condition, set={"profile_key_candidates_json": F.lit(json.dumps(
+        _key_candidate_evidence(candidates, max_columns=max_columns), sort_keys=True, separators=(",", ":"))),
+        **{name: F.lit(value) for name, value in audit.items()}})

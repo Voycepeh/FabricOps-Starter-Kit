@@ -31,6 +31,75 @@ DATA_CONTRACT_MANIFEST: dict[str, Any] | None = None
 DATA_CONTRACT_MANIFEST_JSON: str | None = None
 
 
+def _profiling_section(widgets, table_id, *, context, spark_session):
+    """Compose table-scoped operational scheduling outside contract draft state."""
+    from fabricops_kit.pipeline.shared import (
+        PROFILING_ACTIVITIES, default_profiling_policy, profiling_context_key,
+        profiling_next_eligible, read_table_profiling_state, save_table_profiling_policy,
+    )
+    status = widgets.HTML()
+    try:
+        token, state = read_table_profiling_state(context=context, spark_session=spark_session)
+        context_key, _physical = profiling_context_key(table_id, context=context, spark_session=spark_session)
+    except Exception as exc:
+        return shared.form_section(widgets, title="Profiling", children=[widgets.HTML(
+            "<p>Profiling settings are unavailable. Initialize or check configured profiling metadata.</p>"
+            f"<details><summary>Details</summary>{html.escape(str(exc))}</details>")])
+    policy = state["policies"].get(table_id, default_profiling_policy())
+    history = state["history"].get(context_key, {}).get("activities", {})
+    controls = {}
+    children = [widgets.HTML("<p>Shared table settings. Save independently of Data Contract rules.</p>")]
+    labels = {"standard": "Standard Profiling", "grain": "Grain Discovery", "frequency": "Frequency Profiling"}
+    frequencies = [("Every eligible operation", "every"), ("First run only", "first"),
+                   ("First eligible operation every X days", "interval")]
+    triggers = [("Read only", "read"), ("Write only", "write"), ("Read or Write", "read_or_write")]
+    for activity in PROFILING_ACTIVITIES:
+        settings = policy[activity]
+        frequency = widgets.Dropdown(options=frequencies, value=settings["frequency"], description="Frequency", layout=widgets.Layout(width="100%"))
+        days = widgets.IntText(value=settings.get("days", 1), description="Days", layout=widgets.Layout(width="100%"))
+        trigger = widgets.Dropdown(options=triggers, value=settings["trigger"], description="Trigger", layout=widgets.Layout(width="100%"))
+        last = history.get(activity, {}).get("last_success")
+        last_text = last or "Not yet profiled"
+        timing = widgets.HTML()
+        def changed(event, frequency=frequency, days=days, timing=timing, last=last, last_text=last_text):
+            days.layout.display = "" if frequency.value == "interval" else "none"
+            proposed = {"frequency": frequency.value, "days": days.value}
+            next_time = profiling_next_eligible(proposed, last)
+            if frequency.value == "interval" and days.value <= 0:
+                next_text = "Enter a positive number of days"
+            elif last and frequency.value == "interval" and next_time is None:
+                next_text = "Beyond the supported timestamp range"
+            else:
+                next_text = (next_time.isoformat() if next_time else "Completed; no automatic repeat"
+                             if last and frequency.value == "first" else "Next matching operation")
+            timing.value = (f"<div>Last successful profile: {html.escape(last_text)}<br>"
+                            f"Next eligible: {html.escape(next_text)}</div>")
+        frequency.observe(changed, names="value")
+        days.observe(changed, names="value")
+        changed(None)
+        row = shared.form_grid(widgets, [frequency, days, trigger])
+        children.extend([widgets.HTML(f"<b>{labels[activity]}</b>"), row, timing])
+        controls[activity] = {"frequency": frequency, "days": days, "trigger": trigger}
+    save = widgets.Button(description="Save profiling settings", button_style="primary")
+    def save_policy(_button):
+        nonlocal token
+        proposed = {activity: {"frequency": values["frequency"].value, "trigger": values["trigger"].value,
+                    **({"days": values["days"].value} if values["frequency"].value == "interval" else {})}
+                    for activity, values in controls.items()}
+        try:
+            token = save_table_profiling_policy(table_id, proposed, expected_token=token,
+                context=context, spark_session=spark_session)
+            status.value = "<p>Profiling settings saved. Data Contract rules are unchanged.</p>"
+        except Exception as exc:
+            status.value = f"<p role='alert'>{html.escape(str(exc))}</p>"
+    save.on_click(save_policy)
+    children.extend([save, status])
+    section = shared.form_section(widgets, title="Profiling", children=children)
+    section.profiling_controls = controls
+    section.profiling_save = save
+    return section
+
+
 def _valid_dropdown_value(options: list[str] | tuple[str, ...], value: Any, *, fallback: Any = None) -> Any:
     """Return a widget-safe value when persisted metadata no longer matches its options."""
     candidate = str(value or "")
@@ -2709,9 +2778,13 @@ def widget_data_contract(
             )
         grain_definition.children[3].add_class("fabricops-grain-fields")
         grain_definition.children[3].add_class("fabricops-contract-assistant-grid")
+        if state.get("_profiling_editor_table") != state["table_id"]:
+            state["_profiling_editor"] = _profiling_section(widgets, state["table_id"], context={**resolved, "config": config, "env": env}, spark_session=spark)
+            state["_profiling_editor_table"] = state["table_id"]
         table_right = (
             grain_definition,
             table_definition,
+            state["_profiling_editor"],
             shared.form_section(
                 widgets,
                 title="Processing",

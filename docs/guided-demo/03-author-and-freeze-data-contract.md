@@ -270,3 +270,9 @@ You now have frozen contracts for the complete demo pipeline. `curated_orders` r
 
 **Previous:** [Step 2A. Run the Full Refresh Demo](02A-full-refresh-demo.md)
 **Next:** [Step 4. Select and validate the Data Contract](04-validate-frozen-data-contract.md)
+
+### Configure profiling independently
+
+The Table tab includes **Profiling** for Standard Profiling, Grain Discovery and Frequency Profiling. Each has its own frequency and Read/Write trigger, plus last-success and next-eligibility information. Standard defaults to the first eligible Read or Write every one elapsed day; Grain Discovery and Frequency Profiling default to their first eligible operation only.
+
+Use **Save profiling settings** to update the table's operational policy. This does not change the draft or create a frozen contract version. Grain Discovery finds candidates; the contract's Grain Guardrail continues to enforce authored keys independently. See [shared table profiling](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#shared-table-profiling) for interval, persistence and concurrency behavior.

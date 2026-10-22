@@ -34,7 +34,7 @@ def runtime(monkeypatch):
     write = importlib.import_module('fabricops_kit.pipeline.orchestrate_write')
     for module in [read, write]:
         monkeypatch.setattr(module, 'resolve_table_id', lambda **kwargs: kwargs['table_name'])
-        monkeypatch.setattr(module, 'profile_table', lambda **kwargs: {'row_count': 2})
+        monkeypatch.setattr(module, 'schedule_table_profiling', lambda *args, **kwargs: {'row_count': 2})
     frame = SimpleNamespace(columns=['id'])
     monkeypatch.setattr(read, 'pipeline_read', lambda **kwargs: {'dataframe': frame, 'table_id': kwargs['table_name']})
     publication = Mock(return_value={'published': False, 'table_id': 'target', 'status': 'passed'})

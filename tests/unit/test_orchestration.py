@@ -58,7 +58,7 @@ def test_orchestrate_read_orders_stages_and_preserves_source(capsys):
     def result(name, value):
         def call(*args, **kwargs): calls.append(name); return value
         return call
-    with patch("fabricops_kit.pipeline.orchestrate_read.pipeline_read", result("read", {"dataframe": dataframe, "table_id": "source-id"})), patch("fabricops_kit.pipeline.orchestrate_read.check_freshness", result("freshness", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.check_schema", result("schema", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.check_dq", result("dq", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.profile_table", result("profile", {"profile": object()})):
+    with patch("fabricops_kit.pipeline.orchestrate_read.pipeline_read", result("read", {"dataframe": dataframe, "table_id": "source-id"})), patch("fabricops_kit.pipeline.orchestrate_read.check_freshness", result("freshness", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.check_schema", result("schema", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.check_dq", result("dq", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.schedule_table_profiling", result("profile", {"profile": object()})):
         actual = run_pipeline_operation(orchestrate_read, plan=LIVE_PLAN, store="Bronze", schema="demo", table_name="orders", verbose=False)
     assert calls == ["read", "freshness", "schema", "dq", "profile"]
     assert actual["dataframe"] is dataframe
@@ -85,7 +85,7 @@ def test_orchestrate_read_uses_table_name_for_heading_and_stage_metadata(capsys)
         "fabricops_kit.pipeline.orchestrate_read.check_dq",
         return_value={"status": "passed"},
     ), patch(
-        "fabricops_kit.pipeline.orchestrate_read.profile_table",
+        "fabricops_kit.pipeline.orchestrate_read.schedule_table_profiling",
         return_value={"status": "passed"},
     ):
         result = run_pipeline_operation(orchestrate_read, plan=LIVE_PLAN,
@@ -149,7 +149,7 @@ def test_orchestrate_read_reports_selected_physical_reader(capsys):
         "fabricops_kit.pipeline.orchestrate_read.check_dq",
         return_value={"status": "passed"},
     ), patch(
-        "fabricops_kit.pipeline.orchestrate_read.profile_table",
+        "fabricops_kit.pipeline.orchestrate_read.schedule_table_profiling",
         return_value={"status": "passed"},
     ):
         actual = run_pipeline_operation(orchestrate_read, plan=LIVE_PLAN,
@@ -188,7 +188,7 @@ def test_orchestrate_write_orders_stages_and_profiles_after_write(capsys):
         patch("fabricops_kit.pipeline.orchestrate_write.check_source_drift", effect("drift", {"status":"passed"})),
         patch("fabricops_kit.pipeline.orchestrate_write.check_dq", effect("dq", {"status":"passed"})),
         patch("fabricops_kit.pipeline.orchestrate_write.pipeline_write", side_effect=effect("write", {"table_id":"target-id"})),
-        patch("fabricops_kit.pipeline.orchestrate_write.profile_table", effect("profile", {"profile":object()})),
+        patch("fabricops_kit.pipeline.orchestrate_write.schedule_table_profiling", effect("profile", {"profile":object()})),
     ]
     with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5] as write, patches[6]:
         actual = run_pipeline_operation(orchestrate_write, dataframe, plan=LIVE_PLAN, sources=[{"table_id":"source-id", "execution_plan_id":"plan"}], store="Silver", schema="demo", table_name="physical_target", write_mode="overwrite")
@@ -233,7 +233,7 @@ def test_orchestrate_write_forwards_scd_write_parameters(capsys):
         "fabricops_kit.pipeline.orchestrate_write.pipeline_write",
         return_value={"table_id": "target-id"},
     ) as write, patch(
-        "fabricops_kit.pipeline.orchestrate_write.profile_table",
+        "fabricops_kit.pipeline.orchestrate_write.schedule_table_profiling",
         return_value={"profile": object()},
     ):
         run_pipeline_operation(orchestrate_write,
@@ -357,33 +357,16 @@ def test_orchestration_stage_duration_is_two_decimal_seconds_with_minimum():
 
 
 @pytest.mark.parametrize("operation", ["read", "write"])
-@pytest.mark.parametrize("grain_discovery_enabled,frequency_enabled", [(False, True), (True, False), (False, False)])
-def test_orchestrators_forward_independent_profile_controls(
-    monkeypatch, operation, grain_discovery_enabled, frequency_enabled
-):
-    """Caller flags reach Profile without disabling contract Grain enforcement."""
+@pytest.mark.parametrize("parameter", ["grain_discovery_enabled", "frequency_enabled", "frequency_top_n"])
+def test_orchestrators_reject_notebook_profiling_controls(operation, parameter):
+    """Profiling configuration is table-scoped and cannot be overridden per operation."""
     module = importlib.import_module(f"fabricops_kit.pipeline.orchestrate_{operation}")
-    monkeypatch.setattr(module, "pipeline_guardrail_types", lambda *a: {"grain"})
-    grain = Mock(return_value={"status": "passed", "can_continue": True})
-    monkeypatch.setattr(module, "check_grain", grain)
-    profile = Mock(return_value={"row_count": 2})
-    monkeypatch.setattr(module, "profile_table", profile)
-    kwargs = dict(store="Silver", schema="dbo", table_name="orders", verbose=False,
-                  grain_discovery_enabled=grain_discovery_enabled, grain_discovery_max_columns=2,
-                  grain_discovery_max_candidates=1, frequency_enabled=frequency_enabled)
-    if operation == "read":
-        monkeypatch.setattr(module, "pipeline_read", Mock(return_value={"dataframe": object(), "table_id": "source-id"}))
-        result = run_pipeline_operation(module.orchestrate_read, plan=LIVE_PLAN, **kwargs)
-    else:
-        monkeypatch.setattr(module, "resolve_table_id", lambda **k: "target-id")
-        monkeypatch.setattr(module, "pipeline_write", Mock(return_value={"table_id": "target-id"}))
-        result = run_pipeline_operation(module.orchestrate_write, object(), plan=LIVE_PLAN, sources=[], write_mode="overwrite", **kwargs)
-    assert profile.call_args.kwargs["grain_discovery_enabled"] is grain_discovery_enabled
-    assert profile.call_args.kwargs["frequency_enabled"] is frequency_enabled
-    assert profile.call_args.kwargs["grain_discovery_max_columns"] == 2
-    assert profile.call_args.kwargs["grain_discovery_max_candidates"] == 1
-    grain.assert_called_once()
-    assert result["grain_result"]["status"] == "passed"
+    function = getattr(module, f"orchestrate_{operation}")
+    arguments = {"store": "Bronze", "schema": "demo", "table_name": "orders", parameter: False}
+    if operation == "write":
+        arguments.update(dataframe=object(), write_mode="overwrite")
+    with pytest.raises(TypeError, match=parameter):
+        function(**arguments)
 
 
 def test_testing_blocked_stage_prints_diagnostics_and_retains_result(capsys):

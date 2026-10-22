@@ -26,7 +26,7 @@ See column-level profile metrics for a dataset snapshot. table_name and column_n
 via `table_id` + `column_id`
 
 `METADATA_DATA_PROFILED_FREQUENCY` **(1 → 1)**
-via `profile_id` + `profile_snapshot_id`
+via `profile_id`
 
 ## Column summary
 

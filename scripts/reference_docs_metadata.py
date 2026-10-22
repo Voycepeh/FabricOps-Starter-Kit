@@ -128,6 +128,11 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 )
 
 METADATA_TABLE_MODELS = {
+    "METADATA_TABLE_PROFILING": {
+        "purpose": "Mutable table-level profiling policies and per-environment/physical-context activity history, renewable claims and last successful completions; independent of frozen contracts and activation authority.",
+        "grain": "One preinitialized central coordination row. snapshot_json contains Table ID policies and activity state keyed by Table ID, environment and physical bindings.",
+        "primary_key": ["state_id"], "foreign_keys": [], "relationships": [],
+    },
     "METADATA_PIPELINE_RUN": {
         "purpose": "One complete logical run, exact table mappings, operation results, warnings and pinned activation revision.",
         "grain": "One pipeline execution attempt.", "primary_key": ["run_id"], "foreign_keys": [], "relationships": [],
@@ -195,19 +200,18 @@ METADATA_TABLE_MODELS = {
             {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Many profile snapshots can describe the same logical Catalogue column over time."},
         ],
         "relationships": [
-            {"related_table": "METADATA_DATA_PROFILED_FREQUENCY", "fields": ["profile_id", "profile_snapshot_id"], "cardinality": "1:1", "statement": "One logical column Profile has one corresponding frequency distribution. The distribution is stored separately and flattened into multiple physical Frequency rows to avoid a large JSON payload in the Profile row."},
+            {"related_table": "METADATA_DATA_PROFILED_FREQUENCY", "fields": ["profile_id"], "cardinality": "1:1", "statement": "A combined standalone profile may link a frequency distribution. Scheduled Standard and Frequency Profiling have independent snapshots and eligibility."},
         ],
     },
     "METADATA_DATA_PROFILED_FREQUENCY": {
-        "purpose": "See a profiled column's frequency distribution without joining its parent Profile for table and column IDs, captured names, datatype, or environment. Captured names do not follow later renames.",
-        "grain": "One flattened ranked value within one logical frequency distribution for a column Profile.",
+        "purpose": "Frequency distributions retain Table ID, Column ID, environment, captured names and datatype. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.",
+        "grain": "One ranked value for a column and frequency activity snapshot. The statistical Profile reference is optional.",
         "primary_key": ["frequency_id"],
         "foreign_keys": [
-            {"local_field": "profile_id", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profile_id", "cardinality": "N:1", "statement": "Physical Frequency rows link back to the Profile that owns the logical distribution through profile_id."},
-            {"local_field": "profile_snapshot_id", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profile_snapshot_id", "cardinality": "N:1", "statement": "Profile and Frequency are produced together in the same profiling snapshot."},
+            {"local_field": "profile_id", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profile_id", "cardinality": "N:1", "statement": "Combined standalone profiling links Frequency rows to their parent statistical Profile through profile_id. Independently scheduled Frequency Profiling leaves profile_id null and retains Table ID, Column ID and its own activity snapshot."},
         ],
         "relationships": [
-            {"related_table": "METADATA_DATA_PROFILED", "fields": ["profile_id", "profile_snapshot_id"], "cardinality": "1:1", "statement": "Logically this table stores the one frequency distribution belonging to a Profile; that distribution is physically flattened into multiple rows for storage."},
+            {"related_table": "METADATA_DATA_PROFILED", "fields": ["profile_id"], "cardinality": "N:1", "statement": "Combined standalone distributions optionally reference their statistical Profile. Independent scheduled distributions leave that reference null."},
         ],
     },
     "METADATA_DATA_LINEAGE": {
@@ -242,6 +246,7 @@ METADATA_TABLE_MODELS = {
 }
 
 METADATA_REFERENCE_ORDER = [
+    "METADATA_TABLE_PROFILING",
     "METADATA_PIPELINE_RUN",
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
@@ -272,6 +277,14 @@ _UNTRACED_AGREEMENT_STEWARD_OWNER = {
 }
 
 METADATA_COLUMN_OWNERS = {
+    "METADATA_TABLE_PROFILING": {
+        "__default__": ["fabricops_kit.pipeline.shared.commit_table_profiling_state",
+                        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+                        "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+                        "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+                        "fabricops_kit.widgets.widget_data_contract.widget_data_contract"],
+        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+    },
     "METADATA_DATA_STEWARD": {
         "__default__": [
             "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
@@ -333,10 +346,11 @@ METADATA_COLUMN_OWNERS = {
     },
     "METADATA_DATA_CATALOGUE": {
         "__default__": [
-            "fabricops_kit.pipeline.profile_table.profile_table",
+            "fabricops_kit.pipeline.profile_table.execute_table_profile",
             "fabricops_kit.pipeline.profile_table._catalogue_dataframe_from_profiled",
         ],
-        "__audit__": ["fabricops_kit.pipeline.profile_table._audit_literal_columns"],
+        "__audit__": ["fabricops_kit.pipeline.profile_table._audit_literal_columns", "fabricops_kit.pipeline.profile_table._persist_grain_candidates"],
+        "profile_key_candidates_json": ["fabricops_kit.pipeline.profile_table._catalogue_dataframe_from_profiled", "fabricops_kit.pipeline.profile_table._persist_grain_candidates"],
         "data_type": ["fabricops_kit.pipeline.profile_table._catalogue_dataframe_from_profiled"],
         "table_id": [
             "fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe",
@@ -354,7 +368,7 @@ METADATA_COLUMN_OWNERS = {
     },
     "METADATA_DATA_PROFILED": {
         "__default__": [
-            "fabricops_kit.pipeline.profile_table.profile_table",
+            "fabricops_kit.pipeline.profile_table.execute_table_profile",
             "fabricops_kit.pipeline.profile_table._canonical_profiled_dataframe",
         ],
         "__audit__": ["fabricops_kit.pipeline.profile_table._audit_literal_columns"],
@@ -380,9 +394,9 @@ METADATA_COLUMN_OWNERS = {
     },
     "METADATA_DATA_PROFILED_FREQUENCY": {
         "__default__": [
-            "fabricops_kit.pipeline.profile_table.profile_table",
+            "fabricops_kit.pipeline.profile_table.execute_table_profile",
             "fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe",
-            "fabricops_kit.pipeline.profile_table.profile_table",
+            "fabricops_kit.pipeline.profile_table.execute_table_profile",
         ],
         "__audit__": ["fabricops_kit.pipeline.profile_table._audit_literal_columns"],
         "table_id": ["fabricops_kit.pipeline.profile_table._frequency_metadata_dataframe"],

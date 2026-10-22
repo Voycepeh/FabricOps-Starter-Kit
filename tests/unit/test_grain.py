@@ -121,7 +121,7 @@ def test_grain_plan_guardrails_and_continuation(contract_runtime, spark_session,
     publish = Mock(return_value={"table_id": TARGET_ID, "strategy": "overwrite"})
     if mode == "live":
         monkeypatch.setattr(module, "pipeline_write", publish)
-        monkeypatch.setattr(module, "profile_table", Mock(return_value={"row_count": 2}))
+        monkeypatch.setattr(module, "schedule_table_profiling", Mock(return_value={"row_count": 2}))
     if mode == "live" and action == "Block":
         with pytest.raises(RuntimeError, match="during Grain"):
             write(plan, source, spark_session, dataframe=frame)

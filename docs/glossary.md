@@ -167,6 +167,11 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p><strong>Also known as:</strong> source observations</p>
 </details>
 
+<details id="table-profiling-policy">
+<summary><strong>table profiling policy</strong> — Mutable Table ID-level operational schedules for Standard Profiling, Grain Discovery and Frequency Profiling.</summary>
+<p>METADATA_TABLE_PROFILING stores independent frequency and Read/Write triggers plus per-environment/physical-context claims and last-success history. Policies are edited through Data Contract Authoring without changing immutable contract rules. Pipeline identity does not partition the shared schedule.</p>
+</details>
+
 <details id="lineage">
 <summary><strong>Lineage</strong> — Metadata that records how governed data moves from source to target through a pipeline.</summary>
 <p>FabricOps records source-to-target relationships from governed pipeline execution so a table's upstream and downstream paths can be traced.</p>

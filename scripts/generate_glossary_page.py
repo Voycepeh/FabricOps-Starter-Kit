@@ -46,6 +46,7 @@ GLOSSARY_GROUPS = [
             "business-rule",
             "information-classification",
             "source-observation",
+            "table-profiling-policy",
             "lineage",
             "table-id",
             "effective-data-access",

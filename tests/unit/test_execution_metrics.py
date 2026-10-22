@@ -126,7 +126,7 @@ def test_write_summary_keeps_profile_total_separate_from_committed(mode, capsys,
             stack.enter_context(patch.object(module, name, return_value="target" if name == "resolve_table_id" else {"status": "passed"}))
         stack.enter_context(patch.object(module, "check_sensitive_data", return_value={"dataframe": frame}))
         stack.enter_context(patch.object(module, "pipeline_write", return_value={"table_id": "target", "strategy": mode, "write_metrics": {"rows_committed": 8 if mode in {"append", "overwrite"} else None}}))
-        stack.enter_context(patch.object(module, "profile_table", return_value={"row_count": 100}))
+        stack.enter_context(patch.object(module, "schedule_table_profiling", return_value={"row_count": 100}))
         result = run_pipeline_operation(module.orchestrate_write, frame, plan=PLAN, sources=[], store="Silver", schema="demo", table_name="orders", write_mode=mode)
     assert result["write_metrics"]["total_target_rows"] == 100
     assert result["write_metrics"]["input_rows"] is None
@@ -151,11 +151,11 @@ def test_read_summary_reuses_profile_only_for_full_scope(incremental, rows, caps
         stack.enter_context(patch.object(module, "pipeline_read", return_value=source))
         for name in ("check_freshness", "check_schema", "check_dq"):
             stack.enter_context(patch.object(module, name, return_value={"status": "passed"}))
-        profile = stack.enter_context(patch.object(module, "profile_table", return_value={"row_count": 8}))
+        profile = stack.enter_context(patch.object(module, "schedule_table_profiling", return_value={"row_count": 8}))
         result = run_pipeline_operation(module.orchestrate_read, plan=PLAN, store="Gold", schema="demo", table_name="orders", read_mode="incremental" if incremental else "full")
     assert result["read_metrics"] == {"rows_read": rows, "columns": 1}
     assert "FabricOps READ Summary" in capsys.readouterr().out
-    assert profile.call_count == (0 if incremental else 1)
+    assert profile.call_count == 1
 
 
 @pytest.mark.parametrize("key", ["userMetadata", "USERMETADATA"])

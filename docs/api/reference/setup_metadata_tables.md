@@ -143,7 +143,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:169`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L552">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L557">View on GitHub</a>
 </div>
 
 

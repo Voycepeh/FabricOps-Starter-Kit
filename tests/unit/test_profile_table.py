@@ -25,7 +25,7 @@ def test_profile_table_public_signature_and_removed_symbols():
         "(*, dataframe=None, store: 'str | None' = None, schema: 'str | None' = None, "
         "table_name: 'str | None' = None, table_id: 'str | None' = None, grain_discovery_enabled: 'bool' = True, grain_discovery_max_columns: 'int' = 3, grain_discovery_max_candidates: 'int' = 8, frequency_columns=None, "
         "frequency_enabled: 'bool' = True, frequency_top_n: 'int | None' = 5, frequency_max_distinct_percent: 'float | None' = 80.0, "
-        "context=None, spark_session=None)"
+        "context=None, spark_session=None, verbose: 'bool' = True)"
     )
     for name in ("profile_dataframe", "profile_frequency_distribution", "profile_and_register_table"):
         assert not hasattr(fabricops_kit, name)
@@ -724,7 +724,7 @@ def test_profile_table_frequency_top_n_defaults_to_five():
     from fabricops_kit.pipeline.orchestrate_read import orchestrate_read
     from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
 
-    for function in (profile_table, orchestrate_read, orchestrate_write):
+    for function in (profile_table,):
         assert inspect.signature(function).parameters["frequency_top_n"].default == 5
         assert inspect.signature(function).parameters["frequency_enabled"].default is True
         assert inspect.signature(function).parameters["grain_discovery_enabled"].default is True
@@ -751,6 +751,7 @@ def test_grain_discovery_can_be_disabled_and_reenabled_independently(
                 "table_name": "orders", "store_kind": backend}
     frame, profile = Mock(), Mock()
     profile.cache.return_value = profile
+    profile.select.return_value.first.return_value = {"row_count": 2}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: ({}, "dev", {}))
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *a, **k: dict(identity))
     monkeypatch.setattr(module, "build_profile_dataframe", Mock(return_value=profile))
@@ -856,7 +857,7 @@ def test_warehouse_discovery_stops_after_candidate_limit(monkeypatch, single_col
     assert query.call_count == len(responses)
 
 
-@pytest.mark.parametrize("entrypoint", ["profile_table", "orchestrate_read", "orchestrate_write"])
+@pytest.mark.parametrize("entrypoint", ["profile_table"])
 @pytest.mark.parametrize("parameter", ["grain_discovery_max_columns", "grain_discovery_max_candidates"])
 @pytest.mark.parametrize("value", [0, -1, True, 1.5, "2", None])
 def test_discovery_limits_are_validated_before_any_work(monkeypatch, entrypoint, parameter, value):

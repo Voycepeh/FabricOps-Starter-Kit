@@ -13,6 +13,7 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_DATA_CATALOGUE",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
+    "METADATA_TABLE_PROFILING",
     "METADATA_DATA_LINEAGE",
     "METADATA_DATA_ACCESS",
     "METADATA_PIPELINE_RUN",
@@ -180,6 +181,11 @@ def metadata_table_schema_registry() -> dict[str, Any]:
         "METADATA_ACTIVATION_STATE": build_metadata_schema(
             "METADATA_ACTIVATION_STATE",
             [("authority_id", "string", False), ("token", "string", False),
+             ("snapshot_json", "string", False), *audit],
+        ),
+        "METADATA_TABLE_PROFILING": build_metadata_schema(
+            "METADATA_TABLE_PROFILING",
+            [("state_id", "string", False), ("token", "string", False),
              ("snapshot_json", "string", False), *audit],
         ),
         "METADATA_DATA_CATALOGUE": build_metadata_schema(
