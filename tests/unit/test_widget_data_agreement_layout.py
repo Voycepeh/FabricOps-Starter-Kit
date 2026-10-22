@@ -140,6 +140,7 @@ def test_agreement_form_has_meaningful_groups_and_fabric_safe_status(monkeypatch
 
 
 def test_governance_save_sections_share_white_card_layout(monkeypatch):
+    """Keep the Steward and Agreement save controls in matching white cards."""
     agreement = _render(monkeypatch)
     steward = _render_steward(monkeypatch)
     for controls, heading in ((agreement, "Save agreement"), (steward, "Save steward")):
@@ -150,6 +151,7 @@ def test_governance_save_sections_share_white_card_layout(monkeypatch):
 
 
 def test_agreement_selector_shows_parties_and_dates_without_identity_details():
+    """Present business context in the latest agreement label."""
     row = agreement_row(
         agreement_id="33333333-3333-4333-8333-333333333333",
         agreement_version="1.2.0",
@@ -163,6 +165,7 @@ def test_agreement_selector_shows_parties_and_dates_without_identity_details():
 
 
 def test_agreement_save_enables_only_after_required_inputs(monkeypatch):
+    """Require a complete agreement draft before enabling Save."""
     controls = _render(monkeypatch)
     assert controls["save_button"].disabled
     for field, value in agreement_row().items():
