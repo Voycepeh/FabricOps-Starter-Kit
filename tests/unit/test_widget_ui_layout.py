@@ -182,4 +182,5 @@ def test_optional_custom_dropdown_starts_blank_and_required_keeps_default(monkey
     assert fields["optional"].options[0] == ("Select an option", "")
     assert fields["defaulted"].value == "Faculty"
     assert fields["required"].value == "ODI"
-    assert fields["required"].options == ["ODI", "Faculty"]
+    assert fields["required"].options == [("Select an option", ""), "ODI", "Faculty"]
+    fields["required"].value = ""
