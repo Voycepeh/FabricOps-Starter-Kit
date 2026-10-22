@@ -321,3 +321,21 @@ def test_real_testing_write_authorization_locks_with_the_built_plan(monkeypatch)
     authorization.value = True
     assert state["build_plan"]() is sentinel
     assert authorization.disabled
+
+
+def test_widget_builds_mixed_choices_with_shared_builder(monkeypatch):
+    """Dropdown None stays explicit even when that table has a frozen contract."""
+    from tests.unit.test_contract_orchestration import frozen
+
+    context, state, _ = _render(monkeypatch, [frozen("source"), frozen("target")], interactive=True)
+    builder = importlib.import_module("fabricops_kit.pipeline.shared")
+    monkeypatch.setattr(builder, "resolve_fabric_context", lambda context=None: (context["config"], context["env"], context))
+    monkeypatch.setattr(builder, "resolve_data_contract_version", lambda config, env, table_id, *a, **kw: {
+        **frozen(table_id), "contract_payload": json.loads(frozen(table_id)["contract_payload_json"])})
+    state["_controls"]["source"]["version"].value = "contract-source\n1"
+    state["_controls"]["target"]["version"].value = "none"
+    plan = state["build_plan"]()
+    assert json.loads(plan.selections_json) == {"source": {"contract_id": "contract-source", "contract_version": 1},
+                                                "target": {"no_contract": True}}
+    assert json.loads(plan.contracts_json)["target"] is None
+    assert "Explicit No Contract" in state["_controls"]["target"]["inspector"].value

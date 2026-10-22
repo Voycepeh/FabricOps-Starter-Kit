@@ -30,11 +30,12 @@ def test_contract_free_completed_run_is_explicitly_ungoverned(runtime):
     assert saved[plan.plan_id]["status"] == "ungoverned_completed"
 
 
-def test_partial_contract_selection_is_rejected(plan_runtime):
+def test_partial_contract_selection_is_valid_testing(plan_runtime):
     rows, _, make, row = plan_runtime
     rows.append(row())
-    with pytest.raises(ValueError, match="Partial contract selection"):
-        make(selections={"source": {"contract_id": "contract-source", "contract_version": 1}, "target": {"no_contract": True}})
+    plan = make(selections={"source": {"contract_id": "contract-source", "contract_version": 1}, "target": {"no_contract": True}})
+    assert json.loads(plan.contracts_json)["source"]["contract_version"] == 1
+    assert json.loads(plan.contracts_json)["target"] is None
 
 
 def test_automatic_boundary_includes_external_transform_failures(runtime):

@@ -1,6 +1,6 @@
 # Step 5. Activate the tested pipeline and promote to Production
 
-Complete [Step 4](04-validate-frozen-data-contract.md) and call `finalize_pipeline(plan)` after all operations. Only complete successful governed Testing qualifies.
+Complete [Step 4](04-validate-frozen-data-contract.md) and call `finalize_pipeline(plan)` after all operations. Testing success reports execution under the selected contract coverage. Activation eligibility additionally requires a valid frozen Data Contract for every participating table, passing required Guardrails and complete operation results, an effective Data Agreement and all existing approval requirements. Mixed-contract Testing can succeed but cannot activate. Activation rejects No Contract selections and lists the affected table IDs; select contracts for those tables and rerun complete Testing.
 
 ## Review the affected release
 

@@ -66,7 +66,8 @@ Not documented yet
 
 Displays environment, current/proposed table contracts, writer ownership,
 affected pipelines, missing tests, conflicts and complete release readiness.
-Extra candidate controls appear when shared-table dependencies need review.
+Completed Testing runs missing contracts are listed by table ID and excluded
+from review. Extra candidate controls appear for shared-table dependencies.
 Supply an immutable release version for
 every selected pipeline. The backend revalidates complete Testing, exact
 contracts, Agreement and processing configuration at review and again at approval.
@@ -87,9 +88,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_activate_pipeline.py:65`
+`fabricops_kit/widgets/widget_activate_pipeline.py:78`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L65-L208">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L78-L235">View on GitHub</a>
 </div>
 
 

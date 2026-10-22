@@ -5588,9 +5588,6 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
         validate_contract_definitions(selected["contract_payload"])
         contract_guardrail_rows(selected, environment_name=env, table_id=table_id)
         contracts[table_id] = selected
-    selected_count = sum(contract is not None for contract in contracts.values())
-    if selected_count not in {0, len(identities)}:
-        raise ValueError("Partial contract selection is prohibited; select all frozen contracts or No Contract for all tables.")
     plan_id = str(uuid4())
     run_context = {**runtime, "config": config, "env": env, "_pipeline_spark": spark_session,
                    "_pipeline_bindings": pipeline_physical_bindings(identities, config=config, environment=env)}

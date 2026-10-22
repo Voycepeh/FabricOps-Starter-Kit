@@ -91,9 +91,9 @@ Not documented yet
 
 ### Common failure causes
 
-- Partial contract selections.
+- Missing explicit table choices or invalid frozen contract selections.
 - Unsafe Testing write destination.
-- Missing complete Testing or approved Live configuration.
+- Missing complete governed Testing for activation or approved Live configuration.
 
 ## Behavior and scope
 
@@ -101,8 +101,12 @@ Not documented yet
 
 Testing is interactive by default. Set interactive=False for automation and
 provide exact contract_id/contract_version choices keyed by global table_id,
-or omit selections for contract-free exploration. Select every participant's
-frozen contract or No Contract for all; partial governance is rejected.
+or omit selections for contract-free exploration. Each participant independently
+selects a frozen contract or No Contract (no_contract=True). Only selected
+contracts supply Guardrails; explicit No Contract never selects a default.
+METADATA_PIPELINE_RUN records every choice. Testing success describes execution
+under that coverage; activation requires valid frozen contracts for every
+participant plus all existing Guardrail, operation and Data Agreement checks.
 Stable pipeline_id is required and independent of notebook name or path.
 
 testing_writes=True explicitly permits real Testing writes to the declared
@@ -124,7 +128,7 @@ remain incomplete. Reuse the setup context without repeating configuration.
 Engineering and Microsoft Fabric own code integrity, source control, CI/CD
 and deployment. No executable export or checksum is required.
 
-Raises ValueError for unsafe configuration or partial contract selection,
+Raises ValueError for unsafe configuration or invalid contract selection,
 RuntimeError for metadata failures, stale authority or a reused run boundary.
 Approval neither deploys notebooks nor writes business data.
 
@@ -139,7 +143,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L378">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L382">View on GitHub</a>
 </div>
 
 

@@ -15,7 +15,7 @@ Testing evaluates actual source data and records explicit governance status.
 
 1. Run Environment, set `PIPELINE_CONTRACT_TESTING=True` externally, and rerun the `setup_pipeline()` selector cell with the exact source and target identities to create a fresh selector for this Testing run. A previously built selector is locked, and its `build_plan()` returns the same plan. Historical Lineage is not required.
 2. Leave the pipeline-wide switch in red **Testing**.
-3. Select an eligible frozen version independently for every source and target. Do not leave choices implicit. Before contracts exist, choose No Contract for every participant. Contract-free Testing cannot be activated. Partial selections are rejected; Live requires approved contracts.
+3. Select an eligible frozen version or No Contract independently for every source and target. Do not leave choices implicit. Mixed selections are valid in Testing; a table explicitly set to No Contract receives no default contract. Activation and Live require complete approved contract coverage.
 4. Expand Schema to inspect every expected column and exact type. Expand Grain, Data Quality, Freshness, Source Drift and Sensitive Data to inspect individual parameters, thresholds, actions and states. Non-applicable saved rules remain visible with their boundary explanation.
 Selection does not edit or activate a contract.
 
@@ -23,7 +23,7 @@ Selection does not edit or activate a contract.
 
 **Data Contract → Configured Guardrails → Testing/Live Execution → Results**
 
-The selected payload determines applicable checks. Empty Guardrail lists and intentionally disabled optional checks impose no extra requirement. Warn reports a failure and permits continuation. Block prevents Live publication; a configured check that cannot execute also fails closed. Partial contract selection is prohibited. Missing selections remain errors.
+The selected payload determines applicable checks. Empty Guardrail lists and intentionally disabled optional checks impose no extra requirement. Warn reports a failure and permits continuation. Block prevents Live publication; a configured check that cannot execute also fails closed. Only tables with selected contracts run their saved Guardrails. Tables set to No Contract preserve contract-free processing. Missing explicit choices remain errors.
 
 ### Run Read → Transform → Write → Inspect
 
@@ -69,7 +69,9 @@ Without a successful historical Live publication, Source Drift may report its fi
 
 ### Live publication is a separate decision
 
-Governance approves one exact whole pipeline after successful finalization, using [`widget_activate_pipeline()`](../api/reference/widget_activate_pipeline.md). The service consumes the committed `METADATA_PIPELINE_RUN` snapshot and linked Guardrail diagnostics. Read-only and multiple-output candidates qualify only when every declared operation completed; ungoverned Testing and isolated passing rules cannot authorize activation.
+Testing success means the pipeline executed successfully under its selected contract coverage. A mixed-contract run can have status `succeeded` without being eligible for activation; completion with No Contract for every table retains `ungoverned_completed`. `METADATA_PIPELINE_RUN` records each table's exact frozen version or No Contract.
+
+Activation eligibility requires a valid frozen contract for every participating table, all required Guardrail and operation results, and the existing Data Agreement and approval requirements. Governance approves one exact whole pipeline after successful finalization, using [`widget_activate_pipeline()`](../api/reference/widget_activate_pipeline.md). The service consumes the committed `METADATA_PIPELINE_RUN` snapshot and linked Guardrail diagnostics. Read-only and multiple-output candidates qualify only when every declared operation completed; ungoverned Testing and isolated passing rules cannot authorize activation.
 
 Engineering and Microsoft Fabric own code integrity, checksums, source control and CI/CD. Use runtime configuration for Testing/Live mode and environment bindings. Deployment is separate; headless Live automatically resolves the approved environment revision.
 

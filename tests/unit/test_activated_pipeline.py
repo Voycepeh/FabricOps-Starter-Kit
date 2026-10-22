@@ -438,3 +438,57 @@ def test_public_finalize_releases_existing_live_reservation(authority):
     state.operation(plan, 0)
     assert finalize_pipeline(plan)['status'] == 'succeeded'
     assert plan.plan_id not in state.current()['runs']
+
+
+@pytest.mark.parametrize("missing", [("table1",), ("table0", "table2"), ("table0", "table1", "table2")])
+def test_completed_testing_with_missing_contracts_cannot_activate(authority, missing):
+    """Completion under partial coverage never grants activation authority."""
+    state = authority
+    previous, _ = state.candidate(roles=("source", "source", "target"))
+    contracts = json.loads(previous.contracts_json)
+    for table_id in missing:
+        contracts[table_id] = None
+    plan = replace(previous, plan_id=previous.plan_id + "-mixed", contracts_json=json.dumps(contracts), evidence={}, results=[])
+    pipeline.persist_pipeline_run(plan)
+    for index in range(3):
+        state.operation(plan, index)
+    run = pipeline.finalize_pipeline_run(plan)
+    assert run["status"] == ("ungoverned_completed" if len(missing) == 3 else "succeeded")
+    before = copy.deepcopy(state.central)
+    with pytest.raises(ValueError, match="Missing contracts for table IDs: " + ", ".join(sorted(missing))):
+        state.approve(run)
+    assert state.central == before
+
+
+def test_live_resolves_approved_versions_after_mixed_testing(authority):
+    """Later exploratory selections cannot replace the activated contract versions."""
+    from fabricops_kit import setup_pipeline
+
+    state = authority
+    previous, approved_run = state.candidate(version={"table0": 1, "table1": 2}, roles=("source", "target"))
+    state.approve(approved_run)
+    contracts = json.loads(previous.contracts_json)
+    contracts["table1"] = None
+    exploratory = replace(previous, plan_id=previous.plan_id + "-explore", contracts_json=json.dumps(contracts), evidence={}, results=[])
+    pipeline.persist_pipeline_run(exploratory)
+    state.operation(exploratory, 0)
+    state.operation(exploratory, 1)
+    run = pipeline.finalize_pipeline_run(exploratory)
+    assert run["status"] == "succeeded"
+    with pytest.raises(ValueError, match="table1"):
+        state.approve(run)
+    sources = [{"store": "Bronze", "schema": "physical", "table_name": "table0", "logical_id": "asset0"}]
+    targets = [{"store": "Silver", "schema": "physical", "table_name": "table1", "logical_id": "asset1"}]
+    for selections in ({}, {"table0": {"no_contract": True}}):
+        with pytest.raises(ValueError, match="Live rejects manual"):
+            setup_pipeline(execution_mode="live", pipeline_id="A", sources=sources, targets=targets,
+                           selections=selections, context=previous.runtime_context)
+    with pytest.raises(ValueError, match="identities or participant roles"):
+        setup_pipeline(execution_mode="live", pipeline_id="A", sources=sources + [{**sources[0], "table_name": "extra", "logical_id": "extra"}],
+                       targets=targets, context=previous.runtime_context)
+    live = setup_pipeline(execution_mode="live", pipeline_id="A", sources=sources, targets=targets, context=previous.runtime_context)
+    assert {key: row["contract_version"] for key, row in json.loads(live.contracts_json).items()} == {"table0": 1, "table1": 2}
+    assert live.activated_pipeline_id == state.current()["pipelines"]["A"]["activated_pipeline_id"]
+    state.operation(live, 0)
+    state.operation(live, 1)
+    assert pipeline.finalize_pipeline_run(live)["status"] == "succeeded"

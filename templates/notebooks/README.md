@@ -24,7 +24,7 @@ For the end-to-end workflow, follow the [Guided Demo](https://voycepeh.github.io
 
 The lifecycle is **Author → Test → Activate → Live**. `setup_pipeline()` is interactive for Testing and headless for Live. Declare a stable `pipeline_id` and every source and target. A notebook rename does not change pipeline identity.
 
-For Testing, choose any frozen Data Contract version belonging to each global `table_id`. Choose contracts for every participant, or No Contract for all. Partial selection fails. Contract-free exploration is recorded as `ungoverned_completed` and cannot be activated. There is no Bootstrap execution mode.
+For Testing, choose any frozen Data Contract version belonging to each global `table_id`. Choose a frozen contract or No Contract independently for every participant. Mixed selections are valid in Testing; only selected contracts supply Guardrails. Successful execution under mixed coverage does not qualify for activation, which requires valid frozen contracts for every table and all existing governance checks. Contract-free exploration is recorded as `ungoverned_completed` and cannot be activated. There is no Bootstrap execution mode.
 
 Testing evaluates without business publication by default. `testing_writes=True` explicitly authorizes real writes, mappings and checkpoints to the declared destinations. The interactive selector displays those destinations and requires confirmation. Physical destinations referenced by any Live pipeline are protected, including read-only consumers in another environment. Separate DEV and PROD destinations remain independent. A real Testing write reserves its destinations against activation until the run ends.
 
