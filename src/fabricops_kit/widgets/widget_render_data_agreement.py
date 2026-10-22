@@ -573,11 +573,24 @@ def _steward_label(row: dict[str, Any]) -> str:
 
 def _agreement_label(row: dict[str, Any]) -> str:
     name = str(row.get("agreement_name") or "Unnamed agreement").strip()
-    provider = str(row.get("provider_steward_name") or "Unknown provider").strip()
-    recipient = str(row.get("recipient_steward_name") or "Unknown recipient").strip()
-    start = str(row.get("start_date") or "?")[:10]
-    end = str(row.get("expiry_date") or "?")[:10]
-    return f"{name} ({provider} → {recipient}, {start} to {end})"
+    details: list[str] = []
+    provider = str(row.get("provider_steward_name") or "").strip()
+    recipient = str(row.get("recipient_steward_name") or "").strip()
+    if provider and recipient:
+        details.append(f"between {provider} and {recipient}")
+    elif provider:
+        details.append(f"provider: {provider}")
+    elif recipient:
+        details.append(f"recipient: {recipient}")
+    start_date = str(row.get("start_date") or "").strip()[:10]
+    expiry_date = str(row.get("expiry_date") or "").strip()[:10]
+    if start_date and expiry_date:
+        details.append(f"{start_date} to {expiry_date}")
+    elif start_date:
+        details.append(f"from {start_date}")
+    elif expiry_date:
+        details.append(f"until {expiry_date}")
+    return " — ".join([name, *details])
 
 
 def _create_or_update_data_agreement(

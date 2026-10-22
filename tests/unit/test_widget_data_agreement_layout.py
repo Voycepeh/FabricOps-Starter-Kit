@@ -159,7 +159,7 @@ def test_agreement_selector_shows_parties_and_dates_without_identity_details():
         recipient_steward_name="Recipient",
     )
     label = agreement_widget._agreement_label(row)
-    assert label == "Orders Agreement (Provider → Recipient, 2026-01-01 to 2026-12-31)"
+    assert label == "Orders Agreement — between Provider and Recipient — 2026-01-01 to 2026-12-31"
     assert row["agreement_id"] not in label
     assert row["agreement_version"] not in label
 

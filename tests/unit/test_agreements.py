@@ -19,6 +19,34 @@ from tests.helpers import agreement_config, agreement_row, steward_row
 pytestmark = pytest.mark.unit
 
 
+def test_agreement_labels_use_business_identity_and_latest_version_only(monkeypatch):
+    """Show agreement name, parties, and dates while keeping IDs and versions internal."""
+    row = agreement_row(
+        agreement_id="33333333-3333-4333-8333-333333333333",
+        agreement_version="1.2.0",
+        provider_steward_name="Provider Team",
+        recipient_steward_name="Recipient Team",
+    )
+    label = agreement_widget._agreement_label(row)
+
+    assert label == "Orders Agreement — between Provider Team and Recipient Team — 2026-01-01 to 2026-12-31"
+    assert row["agreement_id"] not in label
+    assert row["agreement_version"] not in label
+    assert agreement_widget._agreement_label({"agreement_name": "Minimal"}) == "Minimal"
+
+    versions = [
+        {**row, "agreement_version": "1.0.0"},
+        {**row, "agreement_version": "1.2.0"},
+        {**row, "agreement_id": "44444444-4444-4444-8444-444444444444", "agreement_version": "1.0.0"},
+    ]
+    monkeypatch.setattr(agreement, "list_all_data_agreement_rows", lambda *args, **kwargs: versions)
+    latest = agreement.list_data_agreements(agreement_config(), "dev", missing_ok=True)
+    assert {(item["agreement_id"], item["agreement_version"]) for item in latest} == {
+        ("33333333-3333-4333-8333-333333333333", "1.2.0"),
+        ("44444444-4444-4444-8444-444444444444", "1.0.0"),
+    }
+
+
 def test_agreement_metadata_schemas_and_widget_fields_keep_only_supported_business_columns():
     """Verify agreement metadata schemas and widget fields keep only supported business columns."""
     config = agreement_config()
@@ -290,6 +318,26 @@ class _FakeWidgets:
 
         def __init__(self, **kwargs):
             self.kwargs = kwargs
+
+
+def test_searchable_selector_disambiguates_duplicate_labels_without_ids():
+    """Disambiguate repeated display labels with a simple ordinal suffix."""
+    selector = agreement.render_searchable_selector(
+        widgets=_FakeWidgets,
+        label="Agreement",
+        rows=[{"id": "first-id"}, {"id": "second-id"}, {"id": "third-id"}],
+        label_fn=lambda row: "Same agreement",
+        value_fn=lambda row: row["id"],
+        empty_label="Create new agreement",
+    )
+
+    assert selector["search"].options == [
+        "Create new agreement",
+        "Same agreement",
+        "Same agreement · 2",
+        "Same agreement · 3",
+    ]
+    assert all("id" not in label for label in selector["search"].options)
 
 
 @pytest.mark.parametrize(

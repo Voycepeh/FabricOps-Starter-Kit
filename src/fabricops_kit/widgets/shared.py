@@ -427,7 +427,10 @@ def render_searchable_selector(
             return candidate
         if values_by_label[candidate] == value:
             return candidate
-        return f"{base_label} · {value}"
+        suffix = 2
+        while f"{base_label} · {suffix}" in values_by_label:
+            suffix += 1
+        return f"{base_label} · {suffix}"
 
     def _set_rows(new_rows: list[dict[str, Any]]) -> None:
         lookup.clear()
