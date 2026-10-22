@@ -11,7 +11,7 @@ Review complete persisted Testing and activate an exact whole pipeline.
 
 ## Usage notes
 
-Use after successful whole-pipeline Testing and finalize_pipeline().
+Use only with existing persisted whole-pipeline Testing evidence. Evaluation-only Test does not persist approval evidence.
 
 
 ## Example usage

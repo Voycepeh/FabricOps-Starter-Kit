@@ -9,6 +9,7 @@ import pytest
 from fabricops_kit import orchestrate_write
 from tests.helpers import execution_plan_stub, execution_context_stub
 from fabricops_kit.pipeline import shared
+from tests.helpers import run_pipeline_operation
 
 write_module = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
 sensitive_module = importlib.import_module("fabricops_kit.pipeline.check_sensitive_data")
@@ -52,9 +53,9 @@ def test_treatment_failure_blocks_write_after_persisting_outcome(monkeypatch, sp
     monkeypatch.setattr(sensitive_module, "load_table_guardrail_rules", lambda *_args, **_kwargs: [rule])
     frame = spark_session.createDataFrame([(1, "raw@example.test")], ["id", "email"])
     def run():
-        return orchestrate_write(
+        return run_pipeline_operation(orchestrate_write,
             frame, sources=[], store="Silver", schema="dbo", table_name="customers", write_mode="overwrite",
-            execution_plan=execution_plan_stub(mode), spark_session=spark_session, verbose=False,
+            plan=execution_plan_stub(mode), spark_session=spark_session, verbose=False,
         )
     if mode == "live":
         with pytest.raises(RuntimeError, match="failed during Sensitive Data"):
@@ -89,9 +90,9 @@ def test_token_mapping_reuse_and_treated_write_input(monkeypatch, spark_session,
         [("target-id", "email-id", "raw@example.test", "established-token")],
         ["table_id", "column_id", "original_value", "token_value"],
     )
-    result = orchestrate_write(
+    result = run_pipeline_operation(orchestrate_write,
         frame, sources=[], store="Silver", schema="dbo", table_name="customers", write_mode="overwrite",
-        existing_mapping=existing, execution_plan=execution_plan_stub(mode), spark_session=spark_session, verbose=False,
+        existing_mapping=existing, plan=execution_plan_stub(mode), spark_session=spark_session, verbose=False,
     )
     assert result["dataframe"].first().email == "established-token"
     assert result["sensitive_result"]["support_mapping"].first().original_value == "raw@example.test"
@@ -143,7 +144,7 @@ def test_later_write_failure_releases_token_mapping(monkeypatch, spark_session, 
     frame = spark_session.createDataFrame([("raw@example.test",)], ["email"])
     before = spark_session.sparkContext._jsc.getPersistentRDDs().size()
     with pytest.raises(RuntimeError, match="publication failed"):
-        orchestrate_write(frame, execution_plan=execution_plan_stub(), sources=[], store="Silver", schema="dbo", table_name="customers",
+        run_pipeline_operation(orchestrate_write, frame, plan=execution_plan_stub(), sources=[], store="Silver", schema="dbo", table_name="customers",
                           write_mode="overwrite", spark_session=spark_session, verbose=False)
     assert spark_session.sparkContext._jsc.getPersistentRDDs().size() == before
 
@@ -163,8 +164,8 @@ def test_simplified_mask_and_fixed_buckets_reach_the_public_write_workflow(monke
     ]
     monkeypatch.setattr(sensitive_module, 'load_table_guardrail_rules', lambda *_args, **_kwargs: rules)
     frame = spark_session.createDataFrame([('ABC', 27), ('ALICE', 31)], ['email', 'age'])
-    result = orchestrate_write(frame, sources=[], store='Silver', schema='dbo', table_name='customers',
-        write_mode='overwrite', execution_plan=execution_plan_stub(mode),
+    result = run_pipeline_operation(orchestrate_write, frame, sources=[], store='Silver', schema='dbo', table_name='customers',
+        write_mode='overwrite', plan=execution_plan_stub(mode),
         spark_session=spark_session, verbose=False)
     assert [(r.email, r.age) for r in result['dataframe'].collect()] == [('***', '[20, 30)'), ('A***E', '[30, 40)')]
     assert later['check_dq'].call_args.args[0] is result['dataframe']

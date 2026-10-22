@@ -127,256 +127,46 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def setup_pipeline(*, sources, targets, execution_mode="testing", selections=None, interactive=None,
-                   spark_session=None, context=None, pipeline_id=None, configuration=None, testing_writes=False):
-    """Prepare Author → Test → Activate → Live execution without running guardrails.
+def setup_pipeline(*, pipeline_id: str, pipeline_mode: str):
+    """Start an isolated pipeline using exactly Test or Live.
 
-    Testing is interactive by default. Set interactive=False for automation and
-    provide exact contract_id/contract_version choices keyed by global table_id,
-    or omit selections for contract-free exploration. Each participant independently
-    selects a frozen contract or No Contract (no_contract=True). Only selected
-    contracts supply Guardrails; explicit No Contract never selects a default.
-    METADATA_PIPELINE_RUN records every choice. Testing success describes execution
-    under that coverage; activation requires valid frozen contracts for every
-    participant plus all existing Guardrail, operation and Data Agreement checks.
-    Stable pipeline_id is required and independent of notebook name or path.
+    Test evaluates reads, transformations and Guardrails without business or
+    metadata commits. Select frozen contracts in the returned interface before
+    the first operation; headless Test explicitly uses No Contract. Live resolves
+    only the approved environment manifest and retains revision/ownership checks.
+    Spark and supported Fabric runtime identity are resolved internally. A missing
+    notebook ID is allowed: pipeline_id identifies the logical pipeline.
 
-    testing_writes=True explicitly permits real Testing writes to the declared
-    target destinations, provided no Live pipeline owns them. Such writes have
-    real side effects, including target metadata, mappings and checkpoints.
-    False evaluates without publication. Guardrail diagnostics and run records
-    always persist to the central configured Metadata store.
+    Returns
+    -------
+    PipelineSession
+        Contract selection and automatically refreshed execution report. Read and
+        Write calls use this execution through a context-local binding.
 
-    Live is headless and resolves the environment's approved configuration
-    automatically. It rejects manual contract choices and pins one activation
-    revision. Transformation configuration, table
-    identity, destinations and ownership must match approval. Operational
-    differences allowed by the orchestrators warn and persist in the run record.
+    Notes
+    -----
+    Fabric cell events identify failures, not successful notebook completion.
+    Runs remain incomplete until a trusted whole-execution boundary is available.
+    Neither a successful Write nor interpreter shutdown proves completion. Test
+    results are in memory and cannot serve as persisted activation evidence.
 
-    Returns an immutable PipelineExecutionPlan, or Testing widget state with
-    select_contract, build_plan and refresh. Call finalize_pipeline(plan) after all
-    Reads, transformations and Writes, including read-only pipelines. Stopped runs
-    remain incomplete. Reuse the setup context without repeating configuration.
-    Engineering and Microsoft Fabric own code integrity, source control, CI/CD
-    and deployment. No executable export or checksum is required.
-
-    Raises ValueError for unsafe configuration or invalid contract selection,
-    RuntimeError for metadata failures, stale authority or a reused run boundary.
-    Approval neither deploys notebooks nor writes business data.
+    Raises
+    ------
+    ValueError
+        For an empty pipeline identity, unsupported mode or missing Live approval.
+    RuntimeError
+        For missing environment configuration or an unavailable Spark session.
 
     Examples
     --------
-    >>> plan = setup_pipeline(sources=SOURCES, targets=TARGETS, pipeline_id="hr-employees",
-    ...     interactive=False, selections=SELECTIONS, configuration={})
-    >>> source = orchestrate_read(execution_plan=plan, **READ_CONFIG)
-    >>> transformed = transform(source["dataframe"])
-    >>> result = orchestrate_write(transformed, execution_plan=plan, sources=[source], **WRITE_CONFIG)
-    >>> pipeline_result = finalize_pipeline(plan)
+    >>> contracts = setup_pipeline(pipeline_id="orders", pipeline_mode="Test")
+    >>> orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 
     """
-    if not str(pipeline_id or "").strip():
-        raise ValueError("setup_pipeline requires a stable pipeline_id.")
-    if execution_mode not in {"testing", "live"}:
-        raise ValueError("execution_mode must be testing or live.")
-    if interactive is None:
-        interactive = execution_mode == "testing"
-    if execution_mode == "live":
-        if selections is not None:
-            raise ValueError("Live rejects manual contract selections; contracts come exclusively from the Activated Pipeline manifest.")
-        if interactive or testing_writes:
-            raise ValueError("Live is headless; Testing write authorization is not a Live option.")
-        from fabricops_kit.activated_pipeline.shared import build_live_pipeline_plan
-        return build_live_pipeline_plan(pipeline_id=pipeline_id, sources=list(sources), targets=list(targets),
-            configuration=configuration, context=context, spark_session=spark_session)
-    if not interactive:
-        mode = execution_mode
-        return build_pipeline_execution_plan(
-            execution_mode=mode, sources=sources, targets=targets,
-            selections=selections, context=context, spark_session=spark_session,
-            pipeline_id=pipeline_id, configuration=configuration, testing_writes=testing_writes,
-        )
-    if execution_mode is not None and execution_mode != "testing":
-        raise ValueError("Interactive contract selection is only available for Testing.")
-    config, env, resolved = resolve_fabric_context(context=context)
-    runtime = {**resolved, "config": config, "env": env}
-    if not str(runtime.get("notebook_id") or "").strip():
-        raise ValueError("Configure notebook_id before selecting Pipeline Data Contracts.")
-    spark = get_spark_session(spark_session)
-    sources, targets = list(sources), list(targets)
-    identities = resolve_pipeline_participants(
-        config, env, sources=sources, targets=targets, context=runtime, spark_session=spark,
-    )
-    try:
-        rows = [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
-                for row in read_lakehouse_table("METADATA_DATA_CONTRACT", store="Metadata",
-                    schema=metadata_table_physical_schema(config, "METADATA_DATA_CONTRACT"),
-                    spark_session=spark, context=runtime).collect()]
-    except Exception as exc:
-        if is_table_not_found_error(exc):
-            raise RuntimeError("Initialize METADATA_DATA_CONTRACT in the configured metadata store before selection.") from exc
-        raise
-    state: dict[str, Any] = {"execution_mode": "testing", "environment": env, "tables": {}, "_controls": {}}
-    for table_id, identity in identities.items():
-        matching = [row for row in rows if row.get("table_id") == table_id]
-        versions = sorted([row for row in matching if str(row.get("status") or "").lower() == "frozen"],
-                          key=lambda row: int(row["contract_version"]), reverse=True)
-        keys = [(row["contract_id"], row["contract_version"]) for row in versions]
-        if len(keys) != len(set(keys)):
-            raise RuntimeError("Duplicate frozen contract version rows.")
-        for row in versions:
-            _contract_review(row, identity["roles"])
-        state["tables"][table_id] = {"identity": identity, "versions": versions,
-                                    "selected": None, "choice": None, "review": None}
+    from fabricops_kit.pipeline.shared import start_pipeline_session
 
-    def require_unbuilt_plan():
-        if state.get("execution_plan") is not None:
-            raise RuntimeError("Cannot change selection during an active execution plan; create a new widget for a new run.")
-
-    def select_contract(table_id, contract_id=None, contract_version=None, *, no_contract=False):
-        require_unbuilt_plan()
-        if table_id not in state["tables"]:
-            raise ValueError("Only configured pipeline participants may select contracts.")
-        table = state["tables"][table_id]
-        if no_contract:
-            if contract_id is not None or contract_version is not None:
-                raise ValueError("No Contract cannot be combined with a contract identity.")
-            selected, choice = None, {"no_contract": True}
-        else:
-            matches = [row for row in table["versions"] if row["contract_id"] == contract_id and row["contract_version"] == contract_version]
-            if len(matches) != 1:
-                raise ValueError("Select an available exact frozen version.")
-            selected = matches[0]
-            choice = {"contract_id": contract_id, "contract_version": contract_version}
-        table.update(selected=selected, choice=choice,
-                     review=_contract_review(selected, table["identity"]["roles"]) if selected else None)
-        refresh()
-        return state
-
-    def set_mode(mode):
-        require_unbuilt_plan()
-        if mode != "testing":
-            raise ValueError("Contract selection supports Testing only; use saved Activated Pipeline selection for Live.")
-        state["execution_mode"] = mode
-        refresh()
-        return state
-
-    def build_plan():
-        if state.get("execution_plan") is None and not state.get("writes_confirmed", False):
-            if testing_writes:
-                raise ValueError("Confirm real Testing writes and their destinations before building the plan.")
-        if state.get("execution_plan") is not None:
-            return state["execution_plan"]
-        plan = build_pipeline_execution_plan(
-            execution_mode=state["execution_mode"], sources=sources, targets=targets,
-            selections={key: table["choice"] for key, table in state["tables"].items() if table["choice"] is not None},
-            context=runtime, spark_session=spark,
-            pipeline_id=pipeline_id, configuration=configuration, testing_writes=testing_writes,
-        )
-
-        state["execution_plan"] = plan
-        refresh()
-        return plan
-
-    state.update(select_contract=select_contract, set_mode=set_mode, build_plan=build_plan)
-    root = header = mode_control = None
-    refreshing = False
-
-    def refresh():
-        nonlocal refreshing
-        if root is None or refreshing:
-            return
-        refreshing = True
-        try:
-            root.add_class("pipeline-testing")
-            mode_control.disabled = state.get("execution_plan") is not None
-            write_authorized.disabled = not testing_writes or state.get("execution_plan") is not None
-            mode_control.value = state["execution_mode"]
-            header.value = '<h3>Pipeline Data Contracts · Testing</h3><p>Choose contract mappings and explicitly authorize any real Testing writes. Run records and Guardrail diagnostics persist.</p>'
-            for table_id, controls in state["_controls"].items():
-                table = state["tables"][table_id]
-                versions = table["versions"]
-                options = [("Choose explicitly…", ""), ("No Contract", "none")]
-                options += [(f'{row.get("contract_name") or row["contract_id"]} · v{row["contract_version"]} · Frozen'
-                             ,
-                             f'{row["contract_id"]}\n{row["contract_version"]}') for row in versions]
-                controls["version"].disabled = state.get("execution_plan") is not None
-                controls["version"].options = options
-                selected = table["selected"]
-                controls["version"].value = (f'{selected["contract_id"]}\n{selected["contract_version"]}' if selected else
-                                             ("none" if table["choice"] else ""))
-                controls["inspector"].value = (_inspector(selected, table["identity"]["roles"],
-                    state["execution_plan"].results if state.get("execution_plan") else ()) if selected else
-                                                ("<p>Explicit No Contract: no saved Guardrails selected.</p>" if table["choice"] else "<p>Select a frozen contract to inspect its saved definitions.</p>"))
-        finally:
-            refreshing = False
-
-    state["refresh"] = refresh
-    if execution_mode is not None:
-        set_mode(execution_mode)
-    if selections is not None:
-        if set(selections) != set(identities):
-            raise ValueError("Supply an explicit choice for every participating table only.")
-        for table_id, choice in selections.items():
-            if not isinstance(choice, dict) or set(choice) not in ({"no_contract"}, {"contract_id", "contract_version"}):
-                raise ValueError("Select exact contract_id/contract_version or explicit no_contract=True.")
-            if "no_contract" in choice and choice["no_contract"] is not True:
-                raise ValueError("No Contract must explicitly be True.")
-            select_contract(table_id, **choice)
-    try:
-        from fabricops_kit.widgets.shared import form_page, form_section, require_ipywidgets
-
-        widgets = require_ipywidgets()
-        from IPython import display as ip
-    except ModuleNotFoundError:
-        return state
-    destinations = [item for item in identities.values() if "target" in item["roles"]]
-    write_authorized = widgets.Checkbox(value=False, indent=False,
-        description="I authorize real Testing writes to the displayed destinations", disabled=not testing_writes)
-    write_authorized.observe(lambda change: state.update(writes_confirmed=change["new"]), names="value")
-    state["write_authorized"] = write_authorized
-    style = widgets.HTML('''<style>
-.pipeline-contracts { --mode:#0f6cbd; }
-.pipeline-testing { --mode:#6750a4; }
-.pipeline-contracts h3 { font-size:15px; color:var(--mode); margin:0; }
-.pipeline-contracts .inactive { background:#f2f5f8; color:#526477; }
-.pipeline-contracts .contract-scroll { overflow-x:auto; }
-</style>''')
-    header = widgets.HTML()
-    mode_control = widgets.ToggleButtons(options=[("Testing", "testing")], value="testing", description="Pipeline mode")
-    mode_control.observe(lambda change: set_mode(change["new"]) if not refreshing else None, names="value")
-    sections = []
-    for table_id, table in state["tables"].items():
-        identity = table["identity"]
-        label = " / ".join(str(identity.get(key)) for key in ("store", "schema", "table_name") if identity.get(key))
-        roles = " / ".join("Read" if role == "source" else "Write" for role in identity["roles"])
-        title = widgets.HTML(f'<small>{html.escape(table_id)}</small>')
-        version = widgets.Dropdown(description="Contract", layout=widgets.Layout(width="100%"), style={"description_width": "70px"})
-        inspector = widgets.HTML()
-        def changed(change, key=table_id):
-            if refreshing:
-                return
-            require_unbuilt_plan()
-            if not change["new"]:
-                state["tables"][key].update(selected=None, choice=None, review=None)
-                refresh()
-                return
-            if change["new"] == "none":
-                select_contract(key, no_contract=True)
-            else:
-                contract_id, version_number = change["new"].split("\n")
-                select_contract(key, contract_id, int(version_number))
-        version.observe(changed, names="value")
-        state["_controls"][table_id] = {"version": version, "inspector": inspector}
-        sections.append(form_section(widgets, title=f"{roles} · {label}", children=[title, version, inspector]))
-    root = form_page(
-        widgets, title="Pipeline setup", tone="engineering",
-        description="Select exact frozen Data Contract versions for Testing.",
-        children=[style, header, mode_control,
-                  widgets.HTML("<p>Testing writes: " + ("REAL writes with side effects" if testing_writes else "Evaluation only") + "</p><pre>" + html.escape(json.dumps(destinations, indent=2)) + "</pre>"),
-                  write_authorized, *sections],
-    )
-    root.add_class("pipeline-contracts")
-    state["widget"], state["mode_control"] = root, mode_control
-    refresh()
-    ip.display(root)
-    return state
+    if not isinstance(pipeline_id, str) or not pipeline_id.strip():
+        raise ValueError("pipeline_id must be a nonempty stable identity.")
+    if pipeline_mode not in {"Test", "Live"}:
+        raise ValueError("pipeline_mode must be exactly Test or Live.")
+    return start_pipeline_session(pipeline_id.strip(), pipeline_mode, inspector=_inspector)

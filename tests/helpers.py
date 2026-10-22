@@ -160,3 +160,21 @@ def execution_context_stub(contracts, rules=None, *, mode="live"):
     return {"execution_plan": execution_plan_stub(mode), "_pipeline_contracts": contracts,
             "_pipeline_rules": rules or {key: [] for key in contracts},
             "_pipeline_identities": {key: {"roles": ["source", "target"]} for key in {*contracts, "target"}}}
+
+
+def run_pipeline_operation(function, *args, plan, sources=(), spark_session=None, **kwargs):
+    """Inject the session service boundary for preplanned orchestrator unit tests.
+
+    Production calls receive no plan or source arguments. These tests already
+    replace physical planning and use their own operation-journal fixtures.
+    """
+    from fabricops_kit.pipeline.shared import _ACTIVE_PIPELINE
+    session = SimpleNamespace(closed=False, spark=spark_session, sources=list(sources),
+                              operation_plan=lambda *unused: plan,
+                              register_source=lambda result: result)
+    token = _ACTIVE_PIPELINE.set(session)
+    try:
+        kwargs.setdefault("verbose", True)
+        return function(*args, **kwargs)
+    finally:
+        _ACTIVE_PIPELINE.reset(token)

@@ -1,0 +1,169 @@
+"""Execution isolation, publication policy and conservative notebook boundaries."""
+# ruff: noqa: D103
+from contextvars import Context
+from dataclasses import replace
+from types import SimpleNamespace
+from unittest.mock import Mock
+import importlib
+import json
+
+import pytest
+
+from fabricops_kit import setup_pipeline, orchestrate_read, orchestrate_write
+from fabricops_kit.pipeline import shared
+
+
+@pytest.fixture
+def runtime(monkeypatch):
+    """Keep session, journal and orchestrators real; replace physical runtime boundaries."""
+    config = {}
+    spark = SimpleNamespace(conf=SimpleNamespace(get=lambda key: 'test'))
+    monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: (config, 'dev', context or {'config': config, 'env': 'dev'}))
+    monkeypatch.setattr(shared, 'get_spark_session', lambda *args: spark)
+    monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kwargs: {})
+    monkeypatch.setattr(shared, 'resolve_physical_table_identity', lambda config, env, **kwargs: {**kwargs, 'table_id': kwargs['table_name']})
+    monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, **kwargs: {key: {'store': value['store'], 'table_name': value['table_name']} for key, value in identities.items()})
+    monkeypatch.setattr(shared, 'load_table_guardrail_rules', lambda *args, **kwargs: [])
+    monkeypatch.setattr(shared, 'read_lakehouse_table', Mock(side_effect=AssertionError('unexpected metadata read')))
+    writes = Mock(side_effect=AssertionError('Test metadata mutation'))
+    monkeypatch.setattr(shared, '_merge_pipeline_run_row', writes)
+    monkeypatch.setattr(shared, 'write_lakehouse_table', writes)
+    import IPython
+    monkeypatch.setattr(IPython, 'get_ipython', lambda: None)
+    read = importlib.import_module('fabricops_kit.pipeline.orchestrate_read')
+    write = importlib.import_module('fabricops_kit.pipeline.orchestrate_write')
+    for module in [read, write]:
+        monkeypatch.setattr(module, 'resolve_table_id', lambda **kwargs: kwargs['table_name'])
+        monkeypatch.setattr(module, 'profile_table', lambda **kwargs: {'row_count': 2})
+    frame = SimpleNamespace(columns=['id'])
+    monkeypatch.setattr(read, 'pipeline_read', lambda **kwargs: {'dataframe': frame, 'table_id': kwargs['table_name']})
+    publication = Mock(return_value={'published': False, 'table_id': 'target', 'status': 'passed'})
+    monkeypatch.setattr(write, 'pipeline_write', publication)
+    token = shared._ACTIVE_PIPELINE.set(None)
+    yield SimpleNamespace(spark=spark, writes=writes, read=read, write=write, frame=frame, publication=publication)
+    session = shared._ACTIVE_PIPELINE.get()
+    if session is not None:
+        session.close()
+    shared._ACTIVE_PIPELINE.reset(token)
+
+
+@pytest.mark.parametrize('mode', ['test', 'live', 'Testing', '', None, 'TEST'])
+def test_exact_mode_validation(runtime, mode):
+    with pytest.raises(ValueError, match='exactly Test or Live'):
+        setup_pipeline(pipeline_id='orders', pipeline_mode=mode)
+
+
+def test_only_pipeline_identity_and_mode_are_setup_arguments(runtime):
+    import inspect
+    assert list(inspect.signature(setup_pipeline).parameters) == ['pipeline_id', 'pipeline_mode']
+    with pytest.raises(TypeError):
+        setup_pipeline(pipeline_id='orders', pipeline_mode='Test', testing_writes=True)
+
+
+def test_headless_test_without_notebook_identity_or_metadata_writes(runtime):
+    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    source = orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    result = orchestrate_write(source['dataframe'], store='Gold', schema='demo', table_name='summary', write_mode='overwrite')
+    assert session.plan.notebook_id == ''
+    assert result['published'] is False
+    assert runtime.publication.call_args.kwargs['context']['execution_plan'].permits_persistence is False
+    assert runtime.publication.call_args.kwargs['source_table_ids'] == ['orders']
+    runtime.writes.assert_not_called()
+    session.close()
+    assert session.plan.run_result['status'] == 'incomplete'
+    assert not session.sources
+
+
+def test_multi_read_multi_write_sources_and_no_early_success(runtime):
+    session = setup_pipeline(pipeline_id='multi', pipeline_mode='Test')
+    for name in ['orders', 'products']:
+        orchestrate_read(store='Bronze', schema='demo', table_name=name)
+    for name in ['summary', 'history']:
+        result = orchestrate_write(runtime.frame, store='Gold', schema='demo', table_name=name, write_mode='overwrite')
+        assert result['source_association'] == 'pipeline_participation'
+        assert runtime.publication.call_args.kwargs['source_table_ids'] == ['orders', 'products']
+        assert not session.plan.evidence['sealed']
+    session.cell_completed(SimpleNamespace(error_in_exec=None, error_before_exec=None))
+    assert not session.plan.evidence['sealed']
+    assert len(session.plan.evidence['operations']) == 4
+
+
+def test_transformation_failure_and_repeated_setup_clear_sources(runtime):
+    first = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    first.cell_completed(SimpleNamespace(error_in_exec=ValueError('bad transform')))
+    assert first.closed and not first.sources
+    assert first.plan.run_result['status'] == 'failed'
+    next_run = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    assert next_run.plan.plan_id != first.plan.plan_id and not next_run.sources
+    with pytest.raises(RuntimeError, match='closed'):
+        first.operation_plan('source', {})
+
+
+def test_operation_failure_seals_run_and_clears_reads(runtime, monkeypatch):
+    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    monkeypatch.setattr(runtime.write, 'pipeline_write', Mock(side_effect=RuntimeError('failed write')))
+    with pytest.raises(RuntimeError):
+        orchestrate_write(runtime.frame, store='Gold', schema='demo', table_name='summary', write_mode='overwrite')
+    assert session.closed and not session.sources
+    assert session.plan.run_result['status'] == 'failed'
+
+
+def test_contexts_isolate_same_pipeline_name(runtime):
+    contexts = [Context(), Context()]
+    sessions = [context.run(setup_pipeline, pipeline_id='same', pipeline_mode='Test') for context in contexts]
+    try:
+        for index, context in enumerate(contexts):
+            context.run(orchestrate_read, store='Bronze', schema='demo', table_name=f'source{index}')
+        assert sessions[0].plan.plan_id != sessions[1].plan.plan_id
+        assert [source['table_id'] for source in sessions[0].sources] == ['source0']
+        assert [source['table_id'] for source in sessions[1].sources] == ['source1']
+    finally:
+        for context, session in zip(contexts, sessions):
+            context.run(session.close)
+
+
+def test_live_resolves_only_approved_manifest(runtime, monkeypatch):
+    activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
+    builder = Mock(side_effect=ValueError('No approved pipeline configuration'))
+    monkeypatch.setattr(activation, 'build_live_pipeline_plan', builder)
+    with pytest.raises(ValueError, match='No approved'):
+        setup_pipeline(pipeline_id='orders', pipeline_mode='Live')
+    assert set(builder.call_args.kwargs) == {'pipeline_id', 'context', 'spark_session'}
+
+
+def test_contract_selection_freezes_at_first_operation(runtime, monkeypatch):
+    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    row = {'table_id': 'orders', 'contract_id': 'frozen', 'contract_version': 2}
+    session.frozen_rows = [row]
+    session.select_contract('orders', 'frozen', 2)
+    payload = {'contract': {'contract_id': 'frozen', 'contract_version': 2, 'status': 'frozen'},
+               'table': {'table_id': 'orders', 'columns': []}, 'guardrails': [], 'enrichment': {'table': [], 'columns': []}}
+    monkeypatch.setattr(shared, 'resolve_data_contract_version', lambda *args, **kwargs: {
+        **row, 'contract_payload_json': json.dumps(payload), 'contract_payload': payload})
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    assert json.loads(session.plan.contracts_json)['orders']['contract_version'] == 2
+    with pytest.raises(RuntimeError, match='locked'):
+        session.select_contract('orders', no_contract=True)
+
+
+def test_interactive_contract_controls_and_failure_event(runtime, monkeypatch):
+    """Render native widgets and exercise frozen selection and per-cell failure cleanup."""
+    import IPython
+    from IPython import display as ip
+    from tests.unit.test_setup_pipeline import _row
+    shell = SimpleNamespace(events=SimpleNamespace(register=Mock(), unregister=Mock()))
+    monkeypatch.setattr(IPython, 'get_ipython', lambda: shell)
+    displayed = Mock()
+    monkeypatch.setattr(ip, 'display', displayed)
+    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda *args, **kwargs: SimpleNamespace(collect=lambda: [_row()]))
+    session = setup_pipeline(pipeline_id='interactive', pipeline_mode='Test')
+    assert any(hasattr(call.args[0], "children") for call in displayed.call_args_list)
+    assert '#a4262c' in session.report.value and 'Test' in session.report.value
+    session.controls[0].value = 'contract-source\n1'
+    assert session.choices['source'] == {'contract_id': 'contract-source', 'contract_version': 1}
+    shell.events.register.assert_called_once_with('post_run_cell', session.cell_completed)
+    session.cell_completed(SimpleNamespace(error_before_exec=SyntaxError('bad cell')))
+    assert session.closed and 'failed' in session.report.value
+    shell.events.unregister.assert_called_once_with('post_run_cell', session.cell_completed)

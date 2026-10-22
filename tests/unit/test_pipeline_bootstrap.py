@@ -5,7 +5,7 @@ from dataclasses import replace
 
 import pytest
 
-from fabricops_kit import setup_pipeline
+from fabricops_kit.pipeline.shared import build_pipeline_execution_plan
 from fabricops_kit.pipeline import shared
 from tests.unit.test_execution_plan import plan_runtime  # noqa: F401
 from tests.unit.test_pipeline_run_evidence import runtime  # noqa: F401
@@ -16,7 +16,7 @@ TARGET = {"store": "Silver", "schema": "demo", "table_name": "target"}
 
 def test_headless_exploration_uses_testing_and_never_activates(plan_runtime):
     _, context, _, _ = plan_runtime
-    plan = setup_pipeline(sources=[SOURCE], targets=[TARGET], pipeline_id="explore", interactive=False, context=context)
+    plan = build_pipeline_execution_plan(execution_mode="testing", sources=[SOURCE], targets=[TARGET], pipeline_id="explore", context=context)
     assert plan.execution_mode == "testing" and not plan.permits_persistence
     assert json.loads(plan.contracts_json) == {"source": None, "target": None}
 
@@ -70,6 +70,6 @@ def test_read_only_boundary_success_and_abandoned_incomplete(runtime):
 def test_old_mode_and_missing_stable_identity_are_rejected(plan_runtime):
     _, context, _, _ = plan_runtime
     with pytest.raises(ValueError, match="testing or live"):
-        setup_pipeline(sources=[SOURCE], targets=[], pipeline_id="explore", execution_mode="bootstrap", context=context)
+        build_pipeline_execution_plan(sources=[SOURCE], targets=[], pipeline_id="explore", execution_mode="bootstrap", context=context)
     with pytest.raises(ValueError, match="stable pipeline_id"):
-        setup_pipeline(sources=[SOURCE], targets=[], interactive=False, context=context)
+        build_pipeline_execution_plan(execution_mode="testing", sources=[SOURCE], targets=[], context=context)

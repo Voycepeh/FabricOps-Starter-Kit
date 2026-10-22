@@ -209,7 +209,7 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'read_warehouse_table',
         'read_warehouse_query',
         'write_warehouse_table',
-        'setup_pipeline', 'finalize_pipeline',
+        'setup_pipeline',
         'profile_table',
         'resolve_table_id',
         'pipeline_read',

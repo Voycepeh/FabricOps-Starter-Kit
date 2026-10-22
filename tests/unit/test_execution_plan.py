@@ -130,12 +130,12 @@ def test_removed_bootstrap_mode_is_rejected(plan_runtime):
 @pytest.mark.parametrize("mode", ["testing"])
 def test_read_only_headless_plan_needs_no_target(plan_runtime, mode):
     """Read-only participants use the same immutable plan without a business target."""
-    from fabricops_kit import setup_pipeline
+    from fabricops_kit.pipeline.shared import build_pipeline_execution_plan
 
     rows, runtime, _, row = plan_runtime
     if mode == "live":
         rows.append(row(active=True))
-    plan = setup_pipeline(interactive=False, execution_mode=mode,
+    plan = build_pipeline_execution_plan(execution_mode=mode,
         sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}], targets=[],
         selections={"source": {"contract_id": "contract-source", "contract_version": 1} if mode == "live" else {"no_contract": True}}, context=runtime, pipeline_id="example")
     assert json.loads(plan.participants_json)["source"]["roles"] == ["source"]

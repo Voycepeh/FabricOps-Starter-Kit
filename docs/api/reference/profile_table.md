@@ -51,6 +51,7 @@ def profile_table(
     frequency_max_distinct_percent: float | None=80.0,
     context=None,
     spark_session=None,
+    verbose: bool=True,
 ):
 ```
 
@@ -80,6 +81,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `frequency_max_distinct_percent` | `float \| None` | No | `80.0` | Maximum distinct-per-non-null percentage for automatically selected columns. ``None`` disables the cardinality filter. |
 | `context` | `dict` | No | `None` | Explicit pipeline context; Testing returns profiles without persistence. |
 | `spark_session` | `object` | No | `None` | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active session. |
+| `verbose` | `bool` | No | `True` | Display profiling progress when True; orchestration uses the automatic report. |
 
 </div>
 
@@ -192,7 +194,7 @@ profiled without creating an identity or writing metadata.
 
 `fabricops_kit/pipeline/profile_table.py:1095`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1095-L1469">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L1095-L1473">View on GitHub</a>
 </div>
 
 

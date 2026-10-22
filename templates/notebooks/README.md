@@ -22,34 +22,29 @@ For the end-to-end workflow, follow the [Guided Demo](https://voycepeh.github.io
 
 ## Pipeline execution mode
 
-The lifecycle is **Author → Test → Activate → Live**. `setup_pipeline()` is interactive for Testing and headless for Live. Declare a stable `pipeline_id` and every source and target. A notebook rename does not change pipeline identity.
-
-For Testing, choose any frozen Data Contract version belonging to each global `table_id`. Choose a frozen contract or No Contract independently for every participant. Mixed selections are valid in Testing; only selected contracts supply Guardrails. Successful execution under mixed coverage does not qualify for activation, which requires valid frozen contracts for every table and all existing governance checks. Contract-free exploration is recorded as `ungoverned_completed` and cannot be activated. There is no Bootstrap execution mode.
-
-Testing evaluates without business publication by default. `testing_writes=True` explicitly authorizes real writes, mappings and checkpoints to the declared destinations. The interactive selector displays those destinations and requires confirmation. Physical destinations referenced by any Live pipeline are protected, including read-only consumers in another environment. Separate DEV and PROD destinations remain independent. A real Testing write reserves its destinations against activation until the run ends.
-
-### Whole-run completion
-
-Run **Environment Configuration → Setup Pipeline → Data Contract Configuration → Read → Transform → Write → Finalize Pipeline → Optional Inspect**.
+The pipeline flow is **Setup Pipeline → Read → Transform → Write**. Environment routing is configured once by `00_env_config`. A stable `pipeline_id` identifies the logical pipeline independently of notebook names and paths.
 
 ```python
-pipeline = setup_pipeline(
-    pipeline_id="example-orders", sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
-    execution_mode="testing", interactive=False, selections=EXACT_SELECTIONS,
-    configuration={},
-)
-source = orchestrate_read(execution_plan=pipeline, **READ_CONFIGURATION)
+CONTRACTS = setup_pipeline(pipeline_id="example-orders", pipeline_mode="Test")
+source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 transformed = transform(source["dataframe"])
-result = orchestrate_write(transformed, execution_plan=pipeline, sources=[source], **WRITE_CONFIGURATION)
-pipeline_result = finalize_pipeline(pipeline)
-print(pipeline_result["status"])
+result = orchestrate_write(transformed, store="Gold", schema="demo",
+                           table_name="customer_summary", write_mode="overwrite")
 ```
 
-Every declared source must complete one Read and every target one Write. Call `finalize_pipeline()` only after all operations and transformations, including read-only pipelines. It reuses setup configuration and recorded results without counting business DataFrames. Repeated finalization returns the same persisted snapshot. Missing operations, blocking checks or persistence failures cannot authorize activation. A stopped notebook remains incomplete. For a caught project error, call `finalize_pipeline(pipeline, failed=True)`. Start a fresh setup for retries; duplicate operations and sealed-plan reuse fail.
+`pipeline_mode` accepts exactly `Test` or `Live`. Test runs real reads, transformations and selected Guardrails without business or operational metadata commits. In a notebook, choose exact frozen contracts or No Contract in the setup interface before the first operation. Headless Test starts with No Contract; its returned session supports explicit `select_contract(table_id, contract_id, contract_version)` for automated diagnostics. Choices lock when operations start. The displayed report updates automatically, with red Test and green Live mode treatment and textual operation/Guardrail status.
 
-The template executes each stage directly in its dedicated cell. Keep project transformations isolated between Read and Write. Complete Read/Write result objects remain available for inspection. Existing `with plan:` callers still finalize automatically; the standard notebook uses explicit setup and finalization.
+Live resolves participants, frozen contracts, project configuration and physical bindings exclusively from the approved environment manifest. Every operation retains destination, strategy, contract and activation-revision validation. Spark and supported Fabric notebook context are resolved internally. Missing notebook audit identity is represented as absent, never fabricated or substituted for approval identity.
 
-`METADATA_PIPELINE_RUN` records exact global table-contract mappings, participating operations, processing configuration hashes, results, physical bindings, environment and warnings. Guardrail diagnostics persist independently in `METADATA_GUARDRAIL_RESULTS`; business writes and run records are separate transactions. Engineering and Microsoft Fabric own executable integrity, checksums, source control, CI/CD and deployment. FabricOps does not require a notebook export or installed dependency identity.
+### Source participation and execution boundaries
+
+Every successful Read registers with the current execution instance. Every subsequent Write receives that execution's registered sources. These associations describe pipeline participation, not proven DataFrame transformation lineage. Context-local state and unique run IDs isolate executions; failure, repeated setup and shutdown clear source references.
+
+Fabric's supported IPython `post_run_cell` event reports cell errors, but a successful cell does not establish whole-notebook completion. No supported whole-notebook completion hook is available in the existing execution model. FabricOps therefore seals observed failures, and conservatively seals other runs as **incomplete** on repeated setup or shutdown. A successful Write, the last observed operation, and normal interpreter shutdown never manufacture whole-run success. A killed process may leave a persisted Live run incomplete and its reservation in place. Headless transformation failures without a notebook event cannot be distinguished from interruption at shutdown.
+
+There is no manual plan-building, finalization or inspection cell. The internal trusted whole-run boundary still supports runtime integration, but the notebook templates cannot prove successful completion automatically. A future supported Fabric execution-owner callback is needed for that guarantee.
+
+Test diagnostics remain in memory. Because the existing activation service requires committed `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS`, evaluation-only Test cannot create new activation evidence. The activation checks remain strict; existing valid approvals can run Live. Restoring a new-approval workflow requires a separately specified, authorized evidence publication boundary. No diagnostic result silently authorizes Live.
 
 ## Activate, deploy and run unattended
 
@@ -68,12 +63,8 @@ Live setup automatically resolves the approved environment configuration and res
 Deploy notebooks through Engineering source control, CI/CD and Microsoft Fabric tooling. Approval never deploys a notebook or writes business data. No FabricOps packaging or deployment verification call is required. Live validates exact global tables, environment destinations, Data Contract versions, ownership and transformation settings against central approval.
 
 ```python
-pipeline = setup_pipeline(
-    execution_mode="live", pipeline_id="example-orders",
-    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS, configuration={},
-)
-# Read → Transform → Write using the shared pipeline plan.
-pipeline_result = finalize_pipeline(pipeline)
+CONTRACTS = setup_pipeline(pipeline_id="example-orders", pipeline_mode="Live")
+# Read → Transform → Write; approved authority is resolved internally.
 ```
 
 Profiling options, diagnostic detail and repartitioning may differ from the tested operation; Live emits warnings and records tested and actual values. Contract mappings, table identities, roles, destinations, source relationships, SQL settings, read/write strategies and transformation settings require approval. Retest changed Data Contract or processing configuration before coordinated approval. Prior approvals containing executable/dependency identity require fresh complete Testing and activation; frozen Data Contracts remain unchanged.

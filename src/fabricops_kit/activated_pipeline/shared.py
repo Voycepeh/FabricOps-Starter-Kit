@@ -451,7 +451,7 @@ def activation_version(activated_pipeline_id, *, context, spark_session=None, re
     return matches[0]
 
 
-def build_live_pipeline_plan(*, pipeline_id, sources, targets, configuration=None, context=None, spark_session=None):
+def build_live_pipeline_plan(*, pipeline_id, context=None, spark_session=None):
     """Pin approval and reserve a Live run atomically against coordinated cutover."""
     from types import MappingProxyType
     from uuid import uuid4
@@ -467,7 +467,11 @@ def build_live_pipeline_plan(*, pipeline_id, sources, targets, configuration=Non
         raise ValueError("Activation snapshot has inconsistent table mappings or ownership.")
     manifest = validate_manifest(approved)
     validate_agreement(manifest["agreement"])
-    identities = resolve_pipeline_participants(config, env, sources=sources, targets=targets, context=runtime, spark_session=spark_session)
+    participants = manifest["candidate"]["participants"]
+    identities = resolve_pipeline_participants(config, env,
+        sources=[{"table_id": item["table_id"], "logical_id": item["participant"]} for item in participants if "source" in item["roles"]],
+        targets=[{"table_id": item["table_id"], "logical_id": item["participant"]} for item in participants if "target" in item["roles"]],
+        context=runtime, spark_session=spark_session)
     definitions = {item["definition"]["table_id"]: item["definition"] for item in manifest["contracts"]}
     expected = {item["participant"]: sorted(item["roles"]) for item in manifest["candidate"]["participants"]}
     if {item["logical_id"]: sorted(item["roles"]) for item in identities.values()} != expected or set(identities) != set(definitions):
@@ -476,9 +480,9 @@ def build_live_pipeline_plan(*, pipeline_id, sources, targets, configuration=Non
     physical = pipeline_physical_bindings(identities, config=config, environment=env)
     if physical != manifest["physical_bindings"]:
         raise ValueError("Live physical destinations differ from the tested approved environment bindings.")
-    plan = PipelineExecutionPlan("live", env, str(runtime["notebook_id"]), str(uuid4()), canonical_candidate_json(identities),
+    plan = PipelineExecutionPlan("live", env, str(runtime.get("notebook_id") or ""), str(uuid4()), canonical_candidate_json(identities),
         "{}", canonical_candidate_json(contracts), MappingProxyType({**runtime, "config": config, "env": env, "_pipeline_spark": spark_session, "_pipeline_bindings": physical}),
-        pipeline_id=pipeline_id, configuration_json=canonical_candidate_json(configuration or {}),
+        pipeline_id=pipeline_id, configuration_json=canonical_candidate_json(manifest["candidate"]["project_configuration"]),
         activated_pipeline_id=approved["activated_pipeline_id"], approved_candidate_json=canonical_candidate_json(manifest["candidate"]),
         activation_revision=current["revision"])
     current["runs"][plan.plan_id] = {"pipeline_id": pipeline_id, "tables": sorted(identities), "destinations": list(physical.values()), "revision": current["revision"], "mode": "live"}

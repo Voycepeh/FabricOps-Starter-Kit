@@ -892,7 +892,11 @@ def build_callable_graph(
                 edges.append(edge)
                 if resolved_qn and edge_type in {"same_module", "cross_module"}:
                     callee_module = resolved_qn.removeprefix(f"{PACKAGE_NAME}.").rsplit(".", 1)[0] if resolved_qn.startswith(f"{PACKAGE_NAME}.") else resolved_qn.split(".")[-2]
-                    if callee_module != module:
+                    # Class methods belong to their Python module, not a
+                    # synthetic module named after the supporting class.
+                    while callee_module not in module_data and "." in callee_module:
+                        callee_module = callee_module.rsplit(".", 1)[0]
+                    if callee_module != module and callee_module in called_by_modules:
                         calls_modules[module].add(callee_module)
                         called_by_modules[callee_module].add(module)
 
@@ -5454,7 +5458,7 @@ def main() -> None:
             "title": "Standard Orchestration",
             "note": "Recommended",
             "description": "Complete governed read and write lifecycle for the standard FabricOps pipeline.",
-            "functions": {"setup_pipeline", "finalize_pipeline", "orchestrate_read", "orchestrate_write"},
+            "functions": {"setup_pipeline", "orchestrate_read", "orchestrate_write"},
             "open": True,
         },
         {

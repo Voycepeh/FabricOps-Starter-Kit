@@ -83,7 +83,7 @@ def runtime(monkeypatch):
                             "contract_payload_json": json.dumps({"table": {"table_id": key, "columns": []}})} for key in identities}), {"config": {}, "env": "canary", "activity_id": activity, "notebook_name": notebook_name,
                             "_pipeline_bindings": {key: {"store": item["store"], "schema": item.get("schema"), "table_name": item["table_name"]}
                                                    for key, item in identities.items()}},
-                                            pipeline_id="orders")
+                                            pipeline_id="orders", testing_writes=True)
         shared.persist_pipeline_run(plan)
         return plan
 
@@ -94,7 +94,7 @@ def runtime(monkeypatch):
             args.setdefault("sources", [{"table_id": key} for key, item in json.loads(plan.participants_json).items()
                                         if "source" in item["roles"]])
         with shared.PipelineOperation(plan, identity["roles"][0], args) as journal:
-            journal.complete(stages or [{"stage": "Read" if identity["roles"] == ["source"] else "Processing", "status": "passed"}])
+            journal.complete(stages or ([{"stage": "Read", "status": "passed"}] if identity["roles"] == ["source"] else [{"stage": "Write", "status": "passed"}, {"stage": "Profile", "status": "passed"}]))
 
     return make, operation, saved, writes, failure
 
@@ -107,6 +107,7 @@ def test_read_only_and_multiple_inputs_outputs_finalize_once(runtime):
         for index in range(len(roles)):
             operation(plan, index)
             assert saved[plan.plan_id]["status"] == "incomplete"
+        plan.evidence["boundary_completed"] = True
         result = finalize_pipeline_run(plan)
         assert result["status"] == "succeeded"
         count = len(writes)
@@ -182,6 +183,7 @@ def test_testing_completion_requires_no_executable_identity(runtime, mode, statu
     make, operation, _, _, _ = runtime
     plan = make(mode=mode, roles=("source",))
     operation(plan, 0)
+    plan.evidence["boundary_completed"] = True
     result = finalize_pipeline_run(plan)
     assert result["status"] == status
 
@@ -298,6 +300,7 @@ def test_distinct_attempts_keep_activity_identity_and_survive_notebook_rename(ru
             result={"guardrail_rule_id": "schema-rule", "guardrail_version": 1, "can_continue": True,
                     "status": "passed", "rule_context": {"guardrail_type": "schema"}},
             context={**plan.runtime_context, "activity_id": plan.plan_id, "execution_plan": plan})
+        plan.evidence["boundary_completed"] = True
         result = finalize_pipeline_run(plan)
         assert result["_activity_id"] == "same-fabric-activity" and result["run_id"] != "same-fabric-activity"
         assert result["pipeline_id"] == "orders" and result["_notebook_name"] == name
@@ -309,7 +312,6 @@ def test_distinct_attempts_keep_activity_identity_and_survive_notebook_rename(ru
 
 def test_failed_source_iterator_is_a_recorded_write_attempt(runtime):
     """Record generator failures before first Write and after an earlier success."""
-    from fabricops_kit import orchestrate_write
     make, operation, _, _, _ = runtime
     for previous_write in (False, True):
         plan = make(roles=("source", "target"))
@@ -320,8 +322,8 @@ def test_failed_source_iterator_is_a_recorded_write_attempt(runtime):
             raise OSError("private input iterator failure")
             yield {}  # pragma: no cover
         with pytest.raises((OSError, ValueError)):
-            orchestrate_write(None, execution_plan=plan, sources=broken_sources(), store="Silver", schema="physical",
-                              table_name="table1", write_mode="overwrite")
+            with shared.PipelineOperation(plan, "target", {"sources": broken_sources(), "store": "Silver", "schema": "physical", "table_name": "table1", "write_mode": "overwrite"}):
+                pytest.fail("Broken source state must fail before publication")
         assert finalize_pipeline_run(plan)["status"] == "failed"
 
 
@@ -373,6 +375,7 @@ def test_finalization_waits_for_an_in_flight_operation(runtime, monkeypatch):
     with ThreadPoolExecutor(max_workers=2) as pool:
         active = pool.submit(operation, plan, 0)
         assert entered.wait(5)
+        plan.evidence["boundary_completed"] = True
         final = pool.submit(finalize_pipeline_run, plan)
         release.set()
         active.result(timeout=5)
@@ -385,6 +388,7 @@ def test_lost_final_commit_acknowledgement_confirms_exact_durable_snapshot(runti
     plan = make(roles=("source",))
     operation(plan, 0)
     failure["after_commit"] = True
+    plan.evidence["boundary_completed"] = True
     result = finalize_pipeline_run(plan)
     assert result == saved[plan.plan_id] and result["status"] == "succeeded"
     assert not plan.evidence["persistence_failed"] and plan.evidence["sealed"]
@@ -396,6 +400,7 @@ def test_unreachable_readback_reports_unknown_client_outcome(runtime):
     make, operation, saved, _, failure = runtime
     plan = make(roles=("source",))
     operation(plan, 0)
+    plan.evidence["boundary_completed"] = True
     failure.update(after_commit=True, read_unavailable=True)
     with pytest.raises(RuntimeError, match="outcome is unknown"):
         finalize_pipeline_run(plan)
@@ -510,12 +515,13 @@ def test_operation_cannot_switch_to_case_alias_store_in_another_physical_item(ru
 @pytest.mark.parametrize('roles', [('source',), ('source', 'source', 'target', 'target')])
 def test_public_finalize_reuses_context_and_is_idempotent(runtime, roles):
     """The explicit notebook end boundary consolidates results without extra work."""
-    from fabricops_kit import finalize_pipeline
+    from fabricops_kit.pipeline.shared import finalize_pipeline_run as finalize_pipeline
     make, operation, saved, writes, _ = runtime
     plan = make(roles=roles)
     for index in range(len(roles)):
         operation(plan, index)
     assert saved[plan.plan_id]['status'] == 'incomplete'
+    plan.evidence["boundary_completed"] = True
     result = finalize_pipeline(plan)
     assert result['status'] == 'succeeded'
     assert json.loads(result['operation_summary_json'])['boundary_completed']
@@ -526,7 +532,7 @@ def test_public_finalize_reuses_context_and_is_idempotent(runtime, roles):
 @pytest.mark.parametrize('failure', ['missing_operation', 'project_exception'])
 def test_public_finalize_cannot_approve_incomplete_or_failed_runs(runtime, failure):
     """Manual completion preserves operation coverage and caught project failures."""
-    from fabricops_kit import finalize_pipeline
+    from fabricops_kit.pipeline.shared import finalize_pipeline_run as finalize_pipeline
     make, operation, saved, _, _ = runtime
     plan = make(roles=('source', 'target'))
     operation(plan, 0)

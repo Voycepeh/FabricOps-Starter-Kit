@@ -2,9 +2,7 @@
 
 ### Build explicit pipeline authority before Read
 
-Declare `PIPELINE_SOURCES` and `PIPELINE_TARGETS` before calling `setup_pipeline()` and keep them aligned with every participating Read and Write. Historical `METADATA_DATA_LINEAGE` cannot authorize unrelated tables. Pass the same execution plan to all operations and execute all reads, transformations and writes before calling `finalize_pipeline(plan)` for whole-run completion, including read-only pipelines.
 
-Start with **Testing**. Choose a frozen version or No Contract independently for each participant. Mixed coverage is valid; only selected contracts supply Guardrails. Explicit `testing_writes=True` permits real publication to reviewed safe destinations; Live-owned destinations are blocked. Otherwise Testing evaluates without publication.
 
 Complete **Author → Test → Activate → Live**. [Step 5](05-activate-data-contract-and-promote.md) reviews the complete affected release and publishes a coordinated environment revision. Headless Live resolves that revision automatically. Deployment stays separate. Start a new plan after changing configuration or contract selections.
 
@@ -46,7 +44,7 @@ The notebook follows one visible lifecycle:
 | PySpark Transform | Contains the joins, filters, derived columns, aggregations, or selections owned by your project. |
 | Governed Write | Checks and, when allowed, publishes each target using its configured load strategy. |
 | Finalize Pipeline | Consolidates Data Contract outcomes and finishes execution tracking. |
-| Optional Inspect | Displays actual rows immediately after each governed Read and Write call. |
+| execution report | Displays actual rows immediately after each governed Read and Write call. |
 
 The template starts with one Read, one transformation, and one Write. Add more Read or Write blocks only when your pipeline needs them.
 
@@ -67,19 +65,13 @@ Then run the import cell immediately below it. The import cell provides the publ
 ### Run the Data Contract block
 
 ```python
-# Testing is interactive by default; choose every participant explicitly.
-CONTRACT_TESTING = bool(globals().get("PIPELINE_CONTRACT_TESTING", True))
-CONTRACTS = setup_pipeline(
-    pipeline_id=PIPELINE_ID, configuration=PROJECT_CONFIGURATION,
-    sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
-    interactive=CONTRACT_TESTING, spark_session=spark,
-)
-EXECUTION_PLAN = CONTRACTS["build_plan"]() if CONTRACT_TESTING else CONTRACTS
+PIPELINE_ID = "02_pipeline"
+PIPELINE_MODE = "Test"  # Test or Live
+CONTRACTS = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode=PIPELINE_MODE)
 ```
 
-Explicitly select a frozen contract or No Contract for each table, then build the shared plan. Run each Read, Transform and Write directly in its dedicated cell, then call `finalize_pipeline(EXECUTION_PLAN)`. Individual successful operations cannot complete a pipeline. Read-only runs also require finalization. A stopped notebook remains incomplete; record caught project exceptions with `finalize_pipeline(EXECUTION_PLAN, failed=True)`.
 
-Supply a stable `pipeline_id` and external transformation configuration. FabricOps governs Data Contracts; Engineering and Microsoft Fabric own code integrity and deployment. Explicit real Testing writes require reviewed safe destinations; they can produce real data and ordinary metadata side effects. Headless Testing sets `interactive=False` and may supply saved exact selections. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#whole-run-completion).
+Supply a stable `pipeline_id` and external transformation configuration. FabricOps governs Data Contracts; Engineering and Microsoft Fabric own code integrity and deployment. Explicit real Testing writes require reviewed safe destinations; they can produce real data and ordinary metadata side effects. Headless Testing sets `interactive=False` and may supply saved exact selections. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -104,20 +96,20 @@ Then run the configured Read cell:
 
 ```python
 source = orchestrate_read(
-    execution_plan=EXECUTION_PLAN,
+
     store="Bronze",
     schema="demo",
     table_name="source_table",  # Replace with the governed source table.
     read_mode="full",
     query=None,
-    grain_discovery_enabled=True,
+
     grain_discovery_max_columns=3,
     grain_discovery_max_candidates=8,
-    frequency_enabled=True,
-    frequency_top_n=5,
-    spark_session=spark,
-    verbose=True,
-    dq_diagnostics="sample",
+
+
+
+
+
 )
 sources["source"] = source
 
@@ -213,15 +205,15 @@ Then run the configured Write cell:
 ```python
 writes["target"] = orchestrate_write(
     transformed_df,
-    sources=[sources["source"]],
+
     store="Silver",
     schema="demo",
     table_name="target_table",  # Replace with the governed target table.
     write_mode="overwrite",
-    execution_plan=EXECUTION_PLAN,
+
     repartition_by=None,
-    spark_session=spark,
-    frequency_top_n=5,
+
+
 )
 
 # Inspect the DataFrame submitted to this Write.
