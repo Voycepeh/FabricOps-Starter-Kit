@@ -117,7 +117,8 @@ def test_summary_duration_is_wall_clock_and_unknown_values_are_explicit(capsys):
 
 
 @pytest.mark.parametrize("mode", ["overwrite", "append", "scd1", "scd2"])
-def test_write_summary_keeps_profile_total_separate_from_committed(mode, capsys, monkeypatch):
+@pytest.mark.parametrize("profile_rows", [100, None, 0])
+def test_write_summary_keeps_profile_total_separate_from_committed(mode, profile_rows, capsys, monkeypatch):
     module = import_module("fabricops_kit.pipeline.orchestrate_write")
     monkeypatch.setattr(module, "prepare_pipeline_execution", lambda *_args, **_kwargs: execution_context_stub({"target": None}))
     frame = SimpleNamespace(columns=["id", "value"])
@@ -125,10 +126,10 @@ def test_write_summary_keeps_profile_total_separate_from_committed(mode, capsys,
         for name in ("resolve_table_id", "check_schema", "check_source_drift", "check_dq"):
             stack.enter_context(patch.object(module, name, return_value="target" if name == "resolve_table_id" else {"status": "passed"}))
         stack.enter_context(patch.object(module, "check_sensitive_data", return_value={"dataframe": frame}))
-        stack.enter_context(patch.object(module, "pipeline_write", return_value={"table_id": "target", "strategy": mode, "write_metrics": {"rows_committed": 8 if mode in {"append", "overwrite"} else None}}))
-        stack.enter_context(patch.object(module, "schedule_table_profiling", return_value={"row_count": 100}))
+        stack.enter_context(patch.object(module, "pipeline_write", return_value={"table_id": "target", "strategy": mode, "write_metrics": {"total_target_rows": 42, "rows_committed": 8 if mode in {"append", "overwrite"} else None}}))
+        stack.enter_context(patch.object(module, "schedule_table_profiling", return_value={"row_count": profile_rows}))
         result = run_pipeline_operation(module.orchestrate_write, frame, plan=PLAN, sources=[], store="Silver", schema="demo", table_name="orders", write_mode=mode)
-    assert result["write_metrics"]["total_target_rows"] == 100
+    assert result["write_metrics"]["total_target_rows"] == (42 if profile_rows is None else profile_rows)
     assert result["write_metrics"]["input_rows"] is None
     assert result["write_metrics"]["input_columns"] == 2
     assert result["write_metrics"]["rows_committed"] == (8 if mode in {"append", "overwrite"} else None)

@@ -320,3 +320,23 @@ def test_later_activity_failure_preserves_earlier_success_history(metadata,monke
     assert activities['standard']['last_status']=='succeeded' and activities['standard']['last_success']
     assert activities['grain']['last_status']=='failed' and 'last_success' not in activities['grain']
     assert 'frequency' not in activities
+
+
+def test_completion_failure_releases_cached_profile_without_advancing_schedule(metadata, monkeypatch):
+    """A lost claim must not leak Spark cache or consume the successful interval."""
+    profile = Mock()
+    profiler = Mock(return_value={'row_count': 100, 'profile': profile})
+    monkeypatch.setattr(importlib.import_module('fabricops_kit.pipeline.profile_table'), 'execute_table_profile', profiler)
+    original = shared.maintain_table_profile_claim
+
+    def maintain(claim, **kwargs):
+        if kwargs.get('complete') is True:
+            raise shared.ProfilingConflict('completion failed')
+        return original(claim, **kwargs)
+
+    monkeypatch.setattr(shared, 'maintain_table_profile_claim', maintain)
+    with pytest.raises(shared.ProfilingConflict, match='completion failed'):
+        shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    profile.unpersist.assert_called_once_with()
+    entry = next(iter(metadata.store['state']['history'].values()))['activities']['standard']
+    assert entry['last_status'] == 'failed' and 'last_success' not in entry

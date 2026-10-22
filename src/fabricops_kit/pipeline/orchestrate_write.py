@@ -171,7 +171,8 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                 if verbose:
                     print(message)
                 raise
-            metrics["total_target_rows"] = profile.get("row_count")
+            if profile.get("row_count") is not None:
+                metrics["total_target_rows"] = profile["row_count"]
             fields = [("Target", target), ("Strategy", strategy.title()), ("Published", "Yes" if published else "No"), ("Publication", publication_status.replace("_", " ")), ("Rows committed", metrics["rows_committed"])]
             if strategy == "scd1":
                 fields.extend((label, metrics[key]) for label, key in (("Rows inserted", "rows_inserted"), ("Rows updated", "rows_updated"), ("Rows unchanged", "rows_unchanged")))

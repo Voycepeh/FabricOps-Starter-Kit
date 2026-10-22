@@ -6478,6 +6478,7 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
                     return
         worker = Thread(target=heartbeat, daemon=True)
         worker.start()
+        outcome = None
         try:
             profile_context = {**context, "activity_id": claim["token"],
                                "_profile_snapshot_id": claim["token"], "_profile_claim_validate": validate_claim}
@@ -6490,9 +6491,6 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
             maintain_table_profile_claim(claim, context=context, spark_session=spark_session, complete=True)
             outcomes[activity] = {"status": "passed", "profile_snapshot_id": claim["token"],
                                   "row_count": outcome.get("row_count")}
-            profile = outcome.get("profile")
-            if profile is not None and hasattr(profile, "unpersist"):
-                profile.unpersist()
         except BaseException:
             stopped.set()
             worker.join(timeout=30)
@@ -6501,5 +6499,9 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
             except Exception:
                 pass  # An uncertain claim stays recoverable through its finite lease.
             raise
+        finally:
+            profile = outcome.get("profile") if outcome is not None else None
+            if profile is not None and hasattr(profile, "unpersist"):
+                profile.unpersist()
     counts = [outcome.get("row_count") for outcome in outcomes.values() if outcome.get("row_count") is not None]
     return {"status": "passed", "activities": outcomes, "row_count": counts[0] if counts else None}
