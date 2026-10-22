@@ -12919,6 +12919,22 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
+      "function_name": "_missing_contracts",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline._missing_contracts",
+      "source_end_line": 48,
+      "source_path": "src/fabricops_kit/widgets/widget_activate_pipeline.py",
+      "source_start_line": 38,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
       "function_name": "_release_view",
       "function_type": "private_function",
       "inbound_source_references": [
@@ -12927,9 +12943,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline._release_view",
-      "source_end_line": 62,
+      "source_end_line": 75,
       "source_path": "src/fabricops_kit/widgets/widget_activate_pipeline.py",
-      "source_start_line": 38,
+      "source_start_line": 51,
       "usage": "public_flow_reachable"
     },
     {
@@ -12966,9 +12982,9 @@
       "raises_documentation": "Not documented yet",
       "returns_documentation": "Not documented yet",
       "signature": "def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=None) -> dict[str, Any]",
-      "source_end_line": 208,
+      "source_end_line": 235,
       "source_path": "src/fabricops_kit/widgets/widget_activate_pipeline.py",
-      "source_start_line": 65,
+      "source_start_line": 78,
       "summary": "Review one successful Testing run and coordinate all affected pipeline candidates.",
       "usage": "public_flow_reachable"
     },
@@ -14839,8 +14855,8 @@
       ],
       "metrics": {
         "depth": 7,
-        "scope": 62,
-        "width": 14
+        "scope": 63,
+        "width": 15
       },
       "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
       "refactor_signals": [
@@ -14848,7 +14864,7 @@
           "evidence": [
             {
               "depth": 7,
-              "width": 14
+              "width": 15
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -20090,6 +20106,10 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.widgets.widget_activate_pipeline._eligible_candidate",
+      "caller_qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.widgets.widget_activate_pipeline._missing_contracts",
       "caller_qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline"
     },
     {

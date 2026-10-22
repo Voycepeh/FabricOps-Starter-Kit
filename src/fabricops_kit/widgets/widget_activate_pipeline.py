@@ -35,6 +35,19 @@ def _eligible_candidate(row, pipeline_id=None):
         return False
 
 
+def _missing_contracts(row):
+    """Describe missing coverage without admitting the run to activation review."""
+    if row.get("execution_mode") != "testing" or row.get("status") not in {"succeeded", "ungoverned_completed"} or not row.get("completed_at"):
+        return []
+    try:
+        candidate = json.loads(row["candidate_json"])
+        summary = json.loads(row["operation_summary_json"])
+        return sorted({item["table_id"] for item in [*candidate["participants"], *summary["frozen_contracts"]]
+                       if isinstance(item, dict) and isinstance(item.get("table_id"), str) and item["table_id"] and not item.get("contract")})
+    except (ValueError, KeyError, TypeError):
+        return []
+
+
 def _release_view(report, candidates):
     """Render the contract and writer decisions with expandable Testing details."""
     visible = set(report.get("changed_tables", []))
@@ -67,7 +80,8 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
 
     Displays environment, current/proposed table contracts, writer ownership,
     affected pipelines, missing tests, conflicts and complete release readiness.
-    Extra candidate controls appear when shared-table dependencies need review.
+    Completed Testing runs missing contracts are listed by table ID and excluded
+    from review. Extra candidate controls appear for shared-table dependencies.
     Supply an immutable release version for
     every selected pipeline. The backend revalidates complete Testing, exact
     contracts, Agreement and processing configuration at review and again at approval.
@@ -86,6 +100,16 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
     all_runs = [row for row in metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session)
                 if row.get("environment_name") == env]
     runs = [row for row in all_runs if _eligible_candidate(row)]
+    excluded = [(row, _missing_contracts(row)) for row in all_runs
+                if pipeline_id is None or row["pipeline_id"] == pipeline_id]
+    coverage_notice = widgets.HTML(layout=widgets.Layout(width="100%", min_width="0"))
+    missing_rows = ["<li>" + html.escape(str(row["pipeline_id"])) + " · " + html.escape(str(row["run_id"]))
+                    + ": missing frozen Data Contracts for table IDs: " + html.escape(", ".join(missing)) + "</li>"
+                    for row, missing in excluded if missing]
+    if missing_rows:
+        coverage_notice.value = ('<div style="overflow-wrap:anywhere"><p><b>Testing completed, but these runs cannot activate.</b></p><ul>'
+            + "".join(missing_rows) + "</ul><p>Select a valid frozen Data Contract for every listed table and rerun complete Testing. "
+            "All existing Guardrail, operation and Data Agreement checks must also pass.</p></div>")
     agreements = metadata_records("METADATA_DATA_AGREEMENT", context=context, spark_session=spark_session)
     primary = [row for row in runs if pipeline_id is None or row["pipeline_id"] == pipeline_id]
     run_select = widgets.Dropdown(description="Testing run", options=[(f"{r['pipeline_id']} · {r['run_id']}", r["run_id"]) for r in primary], layout=widgets.Layout(width="100%"))
@@ -107,6 +131,8 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
         confirm.value = False
 
     def requests():
+        if run_select.value is None:
+            raise ValueError("No eligible Testing run selected. Activation requires complete successful Testing with frozen Data Contracts for every table. Resolve any missing table contracts shown above and rerun Testing.")
         if not agreement.value:
             raise ValueError("Select an exact effective Data Agreement.")
         result = []
@@ -120,6 +146,7 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
 
     def refresh(*_):
         invalidate()
+        review_button.disabled = run_select.value is None
         token, snapshot = read_activation_state(context=context, spark_session=spark_session)
         current = environment_activation(snapshot, env)
         selected = [r for r in runs if r["run_id"] in {run_select.value, *additions.value}]
@@ -200,7 +227,7 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
     activate.on_click(safe(perform_activation))
     root = shared.form_page(widgets, title="Activate a tested pipeline", tone="governance",
         description=f"Environment: {env}. Review shared tables and approve a complete release.",
-        children=[run_select, additions, fields, agreement, details, review_button, confirm,
+        children=[coverage_notice, run_select, additions, fields, agreement, details, review_button, confirm,
                   shared.action_row(widgets, [activate]), status])
     state.update(widget=root, refresh=refresh, review_release=review_release, perform_activation=perform_activation)
     refresh()

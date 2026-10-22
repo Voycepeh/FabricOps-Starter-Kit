@@ -91,9 +91,9 @@ Not documented yet
 
 ### Common failure causes
 
-- Partial contract selections.
+- Missing explicit table choices or invalid frozen contract selections.
 - Unsafe Testing write destination.
-- Missing complete Testing or approved Live configuration.
+- Missing complete governed Testing for activation or approved Live configuration.
 
 ## Behavior and scope
 

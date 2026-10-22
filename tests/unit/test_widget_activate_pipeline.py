@@ -90,3 +90,72 @@ def test_old_or_unbounded_evidence_is_excluded_before_rendering(authority, rende
     run["operation_summary_json"] = json.dumps(summary)
     widget = render()
     assert widget["eligible_runs"] == [] and widget["activate"].disabled
+
+
+@pytest.mark.parametrize('missing', [('table1',), ('table0', 'table1')])
+@pytest.mark.parametrize('has_eligible_run', [False, True])
+def test_missing_contract_runs_show_diagnostics_but_cannot_be_reviewed(authority, render, missing, has_eligible_run):
+    """Mixed and contract-free completion stay visible without granting approval."""
+    import json
+    from copy import deepcopy
+    from dataclasses import replace
+    from fabricops_kit.pipeline import shared as pipeline
+
+    previous, _ = authority.candidate(roles=('source', 'target'))
+    contracts = json.loads(previous.contracts_json)
+    for table_id in missing:
+        contracts[table_id] = None
+    plan = replace(previous, plan_id=previous.plan_id + '-mixed', contracts_json=json.dumps(contracts), evidence={}, results=[])
+    pipeline.persist_pipeline_run(plan)
+    authority.operation(plan, 0)
+    authority.operation(plan, 1)
+    run = pipeline.finalize_pipeline_run(plan)
+    assert run['status'] == ('succeeded' if len(missing) == 1 else 'ungoverned_completed')
+    if not has_eligible_run:
+        authority.saved.clear()
+        authority.saved[run['run_id']] = run
+    before = deepcopy(authority.central)
+    widget = render(pipeline_id='A')
+    notice = next(
+        child for child in widget['widget'].children if 'Testing completed, but these runs cannot activate.' in str(getattr(child, 'value', '')))
+    assert run['run_id'] in notice.value
+    for table_id in missing:
+        assert table_id in notice.value
+    assert run not in widget['eligible_runs']
+    assert run['run_id'] not in {value for _, value in widget['run_select'].options}
+    assert run['run_id'] not in {value for _, value in widget['additional_runs'].options}
+    assert widget['activate'].disabled
+    if has_eligible_run:
+        selected = widget['run_select'].value
+        widget['candidate_controls'][selected]['version'].value = 'review-fix'
+        assert widget['review_release']()['ready']
+        assert run['run_id'] in notice.value
+    else:
+        review = next(child for child in widget['widget'].children if getattr(child, 'description', '') == 'Review complete release')
+        assert review.disabled
+        with pytest.raises(ValueError, match='No eligible Testing run selected'):
+            widget['review_release']()
+        with pytest.raises(ValueError, match='explicitly approve'):
+            widget['perform_activation']()
+    assert authority.central == before
+
+
+def test_missing_coverage_notice_escapes_identifiers_and_handles_malformed_rows(authority, render):
+    """Run metadata is diagnostic text and never trusted HTML or approval authority."""
+    import json
+    _, run = authority.candidate()
+    candidate = json.loads(run['candidate_json'])
+    summary = json.loads(run['operation_summary_json'])
+    table_id = '<script>example</script>'
+    candidate['participants'][0].update(table_id=table_id, contract=None)
+    summary['frozen_contracts'][0].update(table_id=table_id, contract=None)
+    run.update(candidate_json=json.dumps(candidate), operation_summary_json=json.dumps(summary))
+    widget = render(pipeline_id='A')
+    notice = next(child for child in widget['widget'].children if 'Testing completed, but these runs cannot activate.' in str(getattr(child, 'value', '')))
+    assert '&lt;script&gt;example&lt;/script&gt;' in notice.value
+    assert table_id not in notice.value
+    assert widget['eligible_runs'] == [] and widget['activate'].disabled
+    candidate['participants'] = ['invalid']
+    summary['frozen_contracts'] = [None]
+    run.update(candidate_json=json.dumps(candidate), operation_summary_json=json.dumps(summary))
+    assert module._missing_contracts(run) == []

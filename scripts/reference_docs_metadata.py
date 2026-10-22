@@ -1599,8 +1599,8 @@ PUBLIC_SYMBOL_DOCS = [
  'use_when': 'Use once before Read, Transform and Write; finish with finalize_pipeline().',
  'related_functions': ['finalize_pipeline', 'widget_data_contract', 'orchestrate_read', 'orchestrate_write'],
  'return_interpretation': 'Interactive Testing returns a selector with build_plan(); headless execution returns an immutable plan. finalize_pipeline(plan) records the whole-run outcome.',
- 'expanded_purpose': 'Select every participant contract or explore without contracts. Live resolves and pins one approved revision from the central authority.',
- 'common_failure_causes': ['Partial contract selections.', 'Unsafe Testing write destination.', 'Missing complete Testing or approved Live configuration.']},
+ 'expanded_purpose': 'Select a frozen contract or No Contract independently for each Testing participant. Live resolves and pins one approved revision from the central authority.',
+ 'common_failure_causes': ['Missing explicit table choices or invalid frozen contract selections.', 'Unsafe Testing write destination.', 'Missing complete governed Testing for activation or approved Live configuration.']},
 
 
 
