@@ -338,7 +338,7 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     assert agreement_controls["recipient_steward_selector"].options
     assert "recipient" not in agreement_controls["fields"]
     form_flow = agreement_controls["container"].children[1]
-    assert len(form_flow.children) == 5
+    assert len(form_flow.children) == 6
     agreement_header = agreement_controls["container"].children[0]
     assert "Data Agreement Creation Widget" in agreement_header.value
     assert "Governance-level agreement" in agreement_header.value
