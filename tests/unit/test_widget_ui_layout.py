@@ -160,20 +160,24 @@ def test_optional_custom_dropdown_starts_blank_and_required_keeps_default(monkey
     widgets = types.SimpleNamespace(Dropdown=Dropdown, Layout=lambda **kwargs: kwargs)
     monkeypatch.setattr(shared, "require_ipywidgets", lambda: widgets)
 
-    fields = shared.render_custom_fields(
-        [
-            {"key": "optional", "type": "dropdown", "required": False, "options": ["ODI", "Faculty"]},
-            {
-                "key": "defaulted",
-                "type": "dropdown",
-                "required": False,
-                "options": ["ODI", "Faculty"],
-                "default": "Faculty",
-            },
-            {"key": "required", "type": "dropdown", "required": True, "options": ["ODI", "Faculty"]},
-        ]
-    )
+    definitions = [
+        {"key": "optional", "type": "dropdown", "required": False, "options": ["ODI", "Faculty"]},
+        {
+            "key": "defaulted",
+            "type": "dropdown",
+            "required": False,
+            "options": ["ODI", "Faculty"],
+            "default": "Faculty",
+        },
+        {"key": "required", "type": "dropdown", "required": True, "options": ["ODI", "Faculty"]},
+    ]
+    fields = shared.render_custom_fields(definitions)
 
+    assert shared.collect_custom_fields(definitions, fields) == {
+        "optional": "",
+        "defaulted": "Faculty",
+        "required": "ODI",
+    }
     assert fields["optional"].value == ""
     assert fields["optional"].options[0] == ("Select an option", "")
     assert fields["defaulted"].value == "Faculty"
