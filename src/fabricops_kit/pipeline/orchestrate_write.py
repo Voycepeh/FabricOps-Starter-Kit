@@ -30,7 +30,7 @@ def orchestrate_write(dataframe: Any, *, execution_plan, sources: Iterable[dict[
     ----------
     execution_plan : PipelineExecutionPlan
         Same required plan as all participating Reads. Execute all reads,
-        transformations and writes inside with plan: for automatic whole-run
+        transformations and writes before finalize_pipeline(plan) for whole-run
         completion. Testing evaluates processing, guardrails and incremental safety.
         Explicit testing_writes=True permits real publication to declared safe
         destinations, with mappings, checkpoints and normal metadata side effects.

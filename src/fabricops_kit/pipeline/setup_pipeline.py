@@ -128,8 +128,7 @@ def _inspector(row, roles, results=()):
 
 
 def setup_pipeline(*, sources, targets, execution_mode="testing", selections=None, interactive=None,
-                   spark_session=None, context=None, pipeline_id=None, executable_sha256=None,
-                   dependencies=None, configuration=None, testing_writes=False):
+                   spark_session=None, context=None, pipeline_id=None, configuration=None, testing_writes=False):
     """Prepare Author → Test → Activate → Live execution without running guardrails.
 
     Testing is interactive by default. Set interactive=False for automation and
@@ -146,16 +145,16 @@ def setup_pipeline(*, sources, targets, execution_mode="testing", selections=Non
 
     Live is headless and resolves the environment's approved configuration
     automatically. It rejects manual contract choices and pins one activation
-    revision. Notebook code, dependencies, transformation configuration, table
+    revision. Transformation configuration, table
     identity, destinations and ownership must match approval. Operational
     differences allowed by the orchestrators warn and persist in the run record.
 
     Returns an immutable PipelineExecutionPlan, or Testing widget state with
-    select_contract, build_plan and refresh. Execute the complete pipeline inside
-    ``with plan:``; exit automatically persists success, failure or incompleteness.
-    This explicit boundary includes transformations and read-only pipelines.
-    Without the boundary, operation results remain incomplete and ineligible.
-    Missing executable/dependency identity also prevents qualifying success.
+    select_contract, build_plan and refresh. Call finalize_pipeline(plan) after all
+    Reads, transformations and Writes, including read-only pipelines. Stopped runs
+    remain incomplete. Reuse the setup context without repeating configuration.
+    Engineering and Microsoft Fabric own code integrity, source control, CI/CD
+    and deployment. No executable export or checksum is required.
 
     Raises ValueError for unsafe configuration or partial contract selection,
     RuntimeError for metadata failures, stale authority or a reused run boundary.
@@ -164,11 +163,11 @@ def setup_pipeline(*, sources, targets, execution_mode="testing", selections=Non
     Examples
     --------
     >>> plan = setup_pipeline(sources=SOURCES, targets=TARGETS, pipeline_id="hr-employees",
-    ...     interactive=False, selections=SELECTIONS, dependencies={}, configuration={})
-    >>> with plan:
-    ...     source = orchestrate_read(execution_plan=plan, **READ_CONFIG)
-    ...     transformed = transform(source["dataframe"])
-    ...     result = orchestrate_write(transformed, execution_plan=plan, sources=[source], **WRITE_CONFIG)
+    ...     interactive=False, selections=SELECTIONS, configuration={})
+    >>> source = orchestrate_read(execution_plan=plan, **READ_CONFIG)
+    >>> transformed = transform(source["dataframe"])
+    >>> result = orchestrate_write(transformed, execution_plan=plan, sources=[source], **WRITE_CONFIG)
+    >>> pipeline_result = finalize_pipeline(plan)
 
     """
     if not str(pipeline_id or "").strip():
@@ -190,7 +189,7 @@ def setup_pipeline(*, sources, targets, execution_mode="testing", selections=Non
         return build_pipeline_execution_plan(
             execution_mode=mode, sources=sources, targets=targets,
             selections=selections, context=context, spark_session=spark_session,
-            pipeline_id=pipeline_id, executable_sha256=executable_sha256, dependencies=dependencies, configuration=configuration, testing_writes=testing_writes,
+            pipeline_id=pipeline_id, configuration=configuration, testing_writes=testing_writes,
         )
     if execution_mode is not None and execution_mode != "testing":
         raise ValueError("Interactive contract selection is only available for Testing.")
@@ -267,7 +266,7 @@ def setup_pipeline(*, sources, targets, execution_mode="testing", selections=Non
             execution_mode=state["execution_mode"], sources=sources, targets=targets,
             selections={key: table["choice"] for key, table in state["tables"].items() if table["choice"] is not None},
             context=runtime, spark_session=spark,
-            pipeline_id=pipeline_id, executable_sha256=executable_sha256, dependencies=dependencies, configuration=configuration, testing_writes=testing_writes,
+            pipeline_id=pipeline_id, configuration=configuration, testing_writes=testing_writes,
         )
 
         state["execution_plan"] = plan

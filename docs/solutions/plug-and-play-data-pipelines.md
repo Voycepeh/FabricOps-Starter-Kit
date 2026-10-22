@@ -10,7 +10,7 @@ Building a governed data pipeline involves much more than reading a table, trans
 
 A new engineer should not need to understand or rebuild all of that governance and engineering plumbing before they can create a reliable pipeline. At the same time, the framework should not hide so much that nobody can understand what the pipeline is doing.
 
-FabricOps abstracts the repeatable plumbing behind a small, readable notebook interface: **choose how each source is read, write the project transformation in normal PySpark, choose how each target is written, and let FabricOps apply the governed lifecycle around it.**
+FabricOps abstracts the repeatable plumbing behind a small, readable notebook interface: **set up the pipeline, choose how each source is read, write the project transformation in normal PySpark, choose how each target is written, then finalize the run, and let FabricOps apply the governed lifecycle around it.**
 
 ## The solution
 
@@ -36,7 +36,7 @@ flowchart LR
         DEV_ENV["00 Env Config<br/>resolves Development<br/>Fabric Store locations"]
         subgraph DEV_PIPE["02 Pipeline"]
             direction TB
-            DEV_CONTRACT["Select Data Contract context"]
+            DEV_CONTRACT["setup_pipeline()<br/>Configure Data Contracts"]
             DEV_READ_FULL["Read Table 1<br/>Full"]
             DEV_READ_INC["Read Table 2<br/>Incremental"]
             DEV_TRANSFORM["Project-specific<br/>PySpark transformation"]
@@ -44,12 +44,17 @@ flowchart LR
             DEV_WRITE_APPEND["Write Table 2<br/>Append"]
             DEV_WRITE_SCD1["Write Table 3<br/>SCD1"]
             DEV_WRITE_SCD2["Write Table 4<br/>SCD2"]
+            DEV_FINALIZE["finalize_pipeline()<br/>Complete run tracking"]
             DEV_CONTRACT --> DEV_READ_FULL --> DEV_TRANSFORM
             DEV_CONTRACT --> DEV_READ_INC --> DEV_TRANSFORM
             DEV_TRANSFORM --> DEV_WRITE_OVERWRITE
+            DEV_WRITE_OVERWRITE --> DEV_FINALIZE
             DEV_TRANSFORM --> DEV_WRITE_APPEND
+            DEV_WRITE_APPEND --> DEV_FINALIZE
             DEV_TRANSFORM --> DEV_WRITE_SCD1
+            DEV_WRITE_SCD1 --> DEV_FINALIZE
             DEV_TRANSFORM --> DEV_WRITE_SCD2
+            DEV_WRITE_SCD2 --> DEV_FINALIZE
         end
         DEV_ENV --> DEV_PIPE
         DEV_PIPE --> DEV_RES["Development<br/>Fabric Store locations"]
@@ -60,7 +65,7 @@ flowchart LR
         PROD_ENV["00 Env Config<br/>resolves Production<br/>Fabric Store locations"]
         subgraph PROD_PIPE["02 Pipeline"]
             direction TB
-            PROD_CONTRACT["Select Data Contract context"]
+            PROD_CONTRACT["setup_pipeline()<br/>Resolve approved Data Contracts"]
             PROD_READ_FULL["Read Table 1<br/>Full"]
             PROD_READ_INC["Read Table 2<br/>Incremental"]
             PROD_TRANSFORM["Project-specific<br/>PySpark transformation"]
@@ -68,12 +73,17 @@ flowchart LR
             PROD_WRITE_APPEND["Write Table 2<br/>Append"]
             PROD_WRITE_SCD1["Write Table 3<br/>SCD1"]
             PROD_WRITE_SCD2["Write Table 4<br/>SCD2"]
+            PROD_FINALIZE["finalize_pipeline()<br/>Complete run tracking"]
             PROD_CONTRACT --> PROD_READ_FULL --> PROD_TRANSFORM
             PROD_CONTRACT --> PROD_READ_INC --> PROD_TRANSFORM
             PROD_TRANSFORM --> PROD_WRITE_OVERWRITE
+            PROD_WRITE_OVERWRITE --> PROD_FINALIZE
             PROD_TRANSFORM --> PROD_WRITE_APPEND
+            PROD_WRITE_APPEND --> PROD_FINALIZE
             PROD_TRANSFORM --> PROD_WRITE_SCD1
+            PROD_WRITE_SCD1 --> PROD_FINALIZE
             PROD_TRANSFORM --> PROD_WRITE_SCD2
+            PROD_WRITE_SCD2 --> PROD_FINALIZE
         end
         PROD_ENV --> PROD_PIPE
         PROD_PIPE --> PROD_RES["Production<br/>Fabric Store locations"]
@@ -85,7 +95,7 @@ flowchart LR
 The picture has four important parts working together:
 
 1. **Environment-aware configuration.** Each environment has its own `00_env_config`, which resolves the logical Fabric Stores to the correct Development or Production locations.
-2. **A portable pipeline.** `02_pipeline` keeps the same governed shape: **Read → project-owned PySpark → Write**. The engineer changes the project logic, not the surrounding operating pattern.
+2. **A portable pipeline.** `02_pipeline` keeps the same governed shape: **Setup → Read → project-owned PySpark → Write → Finalize**. The engineer changes the project logic, not the surrounding operating pattern.
 3. **Executable governance.** Governance defines the Data Contract and Guardrails. Engineering selects and validates that contract in Development; after approval, Production resolves the approved whole-pipeline manifest and enforces it through the same pipeline boundaries.
 4. **A shared evidence layer.** Reads and writes continuously produce the Catalogue, profiles, processing state, Guardrail results, and lineage that connect the physical pipeline back to Governance.
 
@@ -99,18 +109,24 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
 | --- | --- |
 | **Engineer configures** | Chooses logical sources and targets, Read and Write modes, the project-specific PySpark transformation, and the Data Contract context for governed tables. |
 | **AI can support** | Microsoft Fabric Copilot or another coding agent can help write or refactor project-specific PySpark. AI is optional and is not part of pipeline execution or enforcement. |
-| **FabricOps handles deterministically** | Resolves environment-specific Fabric locations, runs governed Read and Write orchestration, applies the selected Data Contract and Guardrails, and records metadata, profiling, lineage, and processing state. |
+| **FabricOps handles deterministically** | Resolves environment-specific Fabric locations, runs governed Read and Write orchestration, applies the selected Data Contract and Guardrails, and records metadata, profiling, lineage, processing state and the complete run outcome. |
 
 ## Under the hood
 
 <div class="fabricops-mascot-callout">
   <img src="/FabricOps-Starter-Kit/assets/mascots/robot-coding.png" alt="Coding mascot" loading="lazy">
-  <div><p>Explore how the reusable pipeline orchestrators handle governed Read and Write operations around your PySpark transformations.</p></div>
+  <div><p>Trace setup, governed Read and Write boundaries around your PySpark transformation, and finalization of the complete run.</p></div>
 </div>
 
 ??? info "What happens in a standard FabricOps Pipeline"
 
-    ![What happens at the FabricOps Read and Write boundaries](../assets/pipeline-boundaries-implementation.svg){ .fabricops-solution-diagram }
+    [![Setup, governed Read and Write around project PySpark, then finalization](../assets/pipeline-boundaries-implementation.svg){ .fabricops-solution-diagram }](../assets/pipeline-boundaries-implementation.svg)
+
+    Open the SVG at full size to follow the implementation links.
+
+    ### Setup Pipeline
+
+    **Call `setup_pipeline()` once after Environment Configuration.** It resolves the current environment and central Governance authority, selects the applicable Data Contracts and initializes `METADATA_PIPELINE_RUN`. Interactive Testing offers exact frozen versions or No Contract for all participants; Live resolves the approved environment revision.
 
     ### Read side
 
@@ -130,11 +146,17 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
     2. Check Grain and Data Quality after Sensitive Data treatment, enforcing the selected Data Contract policies before publication.
     3. In Live mode, publish through the selected Write strategy, record lineage in `METADATA_DATA_LINEAGE`, and profile the complete persisted target.
 
-    Testing mode runs checks and profiles the prepared input in memory, with persistence limited to `METADATA_PIPELINE_RUN` and Guardrail diagnostics. Explicit `finalize_pipeline()` records complete-run status after all declared operations. The Grain check covers prepared input; it does not guarantee resulting-table uniqueness for Append or SCD strategies.
+    Evaluation-only Testing runs checks and profiles prepared input without business publication; run records and Guardrail diagnostics still persist centrally. Explicit `testing_writes=True` can publish to reviewed safe destinations protected from Live ownership. Explicit `finalize_pipeline()` records complete-run status after all declared operations. The Grain check covers prepared input; it does not guarantee resulting-table uniqueness for Append or SCD strategies.
+
+    ### Finalize Pipeline
+
+    **Call `finalize_pipeline(plan)` once after every declared operation and project transformation.** It consolidates recorded outcomes and exact contract versions, persists the final `METADATA_PIPELINE_RUN` snapshot and releases existing execution reservations. It does not count business DataFrames. Stopped runs remain incomplete; use `failed=True` for a caught project error. Repeated finalization returns the same result. Optional Read/Write inspection stays available afterwards.
+
+    Engineering and Microsoft Fabric own executable integrity, source control, CI/CD and deployment. FabricOps requires no packaging or deployment verification call.
 
     ### Both sides
 
-    - **Contract enforcement:** Live checks commit `METADATA_GUARDRAIL_RESULTS`; Testing returns the same diagnostics in memory. Discovering possible keys is separate from enforcing the contract's selected Grain key.
+    - **Contract enforcement:** Both Live and Testing persist `METADATA_GUARDRAIL_RESULTS` and retain diagnostics for inspection. Discovering possible keys is separate from enforcing the contract's selected Grain key.
     - **Profiling:** when the lifecycle reaches Profile, `profile_table()` calculates statistics and can also calculate frequency distributions and discover candidate Grain keys.
     - **Caller controls:** Read and Write accept the same profiling switches and discovery limits. Your notebook or external scheduler chooses when to enable them; FabricOps does not apply a discovery schedule.
 
@@ -170,6 +192,7 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
 
     ```python
     source = orchestrate_read(
+        execution_plan=plan,
         store="Bronze", schema="demo", table_name="orders",
         grain_discovery_enabled=True,
         grain_discovery_max_columns=3,

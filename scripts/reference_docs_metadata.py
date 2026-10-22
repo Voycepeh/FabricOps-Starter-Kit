@@ -1581,8 +1581,8 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function', 'module': 'widgets.widget_activate_pipeline', 'function_type': 'callable',
   'summary_override': 'Review complete persisted Testing and activate an exact whole pipeline.',
   'symbol_name': 'widget_activate_pipeline', 'template_notebook': '01_governance', 'template_segment': 'Pipeline activation',
-  'use_when': 'Use after successful whole-pipeline Testing inside with plan:.',
-  'expanded_purpose': 'Shows exact contracts/rules, executable and configuration identity, diagnostics, warnings, Agreement and fingerprint before explicit Governance confirmation. Activation neither deploys nor publishes.',
+  'use_when': 'Use after successful whole-pipeline Testing and finalize_pipeline().',
+  'expanded_purpose': 'Shows exact contracts/rules and processing configuration identity, diagnostics, warnings, Agreement and fingerprint before explicit Governance confirmation. Activation neither deploys nor publishes.',
   'related_functions': ['setup_pipeline']},
 
 
@@ -1596,9 +1596,9 @@ PUBLIC_SYMBOL_DOCS = [
  'summary_override': 'Prepare Testing or resolve an approved environment configuration for Live.',
  'symbol_name': 'setup_pipeline', 'template_notebook': '02_pipeline',
  'template_segment': 'Configure the pipeline and whole-run boundary',
- 'use_when': 'Use before reads, transformations and writes; execute them inside with plan:.',
- 'related_functions': ['widget_data_contract', 'orchestrate_read', 'orchestrate_write'],
- 'return_interpretation': 'Interactive Testing returns a selector with build_plan(); headless execution returns an immutable plan. with plan: records the whole-run outcome automatically.',
+ 'use_when': 'Use once before Read, Transform and Write; finish with finalize_pipeline().',
+ 'related_functions': ['finalize_pipeline', 'widget_data_contract', 'orchestrate_read', 'orchestrate_write'],
+ 'return_interpretation': 'Interactive Testing returns a selector with build_plan(); headless execution returns an immutable plan. finalize_pipeline(plan) records the whole-run outcome.',
  'expanded_purpose': 'Select every participant contract or explore without contracts. Live resolves and pins one approved revision from the central authority.',
  'common_failure_causes': ['Partial contract selections.', 'Unsafe Testing write destination.', 'Missing complete Testing or approved Live configuration.']},
 
@@ -1702,24 +1702,12 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     },
 }
 
-PUBLIC_SYMBOL_DOCS.extend([
-
- {'kind': 'function',
-  'module': 'activated_pipeline.package_activated_pipeline',
-  'function_type': 'callable',
-  'summary_override': 'Package exact approved definitions and executable deterministically.',
-  'symbol_name': 'package_activated_pipeline',
-  'template_notebook': '01_governance, 02_pipeline',
-  'template_segment': 'Pipeline activation and deployment',
-  'related_functions': ['setup_pipeline', 'widget_activate_pipeline']},
- {'kind': 'function',
-  'module': 'activated_pipeline.verify_pipeline_deployment',
-  'function_type': 'callable',
-  'summary_override': 'Verify deployment artifacts and persist explicit physical bindings.',
-  'symbol_name': 'verify_pipeline_deployment',
-  'template_notebook': '01_governance, 02_pipeline',
-  'template_segment': 'Pipeline activation and deployment',
-  'related_functions': ['setup_pipeline', 'widget_activate_pipeline']}])
+PUBLIC_SYMBOL_DOCS.append({'kind': 'function', 'module': 'pipeline.finalize_pipeline',
+    'function_type': 'callable', 'symbol_name': 'finalize_pipeline',
+    'summary_override': 'Consolidate Data Contract results and finalize execution tracking.',
+    'template_notebook': '02_pipeline', 'template_segment': 'Finalize Pipeline',
+    'related_functions': ['setup_pipeline', 'orchestrate_read', 'orchestrate_write'],
+    'use_when': 'Call after all Reads, transformations and Writes, including read-only runs.'})
 
 for _row in PUBLIC_SYMBOL_DOCS:
     _update = FOCUSED_FUNCTION_DOC_UPDATES.get(_row.get("symbol_name"))

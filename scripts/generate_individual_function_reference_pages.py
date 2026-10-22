@@ -5454,7 +5454,7 @@ def main() -> None:
             "title": "Standard Orchestration",
             "note": "Recommended",
             "description": "Complete governed read and write lifecycle for the standard FabricOps pipeline.",
-            "functions": {"setup_pipeline", "orchestrate_read", "orchestrate_write"},
+            "functions": {"setup_pipeline", "finalize_pipeline", "orchestrate_read", "orchestrate_write"},
             "open": True,
         },
         {
@@ -5481,8 +5481,6 @@ def main() -> None:
                 "widget_render_data_agreement",
                 "widget_data_contract",
                 "widget_activate_pipeline",
-                "package_activated_pipeline",
-                "verify_pipeline_deployment",
             },
             "open": False,
         },

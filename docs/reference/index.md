@@ -8,7 +8,7 @@ Need the complete implementation-level dependency graph? Use the [Call Flow Dash
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">28</strong>
+    <strong class="reference-kpi-value">27</strong>
     <span class="reference-kpi-title">Public functions</span>
     <p class="reference-kpi-note">Notebook-facing Starter Kit functions.</p>
   </section>
@@ -18,14 +18,14 @@ Need the complete implementation-level dependency graph? Use the [Call Flow Dash
 
 ## Find a function
 
-Use the finder below to search 28 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
+Use the finder below to search 27 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
 
 <div class="callable-finder" data-callable-finder>
   <label class="callable-finder-label" for="callable-finder-input">Search public functions</label>
   <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">
   <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, starter path, usage source, or description.</p>
   <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">lineage</span> <span class="callable-finder-chip">guardrail</span></p>
-  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 28 public functions.</p>
+  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 27 public functions.</p>
   <p class="callable-finder-empty" data-callable-finder-empty hidden>No public functions match your search.</p>
 </div>
 
@@ -34,9 +34,9 @@ Use the finder below to search 28 public functions. Config classes stay out of t
 
     Maintainer inventory metrics:
 
-    - Source Python files count: 53
-    - Total callables: 675
-    - Supporting functions: 333
+    - Source Python files count: 52
+    - Total callables: 671
+    - Supporting functions: 330
     - Private helpers to review: 307
 
     - [Function Call Graph](../function-call-graph.md): explanatory page for the v4 normalized public-function call-flow architecture contract.
@@ -50,9 +50,14 @@ Use the finder below to search 28 public functions. Config classes stay out of t
 Expand a group to browse its public functions. Standard Orchestration is open by default.
 
 <details class="reference-function-group" data-callable-group="standard-orchestration" data-default-open="true" open>
-<summary><span class="reference-function-group-title">Standard Orchestration</span><span class="reference-function-group-meta">3 functions · Recommended</span></summary>
+<summary><span class="reference-function-group-title">Standard Orchestration</span><span class="reference-function-group-meta">4 functions · Recommended</span></summary>
 <p class="reference-function-group-description">Complete governed read and write lifecycle for the standard FabricOps pipeline.</p>
 <div class="reference-catalogue-list">
+<article id="pipeline.finalize_pipeline-finalize_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="finalize_pipeline" data-callable-module="pipeline.finalize_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Consolidate Data Contract results and finalize execution tracking.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/finalize_pipeline/"><code>finalize_pipeline</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Consolidate Data Contract results and finalize execution tracking.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
+</article>
 <article id="pipeline.orchestrate_read-orchestrate_read" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_read" data-callable-module="pipeline.orchestrate_read" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Run the observable standard governed source lifecycle.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_read/"><code>orchestrate_read</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run the observable standard governed source lifecycle.</p>
@@ -94,14 +99,9 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 </details>
 
 <details class="reference-function-group" data-callable-group="governance-metadata" data-default-open="false">
-<summary><span class="reference-function-group-title">Governance &amp; Metadata</span><span class="reference-function-group-meta">8 functions · Author and inspect governed context</span></summary>
+<summary><span class="reference-function-group-title">Governance &amp; Metadata</span><span class="reference-function-group-meta">6 functions · Author and inspect governed context</span></summary>
 <p class="reference-function-group-description">Notebook setup, metadata initialization, Data Steward and Agreement intake, Data Contract workflows.</p>
 <div class="reference-catalogue-list">
-<article id="activated_pipeline.package_activated_pipeline-package_activated_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="package_activated_pipeline" data-callable-module="activated_pipeline.package_activated_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Package exact approved definitions and executable deterministically.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/package_activated_pipeline/"><code>package_activated_pipeline</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Package exact approved definitions and executable deterministically.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
-</article>
 <article id="config.setup_metadata_tables-setup_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_metadata_tables" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-starter-kit" data-callable-purpose="Create missing FabricOps metadata tables and check existing table columns and Spark data types.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></h3>
   <p class="reference-catalogue-item-purpose">Create missing FabricOps metadata tables and check existing table columns and Spark data types.</p>
@@ -111,11 +111,6 @@ Expand a group to browse its public functions. Standard Orchestration is open by
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_notebook/"><code>setup_notebook</code></a></h3>
   <p class="reference-catalogue-item-purpose">Prepare a FabricOps notebook by validating configuration, resolving environment targets, and returning reusable runtime context.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00_env_config</span></p>
-</article>
-<article id="activated_pipeline.verify_pipeline_deployment-verify_pipeline_deployment" class="reference-catalogue-item" data-callable-row="true" data-callable-name="verify_pipeline_deployment" data-callable-module="activated_pipeline.verify_pipeline_deployment" data-function-type="public-starter-kit" data-callable-purpose="Verify deployment artifacts and persist explicit physical bindings.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/verify_pipeline_deployment/"><code>verify_pipeline_deployment</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Verify deployment artifacts and persist explicit physical bindings.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 <article id="widgets.widget_activate_pipeline-widget_activate_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_activate_pipeline" data-callable-module="widgets.widget_activate_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Review complete persisted Testing and activate an exact whole pipeline.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_activate_pipeline/"><code>widget_activate_pipeline</code></a></h3>

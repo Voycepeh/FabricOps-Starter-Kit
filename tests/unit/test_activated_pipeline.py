@@ -20,11 +20,7 @@ from tests.unit.test_pipeline_run_evidence import runtime  # noqa: F401
 def authority(runtime, monkeypatch, tmp_path):
     """Mock physical Fabric I/O only; keep fingerprints, run validation and dependency logic."""
     make, operation, saved, writes, failure = runtime
-    executable = tmp_path / "project.ipynb"
-    executable.write_text('{"cells":[{"cell_type":"code","source":["transform()"]}]}')
-    digest = pipeline.notebook_executable_fingerprint(executable.read_bytes())
     context = {"config": {}, "env": "canary", "notebook_id": "notebook", "notebook_name": "pipeline", "workspace_id": "workspace"}
-    monkeypatch.setattr(pipeline, "deployed_notebook_fingerprint", lambda runtime: digest)
     monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda identities, config, environment: config["bindings"])
     monkeypatch.setattr(service, "resolve_fabric_context", lambda context=None: (context["config"], context["env"], dict(context)))
     monkeypatch.setattr(pipeline, "resolve_fabric_context", service.resolve_fabric_context)
@@ -52,7 +48,7 @@ def authority(runtime, monkeypatch, tmp_path):
     monkeypatch.setattr(service, "read_activation_state", read)
     monkeypatch.setattr(service, "commit_activation_state", commit)
     def candidate(pipeline_id="A", version=3, roles=("target",), env="canary", tables=None, destinations=None):
-        plan = make(roles=roles, executable=digest)
+        plan = make(roles=roles)
         identities = json.loads(plan.participants_json)
         frozen, bindings = {}, {}
         tables = tables or list(identities)
@@ -82,15 +78,15 @@ def authority(runtime, monkeypatch, tmp_path):
     def request(run, release=None):
         return {"testing_run_id": run["run_id"], "candidate_fingerprint": run["candidate_fingerprint"],
                 "pipeline_name": run["pipeline_id"], "pipeline_version": release or run["run_id"],
-                "agreement_id": "agreement", "agreement_version": "1", "executable_path": str(executable)}
+                "agreement_id": "agreement", "agreement_version": "1"}
     def approve(*runs, env="canary"):
         return service.approve_pipeline_release([request(run) for run in runs], expected_token=central["token"],
             governance_confirmed=True, context={**context, "env": env})
     def current(env="canary"):
         return service.environment_activation(central["state"], env)
     return SimpleNamespace(candidate=candidate, approve=approve, request=request, current=current, central=central,
-                           context=context, saved=saved, contracts=contracts, executable=executable, diagnostics=diagnostics,
-                           operation=operation, digest=digest, commit=commit, read=read)
+                           context=context, saved=saved, contracts=contracts, diagnostics=diagnostics,
+                           operation=operation, commit=commit, read=read)
 
 
 def test_single_pipeline_activation_has_no_business_or_deployment_side_effects(authority, tmp_path):
@@ -277,16 +273,13 @@ def test_late_empty_boundary_cannot_authorize_previously_executed_operations(aut
     assert not state.current()["pipelines"]
 
 
-def test_mutated_executable_or_contract_cannot_authorize_activation(authority):
+def test_mutated_contract_cannot_authorize_activation(authority):
     state = authority
     _, run = state.candidate()
     state.contracts[0]["contract_payload_json"] += " "
     with pytest.raises(ValueError, match="Frozen contract changed"):
         state.approve(run)
     state.contracts[0]["contract_payload_json"] = state.contracts[0]["contract_payload_json"].rstrip()
-    state.executable.write_text('{"cells":[{"cell_type":"code","source":"changed()"}]}')
-    with pytest.raises(ValueError, match="executable changed"):
-        state.approve(run)
 
 
 def test_notebook_rename_preserves_pipeline_and_candidate_identity(authority):
@@ -411,3 +404,37 @@ def test_testing_write_cannot_overwrite_an_active_read_only_consumers_input(auth
     testing = replace(plan, plan_id="testing-consumer-input", evidence={}, testing_writes=True)
     with pytest.raises(ValueError, match="Live-owned"):
         service.reserve_testing_destinations(testing)
+
+
+def test_manual_finalization_qualifies_without_executable_integrity(authority, monkeypatch):
+    """Explicit end boundaries preserve coordinated governance without code exports."""
+    from pathlib import Path
+    from fabricops_kit import finalize_pipeline
+    def forbidden(*args, **kwargs):
+        raise AssertionError('Engineering owns executable integrity')
+    monkeypatch.setattr(Path, 'rglob', forbidden)
+    monkeypatch.setattr('urllib.request.urlopen', forbidden)
+    state = authority
+    previous, _ = state.candidate()
+    plan = replace(previous, plan_id=previous.plan_id + '-manual', evidence={}, results=[])
+    pipeline.persist_pipeline_run(plan)
+    state.operation(plan, 0)
+    run = finalize_pipeline(plan)
+    assert run['status'] == 'succeeded'
+    state.approve(run)
+    assert state.current()['pipelines'][plan.pipeline_id]['testing_run_id'] == plan.plan_id
+
+
+def test_public_finalize_releases_existing_live_reservation(authority):
+    """Finalization closes the same atomic reservation used for coordinated cutover."""
+    from fabricops_kit import finalize_pipeline
+    state = authority
+    previous, run = state.candidate()
+    state.approve(run)
+    plan = service.build_live_pipeline_plan(pipeline_id=previous.pipeline_id, sources=[],
+        targets=[{'store': 'Silver', 'schema': 'physical', 'table_name': 'table0', 'logical_id': 'asset0'}],
+        context=previous.runtime_context)
+    assert plan.plan_id in state.current()['runs']
+    state.operation(plan, 0)
+    assert finalize_pipeline(plan)['status'] == 'succeeded'
+    assert plan.plan_id not in state.current()['runs']

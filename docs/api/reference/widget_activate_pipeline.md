@@ -11,7 +11,7 @@ Review complete persisted Testing and activate an exact whole pipeline.
 
 ## Usage notes
 
-Use after successful whole-pipeline Testing inside with plan:.
+Use after successful whole-pipeline Testing and finalize_pipeline().
 
 
 ## Example usage
@@ -29,7 +29,6 @@ Example usage not documented yet.
 def widget_activate_pipeline(
     *,
     pipeline_id=None,
-    executable_path=None,
     spark_session=None,
     context=None,
 ) -> dict[str, Any]:
@@ -48,7 +47,6 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `pipeline_id` | `—` | No | `None` | Not documented yet |
-| `executable_path` | `—` | No | `None` | Not documented yet |
 | `spark_session` | `—` | No | `None` | Not documented yet |
 | `context` | `—` | No | `None` | Not documented yet |
 
@@ -69,9 +67,9 @@ Not documented yet
 Displays environment, current/proposed table contracts, writer ownership,
 affected pipelines, missing tests, conflicts and complete release readiness.
 Extra candidate controls appear when shared-table dependencies need review.
-Supply a deployed executable artifact path and immutable release version for
+Supply an immutable release version for
 every selected pipeline. The backend revalidates complete Testing, exact
-contracts, Agreement and executable identity at review and again at approval.
+contracts, Agreement and processing configuration at review and again at approval.
 
 One explicit approval publishes the entire environment revision atomically.
 Stale review, missing tests, competing writers, contract conflicts or affected
@@ -91,7 +89,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_activate_pipeline.py:65`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L65-L210">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L65-L208">View on GitHub</a>
 </div>
 
 

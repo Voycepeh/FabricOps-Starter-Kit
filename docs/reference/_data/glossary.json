@@ -39,7 +39,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "The validated execution decisions shared by every Read and Write in one pipeline run.",
-    "long_definition": "An immutable Testing or Live plan fixes global participants, exact table contracts, stable pipeline identity and environment destinations. Execute the complete project inside with plan: for automatic outcome recording. Live pins one approved environment activation revision.",
+    "long_definition": "An immutable Testing or Live plan fixes global participants, exact table contracts, stable pipeline identity and environment destinations. Execute the complete project inside finalize_pipeline(plan) for automatic outcome recording. Live pins one approved environment activation revision.",
     "preferred_usage": "Pass one explicit plan throughout Read, Transform and Write; build a new plan after selection changes.",
     "avoid_usage": "mutable notebook-global contract overrides"
   },
@@ -49,7 +49,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "Pipeline execution against all frozen contracts, or explicit contract-free exploration.",
-    "long_definition": "Testing permits any frozen table contract versions, requires all-or-none contract selection, and records METADATA_PIPELINE_RUN and Guardrail Results. Explicit real writes require safe destinations separate from Live ownership. Only complete governed Testing within the whole-run boundary qualifies for activation.",
+    "long_definition": "Testing permits any frozen table contract versions, requires all-or-none contract selection, and records METADATA_PIPELINE_RUN and Guardrail Results. Explicit real writes require safe destinations separate from Live ownership. Only complete governed Testing followed by finalize_pipeline() or the existing context-manager end boundary qualifies for activation.",
     "preferred_usage": "Use Testing for the execution mode, independently of the configured environment name.",
     "avoid_usage": "successful Live publication when only dry-run checks passed"
   },
@@ -59,7 +59,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "The deliberate pipeline-wide mode that permits governed publication and operational metadata commits.",
-    "long_definition": "Live automatically resolves an approved environment configuration from METADATA_ACTIVATION_STATE and pins its revision. Exact contracts, writer ownership, executable, dependencies, transformation settings and physical destinations are enforced. Affected running executions drain before coordinated activation.",
+    "long_definition": "Live automatically resolves an approved environment configuration from METADATA_ACTIVATION_STATE and pins its revision. Exact contracts, writer ownership, transformation settings and physical destinations are enforced. Affected running executions drain before coordinated activation.",
     "preferred_usage": "Use Live for the execution decision in any configured environment; scheduled runs select it explicitly.",
     "avoid_usage": "an execution default inferred from an environment name"
   },
@@ -735,7 +735,7 @@
     "aliases": [],
     "category": "Data Engineering concepts",
     "short_definition": "One logical pipeline execution across every declared Read and Write.",
-    "long_definition": "METADATA_PIPELINE_RUN records one logical attempt across all declared Reads and Writes, stable pipeline_id, candidate identity, operations and status. The with plan: boundary automatically records whole-run completion, including read-only runs. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.",
+    "long_definition": "METADATA_PIPELINE_RUN records one logical attempt across all declared Reads and Writes, stable pipeline_id, candidate identity, operations and status. The finalize_pipeline(plan) boundary automatically records whole-run completion, including read-only runs. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.",
     "preferred_usage": "Use pipeline run for the complete execution; distinguish it from table participation and rule-level Guardrail Results.",
     "avoid_usage": "one run per participating table"
   },
@@ -747,7 +747,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "An immutable approved version of a completely and successfully tested whole pipeline.",
-    "long_definition": "METADATA_ACTIVATION_STATE contains immutable approved pipeline manifests and the active configuration for each environment and pipeline_id. Each manifest binds successful whole-run Testing, an exact effective Agreement, global frozen contracts, executable and dependency identity, transformation settings and physical destinations. Governance approves affected pipelines together; new Live runs resolve the coordinated revision automatically. Activation neither deploys notebooks nor writes business data.",
+    "long_definition": "METADATA_ACTIVATION_STATE contains immutable approved pipeline manifests and the active configuration for each environment and pipeline_id. Each manifest binds successful whole-run Testing, an exact effective Agreement, global frozen contracts, transformation settings and physical destinations. Governance approves affected pipelines together; new Live runs resolve the coordinated revision automatically. Activation neither deploys notebooks nor writes business data.",
     "preferred_usage": "Use Activated Pipeline for exact whole-pipeline Live authority.",
     "avoid_usage": "activated contract as Live authority"
   }

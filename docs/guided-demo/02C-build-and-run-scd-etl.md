@@ -47,30 +47,33 @@ The notebook uses these governed tables throughout:
 Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparation cell. That setup can change Bronze before pipeline selection. The default pipeline setup is:
 
 ```python
-# First run defaults to Bootstrap. Set PIPELINE_CONTRACT_TESTING=True externally
-# in 00_env_config or notebook parameters when the contracts are frozen.
-CONTRACT_TESTING = bool(globals().get("PIPELINE_CONTRACT_TESTING", False))
+# Runtime controls are configured in 00_env_config or notebook parameters.
+PIPELINE_LIVE = bool(globals().get("PIPELINE_LIVE_ENABLED", False))
+CONTRACT_TESTING = bool(globals().get("PIPELINE_CONTRACT_TESTING", True)) and not PIPELINE_LIVE
 CONTRACTS = setup_pipeline(
-    pipeline_id=PIPELINE_ID, dependencies=PROJECT_DEPENDENCIES, configuration=PROJECT_CONFIGURATION,
+    pipeline_id=PIPELINE_ID, configuration=PROJECT_CONFIGURATION,
     sources=PIPELINE_SOURCES, targets=PIPELINE_TARGETS,
-    interactive=CONTRACT_TESTING, spark_session=spark,
+    execution_mode="live" if PIPELINE_LIVE else "testing",
+    interactive=CONTRACT_TESTING,
+    testing_writes=bool(globals().get("PIPELINE_TESTING_WRITES", False)) and not PIPELINE_LIVE,
+    spark_session=spark,
 )
 EXECUTION_PLAN = CONTRACTS["build_plan"]() if CONTRACT_TESTING else CONTRACTS
 ```
 
-With the default `False`, Run all builds a Bootstrap plan and creates/profiles initial outputs without human interaction. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Metadata routing must already be initialized by the environment setup; business targets and Catalogue records do not need to exist.
+Testing is interactive by default. For the initial Guided Demo, there is no Data Contract yet: select **No Contract for every source and target**. To create the initial output tables and profiles, configure `PIPELINE_TESTING_WRITES=True`, review the displayed safe destinations and explicitly confirm real Testing writes before building the plan. Evaluation-only Testing leaves business tables and ordinary operational metadata unchanged. Contract-free completion is `ungoverned_completed` and cannot authorize activation. There is no Bootstrap execution mode.
 
-After Governance authors and freezes the contracts, set `PIPELINE_CONTRACT_TESTING=True` externally. Pause after setup to select the exact frozen versions, then run the execution-plan cell and all Reads and Writes. Testing evaluates every declared operation without publishing targets or committing ordinary operational metadata. Run the finalization cell after all Reads, transforms and Writes (also for Read-only pipelines). `METADATA_PIPELINE_RUN` records the complete run and links Guardrail diagnostics by `run_id`; passing target diagnostics alone do not prove completion. Supply a stable `pipeline_id`, explicit dependencies and external transformation configuration; Fabric observes the deployed notebook identity for qualifying Testing evidence. An optional `executable_sha256` pin must match that identity. See the [complete-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#complete-run-evidence). Live resolves the exact saved Activated Pipeline manifest after explicit Governance approval, deployment and binding verification. Rerun setup for a new test; rebuilding on the same selector reuses its locked plan and journal.
+Run each stage directly in order: **Environment → Setup Pipeline → Data Contract Configuration → Read → Transform → Write → Finalize Pipeline → Optional Inspect**. Every Read and Write receives `execution_plan=EXECUTION_PLAN`. Call `finalize_pipeline(EXECUTION_PLAN)` after all operations; stopped notebooks remain incomplete. A caught project error requires `finalize_pipeline(EXECUTION_PLAN, failed=True)`. Keep complete Read and Write results for inspection.
 
-Bootstrap fails closed if a participating table has a frozen contract or an existing pipeline approval, including one created after setup. It never silently drops governed requirements. UI visibility is separate from execution policy: headless Testing uses `interactive=False`, `execution_mode="testing"`, and saved exact selections.
+After Governance freezes the contracts, select an exact frozen version for every participating table and complete governed Testing. Successful finalization records `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS` for review. Live resolves coordinated approval from central `METADATA_ACTIVATION_STATE`; Engineering and Microsoft Fabric own code integrity and deployment. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#whole-run-completion).
 
-The persisted row counts below describe Bootstrap runs before contracts exist, or governed Live runs after approval. Advance the day only after publication succeeds. Once contracts are frozen, Bootstrap is no longer an eligible way to publish; use Testing to evaluate changes and the governed release workflow for subsequent publication.
+Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. Persisted row counts and saved-data screenshots below require explicitly authorized real Testing writes or governed Live publication. Advance the demo day only after publication succeeds.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run Day 1 with the Bootstrap defaults
+## Run Day 1 with safe real Testing writes
 Reads 8 rows of data from Bronze `demo.product_master_updates` then set 'product_id' as key column for SCD1 and write to silver.demo.product_master_scd1, likewise set 'product_id' as key column , set `product_category` and `list_price` as tracking columns with `modified_datetime` as the effective column for SCD2 and write to silver.demo.product_master_scd2
 
 
@@ -158,7 +161,7 @@ Day 1 creates eight current records in each target, Day 2 creates the first hist
 
 ### Metadata saved by FabricOps
 
-The following records are committed by successful **Bootstrap** or governed **Live** runs and routed to the Metadata Lakehouse configured by `00_env_config`. Testing persists `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS`; ordinary metadata remains unchanged.
+The following records are committed by successful runs with explicitly authorized real Testing writes or governed **Live** publication and routed to the Metadata Lakehouse configured by `00_env_config`. Evaluation-only Testing persists `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS`; ordinary metadata remains unchanged.
 
 | Metadata table | What this demo records |
 | --- | --- |
@@ -180,7 +183,7 @@ Run the `DEMO_DAY` cell and the **Prepare the Bronze snapshot** cell before Read
 | 2 | 44.90 | Accessories | 8 | 9 |
 | 3 | 44.90 | Travel Accessories | 8 | 10 |
 
-Use a fresh permitted **Live** plan for governed publication. Testing keeps Silver and operational metadata unchanged; the explicit Bronze preparation is outside that plan. Retain the notebook's Bootstrap defaults only before contracts exist. Rerun each day in the same interactive session and repeat its Write: SCD2 must retain eight current products and must not add another version for unchanged business values. A new scheduled activity must produce the same results.
+Use a fresh permitted **Live** plan for governed publication. Evaluation-only Testing keeps Silver and operational metadata unchanged; the explicit Bronze preparation is outside that plan. For initial DEV publication, explicitly authorize safe real Testing writes. Rerun each day in the same interactive session and repeat its Write: SCD2 must retain eight current products and must not add another version for unchanged business values. A new scheduled activity must produce the same results.
 
 The Read and Write blocks display their DataFrames inline, without a separate Inspect selector. These previews are not the persisted SCD history. Inspect the physical Silver tables after publication. `Not available` SCD metrics do not establish that a merge failed. For SCD2, confirm that superseded P002/P001 versions have `_is_current=False` and populated `_effective_to`, that each product has one current version, and that no `(product_id, _effective_from)` pair is duplicated. Never replace these keyed merges with overwrite to hide a mismatch. For existing checkpoint divergence, follow the [scoped reconciliation guidance](02B-build-and-run-incremental-append-etl.md#if-silver-has-eight-rows-but-the-checkpoint-already-covers-day-2); immutable Append repairs must not be applied to SCD history.
 
@@ -194,7 +197,7 @@ Do not restart at Day 1 while either SCD target still contains later-day state. 
     - `demo.product_master_scd2`
 3. Set `DEMO_DAY = 1`.
 4. Rerun [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) to restore the eight-row Day 1 Bronze snapshot. Day 1 of this notebook does not load its own CSV.
-5. Run the notebook through a fresh selector, keep the Bootstrap defaults before contracts exist, then continue through both Writes.
+5. Run the notebook through a fresh selector, choose No Contract for every table and explicitly authorize safe real Testing writes, then continue through both Writes.
 6. Continue with Day 2 and Day 3 in order, building a fresh plan each day.
 
 Deleting only the Bronze source is not enough: retained SCD targets still contain the previous current state and history. Conversely, deleting only the targets leaves the Bronze table on its later snapshot until the Day 1 staging cells run.

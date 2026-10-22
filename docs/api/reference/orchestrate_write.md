@@ -73,7 +73,7 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `dataframe` | `Any` | Yes | `—` | Transformed Spark DataFrame; Sensitive Data treatment prepares the input. |
-| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Same required plan as all participating Reads. Execute all reads, transformations and writes inside with plan: for automatic whole-run completion. Testing evaluates processing, guardrails and incremental safety. Explicit testing_writes=True permits real publication to declared safe destinations, with mappings, checkpoints and normal metadata side effects. Otherwise Testing evaluates without publication. Live enforces the pinned approved contracts and ownership and stops on Block before publication. |
+| `execution_plan` | `PipelineExecutionPlan` | Yes | `—` | Same required plan as all participating Reads. Execute all reads, transformations and writes before finalize_pipeline(plan) for whole-run completion. Testing evaluates processing, guardrails and incremental safety. Explicit testing_writes=True permits real publication to declared safe destinations, with mappings, checkpoints and normal metadata side effects. Otherwise Testing evaluates without publication. Live enforces the pinned approved contracts and ownership and stops on Block before publication. |
 | `sources` | `Iterable[dict[str, Any]]` | Yes | `—` | Read results from this exact plan for the sources actually feeding this target. |
 | `store` | `str` | Yes | `—` | Configured target store key. |
 | `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
@@ -149,7 +149,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 205 |
+| Live-critical dependencies | 203 |
 
 ### Release history
 
@@ -325,7 +325,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.check_source_drift_for_target</code></li>
 <li><code>fabricops_kit.pipeline.shared.commit_pipeline_write_success</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
-<li><code>fabricops_kit.pipeline.shared.deployed_notebook_fingerprint</code></li>
 <li><code>fabricops_kit.pipeline.shared.display_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.dq_tolerance_parameter</code></li>
 <li><code>fabricops_kit.pipeline.shared.evaluate_source_drift_guardrail</code></li>
@@ -336,7 +335,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.incremental_publication_scopes</code></li>
 <li><code>fabricops_kit.pipeline.shared.lineage_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
-<li><code>fabricops_kit.pipeline.shared.notebook_executable_fingerprint</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.persist_lineage_participation</code></li>
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>

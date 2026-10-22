@@ -18,7 +18,7 @@ from .config import (
     setup_notebook,
 )
 from .data_agent import create_data_agent
-from .activated_pipeline import package_activated_pipeline, verify_pipeline_deployment
+
 from .io import (
     read_lakehouse_csv,
     read_lakehouse_excel,
@@ -31,6 +31,7 @@ from .io import (
     write_warehouse_table,
 )
 from .pipeline import (
+    finalize_pipeline,
     setup_pipeline,
     resolve_table_id,
     profile_table,
@@ -75,8 +76,8 @@ IO_EXPORTS = (
 )
 
 PIPELINE_EXPORTS = (
-    "package_activated_pipeline", "verify_pipeline_deployment",
     "setup_pipeline",
+    "finalize_pipeline",
     "profile_table",
     "resolve_table_id",
     "pipeline_read",
