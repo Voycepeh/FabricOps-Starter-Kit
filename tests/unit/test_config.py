@@ -416,7 +416,10 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
             self.pending_schema = None
 
         def createDataFrame(self, rows, schema=None):  # noqa: N802
-            assert rows == [] or rows[0].get("authority_id") == "central"
+            assert rows == [] or rows[0].get("authority_id") == "central" or (
+                rows[0].get("state_id") == "central" and json.loads(rows[0]["snapshot_json"]) == {
+                    "format": "fabricops.table-profiling.v1", "policies": {}, "history": {}}
+            )
             self.pending_schema = schema
             self.pending_columns = schema.fieldNames()
             return DataFrame(self, self.pending_columns)
@@ -438,7 +441,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     ):
         assert store == "Metadata"
         assert schema in {"governance", "engineering"}
-        assert mode == ("errorifexists" if table_name == "METADATA_ACTIVATION_STATE" else "overwrite")
+        assert mode == ("errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_TABLE_PROFILING"} else "overwrite")
         assert options is None
         assert verbose is False
         spark.created_tables.append(table_name)
@@ -890,7 +893,10 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
 
     class Spark:
         def createDataFrame(self, rows, schema=None):  # noqa: N802
-            assert rows == [] or rows[0].get("authority_id") == "central"
+            assert rows == [] or rows[0].get("authority_id") == "central" or (
+                rows[0].get("state_id") == "central" and json.loads(rows[0]["snapshot_json"]) == {
+                    "format": "fabricops.table-profiling.v1", "policies": {}, "history": {}}
+            )
             return Frame(schema)
 
     def read_table(table_name, **_kwargs):
@@ -899,7 +905,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
         return existing[table_name]
 
     def write_table(frame, table_name, **kwargs):
-        assert kwargs.get("mode") == ("errorifexists" if table_name == "METADATA_ACTIVATION_STATE" else "overwrite")
+        assert kwargs.get("mode") == ("errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_TABLE_PROFILING"} else "overwrite")
         created[table_name] = frame.schema
         existing[table_name] = frame
 

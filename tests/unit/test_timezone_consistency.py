@@ -187,7 +187,7 @@ def test_warehouse_bounds_normalize_all_explicit_offsets():
 
 def test_profile_audit_uses_instant_type_even_with_ntz_session_default(spark_session, monkeypatch):
     """Metadata timestamp type must not depend on the business timestamp default."""
-    profiler = import_module("fabricops_kit.pipeline.profile_table")
+    profiler = import_module("fabricops_kit.pipeline.shared")
     previous = spark_session.conf.get("spark.sql.timestampType")
     audit = {"_committed_at": datetime(2026, 10, 7, 10, 30, tzinfo=UTC)}
     for name in ["_committed_by", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"]:

@@ -183,11 +183,6 @@ def metadata_table_schema_registry() -> dict[str, Any]:
             [("authority_id", "string", False), ("token", "string", False),
              ("snapshot_json", "string", False), *audit],
         ),
-        "METADATA_TABLE_PROFILING": build_metadata_schema(
-            "METADATA_TABLE_PROFILING",
-            [("state_id", "string", False), ("token", "string", False),
-             ("snapshot_json", "string", False), *audit],
-        ),
         "METADATA_DATA_CATALOGUE": build_metadata_schema(
             "METADATA_DATA_CATALOGUE",
             [
@@ -261,6 +256,11 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("profiled_non_null_count", "long"),
                 *audit,
             ],
+        ),
+        "METADATA_TABLE_PROFILING": build_metadata_schema(
+            "METADATA_TABLE_PROFILING",
+            [("state_id", "string", False), ("token", "string", False),
+             ("snapshot_json", "string", False), *audit],
         ),
         "METADATA_DATA_LINEAGE": build_metadata_schema(
             "METADATA_DATA_LINEAGE",
