@@ -82,5 +82,8 @@ def test_get_spark_session_raises_when_no_session_is_available(monkeypatch):
     ],
 )
 def test_pipeline_stages_and_public_orchestrators_accept_explicit_session(function):
-    """Require explicit Spark injection across public Spark orchestration."""
-    assert "spark_session" in inspect.signature(function).parameters
+    """Capabilities accept Spark injection; orchestrators use the bound session."""
+    if function in (orchestrate_read, orchestrate_write):
+        assert "spark_session" not in inspect.signature(function).parameters
+    else:
+        assert "spark_session" in inspect.signature(function).parameters
