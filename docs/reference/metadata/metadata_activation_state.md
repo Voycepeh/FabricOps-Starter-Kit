@@ -1,6 +1,6 @@
 # METADATA_ACTIVATION_STATE
 
-Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership and running execution reservations.
+Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations and renewable profiling claims.
 
 ## Writer functions
 

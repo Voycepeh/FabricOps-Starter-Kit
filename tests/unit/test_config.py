@@ -442,7 +442,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     ):
         assert store == "Metadata"
         assert schema in {"governance", "engineering"}
-        assert mode == ("errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_TABLE_PROFILING"} else "overwrite")
+        assert mode == ("errorifexists" if table_name == "METADATA_ACTIVATION_STATE" else "overwrite")
         assert options is None
         assert verbose is False
         spark.created_tables.append(table_name)
@@ -906,7 +906,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
         return existing[table_name]
 
     def write_table(frame, table_name, **kwargs):
-        assert kwargs.get("mode") == ("errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_TABLE_PROFILING"} else "overwrite")
+        assert kwargs.get("mode") == ("errorifexists" if table_name == "METADATA_ACTIVATION_STATE" else "overwrite")
         created[table_name] = frame.schema
         existing[table_name] = frame
 

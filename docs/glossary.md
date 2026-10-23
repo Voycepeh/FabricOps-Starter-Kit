@@ -168,8 +168,8 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="table-profiling-policy">
-<summary><strong>table profiling policy</strong> — Mutable Table ID-level operational schedules for Standard Profiling, Grain Discovery and Frequency Profiling.</summary>
-<p>METADATA_TABLE_PROFILING stores independent frequency and Read/Write triggers plus per-environment/physical-context claims and last-success history. Policies are edited through Data Contract Authoring without changing immutable contract rules. Pipeline identity does not partition the shared schedule.</p>
+<summary><strong>table profiling policy</strong> — Versioned Data Contract schedules for Standard Profiling, Grain Discovery and Frequency Profiling.</summary>
+<p>METADATA_DATA_CONTRACT.contract_payload_json stores independently versioned profiling policies. METADATA_PIPELINE_RUN records per-table activity outcomes and completion markers linked to persisted METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY snapshots. METADATA_ACTIVATION_STATE coordinates renewable claims. Schedules share successful history across pipelines for the same Table ID, environment and physical destination.</p>
 </details>
 
 <details id="lineage">

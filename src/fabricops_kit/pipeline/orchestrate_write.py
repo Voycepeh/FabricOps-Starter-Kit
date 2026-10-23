@@ -13,6 +13,7 @@ from fabricops_kit.pipeline.shared import (
     ExecutionSummary,
     current_pipeline_session,
     schedule_table_profiling,
+    skip_table_profiling,
     PipelineOperation,
     execution_result,
     tested_contract_identities,
@@ -36,8 +37,9 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     available. The result includes publication metrics and Guardrail diagnostics.
     A successful Write does not imply successful completion of the notebook.
 
-    Profiling uses independent shared Table ID schedules and scans the complete
-    persisted table. Guardrail checks run regardless of profiling eligibility.
+    Profiling scans the complete persisted table using the frozen contract's
+    policies and shared table completion history. Guardrail checks run regardless
+    of profiling eligibility.
 
     Parameters
     ----------
@@ -170,7 +172,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                                 "dry_run": {"status": "blocked", "reason": str(exc), "fully_evaluated": [],
                                             "simulated": [], "not_verified": ["target preparation and publication"]}}
                 dry_run = run("Processing", evaluate_processing)
-                profile = {"status": "skipped", "reason": "Test did not publish a persisted target"}
+                profile = skip_table_profiling(target_id, "write", "Test did not publish a persisted target", context=context, spark_session=spark_session)
                 passed = all(item["can_continue"] for item in source_checks) and all(stage["status"] != "blocked" for stage in [
                     *stages, *(stage for source in sources for stage in source.get("orchestration_stages", []))
                 ])
@@ -194,7 +196,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
             summary.details([("Strategy", strategy.title()), ("Target", target), ("Rows committed", metrics["rows_committed"]), ("Columns", metrics["input_columns"])])
             try:
                 profile = (run("Profile", lambda: schedule_table_profiling(write_result["table_id"], "write", context=context, spark_session=spark_session))
-                           if published else {"status": "skipped", "reason": "No successful publication"})
+                           if published else skip_table_profiling(target_id, "write", "No successful publication", context=context, spark_session=spark_session))
             except RuntimeError as exc:
                 exc.published = published
                 exc.table_id = write_result["table_id"]

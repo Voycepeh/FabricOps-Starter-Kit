@@ -6,6 +6,8 @@ and keep widget rendering concerns out of governance metadata semantics.
 
 from __future__ import annotations
 
+from fabricops_kit.pipeline.shared import default_profiling_policy, validate_profiling_policy
+
 from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
 
 from collections.abc import Iterable, Mapping
@@ -165,6 +167,7 @@ def create_contract_draft(
                 "notebook_name": str(table.get("_notebook_name") or "").strip(),
             },
         },
+        "profiling": seed.get("profiling", default_profiling_policy()),
         "enrichment": dict(seed.get("enrichment") or {"table": [], "columns": []}),
         "guardrails": list(seed.get("guardrails") or []),
     }
@@ -304,6 +307,8 @@ def validate_contract_definitions(
     only while disabled.
     """
     obsolete = {"coverage_gate", "coverage_policy", "coverage_gate_policy", "guardrail_coverage"}
+    if "profiling" in payload:
+        validate_profiling_policy(payload["profiling"])
     definitions = [payload, payload.get("table")]
     if isinstance(payload.get("guardrails"), list):
         definitions.extend(payload["guardrails"])
@@ -1232,6 +1237,7 @@ def freeze_contract_record(
     if not isinstance(payload, dict):
         raise ValueError("Save the Data Contract draft before freezing it.")
     payload = json.loads(json.dumps(payload))
+    payload.setdefault("profiling", default_profiling_policy())
     validate_contract_definitions(payload)
     validate_grain_contract(payload)
     payload["contract"] = {
@@ -1390,6 +1396,7 @@ def assemble_contract_payload(
             "columns": [row for row in enrichment_docs if row.get("column_id")],
         },
         "guardrails": guardrail_docs,
+        "profiling": validate_profiling_policy(draft_payload.get("profiling", default_profiling_policy())),
     }
     if not allow_incomplete_grain:
         validate_grain_contract(payload)

@@ -31,8 +31,9 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     target_table_id preserves incremental checkpoint and SCD processing support.
     dq_diagnostics accepts sample, none or full for explicit debugging.
 
-    Profiling uses independent shared Table ID schedules and scans the complete
-    persisted table. Guardrail checks run regardless of profiling eligibility.
+    Profiling scans the complete persisted table using the frozen contract's
+    policies and shared table completion history. Guardrail checks run regardless
+    of profiling eligibility.
 
     Parameters
     ----------

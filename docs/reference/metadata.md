@@ -9,7 +9,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
 
 `table_id` connects the same governed asset across both schemas. `contract_id` and `contract_version` identify one exact Data Contract version.
 
-`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column containing authored Guardrails and Enrichment for each contract version.
+`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column containing authored Guardrails, Enrichment and profiling policies for each contract version.
 
 ## Metadata tables
 
@@ -36,27 +36,6 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
 </style>
 
 <div class="metadata-table-grid">
-<a class="metadata-table-card metadata-table-card--engineering" href="metadata_table_profiling/" aria-label="Open METADATA_TABLE_PROFILING schema">
-  <span class="metadata-table-card__header">
-    <span class="metadata-table-card__identity">
-      <span class="metadata-table-card__title">METADATA_TABLE_PROFILING</span>
-      <span class="metadata-table-card__schema">engineering</span>
-    </span>
-    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
-  </span>
-  <span class="metadata-table-card__purpose">Mutable table-level profiling policies and per-environment/physical-context activity history, renewable claims and last successful completions; independent of frozen contracts and activation authority.</span>
-  <span class="metadata-table-card__meta">
-    <strong>Grain</strong>
-    <span>One preinitialized central coordination row. snapshot_json contains Table ID policies and activity state keyed by Table ID, environment and physical bindings.</span>
-  </span>
-  <span class="metadata-table-card__meta">
-    <strong>Primary key</strong>
-    <span><code>state_id</code></span>
-  </span>
-  <span class="metadata-table-card__relationships">
-    <span class="metadata-table-card__relationships-label">Relationships</span>
-  </span>
-</a>
 <a class="metadata-table-card metadata-table-card--engineering" href="metadata_pipeline_run/" aria-label="Open METADATA_PIPELINE_RUN schema">
   <span class="metadata-table-card__header">
     <span class="metadata-table-card__identity">
@@ -65,7 +44,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">One complete logical run, exact table mappings, operation results, warnings and pinned activation revision.</span>
+  <span class="metadata-table-card__purpose">One complete logical run, exact table mappings, operation results, per-table profiling activity outcomes, warnings and pinned activation revision. Profiling completion joins persisted result snapshots; Grain Discovery and empty Frequency Profiling use minimal success markers in operation_summary_json.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One pipeline execution attempt.</span>
@@ -152,7 +131,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Reusable immutable frozen table definition with Enrichment and executable Guardrails. Agreement linkage belongs to Activated Pipeline.</span>
+  <span class="metadata-table-card__purpose">Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. Agreement linkage belongs to Activated Pipeline.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One Draft or Frozen version of one table contract; Frozen contents are immutable.</span>
@@ -191,7 +170,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership and running execution reservations.</span>
+  <span class="metadata-table-card__purpose">Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations and renewable profiling claims.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One central authority row containing environment snapshots.</span>

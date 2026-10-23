@@ -149,7 +149,7 @@ def widget_runtime(monkeypatch):
             pass
 
     ipywidgets = types.SimpleNamespace(
-        Layout=lambda **kwargs: Layout(**kwargs), HTML=Widget, Text=Widget, Textarea=Widget,
+        Layout=lambda **kwargs: Layout(**kwargs), HTML=Widget, Text=Widget, Textarea=Widget, IntText=Widget,
         Dropdown=Dropdown, Combobox=Widget, Checkbox=Widget, Select=Widget, SelectMultiple=Widget,
         ToggleButtons=Widget, ToggleButton=Widget,
         Button=Button, VBox=Box, HBox=Box, GridBox=Box, Tab=Tab,
@@ -3417,3 +3417,31 @@ def test_business_generation_busy_state_and_failure_restore_the_reviewer(widget_
     assert controls["apply_business_rule"].disabled
     assert "Example generation failure" in controls["business_proposal"].value
     assert widget_runtime["calls"]["draft"] == []
+
+
+def test_profiling_edits_use_normal_draft_save_and_preserve_guardrails(widget_runtime):
+    """Table policy edits remain draft state until the normal contract Save action."""
+    state = widget_runtime['open']()
+    before = json.loads(json.dumps(state['manifest']))
+    controls = state['_profiling_editor'].profiling_controls
+    controls['standard']['days'].value = 7
+    controls['grain']['frequency'].value = 'every'
+    controls['grain']['trigger'].value = 'write'
+    assert state['dirty'] is True
+    assert widget_runtime['calls']['draft'] == []
+    state['save_data_contract'](return_to_selector_after=False)
+    saved = widget_runtime['calls']['draft'][-1]
+    assert saved['profiling']['standard']['days'] == 7
+    assert saved['profiling']['grain'] == {'frequency': 'every', 'trigger': 'write'}
+    assert saved['guardrails'] == before['guardrails']
+    reopened = widget_runtime['open']()
+    assert reopened['_profiling_editor'].profiling_controls['standard']['days'].value == 7
+
+
+def test_frozen_profiling_controls_cannot_edit_policy(widget_runtime):
+    """An immutable version exposes disabled policy controls and no separate Save."""
+    widget_runtime['contract']['status'] = 'frozen'
+    state = widget_runtime['open']()
+    section = state['_profiling_editor']
+    assert all(control.disabled for values in section.profiling_controls.values() for control in values.values())
+    assert not hasattr(section, 'profiling_save')

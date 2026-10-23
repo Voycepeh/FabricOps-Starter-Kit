@@ -1,6 +1,6 @@
 # METADATA_PIPELINE_RUN
 
-One complete logical run, exact table mappings, operation results, warnings and pinned activation revision.
+One complete logical run, exact table mappings, operation results, per-table profiling activity outcomes, warnings and pinned activation revision. Profiling completion joins persisted result snapshots; Grain Discovery and empty Frequency Profiling use minimal success markers in operation_summary_json.
 
 ## Writer functions
 
