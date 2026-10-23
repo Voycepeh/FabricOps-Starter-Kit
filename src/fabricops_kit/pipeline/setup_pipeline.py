@@ -7,7 +7,7 @@ import json
 from typing import Any
 
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
-from fabricops_kit.config.shared import initialize_notebook, is_table_not_found_error, resolve_fabric_context
+from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
 from fabricops_kit.io import read_lakehouse_table
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import build_pipeline_execution_plan, resolve_pipeline_participants
@@ -127,7 +127,9 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Test"):
+def setup_pipeline(
+    *, pipeline_id: str | None = None, pipeline_mode: str = "Test", config_workspace_id: str | None = None,
+):
     """Start an isolated pipeline using exactly Test or Live.
 
     Test evaluates reads, transformations and Guardrails without business or
@@ -146,6 +148,10 @@ def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Test
     pipeline_mode : {"Test", "Live"}, default="Test"
         Evaluation-only operations or execution under an approved manifest.
 
+    config_workspace_id : str | None, optional
+        Workspace hosting 00_env_config. Defaults to the current workspace.
+        Supply an ID only when using a shared cross-workspace configuration.
+
     Returns
     -------
     PipelineSession
@@ -155,8 +161,9 @@ def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Test
     Notes
     -----
     Workspace configuration is loaded through the same initialization as
-    setup_notebook. Engineering runtimes set FABRICOPS_CONFIG_WORKSPACE_ID
-    to Central Engineering; callers never select the environment.
+    setup_notebook. Load the current workspace configuration by default, or
+    supply config_workspace_id for a shared deployment. The caller workspace
+    determines the environment in both cases.
 
     Fabric cell events identify failures, not successful notebook completion.
     Call finalize_pipeline after all Reads, transformations and Writes.
@@ -182,9 +189,7 @@ def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Test
         raise ValueError("pipeline_id must be a nonempty stable identity.")
     if pipeline_mode not in {"Test", "Live"}:
         raise ValueError("pipeline_mode must be exactly Test or Live.")
-    context = initialize_notebook()
-    if pipeline_id is None:
-        pipeline_id = context.notebook_name
-        if not pipeline_id:
-            raise ValueError("pipeline_id is required when the current notebook name is unavailable.")
-    return start_pipeline_session(pipeline_id.strip(), pipeline_mode, inspector=_inspector)
+    return start_pipeline_session(
+        pipeline_id.strip() if pipeline_id is not None else None, pipeline_mode,
+        inspector=_inspector, config_workspace_id=config_workspace_id,
+    )

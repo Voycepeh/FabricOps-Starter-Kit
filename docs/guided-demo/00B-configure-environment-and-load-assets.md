@@ -20,7 +20,7 @@ Import the three reusable notebook templates:
 
 | Notebook | Where it goes now |
 | --- | --- |
-| `00_env_config.ipynb` | Deploy separately in Governance and Central Engineering |
+| `00_env_config.ipynb` | Import into each workspace that runs FabricOps notebooks |
 | `01_governance.ipynb` | Governance workspace |
 | `02_pipeline.ipynb` | Engineering Development workspace |
 
@@ -34,9 +34,9 @@ The Governance workspace contains the `metadata` Lakehouse, its Fabric Environme
 
 ![Engineering Development workspace assets](../assets/00B/Engineering_Assets.png)
 
-The Engineering Development workspace contains `bronze`, `silver`, `gold`, its Fabric Environment, the reusable `02_pipeline`, and the three demo notebooks. Central Engineering hosts the shared Engineering `00_env_config`; Development and Production need no local copy. For a small demo, Development may also serve as Central Engineering.
+The Engineering Development workspace contains `bronze`, `silver`, `gold`, its Fabric Environment, `00_env_config`, the reusable `02_pipeline`, and the demo notebooks. Production uses the same config template with its own registered workspace ID. Advanced deployments may instead load a shared config notebook from Central Engineering.
 
-Consumers can use SQL or other native Fabric interfaces directly. For a project-specific consumer notebook using FabricOps, register its workspace in the appropriate shared configuration and grant access to the existing stores. Each registered workspace must have its own environment key.
+Consumers can use SQL or other native Fabric interfaces directly. For a project-specific consumer notebook using FabricOps, import the config template locally or explicitly select a shared config workspace, register its workspace, and grant access to the existing stores. Each registered workspace must have its own environment key.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
@@ -71,11 +71,11 @@ Use the same FabricOps wheel version across the workspace-specific Environments 
 
 ## Configure `00_env_config`
 
-In both deployments of `00_env_config`, replace the Fabric ID placeholders with the IDs for the items created in 0A. Set `ENVIRONMENT_WORKSPACES` to one unique workspace ID per environment: Governance registers its own workspace, while Central Engineering registers the Engineering Development and Production workspaces.
+In each deployment of `00_env_config`, replace the Fabric ID placeholders with the IDs for the items created in 0A. Set `ENVIRONMENT_WORKSPACES` to one unique workspace ID per environment and register the caller workspace. Keep all Metadata stores pointed at the same Governance Lakehouse.
 
-Set `FABRICOPS_CONFIG_WORKSPACE_ID` once in the shared Engineering process environment to the Central Engineering workspace ID before setup. Leave it unset in Governance. The caller needs cross-workspace notebook execution and store access permissions. See [Workspace configuration](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#workspace-configuration) for the loading contract.
+By default, `setup_notebook()` and `setup_pipeline()` load `00_env_config` from the current workspace. Advanced callers can pass `config_workspace_id="<configuration-workspace-id>"` to either function to load a shared deployment. The remote config must register the caller workspace, and cross-workspace execution and store permissions are required. See [Workspace configuration](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#workspace-configuration).
 
-`01_governance` calls `setup_notebook()`; `02_pipeline` calls `setup_pipeline()`. Neither uses `%run`, a local Engineering config copy, or manual environment selection.
+`01_governance` calls `setup_notebook()`; `02_pipeline` calls `setup_pipeline()`. Neither uses `%run` or manual environment selection. No process environment variable or separate JSON file is needed.
 
 </div>
 </div>

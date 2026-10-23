@@ -43,6 +43,8 @@ def setup_notebook(
     notebook_name: str | None=None,
     run_id_prefix: str='run',
     local_fallback_name: str | None=None,
+    *,
+    config_workspace_id: str | None=None,
 ) -> NotebookSetupContext:
 ```
 
@@ -58,12 +60,13 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `config` | `FrameworkConfig \| dict[str, Any] \| None` | No | `None` | Explicit configuration for local or advanced use. When omitted, run 00_env_config in FABRICOPS_CONFIG_WORKSPACE_ID (or the caller workspace when unset), passing Fabric currentWorkspaceId. The notebook rejects unregistered workspaces and returns the environment and FrameworkConfig as JSON. This automatic path initializes the shared Fabric context and applies the configured Spark audit timezone. |
+| `config` | `FrameworkConfig \| dict[str, Any] \| None` | No | `None` | Explicit configuration for local or advanced use. When omitted, run 00_env_config in config_workspace_id (or the caller workspace when omitted), passing Fabric currentWorkspaceId. The notebook rejects unregistered workspaces and returns the environment and FrameworkConfig as JSON. This automatic path initializes the shared Fabric context and applies the configured Spark audit timezone. |
 | `env` | `str` | No | `'Sandbox'` | Environment section for explicit config only; automatic setup resolves it from the workspace. |
 | `required_targets` | `list[str] \| None` | No | `None` | Logical Fabric target names the notebook requires before execution can proceed. When omitted, all stores configured for the selected environment are required. |
 | `notebook_name` | `str \| None` | No | `None` | Explicit notebook name override used for runtime metadata and naming validation. |
 | `run_id_prefix` | `str` | No | `'run'` | Prefix used only when no Fabric runtime run identifier is available. |
 | `local_fallback_name` | `str \| None` | No | `None` | Notebook name used only when neither ``notebook_name`` nor Fabric runtime notebook context provides one. |
+| `config_workspace_id` | `str \| None` | No | `None` | Workspace hosting 00_env_config for automatic loading. Defaults to the caller workspace. Supply a workspace ID only for cross-workspace setup. Ignored when config is supplied explicitly. |
 
 </div>
 
@@ -109,9 +112,9 @@ ValueError
 <div class="reference-docstring-notes" markdown="1">
 
 With no arguments, load workspace configuration before the startup flow.
-Set FABRICOPS_CONFIG_WORKSPACE_ID once in the Engineering runtime to the
-Central Engineering workspace ID. Governance may leave it unset to use its
-local deployment. No configuration load provisions metadata tables.
+By default, use 00_env_config in the current workspace. Advanced callers
+may supply config_workspace_id to load a shared deployment in another
+workspace. No configuration load provisions metadata tables.
 
 Startup flow:
 
@@ -204,7 +207,7 @@ initializes the shared context when configuration is loaded automatically.
 
 `fabricops_kit/config/setup_notebook.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L10-L153">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L10-L160">View on GitHub</a>
 </div>
 
 

@@ -33,12 +33,12 @@
       Lives in the Governance Workspace and connects Governance with Engineering. It stores the shared FabricOps metadata used across the lifecycle, including Catalogue, profiling, contracts, lineage, Guardrail Results, and related governance metadata.
 
     - **Engineering Development Workspace**
-      This is where the engineering implementation is built and validated. The shared Central Engineering `00_env_config` resolves its workspace ID to Development Lakehouses, Warehouses, schemas, and other Fabric object paths. `02_pipeline` reads and profiles data, applies transformations and audit columns, validates Guardrails, writes outputs, and records engineering metadata.
+      This is where the engineering implementation is built and validated. Its `00_env_config` resolves its workspace ID to Development Lakehouses, Warehouses, schemas, and other Fabric object paths. `02_pipeline` reads and profiles data, applies transformations and audit columns, validates Guardrails, writes outputs, and records engineering metadata.
 
     - **Engineering Production Workspace**
-      Runs the same validated `02_pipeline` using Production configuration. The same Central Engineering `00_env_config` resolves its workspace ID to the equivalent Production Lakehouses, Warehouses, schemas, and Fabric object paths, while the pipeline resolves the exact Activated Pipeline manifest and produces governed Production outputs.
+      Runs the same validated `02_pipeline` using Production configuration. Its `00_env_config` resolves its workspace ID to the equivalent Production Lakehouses, Warehouses, schemas, and Fabric object paths, while the pipeline resolves the exact Activated Pipeline manifest and produces governed Production outputs.
 
-      One reusable `00_env_config` template is deployed separately in Governance and Central Engineering. Engineering setup passes the caller workspace ID across the notebook boundary and receives the resolved environment and existing resource mappings as JSON. The Engineering runtime supplies only the central workspace location; Development and Production need no local configuration notebook. Unknown workspaces fail setup before pipeline execution.
+      One reusable `00_env_config` template is deployed in each execution workspace by default. Advanced deployments can share a central copy by passing `config_workspace_id` to setup. Setup passes the caller workspace ID across the notebook boundary and receives the resolved environment and existing resource mappings as JSON. Unknown workspaces fail setup before pipeline execution.
 
     - **Aligned environments and promotion**
       Development and Production keep the same logical Bronze, Silver, and Gold architecture, whether those stores are implemented as Lakehouses or Warehouses. The physical Fabric objects differ by environment, but their roles and structure stay aligned 1:1. Once `02_pipeline` is validated in Development against the frozen Data Contract, that validated notebook is promoted to the Engineering Production Workspace through the deployment flow.

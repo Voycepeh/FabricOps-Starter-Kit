@@ -7,7 +7,8 @@ Complete [Step 0C](00C-prepare-demo-data-with-fabricops-io.md) and open `01_gove
 ### Load the shared environment
 
 ```python
-%run 00_env_config
+from fabricops_kit import setup_notebook
+context = setup_notebook()
 ```
 `00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
 

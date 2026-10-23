@@ -14,6 +14,8 @@ def setup_notebook(
     notebook_name: str | None = None,
     run_id_prefix: str = "run",
     local_fallback_name: str | None = None,
+    *,
+    config_workspace_id: str | None = None,
 ) -> NotebookSetupContext:
     """Validate notebook startup configuration and resolve required Fabric targets.
 
@@ -37,8 +39,8 @@ def setup_notebook(
     ----------
     config : FrameworkConfig | dict[str, Any] | None, optional
         Explicit configuration for local or advanced use. When omitted, run
-        00_env_config in FABRICOPS_CONFIG_WORKSPACE_ID (or the caller workspace
-        when unset), passing Fabric currentWorkspaceId. The notebook rejects
+        00_env_config in config_workspace_id (or the caller workspace
+        when omitted), passing Fabric currentWorkspaceId. The notebook rejects
         unregistered workspaces and returns the environment and FrameworkConfig
         as JSON. This automatic path initializes the shared Fabric context and
         applies the configured Spark audit timezone.
@@ -56,6 +58,11 @@ def setup_notebook(
     local_fallback_name : str | None, optional
         Notebook name used only when neither ``notebook_name`` nor Fabric
         runtime notebook context provides one.
+
+    config_workspace_id : str | None, optional
+        Workspace hosting 00_env_config for automatic loading. Defaults to the
+        caller workspace. Supply a workspace ID only for cross-workspace setup.
+        Ignored when config is supplied explicitly.
 
     Returns
     -------
@@ -84,9 +91,9 @@ def setup_notebook(
     Notes
     -----
     With no arguments, load workspace configuration before the startup flow.
-    Set FABRICOPS_CONFIG_WORKSPACE_ID once in the Engineering runtime to the
-    Central Engineering workspace ID. Governance may leave it unset to use its
-    local deployment. No configuration load provisions metadata tables.
+    By default, use 00_env_config in the current workspace. Advanced callers
+    may supply config_workspace_id to load a shared deployment in another
+    workspace. No configuration load provisions metadata tables.
 
     Startup flow:
 
@@ -149,7 +156,7 @@ def setup_notebook(
     return initialize_notebook(
         config=config, env=env, required_targets=required_targets,
         notebook_name=notebook_name, run_id_prefix=run_id_prefix,
-        local_fallback_name=local_fallback_name,
+        local_fallback_name=local_fallback_name, config_workspace_id=config_workspace_id,
     )
 
 

@@ -33,7 +33,12 @@ orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def setup_pipeline(*, pipeline_id: str | None=None, pipeline_mode: str='Test')
+def setup_pipeline(
+    *,
+    pipeline_id: str | None=None,
+    pipeline_mode: str='Test',
+    config_workspace_id: str | None=None,
+):
 ```
 
 </div>
@@ -50,6 +55,7 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `pipeline_id` | `str \| None` | No | `None` | Stable logical pipeline identity. Defaults to the current notebook name. Supply an explicit identity when notebook renames must preserve it. |
 | `pipeline_mode` | `str` | No | `'Test'` | Evaluation-only operations or execution under an approved manifest. |
+| `config_workspace_id` | `str \| None` | No | `None` | Workspace hosting 00_env_config. Defaults to the current workspace. Supply an ID only when using a shared cross-workspace configuration. |
 
 </div>
 
@@ -81,8 +87,9 @@ RuntimeError
 <div class="reference-docstring-notes" markdown="1">
 
 Workspace configuration is loaded through the same initialization as
-setup_notebook. Engineering runtimes set FABRICOPS_CONFIG_WORKSPACE_ID
-to Central Engineering; callers never select the environment.
+setup_notebook. Load the current workspace configuration by default, or
+supply config_workspace_id for a shared deployment. The caller workspace
+determines the environment in both cases.
 
 Fabric cell events identify failures, not successful notebook completion.
 Call finalize_pipeline after all Reads, transformations and Writes.
@@ -114,7 +121,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L190">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L195">View on GitHub</a>
 </div>
 
 

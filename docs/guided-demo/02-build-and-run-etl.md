@@ -48,13 +48,9 @@ The notebook follows one visible lifecycle:
 
 The template starts with one Read, one transformation, and one Write. Add more Read or Write blocks only when your pipeline needs them.
 
-### Load the shared environment
+### Load workspace configuration
 
-```python
-%run 00_env_config
-```
-
-`00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
+The Setup Pipeline block below loads `00_env_config` from the current workspace, resolves the environment and configured stores, and captures notebook identity. To use a shared deployment in another workspace, pass `config_workspace_id` to `setup_pipeline()`.
 
 ### Import required pipeline functions
 

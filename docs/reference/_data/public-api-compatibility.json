@@ -1733,10 +1733,11 @@
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
             "Lifecycle changed: Preview to Live.",
+            "Optional parameter added: config_workspace_id.",
             "Parameter became optional: config.",
             "Annotation changed for config: FrameworkConfig | dict[str, Any] to FrameworkConfig | dict[str, Any] | None."
           ],
-          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
         },
         {
@@ -1999,7 +2000,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test')",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -3298,10 +3299,11 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
+            "Optional parameter added: config_workspace_id.",
             "Parameter became optional: config.",
             "Annotation changed for config: FrameworkConfig | dict[str, Any] to FrameworkConfig | dict[str, Any] | None."
           ],
-          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
         },
         {
@@ -3488,7 +3490,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test')",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -4617,10 +4619,11 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
+            "Optional parameter added: config_workspace_id.",
             "Parameter became optional: config.",
             "Annotation changed for config: FrameworkConfig | dict[str, Any] to FrameworkConfig | dict[str, Any] | None."
           ],
-          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
         },
         {
@@ -4803,7 +4806,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test')",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -5979,10 +5982,11 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
+            "Optional parameter added: config_workspace_id.",
             "Parameter became optional: config.",
             "Annotation changed for config: FrameworkConfig | dict[str, Any] to FrameworkConfig | dict[str, Any] | None."
           ],
-          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
         },
         {
@@ -6024,11 +6028,12 @@
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
+            "Optional parameter added: config_workspace_id.",
             "Parameter became optional: pipeline_id.",
             "Annotation changed for pipeline_id: str to str | None.",
             "Parameter became optional: pipeline_mode."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test')",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
           "signature_before": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)"
         }
       ],
@@ -6117,11 +6122,12 @@
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
             "Lifecycle changed: Live to Preview.",
+            "Parameter removed: config_workspace_id.",
             "Parameter became required: config.",
             "Annotation changed for config: FrameworkConfig | dict[str, Any] | None to FrameworkConfig | dict[str, Any]."
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
-          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
         },
         {
           "change_type": "removed",
@@ -6384,7 +6390,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test')"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -6636,11 +6642,12 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
+            "Parameter removed: config_workspace_id.",
             "Parameter became required: config.",
             "Annotation changed for config: FrameworkConfig | dict[str, Any] | None to FrameworkConfig | dict[str, Any]."
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
-          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
         },
         {
           "change_type": "removed",
@@ -6827,7 +6834,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test')"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -6923,11 +6930,12 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
+            "Parameter removed: config_workspace_id.",
             "Parameter became required: config.",
             "Annotation changed for config: FrameworkConfig | dict[str, Any] | None to FrameworkConfig | dict[str, Any]."
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
-          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
         },
         {
           "change_type": "added",
@@ -7110,7 +7118,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test')"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -7182,11 +7190,12 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
+            "Parameter removed: config_workspace_id.",
             "Parameter became required: config.",
             "Annotation changed for config: FrameworkConfig | dict[str, Any] | None to FrameworkConfig | dict[str, Any]."
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
-          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
         },
         {
           "change_type": "modified",
@@ -7227,12 +7236,13 @@
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
+            "Parameter removed: config_workspace_id.",
             "Parameter became required: pipeline_id.",
             "Annotation changed for pipeline_id: str | None to str.",
             "Parameter became required: pipeline_mode."
           ],
           "signature_after": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)",
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test')"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)"
         }
       ],
       "summary": {
@@ -15007,11 +15017,19 @@
               "kind": "positional_or_keyword",
               "name": "local_fallback_name",
               "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "config_workspace_id",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "return_annotation": "NotebookSetupContext",
-          "signature": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
+          "signature": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "source_path": "src/fabricops_kit/config/setup_notebook.py",
           "source_qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook"
         },
@@ -16179,11 +16197,19 @@
               "kind": "keyword_only",
               "name": "pipeline_mode",
               "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "config_workspace_id",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "return_annotation": null,
-          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test')",
+          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
           "source_path": "src/fabricops_kit/pipeline/setup_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline"
         },
@@ -16330,7 +16356,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:0bb2857a6138b7df20c3ef57421774d60e03c868ab01e67c5041dea518268fac",
+      "source_digest": "sha256:5c2eaa078272af1fe3453052c1c1878671a97308c24e0357ebcad402c53cccb2",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

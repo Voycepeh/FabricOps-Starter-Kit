@@ -140,7 +140,8 @@ def test_config_setup_public_api_signatures_match_frozen_contract():
     assert str(inspect.signature(setup_notebook)) == (
         "(config: 'FrameworkConfig | dict[str, Any] | None' = None, env: 'str' = 'Sandbox', "
         "required_targets: 'list[str] | None' = None, notebook_name: 'str | None' = None, "
-        "run_id_prefix: 'str' = 'run', local_fallback_name: 'str | None' = None) -> 'NotebookSetupContext'"
+        "run_id_prefix: 'str' = 'run', local_fallback_name: 'str | None' = None, *, "
+        "config_workspace_id: 'str | None' = None) -> 'NotebookSetupContext'"
     )
     assert str(inspect.signature(setup_metadata_tables)) == (
         "(*, spark: 'Any', config: 'FrameworkConfig | dict[str, Any]', env: 'str', "

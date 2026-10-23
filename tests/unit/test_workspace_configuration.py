@@ -27,7 +27,6 @@ def configuration_runtime(monkeypatch):
     import builtins
 
     monkeypatch.delattr(builtins, 'FABRIC_CONTEXT', raising=False)
-    monkeypatch.delenv('FABRICOPS_CONFIG_WORKSPACE_ID', raising=False)
     monkeypatch.setattr(builtins, 'FABRIC_CONTEXT', None, raising=False)
     runtime = ModuleType('notebookutils.runtime')
     runtime.context = {'currentWorkspaceId': 'dev-ws', 'currentNotebookName': '02_pipeline_orders',
@@ -75,9 +74,8 @@ def configuration_runtime(monkeypatch):
 @pytest.mark.parametrize('workspace, environment', [('dev-ws', 'dev'), ('prod-ws', 'prod')])
 def test_engineering_loads_central_config_for_caller_workspace(configuration_runtime, monkeypatch, workspace, environment):
     fabric = configuration_runtime
-    monkeypatch.setenv('FABRICOPS_CONFIG_WORKSPACE_ID', 'central-ws')
     fabric.runtime.context['currentWorkspaceId'] = workspace
-    result = setup_notebook()
+    result = setup_notebook(config_workspace_id="central-ws")
     assert result.environment == environment
     assert set(result.paths) == {'Bronze', 'Silver', 'Gold', 'Metadata'}
     assert result.paths['Silver'].env == environment
@@ -98,10 +96,9 @@ def test_governance_loads_its_separate_local_deployment(configuration_runtime):
 
 
 def test_unknown_workspace_is_rejected_by_central_notebook(configuration_runtime, monkeypatch):
-    monkeypatch.setenv('FABRICOPS_CONFIG_WORKSPACE_ID', 'central-ws')
     configuration_runtime.runtime.context['currentWorkspaceId'] = 'unregistered'
     with pytest.raises(ValueError, match='Unknown workspace ID'):
-        setup_notebook()
+        setup_notebook(config_workspace_id='central-ws')
 
 
 def test_missing_runtime_workspace_fails_before_notebook_execution(configuration_runtime):
@@ -126,19 +123,31 @@ def test_invalid_response_reuses_validation(configuration_runtime, change, messa
 
 @pytest.mark.parametrize('mode', ['Test', 'Live'])
 def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeypatch, mode):
-    monkeypatch.setenv('FABRICOPS_CONFIG_WORKSPACE_ID', 'central-ws')
     shared = importlib.import_module('fabricops_kit.pipeline.shared')
-    observed = []
-
-    def start(pipeline_id, pipeline_mode, *, inspector):
-        config, env, runtime = resolve_fabric_context()
-        observed.append((pipeline_id, pipeline_mode, env, config.path_config.paths[env]['Metadata'].workspace_id))
-        return 'session'
-
-    monkeypatch.setattr(shared, 'start_pipeline_session', start)
-    result = setup_pipeline(pipeline_mode=mode)
-    assert result == 'session'
-    assert observed == [('02_pipeline_orders', mode, 'dev', 'metadata-ws')]
+    monkeypatch.setattr(shared, 'get_spark_session', lambda: configuration_runtime.spark)
+    monkeypatch.setattr(shared.PipelineSession, 'refresh', lambda self: None)
+    if mode == 'Live':
+        live = importlib.import_module('fabricops_kit.activated_pipeline.shared')
+        def approved(**kwargs):
+            config, env, runtime = resolve_fabric_context()
+            return shared.PipelineExecutionPlan('live', env, 'caller-notebook', 'approved-run',
+                                               '{}', '{}', '{}', runtime, pipeline_id=kwargs['pipeline_id'])
+        monkeypatch.setattr(live, 'build_live_pipeline_plan', approved)
+    import IPython
+    monkeypatch.setattr(IPython, 'get_ipython', lambda: None)
+    token = shared._ACTIVE_PIPELINE.set(None)
+    session = None
+    try:
+        session = setup_pipeline(pipeline_mode=mode, config_workspace_id='central-ws')
+        assert session.plan.environment == 'dev'
+        assert session.plan.pipeline_id == '02_pipeline_orders'
+        assert session.plan.runtime_context['config'].path_config.paths['dev']['Metadata'].workspace_id == 'metadata-ws'
+        assert configuration_runtime.notebook.run.call_args.kwargs['workspaceId'] == 'central-ws'
+    finally:
+        if session is not None:
+            import atexit
+            atexit.unregister(session.close)
+        shared._ACTIVE_PIPELINE.reset(token)
 
 
 def test_duplicate_workspace_assignments_are_rejected(configuration_runtime):
@@ -158,3 +167,9 @@ def test_setup_replaces_stale_notebook_namespace_context(configuration_runtime, 
     assert result.environment == 'dev'
     assert resolve_fabric_context()[1] == 'dev'
     assert shell.user_ns['FABRIC_CONTEXT']['runtime_metadata']['workspace_id'] == 'dev-ws'
+
+
+def test_default_loading_uses_current_workspace(configuration_runtime):
+    result = setup_notebook()
+    assert result.environment == 'dev'
+    assert configuration_runtime.notebook.run.call_args.kwargs['workspaceId'] == 'dev-ws'

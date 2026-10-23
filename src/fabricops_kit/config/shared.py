@@ -887,20 +887,18 @@ def build_column_id(table_id: Any, column_name: Any) -> str:
 
 def initialize_notebook(
     config=None, env="Sandbox", required_targets=None, notebook_name=None,
-    run_id_prefix="run", local_fallback_name=None,
+    run_id_prefix="run", local_fallback_name=None, *, config_workspace_id=None,
 ) -> NotebookSetupContext:
     """Load workspace configuration and reuse notebook startup validation."""
     runtime_meta = _get_fabric_runtime_metadata(notebook_name=notebook_name, local_fallback_name=local_fallback_name)
     automatic = config is None
     if automatic:
-        import os
-
         workspace_id = str(runtime_meta.get("workspace_id") or "").strip().lower()
         if not workspace_id:
             raise RuntimeError("Automatic setup requires Fabric currentWorkspaceId.")
         import notebookutils
 
-        config_workspace_id = os.environ.get("FABRICOPS_CONFIG_WORKSPACE_ID", "").strip() or workspace_id
+        config_workspace_id = config_workspace_id or workspace_id
         payload = json.loads(notebookutils.notebook.run(
             "00_env_config", 120, {"caller_workspace_id": workspace_id}, workspaceId=config_workspace_id,
         ))

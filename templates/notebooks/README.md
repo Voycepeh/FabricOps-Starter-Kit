@@ -22,11 +22,21 @@ For the end-to-end workflow, follow the [Guided Demo](https://voycepeh.github.io
 
 ## Workspace configuration
 
-Deploy the same `00_env_config.ipynb` template separately in Governance and Central Engineering, named `00_env_config` in Fabric. Governance uses its local deployment. Engineering execution workspaces need no local config notebook.
+Deploy the same `00_env_config.ipynb` template in each workspace that runs FabricOps notebooks, named `00_env_config` in Fabric. Both Governance and Engineering load their current workspace's configuration by default.
 
-In each deployment, populate `ENVIRONMENT_WORKSPACES` with one unique workspace ID per environment and fill the existing `FrameworkConfig` store mappings. Governance registers its own workspace (for example as `dev`); Central Engineering registers Development and Production execution workspaces. Unknown workspace IDs and duplicate workspace assignments fail setup. All environment mappings retain the same central Metadata Lakehouse.
+Populate `ENVIRONMENT_WORKSPACES` with one unique workspace ID per environment and fill the existing `FrameworkConfig` store mappings. Each workspace resolves its environment automatically; engineers do not select an environment. Keep every Metadata mapping pointed at the same central Metadata Lakehouse. Unknown workspace IDs and duplicate workspace assignments fail setup.
 
-Set the process environment variable `FABRICOPS_CONFIG_WORKSPACE_ID` to the Central Engineering workspace ID once in the shared Engineering runtime before setup. Leave it unset in Governance. This is only a bootstrap notebook location; environment selection and resource mappings remain in `00_env_config`. The execution identity needs permission to run that notebook across workspaces and access its configured stores. If the setting is absent, setup looks in the caller workspace and fails when no config notebook exists there.
+For advanced cross-workspace use, deploy a shared `00_env_config` in Central Engineering and pass its workspace ID explicitly:
+
+```python
+# Optional: load configuration from another workspace.
+CONFIG_WORKSPACE_ID = "<configuration-workspace-id>"
+context = setup_notebook(config_workspace_id=CONFIG_WORKSPACE_ID)
+# Or in an Engineering pipeline:
+pipeline = setup_pipeline(config_workspace_id=CONFIG_WORKSPACE_ID)
+```
+
+The shared deployment must register the caller workspace in `ENVIRONMENT_WORKSPACES`. The execution identity needs permission to run the remote notebook and access its configured stores. No environment variable or separate configuration file is required. Omitting `config_workspace_id` always uses the caller workspace.
 
 `setup_notebook()` passes Fabric `currentWorkspaceId` to the config notebook through `notebookutils.notebook.run(..., workspaceId=...)`. The config notebook resolves that caller ID and returns JSON using `notebookutils.notebook.exit()`. Setup reconstructs the existing `FrameworkConfig`, validates it, applies the audit timezone, and initializes the shared context using the caller's runtime identity.
 
@@ -48,7 +58,7 @@ Configuration loads do not create metadata tables. At deployment, run the Govern
 
 ## Pipeline execution mode
 
-The pipeline flow is **Setup Pipeline → Read → Transform → Write**. Environment routing is resolved automatically from the caller workspace by the central Engineering `00_env_config`. A stable `pipeline_id` identifies the logical pipeline independently of notebook names and paths.
+The pipeline flow is **Setup Pipeline → Read → Transform → Write**. Environment routing is resolved automatically from the caller workspace by the selected `00_env_config`. A stable `pipeline_id` identifies the logical pipeline independently of notebook names and paths.
 
 ```python
 CONTRACTS = setup_pipeline(pipeline_id="example-orders", pipeline_mode="Test")

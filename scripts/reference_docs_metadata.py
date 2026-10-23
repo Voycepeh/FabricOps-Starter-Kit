@@ -970,7 +970,7 @@ PUBLIC_SYMBOL_DOCS = [
   'side_effects': 'Runs configuration validation and Fabric readiness checks; it does not write '
                   'FabricOps metadata tables.',
   'fabric_context': 'Automatic setup requires Fabric currentWorkspaceId and access to 00_env_config. '
-                    'FABRICOPS_CONFIG_WORKSPACE_ID selects the central notebook workspace; Governance defaults locally.',
+                    'config_workspace_id optionally selects a remote notebook workspace; loading defaults locally.',
   'ai_verification': 'Verify the returned context is ready before generating downstream notebook '
                      'code and confirm required targets resolve for the selected env.',
   'preferred_example': 'context = setup_notebook(CONFIG, env="Sandbox", '
@@ -1635,7 +1635,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     "setup_notebook": {
         "expanded_purpose": "Prepares a Fabric notebook to use FabricOps consistently by validating environment configuration, resolving required data and metadata targets, collecting runtime identity, and returning a normalized NotebookSetupContext for downstream cells.",
         "when_to_use": "Call near the beginning of an operational FabricOps notebook to load workspace configuration before source reads, metadata setup, profiling, guardrails, or writes. It is normally called once per notebook execution and does not replace setup_metadata_tables.",
-        "parameters": "config optionally supplies explicit FabricOps configuration; otherwise the caller workspace selects the environment through 00_env_config. FABRICOPS_CONFIG_WORKSPACE_ID locates the central Engineering notebook; env applies only to explicit config; required_targets identifies the configured data or metadata targets that must resolve; notebook_name overrides automatic runtime notebook-name resolution; run_id_prefix is used only when Fabric does not provide a run id; local_fallback_name supports local tests when Fabric runtime context is unavailable.",
+        "parameters": "config optionally supplies explicit FabricOps configuration; otherwise the caller workspace selects the environment through 00_env_config. config_workspace_id optionally locates a remote config notebook; otherwise loading uses the current workspace; env applies only to explicit config; required_targets identifies the configured data or metadata targets that must resolve; notebook_name overrides automatic runtime notebook-name resolution; run_id_prefix is used only when Fabric does not provide a run id; local_fallback_name supports local tests when Fabric runtime context is unavailable.",
         "returns": "NotebookSetupContext with run_id, notebook_name, workspace_name, user_name, environment, paths, validation_results, runtime_metadata, and readiness_status.",
         "side_effects": "With no config, runs 00_env_config for the caller workspace, loads JSON, applies the audit timezone and initializes the shared context. Explicit config retains validation-only behavior. It does not write business data, provision resources or persist metadata.",
         "return_interpretation": "A ready context means required targets resolved and startup checks did not fail. Review validation_results when readiness_status is not ready before running downstream notebook cells.",

@@ -235,6 +235,7 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
 
 
 from fabricops_kit.config.shared import (
+    initialize_notebook,
     get_current_audit_timestamp,
     is_table_not_found_error,
     metadata_timestamp_sort_key,
@@ -6210,7 +6211,7 @@ def current_pipeline_session():
     return session
 
 
-def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None):
+def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None, config_workspace_id=None):
     """Resolve runtime services and install conservative notebook lifecycle reporting."""
     import atexit
     from types import MappingProxyType
@@ -6218,6 +6219,11 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None):
     previous = _ACTIVE_PIPELINE.get()
     if previous is not None and previous.owns_current_execution():
         previous.close()
+    context = initialize_notebook(config_workspace_id=config_workspace_id)
+    if pipeline_id is None:
+        pipeline_id = context.notebook_name
+        if not pipeline_id:
+            raise ValueError("pipeline_id is required when the current notebook name is unavailable.")
     config, env, runtime = resolve_fabric_context()
     runtime = {**runtime, **{key: value for key, value in resolve_runtime_context(context=runtime).items() if value is not None},
                "config": config, "env": env}
