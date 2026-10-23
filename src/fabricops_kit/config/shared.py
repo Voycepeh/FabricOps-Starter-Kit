@@ -1098,6 +1098,10 @@ class FrozenConfigDict(dict):
         """Share immutable configuration safely across plan copies."""
         return self
 
+    def __reduce__(self):
+        """Reconstruct immutable mappings through their constructor in Spark workers."""
+        return type(self), (dict(self),)
+
 
 class FrozenConfigList(list):
     """JSON-compatible immutable sequence for centrally approved policy settings."""
@@ -1110,6 +1114,10 @@ class FrozenConfigList(list):
     def __deepcopy__(self, memo):
         """Share immutable configuration safely across plan copies."""
         return self
+
+    def __reduce__(self):
+        """Reconstruct immutable sequences through their constructor in Spark workers."""
+        return type(self), (list(self),)
 
 
 def freeze_governed_configuration(value):

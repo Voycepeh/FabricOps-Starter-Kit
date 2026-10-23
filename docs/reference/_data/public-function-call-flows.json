@@ -2991,9 +2991,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.config.shared.bind_governed_context",
-      "source_end_line": 1172,
+      "source_end_line": 1180,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 1168,
+      "source_start_line": 1176,
       "usage": "public_flow_reachable"
     },
     {
@@ -3087,9 +3087,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.config.shared.check_governed_readiness",
-      "source_end_line": 1164,
+      "source_end_line": 1172,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 1149,
+      "source_start_line": 1157,
       "usage": "public_flow_reachable"
     },
     {
@@ -3125,9 +3125,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.configure_metadata_transaction",
-      "source_end_line": 1135,
+      "source_end_line": 1143,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 1129,
+      "source_start_line": 1137,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -3171,9 +3171,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.config.shared.freeze_governed_configuration",
-      "source_end_line": 1125,
+      "source_end_line": 1133,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 1115,
+      "source_start_line": 1123,
       "usage": "public_flow_reachable"
     },
     {
@@ -3542,9 +3542,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.config.shared.release_governed_context",
-      "source_end_line": 1146,
+      "source_end_line": 1154,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 1139,
+      "source_start_line": 1147,
       "usage": "public_flow_reachable"
     },
     {

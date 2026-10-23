@@ -357,3 +357,16 @@ def test_registry_locator_cannot_change_during_an_execution(registry, monkeypatc
     monkeypatch.setattr(config, 'registry_bootstrap', lambda: moved)
     with pytest.raises(RuntimeError, match='bootstrap changed after setup'):
         config.verify_governed_context(context)
+
+
+def test_frozen_configuration_round_trip_remains_immutable_for_spark_serialization(registry):
+    import pickle
+    from dataclasses import asdict
+    original = config.resolve_governed_workspace(require_pipeline=True)['config']
+    restored = pickle.loads(pickle.dumps(original))
+    assert asdict(restored) == asdict(original)
+    assert config.get_store(restored, 'DEV', 'Metadata').item_id == META
+    with pytest.raises(TypeError, match='immutable'):
+        restored.path_config.paths['DEV']['Gold'] = restored.path_config.paths['DEV']['Silver']
+    with pytest.raises(TypeError, match='immutable'):
+        restored.governance_config.classification_levels.append('Unapproved')
