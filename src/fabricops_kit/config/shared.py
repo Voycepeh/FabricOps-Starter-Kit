@@ -9,6 +9,7 @@ import json
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from uuid import uuid4
 from pathlib import Path
 import re
 from typing import Any
@@ -18,7 +19,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 DEFAULT_AUDIT_TIMEZONE = "UTC"
 
 
-_DEFAULT_CONTEXT_ERROR = "No active Fabric context found. Please run 00_env_config before running this notebook."
+_DEFAULT_CONTEXT_ERROR = "No active Fabric context found. Call setup_notebook() or setup_pipeline() before continuing."
 
 
 # ---------------------------------------------------------------------------
@@ -27,7 +28,7 @@ _DEFAULT_CONTEXT_ERROR = "No active Fabric context found. Please run 00_env_conf
 
 
 def get_default_fabric_context() -> dict[str, Any]:
-    """Return the active Fabric context created by ``00_env_config``.
+    """Return the active Fabric context initialized by notebook or pipeline setup.
 
     Returns
     -------
@@ -38,7 +39,7 @@ def get_default_fabric_context() -> dict[str, Any]:
     Raises
     ------
     RuntimeError
-        If ``00_env_config`` has not initialized ``FABRIC_CONTEXT`` in the
+        If setup has not initialized ``FABRIC_CONTEXT`` in the
         active notebook session.
 
     Notes
@@ -882,3 +883,173 @@ def build_table_id(store_type: Any, layer: Any, schema_name: Any, table_name: An
 def build_column_id(table_id: Any, column_name: Any) -> str:
     """Return the environment-independent logical identity for a column asset."""
     return stable_metadata_id(table_id, column_name)
+
+
+def initialize_notebook(
+    config=None, env="Sandbox", required_targets=None, notebook_name=None,
+    run_id_prefix="run", local_fallback_name=None, *, config_workspace_id=None,
+) -> NotebookSetupContext:
+    """Load workspace configuration and reuse notebook startup validation."""
+    runtime_meta = _get_fabric_runtime_metadata(notebook_name=notebook_name, local_fallback_name=local_fallback_name)
+    automatic = config is None
+    if automatic:
+        workspace_id = str(runtime_meta.get("workspace_id") or "").strip().lower()
+        if not workspace_id:
+            raise RuntimeError("Automatic setup requires Fabric currentWorkspaceId.")
+        import notebookutils
+
+        config_workspace_id = config_workspace_id or workspace_id
+        payload = json.loads(notebookutils.notebook.run(
+            "00_env_config", 120, {"caller_workspace_id": workspace_id}, workspaceId=config_workspace_id,
+        ))
+        if payload["workspace_id"] != workspace_id:
+            raise ValueError("Configuration response does not match the caller workspace ID.")
+        env = payload["env"]
+        raw = payload["config"]
+        config = FrameworkConfig(
+            **{key: value for key, value in raw.items()
+               if key not in {"path_config", "governance_config", "data_agreement_config"}},
+            path_config=PathConfig(paths={environment: {name: FabricStore(**store) for name, store in stores.items()}
+                                         for environment, stores in raw["path_config"]["paths"].items()}),
+            governance_config=GovernanceConfig(**raw["governance_config"]),
+            data_agreement_config=DataAgreementConfig(**raw["data_agreement_config"]),
+        )
+    normalized = validate_framework_config(config)
+    if automatic and env not in normalized.path_config.paths:
+        raise ValueError(f"No configured paths for environment: {env}")
+    targets = required_targets if required_targets is not None else list(normalized.path_config.paths.get(env, {}))
+    resolved_paths = {store_name: get_store(config=normalized, env=env, store=store_name) for store_name in targets}
+
+    resolved_notebook_name = runtime_meta.get("notebook_name")
+    user_name = runtime_meta.get("user_name") or runtime_meta.get("user_id") or "unknown"
+    run_id = runtime_meta.get("current_run_id") or (
+        f"{run_id_prefix}_"
+        f"{datetime.fromisoformat(get_current_audit_timestamp(config=normalized)).strftime('%Y%m%dT%H%M%S')}_"
+        f"{uuid4().hex[:8]}"
+    )
+
+    checks: list[ConfigSmokeCheckResult] = []
+    spark_obj = globals().get("spark")
+    checks.append(
+        ConfigSmokeCheckResult(
+            "spark_session",
+            "pass" if spark_obj is not None else "warn",
+            "Spark session is available." if spark_obj is not None else "Spark session not found; local fallback mode.",
+        )
+    )
+    checks.append(
+        ConfigSmokeCheckResult(
+            "fabric_runtime_context",
+            "pass" if runtime_meta.get("runtime_available") else "skipped",
+            "Fabric runtime context is readable."
+            if runtime_meta.get("runtime_available")
+            else "notebookutils.runtime unavailable outside Fabric runtime.",
+        )
+    )
+    for store_name, store in resolved_paths.items():
+        missing = [attr for attr in ("workspace_id", "item_id", "kind") if not getattr(store, attr, None)]
+        if missing:
+            checks.append(ConfigSmokeCheckResult(f"path:{store_name}", "fail", f"Missing required fields: {missing}"))
+        elif store.kind == "lakehouse" and str(store.root).startswith("abfss://"):
+            checks.append(
+                ConfigSmokeCheckResult(
+                    f"path:{store_name}", "pass", "Lakehouse store is populated and ABFSS root is derivable."
+                )
+            )
+        else:
+            checks.append(ConfigSmokeCheckResult(f"path:{store_name}", "pass", "Store is populated."))
+
+    if resolved_notebook_name:
+        normalized_name = "_".join(str(resolved_notebook_name).strip().lower().split())
+        patterns = [
+            r"^00_env_config$",
+            r"^02_pipeline(?:_[a-z0-9_]+)?$",
+            r"^01_governance(?:_[a-z0-9_]+)?$",
+            r"^99_explore(?:_[a-z0-9_]+)?$",
+        ]
+        naming_errors = [] if any(re.match(pattern, normalized_name) for pattern in patterns) else [
+            "Notebook name does not match accepted FabricOps naming patterns."
+        ]
+        checks.append(
+            ConfigSmokeCheckResult(
+                "notebook_naming",
+                "pass" if not naming_errors else "fail",
+                "; ".join(naming_errors) or "Notebook name is valid.",
+            )
+        )
+    else:
+        checks.append(ConfigSmokeCheckResult("notebook_naming", "skipped", "Notebook name check skipped."))
+
+    readiness_status = "ready" if all(r.status in {"pass", "warn", "skipped"} for r in checks) else "not_ready"
+
+    result = NotebookSetupContext(
+        run_id=str(run_id),
+        notebook_name=resolved_notebook_name,
+        workspace_name=runtime_meta.get("workspace_name"),
+        user_name=str(user_name),
+        environment=env,
+        paths=resolved_paths,
+        validation_results=checks,
+        runtime_metadata=runtime_meta,
+        readiness_status=readiness_status,
+    )
+    if automatic:
+        import builtins
+        from fabricops_kit.io.shared import get_spark_session
+
+        try:
+            spark_session = get_spark_session()
+        except RuntimeError:
+            spark_session = None
+        if spark_session is not None:
+            spark_session.conf.set("spark.sql.session.timeZone", normalized.audit_timezone)
+        active_context = {"config": normalized, "env": env, "runtime_metadata": runtime_meta}
+        builtins.FABRIC_CONTEXT = active_context
+        try:
+            from IPython import get_ipython
+        except ModuleNotFoundError:
+            shell = None
+        else:
+            shell = get_ipython()
+        if shell is not None:
+            shell.user_ns["FABRIC_CONTEXT"] = active_context
+    return result
+
+
+
+def _get_fabric_runtime_metadata(*, notebook_name: str | None, local_fallback_name: str | None) -> dict[str, Any]:
+    """Collect best-effort runtime metadata for setup_notebook."""
+    context = None
+    try:
+        import notebookutils.runtime as nb_runtime  # type: ignore
+
+        context = getattr(nb_runtime, "context", None)
+    except Exception:
+        context = None
+
+    def ctx(key: str) -> Any:
+        if context is None:
+            return None
+        if isinstance(context, dict):
+            return context.get(key)
+        get_method = getattr(context, "get", None)
+        if callable(get_method):
+            try:
+                return get_method(key)
+            except Exception:
+                return None
+        return getattr(context, key, None)
+
+    return {
+        "notebook_name": notebook_name or ctx("currentNotebookName") or local_fallback_name,
+        "notebook_id": ctx("currentNotebookId") or ctx("notebookId"),
+        "workspace_name": ctx("currentWorkspaceName"),
+        "workspace_id": ctx("currentWorkspaceId"),
+        "user_name": ctx("userName") or ctx("userId") or "unknown",
+        "user_id": ctx("userId"),
+        "current_run_id": ctx("currentRunId"),
+        "is_for_pipeline": ctx("isForPipeline"),
+        "is_for_interactive": ctx("isForInteractive"),
+        "is_reference_run": ctx("isReferenceRun"),
+        "runtime_available": context is not None,
+    }

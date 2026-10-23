@@ -127,7 +127,9 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def setup_pipeline(*, pipeline_id: str, pipeline_mode: str):
+def setup_pipeline(
+    *, pipeline_id: str | None = None, pipeline_mode: str = "Test", config_workspace_id: str | None = None,
+):
     """Start an isolated pipeline using exactly Test or Live.
 
     Test evaluates reads, transformations and Guardrails without business or
@@ -140,10 +142,15 @@ def setup_pipeline(*, pipeline_id: str, pipeline_mode: str):
 
     Parameters
     ----------
-    pipeline_id : str
-        Stable logical pipeline identity, independent of the notebook name.
-    pipeline_mode : {"Test", "Live"}
+    pipeline_id : str | None, optional
+        Stable logical pipeline identity. Defaults to the current notebook name.
+        Supply an explicit identity when notebook renames must preserve it.
+    pipeline_mode : {"Test", "Live"}, default="Test"
         Evaluation-only operations or execution under an approved manifest.
+
+    config_workspace_id : str | None, optional
+        Workspace hosting 00_env_config. Defaults to the current workspace.
+        Supply an ID only when using a shared cross-workspace configuration.
 
     Returns
     -------
@@ -153,6 +160,11 @@ def setup_pipeline(*, pipeline_id: str, pipeline_mode: str):
 
     Notes
     -----
+    Workspace configuration is loaded through the same initialization as
+    setup_notebook. Load the current workspace configuration by default, or
+    supply config_workspace_id for a shared deployment. The caller workspace
+    determines the environment in both cases.
+
     Fabric cell events identify failures, not successful notebook completion.
     Call finalize_pipeline after all Reads, transformations and Writes.
     Neither a successful Write nor interpreter shutdown proves completion. Test
@@ -173,8 +185,11 @@ def setup_pipeline(*, pipeline_id: str, pipeline_mode: str):
     """
     from fabricops_kit.pipeline.shared import start_pipeline_session
 
-    if not isinstance(pipeline_id, str) or not pipeline_id.strip():
+    if pipeline_id is not None and (not isinstance(pipeline_id, str) or not pipeline_id.strip()):
         raise ValueError("pipeline_id must be a nonempty stable identity.")
     if pipeline_mode not in {"Test", "Live"}:
         raise ValueError("pipeline_mode must be exactly Test or Live.")
-    return start_pipeline_session(pipeline_id.strip(), pipeline_mode, inspector=_inspector)
+    return start_pipeline_session(
+        pipeline_id.strip() if pipeline_id is not None else None, pipeline_mode,
+        inspector=_inspector, config_workspace_id=config_workspace_id,
+    )

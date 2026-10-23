@@ -6,11 +6,7 @@ Complete [Step 5](05-activate-data-contract-and-promote.md) and use the promoted
 
 ### Load the Production configuration
 
-Run the Production copy of `00_env_config`:
-
-```python
-%run 00_env_config
-```
+The promoted pipeline calls `setup_pipeline()`, which loads the Production workspace's `00_env_config` automatically. To use a shared deployment, pass its workspace ID as `config_workspace_id` in the Setup Pipeline block.
 
 The same logical store names now resolve to the Production Lakehouses, Warehouses, schemas, paths, and SQL endpoints.
 

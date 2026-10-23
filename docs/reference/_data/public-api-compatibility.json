@@ -1727,14 +1727,17 @@
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "review_required",
           "lifecycle_after": "Live",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
-            "Lifecycle changed: Preview to Live."
+            "Lifecycle changed: Preview to Live.",
+            "Optional parameter added: config_workspace_id.",
+            "Parameter became optional: config.",
+            "Annotation changed for config: FrameworkConfig | dict[str, Any] to FrameworkConfig | dict[str, Any] | None."
           ],
-          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
         },
         {
@@ -1997,7 +2000,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -2172,10 +2175,10 @@
       "summary": {
         "added": 15,
         "modified": 12,
-        "nonbreaking": 18,
+        "nonbreaking": 17,
         "potentially_breaking": 9,
         "removed": 14,
-        "review_required": 14,
+        "review_required": 15,
         "total": 41
       },
       "target": "working-tree"
@@ -3290,6 +3293,20 @@
           "signature_before": null
         },
         {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
+          "reasons": [
+            "Optional parameter added: config_workspace_id.",
+            "Parameter became optional: config.",
+            "Annotation changed for config: FrameworkConfig | dict[str, Any] to FrameworkConfig | dict[str, Any] | None."
+          ],
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
+        },
+        {
           "change_type": "added",
           "classification": "nonbreaking",
           "lifecycle_after": "Preview",
@@ -3473,7 +3490,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -3551,12 +3568,12 @@
       ],
       "summary": {
         "added": 11,
-        "modified": 3,
+        "modified": 4,
         "nonbreaking": 13,
         "potentially_breaking": 1,
         "removed": 12,
-        "review_required": 12,
-        "total": 26
+        "review_required": 13,
+        "total": 27
       },
       "target": "working-tree"
     },
@@ -4596,6 +4613,20 @@
       "baseline": "v0.2.5",
       "changes": [
         {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
+          "reasons": [
+            "Optional parameter added: config_workspace_id.",
+            "Parameter became optional: config.",
+            "Annotation changed for config: FrameworkConfig | dict[str, Any] to FrameworkConfig | dict[str, Any] | None."
+          ],
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
+        },
+        {
           "change_type": "removed",
           "classification": "review_required",
           "lifecycle_after": null,
@@ -4775,7 +4806,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -4829,12 +4860,12 @@
       ],
       "summary": {
         "added": 3,
-        "modified": 5,
+        "modified": 6,
         "nonbreaking": 6,
         "potentially_breaking": 3,
         "removed": 10,
-        "review_required": 9,
-        "total": 18
+        "review_required": 10,
+        "total": 19
       },
       "target": "working-tree"
     },
@@ -5944,6 +5975,20 @@
     {
       "baseline": "main",
       "changes": [
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
+          "reasons": [
+            "Optional parameter added: config_workspace_id.",
+            "Parameter became optional: config.",
+            "Annotation changed for config: FrameworkConfig | dict[str, Any] to FrameworkConfig | dict[str, Any] | None."
+          ],
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
+        },
         {
           "change_type": "modified",
           "classification": "potentially_breaking",
@@ -5975,16 +6020,31 @@
           ],
           "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
+          "reasons": [
+            "Optional parameter added: config_workspace_id.",
+            "Parameter became optional: pipeline_id.",
+            "Annotation changed for pipeline_id: str to str | None.",
+            "Parameter became optional: pipeline_mode."
+          ],
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
+          "signature_before": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)"
         }
       ],
       "summary": {
         "added": 0,
-        "modified": 2,
+        "modified": 4,
         "nonbreaking": 0,
         "potentially_breaking": 2,
         "removed": 0,
-        "review_required": 0,
-        "total": 2
+        "review_required": 2,
+        "total": 4
       },
       "target": "working-tree"
     },
@@ -6061,10 +6121,13 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
-            "Lifecycle changed: Live to Preview."
+            "Lifecycle changed: Live to Preview.",
+            "Parameter removed: config_workspace_id.",
+            "Parameter became required: config.",
+            "Annotation changed for config: FrameworkConfig | dict[str, Any] | None to FrameworkConfig | dict[str, Any]."
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
-          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
         },
         {
           "change_type": "removed",
@@ -6327,7 +6390,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -6573,6 +6636,20 @@
           "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
+          "reasons": [
+            "Parameter removed: config_workspace_id.",
+            "Parameter became required: config.",
+            "Annotation changed for config: FrameworkConfig | dict[str, Any] | None to FrameworkConfig | dict[str, Any]."
+          ],
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
+        },
+        {
           "change_type": "removed",
           "classification": "review_required",
           "lifecycle_after": null,
@@ -6757,7 +6834,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -6834,18 +6911,32 @@
       ],
       "summary": {
         "added": 12,
-        "modified": 3,
+        "modified": 4,
         "nonbreaking": 12,
-        "potentially_breaking": 3,
+        "potentially_breaking": 4,
         "removed": 11,
         "review_required": 11,
-        "total": 26
+        "total": 27
       },
       "target": "v0.2.0"
     },
     {
       "baseline": "working-tree",
       "changes": [
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
+          "reasons": [
+            "Parameter removed: config_workspace_id.",
+            "Parameter became required: config.",
+            "Annotation changed for config: FrameworkConfig | dict[str, Any] | None to FrameworkConfig | dict[str, Any]."
+          ],
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
+        },
         {
           "change_type": "added",
           "classification": "nonbreaking",
@@ -7027,7 +7118,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -7080,18 +7171,32 @@
       ],
       "summary": {
         "added": 10,
-        "modified": 5,
+        "modified": 6,
         "nonbreaking": 10,
-        "potentially_breaking": 5,
+        "potentially_breaking": 6,
         "removed": 3,
         "review_required": 3,
-        "total": 18
+        "total": 19
       },
       "target": "v0.2.5"
     },
     {
       "baseline": "working-tree",
       "changes": [
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
+          "reasons": [
+            "Parameter removed: config_workspace_id.",
+            "Parameter became required: config.",
+            "Annotation changed for config: FrameworkConfig | dict[str, Any] | None to FrameworkConfig | dict[str, Any]."
+          ],
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
+        },
         {
           "change_type": "modified",
           "classification": "nonbreaking",
@@ -7123,16 +7228,31 @@
           ],
           "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_enabled: bool = True, frequency_top_n: int | None = 5, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
+          "reasons": [
+            "Parameter removed: config_workspace_id.",
+            "Parameter became required: pipeline_id.",
+            "Annotation changed for pipeline_id: str | None to str.",
+            "Parameter became required: pipeline_mode."
+          ],
+          "signature_after": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)",
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)"
         }
       ],
       "summary": {
         "added": 0,
-        "modified": 2,
+        "modified": 4,
         "nonbreaking": 2,
-        "potentially_breaking": 0,
+        "potentially_breaking": 2,
         "removed": 0,
         "review_required": 0,
-        "total": 2
+        "total": 4
       },
       "target": "main"
     }
@@ -14851,12 +14971,12 @@
           "lifecycle": "Live",
           "parameters": [
             {
-              "annotation": "FrameworkConfig | dict[str, Any]",
-              "default": null,
-              "has_default": false,
+              "annotation": "FrameworkConfig | dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
               "kind": "positional_or_keyword",
               "name": "config",
-              "required": true
+              "required": false
             },
             {
               "annotation": "str",
@@ -14897,11 +15017,19 @@
               "kind": "positional_or_keyword",
               "name": "local_fallback_name",
               "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "config_workspace_id",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "return_annotation": "NotebookSetupContext",
-          "signature": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
+          "signature": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "source_path": "src/fabricops_kit/config/setup_notebook.py",
           "source_qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook"
         },
@@ -16055,25 +16183,33 @@
           "lifecycle": "Preview",
           "parameters": [
             {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
               "kind": "keyword_only",
               "name": "pipeline_id",
-              "required": true
+              "required": false
             },
             {
               "annotation": "str",
-              "default": null,
-              "has_default": false,
+              "default": "'Test'",
+              "has_default": true,
               "kind": "keyword_only",
               "name": "pipeline_mode",
-              "required": true
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "config_workspace_id",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "return_annotation": null,
-          "signature": "setup_pipeline(*, pipeline_id: str, pipeline_mode: str)",
+          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
           "source_path": "src/fabricops_kit/pipeline/setup_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline"
         },
@@ -16220,7 +16356,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:a59964a79682099056fb4b6079b8983b0ff6a07590ebde0a623d1c2be1718e54",
+      "source_digest": "sha256:5c2eaa078272af1fe3453052c1c1878671a97308c24e0357ebcad402c53cccb2",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

@@ -22,17 +22,19 @@ def test_env_config_derives_runtime_setup_from_declared_paths() -> None:
     assert "REQUIRED_TARGETS =" not in source
     assert 'CONFIG.path_config.paths[ENV]["source"]' not in source
     assert "ACTIVE_STORE" not in source
-    assert "required_targets=list(CONFIG.path_config.paths[ENV])" in source
+    assert "setup_notebook(" not in source
+    assert "notebookutils.notebook.exit(json.dumps(" in source
 
 
 def test_env_config_leaves_metadata_schema_routing_to_framework() -> None:
     """Canonical metadata writers should own governance versus engineering schema routing."""
     source = _env_config_source()
 
-    assert "metadata_schema=" not in source
+    assert "    metadata_schema=" not in source
     assert "VALIDATION_MODE" not in source
     assert '"notebook_context"' not in source
-    assert '"runtime_metadata": RUN_CONTEXT.runtime_metadata' in source
+    assert "builtins.FABRIC_CONTEXT" not in source
+    assert '"config": asdict(CONFIG)' in source
     assert "governance_metadata_schema" in source
     assert "engineering_metadata_schema" in source
 

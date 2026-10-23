@@ -662,12 +662,12 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "## Example usage" in text
     example = _section_text(text, "Example usage")
     assert "CONTEXT = setup_notebook" in example
-    assert "required_targets=" in example
+    assert "setup_notebook()" in example
     for marker in ("## Signature", "## Parameters", "## Returns"):
         assert marker in text
     assert "## AI / machine-readable metadata" not in text
     assert "Machine-readable metadata / metadata details" not in text
-    assert "Use at the start of 00_env_config" in text
+    assert "Use at the start of a Governance notebook" in text
     assert "capture runtime context before other helpers run" in text
     assert "## Parameters" in text
     assert "| `config` |" in text

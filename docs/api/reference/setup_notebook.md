@@ -10,12 +10,12 @@
 Shared environment setup and runtime validation for notebook templates.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">00_env_config</span>
+<span class="reference-chip">01_governance</span>
 </p>
 
 ## Usage notes
 
-Use at the start of 00_env_config or a notebook template to validate FabricOps configuration, resolve required targets, and capture runtime context before other helpers run.
+Use at the start of a Governance notebook to load and validate FabricOps configuration, resolve required targets, and capture runtime context before other helpers run.
 
 
 ## Example usage
@@ -23,7 +23,7 @@ Use at the start of 00_env_config or a notebook template to validate FabricOps c
 <div class="reference-example-usage" markdown="1">
 
 ```python
-CONTEXT = setup_notebook(CONFIG, env=ENVIRONMENT_NAME, required_targets=["Bronze", "Silver", "Gold", "Metadata"])
+CONTEXT = setup_notebook()
 ```
 
 </div>
@@ -37,12 +37,14 @@ CONTEXT = setup_notebook(CONFIG, env=ENVIRONMENT_NAME, required_targets=["Bronze
 
 ```python
 def setup_notebook(
-    config: FrameworkConfig | dict[str, Any],
+    config: FrameworkConfig | dict[str, Any] | None=None,
     env: str='Sandbox',
     required_targets: list[str] | None=None,
     notebook_name: str | None=None,
     run_id_prefix: str='run',
     local_fallback_name: str | None=None,
+    *,
+    config_workspace_id: str | None=None,
 ) -> NotebookSetupContext:
 ```
 
@@ -58,12 +60,13 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | `—` | Full FabricOps framework configuration used to resolve environments and target stores. |
-| `env` | `str` | No | `'Sandbox'` | Environment section selected for target resolution. |
+| `config` | `FrameworkConfig \| dict[str, Any] \| None` | No | `None` | Explicit configuration for local or advanced use. When omitted, run 00_env_config in config_workspace_id (or the caller workspace when omitted), passing Fabric currentWorkspaceId. The notebook rejects unregistered workspaces and returns the environment and FrameworkConfig as JSON. This automatic path initializes the shared Fabric context and applies the configured Spark audit timezone. |
+| `env` | `str` | No | `'Sandbox'` | Environment section for explicit config only; automatic setup resolves it from the workspace. |
 | `required_targets` | `list[str] \| None` | No | `None` | Logical Fabric target names the notebook requires before execution can proceed. When omitted, all stores configured for the selected environment are required. |
 | `notebook_name` | `str \| None` | No | `None` | Explicit notebook name override used for runtime metadata and naming validation. |
 | `run_id_prefix` | `str` | No | `'run'` | Prefix used only when no Fabric runtime run identifier is available. |
 | `local_fallback_name` | `str \| None` | No | `None` | Notebook name used only when neither ``notebook_name`` nor Fabric runtime notebook context provides one. |
+| `config_workspace_id` | `str \| None` | No | `None` | Workspace hosting 00_env_config for automatic loading. Defaults to the caller workspace. Supply a workspace ID only for cross-workspace setup. Ignored when config is supplied explicitly. |
 
 </div>
 
@@ -88,8 +91,11 @@ A ready context means required targets resolved and startup checks did not fail.
 
 ## Raises / Errors
 
+RuntimeError
+    Automatic setup requires a readable Fabric workspace ID.
 ValueError
-    Raised when config sections are invalid or required targets cannot be
+    Raised for unregistered workspaces, mismatched configuration responses,
+    or when config sections are invalid or required targets cannot be
     resolved for the selected environment.
 
 ### Common failure causes
@@ -104,6 +110,11 @@ ValueError
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
+
+With no arguments, load workspace configuration before the startup flow.
+By default, use 00_env_config in the current workspace. Advanced callers
+may supply config_workspace_id to load a shared deployment in another
+workspace. No configuration load provisions metadata tables.
 
 Startup flow:
 
@@ -159,8 +170,7 @@ checks rather than failing automatically.
 Validation and smoke checks are local to notebook startup. This helper does
 not read business data, write business data, persist metadata, provision
 workspaces, lakehouses, or warehouses, create missing Fabric resources,
-mutate the supplied configuration, globally attach setup context to all
-downstream calls, or automatically stop notebook execution on failed
+mutate the supplied configuration, or automatically stop notebook execution on failed
 readiness checks.
 
 </div>
@@ -182,8 +192,8 @@ downstream FabricOps functions rely on, including
 metadata registration functions that resolve Fabric targets or runtime
 context. It validates and resolves the same configuration and Fabric
 targets used by downstream FabricOps functions, then returns that
-information in a reusable ``NotebookSetupContext``. It does not
-automatically inject configuration into every downstream function.
+information in a reusable ``NotebookSetupContext``. It
+initializes the shared context when configuration is loaded automatically.
 
 </div>
 
@@ -195,9 +205,9 @@ automatically inject configuration into every downstream function.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_notebook.py:20`
+`fabricops_kit/config/setup_notebook.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L20-L225">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L10-L160">View on GitHub</a>
 </div>
 
 
@@ -213,7 +223,7 @@ automatically inject configuration into every downstream function.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 7 |
+| Live-critical dependencies | 9 |
 
 ### Release history
 
@@ -226,13 +236,15 @@ automatically inject configuration into every downstream function.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
-<li><code>fabricops_kit.config.setup_notebook._get_fabric_runtime_metadata</code></li>
+<li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.initialize_notebook</code></li>
 <li><code>fabricops_kit.config.shared.validate_framework_config</code></li>
+<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 </ul>
 
 

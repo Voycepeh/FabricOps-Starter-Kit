@@ -16,6 +16,8 @@ from fabricops_kit.pipeline import shared
 @pytest.fixture
 def runtime(monkeypatch):
     """Keep session, journal and orchestrators real; replace physical runtime boundaries."""
+    monkeypatch.setattr(shared, "initialize_notebook",
+                        lambda **kwargs: SimpleNamespace(notebook_name="02_pipeline"))
     config = {}
     spark = SimpleNamespace(conf=SimpleNamespace(get=lambda key: 'test'))
     monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: (config, 'dev', context or {'config': config, 'env': 'dev'}))
@@ -53,9 +55,9 @@ def test_exact_mode_validation(runtime, mode):
         setup_pipeline(pipeline_id='orders', pipeline_mode=mode)
 
 
-def test_only_pipeline_identity_and_mode_are_setup_arguments(runtime):
+def test_only_pipeline_identity_mode_and_config_location_are_setup_arguments(runtime):
     import inspect
-    assert list(inspect.signature(setup_pipeline).parameters) == ['pipeline_id', 'pipeline_mode']
+    assert list(inspect.signature(setup_pipeline).parameters) == ['pipeline_id', 'pipeline_mode', 'config_workspace_id']
     with pytest.raises(TypeError):
         setup_pipeline(pipeline_id='orders', pipeline_mode='Test', testing_writes=True)
 
@@ -384,3 +386,19 @@ def test_finalization_requires_durable_audit_before_any_testing_publication(runt
         finalize_pipeline(session)
     commit.assert_not_called()
     runtime.writes.assert_not_called()
+
+
+def test_failed_configuration_reload_closes_previous_execution(runtime, monkeypatch):
+    previous = setup_pipeline(pipeline_id='previous', pipeline_mode='Test')
+    previous.sources.append({'table_id': 'previous-source'})
+
+    def unavailable(**kwargs):
+        raise RuntimeError('Configuration notebook unavailable')
+
+    monkeypatch.setattr(shared, 'initialize_notebook', unavailable)
+    with pytest.raises(RuntimeError, match='Configuration notebook unavailable'):
+        setup_pipeline(pipeline_id='next', pipeline_mode='Test', config_workspace_id='remote-workspace')
+    assert previous.closed
+    assert previous.sources == []
+    with pytest.raises(RuntimeError, match='Run setup_pipeline'):
+        shared.current_pipeline_session()

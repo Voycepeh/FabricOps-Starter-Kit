@@ -508,3 +508,11 @@ def test_demo_notebooks_start_with_title_and_finalize_after_write(notebook_name:
         if cell_id.startswith("write-") and cell_id not in {"write-inspection", "write-dictionary-inspection-heading"}
     )
     assert ids.index("transform") < last_write
+
+
+def test_living_templates_and_demos_use_setup_instead_of_run_magic():
+    """JSON config notebooks must be loaded through setup, including demo callers."""
+    paths = list(NOTEBOOK_DIR.glob('*.ipynb')) + list(Path('templates/DemoData').glob('*.ipynb'))
+    for path in paths:
+        source = path.read_text(encoding='utf-8')
+        assert '%run 00_env_config' not in source, path.name
