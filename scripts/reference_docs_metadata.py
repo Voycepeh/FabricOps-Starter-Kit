@@ -72,7 +72,7 @@ WIDGET_USAGE_NOTE = """Widget helpers provide a front-end notebook interface so 
 
 They help users write values into the correct underlying metadata tables without manually editing those tables directly."""
 
-SETUP_NOTEBOOK_USAGE_NOTE = """Use this in the setup notebook to capture and render the key runtime information required by downstream Starter Kit notebooks.
+SETUP_NOTEBOOK_USAGE_NOTE = """Use this at notebook startup to load configuration for the current workspace and capture the runtime information required by downstream Starter Kit notebooks.
 
 This helps confirm the active environment, configured stores, notebook context, and runtime values before later notebooks depend on them."""
 
@@ -601,7 +601,7 @@ MODULE_DOCS_METADATA = [
 TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
   'notebook_label': '`00_env_config`',
   'segment_intro': 'Shared environment bootstrap and metadata table setup.',
-  'segments': [{'symbols': ['FabricStore', 'PathConfig', 'GovernanceConfig', 'DataAgreementConfig', 'FrameworkConfig', 'setup_notebook', 'setup_metadata_tables'],
+  'segments': [{'symbols': ['FabricStore', 'PathConfig', 'GovernanceConfig', 'DataAgreementConfig', 'FrameworkConfig', 'setup_metadata_tables'],
                 'title': 'Environment setup'}],
   'template_path': 'templates/notebooks/00_env_config.ipynb'},
  {'notebook_key': '00C_demo_setup',
@@ -621,7 +621,7 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
  {'notebook_key': '01_governance',
   'notebook_label': '`01_governance`',
   'segment_intro': 'Persistent Governance lifecycle before and after Engineering evidence production.',
-  'segments': [{'symbols': ['widget_render_data_steward',
+  'segments': [{'symbols': ['setup_notebook', 'widget_render_data_steward',
                             'widget_render_data_agreement',
                             'widget_data_contract'],
                 'title': 'Agreement, Data Contract authoring, and activation'}],
@@ -953,10 +953,10 @@ PUBLIC_SYMBOL_DOCS = [
   'symbol_name': 'setup_notebook',
   'template_notebook': '00_env_config',
   'template_segment': 'Environment bootstrap',
-  'use_when': 'Use at the start of 00_env_config or a notebook template to validate FabricOps '
+  'use_when': 'Use at the start of a Governance notebook to load and validate FabricOps '
               'configuration, resolve required targets, and capture runtime context before other '
               'helpers run.',
-  'when_to_use': ['Starting a FabricOps notebook from 00_env_config',
+  'when_to_use': ['Starting a FabricOps notebook with workspace configuration',
                   'Validating configured environment targets before downstream helpers run',
                   'Capturing runtime metadata for later lineage, review, or handover steps'],
   'do_not_use_when': 'Do not use as a replacement for metadata table setup or per-table governance '
@@ -969,8 +969,8 @@ PUBLIC_SYMBOL_DOCS = [
             'required targets.',
   'side_effects': 'Runs configuration validation and Fabric readiness checks; it does not write '
                   'FabricOps metadata tables.',
-  'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
-                    'intended env name; never hardcode Fabric workspace or item identifiers.',
+  'fabric_context': 'Automatic setup requires Fabric currentWorkspaceId and access to 00_env_config. '
+                    'FABRICOPS_CONFIG_WORKSPACE_ID selects the central notebook workspace; Governance defaults locally.',
   'ai_verification': 'Verify the returned context is ready before generating downstream notebook '
                      'code and confirm required targets resolve for the selected env.',
   'preferred_example': 'context = setup_notebook(CONFIG, env="Sandbox", '
@@ -1634,13 +1634,13 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     },
     "setup_notebook": {
         "expanded_purpose": "Prepares a Fabric notebook to use FabricOps consistently by validating environment configuration, resolving required data and metadata targets, collecting runtime identity, and returning a normalized NotebookSetupContext for downstream cells.",
-        "when_to_use": "Call near the beginning of an operational FabricOps notebook after loading environment configuration and before source reads, metadata setup, profiling, guardrails, or writes. It is normally called once per notebook execution and does not replace setup_metadata_tables.",
-        "parameters": "config supplies the FabricOps framework configuration; env selects the environment; required_targets identifies the configured data or metadata targets that must resolve; notebook_name overrides automatic runtime notebook-name resolution; run_id_prefix is used only when Fabric does not provide a run id; local_fallback_name supports local tests when Fabric runtime context is unavailable.",
+        "when_to_use": "Call near the beginning of an operational FabricOps notebook to load workspace configuration before source reads, metadata setup, profiling, guardrails, or writes. It is normally called once per notebook execution and does not replace setup_metadata_tables.",
+        "parameters": "config optionally supplies explicit FabricOps configuration; otherwise the caller workspace selects the environment through 00_env_config. FABRICOPS_CONFIG_WORKSPACE_ID locates the central Engineering notebook; env applies only to explicit config; required_targets identifies the configured data or metadata targets that must resolve; notebook_name overrides automatic runtime notebook-name resolution; run_id_prefix is used only when Fabric does not provide a run id; local_fallback_name supports local tests when Fabric runtime context is unavailable.",
         "returns": "NotebookSetupContext with run_id, notebook_name, workspace_name, user_name, environment, paths, validation_results, runtime_metadata, and readiness_status.",
-        "side_effects": "Validates configuration and runtime context only. It does not read or write business data, create Fabric resources, or persist metadata.",
+        "side_effects": "With no config, runs 00_env_config for the caller workspace, loads JSON, applies the audit timezone and initializes the shared context. Explicit config retains validation-only behavior. It does not write business data, provision resources or persist metadata.",
         "return_interpretation": "A ready context means required targets resolved and startup checks did not fail. Review validation_results when readiness_status is not ready before running downstream notebook cells.",
         "common_failure_causes": ["Missing required configuration sections or target names.", "No active Spark session, which is reported as a warning for local fallback mode.", "Fabric notebook runtime utilities are unavailable outside Fabric.", "Workspace, lakehouse, warehouse, or notebook context cannot be resolved.", "Invalid target names or required store identity fields.", "Explicit notebook_name or local_fallback_name is needed when automatic Fabric context is not available."],
-        "preferred_example": 'CONTEXT = setup_notebook(CONFIG, env=ENVIRONMENT_NAME, required_targets=["Bronze", "Silver", "Gold", "Metadata"])',
+        "preferred_example": 'CONTEXT = setup_notebook()',
     },
     "read_lakehouse_csv": {
         "expanded_purpose": "Reads one CSV file or a compatible collection of CSV files from a Fabric lakehouse Files location into a Spark DataFrame using FabricOps target and path resolution. It does not profile, register, display, cache, or write the data automatically.",

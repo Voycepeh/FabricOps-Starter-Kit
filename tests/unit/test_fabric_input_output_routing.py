@@ -752,7 +752,7 @@ def test_missing_active_context_has_clear_error(monkeypatch):
 
     monkeypatch.delattr(builtins, "FABRIC_CONTEXT", raising=False)
 
-    with pytest.raises(RuntimeError, match="Please run 00_env_config"):
+    with pytest.raises(RuntimeError, match="Call setup_notebook"):
         io.read_lakehouse_table("orders", spark_session=_Spark())
 
 

@@ -138,7 +138,7 @@ def test_framework_config_rejects_different_metadata_stores_across_environments(
 def test_config_setup_public_api_signatures_match_frozen_contract():
     """Verify config setup public API signatures match the frozen contract."""
     assert str(inspect.signature(setup_notebook)) == (
-        "(config: 'FrameworkConfig | dict[str, Any]', env: 'str' = 'Sandbox', "
+        "(config: 'FrameworkConfig | dict[str, Any] | None' = None, env: 'str' = 'Sandbox', "
         "required_targets: 'list[str] | None' = None, notebook_name: 'str | None' = None, "
         "run_id_prefix: 'str' = 'run', local_fallback_name: 'str | None' = None) -> 'NotebookSetupContext'"
     )
@@ -1037,9 +1037,8 @@ def test_env_config_template_exposes_audit_timezone_setting():
     assert "FABRICOPS_AUDIT_TIMEZONE" in source
     assert "_validate_audit_timezone" in source or "audit_timezone=FABRICOPS_AUDIT_TIMEZONE" in source
     assert "audit_timezone=FABRICOPS_AUDIT_TIMEZONE" in source
-    assert 'spark.conf.set("spark.sql.session.timeZone", CONFIG.audit_timezone)' in source
-    assert source.index("CONFIG = FrameworkConfig(") < source.index('spark.conf.set("spark.sql.session.timeZone"')
-    assert "spark.conf.get('spark.sql.session.timeZone')" in source
+    assert '"config": asdict(CONFIG)' in source
+    assert source.index("CONFIG = FrameworkConfig(") < source.index('notebookutils.notebook.exit(')
 
 
 def test_downstream_notebooks_use_config_aware_audit_timestamps_only():

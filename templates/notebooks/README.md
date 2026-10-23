@@ -20,9 +20,35 @@ Completed learning demos are kept separately under `templates/DemoData/`:
 
 For the end-to-end workflow, follow the [Guided Demo](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/).
 
+## Workspace configuration
+
+Deploy the same `00_env_config.ipynb` template separately in Governance and Central Engineering, named `00_env_config` in Fabric. Governance uses its local deployment. Engineering execution workspaces need no local config notebook.
+
+In each deployment, populate `ENVIRONMENT_WORKSPACES` with one unique workspace ID per environment and fill the existing `FrameworkConfig` store mappings. Governance registers its own workspace (for example as `dev`); Central Engineering registers Development and Production execution workspaces. Unknown workspace IDs and duplicate workspace assignments fail setup. All environment mappings retain the same central Metadata Lakehouse.
+
+Set the process environment variable `FABRICOPS_CONFIG_WORKSPACE_ID` to the Central Engineering workspace ID once in the shared Engineering runtime before setup. Leave it unset in Governance. This is only a bootstrap notebook location; environment selection and resource mappings remain in `00_env_config`. The execution identity needs permission to run that notebook across workspaces and access its configured stores. If the setting is absent, setup looks in the caller workspace and fails when no config notebook exists there.
+
+`setup_notebook()` passes Fabric `currentWorkspaceId` to the config notebook through `notebookutils.notebook.run(..., workspaceId=...)`. The config notebook resolves that caller ID and returns JSON using `notebookutils.notebook.exit()`. Setup reconstructs the existing `FrameworkConfig`, validates it, applies the audit timezone, and initializes the shared context using the caller's runtime identity.
+
+```python
+# 01 Governance
+from fabricops_kit import setup_notebook
+context = setup_notebook()
+
+# 02 Pipeline
+from fabricops_kit import setup_pipeline, finalize_pipeline
+pipeline = setup_pipeline()  # Notebook name supplies pipeline_id; Test is the default.
+# Read → Transform → Write
+finalize_pipeline()
+```
+
+An explicit `pipeline_id` remains useful when notebook names can change; `pipeline_mode="Live"` retains the existing approved-manifest behavior. Neither requires an environment argument. Explicit `setup_notebook(CONFIG, env=...)` remains supported for local validation and advanced callers.
+
+Configuration loads do not create metadata tables. At deployment, run the Governance config notebook directly with `INITIALIZE_METADATA = True` once, then restore `False` before ordinary use.
+
 ## Pipeline execution mode
 
-The pipeline flow is **Setup Pipeline → Read → Transform → Write**. Environment routing is configured once by `00_env_config`. A stable `pipeline_id` identifies the logical pipeline independently of notebook names and paths.
+The pipeline flow is **Setup Pipeline → Read → Transform → Write**. Environment routing is resolved automatically from the caller workspace by the central Engineering `00_env_config`. A stable `pipeline_id` identifies the logical pipeline independently of notebook names and paths.
 
 ```python
 CONTRACTS = setup_pipeline(pipeline_id="example-orders", pipeline_mode="Test")

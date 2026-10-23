@@ -16,6 +16,8 @@ from fabricops_kit.pipeline import shared
 @pytest.fixture
 def runtime(monkeypatch):
     """Keep session, journal and orchestrators real; replace physical runtime boundaries."""
+    monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.setup_pipeline"), "initialize_notebook",
+                        lambda: SimpleNamespace(notebook_name="02_pipeline"))
     config = {}
     spark = SimpleNamespace(conf=SimpleNamespace(get=lambda key: 'test'))
     monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: (config, 'dev', context or {'config': config, 'env': 'dev'}))
