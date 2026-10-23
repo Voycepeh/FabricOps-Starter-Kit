@@ -721,7 +721,10 @@ def test_read_lakehouse_table_defaults_to_active_context(monkeypatch):
     """Verify lakehouse reads can default to the active Fabric context."""
     import builtins
 
-    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": _io_config(), "env": "dev"}, raising=False)
+    from fabricops_kit.config import shared as config_shared
+    from contextvars import ContextVar
+    active = ContextVar("test_governed_context", default={"config": _io_config(), "env": "dev"})
+    monkeypatch.setattr(config_shared, "_ACTIVE_GOVERNED_CONTEXT", active)
     spark = _Spark()
 
     io.read_lakehouse_table("orders", spark_session=spark)
@@ -734,7 +737,10 @@ def test_write_lakehouse_table_defaults_to_active_context(monkeypatch):
     """Verify lakehouse writes can default to the active Fabric context."""
     import builtins
 
-    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": _io_config(), "env": "dev"}, raising=False)
+    from fabricops_kit.config import shared as config_shared
+    from contextvars import ContextVar
+    active = ContextVar("test_governed_context", default={"config": _io_config(), "env": "dev"})
+    monkeypatch.setattr(config_shared, "_ACTIVE_GOVERNED_CONTEXT", active)
     frame = _Frame()
 
     io.write_lakehouse_table(frame, "orders_clean", mode="overwrite", verbose=False)
@@ -752,7 +758,7 @@ def test_missing_active_context_has_clear_error(monkeypatch):
 
     monkeypatch.delattr(builtins, "FABRIC_CONTEXT", raising=False)
 
-    with pytest.raises(RuntimeError, match="Please run 00_env_config"):
+    with pytest.raises(RuntimeError, match="No governed context"):
         io.read_lakehouse_table("orders", spark_session=_Spark())
 
 

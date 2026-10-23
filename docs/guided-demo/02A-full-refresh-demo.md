@@ -4,7 +4,7 @@
 
 1. Complete [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md).
 2. Download [`02A_full_refresh_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02A_full_refresh_demo.ipynb) and import it into the Engineering Development workspace.
-3. Keep `00_env_config.ipynb` beside the demo notebook.
+3. Have Governance register its runtime notebook ID with a Test pipeline binding.
 4. Attach the same Fabric Environment configured in [Step 00B](00B-configure-environment-and-load-assets.md).
 5. Confirm these source tables exist:
 
@@ -40,9 +40,7 @@ Bounded DataFrame previews also remain directly below each Read and Write call.
 Run **0. Environment** and **1. Setup Pipeline**. Reads and Writes define participants directly:
 
 ```python
-PIPELINE_ID = "02A_full_refresh_demo"
-PIPELINE_MODE = "Test"  # Test or Live
-CONTRACTS = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode=PIPELINE_MODE)
+pipeline = setup_pipeline()
 ```
 
 
@@ -180,7 +178,7 @@ Evaluation-only Testing completes all three Reads and both prepared Writes witho
 
 ![FabricOps metadata captured for the Full Refresh pipeline](../assets/02/Metadat_Captured.png)
 
-All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
+All metadata is routed to the Metadata Lakehouse resolved from the central Workspace Registry.
 
 | Metadata table | What this run records |
 | --- | --- |
@@ -208,4 +206,4 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 
 **Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
 
-Run `pipeline_result = finalize_pipeline(CONTRACTS)` after the last Write to record completion. Test publishes its run and Guardrail results at this step.
+Run `pipeline_result = finalize_pipeline()` after the last Write to record completion. Test publishes its run and Guardrail results at this step.

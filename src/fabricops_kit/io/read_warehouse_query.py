@@ -52,14 +52,14 @@ def read_warehouse_query(
         and ending in a ``SELECT``, to execute through the Fabric Warehouse SQL
         serving engine.
     store : str, default="warehouse"
-        Logical Warehouse store key from ``00_env_config``.
+        Logical Warehouse store key from the Workspace Registry or an explicit IO context.
     spark_session : object, optional
         Spark session to use instead of the notebook global ``spark``.
     context : dict[str, Any], optional
         Active Fabric context override.
     **options
         Additional Fabric Warehouse Spark connector reader options. Required
-        Fabric connector options are always set from ``00_env_config``.
+        Fabric connector options are always set from the Workspace Registry or an explicit IO context.
 
     Raises
     ------

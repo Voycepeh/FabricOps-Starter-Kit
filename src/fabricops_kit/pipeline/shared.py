@@ -493,7 +493,8 @@ def persist_lineage_participation(
         .alias("target")
         .merge(
             frame.alias("source"),
-            "target.environment_name = source.environment_name AND target.lineage_id = source.lineage_id",
+            "(target.execution_workspace_id <=> source.execution_workspace_id) "
+            "AND target.environment_name = source.environment_name AND target.lineage_id = source.lineage_id",
         )
         .whenMatchedUpdateAll()
         .whenNotMatchedInsertAll()
@@ -1272,7 +1273,8 @@ def _merge_source_observation_records(
         target.alias("target")
         .merge(
             frame.alias("source"),
-            "target.environment_name = source.environment_name "
+            "(target.execution_workspace_id <=> source.execution_workspace_id) "
+            "AND target.environment_name = source.environment_name "
             "AND target._activity_id = source._activity_id "
             "AND target.run_id <=> source.run_id "
             "AND target.source_table_id = source.source_table_id "
@@ -5847,6 +5849,8 @@ class PipelineOperation:
         plan.lock.acquire()
         args = self.arguments
         try:
+            from fabricops_kit.config.shared import verify_governed_context
+            verify_governed_context(plan.runtime_context)
             if plan.evidence.get("sealed") or plan.evidence.get("persistence_failed"):
                 raise RuntimeError("Execution plan is closed or evidence persistence failed; create a new plan.")
             if plan.evidence["failures"] and plan.permits_persistence:
@@ -6163,6 +6167,8 @@ class PipelineSession:
             '<p>Source associations describe pipeline participation.</p>'
             f'<ul>{operations}</ul><details><summary>Guardrail results and diagnostics</summary><ul>{checks}{failures}</ul></details></div>')
         for table_id, (detail, row) in self.reviews.items():
+            if self.inspector is None:
+                continue
             detail.value = self.inspector(row, ("source", "target"), self.plan.results)
         for control in self.controls:
             control.disabled = self.closed or bool(self.plan.evidence["operations"])
@@ -6197,6 +6203,8 @@ class PipelineSession:
                 self.shell.events.unregister("post_run_cell", self.cell_completed)
             if _ACTIVE_PIPELINE.get() is self:
                 _ACTIVE_PIPELINE.set(None)
+                from fabricops_kit.config.shared import release_governed_context
+                release_governed_context(self.plan.runtime_context)
             self.refresh()
 
 
@@ -6215,6 +6223,10 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None):
     import atexit
     from types import MappingProxyType
     from fabricops_kit.config.shared import resolve_runtime_context
+    if not isinstance(pipeline_id, str) or not pipeline_id.strip():
+        raise ValueError("A non-empty pipeline identity is required.")
+    if pipeline_mode not in {"Test", "Live"}:
+        raise ValueError("pipeline_mode must be exactly Test or Live.")
     previous = _ACTIVE_PIPELINE.get()
     if previous is not None and previous.owns_current_execution():
         previous.close()
@@ -7238,6 +7250,8 @@ def _audit_literal_columns(*, config: Any, env: str, runtime_context: dict[str, 
         "_notebook_name": F.lit(audit["_notebook_name"]).cast("string"),
         "_metadata_lakehouse_name": F.lit(audit["_metadata_lakehouse_name"]).cast("string"),
         "_activity_id": F.lit(audit["_activity_id"]).cast("string"),
+        "execution_workspace_id": F.lit(audit.get("execution_workspace_id")).cast("string"),
+        "_legacy_environment_name": F.lit(None).cast("string"),
     }
 
 
@@ -7437,25 +7451,22 @@ def _stage_catalogue_profile_retry(
         context={"config": config, "env": env},
     )
     activities = profiled_df.select(
-        "environment_name", "table_id", "_activity_id"
+        "environment_name", "table_id", "_activity_id", "execution_workspace_id"
     ).dropDuplicates()
     target = DeltaTable.forPath(spark_session, path)
-    same_activity_retry = bool(
-        target.toDF()
-        .select("environment_name", "table_id", "_activity_id")
-        .join(
-            activities,
-            on=["environment_name", "table_id", "_activity_id"],
-            how="inner",
-        )
-        .limit(1)
-        .count()
-    )
+    existing = target.toDF().select("environment_name", "table_id", "_activity_id", "execution_workspace_id").alias("existing")
+    activities = activities.alias("activities")
+    same_activity_retry = bool(existing.join(activities, on=(
+        (existing.environment_name == activities.environment_name)
+        & (existing.table_id == activities.table_id)
+        & (existing._activity_id == activities._activity_id)
+        & existing.execution_workspace_id.eqNullSafe(activities.execution_workspace_id)), how="inner").limit(1).count())
     (
         target.alias("target")
         .merge(
             activities.alias("source"),
-            "target.environment_name = source.environment_name "
+            "(target.execution_workspace_id <=> source.execution_workspace_id) "
+            "AND target.environment_name = source.environment_name "
             "AND target.table_id = source.table_id "
             "AND target._activity_id = source._activity_id",
         )
@@ -7472,7 +7483,9 @@ def _profile_snapshot_id(*, config: Any, env: str, context: dict[str, Any], tabl
     activity_id = build_runtime_audit_fields(
         config=config, env=env, runtime_context=context
     )["_activity_id"]
-    return str(uuid5(NAMESPACE_URL, f"fabricops-profile|{env}|{table_id}|{activity_id}"))
+    workspace = getattr(config, "execution_workspace_id", None)
+    prefix = f"fabricops-profile|{workspace}" if workspace else "fabricops-profile"
+    return str(uuid5(NAMESPACE_URL, f"{prefix}|{env}|{table_id}|{activity_id}"))
 
 
 def _catalogue_dataframe_from_profiled(
@@ -7498,6 +7511,8 @@ def _catalogue_dataframe_from_profiled(
     first = profiled_df.select(
         "table_id",
         "environment_name",
+        "execution_workspace_id",
+        "_legacy_environment_name",
         "_committed_by",
         "_committed_at",
         "_workspace_id",
@@ -7513,6 +7528,7 @@ def _catalogue_dataframe_from_profiled(
     common = {
         "table_id": first["table_id"],
         "environment_name": first["environment_name"],
+        "execution_workspace_id": first["execution_workspace_id"],
         "store_type": store_type,
         "layer": layer,
         "schema_name": schema_name,
@@ -7580,17 +7596,21 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
         metadata_table_physical_schema(config, CATALOGUE_TABLE),
         context={"config": config, "env": env},
     )
-    first = catalogue_df.select("environment_name", "table_id").first()
+    first = catalogue_df.select("environment_name", "table_id", "execution_workspace_id").first()
     if first is None:
         return
     environment_name = str(first["environment_name"]).replace("'", "''")
     table_id = str(first["table_id"]).replace("'", "''")
+    workspace = first["execution_workspace_id"]
+    workspace_condition = ("target.execution_workspace_id IS NULL" if workspace is None else
+                           "target.execution_workspace_id = '" + str(workspace).replace("'", "''") + "'")
     target = DeltaTable.forPath(spark_session, path)
     (
         target.alias("target")
         .merge(
             catalogue_df.alias("source"),
-            "target.environment_name = source.environment_name "
+            "(target.execution_workspace_id <=> source.execution_workspace_id) "
+            "AND target.environment_name = source.environment_name "
             "AND target.metadata_level = source.metadata_level "
             "AND target.table_id = source.table_id "
             "AND coalesce(target.column_id, '') = coalesce(source.column_id, '')",
@@ -7637,7 +7657,7 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
         .whenNotMatchedInsertAll()
         .whenNotMatchedBySourceUpdate(
             condition=(
-                f"target.environment_name = '{environment_name}' AND target.table_id = '{table_id}' "
+                f"{workspace_condition} AND target.environment_name = '{environment_name}' AND target.table_id = '{table_id}' "
                 "AND target.metadata_level = 'column' AND target.is_active = true"
             ),
             set={"is_active": "false"},
@@ -7929,3 +7949,11 @@ def _persist_grain_candidates(identity, candidates, *, max_columns, config, env,
     table.update(condition=condition, set={"profile_key_candidates_json": F.lit(json.dumps(
         _key_candidate_evidence(candidates, max_columns=max_columns), sort_keys=True, separators=(",", ":"))),
         **{name: F.lit(value) for name, value in audit.items()}})
+
+
+
+def close_current_pipeline_session():
+    """Close only an execution owned by the caller before resolving another workspace context."""
+    previous = _ACTIVE_PIPELINE.get()
+    if previous is not None and previous.owns_current_execution():
+        previous.close()

@@ -10,7 +10,7 @@ Complete **Author → Test → Activate → Live**. [Step 5](05-activate-data-co
 
 1. Complete [Step 00B. Configure the Environment and load assets](00B-configure-environment-and-load-assets.md).
 2. Download [`02_pipeline.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/notebooks/02_pipeline.ipynb) and import it into the Engineering Development workspace.
-3. Import `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
+3. Register its runtime notebook ID centrally and attach the same Fabric Environment used in Step 00B.
 
 The template deliberately contains placeholder table names. Read this walkthrough first, then replace them before running the Read or Write cells.
 
@@ -51,10 +51,11 @@ The template starts with one Read, one transformation, and one Write. Add more R
 ### Load the shared environment
 
 ```python
-%run 00_env_config
+from fabricops_kit import setup_governance
+context = setup_governance()
 ```
 
-`00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
+`setup_pipeline()` resolves the approved stores, deployment environment and notebook identity from the registry; Governance uses `setup_governance(target_workspace_id=...)`. You should see the shared FabricOps configuration load without an error.
 
 ### Import required pipeline functions
 
@@ -65,9 +66,7 @@ Then run the import cell immediately below it. The import cell provides the publ
 ### Run the Data Contract block
 
 ```python
-PIPELINE_ID = "02_pipeline"
-PIPELINE_MODE = "Test"  # Test or Live
-CONTRACTS = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode=PIPELINE_MODE)
+pipeline = setup_pipeline()
 ```
 
 

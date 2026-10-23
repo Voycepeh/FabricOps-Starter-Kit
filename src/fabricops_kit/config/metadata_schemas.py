@@ -10,6 +10,8 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
     "METADATA_ACTIVATION_STATE",
+    "METADATA_WORKSPACE_REGISTRY",
+    "METADATA_EXECUTION_STATE",
     "METADATA_DATA_CATALOGUE",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
@@ -26,10 +28,15 @@ GOVERNANCE_METADATA_TABLES = (
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
     "METADATA_ACTIVATION_STATE",
+    "METADATA_WORKSPACE_REGISTRY",
 )
 
 ENGINEERING_METADATA_TABLES = tuple(
     table_name for table_name in CANONICAL_METADATA_TABLES if table_name not in GOVERNANCE_METADATA_TABLES
+)
+
+WORKSPACE_SCOPED_METADATA_TABLES = tuple(
+    table for table in ENGINEERING_METADATA_TABLES if table not in {"METADATA_EXECUTION_STATE", "METADATA_TABLE_PROFILING"}
 )
 
 METADATA_TABLE_OWNERSHIP = {
@@ -123,6 +130,9 @@ def build_metadata_schema(table_name: str, fields: list[tuple[str, str] | tuple[
             def fieldNames(self) -> list[str]:  # noqa: N802
                 return [field.name for field in self.fields]
 
+    if table_name in WORKSPACE_SCOPED_METADATA_TABLES:
+        fields = [*fields[:-len(AUDIT_SCHEMA_FIELDS)], ("execution_workspace_id", "string", True),
+                  ("_legacy_environment_name", "string", True), *fields[-len(AUDIT_SCHEMA_FIELDS):]]
     logical: dict[str, list[str]] = {}
     for field in fields:
         name = field[0]
@@ -180,6 +190,16 @@ def metadata_table_schema_registry() -> dict[str, Any]:
         ),
         "METADATA_ACTIVATION_STATE": build_metadata_schema(
             "METADATA_ACTIVATION_STATE",
+            [("authority_id", "string", False), ("token", "string", False),
+             ("snapshot_json", "string", False), *audit],
+        ),
+        "METADATA_WORKSPACE_REGISTRY": build_metadata_schema(
+            "METADATA_WORKSPACE_REGISTRY",
+            [("authority_id", "string", False), ("token", "string", False),
+             ("snapshot_json", "string", False), *audit],
+        ),
+        "METADATA_EXECUTION_STATE": build_metadata_schema(
+            "METADATA_EXECUTION_STATE",
             [("authority_id", "string", False), ("token", "string", False),
              ("snapshot_json", "string", False), *audit],
         ),

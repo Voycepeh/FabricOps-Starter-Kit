@@ -1,6 +1,6 @@
 # METADATA_ACTIVATION_STATE
 
-Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership and running execution reservations.
+Administrator-owned central authority for workspace activation revisions, immutable approval history, table contracts and writer ownership. Run reservations live separately in METADATA_EXECUTION_STATE.
 
 ## Writer functions
 
@@ -16,7 +16,7 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `governance`
 
-**Grain:** One central authority row containing environment snapshots.
+**Grain:** One central authority row containing deployment-environment and workspace scopes.
 
 **Primary key:** `authority_id`
 

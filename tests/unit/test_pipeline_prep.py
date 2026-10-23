@@ -283,7 +283,7 @@ class BatchDouble:
 def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", context=None):
     context = context if context is not None else {}
     identity = _identity(f"{store_type}:unified:dbo:students", store_type=store_type)
-    monkeypatch.setattr(write_module, "resolve_fabric_context", lambda: ("config", "dev", context))
+    monkeypatch.setattr(write_module, "resolve_fabric_context", lambda **kwargs: ("config", "dev", context))
     monkeypatch.setattr(
         write_module,
         "resolve_catalogue_table_identity",

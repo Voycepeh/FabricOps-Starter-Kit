@@ -60,7 +60,7 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `relative_path` | `str` | Yes | `—` | Parquet file path resolved underneath the configured Lakehouse ``Files`` area. Root-level files such as ``customers.parquet`` and nested paths such as ``incoming/2026/customers.parquet`` are supported. |
-| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from ``00_env_config``. |
+| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from the Workspace Registry or an explicit IO context. |
 | `verbose` | `bool` | No | `True` | Whether to print operational progress for original path attempts, original read success or failure, ``_tsus`` path attempts, conversion attempts, and fallback success or failure. It does not change the resulting data. |
 | `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
@@ -108,7 +108,7 @@ that Spark can decode at least one row. The function is therefore not a
 purely lazy reader, but it does not collect the entire dataset to the
 driver.
 
-``store`` is a logical Lakehouse target from ``00_env_config`` and
+``store`` is a logical Lakehouse target from the Workspace Registry or an explicit IO context and
 ``relative_path`` is resolved under the configured Lakehouse ``Files``
 area. Root-level and nested paths are supported. The resolved location is
 conceptually ``<configured lakehouse>/Files/<relative_path>``. Examples:

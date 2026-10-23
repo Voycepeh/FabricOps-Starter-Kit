@@ -60,7 +60,7 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `relative_path` | `str` | Yes | `—` | JSON file or folder path underneath the configured Lakehouse ``Files`` area. Root-level and nested paths are supported. |
-| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key configured by ``00_env_config``. |
+| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key configured by the Workspace Registry or an explicit IO context. |
 | `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
 | `**options` | `—` | No | `—` | Options forwarded unchanged to Spark's JSON reader, such as ``multiLine``, ``mode``, ``columnNameOfCorruptRecord``, ``dateFormat``, ``timestampFormat``, ``encoding``, ``recursiveFileLookup``, ``pathGlobFilter``, ``primitivesAsString``, ``allowComments``, ``allowSingleQuotes``, and ``allowUnquotedFieldNames``. |

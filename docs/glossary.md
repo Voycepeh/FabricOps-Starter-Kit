@@ -25,7 +25,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="data-contract">
 <summary><strong>Data Contract</strong> — A versioned set of governed expectations for one table.</summary>
-<p>A globally versioned table-centric Data Contract freezes Schema, processing, Enrichment and Guardrails. Draft becomes Frozen and stays immutable and reusable across environments. An Activated Pipeline references exact versions and payload hashes. Environment activation can differ while sharing one central contract history; contracts have no individual activation step.</p>
+<p>A globally versioned table-centric Data Contract freezes Schema, processing, Enrichment and Guardrails. Draft becomes Frozen and stays immutable and reusable across environments. An Activated Pipeline references exact versions and payload hashes. Workspace activation can differ while sharing one central contract history; contracts have no individual activation step.</p>
 <p><strong>Also known as:</strong> data contracts</p>
 </details>
 
@@ -83,6 +83,16 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <summary><strong>Configuration-driven Engineering</strong> — Keeping reusable pipeline logic separate from environment-specific Fabric configuration.</summary>
 <p>00_env_config maps logical stores to the Fabric items for the active environment. The same 02_pipeline can therefore move between environments without hard-coded workspace IDs, item IDs, paths, or endpoints throughout the notebook.</p>
 <p><strong>Also known as:</strong> config-driven engineering</p>
+</details>
+
+<details id="workspace-registry">
+<summary><strong>Workspace Registry</strong> — Centrally governed mappings keyed by authoritative Fabric workspace ID.</summary>
+<p>METADATA_WORKSPACE_REGISTRY stores registration status, deployment environment, approved Bronze/Silver/Gold resources, shared Metadata identity, settings and notebook pipeline bindings. Unknown or inactive workspaces fail closed for governed execution.</p>
+</details>
+
+<details id="deployment-environment">
+<summary><strong>deployment environment</strong> — The DEV, TEST or PROD label assigned centrally to a registered workspace.</summary>
+<p>Multiple workspaces may share one deployment environment. The label does not infer Test or Live execution or grant activation; approvals are isolated by workspace identity.</p>
 </details>
 
 <details id="read-transform-write">
@@ -202,6 +212,11 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <summary><strong>Microsoft Fabric</strong> — Microsoft's end-to-end analytics platform for data ingestion, transformation, real-time processing, analytics, and reporting.</summary>
 <p>Microsoft Fabric is an end-to-end analytics platform that brings together data ingestion, transformation, real-time processing, analytics, and reporting through integrated Fabric workloads over a shared data and compute foundation.</p>
 <p><strong>Microsoft Learn:</strong> <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/microsoft-fabric-overview">Official documentation</a></p>
+</details>
+
+<details id="fabric-environment-item">
+<summary><strong>Fabric Environment item</strong> — A published Fabric item providing Spark runtime, libraries and compute settings.</summary>
+<p>Administrators publish the approved FabricOps wheel and pinned registry locator in a shared Fabric Environment, or compatible centrally managed equivalents. This runtime item is distinct from the registered deployment environment.</p>
 </details>
 
 <details id="workspace">

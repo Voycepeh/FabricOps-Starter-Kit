@@ -29,7 +29,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "A versioned set of governed expectations for one table.",
-    "long_definition": "A globally versioned table-centric Data Contract freezes Schema, processing, Enrichment and Guardrails. Draft becomes Frozen and stays immutable and reusable across environments. An Activated Pipeline references exact versions and payload hashes. Environment activation can differ while sharing one central contract history; contracts have no individual activation step.",
+    "long_definition": "A globally versioned table-centric Data Contract freezes Schema, processing, Enrichment and Guardrails. Draft becomes Frozen and stays immutable and reusable across environments. An Activated Pipeline references exact versions and payload hashes. Workspace activation can differ while sharing one central contract history; contracts have no individual activation step.",
     "preferred_usage": "Use Data Contract for reusable frozen table expectations; Activated Pipeline is whole-pipeline Live authority.",
     "avoid_usage": "data agreement when the steward-to-steward sharing relationship is meant"
   },
@@ -40,7 +40,7 @@
     "category": "FabricOps concepts",
     "short_definition": "The validated execution decisions shared by every Read and Write in one pipeline run.",
     "long_definition": "Internal run authority fixes exact table contracts, stable pipeline identity and environment destinations. Test discovers participants from operations; Live pins an approved manifest and revision. Public Read and Write calls use the execution session automatically.",
-    "preferred_usage": "Pass one explicit plan throughout Read, Transform and Write; build a new plan after selection changes.",
+    "preferred_usage": "Use setup_pipeline() to bind one immutable workspace-resolved plan throughout Read, Transform, Write and Finalize.",
     "avoid_usage": "mutable notebook-global contract overrides"
   },
   {
@@ -50,7 +50,7 @@
     "category": "FabricOps concepts",
     "short_definition": "Pipeline execution against all frozen contracts, or explicit contract-free exploration.",
     "long_definition": "Test evaluates real reads, transformations and selected frozen Data Contract Guardrails without business or operational metadata commits during Read and Write. finalize_pipeline publishes the completed run and Guardrail results for activation review; approval still requires complete frozen-contract coverage and all existing checks.",
-    "preferred_usage": "Use Test for pipeline_mode, independently of the configured environment name.",
+    "preferred_usage": "Use Test for the centrally registered execution mode, independently of the deployment environment label.",
     "avoid_usage": "successful Live publication when only dry-run checks passed"
   },
   {
@@ -760,5 +760,35 @@
     "id": "table-profiling-policy",
     "short_definition": "Mutable Table ID-level operational schedules for Standard Profiling, Grain Discovery and Frequency Profiling.",
     "avoid_usage": "contract Guardrail schedule"
+  },
+  {
+    "id": "workspace-registry",
+    "term": "Workspace Registry",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "Centrally governed mappings keyed by authoritative Fabric workspace ID.",
+    "long_definition": "METADATA_WORKSPACE_REGISTRY stores registration status, deployment environment, approved Bronze/Silver/Gold resources, shared Metadata identity, settings and notebook pipeline bindings. Unknown or inactive workspaces fail closed for governed execution.",
+    "preferred_usage": "Workspace Registry",
+    "avoid_usage": "local environment configuration notebook"
+  },
+  {
+    "id": "deployment-environment",
+    "term": "deployment environment",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "The DEV, TEST or PROD label assigned centrally to a registered workspace.",
+    "long_definition": "Multiple workspaces may share one deployment environment. The label does not infer Test or Live execution or grant activation; approvals are isolated by workspace identity.",
+    "preferred_usage": "deployment environment",
+    "avoid_usage": "local environment configuration notebook"
+  },
+  {
+    "id": "fabric-environment-item",
+    "term": "Fabric Environment item",
+    "aliases": [],
+    "category": "Microsoft Fabric concepts",
+    "short_definition": "A published Fabric item providing Spark runtime, libraries and compute settings.",
+    "long_definition": "Administrators publish the approved FabricOps wheel and pinned registry locator in a shared Fabric Environment, or compatible centrally managed equivalents. This runtime item is distinct from the registered deployment environment.",
+    "preferred_usage": "Fabric Environment item",
+    "avoid_usage": "local environment configuration notebook"
   }
 ]

@@ -60,7 +60,7 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `relative_path` | `str` | Yes | `—` | Excel file path resolved by the Fabric resolver. |
-| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from ``00_env_config``. |
+| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from the Workspace Registry or an explicit IO context. |
 | `sheet_name` | `str or int` | No | `0` | Worksheet name or index to read. |
 | `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
@@ -93,7 +93,7 @@ Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors 
 <div class="reference-docstring-notes" markdown="1">
 
 FabricOps resolves the configured Lakehouse Files path from
-``00_env_config``, reads the workbook binary through Spark, parses it with
+the Workspace Registry or an explicit IO context, reads the workbook binary through Spark, parses it with
 ``pandas.read_excel``, and converts the pandas DataFrame back to a Spark
 DataFrame. The temporary local workbook is deleted after parsing, including
 when parsing raises an error.

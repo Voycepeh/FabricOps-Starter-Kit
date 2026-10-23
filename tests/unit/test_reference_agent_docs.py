@@ -213,10 +213,10 @@ def test_setup_metadata_tables_reference_uses_keyword_only_example() -> None:
     assert "spark_session=spark" not in _section_text(text, "Example usage")
     example = _section_text(text, "Example usage")
     assert 'class="reference-example-usage"' in example
-    assert "setup_result = setup_metadata_tables" in example
+    assert "setup_metadata_tables(" in example
     assert "spark=spark" in example
-    assert "config=CONFIG" in example
-    assert "env=ENVIRONMENT_NAME" in example
+    assert "config=" not in example and "env=" not in example
+    assert "raise_on_failure=True" in example
 
 
 def test_write_io_reference_pages_render_docstring_examples(tmp_path, monkeypatch) -> None:
@@ -661,14 +661,14 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert text.count('<div class="reference-source-card" markdown="1">') == 1
     assert "## Example usage" in text
     example = _section_text(text, "Example usage")
-    assert "CONTEXT = setup_notebook" in example
-    assert "required_targets=" in example
+    assert "legacy_readiness = setup_notebook" in example
+    assert "legacy_config" in example and "env=legacy_environment" in example
     for marker in ("## Signature", "## Parameters", "## Returns"):
         assert marker in text
     assert "## AI / machine-readable metadata" not in text
     assert "Machine-readable metadata / metadata details" not in text
-    assert "Use at the start of 00_env_config" in text
-    assert "capture runtime context before other helpers run" in text
+    assert "Deprecated compatibility helper" in text
+    assert "setup_pipeline" in text and "setup_governance" in text
     assert "## Parameters" in text
     assert "| `config` |" in text
     assert "| Yes |" in text or "| No |" in text
@@ -691,7 +691,7 @@ def test_public_callable_usage_notes_are_function_specific() -> None:
     assert "managed Delta tables" in io_text
     assert "Data Contract" in widget_text
     assert "DataFrame profiling" in pipeline_text
-    assert "create or validate" in setup_text
+    assert "provision or additively evolve" in setup_text
     assert "Fabric notebooks can only attach" not in io_text
     assert "standard Starter Kit pipeline flow" not in pipeline_text
 
@@ -747,7 +747,7 @@ def test_metadata_reference_overview_renders_model_diagram() -> None:
     assert image_reference in text
     assert "manifest-backed Activated Pipeline contracts and separate run-linked Guardrail Results" in text
     assert "```mermaid" not in text
-    assert len(CANONICAL_METADATA_TABLES) == 13
+    assert len(CANONICAL_METADATA_TABLES) == 15
     assert all(name in text for name in CANONICAL_METADATA_TABLES)
     assert "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column" in text
     assert "containing authored Guardrails and Enrichment" in text
@@ -2076,7 +2076,7 @@ def test_current_metadata_pages_match_reduced_registry_and_have_no_retired_links
 
     pages = {path.name for path in (REFERENCE_DIR / "metadata").glob("*.md")}
     assert pages == {name.lower() + ".md" for name in CANONICAL_METADATA_TABLES}
-    assert len(pages) == 13
+    assert len(pages) == 15
     for slug in ("metadata_enrichment", "metadata_guardrail"):
         assert not (REFERENCE_DIR / "metadata" / f"{slug}.md").exists()
         assert f"metadata/{slug}.md" not in (ROOT / "mkdocs.yml").read_text()

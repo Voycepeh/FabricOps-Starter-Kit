@@ -13,7 +13,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE_DIR = ROOT / "templates" / "notebooks"
 TEMPLATE_NAMES = (
-    "00_env_config.ipynb",
     "01_governance.ipynb",
     "02_pipeline.ipynb",
 )

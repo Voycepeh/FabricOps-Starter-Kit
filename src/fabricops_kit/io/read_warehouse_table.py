@@ -46,7 +46,7 @@ def read_warehouse_table(
     table_name : str
         Physical Warehouse table name for the source table.
     store : str, default="warehouse"
-        Logical Warehouse configuration name from ``00_env_config``. This
+        Logical Warehouse configuration name from the Workspace Registry or an explicit IO context. This
         identifies the configured Warehouse target, while ``schema`` and
         ``table_name`` identify the physical Warehouse table.
     spark_session : object, optional
@@ -55,7 +55,7 @@ def read_warehouse_table(
         Active Fabric context override.
     **options
         Additional Fabric Warehouse Spark connector reader options. Required
-        Fabric connector options are always set from ``00_env_config``.
+        Fabric connector options are always set from the Workspace Registry or an explicit IO context.
 
     Returns
     -------

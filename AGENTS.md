@@ -20,7 +20,7 @@ Canonical operating guide for Codex and agent contributions in this repository. 
   - `METADATA_DATA_PROFILED_FREQUENCY` stores frequency-distribution rows linked to profile snapshots where applicable.
   - `METADATA_DATA_LINEAGE` stores registered source/target pipeline participation.
   - `METADATA_DATA_CONTRACT.contract_payload_json` stores authored descriptive Enrichment and executable Guardrails for one exact contract version; frozen payloads are immutable.
-  - `METADATA_ACTIVATION_STATE` stores one central atomic authority snapshot containing environment activation revisions, immutable pipeline approval history, exact Agreements, complete Testing references, table contracts, writer ownership and running execution reservations.
+  - `METADATA_ACTIVATION_STATE` stores one central atomic authority snapshot containing workspace activation revisions, immutable pipeline approval history, exact Agreements, complete Testing references, table contracts and writer ownership. `METADATA_EXECUTION_STATE` owns run reservations and the cutover lock; `METADATA_WORKSPACE_REGISTRY` owns approved workspace configuration.
   - `METADATA_PIPELINE_RUN` stores one logical pipeline execution across all declared operations, candidate identity, status and safe failures, and the activated version for Live.
   - `METADATA_GUARDRAIL_RESULTS` stores Guardrail evaluation results and continuation decisions.
   - `METADATA_GUARDRAIL_ROW_RESULTS` stores row-level failures linked to Guardrail Results where applicable.
@@ -226,7 +226,7 @@ Validation builds do not make generated files on `main` current unless those fil
 - `src/fabricops_kit/config/metadata_schemas.py` is the canonical implemented metadata schema source.
 - `Managed by` entries should identify exact source functions when traceable.
 - Use `.agents/skills/fabricops-docs-maintenance/SKILL.md` for documentation ownership, readability, Guided Demo, Featured Solutions, and diagram procedure.
-- Use `.agents/skills/fabricops-notebook-template/SKILL.md` for all living standard notebook templates. Only `00_env_config.ipynb` and `02_pipeline.ipynb` are currently part of the release snapshot contract.
+- Use `.agents/skills/fabricops-notebook-template/SKILL.md` for all living standard notebook templates. Current standard templates are `01_governance.ipynb` and `02_pipeline.ipynb`; historical release snapshots remain immutable.
 - Use `.agents/skills/fabricops-release/SKILL.md` for release notes, release snapshots, versioning, tagging, and publishing procedure.
 - Use `.agents/skills/fabricops-public-api-change/SKILL.md` for callable documentation and lifecycle-specific API procedure.
 
@@ -240,7 +240,7 @@ Validation builds do not make generated files on `main` current unless those fil
 
 ## Metadata lakehouse routing
 
-Do not assume the attached or default Lakehouse for metadata tables. Route all `METADATA_*` reads and writes through the metadata target configured by `00_env_config`.
+Do not assume the attached or default Lakehouse for metadata tables. Route all `METADATA_*` reads and writes through the central Metadata target resolved from the Workspace Registry (or explicit context for independent IO/admin migration).
 
 Use the current public IO signatures and configured metadata store or path. Do not introduce default-Lakehouse shortcuts.
 

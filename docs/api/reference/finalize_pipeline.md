@@ -19,12 +19,11 @@ Call after all Reads, transformations and Writes, including read-only runs.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-pipeline = setup_pipeline(pipeline_id="orders", pipeline_mode="Test")
-source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
-pipeline_result = finalize_pipeline(pipeline)
+pipeline_result = finalize_pipeline()
 ```
 
 </div>
+
 
 <details class="reference-signature-details" markdown="1">
 <summary>Signature</summary>
@@ -51,6 +50,18 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `pipeline` | `PipelineSession` | No | `None` | Execution returned by setup_pipeline. Retain it for repeat finalization. |
 | `failed` | `bool` | No | `False` | Mark a caught project failure; recorded failures cannot become success. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+pipeline = setup_pipeline()
+source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+pipeline_result = finalize_pipeline(pipeline)
+```
 
 </div>
 
@@ -95,7 +106,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/finalize_pipeline.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L10-L64">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L10-L72">View on GitHub</a>
 </div>
 
 

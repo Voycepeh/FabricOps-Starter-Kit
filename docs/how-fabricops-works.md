@@ -27,19 +27,19 @@
       FabricOps operates inside Microsoft Fabric using its native building blocks: Workspaces to separate responsibilities and environments, Notebooks running PySpark for engineering and governance logic, Deployment Pipelines for promotion, Lakehouses and Warehouses for Bronze, Silver, Gold, and Metadata storage, and Fabric environments and object configuration to keep Development and Production aligned.
 
     - **Governance Workspace**
-      Owns the governed definition of the data. `00_env_config` stores the Governance environment configuration and Fabric object paths. `01_governance` manages Data Agreements, Stewards, Enrichment, Guardrails, Data Contracts, and access metadata.
+      Owns the governed definition of the data. The central `METADATA_WORKSPACE_REGISTRY` stores registered workspace IDs, deployment environments, approved resource mappings and notebook pipeline bindings. `01_governance` manages Data Agreements, Stewards, Enrichment, Guardrails, Data Contracts, and access metadata.
 
     - **Shared Metadata Lakehouse**
-      Lives in the Governance Workspace and connects Governance with Engineering. It stores the shared FabricOps metadata used across the lifecycle, including Catalogue, profiling, contracts, lineage, Guardrail Results, and related governance metadata.
+      Lives in the Governance Workspace and connects Governance with Engineering. One authoritative Lakehouse stores the Workspace Registry and all shared FabricOps metadata, including Catalogue, profiling, contracts, lineage, Guardrail Results, and related governance metadata.
 
     - **Engineering Development Workspace**
-      This is where the engineering implementation is built and validated. Its `00_env_config` points to the Development Lakehouses, Warehouses, schemas, and other Fabric object paths. `02_pipeline` reads and profiles data, applies transformations and audit columns, validates Guardrails, writes outputs, and records engineering metadata.
+      This is where the engineering implementation is built and validated. Its runtime workspace ID resolves approved Development resources from the central registry. `02_pipeline` reads and profiles data, applies transformations and audit columns, validates Guardrails, writes outputs, and records engineering metadata.
 
     - **Engineering Production Workspace**
-      Runs the same validated `02_pipeline` using Production configuration. Its own `00_env_config` points to the equivalent Production Lakehouses, Warehouses, schemas, and Fabric object paths, while the pipeline resolves the exact Activated Pipeline manifest and produces governed Production outputs.
+      Runs the same validated `02_pipeline` using Production configuration. Its runtime workspace ID resolves approved Production resources from the same registry, while the pipeline resolves the exact Activated Pipeline manifest and produces governed Production outputs.
 
     - **Aligned environments and promotion**
-      Development and Production keep the same logical Bronze, Silver, and Gold architecture, whether those stores are implemented as Lakehouses or Warehouses. The physical Fabric objects differ by environment, but their roles and structure stay aligned 1:1. Once `02_pipeline` is validated in Development against the frozen Data Contract, that validated notebook is promoted to the Engineering Production Workspace through the deployment flow.
+      Development and Production keep the same logical Bronze, Silver, and Gold architecture, whether those stores are implemented as Lakehouses or Warehouses. Multiple engineering workspaces may share DEV, TEST or PROD; physical mappings are approved separately for each workspace. Once `02_pipeline` is validated in Development against the frozen Data Contract, that validated notebook is promoted to the Engineering Production Workspace through the deployment flow.
 
     - **Project-Specific Consumer Workspace**
       Consumers receive approved Production access through native Fabric controls and can use the Fabric interface appropriate to their work. Consumers can query centralized metadata directly through PySpark or SQL and use project-specific notebooks for analytics and AI. Data Agent publishing is the first automated target; direct analytics and future Power BI/reporting paths reuse the same governed foundation.
@@ -58,6 +58,15 @@
             A Fabric notebook can read a Warehouse through the supported Spark SQL connector, for example `spark.read.synapsesql("ConsumptionWH.dbo.sales_orders")`. The connector uses the Warehouse access path, but its generated requests and their visibility in Query Insights should be verified in the target Fabric environment. Query history does not expose subsequent PySpark transformations or the original notebook code.
 
             Direct Spark access to Lakehouse Delta tables bypasses the Warehouse SQL endpoint. Power BI Direct Lake and other non-SQL access paths may also bypass Warehouse query history. Therefore, routing consumers through a Warehouse improves the opportunity for SQL activity monitoring **only when alternative access paths are appropriately restricted**.
+
+Unknown or inactive workspaces fail closed. Engineers use `pipeline = setup_pipeline()`,
+Read → Transform → Write, then `finalize_pipeline()`. Notebook names do not determine
+identity. Governance uses `setup_governance()` without a pipeline, and selects the
+registered engineering workspace being governed. No local configuration notebook is required.
+
+The **Fabric Environment item** supplies Spark libraries and compute settings; the
+**deployment environment** is the centrally registered DEV, TEST or PROD value.
+See [central setup, security boundaries and migration](guided-demo/00B-configure-environment-and-load-assets.md#central-workspace-registry).
 
 ---
 
@@ -82,7 +91,7 @@ Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read
 
     `01_governance` creates the Governance side: `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT`, and the versioned `METADATA_DATA_CONTRACT`. Engineering selects that contract, validates and enforces its Guardrails, and records the outcomes in `METADATA_GUARDRAIL_RESULTS`.
 
-    If the implementation or governed definition needs refinement, Governance creates the next contract version and Engineering validates it again. Once the tested version is approved, Governance activates it for Production and the same `02_pipeline` resolves the approved environment activation revision.
+    If the implementation or governed definition needs refinement, Governance creates the next contract version and Engineering validates it again. Once the tested version is approved, Governance activates it for the target registered workspace and the same `02_pipeline` resolves the approved workspace activation revision.
 
     **For the notebook-level implementation, browse the [FabricOps notebook templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks). For the schema, purpose, and relationships of each metadata table, see the [Metadata reference](reference/metadata.md).**
 
@@ -125,7 +134,7 @@ Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read
             **Steps 3 ↔ 4 are intentionally iterative.** Governance authors the next contract version; Engineering selects that immutable version and reruns the pipeline against it. If the expectation needs refinement or the implementation does not satisfy the intended rule, the flow returns to Governance for another version and then back to Engineering for another validation run. The loop continues until the governed definition and the real engineering implementation agree.
 
         5. **Governance activates the tested whole pipeline, then Engineering deploys it.** [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) independently validates a complete successful Testing run, exact candidate, frozen definitions and Agreement, then records explicit confirmation in `METADATA_ACTIVATION_STATE`. Contracts remain Frozen and reusable. Engineering and Microsoft Fabric own executable integrity, source control, CI/CD and deployment. The notebook calls `setup_pipeline()` to resolve the approved Data Contracts, then Read → Transform → Write, followed by `finalize_pipeline()` to consolidate outcomes and finish tracking. Fabric Deployment Pipelines are not assumed to copy metadata rows.
-        6. **Engineering runs the same workflow again in Production and hands off access.** The promoted `02_pipeline` resolves Production stores through `00_env_config`, automatically resolves the active Data Contract, applies the same Read → Transform → Write pattern and Guardrail functions, and publishes the governed output. Successful writes commit the associated runtime Lineage and Source Observation state. Approved consumers then receive access through native Fabric controls and can use standard Fabric interfaces directly.
+        6. **Engineering runs the same workflow again in Production and hands off access.** The promoted `02_pipeline` resolves Production stores through its registered runtime workspace ID, automatically resolves the active Data Contract, applies the same Read → Transform → Write pattern and Guardrail functions, and publishes the governed output. Successful writes commit the associated runtime Lineage and Source Observation state. Approved consumers then receive access through native Fabric controls and can use standard Fabric interfaces directly.
         7. **Analytics and AI consumers use native Fabric interfaces or project-specific notebooks.** Centralized metadata provides the governed context for downstream use. One-shot Data Agent publishing is the first automated target; explicit reusable relationship context later extends the same pattern to multiple tables and other consumers.
 
 !!! tip "Validation is iterative"

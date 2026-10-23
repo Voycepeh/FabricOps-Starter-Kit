@@ -39,7 +39,7 @@ def exact_record(rows, **identity):
 def agreement_definition(row):
     """Retain exact Agreement content without mutable physical audit fields."""
     return {key: value.isoformat() if isinstance(value, date) else value
-            for key, value in row.items() if not key.startswith("_")}
+            for key, value in row.items() if not key.startswith("_") and key != "execution_workspace_id"}
 
 
 def validate_agreement(row):
@@ -87,6 +87,9 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
     """Revalidate committed complete Testing evidence independently of any widget."""
     config, env, runtime = resolve_fabric_context(context=context)
     run = exact_record(metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session), run_id=testing_run_id)
+    workspace_id = getattr(config, "execution_workspace_id", None)
+    if workspace_id and run.get("execution_workspace_id") != workspace_id:
+        raise ValueError("Testing results belong to a different registered workspace.")
     if run.get("environment_name") != env:
         raise ValueError("Testing evidence must cover the activation environment; other environments are isolated.")
     candidate = json.loads(run["candidate_json"])
@@ -210,8 +213,17 @@ def empty_activation_state():
     return canonical_candidate_json({"format": "fabricops.activation-state.v1", "environments": {}})
 
 
-def read_activation_state(*, context, spark_session=None):
-    """Read one atomic authority snapshot; missing or duplicate authority fails closed."""
+def read_execution_state(*, context, spark_session=None):
+    """Read execution coordination separately from read-only governance authority."""
+    row = exact_record(metadata_records("METADATA_EXECUTION_STATE", context=context, spark_session=spark_session), authority_id="central")
+    state = json.loads(row["snapshot_json"])
+    if state.get("format") != "fabricops.execution-state.v1":
+        raise ValueError("Unsupported execution coordination format.")
+    return row["token"], state
+
+
+def read_activation_authority(*, context, spark_session=None):
+    """Read the administrator-owned immutable approvals and revision history."""
     row = exact_record(metadata_records(ACTIVATION_STATE_TABLE, context=context, spark_session=spark_session), authority_id="central")
     state = json.loads(row["snapshot_json"])
     if state.get("format") != "fabricops.activation-state.v1":
@@ -219,46 +231,77 @@ def read_activation_state(*, context, spark_session=None):
     return row["token"], state
 
 
-def environment_activation(state, environment):
-    """Return an isolated environment's approved configurations and run reservations."""
-    return state["environments"].setdefault(environment, {"revision": "initial", "pipelines": {}, "history": {}, "tables": {}, "runs": {}})
+def read_activation_state(*, context, spark_session=None):
+    """Read a consistent authority/reservation pair; interrupted cutovers fail closed."""
+    execution_token, execution = read_execution_state(context=context, spark_session=spark_session)
+    if execution.get("locked"):
+        raise RuntimeError("Activation coordination is locked; retry after completion or contact Governance for recovery.")
+    authority_token, state = read_activation_authority(context=context, spark_session=spark_session)
+    confirmed, _execution = read_execution_state(context=context, spark_session=spark_session)
+    if confirmed != execution_token:
+        raise RuntimeError("Execution reservations changed while reading; refresh.")
+    for scope, current in state["environments"].items():
+        if current.get("runs"):
+            raise RuntimeError("Legacy activation reservations exist; stop executions and migrate before continuing.")
+        current["runs"] = execution["runs"].get(scope, {})
+    for scope, runs in execution["runs"].items():
+        environment_activation(state, scope)["runs"] = runs
+    return canonical_candidate_json({"authority": authority_token, "execution": execution_token}), state
+
+
+def environment_activation(state, environment, context=None):
+    """Return a workspace-isolated activation; retain historical environment scopes unchanged."""
+    from fabricops_kit.config.shared import activation_scope
+    scope = activation_scope(environment, context)
+    return state["environments"].setdefault(scope, {"revision": "initial", "pipelines": {}, "history": {}, "tables": {}, "runs": {}})
+
+
+def authority_without_runs(state):
+    """Remove engineering-owned reservations before comparing or persisting governance decisions."""
+    state = json.loads(canonical_candidate_json(state))
+    for current in state["environments"].values():
+        current["runs"] = {}
+    state["environments"] = {scope: current for scope, current in state["environments"].items()
+                             if current["revision"] != "initial" or current["pipelines"] or current["history"] or current["tables"] or current.get("migrated_to")}
+    return state
 
 
 def commit_activation_state(state, *, expected_token, context, spark_session=None):
-    """Compare-and-swap the existing singleton using one serializable Delta MERGE.
+    """Serialize cutover and reservation changes without engineering writes to approvals.
 
-    Setup creates the singleton with the table, never by racing first insertions.
-    Both activations and run reservations update this row. An overlapping update
-    conflicts in Delta or raises inside the MERGE. No automatic activation retry.
-    A lost acknowledgement is accepted only after exact token read-back.
+    The execution singleton is a persistent exclusive cutover lock. A writer
+    first claims it with CAS, checks both reviewed revisions, then commits only
+    its owned tables and unlocks. A crash leaves the lock in place: no timeout
+    can prove that a Spark write stopped. Governance must verify stopped runs
+    before recovering an interrupted cutover. ReadWrite on the execution table
+    never grants Write on the activation or registry tables.
     """
-    from delta.tables import DeltaTable
+    from fabricops_kit.config.shared import commit_metadata_snapshot
     from uuid import uuid4
-    config, env, runtime = resolve_fabric_context(context=context)
-    spark = get_spark_session(spark_session)
-    _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", ACTIVATION_STATE_TABLE,
-        metadata_table_physical_schema(config, ACTIVATION_STATE_TABLE), context=context)
-    spark.sql("ALTER TABLE delta.`" + path.replace("`", "``") + "` SET TBLPROPERTIES ('delta.isolationLevel' = 'Serializable')")
-    token = str(uuid4())
-    row = {"authority_id": "central", "token": token, "snapshot_json": canonical_candidate_json(state),
-           **build_runtime_audit_fields(config=config, env=env, runtime_context=runtime)}
-    frame = spark.createDataFrame([coerce_metadata_row_types(ACTIVATION_STATE_TABLE, row)],
-                                  schema=metadata_table_schema_registry()[ACTIVATION_STATE_TABLE])
-    expected = "'" + expected_token.replace("'", "''") + "'"
-    changes = {key: "source." + key for key in row if key != "authority_id"}
-    changes["token"] = f"CASE WHEN target.token = {expected} THEN source.token ELSE CAST(raise_error('Stale activation revision; refresh') AS STRING) END"
-    try:
-        (DeltaTable.forPath(spark, path).alias("target")
-         .merge(frame.alias("source"), "target.authority_id = source.authority_id")
-         .whenMatchedUpdate(set=changes).execute())
-    except Exception:
-        observed, _state = read_activation_state(context=context, spark_session=spark_session)
-        if observed != token:
-            raise
-    observed, _state = read_activation_state(context=context, spark_session=spark_session)
-    if observed != token:
-        raise RuntimeError("Activation state commit was not confirmed; refresh before retrying.")
-    return token
+    expected = json.loads(expected_token)
+    actual, _current = read_activation_state(context=context, spark_session=spark_session)
+    if actual != expected_token:
+        raise ValueError("Activation or execution state changed; refresh.")
+    execution_token, execution = read_execution_state(context=context, spark_session=spark_session)
+    if execution_token != expected["execution"]:
+        raise ValueError("Execution coordination changed; refresh.")
+    lock_id = str(uuid4())
+    execution["locked"] = lock_id
+    locked_token = commit_metadata_snapshot("METADATA_EXECUTION_STATE", execution,
+        expected_token=execution_token, context=context, spark_session=spark_session)
+    # Do not unlock on an unconfirmed write. Operator recovery is intentionally explicit.
+    authority_token, authority = read_activation_authority(context=context, spark_session=spark_session)
+    if authority_token != expected["authority"]:
+        raise RuntimeError("Activation changed during cutover; Governance must inspect the coordination lock.")
+    proposed = authority_without_runs(state)
+    if proposed != authority_without_runs(authority):
+        authority_token = commit_metadata_snapshot(ACTIVATION_STATE_TABLE, proposed,
+            expected_token=authority_token, context=context, spark_session=spark_session)
+    execution = {"format": "fabricops.execution-state.v1", "locked": False,
+                 "runs": {scope: current["runs"] for scope, current in state["environments"].items() if current["runs"]}}
+    execution_token = commit_metadata_snapshot("METADATA_EXECUTION_STATE", execution,
+        expected_token=locked_token, context=context, spark_session=spark_session)
+    return canonical_candidate_json({"authority": authority_token, "execution": execution_token})
 
 
 def manifest_table_mappings(manifest):
@@ -333,7 +376,7 @@ def review_pipeline_release(requests, *, context, spark_session=None):
     """Revalidate every Testing candidate and compute environment-specific readiness."""
     config, env, runtime = resolve_fabric_context(context=context)
     token, state = read_activation_state(context=context, spark_session=spark_session)
-    current = environment_activation(state, env)
+    current = environment_activation(state, env, context)
     proposed = {}
     for request in requests:
         manifest = tested_pipeline_manifest(**request, context=context, spark_session=spark_session)
@@ -359,6 +402,13 @@ def review_pipeline_release(requests, *, context, spark_session=None):
         for run_id, run in other["runs"].items():
             if run.get("mode") == "testing" and any(destination in run.get("destinations", []) for destination in changed_destinations):
                 report["blocking_conflicts"].append(f"Drain Testing execution reserving a proposed destination: {run_id}.")
+    from fabricops_kit.config.shared import activation_scope
+    own_scope = activation_scope(env, context)
+    proposed_writes = [item["destination"] for item in report["tables"].values() if item.get("writer")]
+    for scope, other in state["environments"].items():
+        if scope != own_scope and any(item.get("writer") and item["destination"] in proposed_writes
+                                      for item in other["tables"].values()):
+            report["blocking_conflicts"].append("A proposed write destination belongs to another workspace activation.")
     report["ready"] = not report["blocking_conflicts"]
     return token, state, proposed, {**report, "environment": env}
 
@@ -372,7 +422,7 @@ def approve_pipeline_release(requests, *, expected_token, governance_confirmed=F
         raise ValueError("Activation state changed; refresh and review the release again.")
     if not report["ready"]:
         raise ValueError(" ".join(report["blocking_conflicts"]))
-    current = environment_activation(state, report["environment"])
+    current = environment_activation(state, report["environment"], context)
     current["pipelines"].update(proposed)
     current["history"].update({row["activated_pipeline_id"]: row for row in proposed.values()})
     current["tables"] = report["tables"]
@@ -395,7 +445,7 @@ def validate_testing_destinations(plan, *, spark_session=None, require_reservati
             if any(item.get("destination") == bindings[table_id] for item in current["tables"].values()):
                 raise ValueError("Testing cannot write Live-owned destinations: " + table_id)
     if require_reservation:
-        current = environment_activation(state, plan.environment)
+        current = environment_activation(state, plan.environment, plan.runtime_context)
         reservation = current["runs"].get(plan.plan_id)
         expected_destinations = [bindings[key] for key in sorted(targets)]
         if not reservation or reservation.get("mode") != "testing" or reservation.get("destinations") != expected_destinations:
@@ -412,7 +462,7 @@ def reserve_testing_destinations(plan, *, spark_session=None):
     if any(item.get("destination") in destinations
            for other in state["environments"].values() for item in other["tables"].values()):
         raise ValueError("Testing destination became Live-owned; choose a separate destination.")
-    current = environment_activation(state, plan.environment)
+    current = environment_activation(state, plan.environment, plan.runtime_context)
     if any(destination in run.get("destinations", []) for destination in destinations
            for other in state["environments"].values() for run in other["runs"].values()):
         raise ValueError("Testing destination is reserved by a running execution.")
@@ -426,7 +476,7 @@ def release_pipeline_lease(plan, *, spark_session=None):
     """Release only this completed run's reservation; failed release remains fail-closed."""
     for _attempt in range(5):
         token, state = read_activation_state(context=plan.runtime_context, spark_session=spark_session)
-        current = environment_activation(state, plan.environment)
+        current = environment_activation(state, plan.environment, plan.runtime_context)
         if current["runs"].pop(plan.plan_id, None) is None:
             return
         try:
@@ -442,7 +492,7 @@ def activation_version(activated_pipeline_id, *, context, spark_session=None, re
     """Resolve an immutable approval from the environment's atomic authority."""
     _config, env, _runtime = resolve_fabric_context(context=context)
     _token, state = read_activation_state(context=context, spark_session=spark_session)
-    current = environment_activation(state, env)
+    current = environment_activation(state, env, context)
     matches = [row for row in (current["pipelines"] if require_active else current["history"]).values()
                if row["activated_pipeline_id"] == activated_pipeline_id]
     if len(matches) != 1:
@@ -458,7 +508,7 @@ def build_live_pipeline_plan(*, pipeline_id, context=None, spark_session=None):
     from fabricops_kit.pipeline.shared import persist_pipeline_run, pipeline_physical_bindings
     config, env, runtime = resolve_fabric_context(context=context)
     token, state = read_activation_state(context=context, spark_session=spark_session)
-    current = environment_activation(state, env)
+    current = environment_activation(state, env, context)
     approved = current["pipelines"].get(pipeline_id)
     if not approved:
         raise ValueError("No approved pipeline configuration for this environment and pipeline_id.")
@@ -501,7 +551,7 @@ def verify_live_plan(plan, *, spark_session=None):
     """Check pinned Data Contract approval and reservation without switching runs."""
     from dataclasses import replace
     _token, state = read_activation_state(context=plan.runtime_context, spark_session=spark_session)
-    current = environment_activation(state, plan.environment)
+    current = environment_activation(state, plan.environment, plan.runtime_context)
     lease = current["runs"].get(plan.plan_id)
     if not lease or lease.get("revision") != plan.activation_revision:
         raise ValueError("Live run has no valid pinned activation reservation.")
@@ -532,7 +582,7 @@ def verify_live_plan(plan, *, spark_session=None):
 def resolve_approved_consumer_contract(config, env, table_id, *, spark_session=None):
     """Resolve the single approved table mapping in an environment's revision."""
     _token, state = read_activation_state(context={"config": config, "env": env}, spark_session=spark_session)
-    current = environment_activation(state, env)
+    current = environment_activation(state, env, {"config": config, "env": env})
     matches = []
     for row in current["pipelines"].values():
         manifest = validate_manifest(row)

@@ -4,7 +4,6 @@ Download these notebooks and import them into Microsoft Fabric.
 
 | Notebook | Purpose |
 | --- | --- |
-| `00_env_config.ipynb` | Configure environments and Fabric stores. |
 | `01_governance.ipynb` | Manage Governance metadata and Data Contracts. |
 | `02_pipeline.ipynb` | Reusable governed Read → PySpark Transform → Write scaffold. |
 
@@ -22,26 +21,36 @@ For the end-to-end workflow, follow the [Guided Demo](https://voycepeh.github.io
 
 ## Pipeline execution mode
 
-The pipeline flow is **Setup Pipeline → Read → Transform → Write**. Environment routing is configured once by `00_env_config`. A stable `pipeline_id` identifies the logical pipeline independently of notebook names and paths.
+The pipeline flow is **Setup Pipeline → Read → Transform → Write**. Workspace ID, deployment environment, stores and notebook pipeline bindings resolve from the central Workspace Registry. A stable `pipeline_id` identifies the logical pipeline independently of notebook names and paths.
 
 ```python
-CONTRACTS = setup_pipeline(pipeline_id="example-orders", pipeline_mode="Test")
+pipeline = setup_pipeline()
 source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 transformed = transform(source["dataframe"])
 result = orchestrate_write(transformed, store="Gold", schema="demo",
                            table_name="customer_summary", write_mode="overwrite")
-pipeline_result = finalize_pipeline(CONTRACTS)
+pipeline_result = finalize_pipeline()
 ```
 
-`pipeline_mode` accepts exactly `Test` or `Live`. Test runs real reads, transformations and selected Guardrails without business or operational metadata commits during Read and Write. The explicit Finalize step publishes only run and Guardrail results for activation review. In a notebook, choose exact frozen contracts or No Contract in the setup interface before the first operation. Headless Test starts with No Contract; its returned session supports explicit `select_contract(table_id, contract_id, contract_version)` for automated diagnostics. Choices lock when operations start. The displayed report updates automatically, with red Test and green Live mode treatment and textual operation/Guardrail status.
+Administrators register exactly `Test` or `Live` for each runtime notebook ID. Engineers do not select deployment environments or execution modes in notebook parameters. Test runs real reads, transformations and selected Guardrails without business or operational metadata commits during Read and Write. The explicit Finalize step publishes only run and Guardrail results for activation review. In a notebook, choose exact frozen contracts or No Contract in the setup interface before the first operation. Headless Test starts with No Contract; its returned session supports explicit `select_contract(table_id, contract_id, contract_version)` for automated diagnostics. Choices lock when operations start. The displayed report updates automatically, with red Test and green Live mode treatment and textual operation/Guardrail status.
 
-Live resolves participants, frozen contracts, project configuration and physical bindings exclusively from the approved environment manifest. Every operation retains destination, strategy, contract and activation-revision validation. Spark and supported Fabric notebook context are resolved internally. Missing notebook audit identity is represented as absent, never fabricated or substituted for approval identity.
+Live resolves participants, frozen contracts, project configuration and physical bindings exclusively from the approved workspace manifest. Every operation retains destination, strategy, contract and activation-revision validation. Spark and supported Fabric notebook context are resolved internally. Missing notebook audit identity is represented as absent, never fabricated or substituted for approval identity.
+
+### Initial contract authoring
+
+For a new pipeline without Catalogue entries, finalize the first No Contract Test
+run, then use `profile_table(dataframe, store=..., schema=..., table_name=...)` on
+the returned source and transformed target DataFrames to register observed
+structures. Approved workspace defaults remain available for independent IO and
+profiling after finalization; no second initializer is needed. This explicit
+metadata authoring step does not publish business data. See the [guided contract
+authoring step](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/03-author-and-freeze-data-contract/).
 
 ### Source participation and execution boundaries
 
 Every successful Read registers with the current execution instance. Every subsequent Write receives that execution's registered sources. These associations describe pipeline participation, not proven DataFrame transformation lineage. Context-local state and unique run IDs isolate executions; failure, repeated setup and shutdown clear source references.
 
-Run `finalize_pipeline(CONTRACTS)` after all Reads, transformations and Writes, including read-only pipelines. It records the complete outcome and releases Live reservations. Pass `failed=True` for a caught project exception. Test publishes `METADATA_GUARDRAIL_RESULTS` first and its authoritative `METADATA_PIPELINE_RUN` snapshot last; normal Test operations still commit no metadata. Publication requires complete runtime audit identity. Repeating finalization with the same session is idempotent, including retries after an interrupted diagnostic publication.
+Run `finalize_pipeline()` after all Reads, transformations and Writes, including read-only pipelines. It records the complete outcome and releases Live reservations. Pass `failed=True` for a caught project exception. Test publishes `METADATA_GUARDRAIL_RESULTS` first and its authoritative `METADATA_PIPELINE_RUN` snapshot last; normal Test operations still commit no metadata. Publication requires complete runtime audit identity. Repeating finalization with the same session is idempotent, including retries after an interrupted diagnostic publication.
 
 A successful Write or Fabric cell does not prove whole-notebook completion. Observed errors seal failure; repeated setup and shutdown seal unfinalized runs as **incomplete**. A killed process may retain an incomplete Live record and reservation. Operators must confirm execution stopped before repairing a reservation. Headless code must call Finalize after its full transformation workflow, or use `failed=True` when it catches a project failure.
 
@@ -64,7 +73,7 @@ Live setup automatically resolves the approved environment configuration and res
 Deploy notebooks through Engineering source control, CI/CD and Microsoft Fabric tooling. Approval never deploys a notebook or writes business data. No FabricOps packaging or deployment verification call is required. Live validates exact global tables, environment destinations, Data Contract versions, ownership and transformation settings against central approval.
 
 ```python
-CONTRACTS = setup_pipeline(pipeline_id="example-orders", pipeline_mode="Live")
+pipeline = setup_pipeline()  # Uses this notebook ID's centrally registered Live binding.
 # Read → Transform → Write; approved authority is resolved internally.
 ```
 
@@ -97,3 +106,35 @@ The singleton deliberately serializes metadata changes, reusing the existing Del
 Run `setup_metadata_tables()` once under controlled metadata administration to create the singleton authority. Existing per-pipeline approvals are not imported or trusted. Existing environment-specific contract histories need deliberate reconciliation into one global lifecycle per table, followed by complete Testing and activation; no compatibility shim or automatic migration is provided. Old tables are not deleted automatically.
 
 The authority uses a single JSON snapshot to guarantee metadata atomicity, trading scalability for a conservative first implementation. Large estates may need a transactional metadata service later. Actual Fabric/Delta runtime validation remains required before deployment. Managed token-vault and caller-owned mapping dependencies without verifiable immutable identities remain ineligible for activation. Notebook deployments, business-table transactions, guardrail diagnostics and run evidence retain separate failure boundaries.
+
+
+## Central configuration and migration
+
+The authoritative setup and migration procedure is [Guided Demo foundation setup](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/00B-configure-environment-and-load-assets/).
+Only Governance administrators publish registry mappings. Engineering requires
+`02_pipeline`; `00_env_config` is retired from current templates. Historical
+release snapshots remain unchanged. Independent exploration uses native Fabric
+notebooks and public IO with an explicit context, or `setup_governance()` for the
+current registered workspace without a pipeline session.
+
+### Implementation audit
+
+The refactor inspected all standard/demo notebooks, FrameworkConfig and resource
+routing, metadata schemas/setup, contract freezing/activation, manifests,
+orchestrators, public IO, tests and guides before changing implementation.
+PR #1675 removed executable identity packaging and established Setup → Read →
+Transform → Write → Finalize. Subsequent changes added interactive Test sessions,
+finalization-only Test publication and independent profiling schedules.
+
+Retained: exact immutable contract payloads and IDs, Agreements, approved physical
+bindings, coordinated activation, run reservations, failure/incomplete status,
+idempotent finalization and independent public IO. Migrated: runtime identity,
+configuration readiness, timezone and routing initialization into central setup.
+Removed from standard execution: mutable notebook globals, local environment
+selection and duplicate configuration notebooks. Deprecated `setup_notebook()`
+remains callable for compatibility; it does not authorize governed execution.
+
+Activations previously isolated deployment environments only. New scopes include
+workspace ID. The old authority combined approvals and execution reservations;
+`METADATA_EXECUTION_STATE` now owns reservations and a persistent cutover lock,
+so engineering writes do not require permission to edit approval decisions.

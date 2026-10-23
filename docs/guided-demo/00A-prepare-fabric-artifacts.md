@@ -79,7 +79,7 @@ Production should be a **1:1 structural mirror** of Development so the validated
 
 ## Get FabricOps
 
-Download the packaged FabricOps wheel from the [FabricOps Releases page](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases).
+Obtain the administrator-built FabricOps wheel with the pinned central registry locator.
 
 </div>
 </div>
@@ -87,17 +87,11 @@ Download the packaged FabricOps wheel from the [FabricOps Releases page](https:/
 
 
 
-Download the `.whl` file from the release you want to use, please check that you do not download the release version than is earlier than what was declared on the demo files you want to run, else the demo may not run correctly.
+Use a package revision that supports centralized workspace registration. Earlier release wheels do not implement the current setup APIs. The public distribution is deliberately unconfigured until Governance builds a wheel with the reviewed Metadata Lakehouse locator.
 
 
 
-If you prefer to build FabricOps yourself, clone the repository locally and run:
-
-```bash
-uv build
-```
-
-The built wheel will be available under `dist/`.
+Governance administrators follow the [central bootstrap and wheel-build procedure](00B-configure-environment-and-load-assets.md#central-workspace-registry). Engineers use the resulting approved runtime artifact; they do not edit the registry locator in a notebook.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
@@ -105,7 +99,7 @@ The built wheel will be available under `dist/`.
 
 ## Create Fabric Environments and install FabricOps
 
-Fabric Environments are **workspace-specific**. Install and publish the same FabricOps wheel in each workspace that runs FabricOps notebooks.
+Publish one centrally managed Fabric Environment where workspace compatibility permits sharing. Use centrally managed equivalent items when capacity or network settings prevent sharing.
 
 </div>
 </div>
@@ -114,7 +108,7 @@ Fabric Environments are **workspace-specific**. Install and publish the same Fab
 
 
 
-A Fabric Environment belongs to a workspace. An Environment created in Governance is not automatically available in Engineering Development, Engineering Production, or Consumer.
+A Fabric Environment belongs to a workspace and must be shared explicitly. Cross-workspace attachment requires compatible capacity and network security settings; see the [Environment publication and reuse requirements](00B-configure-environment-and-load-assets.md#fabric-environment-publication-and-reuse).
 
 Start in the **Governance** workspace and create a Fabric **Environment**. Then:
 
@@ -128,7 +122,7 @@ Publishing is required before the installed FabricOps package is available to no
 ![Install the FabricOps wheel as a custom library](../assets/00A/install-custom-whl.png)
 
 
-Use the same FabricOps wheel version in each workspace so Governance, Development, Production, and Consumer are running the same package version during the Guided Demo.
+Reuse the same approved wheel and pinned locator across shared or equivalent Environment items. Registry mappings remain authoritative in one Metadata Lakehouse; Python does not change workspace-level default Environment settings.
 
 ??? info "Optional: enable Fabric AI Functions for AI-assisted Governance"
 
@@ -138,7 +132,7 @@ Use the same FabricOps wheel version in each workspace so Governance, Developmen
 
     See [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview) and [Copilot and Agent tenant settings](https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-copilot).
 
-    You will enable or disable the FabricOps authoring integration itself through `GOVERNANCE_CONFIG.ai_enrichment.enabled` in `00_env_config`.
+    You will enable or disable the FabricOps authoring integration itself through `GOVERNANCE_CONFIG.ai_enrichment.enabled` in the centrally managed registry settings.
 
 ### Expected result
 

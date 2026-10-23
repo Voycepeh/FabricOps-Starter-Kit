@@ -61,10 +61,10 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `schema` | `str` | Yes | `—` | Physical Warehouse schema name for the source table. |
 | `table_name` | `str` | Yes | `—` | Physical Warehouse table name for the source table. |
-| `store` | `str` | No | `'warehouse'` | Logical Warehouse configuration name from ``00_env_config``. This identifies the configured Warehouse target, while ``schema`` and ``table_name`` identify the physical Warehouse table. |
+| `store` | `str` | No | `'warehouse'` | Logical Warehouse configuration name from the Workspace Registry or an explicit IO context. This identifies the configured Warehouse target, while ``schema`` and ``table_name`` identify the physical Warehouse table. |
 | `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
-| `**options` | `—` | No | `—` | Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
+| `**options` | `—` | No | `—` | Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from the Workspace Registry or an explicit IO context. |
 
 </div>
 

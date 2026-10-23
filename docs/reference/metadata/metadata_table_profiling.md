@@ -11,8 +11,8 @@ Mutable table-level profiling policies and per-environment/physical-context acti
 
 ## Used in Workflow Template
 
-* [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Environment bootstrap
 * [`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Data Contract authoring
+* [`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Environment bootstrap
 * [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Standard Read orchestration
 * [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Standard Write orchestration
 

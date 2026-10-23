@@ -25,7 +25,7 @@ def setup_notebook(
     run_id_prefix: str = "run",
     local_fallback_name: str | None = None,
 ) -> NotebookSetupContext:
-    """Validate notebook startup configuration and resolve required Fabric targets.
+    """Validate legacy explicit configuration (deprecated for governed notebook startup).
 
     Validate the selected FabricOps environment and resolve the Fabric targets
     required by the notebook before downstream IO, profiling, and metadata
@@ -103,7 +103,7 @@ def setup_notebook(
         patterns.
     11. Return an overall readiness status.
 
-    Current standard templates use ``00_env_config``, ``01_governance``,
+    Legacy templates used ``00_env_config``, ``01_governance``,
     and ``02_pipeline``. Governance and pipeline names can include suffixes
     for project-specific workflows.
 
@@ -145,6 +145,10 @@ def setup_notebook(
     readiness checks.
 
     """
+    import warnings
+    warnings.warn("setup_notebook() is deprecated. Governed notebooks use setup_pipeline() or "
+                  "setup_governance(); explicit contexts remain supported for independent public IO.",
+                  DeprecationWarning, stacklevel=2)
     normalized = validate_framework_config(config)
     targets = required_targets if required_targets is not None else list(normalized.path_config.paths.get(env, {}))
     resolved_paths = {store_name: get_store(config=normalized, env=env, store=store_name) for store_name in targets}

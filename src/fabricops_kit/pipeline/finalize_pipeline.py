@@ -45,7 +45,7 @@ def finalize_pipeline(pipeline=None, *, failed=False):
 
     Examples
     --------
-    >>> pipeline = setup_pipeline(pipeline_id="orders", pipeline_mode="Test")
+    >>> pipeline = setup_pipeline()
     >>> source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
     >>> pipeline_result = finalize_pipeline(pipeline)
 
@@ -55,6 +55,14 @@ def finalize_pipeline(pipeline=None, *, failed=False):
         raise ValueError("Pass the session returned by setup_pipeline.")
     if not pipeline.owns_current_execution():
         raise RuntimeError("This execution belongs to another task or thread.")
+    from fabricops_kit.config.shared import verify_governed_context
+    try:
+        verify_governed_context(pipeline.plan.runtime_context)
+    except Exception:
+        pipeline.close(failed=True)
+        if pipeline.plan.execution_mode == "testing":
+            publish_pipeline_testing_results(pipeline.plan, spark_session=pipeline.spark)
+        raise
     with pipeline.plan.lock:
         if not pipeline.closed:
             pipeline.plan.evidence["boundary_completed"] = not failed

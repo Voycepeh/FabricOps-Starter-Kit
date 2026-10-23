@@ -34,8 +34,8 @@ via `contract_id` + `contract_version`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 27 |
-| Business columns | 19 |
+| Total columns | 29 |
+| Business columns | 21 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -61,6 +61,8 @@ via `contract_id` + `contract_version`
 | `action` | `string` | Warn or Block action applied when an authored Guardrail fails. |
 | `reason` | `string` | Human-readable reason recorded for the Guardrail outcome. |
 | `result_payload_json` | `string` | Serialized aggregate result payload written for the Guardrail outcome. |
+| `execution_workspace_id` | `string` | Registered engineering workspace scope; distinct from the committing administrator workspace. Historical unassigned rows remain nullable until explicit migration. |
+| `_legacy_environment_name` | `string` | Original deployment environment label retained during explicit stopped-workload metadata migration. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

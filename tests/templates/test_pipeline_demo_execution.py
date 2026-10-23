@@ -31,8 +31,8 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     for cell in notebook.cells:
         if cell.cell_type == 'code' and cell.id not in {'environment','imports'}:
             exec(compile(cell.source, f'{path.name}:{cell.id}', 'exec'), namespace)
-    namespace['finalize_pipeline'].assert_called_once_with(setup.return_value)
-    setup.assert_called_once_with(pipeline_id=path.stem, pipeline_mode='Test')
+    namespace['finalize_pipeline'].assert_called_once_with()
+    setup.assert_called_once_with()
     expected = {
         '02_pipeline': (1, ['overwrite']),
         '02A_full_refresh_demo': (3, ['overwrite','overwrite']),
@@ -61,6 +61,6 @@ def test_notebooks_keep_user_owned_transform_surface(path):
     assert len(calls['setup_pipeline']) == 1
     assert len(calls['finalize_pipeline']) == 1
     assert ids.index('finalize-run') > ids.index('write-heading')
-    assert {arg.arg for arg in calls['setup_pipeline'][0].keywords} == {'pipeline_id','pipeline_mode'}
+    assert {arg.arg for arg in calls['setup_pipeline'][0].keywords} == set()
     transform = next(cell.source for cell in notebook.cells if cell.id == 'transform')
     assert 'orchestrate_' not in transform

@@ -32,8 +32,8 @@ via `profile_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 29 |
-| Business columns | 21 |
+| Total columns | 31 |
+| Business columns | 23 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -61,6 +61,8 @@ via `profile_id`
 | `median_value` | `double` | Observed median value for numeric columns when available. |
 | `percentile_75_value` | `double` | Observed 75th percentile for numeric columns when available. |
 | `max_value` | `string` | Observed maximum value captured as text. |
+| `execution_workspace_id` | `string` | Registered engineering workspace scope; distinct from the committing administrator workspace. Historical unassigned rows remain nullable until explicit migration. |
+| `_legacy_environment_name` | `string` | Original deployment environment label retained during explicit stopped-workload metadata migration. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

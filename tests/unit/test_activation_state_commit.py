@@ -1,73 +1,81 @@
-"""Exercise the production Delta authority mutation and acknowledgement behavior."""
+"""Governance authority stays read-only during engineering reservation commits."""
 # ruff: noqa: D103
-import copy
+from copy import deepcopy
 import json
-import re
-import sys
-from types import SimpleNamespace
 
 import pytest
 
 from fabricops_kit.activated_pipeline import shared as service
+from fabricops_kit.config import shared as config
 
 
 @pytest.fixture
-def delta_authority(monkeypatch):
-    """Simulate Delta execution while inspecting the actual production MERGE expressions."""
-    central = {"token": "initial", "state": json.loads(service.empty_activation_state()), "after_commit": False, "before_commit": False}
-    calls = []
-    context = {"config": {}, "env": "DEV"}
-    monkeypatch.setattr(service, "resolve_fabric_context", lambda context=None: ({}, "DEV", context))
-    monkeypatch.setattr(service, "resolve_configured_lakehouse_table", lambda *a, **kw: ("Metadata", service.ACTIVATION_STATE_TABLE, "governance", "configured/authority"))
-    monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **kw: {})
-    monkeypatch.setattr(service, "read_activation_state", lambda **kw: (central["token"], copy.deepcopy(central["state"])))
-    class Merge:
-        def alias(self, name): return self
-        def merge(self, source, predicate):
-            assert predicate == "target.authority_id = source.authority_id"
-            self.row = source.row
-            return self
-        def whenMatchedUpdate(self, set):
-            self.changes = set
-            return self
-        def execute(self):
-            assert self.changes["snapshot_json"] == "source.snapshot_json"
-            assert "raise_error('Stale activation revision; refresh')" in self.changes["token"]
-            expected = re.search("target.token = '([^']*)'", self.changes["token"]).group(1)
-            calls.append("merge")
-            if central["before_commit"]: raise OSError("write failed")
-            if expected != central["token"]: raise ValueError("Stale activation revision")
-            central.update(token=self.row["token"], state=json.loads(self.row["snapshot_json"]))
-            if central["after_commit"]: raise OSError("acknowledgement lost")
-    class Frame:
-        def __init__(self, rows): self.row = rows[0]
-        def alias(self, name): return self
-    spark = SimpleNamespace(sql=lambda statement: calls.append(statement),
-                            createDataFrame=lambda rows, schema: Frame(rows))
-    monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=SimpleNamespace(forPath=lambda *_: Merge())))
-    monkeypatch.setattr(service, "get_spark_session", lambda supplied=None: spark)
-    return context, central, calls
+def state_store(monkeypatch):
+    state = {'METADATA_ACTIVATION_STATE': ['authority-0', json.loads(service.empty_activation_state())],
+             'METADATA_EXECUTION_STATE': ['execution-0', {'format': 'fabricops.execution-state.v1', 'locked': False, 'runs': {}}]}
+    writes = []
+    def records(table, **kwargs):
+        token, snapshot = state[table]
+        return [{'authority_id': 'central', 'token': token, 'snapshot_json': json.dumps(snapshot)}]
+    def commit(table, snapshot, *, expected_token, **kwargs):
+        if state[table][0] != expected_token:
+            raise ValueError('stale snapshot')
+        token = f'{table}-{len(writes)}'
+        state[table] = [token, deepcopy(snapshot)]
+        writes.append((table, deepcopy(snapshot)))
+        return token
+    monkeypatch.setattr(service, 'metadata_records', records)
+    monkeypatch.setattr(config, 'commit_metadata_snapshot', commit)
+    return state, writes
 
 
-def test_existing_singleton_updates_atomically_and_stale_token_fails(delta_authority):
-    context, central, calls = delta_authority
-    proposed = copy.deepcopy(central["state"])
-    service.environment_activation(proposed, "DEV")["revision"] = "release-one"
-    service.commit_activation_state(proposed, expected_token="initial", context=context)
-    assert central["state"] == proposed
-    assert "Serializable" in calls[0]
-    with pytest.raises(ValueError, match="Stale"):
-        service.commit_activation_state(json.loads(service.empty_activation_state()), expected_token="initial", context=context)
-    assert central["state"] == proposed
+def test_execution_reservations_do_not_write_governance_authority(state_store):
+    state, writes = state_store
+    token, proposal = service.read_activation_state(context={})
+    service.environment_activation(proposal, 'DEV', {'_registry_workspace_id': 'team-a'})['runs']['run-a'] = {'mode': 'live'}
+    committed = service.commit_activation_state(proposal, expected_token=token, context={})
+    assert all(table == 'METADATA_EXECUTION_STATE' for table, _ in writes)
+    assert state['METADATA_ACTIVATION_STATE'][0] == 'authority-0'
+    assert service.read_activation_state(context={}) == (committed, proposal)
+    with pytest.raises(ValueError, match='changed'):
+        service.commit_activation_state(proposal, expected_token=token, context={})
 
 
-def test_failure_exposes_no_partial_snapshot_and_lost_acknowledgement_is_confirmed(delta_authority):
-    context, central, _calls = delta_authority
-    proposed = copy.deepcopy(central["state"])
-    service.environment_activation(proposed, "DEV")["revision"] = "release-one"
-    central["before_commit"] = True
-    with pytest.raises(OSError): service.commit_activation_state(proposed, expected_token="initial", context=context)
-    assert central["state"] == json.loads(service.empty_activation_state())
-    central.update(before_commit=False, after_commit=True)
-    result = service.commit_activation_state(proposed, expected_token="initial", context=context)
-    assert result == central["token"] and central["state"] == proposed
+def test_activation_claims_cutover_lock_before_governance_commit_and_unlocks_after(state_store):
+    _state, writes = state_store
+    token, proposal = service.read_activation_state(context={})
+    service.environment_activation(proposal, 'DEV')['revision'] = 'approved'
+    service.commit_activation_state(proposal, expected_token=token, context={})
+    assert [table for table, _ in writes] == ['METADATA_EXECUTION_STATE', 'METADATA_ACTIVATION_STATE', 'METADATA_EXECUTION_STATE']
+    assert writes[0][1]['locked'] and writes[-1][1]['locked'] is False
+
+
+def test_interrupted_cutover_cannot_be_read_or_recovered_by_timeout(state_store):
+    state, _writes = state_store
+    state['METADATA_EXECUTION_STATE'][1]['locked'] = 'interrupted-transaction'
+    with pytest.raises(RuntimeError, match='locked'):
+        service.read_activation_state(context={})
+
+
+def test_legacy_reservations_fail_closed_until_jobs_verified_stopped(state_store):
+    state, _writes = state_store
+    service.environment_activation(state['METADATA_ACTIVATION_STATE'][1], 'DEV')['runs']['old-run'] = {}
+    with pytest.raises(RuntimeError, match='Legacy activation reservations'):
+        service.read_activation_state(context={})
+
+
+def test_unconfirmed_authority_write_leaves_cutover_locked(state_store, monkeypatch):
+    state, _writes = state_store
+    original = config.commit_metadata_snapshot
+    def fail(table, *args, **kwargs):
+        if table == 'METADATA_ACTIVATION_STATE':
+            raise PermissionError('Governance table is read-only')
+        return original(table, *args, **kwargs)
+    monkeypatch.setattr(config, 'commit_metadata_snapshot', fail)
+    token, proposal = service.read_activation_state(context={})
+    service.environment_activation(proposal, 'DEV')['revision'] = 'unauthorized'
+    with pytest.raises(PermissionError):
+        service.commit_activation_state(proposal, expected_token=token, context={})
+    assert state['METADATA_ACTIVATION_STATE'][0] == 'authority-0'
+    with pytest.raises(RuntimeError, match='locked'):
+        service.read_activation_state(context={})

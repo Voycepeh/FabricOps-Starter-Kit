@@ -122,7 +122,7 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "`METADATA_DATA_AGREEMENT` **(N → 1)**" not in contract_page
     activated_page = first_pages["metadata_activation_state.md"]
     assert "`snapshot_json`" in activated_page and "`authority_id`" in activated_page
-    assert "atomic central authority" in activated_page
+    assert "Administrator-owned central authority" in activated_page
     assert "via `agreement_id` + `agreement_version`" not in activated_page
     assert "`METADATA_DATA_CATALOGUE` **(N → 1)**" in contract_page
     assert "via `table_id`" in contract_page

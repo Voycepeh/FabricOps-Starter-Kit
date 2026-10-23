@@ -489,3 +489,42 @@ def test_live_resolves_approved_versions_after_mixed_testing(authority, monkeypa
         state.operation(live, 0)
         state.operation(live, 1)
     assert live.run_result["status"] == "succeeded"
+
+
+@pytest.mark.parametrize('environment', ['DEV', 'TEST', 'PROD', 'canary-east'])
+def test_complete_manifest_approvals_are_workspace_scoped_for_every_environment(authority, environment):
+    """Environment labels never select a contract version or authorize another workspace's manifest."""
+    state = authority
+    class ScopedConfig(dict):
+        pass
+    contexts, approvals = [], []
+    for workspace, version in [('workspace-a', 3), ('workspace-b', 4)]:
+        plan, run = state.candidate('same-pipeline', version=version, roles=('source',), env=environment)
+        run['execution_workspace_id'] = workspace
+        config = ScopedConfig(plan.runtime_context['config'])
+        config.execution_workspace_id = workspace
+        context = {**state.context, 'config': config, 'env': environment, '_registry_workspace_id': workspace}
+        approved = service.approve_pipeline_release([state.request(run)], expected_token=state.central['token'],
+            governance_confirmed=True, context=context)
+        contexts.append(context)
+        approvals.append(approved['pipelines']['same-pipeline']['activated_pipeline_id'])
+    assert service.environment_activation(state.central['state'], environment, contexts[0])['tables']['table0']['contract_version'] == 3
+    assert service.environment_activation(state.central['state'], environment, contexts[1])['tables']['table0']['contract_version'] == 4
+    assert service.activation_version(approvals[1], context=contexts[1])['activated_pipeline_id'] == approvals[1]
+    with pytest.raises(ValueError, match='missing or inactive'):
+        service.activation_version(approvals[0], context=contexts[1])
+
+
+@pytest.mark.parametrize('environment', ['DEV', 'TEST', 'PROD'])
+def test_foreign_workspace_test_run_cannot_authorize_activation(authority, environment):
+    state = authority
+    plan, run = state.candidate('orders', env=environment)
+    run['execution_workspace_id'] = 'workspace-a'
+    class ScopedConfig(dict):
+        execution_workspace_id = 'workspace-b'
+    context = {**state.context, 'config': ScopedConfig(plan.runtime_context['config']), 'env': environment,
+               '_registry_workspace_id': 'workspace-b'}
+    with pytest.raises(ValueError, match='different registered workspace'):
+        service.approve_pipeline_release([state.request(run)], expected_token=state.central['token'],
+            governance_confirmed=True, context=context)
+    assert not state.central['state']['environments']

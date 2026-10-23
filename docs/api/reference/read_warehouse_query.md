@@ -59,10 +59,10 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `query` | `str` | Yes | `—` | Read-only SQL ``SELECT`` statement, or a CTE beginning with ``WITH`` and ending in a ``SELECT``, to execute through the Fabric Warehouse SQL serving engine. |
-| `store` | `str` | No | `'warehouse'` | Logical Warehouse store key from ``00_env_config``. |
+| `store` | `str` | No | `'warehouse'` | Logical Warehouse store key from the Workspace Registry or an explicit IO context. |
 | `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
-| `**options` | `—` | No | `—` | Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
+| `**options` | `—` | No | `—` | Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from the Workspace Registry or an explicit IO context. |
 
 </div>
 

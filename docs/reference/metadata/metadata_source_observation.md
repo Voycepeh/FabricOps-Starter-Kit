@@ -34,8 +34,8 @@ via `source_table_id` + `target_table_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 23 |
-| Business columns | 15 |
+| Total columns | 25 |
+| Business columns | 17 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -57,6 +57,8 @@ via `source_table_id` + `target_table_id`
 | `is_present` | `boolean` | Whether the partition exists in this observation; false identifies a removal tombstone. |
 | `observation_status` | `string` | Metadata Source Observation field `observation_status`. |
 | `publication_payload_json` | `string` | Exact prepared-batch identity, originating pipeline run, real Fabric activity and publication timestamp staged before the physical write. Recovery verifies the Delta commit and target marker for Lakehouse writes, or the exact staged activity/timestamp pair for Warehouse writes. Target-only Warehouse receipt rows never advance source watermarks; legacy activity-only rows are not automatically promoted. |
+| `execution_workspace_id` | `string` | Registered engineering workspace scope; distinct from the committing administrator workspace. Historical unassigned rows remain nullable until explicit migration. |
+| `_legacy_environment_name` | `string` | Original deployment environment label retained during explicit stopped-workload metadata migration. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

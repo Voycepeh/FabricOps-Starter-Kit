@@ -87,3 +87,6 @@ branch = true
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
+
+[tool.setuptools.package-data]
+"fabricops_kit.config" = ["registry_bootstrap.json"]

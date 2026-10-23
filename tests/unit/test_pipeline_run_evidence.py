@@ -277,8 +277,9 @@ def test_run_schema_has_only_independent_lifecycle_fields():
     fields = metadata_table_schema_registry()["METADATA_PIPELINE_RUN"].fieldNames()
     assert fields == ["run_id", "activated_pipeline_id", "pipeline_id", "execution_mode", "environment_name", "started_at", "completed_at",
                       "status", "candidate_fingerprint", "candidate_json", "operation_summary_json",
+                      "execution_workspace_id", "_legacy_environment_name",
                       *[name for name, *_ in AUDIT_SCHEMA_FIELDS]]
-    assert len(fields) == 19
+    assert len(fields) == 21
 
 
 def test_distinct_attempts_keep_activity_identity_and_survive_notebook_rename(runtime, monkeypatch):

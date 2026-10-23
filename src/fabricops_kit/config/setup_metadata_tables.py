@@ -15,7 +15,7 @@ from .metadata_schemas import (
     metadata_table_field_names,
     metadata_table_schema_registry,
 )
-from .shared import FrameworkConfig, get_store, is_table_not_found_error, validate_framework_config
+from .shared import configure_metadata_transaction, FrameworkConfig, get_store, is_table_not_found_error, validate_framework_config
 
 
 def _schema_fields_by_name(schema: Any) -> dict[str, Any]:
@@ -169,8 +169,8 @@ def _print_setup_summary(
 def setup_metadata_tables(
     *,
     spark: Any,
-    config: FrameworkConfig | dict[str, Any],
-    env: str,
+    config: FrameworkConfig | dict[str, Any] | None = None,
+    env: str | None = None,
     require_active_steward: bool = False,
     verbose: bool = True,
     raise_on_failure: bool = False,
@@ -355,6 +355,15 @@ def setup_metadata_tables(
     their respective FabricOps workflows.
 
     """
+    if config is None or env is None:
+        if config is not None or env is not None:
+            raise ValueError("Supply both config and env for explicit administrative migration, or omit both.")
+        from .shared import fabric_runtime_identity, registry_bootstrap, bootstrap_context
+        identity, locator = fabric_runtime_identity(), registry_bootstrap()
+        if identity["workspace_id"] != locator["governance_workspace_id"]:
+            raise PermissionError("Only Governance administrators provision central metadata in the Governance Workspace.")
+        bootstrap = bootstrap_context(locator, identity)
+        config, env = bootstrap["config"], bootstrap["env"]
     normalized = validate_framework_config(config)
     metadata_store = get_store(config=normalized, env=env, store="Metadata")
     if getattr(metadata_store, "kind", None) != "lakehouse":
@@ -393,6 +402,14 @@ def setup_metadata_tables(
                     initial_rows = [{"authority_id": "central", "token": "initial",
                                      "snapshot_json": empty_activation_state(),
                                      **build_runtime_audit_fields(config=normalized, env=env, runtime_context=context)}]
+                if table_name in {"METADATA_WORKSPACE_REGISTRY", "METADATA_EXECUTION_STATE"}:
+                    from fabricops_kit.config.audit import build_runtime_audit_fields
+                    import json
+                    snapshot = ({"format": "fabricops.workspace-registry.v1", "workspaces": {}}
+                                if table_name == "METADATA_WORKSPACE_REGISTRY" else
+                                {"format": "fabricops.execution-state.v1", "locked": False, "runs": {}})
+                    initial_rows = [{"authority_id": "central", "token": "initial", "snapshot_json": json.dumps(snapshot),
+                                     **build_runtime_audit_fields(config=normalized, env=env, runtime_context=context)}]
                 if table_name == "METADATA_TABLE_PROFILING":
                     from fabricops_kit.config.audit import build_runtime_audit_fields
                     initial_rows = [{"state_id": "central", "token": "initial",
@@ -404,7 +421,7 @@ def setup_metadata_tables(
                     table_name,
                     store="Metadata",
                     schema=resolved_metadata_schema,
-                    mode="errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_TABLE_PROFILING"} else "overwrite",
+                    mode="errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_TABLE_PROFILING", "METADATA_WORKSPACE_REGISTRY", "METADATA_EXECUTION_STATE"} else "overwrite",
                     verbose=False,
                     context=context,
                 )
@@ -412,6 +429,8 @@ def setup_metadata_tables(
                 table = read_lakehouse_table(
                     table_name, store="Metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
                 )
+            if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_EXECUTION_STATE", "METADATA_WORKSPACE_REGISTRY"}:
+                configure_metadata_transaction(spark=spark, config=normalized, env=env, table_name=table_name)
             evolved_columns: list[str] = []
             if not created:
                 columns = _table_column_names(table)

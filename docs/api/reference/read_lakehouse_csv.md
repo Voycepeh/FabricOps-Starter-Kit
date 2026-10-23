@@ -60,7 +60,7 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `relative_path` | `str` | Yes | `—` | Relative CSV file or folder path resolved underneath the configured Lakehouse ``Files`` area. |
-| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from ``00_env_config``. It is not necessarily the literal physical Lakehouse name. |
+| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from the Workspace Registry or an explicit IO context. It is not necessarily the literal physical Lakehouse name. |
 | `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
 | `header` | `bool` | No | `True` | Whether Spark should treat the first row as column names. When ``header=True``, the first row is used as column names. When ``header=False``, the first row is treated as data and Spark typically creates generic column names such as ``_c0``, ``_c1``, and ``_c2``. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |

@@ -7,7 +7,8 @@ import hashlib
 import json
 
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+from contextvars import ContextVar
 from datetime import UTC, datetime
 from pathlib import Path
 import re
@@ -18,74 +19,17 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 DEFAULT_AUDIT_TIMEZONE = "UTC"
 
 
-_DEFAULT_CONTEXT_ERROR = "No active Fabric context found. Please run 00_env_config before running this notebook."
-
-
-# ---------------------------------------------------------------------------
-# Resolver layer: Fabric runtime context
-# ---------------------------------------------------------------------------
+_ACTIVE_GOVERNED_CONTEXT: ContextVar = ContextVar("fabricops_governed_context", default=None)
 
 
 def get_default_fabric_context() -> dict[str, Any]:
-    """Return the active Fabric context created by ``00_env_config``.
-
-    Returns
-    -------
-    dict[str, Any]
-        Active FabricOps runtime context containing at least ``config`` and
-        ``env``.
-
-    Raises
-    ------
-    RuntimeError
-        If ``00_env_config`` has not initialized ``FABRIC_CONTEXT`` in the
-        active notebook session.
-
-    Notes
-    -----
-    The helper first checks the IPython notebook namespace, then ``builtins``.
-    When ``00_env_config`` is still constructing the active context, it can
-    also assemble the minimal context from ``CONFIG`` and ``ENV`` in the
-    notebook namespace. This keeps common notebooks simple while still
-    allowing tests and advanced workflows to inject an explicit context.
-
-    """
-    context = None
-    shell_user_ns = None
-    try:
-        from IPython import get_ipython  # type: ignore
-
-        shell = get_ipython()
-        if shell is not None:
-            shell_user_ns = shell.user_ns
-            context = shell_user_ns.get("FABRIC_CONTEXT")
-    except Exception:
-        context = None
-
-    if context is None:
-        try:
-            import builtins
-
-            context = getattr(builtins, "FABRIC_CONTEXT", None)
-        except Exception:
-            context = None
-
-    if context is None and shell_user_ns is not None:
-        shell_config = shell_user_ns.get("CONFIG")
-        shell_env = shell_user_ns.get("ENV")
-        if shell_config is not None and shell_env is not None:
-            context = {"config": shell_config, "env": shell_env}
-            run_context = shell_user_ns.get("RUN_CONTEXT")
-            if run_context is not None:
-                context["workspace_name"] = getattr(run_context, "workspace_name", None)
-                context["runtime_metadata"] = getattr(run_context, "runtime_metadata", None)
-
-    has_environment = isinstance(context, dict) and context.get("env")
-    if not isinstance(context, dict) or not context.get("config") or not has_environment:
-        raise RuntimeError(_DEFAULT_CONTEXT_ERROR)
-    return context
-
-
+    """Return the context resolved from the central registry, never notebook globals."""
+    active = _ACTIVE_GOVERNED_CONTEXT.get()
+    if active is None:
+        raise RuntimeError("No governed context. Run setup_pipeline() or setup_governance(); "
+                           "00_env_config and FABRIC_CONTEXT globals are no longer supported. "
+                           "Independent public IO accepts an explicit context.")
+    return dict(active)
 
 
 def resolve_fabric_context(
@@ -95,6 +39,19 @@ def resolve_fabric_context(
     context: dict[str, Any] | None = None,
 ) -> tuple[Any, str, dict[str, Any]]:
     """Resolve explicit or default FabricOps config and environment values."""
+    active = _ACTIVE_GOVERNED_CONTEXT.get()
+    if active is not None and active.get("_configuration_locked", True):
+        proposed = dict(context or {})
+        if ((config is not None and config != active["config"])
+                or (env is not None and env != active["env"])
+                or (proposed.get("config", active["config"]) != active["config"])
+                or (proposed.get("env", active["env"]) != active["env"])):
+            raise ValueError("Governed workspace configuration cannot be overridden after setup.")
+        for key in ("workspace_id", "notebook_id", "_registry_workspace_id", "_registry_revision",
+                    "_registry_config", "_registry_registration", "_registry_bootstrap", "_registry_pipeline", "_configuration_locked"):
+            if key in proposed and proposed[key] != active.get(key):
+                raise ValueError("Governed runtime identity cannot be overridden after setup.")
+        context = {**active, **proposed}
     resolved = dict(context or {})
     if config is None:
         config = resolved.get("config")
@@ -304,6 +261,7 @@ class FabricStore:
     kind: str
     schema_enabled: bool = False
     schema: str | None = None
+    item_name: str | None = None
 
     def __post_init__(self) -> None:
         """Validate and normalize initialized values."""
@@ -519,7 +477,7 @@ class DataAgreementConfig:
     Parameters
     ----------
     metadata_tables : dict[str, str]
-        Lightweight metadata table names prepared by ``00_env_config``.
+        Lightweight metadata table names provisioned centrally by Governance.
     data_steward_widget, data_agreement_widget : dict[str, Any]
         Visible standard columns and organization-specific ``custom_fields``.
         Custom fields are rendered dynamically and persisted in
@@ -605,6 +563,7 @@ class FrameworkConfig:
     audit_timezone: str = DEFAULT_AUDIT_TIMEZONE
     governance_metadata_schema: str = "governance"
     engineering_metadata_schema: str = "engineering"
+    execution_workspace_id: str | None = None
 
     def __post_init__(self) -> None:
         """Validate and normalize initialized values."""
@@ -849,6 +808,7 @@ def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> Reso
         schema_enabled=configured_store.schema_enabled,
         schema=configured_store.schema,
         key=store,
+        item_name=configured_store.item_name,
     )
 
 
@@ -882,3 +842,331 @@ def build_table_id(store_type: Any, layer: Any, schema_name: Any, table_name: An
 def build_column_id(table_id: Any, column_name: Any) -> str:
     """Return the environment-independent logical identity for a column asset."""
     return stable_metadata_id(table_id, column_name)
+
+
+REGISTRY_TABLE = "METADATA_WORKSPACE_REGISTRY"
+
+
+def fabric_runtime_identity() -> dict[str, Any]:
+    """Read executing identity directly from Fabric, ignoring notebook-supplied context."""
+    try:
+        import notebookutils
+        live = notebookutils.runtime.context
+    except (ImportError, AttributeError) as exc:
+        raise RuntimeError("Governed execution requires the Fabric runtime workspace identity.") from exc
+    identity = resolve_runtime_context(context={"runtime_metadata": live}, active_context={})
+    from uuid import UUID
+    for key in ("workspace_id", "notebook_id"):
+        try:
+            identity[key] = str(UUID(str(identity[key])))
+        except (ValueError, TypeError, AttributeError) as exc:
+            raise RuntimeError(f"Fabric runtime did not provide a valid {key}.") from exc
+    # Names are audit labels, never configuration or execution requirements.
+    identity["workspace_name"] = identity.get("workspace_name") or identity["workspace_id"]
+    identity["notebook_name"] = identity.get("notebook_name") or identity["notebook_id"]
+    identity["activity_id"] = identity.get("activity_id") or str(__import__("uuid").uuid4())
+    return identity
+
+
+def registry_bootstrap() -> dict[str, Any]:
+    """Load the administrator-built wheel's pinned locator; no runtime overrides."""
+    from importlib.resources import files
+    from uuid import UUID
+    locator = json.loads(files("fabricops_kit.config").joinpath("registry_bootstrap.json").read_text())
+    if set(locator) != {"governance_workspace_id", "metadata_item_id", "governance_schema", "engineering_schema"}:
+        raise RuntimeError("Install the centrally published FabricOps wheel with a pinned registry bootstrap.")
+    try:
+        for key in ("governance_workspace_id", "metadata_item_id"):
+            locator[key] = str(UUID(locator[key]))
+        for key in ("governance_schema", "engineering_schema"):
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", locator[key]):
+                raise ValueError("Invalid metadata schema.")
+        if locator["governance_schema"] == locator["engineering_schema"]:
+            raise ValueError("Governance and execution schemas must be distinct.")
+    except (ValueError, TypeError, AttributeError) as exc:
+        raise RuntimeError("Invalid centrally published registry bootstrap.") from exc
+    return locator
+
+
+def bootstrap_context(locator, identity):
+    """Construct only the pinned Metadata route, before workspace registration is resolved."""
+    env = "GOVERNANCE"
+    store = FabricStore(env, locator["governance_workspace_id"], locator["metadata_item_id"],
+                        "lakehouse", True, locator["governance_schema"])
+    config = FrameworkConfig(PathConfig({env: {"Metadata": store}}), GovernanceConfig(), DataAgreementConfig(),
+                             governance_metadata_schema=locator["governance_schema"],
+                             engineering_metadata_schema=locator["engineering_schema"])
+    return {**identity, "config": config, "env": env}
+
+
+def read_workspace_registry(*, locator, identity, spark_session=None):
+    """Read exactly one central registry snapshot using the pinned physical route."""
+    from fabricops_kit.io import read_lakehouse_table
+    context = bootstrap_context(locator, identity)
+    # Administrative/bootstrap reads must not inherit a different active workspace context.
+    saved = _ACTIVE_GOVERNED_CONTEXT.set(None)
+    try:
+        rows = read_lakehouse_table(REGISTRY_TABLE, store="Metadata", schema=locator["governance_schema"],
+                                   context=context, spark_session=spark_session).collect()
+    finally:
+        _ACTIVE_GOVERNED_CONTEXT.reset(saved)
+    if len(rows) != 1:
+        raise RuntimeError("Initialize exactly one central Workspace Registry before governed execution.")
+    row = rows[0].asDict(recursive=True) if hasattr(rows[0], "asDict") else dict(rows[0])
+    snapshot = json.loads(row["snapshot_json"])
+    if row.get("authority_id") != "central" or snapshot.get("format") != "fabricops.workspace-registry.v1":
+        raise RuntimeError("Unsupported Workspace Registry snapshot.")
+    return row["token"], snapshot
+
+
+def validate_workspace_registration(registration, *, locator):
+    """Validate a complete admin-owned workspace mapping without selecting an environment."""
+    from uuid import UUID
+    row = deepcopy(registration)
+    required = {"workspace_id", "display_name", "environment", "status", "resources", "notebooks", "settings"}
+    if set(row) != required:
+        raise ValueError(f"Workspace registration requires exactly {sorted(required)}.")
+    row["workspace_id"] = str(UUID(row["workspace_id"]))
+    if not str(row["display_name"]).strip() or row["environment"] not in {"DEV", "TEST", "PROD"}:
+        raise ValueError("A workspace display name and explicit DEV, TEST or PROD environment are required.")
+    if row["status"] not in {"active", "inactive"}:
+        raise ValueError("Registration status must be active or inactive.")
+    if not {"Bronze", "Silver", "Gold", "Metadata"} <= set(row["resources"]):
+        raise ValueError("Register approved Bronze, Silver, Gold and Metadata resources.")
+    for key, resource in row["resources"].items():
+        resource = dict(resource)
+        for field_name in ("workspace_id", "item_id"):
+            resource[field_name] = str(UUID(resource[field_name]))
+        store = FabricStore(env=row["environment"], **resource)
+        if store.kind == "warehouse" and not store.item_name:
+            raise ValueError("Warehouse mappings require the physical item_name as well as item_id.")
+        row["resources"][key] = resource
+    metadata = row["resources"]["Metadata"]
+    if (metadata["workspace_id"], metadata["item_id"], metadata["kind"], metadata.get("schema_enabled")) != (
+            locator["governance_workspace_id"], locator["metadata_item_id"], "lakehouse", True):
+        raise ValueError("Every workspace must use the pinned central Metadata Lakehouse.")
+    for notebook_id, binding in row["notebooks"].items():
+        if str(UUID(notebook_id)) != notebook_id or set(binding) != {"pipeline_id", "mode"}:
+            raise ValueError("Register notebook UUIDs with pipeline_id and mode.")
+        if not str(binding["pipeline_id"]).strip() or binding["mode"] not in {"Test", "Live"}:
+            raise ValueError("Notebook bindings require a pipeline_id and exactly Test or Live.")
+    registration_context(row, locator=locator, identity={})
+    return row
+
+
+def registration_context(registration, *, locator, identity):
+    """Materialize the existing FrameworkConfig from one approved workspace registration."""
+    row = registration
+    settings = deepcopy(row["settings"])
+    allowed = {"governance_config", "data_agreement_config", "audit_timezone"}
+    if set(settings) - allowed:
+        raise ValueError("Registry settings cannot override resource routing or metadata schemas.")
+    config = FrameworkConfig(
+        path_config=PathConfig({row["environment"]: {key: FabricStore(env=row["environment"], **resource)
+                                                   for key, resource in row["resources"].items()}}),
+        governance_config=GovernanceConfig(**settings.get("governance_config", {})),
+        data_agreement_config=DataAgreementConfig(**settings.get("data_agreement_config", {})),
+        audit_timezone=settings.get("audit_timezone", "UTC"),
+        governance_metadata_schema=locator["governance_schema"], engineering_metadata_schema=locator["engineering_schema"],
+        execution_workspace_id=row["workspace_id"])
+    validate_framework_config(config)
+    return {**identity, "config": config, "env": row["environment"], "_registry_workspace_id": row["workspace_id"]}
+
+
+def resolve_governed_workspace(*, target_workspace_id=None, require_pipeline=False, spark_session=None, bind=True):
+    """Resolve trusted runtime and central registration, then pin the complete execution configuration."""
+    identity = fabric_runtime_identity()
+    locator = registry_bootstrap()
+    if target_workspace_id is not None and identity["workspace_id"] != locator["governance_workspace_id"]:
+        raise PermissionError("Only Governance Workspace operations may select a registered target workspace.")
+    workspace_id = target_workspace_id or identity["workspace_id"]
+    token, snapshot = read_workspace_registry(locator=locator, identity=identity, spark_session=spark_session)
+    row = snapshot["workspaces"].get(workspace_id)
+    if row is None or row.get("status") != "active":
+        raise PermissionError("Executing or selected workspace is unknown or inactive in the central registry.")
+    row = validate_workspace_registration(row, locator=locator)
+    if row["workspace_id"] != workspace_id:
+        raise RuntimeError("Workspace Registry key does not match its authoritative workspace ID.")
+    context = registration_context(row, locator=locator, identity=identity)
+    context.update(_configuration_locked=True, _registry_bootstrap=json.dumps(locator, sort_keys=True),
+                   _registry_revision=token, _registry_registration=json.dumps(row, sort_keys=True),
+                   _registry_config=json.dumps(asdict(context["config"]), sort_keys=True))
+    binding = row["notebooks"].get(identity["notebook_id"])
+    if require_pipeline:
+        if binding is None or target_workspace_id is not None:
+            raise PermissionError("Executing notebook ID has no approved pipeline binding in this workspace.")
+        context["_registry_pipeline"] = dict(binding)
+    from fabricops_kit.io.shared import get_spark_session
+    spark = get_spark_session(spark_session)
+    # Syntactic resource validation is eager. Metadata readability is verified by the registry
+    # read above; target permissions are enforced by Fabric at the actual IO boundary.
+    for key in row["resources"]:
+        get_store(context["config"], context["env"], key)
+    with suspend_governed_context():
+        check_governed_readiness(context, spark_session=spark)
+    freeze_governed_configuration(context["config"])
+    if "_registry_pipeline" in context:
+        context["_registry_pipeline"] = FrozenConfigDict(context["_registry_pipeline"])
+    if bind:
+        bind_governed_context(context, spark_session=spark)
+    return dict(context)
+
+
+def verify_governed_context(context):
+    """Reject runtime, registration or configuration drift before operations and finalization."""
+    if not context.get("_registry_revision"):
+        return  # Explicit independent IO contexts are outside the governed lifecycle.
+    identity = fabric_runtime_identity()
+    if any(identity[key] != context[key] for key in ("workspace_id", "notebook_id")):
+        raise RuntimeError("Fabric execution identity changed after pipeline setup.")
+    if json.dumps(asdict(context["config"]), sort_keys=True) != context["_registry_config"]:
+        raise RuntimeError("Governed configuration changed after setup; start a new execution.")
+    locator = registry_bootstrap()
+    if json.dumps(locator, sort_keys=True) != context["_registry_bootstrap"]:
+        raise RuntimeError("Central registry bootstrap changed after setup; start a new execution.")
+    _token, snapshot = read_workspace_registry(locator=locator, identity=identity,
+                                              spark_session=context.get("_pipeline_spark"))
+    row = snapshot["workspaces"].get(context["_registry_workspace_id"])
+    if json.dumps(row, sort_keys=True) != context["_registry_registration"]:
+        raise RuntimeError("Workspace registration changed after setup; stop and start a new execution.")
+
+
+def activation_scope(environment, context=None):
+    """Scope approvals by executing workspace; historical environment scopes remain read-only history."""
+    context = context or {}
+    config = context.get("config")
+    workspace_id = context.get("_registry_workspace_id") or getattr(config, "execution_workspace_id", None)
+    return f"{environment}@{workspace_id}" if workspace_id else environment
+
+
+
+def commit_metadata_snapshot(table, snapshot, *, expected_token, context, spark_session=None):
+    """Compare-and-swap a preinitialized singleton; confirm lost acknowledgements by exact token."""
+    from uuid import uuid4
+    from delta.tables import DeltaTable
+    from fabricops_kit.io.shared import get_spark_session, resolve_configured_lakehouse_table
+    from fabricops_kit.io import read_lakehouse_table
+    from fabricops_kit.config.audit import build_runtime_audit_fields
+    from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema, metadata_table_schema_registry, coerce_metadata_row_types
+    config, env, runtime = resolve_fabric_context(context=context)
+    spark = get_spark_session(spark_session)
+    schema = metadata_table_physical_schema(config, table)
+    _store, _name, _schema, path = resolve_configured_lakehouse_table("Metadata", table, schema, context=context)
+    token = str(uuid4())
+    row = {"authority_id": "central", "token": token, "snapshot_json": json.dumps(snapshot, sort_keys=True, separators=(",", ":")),
+           **build_runtime_audit_fields(config=config, env=env, runtime_context=runtime)}
+    frame = spark.createDataFrame([coerce_metadata_row_types(table, row)], schema=metadata_table_schema_registry()[table])
+    expected = "'" + expected_token.replace("'", "''") + "'"
+    changes = {key: "source." + key for key in row if key != "authority_id"}
+    changes["token"] = f"CASE WHEN target.token = {expected} THEN source.token ELSE CAST(raise_error('Stale metadata snapshot; refresh') AS STRING) END"
+    failure = None
+    try:
+        (DeltaTable.forPath(spark, path).alias("target").merge(frame.alias("source"), "target.authority_id = source.authority_id")
+         .whenMatchedUpdate(set=changes).execute())
+    except Exception as exc:
+        failure = exc
+    rows = read_lakehouse_table(table, store="Metadata", schema=schema, context=context, spark_session=spark).collect()
+    if len(rows) == 1 and rows[0]["token"] == token:
+        return token
+    raise RuntimeError("Metadata snapshot commit was not confirmed; refresh before retrying.") from failure
+
+
+
+def suspend_governed_context():
+    """Temporarily suspend default routing for administrative singleton bootstrap only."""
+    from contextlib import contextmanager
+    @contextmanager
+    def suspended():
+        token = _ACTIVE_GOVERNED_CONTEXT.set(None)
+        try:
+            yield
+        finally:
+            _ACTIVE_GOVERNED_CONTEXT.reset(token)
+    return suspended()
+
+
+
+class FrozenConfigDict(dict):
+    """JSON-compatible mapping that rejects accidental post-setup configuration edits."""
+
+    def _immutable(self, *args, **kwargs):
+        raise TypeError("Governed workspace configuration is immutable; update the central registry and rerun setup.")
+
+    __setitem__ = __delitem__ = clear = pop = popitem = setdefault = update = __ior__ = _immutable
+
+    def __deepcopy__(self, memo):
+        """Share immutable configuration safely across plan copies."""
+        return self
+
+
+class FrozenConfigList(list):
+    """JSON-compatible immutable sequence for centrally approved policy settings."""
+
+    def _immutable(self, *args, **kwargs):
+        raise TypeError("Governed workspace configuration is immutable.")
+
+    __setitem__ = __delitem__ = append = clear = extend = insert = pop = remove = reverse = sort = __iadd__ = __imul__ = _immutable
+
+    def __deepcopy__(self, memo):
+        """Share immutable configuration safely across plan copies."""
+        return self
+
+
+def freeze_governed_configuration(value):
+    """Freeze nested settings without changing the existing FrameworkConfig and FabricStore types."""
+    from dataclasses import fields, is_dataclass
+    if is_dataclass(value):
+        for item in fields(value):
+            object.__setattr__(value, item.name, freeze_governed_configuration(getattr(value, item.name)))
+    elif isinstance(value, dict):
+        return FrozenConfigDict((key, freeze_governed_configuration(item)) for key, item in value.items())
+    elif isinstance(value, list):
+        return FrozenConfigList(freeze_governed_configuration(item) for item in value)
+    return value
+
+
+
+def configure_metadata_transaction(*, spark, config, env, table_name):
+    """Provision singleton Serializable isolation using administrator permissions."""
+    from fabricops_kit.io.shared import resolve_configured_lakehouse_table
+    from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
+    _store, _table, _schema, path = resolve_configured_lakehouse_table(
+        "Metadata", table_name, metadata_table_physical_schema(config, table_name), context={"config": config, "env": env})
+    spark.sql("ALTER TABLE delta.`" + path.replace("`", "``") + "` SET TBLPROPERTIES ('delta.isolationLevel' = 'Serializable')")
+
+
+
+def release_governed_context(context):
+    """Release the pipeline override lock while retaining approved defaults for independent IO."""
+    active = _ACTIVE_GOVERNED_CONTEXT.get()
+    if active is not None and context.get("_registry_revision") == active.get("_registry_revision"):
+        defaults = dict(active)
+        defaults.pop("_registry_pipeline", None)
+        defaults["_configuration_locked"] = False
+        _ACTIVE_GOVERNED_CONTEXT.set(defaults)
+
+
+def check_governed_readiness(context, *, spark_session):
+    """Verify shared metadata availability and canonical schemas without provisioning as an engineer."""
+    from fabricops_kit.io import read_lakehouse_table
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry, metadata_table_physical_schema
+    schemas = metadata_table_schema_registry()
+    for table in ("METADATA_ACTIVATION_STATE", "METADATA_EXECUTION_STATE", "METADATA_DATA_CATALOGUE",
+                  "METADATA_PIPELINE_RUN", "METADATA_GUARDRAIL_RESULTS", "METADATA_SOURCE_OBSERVATION"):
+        try:
+            frame = read_lakehouse_table(table, store="Metadata",
+                schema=metadata_table_physical_schema(context["config"], table), context=context, spark_session=spark_session)
+            if set(schemas[table].fieldNames()) - set(frame.schema.fieldNames()):
+                raise ValueError("Missing canonical metadata columns.")
+            frame.limit(0).collect()
+        except Exception as exc:
+            raise RuntimeError(f"Shared metadata readiness failed for {table}. Ask Governance to run "
+                               "setup_metadata_tables() and verify Fabric read permissions.") from exc
+
+
+
+def bind_governed_context(context, *, spark_session=None):
+    """Install validated configuration only after the previous pipeline boundary closes."""
+    from fabricops_kit.io.shared import get_spark_session
+    get_spark_session(spark_session).conf.set("spark.sql.session.timeZone", context["config"].audit_timezone)
+    _ACTIVE_GOVERNED_CONTEXT.set(dict(context))

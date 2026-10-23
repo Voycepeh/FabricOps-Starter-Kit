@@ -6,10 +6,11 @@ Complete [Step 5](05-activate-data-contract-and-promote.md) and use the promoted
 
 ### Load the Production configuration
 
-Run the Production copy of `00_env_config`:
+Confirm Governance registered this Production workspace and notebook ID with the approved Live binding:
 
 ```python
-%run 00_env_config
+from fabricops_kit import setup_governance
+context = setup_governance()
 ```
 
 The same logical store names now resolve to the Production Lakehouses, Warehouses, schemas, paths, and SQL endpoints.
@@ -40,7 +41,7 @@ The same source reads, transformations, Guardrail checks, governed write logic, 
 
 Live uses the **same tested workflow in the Production environment**, with contracts resolved exclusively from the approved environment Activated Pipeline manifest. It verifies the exact effective Agreement, Data Contract versions, current active approval and configured physical bindings before execution. Read/Write behavior must match the approved operation configuration.
 
-Set `PIPELINE_MODE = "Live"` after Step 5. Headless setup resolves the currently approved environment revision automatically. There is no Live contract-selection widget or deployment-file selection. The environment name routes execution and never infers Live.
+Have Governance register this notebook binding as `Live` after Step 5. Headless setup resolves the currently approved environment revision automatically. There is no Live contract-selection widget or deployment-file selection. The environment name routes execution and never infers Live.
 
 Pass the shared `EXECUTION_PLAN` to every operation and execute reads, transformations and writes inside `with EXECUTION_PLAN:`. Its exit records the complete outcome automatically, including read-only runs. The plan pins one activation revision; affected running executions must drain before a coordinated switch. Changed code, dependencies, contract identity, unsafe destinations or transformation settings fail safely. Permitted operational differences warn and are recorded.
 

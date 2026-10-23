@@ -23,7 +23,7 @@ def read_lakehouse_excel(
     relative_path : str
         Excel file path resolved by the Fabric resolver.
     store : str, default="Bronze"
-        Logical Lakehouse store key from ``00_env_config``.
+        Logical Lakehouse store key from the Workspace Registry or an explicit IO context.
     sheet_name : str or int, default=0
         Worksheet name or index to read.
     spark_session : object, optional
@@ -41,7 +41,7 @@ def read_lakehouse_excel(
     Notes
     -----
     FabricOps resolves the configured Lakehouse Files path from
-    ``00_env_config``, reads the workbook binary through Spark, parses it with
+    the Workspace Registry or an explicit IO context, reads the workbook binary through Spark, parses it with
     ``pandas.read_excel``, and converts the pandas DataFrame back to a Spark
     DataFrame. The temporary local workbook is deleted after parsing, including
     when parsing raises an error.

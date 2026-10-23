@@ -12,8 +12,6 @@ from uuid import uuid4
 from fabricops_kit.config import FabricStore
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
 
-DEFAULT_ENV = "Sandbox"
-DEFAULT_STORE = "Source"
 
 
 # ---------------------------------------------------------------------------
@@ -182,7 +180,7 @@ def resolve_configured_warehouse_table(
     """Resolve a logical store key and table through configured warehouse metadata."""
     configured_store, _env = resolve_store(store, "warehouse", context=context)
     schema_value, table_value, object_name = resolve_warehouse_table_location(
-        configured_store, schema, table_name, warehouse_name=configured_store.key
+        configured_store, schema, table_name, warehouse_name=configured_store.item_name or configured_store.key
     )
     return configured_store, schema_value, table_value, object_name
 

@@ -132,7 +132,8 @@ def _persist_target_processing(
         target.alias("target")
         .merge(
             source.alias("source"),
-            "target.environment_name = source.environment_name "
+            "(target.execution_workspace_id <=> source.execution_workspace_id) "
+            "AND target.environment_name = source.environment_name "
             "AND target.metadata_level = 'table' "
             "AND target.table_id = source.table_id "
             "AND target.column_id IS NULL",
@@ -497,7 +498,9 @@ def pipeline_write(
         validate_processing_input,
     )
 
-    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+    config, env, context = resolve_fabric_context(context=context)
+    from fabricops_kit.config.shared import verify_governed_context
+    verify_governed_context(context)
     coordinates = (store, schema, table_name)
     if table_id and any(value is not None for value in coordinates):
         raise ValueError("table_id cannot be combined with store, schema, or table_name.")

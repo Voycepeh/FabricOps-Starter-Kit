@@ -9,13 +9,10 @@
 
 Shared environment setup and runtime validation for notebook templates.
 
-<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">00_env_config</span>
-</p>
 
 ## Usage notes
 
-Use at the start of 00_env_config or a notebook template to validate FabricOps configuration, resolve required targets, and capture runtime context before other helpers run.
+Deprecated compatibility helper for legacy explicit contexts; standard notebooks use setup_pipeline or setup_governance.
 
 
 ## Example usage
@@ -23,7 +20,7 @@ Use at the start of 00_env_config or a notebook template to validate FabricOps c
 <div class="reference-example-usage" markdown="1">
 
 ```python
-CONTEXT = setup_notebook(CONFIG, env=ENVIRONMENT_NAME, required_targets=["Bronze", "Silver", "Gold", "Metadata"])
+legacy_readiness = setup_notebook(legacy_config, env=legacy_environment)
 ```
 
 </div>
@@ -122,7 +119,7 @@ Startup flow:
     patterns.
 11. Return an overall readiness status.
 
-Current standard templates use ``00_env_config``, ``01_governance``,
+Legacy templates used ``00_env_config``, ``01_governance``,
 and ``02_pipeline``. Governance and pipeline names can include suffixes
 for project-specific workflows.
 
@@ -197,7 +194,7 @@ automatically inject configuration into every downstream function.
 
 `fabricops_kit/config/setup_notebook.py:20`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L20-L225">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L20-L229">View on GitHub</a>
 </div>
 
 

@@ -24,6 +24,10 @@ SUPPORTED_PUBLIC_API = (
 # Preview public functions remain importable for evaluation, but are not part of
 # the supported compatibility surface until promoted in a future release.
 PREVIEW_PUBLIC_API = (
+    "fabricops_kit.config.setup_governance.setup_governance",
+    "fabricops_kit.config.register_workspace.register_workspace",
+    "fabricops_kit.config.migrate_workspace_config.migrate_workspace_config",
+    "fabricops_kit.config.migrate_workspace_metadata.migrate_workspace_metadata",
     "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
     "fabricops_kit.data_agent.create_data_agent.create_data_agent",
     "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",

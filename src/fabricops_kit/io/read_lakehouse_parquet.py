@@ -44,7 +44,7 @@ def read_lakehouse_parquet(
         nested paths such as ``incoming/2026/customers.parquet`` are
         supported.
     store : str, default="Bronze"
-        Logical Lakehouse store key from ``00_env_config``.
+        Logical Lakehouse store key from the Workspace Registry or an explicit IO context.
     verbose : bool, default=True
         Whether to print operational progress for original path attempts,
         original read success or failure, ``_tsus`` path attempts, conversion
@@ -88,7 +88,7 @@ def read_lakehouse_parquet(
     purely lazy reader, but it does not collect the entire dataset to the
     driver.
 
-    ``store`` is a logical Lakehouse target from ``00_env_config`` and
+    ``store`` is a logical Lakehouse target from the Workspace Registry or an explicit IO context and
     ``relative_path`` is resolved under the configured Lakehouse ``Files``
     area. Root-level and nested paths are supported. The resolved location is
     conceptually ``<configured lakehouse>/Files/<relative_path>``. Examples:

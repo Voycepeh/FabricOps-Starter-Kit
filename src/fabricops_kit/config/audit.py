@@ -145,4 +145,8 @@ def build_runtime_audit_fields(
     values[notebook_field] = str(values[notebook_field]).strip() if values[notebook_field] is not None else None
     values[metadata_lakehouse_field] = str(values[metadata_lakehouse_field]).strip()
     values[activity_field] = str(values[activity_field]).strip()
+    execution_workspace_id = (config.get("execution_workspace_id") if isinstance(config, dict)
+                              else getattr(config, "execution_workspace_id", None))
+    if execution_workspace_id:
+        values["execution_workspace_id"] = execution_workspace_id
     return values

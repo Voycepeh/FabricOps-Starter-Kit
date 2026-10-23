@@ -36,7 +36,7 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
 
     class Spark:
         def sql(self, statement: str) -> None:
-            raise AssertionError(f"metadata setup must not call spark.sql: {statement}")
+            assert "SET TBLPROPERTIES" in statement and "Serializable" in statement
 
     def read_table(table_name: str, **_kwargs) -> Table:
         reads.append(table_name)
@@ -65,7 +65,8 @@ def test_central_metadata_setup_rejects_known_legacy_schema(monkeypatch):
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
 
     class Spark:
-        pass
+        def sql(self, statement):
+            assert "SET TBLPROPERTIES" in statement and "Serializable" in statement
 
     def read_table(table_name: str, **_kwargs) -> Table:
         columns = metadata_table_schema_registry()[table_name].fieldNames()

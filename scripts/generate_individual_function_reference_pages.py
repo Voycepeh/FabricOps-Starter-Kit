@@ -45,8 +45,10 @@ INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
 GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
-CORE_TEMPLATE_KEYS = {"00_env_config", "00C_demo_setup", "01_governance", "02_pipeline"}
+CORE_TEMPLATE_KEYS = { "00C_demo_setup", "01_governance", "02_pipeline"}
 AUDIT_FIELD_DESCRIPTIONS = {
+    "_legacy_environment_name": "Original deployment environment label retained during explicit stopped-workload metadata migration.",
+    "execution_workspace_id": "Registered engineering workspace scope; distinct from the committing administrator workspace. Historical unassigned rows remain nullable until explicit migration.",
     "_committed_by": "User principal or runtime identity that committed the metadata row.",
     "_committed_at": "Timestamp when the metadata row was committed.",
     "_workspace_id": "Fabric workspace identifier captured from runtime audit context.",
@@ -214,7 +216,7 @@ SOURCE_OBSERVATION_FIELD_DESCRIPTIONS = {
     "source_table_name": "Source table name captured from the Catalogue when this observation was written; later renames do not change it.",
     "target_table_name": "Target table name captured from the Catalogue when this observation was written; later renames do not change it.",
     "table_id": "Canonical table identity shared with METADATA_DATA_CATALOGUE.",
-    "source_target": "Logical FabricOps target resolved through 00_env_config.",
+    "source_target": "Logical FabricOps target resolved through approved workspace mappings or an explicit independent IO context.",
     "source_schema": "Resolved physical source schema when the configured store uses one.",
     "source_table": "Resolved physical source table name.",
     "partition_column": "Column whose distinct values define observed source partitions.",
@@ -5481,6 +5483,10 @@ def main() -> None:
             "functions": {
                 "setup_notebook",
                 "setup_metadata_tables",
+                "setup_governance",
+                "register_workspace",
+                "migrate_workspace_config",
+                "migrate_workspace_metadata",
                 "widget_render_data_steward",
                 "widget_render_data_agreement",
                 "widget_data_contract",

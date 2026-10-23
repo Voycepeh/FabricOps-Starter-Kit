@@ -29,8 +29,8 @@ via `profile_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 23 |
-| Business columns | 15 |
+| Total columns | 25 |
+| Business columns | 17 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -52,6 +52,8 @@ via `profile_id`
 | `frequency_rank` | `integer` | Metadata Data Profiled Frequency field `frequency_rank`. |
 | `profiled_row_count` | `long` | Metadata Data Profiled Frequency field `profiled_row_count`. |
 | `profiled_non_null_count` | `long` | Metadata Data Profiled Frequency field `profiled_non_null_count`. |
+| `execution_workspace_id` | `string` | Registered engineering workspace scope; distinct from the committing administrator workspace. Historical unassigned rows remain nullable until explicit migration. |
+| `_legacy_environment_name` | `string` | Original deployment environment label retained during explicit stopped-workload metadata migration. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

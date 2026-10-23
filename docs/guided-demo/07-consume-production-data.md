@@ -4,7 +4,7 @@
 
 - Run on a [Fabric capacity that supports Data Agents](https://learn.microsoft.com/fabric/data-science/data-agent-concept).
 - Give the caller access to the governed Production Lakehouse or Warehouse and permission to create and configure items in the target workspace.
-- Configure both physical source identifiers through `00_env_config`; the flow does not infer a default Lakehouse.
+- Configure both physical source identifiers through the central Workspace Registry; the flow does not infer a default Lakehouse.
 - Activate one frozen Production Data Contract linked to an exact Data Agreement version.
 - Use the current [Fabric Data Agent REST APIs](https://learn.microsoft.com/rest/api/fabric/data-agent/items) for item creation and the documented staging datasource and instruction resources. These APIs may remain Preview; review Microsoft's current limitations before production adoption.
 

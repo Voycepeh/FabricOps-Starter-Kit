@@ -4,10 +4,42 @@
 
 Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the contracts.
 
+### First-time Catalogue registration
+
+Test Read and Write keep profiling diagnostics in memory. `finalize_pipeline()`
+publishes run and Guardrail results; it does not publish business data or create
+Catalogue entries automatically. For a new pipeline, after finalizing the initial
+No Contract run, profile the returned DataFrames using the existing public API.
+The approved workspace defaults remain available, so no second configuration
+notebook or environment selection is needed. For the Step 2A notebook:
+
+```python
+from fabricops_kit import profile_table
+
+for key, store, table in [
+    ("orders", "Bronze", "orders"),
+    ("products", "Bronze", "products"),
+    ("history", "Gold", "order_history"),
+]:
+    profile_table(sources[key]["dataframe"], store=store, schema="demo", table_name=table)
+
+for key, store, table in [
+    ("curated_orders_lakehouse", "Silver", "curated_orders"),
+    ("customer_summary_warehouse", "Gold", "customer_summary"),
+]:
+    profile_table(writes[key]["dataframe"], store=store, schema="demo", table_name=table)
+```
+
+This explicit authoring step registers observed structures in the shared
+Catalogue and profiling tables; it does not create or overwrite business tables.
+Use the equivalent source/target coordinates for other pipelines. Then author and
+freeze contracts below and rerun the governed Test workflow. Existing migrated
+Catalogue records do not need to be recreated.
+
 !!! warning "Enable Fabric AI Functions for the full DQ integration exercise"
     The four direct Column data quality families can be authored without AI. The remaining Business Rules are resolved from business language, so the full nine-rule integration exercise requires AI-assisted authoring.
 
-    Meet the [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview) and set `GOVERNANCE_CONFIG.ai_enrichment.enabled = True` in `00_env_config`.
+    Meet the [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview) and set `GOVERNANCE_CONFIG.ai_enrichment.enabled = True` in the centrally managed registry settings.
 
     Learn more: [Sensitive Data Classification & Treatment](../solutions/ai-assisted-data-contract-authoring.md).
 
@@ -223,7 +255,7 @@ The frozen version is an immutable data contract and becomes the exact candidate
     report["conflicts"], report["drafts"]
     ```
 
-    Supply the active configuration object and environment from `00_env_config`
+    Supply the active configuration object and environment from the resolved registered workspace context
     in place of `CONFIG` and `ENV`. The default is report-only. Review all proposed
     drafts and conflicts, then apply the exact reviewed snapshot while writers
     remain paused:

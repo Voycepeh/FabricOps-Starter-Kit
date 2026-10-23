@@ -56,7 +56,7 @@ def write_warehouse_table(
     table_name : str
         Warehouse table name.
     store : str, default="warehouse"
-        Logical Warehouse store key from ``00_env_config``. FabricOps resolves
+        Logical Warehouse store key from the Workspace Registry or an explicit IO context. FabricOps resolves
         the logical store key, workspace ID, Warehouse item ID, Warehouse database
         name, schema, and table name.
     mode : {"append", "overwrite", "errorifexists", "ignore"}, default="append"

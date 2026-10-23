@@ -46,7 +46,7 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 
 | Step | Stage | Canonical workflow step |
 | --- | --- | --- |
-| 0 | Set up the operating environment | Create the Fabric workspaces and required stores, configure `00_env_config`, and create the metadata tables in Governance. |
+| 0 | Set up the operating environment | Create the Fabric workspaces and required stores, register workspace mappings centrally, and create the shared metadata tables in Governance. |
 | 1 | Governance — Create Data Stewards and Data Agreements | In `01_governance`, create Data Stewards and establish Data Agreements between accountable stewards. |
 | 2 | Engineering Development — ETL, profile, and catalogue | Build and run `02_pipeline`, profile and catalogue governed tables, and capture Data Lineage and technical observations. |
 | 3 | Governance — Author and freeze the Data Contract | Select the governed `table_id`, author descriptive Enrichment and enforced Guardrails, review the schema and processing definition, and freeze an immutable table-centric version. Do not link a Data Agreement at authoring time. |

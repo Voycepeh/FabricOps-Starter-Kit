@@ -9,7 +9,7 @@ description: Use when creating, updating, or reviewing FabricOps notebook templa
 
 Guide all living standard notebook template work so templates remain public-safe, understandable, Microsoft Fabric aware, and clearly separated from the formal FabricOps package release contract.
 
-This skill owns the current standard templates under `templates/notebooks/`, including `00_env_config`, `01_governance`, and `02_pipeline`. The release workflow has a narrower responsibility: it freezes and publishes only the notebook templates explicitly included in the release snapshot contract.
+This skill owns the current standard templates under `templates/notebooks/`, including `01_governance` and `02_pipeline`. The release workflow has a narrower responsibility: it freezes and publishes only the notebook templates explicitly included in the release snapshot contract.
 
 ## When to use this skill
 
@@ -29,7 +29,7 @@ Do not use this skill for package implementation changes unless the notebook tas
 ## Implementation workflow
 
 1. Identify the affected notebook cells, supported public APIs, and relevant template tests.
-2. Treat all notebooks under `templates/notebooks/` as evolving latest templates. Preserve each notebook's existing responsibility: `00_env_config` for environment/runtime configuration, `01_governance` for governance authoring and review, `02_pipeline` for governed pipeline execution. Do not assume that release snapshot eligibility defines notebook-template ownership.
+2. Treat all notebooks under `templates/notebooks/` as evolving latest templates. Preserve each notebook's existing responsibility: `01_governance` for governance authoring and review, `02_pipeline` for governed pipeline execution. Do not assume that release snapshot eligibility defines notebook-template ownership.
 4. Use public FabricOps APIs only; avoid internal package imports, private helpers, generated metadata internals, or test-only helpers. For ordinary Fabric table/file reads and writes, use the public foundational I/O functions instead of raw Spark/connector/path persistence when FabricOps provides the operation.
 5. Keep notebooks executable block by block in Microsoft Fabric and understandable for junior engineers.
 6. Reuse canonical defaults and public helpers from `src/fabricops_kit/` instead of duplicating constants or metadata-routing logic inline.
@@ -44,7 +44,7 @@ Treat `02_pipeline.ipynb` as a cloneable bootstrap that users own after copying 
 
 Preserve these migration surfaces across routine template changes:
 
-- Keep the top-level flow ordered as Environment → Data Contract → Read → Transform → Write.
+- Keep the top-level flow ordered as Setup → Data Contract → Read → Transform → Write → Finalize.
 - Use each `orchestrate_read()` call itself as the source configuration surface. Keep source choices explicit as call arguments rather than duplicating them into `READ_*` passthrough variables.
 - Use each `orchestrate_write()` call itself as the target configuration surface. Keep target choices explicit as call arguments rather than duplicating them into `WRITE_*` passthrough variables.
 - Treat read strategy as a per-source decision and write strategy as a per-target decision. One pipeline may mix full and incremental sources and publish targets with different supported load strategies.

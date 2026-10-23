@@ -77,16 +77,6 @@ def test_get_store_requires_exact_canonical_metadata_case():
         get_store(canonical, "dev", "metadata")
 
 
-def test_env_config_uses_physical_item_keys_without_duplicate_names():
-    """The starter configuration exposes only its four physical item names."""
-    notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
-    source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
-
-    for key in ("Bronze", "Silver", "Gold", "Metadata"):
-        assert f'"{key}": FabricStore(' in source
-    for removed_alias in ("source", "unified", "product"):
-        assert f'"{removed_alias}": FabricStore(' not in source
-    assert "name=" not in source
 
 
 def test_framework_config_allows_shared_metadata_store_across_environments():
@@ -143,7 +133,7 @@ def test_config_setup_public_api_signatures_match_frozen_contract():
         "run_id_prefix: 'str' = 'run', local_fallback_name: 'str | None' = None) -> 'NotebookSetupContext'"
     )
     assert str(inspect.signature(setup_metadata_tables)) == (
-        "(*, spark: 'Any', config: 'FrameworkConfig | dict[str, Any]', env: 'str', "
+        "(*, spark: 'Any', config: 'FrameworkConfig | dict[str, Any] | None' = None, env: 'str | None' = None, "
         "require_active_steward: 'bool' = False, verbose: 'bool' = True, "
         "raise_on_failure: 'bool' = False) -> 'dict[str, Any]'"
     )
@@ -158,10 +148,8 @@ def test_default_fabric_context_requires_env(monkeypatch):
     config = object()
     monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": config, "env": "dev"}, raising=False)
 
-    context = get_default_fabric_context()
-
-    assert context["env"] == "dev"
-    assert context["config"] is config
+    with pytest.raises(RuntimeError, match="no longer supported"):
+        get_default_fabric_context()
 
 
 def test_resolve_fabric_context_uses_env_only():
@@ -266,30 +254,6 @@ def test_data_agreement_widgets_reject_blank_custom_field_keys():
         DataAgreementConfig(data_steward_widget={"custom_fields": [{"key": " "}]})
 
 
-def test_env_config_template_exposes_only_active_ai_enrichment_prompts():
-    """Expose the focused AI Enrichment controls without obsolete prompt frameworks."""
-    notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
-    source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
-
-    assert "AIPromptConfig" not in source
-    assert "ai_prompt_config" not in source
-    assert '"table_description_prompt"' in source
-    assert '"column_description_prompt"' in source
-    assert '"description_prompt"' not in source
-    assert '"classification_prompt"' not in source
-    assert '"sensitive_data_prompt"' in source
-    assert '"grain_prompt"' in source
-    assert '"pattern_prompt"' not in source
-    assert '"business_rule_prompt"' in source
-    assert '"dq_prompt"' not in source
-    assert '"enabled": True' in source
-    assert "DQ_RULE_SUGGESTION_PROMPT_TEMPLATE =" not in source
-    assert "GOVERNANCE_CANDIDATE_PROMPT_TEMPLATE" not in source
-    assert "GOVERNANCE_REVIEW_PROMPT_TEMPLATE" not in source
-    assert "QUALITY_CONFIG = QualityConfig()" not in source
-    assert "GOVERNANCE_CONFIG = GovernanceConfig()" not in source
-    assert "REVIEW_WORKFLOW_CONFIG = ReviewWorkflowConfig()" not in source
-    assert "LINEAGE_CONFIG = LineageConfig()" not in source
 
 
 def test_framework_config_uses_simplified_config_sections():
@@ -429,7 +393,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     def read_table(table_name, *, store, schema=None, spark_session=None, context=None):
         assert store == "Metadata"
         assert schema == ("governance" if table_name in {
-            "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_ACTIVATION_STATE",
+            "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_ACTIVATION_STATE", "METADATA_WORKSPACE_REGISTRY",
         } else "engineering")
         assert context["env"] == "dev"
         if table_name not in spark.tables:
@@ -441,7 +405,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     ):
         assert store == "Metadata"
         assert schema in {"governance", "engineering"}
-        assert mode == ("errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_TABLE_PROFILING"} else "overwrite")
+        assert mode == ("errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_TABLE_PROFILING", "METADATA_WORKSPACE_REGISTRY", "METADATA_EXECUTION_STATE"} else "overwrite")
         assert options is None
         assert verbose is False
         spark.created_tables.append(table_name)
@@ -905,7 +869,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
         return existing[table_name]
 
     def write_table(frame, table_name, **kwargs):
-        assert kwargs.get("mode") == ("errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_TABLE_PROFILING"} else "overwrite")
+        assert kwargs.get("mode") == ("errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_TABLE_PROFILING", "METADATA_WORKSPACE_REGISTRY", "METADATA_EXECUTION_STATE"} else "overwrite")
         created[table_name] = frame.schema
         existing[table_name] = frame
 
@@ -986,6 +950,7 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
         "first_profiled_at",
         "last_profiled_at",
         "is_active",
+        "execution_workspace_id", "_legacy_environment_name",
         "_committed_by",
         "_committed_at",
         "_workspace_id",
@@ -1025,21 +990,6 @@ def test_framework_config_and_get_current_audit_timestamp_use_configured_timezon
         get_current_audit_timestamp(timezone_name="Singapore")
 
 
-def test_env_config_template_exposes_audit_timezone_setting():
-    """Verify env config template exposes audit timezone setting."""
-    notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
-    source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
-
-    timezone_assignment = re.search(r'(?m)^FABRICOPS_AUDIT_TIMEZONE = "([^"]+)"$', source)
-    assert timezone_assignment is not None
-    configured_timezone = timezone_assignment.group(1)
-    assert _validate_audit_timezone(configured_timezone) == configured_timezone
-    assert "FABRICOPS_AUDIT_TIMEZONE" in source
-    assert "_validate_audit_timezone" in source or "audit_timezone=FABRICOPS_AUDIT_TIMEZONE" in source
-    assert "audit_timezone=FABRICOPS_AUDIT_TIMEZONE" in source
-    assert 'spark.conf.set("spark.sql.session.timeZone", CONFIG.audit_timezone)' in source
-    assert source.index("CONFIG = FrameworkConfig(") < source.index('spark.conf.set("spark.sql.session.timeZone"')
-    assert "spark.conf.get('spark.sql.session.timeZone')" in source
 
 
 def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
@@ -1136,16 +1086,6 @@ def test_config_public_import_contract_and_package_shape():
     assert not hasattr(config_package, "get_fabric_context")
 
 
-def test_env_config_template_imports_config_from_root_only():
-    """Verify 00_env_config imports supported config objects from root only."""
-    notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
-    source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
-
-    assert "from fabricops_kit import (" in source
-    assert "from fabricops_kit.config" not in source
-    assert "NotebookRuntimeConfig" not in source
-    assert "NOTEBOOK_PREFIXES" not in source
-    assert "RUNTIME_CONFIG" not in source
 
 
 def test_internal_modules_import_config_shared_helpers_not_old_module():
@@ -1352,6 +1292,7 @@ def test_lineage_schema_has_only_lineage_fields_and_canonical_audit_context():
         "table_name",
         "environment_name",
         "pipeline_role",
+        "execution_workspace_id", "_legacy_environment_name",
         *audit_names,
     ]
     assert all(not field.nullable for field in schema.fields if field.name in audit_names)
@@ -1728,3 +1669,10 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
     assert "blacklist" in business_prompt
     assert "regular expression" in business_prompt
     assert "only when none of those structured patterns" in business_prompt
+
+
+@pytest.fixture(autouse=True)
+def isolate_metadata_transaction_configuration(monkeypatch):
+    """Keep schema setup tests independent of Delta table-property transport."""
+    from importlib import import_module
+    monkeypatch.setattr(import_module("fabricops_kit.config.setup_metadata_tables"), "configure_metadata_transaction", lambda **kwargs: None)

@@ -22,4 +22,13 @@ __all__ = [
     "NotebookSetupContext",
     "setup_notebook",
     "setup_metadata_tables",
+    "setup_governance",
+    "register_workspace",
+    "migrate_workspace_config",
+    "migrate_workspace_metadata",
 ]
+
+from .setup_governance import setup_governance
+from .register_workspace import register_workspace
+from .migrate_workspace_config import migrate_workspace_config
+from .migrate_workspace_metadata import migrate_workspace_metadata

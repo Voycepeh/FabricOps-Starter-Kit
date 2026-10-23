@@ -63,7 +63,7 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `table_name` | `str \| None` | No | `None` | Required unless table_id is supplied. Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name. Omit it when ``table_id`` is supplied. |
 | `table_id` | `str \| None` | No | `None` | Canonical registered table identity. When supplied, FabricOps resolves ``table_name``, ``store``, and ``schema`` from the Catalogue. Do not combine with table_name, schema, or a non-default store. |
-| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from ``00_env_config``, such as ``bronze`` or ``silver``. FabricOps resolves this store key to the configured physical Lakehouse and Delta table path. |
+| `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from the Workspace Registry or an explicit IO context, such as ``bronze`` or ``silver``. FabricOps resolves this store key to the configured physical Lakehouse and Delta table path. |
 | `schema` | `str \| None` | No | `None` | Optional schema override for schema-enabled Lakehouses. Supply it separately from ``table_name``: use ``schema="sales"`` and ``table_name="orders"`` rather than ``table_name="sales.orders"``. This is normally omitted for Lakehouses without schemas. |
 | `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
@@ -132,7 +132,7 @@ Spark transformations; Delta can push these into the eventual scan.
 
 `fabricops_kit/io/read_lakehouse_table.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L10-L102">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L10-L110">View on GitHub</a>
 </div>
 
 

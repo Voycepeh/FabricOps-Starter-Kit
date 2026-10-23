@@ -6,12 +6,12 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Prepare Testing or resolve an approved environment configuration for Live.
+Resolve registered workspace configuration and start its explicit Test or Live binding.
 
 
 ## Usage notes
 
-Use once before Read, Transform and Write with pipeline_id and pipeline_mode.
+Use once before Read, Transform and Write; workspace and notebook IDs resolve the approved binding.
 
 
 ## Example usage
@@ -19,11 +19,11 @@ Use once before Read, Transform and Write with pipeline_id and pipeline_mode.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-contracts = setup_pipeline(pipeline_id="orders", pipeline_mode="Test")
-orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+pipeline = setup_pipeline()
 ```
 
 </div>
+
 
 <details class="reference-signature-details" markdown="1">
 <summary>Signature</summary>
@@ -33,7 +33,7 @@ orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def setup_pipeline(*, pipeline_id: str, pipeline_mode: str)
+def setup_pipeline(*, pipeline_id: str | None=None, pipeline_mode: str | None=None)
 ```
 
 </div>
@@ -48,8 +48,19 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `pipeline_id` | `str` | Yes | `—` | Stable logical pipeline identity, independent of the notebook name. |
-| `pipeline_mode` | `str` | Yes | `—` | Evaluation-only operations or execution under an approved manifest. |
+| `pipeline_id` | `str \| None` | No | `None` | Deprecated assertion of the registered pipeline identity; omit in new notebooks. |
+| `pipeline_mode` | `str \| None` | No | `None` | Deprecated assertion of the registered mode; cannot override it. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+pipeline = setup_pipeline()
+orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+```
 
 </div>
 
@@ -110,7 +121,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L180">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L190">View on GitHub</a>
 </div>
 
 

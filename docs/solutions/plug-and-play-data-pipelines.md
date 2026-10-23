@@ -22,7 +22,7 @@ FabricOps abstracts the repeatable plumbing behind a small, readable notebook in
   <div><p>FabricOps provides a <strong>clonable two-notebook engineering stack</strong>:</p></div>
 </div>
 
-- [`00_env_config.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) maps logical Fabric Stores to the correct environment-specific Fabric locations.
+- The central Workspace Registry maps runtime workspace IDs to approved Fabric Store locations; engineers use `setup_pipeline()` without a local configuration notebook.
 - [`02_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) keeps the pipeline definition portable between environments, with governed Read and Write boundaries around ordinary project-owned PySpark.
 
 The result is a pipeline pattern that engineers can clone and adapt without rebuilding the governance and engineering plumbing each time.
@@ -33,7 +33,7 @@ The result is a pipeline pattern that engineers can clone and adapt without rebu
 flowchart LR
     subgraph DEV["Development — clonable notebook stack"]
         direction TB
-        DEV_ENV["00 Env Config<br/>resolves Development<br/>Fabric Store locations"]
+        DEV_ENV["Runtime workspace ID<br/>resolves approved mappings<br/>from the central registry"]
         subgraph DEV_PIPE["02 Pipeline"]
             direction TB
             DEV_CONTRACT["setup_pipeline()<br/>Configure Data Contracts"]
@@ -62,7 +62,7 @@ flowchart LR
 
     subgraph PROD["Production — same notebook stack"]
         direction TB
-        PROD_ENV["00 Env Config<br/>resolves Production<br/>Fabric Store locations"]
+        PROD_ENV["Runtime workspace ID<br/>resolves approved mappings<br/>from the central registry"]
         subgraph PROD_PIPE["02 Pipeline"]
             direction TB
             PROD_CONTRACT["setup_pipeline()<br/>Resolve approved Data Contracts"]
@@ -94,7 +94,7 @@ flowchart LR
 
 The picture has four important parts working together:
 
-1. **Environment-aware configuration.** Each environment has its own `00_env_config`, which resolves the logical Fabric Stores to the correct Development or Production locations.
+1. **Environment-aware configuration.** Each workspace resolves its approved resources from the central registry using runtime identity. Multiple workspaces may share one deployment environment.
 2. **A portable pipeline.** `02_pipeline` keeps the same governed shape: **Setup → Read → project-owned PySpark → Write → Finalize**. The engineer changes the project logic, not the surrounding operating pattern.
 3. **Executable governance.** Governance defines the Data Contract and Guardrails. Engineering selects and validates that contract in Development; after approval, Production resolves the approved whole-pipeline manifest and enforces it through the same pipeline boundaries.
 4. **A shared evidence layer.** Reads and writes continuously produce the Catalogue, profiles, processing state, Guardrail results, and lineage that connect the physical pipeline back to Governance.

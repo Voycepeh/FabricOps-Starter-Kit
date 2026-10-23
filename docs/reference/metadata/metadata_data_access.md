@@ -31,8 +31,8 @@ via `table_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 24 |
-| Business columns | 16 |
+| Total columns | 26 |
+| Business columns | 18 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -55,6 +55,8 @@ via `table_id`
 | `schema_name` | `string` | Lakehouse or warehouse schema name recorded for the dataset when available. |
 | `object_name` | `string` | Database object name covered by the observed permission when applicable. |
 | `object_type` | `string` | Database object type covered by the observed permission when applicable. |
+| `execution_workspace_id` | `string` | Registered engineering workspace scope; distinct from the committing administrator workspace. Historical unassigned rows remain nullable until explicit migration. |
+| `_legacy_environment_name` | `string` | Original deployment environment label retained during explicit stopped-workload metadata migration. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

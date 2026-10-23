@@ -505,7 +505,7 @@ def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
             return self
 
         def first(self):
-            return {"environment_name": "dev", "table_id": "target-id"}
+            return {"environment_name": "dev", "table_id": "target-id", "execution_workspace_id": None}
 
         def alias(self, _name):
             return self
@@ -574,12 +574,12 @@ def test_same_activity_retry_clears_catalogue_completion_before_replacement(
     module = importlib.import_module("fabricops_kit.pipeline.shared")
     updates = []
     activities = spark_session.createDataFrame(
-        [("dev", "table-1", "activity-1")],
-        ["environment_name", "table_id", "_activity_id"],
+        [("dev", "table-1", "activity-1", "workspace")],
+        ["environment_name", "table_id", "_activity_id", "execution_workspace_id"],
     )
     catalogue = spark_session.createDataFrame(
-        [("dev", "table-1", "activity-1")],
-        ["environment_name", "table_id", "_activity_id"],
+        [("dev", "table-1", "activity-1", "workspace")],
+        ["environment_name", "table_id", "_activity_id", "execution_workspace_id"],
     )
 
     class Merge:
@@ -623,12 +623,12 @@ def test_first_profile_activity_is_not_reported_as_retry(spark_session, monkeypa
     """Distinguish a new profiling activity from an idempotent same-activity retry."""
     module = importlib.import_module("fabricops_kit.pipeline.shared")
     activities = spark_session.createDataFrame(
-        [("dev", "table-1", "activity-2")],
-        ["environment_name", "table_id", "_activity_id"],
+        [("dev", "table-1", "activity-2", "workspace")],
+        ["environment_name", "table_id", "_activity_id", "execution_workspace_id"],
     )
     catalogue = spark_session.createDataFrame(
-        [("dev", "table-1", "activity-1")],
-        ["environment_name", "table_id", "_activity_id"],
+        [("dev", "table-1", "activity-1", "workspace")],
+        ["environment_name", "table_id", "_activity_id", "execution_workspace_id"],
     )
 
     class Merge:

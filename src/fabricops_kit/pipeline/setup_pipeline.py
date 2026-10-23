@@ -127,8 +127,8 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def setup_pipeline(*, pipeline_id: str, pipeline_mode: str):
-    """Start an isolated pipeline using exactly Test or Live.
+def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str | None = None):
+    """Resolve the Fabric workspace and start its centrally registered Test or Live pipeline.
 
     Test evaluates reads, transformations and Guardrails without business or
     metadata commits during Read and Write. finalize_pipeline publishes the final
@@ -141,9 +141,9 @@ def setup_pipeline(*, pipeline_id: str, pipeline_mode: str):
     Parameters
     ----------
     pipeline_id : str
-        Stable logical pipeline identity, independent of the notebook name.
+        Deprecated assertion of the registered pipeline identity; omit in new notebooks.
     pipeline_mode : {"Test", "Live"}
-        Evaluation-only operations or execution under an approved manifest.
+        Deprecated assertion of the registered mode; cannot override it.
 
     Returns
     -------
@@ -167,14 +167,24 @@ def setup_pipeline(*, pipeline_id: str, pipeline_mode: str):
 
     Examples
     --------
-    >>> contracts = setup_pipeline(pipeline_id="orders", pipeline_mode="Test")
+    >>> pipeline = setup_pipeline()
     >>> orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 
     """
     from fabricops_kit.pipeline.shared import start_pipeline_session
 
-    if not isinstance(pipeline_id, str) or not pipeline_id.strip():
-        raise ValueError("pipeline_id must be a nonempty stable identity.")
-    if pipeline_mode not in {"Test", "Live"}:
-        raise ValueError("pipeline_mode must be exactly Test or Live.")
-    return start_pipeline_session(pipeline_id.strip(), pipeline_mode, inspector=_inspector)
+    from fabricops_kit.config.shared import resolve_governed_workspace, bind_governed_context, release_governed_context
+    from fabricops_kit.pipeline.shared import close_current_pipeline_session
+    runtime = resolve_governed_workspace(require_pipeline=True, bind=False)
+    binding = runtime["_registry_pipeline"]
+    if pipeline_id is not None and pipeline_id != binding["pipeline_id"]:
+        raise ValueError("pipeline_id cannot override the centrally registered notebook binding.")
+    if pipeline_mode is not None and pipeline_mode != binding["mode"]:
+        raise ValueError("pipeline_mode cannot override the centrally registered execution mode.")
+    close_current_pipeline_session()
+    bind_governed_context(runtime)
+    try:
+        return start_pipeline_session(binding["pipeline_id"], binding["mode"], inspector=_inspector)
+    except BaseException:
+        release_governed_context(runtime)
+        raise

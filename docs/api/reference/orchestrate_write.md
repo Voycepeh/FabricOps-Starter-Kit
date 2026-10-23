@@ -143,7 +143,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 216 |
+| Live-critical dependencies | 224 |
 
 ### Release history
 
@@ -159,7 +159,9 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.read_activation_authority</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_activation_state</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.read_execution_state</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_manifest</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_testing_destinations</code></li>
@@ -178,8 +180,11 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.activation_scope</code></li>
+<li><code>fabricops_kit.config.shared.bootstrap_context</code></li>
 <li><code>fabricops_kit.config.shared.build_column_id</code></li>
 <li><code>fabricops_kit.config.shared.build_table_id</code></li>
+<li><code>fabricops_kit.config.shared.fabric_runtime_identity</code></li>
 <li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
@@ -187,9 +192,12 @@ No related guides documented.
 <li><code>fabricops_kit.config.shared.is_table_not_found_error</code></li>
 <li><code>fabricops_kit.config.shared.metadata_timestamp_sort_key</code></li>
 <li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
+<li><code>fabricops_kit.config.shared.read_workspace_registry</code></li>
+<li><code>fabricops_kit.config.shared.registry_bootstrap</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
+<li><code>fabricops_kit.config.shared.verify_governed_context</code></li>
 <li><code>fabricops_kit.data_contract.scheduled_refresh._fabric_schedules_json</code></li>
 <li><code>fabricops_kit.data_contract.scheduled_refresh._time_value</code></li>
 <li><code>fabricops_kit.data_contract.scheduled_refresh.canonical_scheduled_refresh</code></li>

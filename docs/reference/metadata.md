@@ -36,6 +36,48 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
 </style>
 
 <div class="metadata-table-grid">
+<a class="metadata-table-card metadata-table-card--governance" href="metadata_workspace_registry/" aria-label="Open METADATA_WORKSPACE_REGISTRY schema">
+  <span class="metadata-table-card__header">
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_WORKSPACE_REGISTRY</span>
+      <span class="metadata-table-card__schema">governance</span>
+    </span>
+    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
+  </span>
+  <span class="metadata-table-card__purpose">Authoritative centrally governed workspace registrations, resource mappings and notebook pipeline bindings.</span>
+  <span class="metadata-table-card__meta">
+    <strong>Grain</strong>
+    <span>One central registry snapshot keyed internally by workspace UUID.</span>
+  </span>
+  <span class="metadata-table-card__meta">
+    <strong>Primary key</strong>
+    <span><code>authority_id</code></span>
+  </span>
+  <span class="metadata-table-card__relationships">
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+  </span>
+</a>
+<a class="metadata-table-card metadata-table-card--engineering" href="metadata_execution_state/" aria-label="Open METADATA_EXECUTION_STATE schema">
+  <span class="metadata-table-card__header">
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_EXECUTION_STATE</span>
+      <span class="metadata-table-card__schema">engineering</span>
+    </span>
+    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
+  </span>
+  <span class="metadata-table-card__purpose">Engineering-owned run reservations and persistent cutover lock, separate from governance approvals.</span>
+  <span class="metadata-table-card__meta">
+    <strong>Grain</strong>
+    <span>One central coordination snapshot containing workspace-scoped reservations.</span>
+  </span>
+  <span class="metadata-table-card__meta">
+    <strong>Primary key</strong>
+    <span><code>authority_id</code></span>
+  </span>
+  <span class="metadata-table-card__relationships">
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+  </span>
+</a>
 <a class="metadata-table-card metadata-table-card--engineering" href="metadata_table_profiling/" aria-label="Open METADATA_TABLE_PROFILING schema">
   <span class="metadata-table-card__header">
     <span class="metadata-table-card__identity">
@@ -191,10 +233,10 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership and running execution reservations.</span>
+  <span class="metadata-table-card__purpose">Administrator-owned central authority for workspace activation revisions, immutable approval history, table contracts and writer ownership. Run reservations live separately in METADATA_EXECUTION_STATE.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One central authority row containing environment snapshots.</span>
+    <span>One central authority row containing deployment-environment and workspace scopes.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -221,11 +263,11 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
   <span class="metadata-table-card__purpose">The current structural registry of known table and column assets. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One table or column asset in one environment.</span>
+    <span>One table or column asset in one registered workspace and deployment environment.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
-    <span><code>environment_name</code> <span class="metadata-table-card__key-separator">+</span> <code>table_id</code> <span class="metadata-table-card__key-separator">+</span> <code>column_id</code></span>
+    <span><code>execution_workspace_id</code> <span class="metadata-table-card__key-separator">+</span> <code>environment_name</code> <span class="metadata-table-card__key-separator">+</span> <code>table_id</code> <span class="metadata-table-card__key-separator">+</span> <code>column_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
@@ -369,7 +411,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
-    <span><code>lineage_id</code></span>
+    <span><code>execution_workspace_id</code> <span class="metadata-table-card__key-separator">+</span> <code>environment_name</code> <span class="metadata-table-card__key-separator">+</span> <code>lineage_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>

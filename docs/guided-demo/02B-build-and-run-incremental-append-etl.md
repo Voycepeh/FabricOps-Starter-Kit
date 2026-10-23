@@ -3,7 +3,7 @@
 ### Before you begin
 
 1. Download [`02B_incremental_append_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02B_incremental_append_demo.ipynb) and import it into the Engineering Development workspace.
-2. Keep `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
+2. Register its runtime notebook ID centrally and attach the same Fabric Environment used in Step 00B.
 3. Make sure you have already uploaded the demo files required for this demo in the previous step [Step 00B](00B-configure-environment-and-load-assets.md).
 
 4. Run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) first to stage Day 1. For Day 2, the notebook reads `Demo/inventory_day2.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `incremental_inventory` subfolder.
@@ -41,9 +41,7 @@ Profiling schedules and Read/Write triggers are saved per table in Data Contract
 Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparation cell. That setup can change Bronze before pipeline selection. The default pipeline setup is:
 
 ```python
-PIPELINE_ID = "02B_incremental_append_demo"
-PIPELINE_MODE = "Test"  # Test or Live
-CONTRACTS = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode=PIPELINE_MODE)
+pipeline = setup_pipeline()
 ```
 
 
@@ -184,7 +182,7 @@ Complete Read → Transform → Write for each pending batch before reading a ne
 
 ### Metadata saved by FabricOps
 
-The following records are committed by successful runs with approved **Live** publication and routed to the Metadata Lakehouse configured by `00_env_config`. Test retains diagnostics in memory during Read and Write; `finalize_pipeline(CONTRACTS)` publishes only run and Guardrail results for activation review.
+The following records are committed by successful runs with approved **Live** publication and routed to the Metadata Lakehouse resolved from the central Workspace Registry. Test retains diagnostics in memory during Read and Write; `finalize_pipeline()` publishes only run and Guardrail results for activation review.
 
 | Metadata table or governed record | What this demo records |
 | --- | --- |

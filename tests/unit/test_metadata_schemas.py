@@ -24,6 +24,8 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_DATA_AGREEMENT": "governance",
         "METADATA_DATA_CONTRACT": "governance",
         "METADATA_ACTIVATION_STATE": "governance",
+        "METADATA_WORKSPACE_REGISTRY": "governance",
+        "METADATA_EXECUTION_STATE": "engineering",
         "METADATA_TABLE_PROFILING": "engineering",
         "METADATA_DATA_CATALOGUE": "engineering",
         "METADATA_DATA_PROFILED": "engineering",
@@ -96,6 +98,7 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
         "first_profiled_at",
         "last_profiled_at",
         "is_active",
+        "execution_workspace_id", "_legacy_environment_name",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
     assert {"metadata_id", "metadata_key", "metadata_table_key", "metadata_column_key"}.isdisjoint(fields)
@@ -162,6 +165,7 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
         "frequency_rank",
         "profiled_row_count",
         "profiled_non_null_count",
+        "execution_workspace_id", "_legacy_environment_name",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
     assert {"metadata_column_key", "profiled_at"}.isdisjoint(fields)
@@ -176,6 +180,7 @@ def test_stage2_lineage_schema_uses_pipeline_language():
         "table_name",
         "environment_name",
         "pipeline_role",
+        "execution_workspace_id", "_legacy_environment_name",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
     assert {"lineage_event_id", "profile_role", "profiled_at", "recorded_at"}.isdisjoint(fields)
@@ -201,6 +206,7 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
         "is_present",
         "observation_status",
         "publication_payload_json",
+        "execution_workspace_id", "_legacy_environment_name",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
     assert {
@@ -242,6 +248,7 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
         "schema_name",
         "object_name",
         "object_type",
+        "execution_workspace_id", "_legacy_environment_name",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
     field_by_name = {field.name: field for field in schema.fields}

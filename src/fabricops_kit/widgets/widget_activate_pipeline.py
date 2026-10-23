@@ -148,7 +148,7 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
         invalidate()
         review_button.disabled = run_select.value is None
         token, snapshot = read_activation_state(context=context, spark_session=spark_session)
-        current = environment_activation(snapshot, env)
+        current = environment_activation(snapshot, env, context)
         selected = [r for r in runs if r["run_id"] in {run_select.value, *additions.value}]
         children = []
         changed_tables = set()

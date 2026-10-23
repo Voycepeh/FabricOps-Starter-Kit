@@ -126,7 +126,6 @@ def test_official_governance_workflow_inventory():
     """The active templates expose one persistent Governance entry point."""
     names = {path.name for path in NOTEBOOKS}
     assert {
-        "00_env_config.ipynb",
         "01_governance.ipynb",
         "02_pipeline.ipynb",
     } <= names
@@ -209,7 +208,7 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "# step 4. evaluate frozen data contracts" in normalized["step_4"]
     assert "no contract" in normalized["step_4"]
     assert "test does not publish business data or commit any operational metadata" in normalized["step_4"]
-    assert "finalize_pipeline(contracts)" in normalized["step_4"]
+    assert "finalize_pipeline()" in normalized["step_4"]
     assert "incomplete" in normalized["step_4"]
 
     assert "# step 5. activate the tested pipeline and promote to production" in normalized["step_5"]
@@ -483,9 +482,10 @@ def test_guided_demo_explains_explicit_testing_writes_and_contract_selection():
     step_2a = (ROOT / "docs/guided-demo/02A-full-refresh-demo.md").read_text(encoding="utf-8")
     step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
 
-    assert 'PIPELINE_MODE = "Test"' in step_2a
+    assert "pipeline = setup_pipeline()" in step_2a
+    assert "PIPELINE_MODE =" not in step_2a
     assert "PIPELINE_TESTING_WRITES" not in step_2a
-    assert "finalize_pipeline(CONTRACTS)" in step_2a
+    assert "finalize_pipeline()" in step_2a
     assert "Guardrail" in step_4 and "results are in memory" in step_4.casefold()
 
 

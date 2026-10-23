@@ -27,7 +27,7 @@ def read_lakehouse_csv(
         Relative CSV file or folder path resolved underneath the configured
         Lakehouse ``Files`` area.
     store : str, default="Bronze"
-        Logical Lakehouse store key from ``00_env_config``. It is not necessarily
+        Logical Lakehouse store key from the Workspace Registry or an explicit IO context. It is not necessarily
         the literal physical Lakehouse name.
     spark_session : object, optional
         Spark session to use instead of the notebook global ``spark``.

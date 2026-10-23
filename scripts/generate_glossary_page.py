@@ -32,6 +32,8 @@ GLOSSARY_GROUPS = [
             "guardrail-result",
             "governance-as-code",
             "configuration-driven-engineering",
+            "workspace-registry",
+            "deployment-environment",
             "read-transform-write",
             "full-dataset",
             "load-strategy",
@@ -60,6 +62,7 @@ GLOSSARY_GROUPS = [
         ),
         [
             "microsoft-fabric",
+            "fabric-environment-item",
             "workspace",
             "lakehouse",
             "warehouse",

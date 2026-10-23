@@ -157,6 +157,7 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "first_profiled_at",
         "last_profiled_at",
         "is_active",
+        "execution_workspace_id", "_legacy_environment_name",
         "_committed_by",
         "_committed_at",
         "_workspace_id",

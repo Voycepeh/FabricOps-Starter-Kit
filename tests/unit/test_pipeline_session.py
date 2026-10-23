@@ -9,7 +9,8 @@ import json
 
 import pytest
 
-from fabricops_kit import setup_pipeline, orchestrate_read, orchestrate_write
+from fabricops_kit import orchestrate_read, orchestrate_write
+from fabricops_kit.pipeline.shared import start_pipeline_session as setup_pipeline
 from fabricops_kit.pipeline import shared
 
 
@@ -55,7 +56,8 @@ def test_exact_mode_validation(runtime, mode):
 
 def test_only_pipeline_identity_and_mode_are_setup_arguments(runtime):
     import inspect
-    assert list(inspect.signature(setup_pipeline).parameters) == ['pipeline_id', 'pipeline_mode']
+    from fabricops_kit import setup_pipeline as public_setup
+    assert list(inspect.signature(public_setup).parameters) == ['pipeline_id', 'pipeline_mode']
     with pytest.raises(TypeError):
         setup_pipeline(pipeline_id='orders', pipeline_mode='Test', testing_writes=True)
 

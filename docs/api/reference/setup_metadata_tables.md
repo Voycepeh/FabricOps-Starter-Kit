@@ -9,13 +9,10 @@
 
 Create missing FabricOps metadata tables and check existing table columns and Spark data types.
 
-<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">00_env_config</span>
-</p>
 
 ## Usage notes
 
-Use after setup_notebook in 00_env_config to create or validate the FabricOps metadata tables required by agreement, profiling, lineage, stability, and governance workflows.
+Governance administrators provision or additively evolve the one shared Metadata Lakehouse.
 
 
 ## Example usage
@@ -23,7 +20,7 @@ Use after setup_notebook in 00_env_config to create or validate the FabricOps me
 <div class="reference-example-usage" markdown="1">
 
 ```python
-setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT_NAME)
+metadata_setup = setup_metadata_tables(spark=spark, raise_on_failure=True)
 ```
 
 </div>
@@ -39,8 +36,8 @@ setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT
 def setup_metadata_tables(
     *,
     spark: Any,
-    config: FrameworkConfig | dict[str, Any],
-    env: str,
+    config: FrameworkConfig | dict[str, Any] | None=None,
+    env: str | None=None,
     require_active_steward: bool=False,
     verbose: bool=True,
     raise_on_failure: bool=False,
@@ -60,8 +57,8 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `spark` | `Any` | Yes | `—` | Spark session used to create empty schema DataFrames and read or write the metadata lakehouse tables. |
-| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | `—` | FabricOps configuration used to find the selected environment and its metadata lakehouse. |
-| `env` | `str` | Yes | `—` | Environment whose configured metadata lakehouse should be initialized or validated. |
+| `config` | `FrameworkConfig \| dict[str, Any] \| None` | No | `None` | FabricOps configuration used to find the selected environment and its metadata lakehouse. |
+| `env` | `str \| None` | No | `None` | Environment whose configured metadata lakehouse should be initialized or validated. |
 | `require_active_steward` | `bool` | No | `False` | When ``True``, raise if ``METADATA_DATA_STEWARD`` contains no active steward rows after setup. This option does not create a steward record. |
 | `verbose` | `bool` | No | `True` | Controls whether the concise per-table setup summary is printed. |
 | `raise_on_failure` | `bool` | No | `False` | When ``True``, raise a ``RuntimeError`` after processing all tables if any table failed creation or validation. |
@@ -143,7 +140,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:169`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L557">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L576">View on GitHub</a>
 </div>
 
 
@@ -267,7 +264,7 @@ their respective FabricOps workflows.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 31 |
+| Live-critical dependencies | 46 |
 
 ### Release history
 
@@ -302,14 +299,29 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.config.setup_metadata_tables._validate_existing_metadata_schema</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.bootstrap_context</code></li>
+<li><code>fabricops_kit.config.shared.configure_metadata_transaction</code></li>
+<li><code>fabricops_kit.config.shared.fabric_runtime_identity</code></li>
 <li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.is_table_not_found_error</code></li>
 <li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
+<li><code>fabricops_kit.config.shared.registry_bootstrap</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared.validate_framework_config</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
+<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_candidate_json</code></li>
 </ul>
 

@@ -32,7 +32,7 @@ def read_lakehouse_table(
         ``table_name``, ``store``, and ``schema`` from the Catalogue. Do not
         combine with table_name, schema, or a non-default store.
     store : str, default="Bronze"
-        Logical Lakehouse store key from ``00_env_config``, such as ``bronze`` or
+        Logical Lakehouse store key from the Workspace Registry or an explicit IO context, such as ``bronze`` or
         ``silver``. FabricOps resolves this store key to the configured physical
         Lakehouse and Delta table path.
     schema : str or None, default=None
@@ -91,6 +91,14 @@ def read_lakehouse_table(
         store, table_name, schema, context=context
     )
     dataframe = read_delta_path(get_spark_session(spark_session), path, options=options)
+    if store == "Metadata":
+        from fabricops_kit.config.shared import resolve_fabric_context
+        from fabricops_kit.config.metadata_schemas import WORKSPACE_SCOPED_METADATA_TABLES
+        config, _env, _runtime = resolve_fabric_context(context=context)
+        workspace_id = getattr(config, "execution_workspace_id", None)
+        if workspace_id and _table_value in WORKSPACE_SCOPED_METADATA_TABLES:
+            from pyspark.sql import functions as F
+            dataframe = dataframe.where(F.col("execution_workspace_id") == workspace_id)
     if resolved_table_id is not None:
         dataframe._fabricops_table_id = str(resolved_table_id)
     if not (context or {}).get("_fabricops_suppress_io_log"):

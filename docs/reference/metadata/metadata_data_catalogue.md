@@ -16,9 +16,9 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One table or column asset in one environment.
+**Grain:** One table or column asset in one registered workspace and deployment environment.
 
-**Primary key:** `environment_name` + `table_id` + `column_id`
+**Primary key:** `execution_workspace_id` + `environment_name` + `table_id` + `column_id`
 
 **Relationships:**
 
@@ -28,8 +28,8 @@ No immediate table relationship is defined in the current implementation.
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 28 |
-| Business columns | 20 |
+| Total columns | 30 |
+| Business columns | 22 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -56,6 +56,8 @@ No immediate table relationship is defined in the current implementation.
 | `first_profiled_at` | `timestamp` | Timestamp stored for `first_profiled_at`. |
 | `last_profiled_at` | `timestamp` | Timestamp stored for `last_profiled_at`. |
 | `is_active` | `boolean` | Whether the row is currently active. |
+| `execution_workspace_id` | `string` | Registered engineering workspace scope; distinct from the committing administrator workspace. Historical unassigned rows remain nullable until explicit migration. |
+| `_legacy_environment_name` | `string` | Original deployment environment label retained during explicit stopped-workload metadata migration. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

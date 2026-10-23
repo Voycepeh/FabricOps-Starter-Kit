@@ -112,14 +112,15 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
 
     from fabricops_kit.activated_pipeline import shared as activation
     state.metadata["METADATA_ACTIVATION_STATE"] = [{"authority_id": "central", "token": "initial", "snapshot_json": activation.empty_activation_state()}]
-    def commit_authority(snapshot, *, expected_token, **kwargs):
-        row = state.metadata["METADATA_ACTIVATION_STATE"][0]
+    state.metadata["METADATA_EXECUTION_STATE"] = [{"authority_id": "central", "token": "initial", "snapshot_json": json.dumps({"format": "fabricops.execution-state.v1", "locked": False, "runs": {}})}]
+    def commit_authority(table, snapshot, *, expected_token, **kwargs):
+        row = state.metadata[table][0]
         if row["token"] != expected_token:
             raise ValueError("Concurrent approval")
         from uuid import uuid4
         row.update(token=str(uuid4()), snapshot_json=runtime.canonical_candidate_json(snapshot))
         return row["token"]
-    monkeypatch.setattr(activation, "commit_activation_state", commit_authority)
+    monkeypatch.setattr("fabricops_kit.config.shared.commit_metadata_snapshot", commit_authority)
     activity_times = {}
     def audit_fields(**kwargs):
         activity = context["activity_id"]

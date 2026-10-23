@@ -192,7 +192,7 @@ AI suggestions are checked against the same datatype rules before acceptance. An
 
 **Engineering owns the mapping store; Governance only chooses Tokenize.**
 
-Configure an existing Lakehouse store in `00_env_config` and give it a separate access boundary from consumer data and general Metadata. Provision an empty Delta table with five string columns: `table_id`, `column_id`, `original_value`, `token_value`, and `original_data_type`. Only authorized pipeline/service identities should read or write it. FabricOps does not create permissions or silently create this table.
+Configure an existing Lakehouse store in the centrally managed registry settings and give it a separate access boundary from consumer data and general Metadata. Provision an empty Delta table with five string columns: `table_id`, `column_id`, `original_value`, `token_value`, and `original_data_type`. Only authorized pipeline/service identities should read or write it. FabricOps does not create permissions or silently create this table.
 
 Set this project-level option when constructing `GovernanceConfig`:
 

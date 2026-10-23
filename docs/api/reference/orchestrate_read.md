@@ -139,7 +139,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 193 |
+| Live-critical dependencies | 196 |
 
 ### Release history
 
@@ -155,7 +155,9 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.read_activation_authority</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_activation_state</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.read_execution_state</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_manifest</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_testing_destinations</code></li>
@@ -174,6 +176,7 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.activation_scope</code></li>
 <li><code>fabricops_kit.config.shared.build_column_id</code></li>
 <li><code>fabricops_kit.config.shared.build_table_id</code></li>
 <li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>

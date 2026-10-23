@@ -7,9 +7,10 @@ Complete [Step 0C](00C-prepare-demo-data-with-fabricops-io.md) and open `01_gove
 ### Load the shared environment
 
 ```python
-%run 00_env_config
+from fabricops_kit import setup_governance
+context = setup_governance()
 ```
-`00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
+`setup_pipeline()` resolves the approved stores, deployment environment and notebook identity from the registry; Governance uses `setup_governance(target_workspace_id=...)`. You should see the shared FabricOps configuration load without an error.
 
 ### Import required widget functions
 
@@ -38,7 +39,7 @@ Use the widget to create the data producer and consumer stewards.
 
 
 
-- The dropdown lists are configurable and come from the `00_env_config` notebook.
+- The dropdown lists are configurable and come from the central Workspace Registry.
 - To update a record, edit the data and press save again.
 - The widget writes to the underlying metadata table. In the example below, I created myself as a Data Owner and later updated the record to Data Custodian.
 

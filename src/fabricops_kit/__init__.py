@@ -15,6 +15,10 @@ from .config import (
     NotebookSetupContext,
     PathConfig,
     setup_metadata_tables,
+    setup_governance,
+    register_workspace,
+    migrate_workspace_config,
+    migrate_workspace_metadata,
     setup_notebook,
 )
 from .data_agent import create_data_agent
@@ -57,6 +61,10 @@ CONFIG_EXPORTS = (
     "NotebookSetupContext",
     "setup_notebook",
     "setup_metadata_tables",
+    "setup_governance",
+    "register_workspace",
+    "migrate_workspace_config",
+    "migrate_workspace_metadata",
 )
 
 DATA_AGENT_EXPORTS = (

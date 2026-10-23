@@ -22,7 +22,7 @@ See which registered tables participated as sources and targets in pipeline acti
 
 **Grain:** One registered table participating as a source or target in one pipeline activity.
 
-**Primary key:** `lineage_id`
+**Primary key:** `execution_workspace_id` + `environment_name` + `lineage_id`
 
 **Relationships:**
 
@@ -33,8 +33,8 @@ via `table_id`
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 13 |
-| Business columns | 5 |
+| Total columns | 15 |
+| Business columns | 7 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -46,6 +46,8 @@ via `table_id`
 | `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `pipeline_role` | `string` | Metadata Data Lineage field `pipeline_role`. |
+| `execution_workspace_id` | `string` | Registered engineering workspace scope; distinct from the committing administrator workspace. Historical unassigned rows remain nullable until explicit migration. |
+| `_legacy_environment_name` | `string` | Original deployment environment label retained during explicit stopped-workload metadata migration. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

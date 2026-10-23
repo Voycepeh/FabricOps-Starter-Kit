@@ -24,16 +24,32 @@ def authority_delta(monkeypatch, spark_session, tmp_path):
     pytest.importorskip("delta.tables")
     if "DeltaSparkSessionExtension" not in spark_session.conf.get("spark.sql.extensions", ""):
         pytest.skip("requires Delta Spark extensions")
-    path = str(tmp_path / service.ACTIVATION_STATE_TABLE)
+    from fabricops_kit.config import shared as config_shared
+    from fabricops_kit.config import audit as audit_service
+    from fabricops_kit.io import shared as io_shared
+    import fabricops_kit.io as io_public
+    paths = {table: str(tmp_path / table) for table in (service.ACTIVATION_STATE_TABLE, "METADATA_EXECUTION_STATE")}
     context = {"config": {}, "env": "DEV"}
     audit = {name: datetime.now(UTC) if name == "_committed_at" else "test-runtime" for name, *_ in AUDIT_SCHEMA_FIELDS}
-    initial = {"authority_id": "central", "token": "initial", "snapshot_json": service.empty_activation_state(), **audit}
-    spark_session.createDataFrame([initial], metadata_table_schema_registry()[service.ACTIVATION_STATE_TABLE]).write.format("delta").save(path)
+    for table, path in paths.items():
+        snapshot = (service.empty_activation_state() if table == service.ACTIVATION_STATE_TABLE else
+                    canonical_candidate_json({"format": "fabricops.execution-state.v1", "locked": False, "runs": {}}))
+        initial = {"authority_id": "central", "token": "initial", "snapshot_json": snapshot, **audit}
+        spark_session.createDataFrame([initial], metadata_table_schema_registry()[table]).write.format("delta").save(path)
+        spark_session.sql("ALTER TABLE delta.`" + path + "` SET TBLPROPERTIES ('delta.isolationLevel' = 'Serializable')")
     monkeypatch.setattr(service, "resolve_fabric_context", lambda context=None: ({}, "DEV", context))
     monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **kw: audit)
-    monkeypatch.setattr(service, "resolve_configured_lakehouse_table", lambda *a, **kw: ("Metadata", service.ACTIVATION_STATE_TABLE, "governance", path))
-    monkeypatch.setattr(service, "read_lakehouse_table", lambda *a, **kw: spark_session.read.format("delta").load(path))
-    return SimpleNamespace(context=context, spark=spark_session, path=path)
+    monkeypatch.setattr(config_shared, "resolve_fabric_context", lambda context=None: ({}, "DEV", context))
+    monkeypatch.setattr(audit_service, "build_runtime_audit_fields", lambda **kw: audit)
+    def route(store, table, schema, **kw):
+        return "Metadata", table, schema, paths[table]
+    def read(table, **kw):
+        return spark_session.read.format("delta").load(paths[table])
+    monkeypatch.setattr(service, "resolve_configured_lakehouse_table", route)
+    monkeypatch.setattr(io_shared, "resolve_configured_lakehouse_table", route)
+    monkeypatch.setattr(service, "read_lakehouse_table", read)
+    monkeypatch.setattr(io_public, "read_lakehouse_table", read)
+    return SimpleNamespace(context=context, spark=spark_session, path=paths[service.ACTIVATION_STATE_TABLE], paths=paths)
 
 
 def test_persisted_stale_commit_cannot_partially_update_the_authority(authority_delta):
@@ -46,7 +62,7 @@ def test_persisted_stale_commit_cannot_partially_update_the_authority(authority_
     assert service.read_activation_state(context=runtime.context, spark_session=runtime.spark) == (committed, proposed)
     stale = deepcopy(state)
     service.environment_activation(stale, "DEV")["revision"] = "must-not-publish"
-    with pytest.raises(Exception, match="Stale activation revision"):
+    with pytest.raises(Exception, match="state changed"):
         service.commit_activation_state(stale, expected_token=token, context=runtime.context, spark_session=runtime.spark)
     assert service.read_activation_state(context=runtime.context, spark_session=runtime.spark) == (committed, proposed)
     assert runtime.spark.read.format("delta").load(runtime.path).count() == 1
@@ -115,3 +131,48 @@ def test_finalization_publishes_test_results_once_with_real_delta(authority_delt
     assert stored[0].run_id == diagnostics[0].run_id == plan.plan_id
     assert stored[0].status == 'ungoverned_completed' and stored[0].completed_at is not None
     assert diagnostics[0].guardrail_result_id == 'stable-result'
+
+
+def test_workspace_metadata_migration_preserves_contract_bytes_and_history(authority_delta, monkeypatch, tmp_path):
+    """Stopped-workload migration assigns scope without regenerating contracts, IDs or outcomes."""
+    import importlib
+    import json
+    from fabricops_kit.config.metadata_schemas import ENGINEERING_METADATA_TABLES, coerce_metadata_row_types
+    from tests.unit.test_workspace_registry import registration, DEV, GOV, LOCATOR
+    migration = importlib.import_module('fabricops_kit.config.migrate_workspace_metadata')
+    runtime = authority_delta
+    registered = registration()
+    registered['status'] = 'inactive'
+    monkeypatch.setattr(migration, 'fabric_runtime_identity', lambda: {'workspace_id': GOV})
+    monkeypatch.setattr(migration, 'registry_bootstrap', lambda: LOCATOR)
+    monkeypatch.setattr(migration, 'read_workspace_registry', lambda **kwargs: ('registry-0', {'workspaces': {DEV: registered}}))
+    monkeypatch.setattr(migration, 'bootstrap_context', lambda *args: runtime.context)
+    audit = {name: datetime.now(UTC) if name == '_committed_at' else 'test-runtime' for name, *_ in AUDIT_SCHEMA_FIELDS}
+    for table in ENGINEERING_METADATA_TABLES:
+        if table in {'METADATA_EXECUTION_STATE', 'METADATA_TABLE_PROFILING'}:
+            continue
+        path = str(tmp_path / table)
+        runtime.paths[table] = path
+        rows = []
+        if table == 'METADATA_DATA_CATALOGUE':
+            rows = [coerce_metadata_row_types(table, {'table_id': 'stable-table-id', 'metadata_level': 'table',
+                      'environment_name': 'dev', **audit})]
+        runtime.spark.createDataFrame(rows, metadata_table_schema_registry()[table]).write.format('delta').save(path)
+    token, before = service.read_activation_state(context=runtime.context, spark_session=runtime.spark)
+    current = service.environment_activation(before, 'dev')
+    current['history']['old-approval'] = {'manifest_json': '{"exact_frozen_bytes":"preserved"}'}
+    token = service.commit_activation_state(before, expected_token=token, context=runtime.context, spark_session=runtime.spark)
+    migrated = migration.migrate_workspace_metadata(legacy_environment='dev', workspace_id=DEV,
+        expected_token=token, workloads_stopped=True, spark_session=runtime.spark)
+    rows = runtime.spark.read.format('delta').load(runtime.paths['METADATA_DATA_CATALOGUE']).collect()
+    assert len(rows) == 1 and rows[0].table_id == 'stable-table-id'
+    assert rows[0].execution_workspace_id == DEV and rows[0].environment_name == 'DEV'
+    assert rows[0]._legacy_environment_name == 'dev'
+    _token, state = service.read_activation_state(context=runtime.context, spark_session=runtime.spark)
+    target = state['environments'][f'DEV@{DEV}']
+    assert target['history'] == current['history']
+    assert state['environments']['dev']['migrated_to'] == f'DEV@{DEV}'
+    # Retry uses the same persisted scope; it cannot duplicate rows or invent versions.
+    migration.migrate_workspace_metadata(legacy_environment='dev', workspace_id=DEV,
+        expected_token=migrated, workloads_stopped=True, spark_session=runtime.spark)
+    assert runtime.spark.read.format('delta').load(runtime.paths['METADATA_DATA_CATALOGUE']).count() == 1

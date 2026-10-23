@@ -32,6 +32,7 @@ _GUARDRAIL_COLUMNS = [
     "rule_parameters_json",
     "action",
     "is_active",
+    "execution_workspace_id", "_legacy_environment_name",
     *_AUDIT_COLUMNS,
 ]
 
@@ -55,6 +56,7 @@ _RESULT_COLUMNS = [
     "action",
     "reason",
     "result_payload_json",
+    "execution_workspace_id", "_legacy_environment_name",
     *_AUDIT_COLUMNS,
 ]
 
@@ -65,6 +67,7 @@ _ROW_RESULT_COLUMNS = [
     "involved_columns_json",
     "failed_values_json",
     "failure_reason",
+    "execution_workspace_id", "_legacy_environment_name",
     *_AUDIT_COLUMNS,
 ]
 
@@ -84,6 +87,7 @@ _SOURCE_OBSERVATION_COLUMNS = [
     "is_present",
     "observation_status",
     "publication_payload_json",
+    "execution_workspace_id", "_legacy_environment_name",
     *_AUDIT_COLUMNS,
 ]
 
@@ -189,7 +193,7 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
 
     row = guardrail_shared.canonical_guardrail_rule_record(source, config=framework_config(), env="dev")
 
-    assert list(row) == _GUARDRAIL_COLUMNS
+    assert list(row) == [name for name in _GUARDRAIL_COLUMNS if name not in {"execution_workspace_id", "_legacy_environment_name"}]
     assert row["guardrail_version"] == 3
     assert row["contract_id"] == "contract-id"
     assert row["contract_version"] == 2
@@ -248,7 +252,7 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> 
 
     table_name, row = writes[0]
     assert table_name == "METADATA_GUARDRAIL_RESULTS"
-    assert list(row) == _RESULT_COLUMNS
+    assert list(row) == [name for name in _RESULT_COLUMNS if name not in {"execution_workspace_id", "_legacy_environment_name"}]
     assert row["guardrail_rule_id"] == "rule-1"
     assert row["guardrail_version"] == 3
     assert row["run_id"] == "run-1"

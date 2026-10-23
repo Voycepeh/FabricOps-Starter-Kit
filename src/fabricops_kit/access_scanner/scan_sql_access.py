@@ -238,6 +238,9 @@ def _access_rows(
         result = result.withColumn(field_name, F.lit(value))
 
     schema = metadata_table_schema_registry()[ACCESS_TABLE]
+    for field in schema.fields:
+        if field.name not in result.columns:
+            result = result.withColumn(field.name, F.lit(None).cast(field.dataType))
     return result.select(*[field.name for field in schema.fields])
 
 
