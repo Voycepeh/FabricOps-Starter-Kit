@@ -56,7 +56,8 @@ def authority(runtime, monkeypatch, tmp_path):
         for key, item in identities.items():
             selected_version = version[key] if isinstance(version, dict) else version
             payload = {"contract": {"contract_id": "contract-" + key, "contract_version": selected_version, "status": "frozen"},
-                       "table": {"table_id": key, "columns": [], "processing": {"load_strategy": "overwrite"}}, "guardrails": []}
+                       "table": {"table_id": key, "columns": [], "processing": {"load_strategy": "overwrite"}}, "guardrails": [],
+                       "profiling": {**pipeline.default_profiling_policy(), "standard": {"frequency": "interval", "days": 7, "trigger": "write"}}}
             contract = {"contract_id": "contract-" + key, "contract_version": selected_version, "status": "frozen", "table_id": key,
                         "environment_name": "DEV", "contract_payload_json": pipeline.canonical_candidate_json(payload)}
             frozen[key] = contract
@@ -489,3 +490,24 @@ def test_live_resolves_approved_versions_after_mixed_testing(authority, monkeypa
         state.operation(live, 0)
         state.operation(live, 1)
     assert live.run_result["status"] == "succeeded"
+
+
+def test_activation_preserves_exact_profiling_and_policy_changes_require_new_testing(authority, monkeypatch):
+    state = authority
+    tested, run = state.candidate()
+    state.approve(run)
+    monkeypatch.setattr(service, 'resolve_pipeline_participants', lambda *args, **kwargs: json.loads(tested.participants_json))
+    live = service.build_live_pipeline_plan(pipeline_id='A', context=tested.runtime_context)
+    expected = json.loads(tested.contracts_json)
+    actual = json.loads(live.contracts_json)
+    for table_id, contract in actual.items():
+        assert contract['contract_payload_json'] == expected[table_id]['contract_payload_json']
+        assert pipeline.contract_profiling_policy(table_id, context={'_pipeline_contracts': actual})['standard'] == {
+            'frequency': 'interval', 'days': 7, 'trigger': 'write'}
+    changed = copy.deepcopy(expected)
+    payload = json.loads(changed['table0']['contract_payload_json'])
+    payload['profiling']['standard']['days'] = 14
+    changed['table0']['contract_payload_json'] = pipeline.canonical_candidate_json(payload)
+    revised = replace(tested, contracts_json=pipeline.canonical_candidate_json(changed))
+    assert pipeline.pipeline_candidate(revised)[1] != pipeline.pipeline_candidate(tested)[1]
+    assert json.loads(live.contracts_json) == actual

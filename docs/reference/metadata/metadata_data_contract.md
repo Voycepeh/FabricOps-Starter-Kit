@@ -1,6 +1,6 @@
 # METADATA_DATA_CONTRACT
 
-Reusable immutable frozen table definition with Enrichment and executable Guardrails. Agreement linkage belongs to Activated Pipeline.
+Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. Agreement linkage belongs to Activated Pipeline.
 
 ## Writer functions
 

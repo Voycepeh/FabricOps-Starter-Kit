@@ -72,6 +72,7 @@ def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
         },
         "enrichment": {"table": [], "columns": []},
         "guardrails": [],
+        "profiling": {**service.default_profiling_policy(), "grain": {"frequency": "every", "trigger": "write"}},
     }
     frozen = {
         "contract_id": lifecycle_id, "contract_version": 1, "table_id": "orders",
@@ -99,6 +100,8 @@ def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
         table_id="orders", config=object(), env="dev", spark_session=spark,
     )
     inherited_payload = json.loads(inherited["contract_payload_json"])
+    assert inherited_payload["profiling"] == previous_payload["profiling"]
+    assert json.loads(frozen["contract_payload_json"]) == previous_payload
     assert inherited["contract_version"] == 2
     assert inherited_payload["table"]["processing"] == {
         "load_strategy": "scd1", "key_columns": ["id"]
@@ -578,3 +581,25 @@ def test_saved_manifest_uses_block_for_mandatory_guardrails(guardrail_type):
     )
     assert payload["guardrails"][0]["action"] == "Block"
     assert rule["action"] == "Warn"
+
+
+def test_profiling_policy_freezes_exactly_and_cannot_be_saved_when_frozen():
+    """Profiling shares contract immutability without editing enforcement."""
+    policy = service.default_profiling_policy()
+    policy['standard'] = {'frequency': 'interval', 'days': 7, 'trigger': 'write'}
+    payload = {'contract': {'contract_id': 'c', 'contract_version': 2, 'status': 'draft'},
+               'table': {'table_id': 'orders', 'processing': {'load_strategy': 'append'}, 'columns': []},
+               'enrichment': {'table': [], 'columns': []}, 'guardrails': [], 'profiling': policy}
+    draft = {'contract_id': 'c', 'contract_version': 2, 'table_id': 'orders', 'status': 'draft',
+             'contract_payload_json': json.dumps(payload)}
+    frozen = service.freeze_contract_record(draft=draft, audit={})
+    saved = json.loads(frozen['contract_payload_json'])
+    assert saved['profiling'] == policy and saved['guardrails'] == []
+    assert draft['status'] == 'draft' and json.loads(draft['contract_payload_json']) == payload
+    with pytest.raises(ValueError, match='Only a draft'):
+        service.save_contract_draft(draft=frozen, payload=payload, config={}, env='dev', spark_session=None)
+    with pytest.raises(ValueError, match='Only a draft'):
+        service.freeze_contract_record(draft=frozen, audit={})
+    payload['profiling']['standard']['days'] = 0
+    with pytest.raises(ValueError, match='positive integer'):
+        service.validate_contract_definitions(payload)

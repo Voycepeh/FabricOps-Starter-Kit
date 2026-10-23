@@ -21,6 +21,7 @@ def write_workflow(monkeypatch):
     identity = {"table_id": "target-id", "table_name": "customers", "store_type": "lakehouse", "store": "Silver", "schema": "dbo"}
     monkeypatch.setattr(write_module, "resolve_table_id", lambda **_kwargs: "target-id")
     monkeypatch.setattr(write_module, "check_schema", lambda *_args, **_kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(write_module, "skip_table_profiling", lambda *args, **kwargs: {"status": "skipped"})
     later = {}
     for name in ("check_dq", "pipeline_write", "schedule_table_profiling"):
         later[name] = Mock(return_value={"status": "passed", "can_continue": True, "table_id": "target-id"})

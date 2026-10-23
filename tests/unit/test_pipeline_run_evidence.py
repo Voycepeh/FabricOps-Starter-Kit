@@ -541,3 +541,46 @@ def test_public_finalize_cannot_approve_incomplete_or_failed_runs(runtime, failu
     result = finalize_pipeline(plan, failed=failure == 'project_exception')
     assert result['status'] == ('failed' if failure == 'project_exception' else 'incomplete')
     assert saved[plan.plan_id] == result
+
+
+def test_profiling_outcomes_preserve_run_grain_and_completion_status(runtime):
+    """A legitimate skip or independent activity failure cannot overwrite pipeline status."""
+    make, operation, saved, _, _ = runtime
+    plan = make(roles=('source', 'target'))
+    events = [{'table_id': 'table0', 'activity': 'standard', 'status': 'skipped', 'reason': 'interval_not_elapsed'},
+              {'table_id': 'table1', 'activity': 'frequency', 'status': 'failed', 'reason': 'RuntimeError'}]
+    for event in events:
+        shared.record_profiling_outcome(event, context={'execution_plan': plan})
+    for index in range(2):
+        operation(plan, index)
+    plan.evidence['boundary_completed'] = True
+    result = shared.finalize_pipeline_run(plan)
+    assert result['status'] == 'succeeded'
+    assert len(saved) == 1
+    assert json.loads(result['operation_summary_json'])['profiling'] == events
+
+
+def test_operation_exit_does_not_publish_unconfirmed_profiling_success(runtime, monkeypatch):
+    """A failed activity journal write cannot leak through the operation-exit retry."""
+    make, _, saved, _, _ = runtime
+    plan = make(roles=('source',))
+    context = {'execution_plan': plan}
+    monkeypatch.setattr(shared, 'profiling_context_key', lambda *args, **kwargs: ('physical', {'table_id': 'table0'}))
+    monkeypatch.setattr(shared, 'claim_table_profile', lambda *args, **kwargs: {'token': 'snapshot'})
+    monkeypatch.setattr(shared, 'maintain_table_profile_claim', lambda *args, **kwargs: '2026-10-23T09:00:00+00:00')
+    monkeypatch.setattr(shared, 'execute_table_profile', lambda **kwargs: {'row_count': 100})
+    merge = shared._merge_pipeline_run_row
+    failed = []
+    def fail_once(plan, row, **kwargs):
+        events = json.loads(row['operation_summary_json'])['profiling']
+        if not failed and any(event['status'] == 'passed' for event in events):
+            failed.append(True)
+            raise OSError('transient failure before committing success')
+        return merge(plan, row, **kwargs)
+    monkeypatch.setattr(shared, '_merge_pipeline_run_row', fail_once)
+    with pytest.raises(RuntimeError, match='persistence failed'):
+        with shared.PipelineOperation(plan, 'source', {'store': 'Bronze', 'schema': 'physical', 'table_name': 'table0'}):
+            shared.schedule_table_profiling('table0', 'read', context=context)
+    row = saved[plan.plan_id]
+    assert row['status'] == 'failed'
+    assert not any(event['status'] == 'passed' for event in json.loads(row['operation_summary_json'])['profiling'])

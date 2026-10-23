@@ -109,8 +109,9 @@ exact DataFrame lineage. Live blocks failed checks; Test never commits.
 target_table_id preserves incremental checkpoint and SCD processing support.
 dq_diagnostics accepts sample, none or full for explicit debugging.
 
-Profiling uses independent shared Table ID schedules and scans the complete
-persisted table. Guardrail checks run regardless of profiling eligibility.
+Profiling scans the complete persisted table using the frozen contract's
+policies and shared table completion history. Guardrail checks run regardless
+of profiling eligibility.
 
 </div>
 
@@ -123,7 +124,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:23`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L23-L137">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L23-L138">View on GitHub</a>
 </div>
 
 
@@ -139,7 +140,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 193 |
+| Live-critical dependencies | 197 |
 
 ### Release history
 
@@ -151,6 +152,7 @@ No related guides documented.
 
 <ul class="reference-compact-list">
 <li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.commit_activation_state</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.environment_activation</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
@@ -246,6 +248,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._latest_source_target_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared._load_active_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared._max_column_value</code></li>
+<li><code>fabricops_kit.pipeline.shared._merge_pipeline_run_row</code></li>
 <li><code>fabricops_kit.pipeline.shared._merge_source_observation_records</code></li>
 <li><code>fabricops_kit.pipeline.shared._normalize_datatype</code></li>
 <li><code>fabricops_kit.pipeline.shared._normalize_dq_severity</code></li>
@@ -303,8 +306,8 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.catalogue_authored_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.check_dq_runtime</code></li>
 <li><code>fabricops_kit.pipeline.shared.claim_table_profile</code></li>
-<li><code>fabricops_kit.pipeline.shared.commit_table_profiling_state</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared.contract_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.current_pipeline_session</code></li>
 <li><code>fabricops_kit.pipeline.shared.default_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.display_table_identity</code></li>
@@ -317,6 +320,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared.maintain_table_profile_claim</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared.persist_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_candidate</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>
@@ -324,9 +328,10 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_guardrail_result</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_pipeline_contract</code></li>
+<li><code>fabricops_kit.pipeline.shared.profiling_completion_history</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_context_key</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_due</code></li>
-<li><code>fabricops_kit.pipeline.shared.read_table_profiling_state</code></li>
+<li><code>fabricops_kit.pipeline.shared.record_profiling_outcome</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_freshness_observation_column</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_incremental_observation_columns</code></li>

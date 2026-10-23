@@ -124,21 +124,16 @@ METADATA_REFERENCE_MODEL_DIAGRAM = (
 
 METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
     "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column "
-    "containing authored Guardrails and Enrichment for each contract version."
+    "containing authored Guardrails, Enrichment and profiling policies for each contract version."
 )
 
 METADATA_TABLE_MODELS = {
-    "METADATA_TABLE_PROFILING": {
-        "purpose": "Mutable table-level profiling policies and per-environment/physical-context activity history, renewable claims and last successful completions; independent of frozen contracts and activation authority.",
-        "grain": "One preinitialized central coordination row. snapshot_json contains Table ID policies and activity state keyed by Table ID, environment and physical bindings.",
-        "primary_key": ["state_id"], "foreign_keys": [], "relationships": [],
-    },
     "METADATA_PIPELINE_RUN": {
-        "purpose": "One complete logical run, exact table mappings, operation results, warnings and pinned activation revision.",
+        "purpose": "One complete logical run, exact table mappings, operation results, per-table profiling activity outcomes, warnings and pinned activation revision. Profiling completion joins persisted result snapshots; Grain Discovery and empty Frequency Profiling use minimal success markers in operation_summary_json.",
         "grain": "One pipeline execution attempt.", "primary_key": ["run_id"], "foreign_keys": [], "relationships": [],
     },
     "METADATA_ACTIVATION_STATE": {
-        "purpose": "Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership and running execution reservations.",
+        "purpose": "Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations and renewable profiling claims.",
         "grain": "One central authority row containing environment snapshots.",
         "primary_key": ["authority_id"], "foreign_keys": [], "relationships": [],
     },
@@ -165,7 +160,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_CONTRACT": {
-        "purpose": "Reusable immutable frozen table definition with Enrichment and executable Guardrails. Agreement linkage belongs to Activated Pipeline.",
+        "purpose": "Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. Agreement linkage belongs to Activated Pipeline.",
         "grain": "One Draft or Frozen version of one table contract; Frozen contents are immutable.",
         "primary_key": ["contract_id", "contract_version"],
         "foreign_keys": [{"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "A contract defines one Catalogue table."}],
@@ -246,7 +241,6 @@ METADATA_TABLE_MODELS = {
 }
 
 METADATA_REFERENCE_ORDER = [
-    "METADATA_TABLE_PROFILING",
     "METADATA_PIPELINE_RUN",
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
@@ -277,14 +271,6 @@ _UNTRACED_AGREEMENT_STEWARD_OWNER = {
 }
 
 METADATA_COLUMN_OWNERS = {
-    "METADATA_TABLE_PROFILING": {
-        "__default__": ["fabricops_kit.pipeline.shared.commit_table_profiling_state",
-                        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
-                        "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
-                        "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
-                        "fabricops_kit.widgets.widget_data_contract.widget_data_contract"],
-        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-    },
     "METADATA_DATA_STEWARD": {
         "__default__": [
             "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",

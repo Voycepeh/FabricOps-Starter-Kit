@@ -754,11 +754,11 @@
   {
     "term": "table profiling policy",
     "category": "FabricOps concepts",
-    "long_definition": "METADATA_TABLE_PROFILING stores independent frequency and Read/Write triggers plus per-environment/physical-context claims and last-success history. Policies are edited through Data Contract Authoring without changing immutable contract rules. Pipeline identity does not partition the shared schedule.",
+    "long_definition": "METADATA_DATA_CONTRACT.contract_payload_json stores independently versioned profiling policies. METADATA_PIPELINE_RUN records per-table activity outcomes and completion markers linked to persisted METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY snapshots. METADATA_ACTIVATION_STATE coordinates renewable claims. Schedules share successful history across pipelines for the same Table ID, environment and physical destination.",
     "preferred_usage": "Describe scheduling as table-level operational configuration, independently of Guardrail enforcement.",
     "aliases": [],
     "id": "table-profiling-policy",
-    "short_definition": "Mutable Table ID-level operational schedules for Standard Profiling, Grain Discovery and Frequency Profiling.",
+    "short_definition": "Versioned Data Contract schedules for Standard Profiling, Grain Discovery and Frequency Profiling.",
     "avoid_usage": "contract Guardrail schedule"
   }
 ]
