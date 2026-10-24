@@ -403,3 +403,21 @@ def test_generated_svg_check_ignores_windows_line_endings_but_detects_real_drift
     second = subprocess.run(command, cwd=tmp_path, capture_output=True, text=True)
     assert second.returncode != 0
     assert "diagram drift" in second.stderr
+
+
+def test_metadata_relationship_reference_label_does_not_overlap_table_name() -> None:
+    """Conceptual references are plain labels with enough room at all widths."""
+    from pathlib import Path
+
+    root = Path(__file__).parents[2]
+    js = (root / "docs/javascripts/metadata-explorer.js").read_text(encoding="utf-8")
+    css = (root / "docs/stylesheets/metadata-explorer.css").read_text(encoding="utf-8")
+
+    assert "const referenceOnly = !edge[2];" in js
+    assert "metadata-explorer-reference-label" in js
+    assert "Conceptual reference without a physical foreign key" in js
+    assert "grid-template-columns: 94px minmax(140px, 195px)" in css
+    assert "grid-template-columns: 94px minmax(0,1fr)" in css
+    assert ".metadata-explorer-reference-label {" in css
+    assert "justify-self: start;" in css
+    assert "max-width: 100%;" in css
