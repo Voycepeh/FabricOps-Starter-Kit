@@ -4,193 +4,82 @@
 <rect x="17" y="303" width="1506" height="898" rx="9" fill="#EEF7FF" stroke="#83B8EA" stroke-width="1.5"/>
 <text x="36" y="52" font-size="23" font-family="Arial, sans-serif" font-weight="700" fill="#7144AE">Governance Schema</text>
 <text x="36" y="346" font-size="23" font-family="Arial, sans-serif" font-weight="700" fill="#1168B6">Engineering Schema</text>
-<path d="M335 170H425" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M346 161V179" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M409 170L425 160 M409 170L425 170 M409 170L425 180" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M725 170H815" fill="none" stroke="#7144AE" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 7"/>
-<path d="M1115 170H1205" fill="none" stroke="#7144AE" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 7"/>
-<path d="M965 253V296H575V423" fill="none" stroke="#7144AE" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 7"/>
-<path d="M1355 253V423" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M1355 269L1345 253 M1355 269L1355 253 M1355 269L1365 253" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M1346 412H1364" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M335 545H425" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M351 545L335 535 M351 545L335 545 M351 545L335 555" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M414 536V554" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M725 504H815" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M736 495V513" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M799 504L815 494 M799 504L815 504 M799 504L815 514" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M1115 566H1205" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M1131 566L1115 556 M1131 566L1115 566 M1131 566L1115 576" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M1194 557V575" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M1250 598V900H575V995" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M1241 609H1259" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M575 979L565 995 M575 979L575 995 M575 979L585 995" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M1335 598V910H965V995" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M1326 609H1344" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M965 979L955 995 M965 979L965 995 M965 979L975 995" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M1430 598V940H1355V995" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M1421 609H1439" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M1355 979L1345 995 M1355 979L1355 995 M1355 979L1365 995" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M335 1081H425" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M351 1081L335 1071 M351 1081L335 1081 M351 1081L335 1091" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M414 1072V1090" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M575 598V675" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M565 614L575 598 M575 614V598 M585 614L575 598" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M566 663H584" fill="none" stroke="#1168B6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_steward/" target="_blank">
 <rect x="35" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
 <path d="M39 78H331Q335 78 335 82V115H35V82Q35 78 39 78Z" fill="#7144AE"/>
 <text x="185.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_STEWARD</text>
-<text x="48" y="135" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="86" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">steward_id</text>
 <title>Open metadata documentation: DATA_STEWARD</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_agreement/" target="_blank">
 <rect x="425" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
 <path d="M429 78H721Q725 78 725 82V115H425V82Q425 78 429 78Z" fill="#7144AE"/>
 <text x="575.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_AGREEMENT</text>
-<text x="438" y="135" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="476" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">agreement_id</text>
-<text x="438" y="159" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="476" y="159" fill="#243550" font-size="14" font-family="Arial, sans-serif">agreement_version</text>
-<text x="438" y="183" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="476" y="183" fill="#243550" font-size="14" font-family="Arial, sans-serif">provider_steward_id</text>
-<text x="438" y="207" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="476" y="207" fill="#243550" font-size="14" font-family="Arial, sans-serif">recipient_steward_id</text>
 <title>Open metadata documentation: DATA_AGREEMENT</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_activation_state/" target="_blank">
 <rect x="815" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
 <path d="M819 78H1111Q1115 78 1115 82V115H815V82Q815 78 819 78Z" fill="#7144AE"/>
 <text x="965.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">ACTIVATION_STATE</text>
-<text x="828" y="135" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="866" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">authority_id</text>
-<text x="866" y="159" fill="#243550" font-size="14" font-family="Arial, sans-serif">token</text>
-<text x="866" y="183" fill="#243550" font-size="14" font-family="Arial, sans-serif">snapshot_json</text>
 <title>Open metadata documentation: ACTIVATION_STATE</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract/" target="_blank">
 <rect x="1205" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
 <path d="M1209 78H1501Q1505 78 1505 82V115H1205V82Q1205 78 1209 78Z" fill="#7144AE"/>
 <text x="1355.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_CONTRACT</text>
-<text x="1218" y="135" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="1256" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">contract_id</text>
-<text x="1218" y="159" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="1256" y="159" fill="#243550" font-size="14" font-family="Arial, sans-serif">contract_version</text>
-<text x="1218" y="183" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="1256" y="183" fill="#243550" font-size="14" font-family="Arial, sans-serif">table_id</text>
-<text x="1256" y="207" fill="#243550" font-size="14" font-family="Arial, sans-serif">contract_payload_json</text>
 <title>Open metadata documentation: DATA_CONTRACT</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_guardrail_results/" target="_blank">
 <rect x="35" y="423" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
 <path d="M39 423H331Q335 423 335 427V460H35V427Q35 423 39 423Z" fill="#1168B6"/>
 <text x="185.0" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">GUARDRAIL_RESULTS</text>
-<text x="48" y="480" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="86" y="480" fill="#243550" font-size="14" font-family="Arial, sans-serif">guardrail_result_id</text>
-<text x="48" y="504" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="86" y="504" fill="#243550" font-size="14" font-family="Arial, sans-serif">run_id</text>
-<text x="48" y="528" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="86" y="528" fill="#243550" font-size="14" font-family="Arial, sans-serif">contract_id</text>
-<text x="48" y="552" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="86" y="552" fill="#243550" font-size="14" font-family="Arial, sans-serif">contract_version</text>
-<text x="48" y="576" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="86" y="576" fill="#243550" font-size="14" font-family="Arial, sans-serif">table_id</text>
 <title>Open metadata documentation: GUARDRAIL_RESULTS</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_run/" target="_blank">
 <rect x="425" y="423" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
 <path d="M429 423H721Q725 423 725 427V460H425V427Q425 423 429 423Z" fill="#1168B6"/>
 <text x="575.0" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_RUN</text>
-<text x="438" y="480" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="476" y="480" fill="#243550" font-size="14" font-family="Arial, sans-serif">run_id</text>
-<text x="476" y="504" fill="#243550" font-size="14" font-family="Arial, sans-serif">pipeline_id</text>
-<text x="476" y="528" fill="#243550" font-size="14" font-family="Arial, sans-serif">activated_pipeline_id</text>
-<text x="476" y="552" fill="#243550" font-size="14" font-family="Arial, sans-serif">environment_name</text>
 <title>Open metadata documentation: PIPELINE_RUN</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_source_observation/" target="_blank">
 <rect x="815" y="423" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
 <path d="M819 423H1111Q1115 423 1115 427V460H815V427Q815 423 819 423Z" fill="#1168B6"/>
 <text x="965.0" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">SOURCE_OBSERVATION</text>
-<text x="828" y="480" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="866" y="480" fill="#243550" font-size="14" font-family="Arial, sans-serif">observation_id</text>
-<text x="828" y="504" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="866" y="504" fill="#243550" font-size="14" font-family="Arial, sans-serif">run_id</text>
-<text x="828" y="528" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="866" y="528" fill="#243550" font-size="14" font-family="Arial, sans-serif">source_table_id</text>
-<text x="828" y="552" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="866" y="552" fill="#243550" font-size="14" font-family="Arial, sans-serif">target_table_id</text>
 <title>Open metadata documentation: SOURCE_OBSERVATION</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_catalogue/" target="_blank">
 <rect x="1205" y="423" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
 <path d="M1209 423H1501Q1505 423 1505 427V460H1205V427Q1205 423 1209 423Z" fill="#1168B6"/>
 <text x="1355.0" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_CATALOGUE</text>
-<text x="1218" y="480" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="1256" y="480" fill="#243550" font-size="14" font-family="Arial, sans-serif">environment_name</text>
-<text x="1218" y="504" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="1256" y="504" fill="#243550" font-size="14" font-family="Arial, sans-serif">table_id</text>
-<text x="1218" y="528" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="1256" y="528" fill="#243550" font-size="14" font-family="Arial, sans-serif">column_id</text>
-<text x="1256" y="552" fill="#243550" font-size="14" font-family="Arial, sans-serif">metadata_level</text>
 <title>Open metadata documentation: DATA_CATALOGUE</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_profiled_frequency/" target="_blank" transform="translate(0 180)">
 <rect x="35" y="815" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
 <path d="M39 815H331Q335 815 335 819V852H35V819Q35 815 39 815Z" fill="#1168B6"/>
 <text x="185.0" y="839" text-anchor="middle" font-size="13.1" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_PROFILED_FREQUENCY</text>
-<text x="48" y="872" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="86" y="872" fill="#243550" font-size="14" font-family="Arial, sans-serif">frequency_id</text>
-<text x="48" y="896" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="86" y="896" fill="#243550" font-size="14" font-family="Arial, sans-serif">profile_id</text>
-<text x="86" y="920" fill="#243550" font-size="14" font-family="Arial, sans-serif">table_id</text>
-<text x="86" y="944" fill="#243550" font-size="14" font-family="Arial, sans-serif">column_id</text>
 <title>Open metadata documentation: DATA_PROFILED_FREQUENCY</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_profiled/" target="_blank" transform="translate(0 180)">
 <rect x="425" y="815" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
 <path d="M429 815H721Q725 815 725 819V852H425V819Q425 815 429 815Z" fill="#1168B6"/>
 <text x="575.0" y="839" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_PROFILED</text>
-<text x="438" y="872" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="476" y="872" fill="#243550" font-size="14" font-family="Arial, sans-serif">profile_id</text>
-<text x="438" y="896" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="476" y="896" fill="#243550" font-size="14" font-family="Arial, sans-serif">table_id</text>
-<text x="438" y="920" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="476" y="920" fill="#243550" font-size="14" font-family="Arial, sans-serif">column_id</text>
-<text x="476" y="944" fill="#243550" font-size="14" font-family="Arial, sans-serif">profile_snapshot_id</text>
 <title>Open metadata documentation: DATA_PROFILED</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_lineage/" target="_blank" transform="translate(0 180)">
 <rect x="815" y="815" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
 <path d="M819 815H1111Q1115 815 1115 819V852H815V819Q815 815 819 815Z" fill="#1168B6"/>
 <text x="965.0" y="839" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_LINEAGE</text>
-<text x="828" y="872" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="866" y="872" fill="#243550" font-size="14" font-family="Arial, sans-serif">lineage_id</text>
-<text x="828" y="896" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="866" y="896" fill="#243550" font-size="14" font-family="Arial, sans-serif">table_id</text>
 <title>Open metadata documentation: DATA_LINEAGE</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_access/" target="_blank" transform="translate(0 180)">
 <rect x="1205" y="815" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
 <path d="M1209 815H1501Q1505 815 1505 819V852H1205V819Q1205 815 1209 815Z" fill="#1168B6"/>
 <text x="1355.0" y="839" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_ACCESS</text>
-<text x="1218" y="872" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="1256" y="872" fill="#243550" font-size="14" font-family="Arial, sans-serif">access_id</text>
-<text x="1218" y="896" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="1256" y="896" fill="#243550" font-size="14" font-family="Arial, sans-serif">table_id</text>
 <title>Open metadata documentation: DATA_ACCESS</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_registry/" target="_blank">
 <rect x="425" y="675" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
 <path d="M429 675H721Q725 675 725 679V712H425V679Q425 675 429 675Z" fill="#1168B6"/>
 <text x="575" y="699" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_REGISTRY</text>
-<text x="438" y="732" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="476" y="732" fill="#243550" font-size="14" font-family="Arial, sans-serif">pipeline_id</text>
-<text x="438" y="756" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="476" y="756" fill="#243550" font-size="14" font-family="Arial, sans-serif">environment_name</text>
-<text x="476" y="780" fill="#243550" font-size="14" font-family="Arial, sans-serif">workspace_id + notebook_id</text>
-<text x="476" y="804" fill="#243550" font-size="14" font-family="Arial, sans-serif">registration_status</text>
 <title>Open metadata documentation: PIPELINE_REGISTRY</title>
 </a>
 </svg>
