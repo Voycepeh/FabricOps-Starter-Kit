@@ -736,24 +736,27 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
     assert "[`orchestrate_write`](../../api/reference/orchestrate_write.md)" in lineage_table
 
 
-def test_metadata_reference_overview_renders_model_diagram() -> None:
-    """The current model uses the illustration and describes the implemented payload column."""
+def test_metadata_reference_overview_renders_interactive_explorer() -> None:
+    """The generated metadata page uses the interactive model, not an image or duplicate cards."""
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
 
     page = ROOT / "docs" / "reference" / "metadata.md"
     text = page.read_text(encoding="utf-8")
-    image_reference = "../assets/fabricops-metadata-model.svg"
-    assert (page.parent / image_reference).resolve().is_file()
-    assert image_reference in text
-    assert "manifest-backed Activated Pipeline contracts and separate run-linked Guardrail Results" in text
-    assert "```mermaid" not in text
+    assert 'data-metadata-explorer' in text
+    assert '<nav class="metadata-explorer-fallback"' in text
+    assert "fabricops-metadata-model.png" not in text
+    assert "metadata-table-grid" not in text
     assert len(CANONICAL_METADATA_TABLES) == 13
-    assert all(name in text for name in CANONICAL_METADATA_TABLES)
+    for name in CANONICAL_METADATA_TABLES:
+        assert f'href="{name.lower()}/"' in text
     assert "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column" in text
     assert "containing authored Guardrails, Enrichment and profiling policies" in text
-    assert "reduced from" not in text
-    assert "migration" not in text.casefold()
-    assert text.index(image_reference) < text.index('<div class="metadata-table-grid">')
+    script = (ROOT / "docs" / "javascripts" / "metadata-explorer.js").read_text(encoding="utf-8")
+    for name in CANONICAL_METADATA_TABLES:
+        assert name.removeprefix("METADATA_") in script
+    assert '"PIPELINE_REGISTRY"' in script and '"metadata_pipeline_registry/"' in script
+    assert "ACTIVATION_STATE" in script
+    assert "metadata-explorer.js" in (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
 
 
 def test_template_function_map_page_stays_removed() -> None:

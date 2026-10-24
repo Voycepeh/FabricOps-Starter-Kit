@@ -116,12 +116,6 @@ METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "The contract answers: Exactly what data will be delivered, in what structure, at what quality, and how reliably?"
 )
 
-METADATA_REFERENCE_MODEL_DIAGRAM = (
-    "![FabricOps metadata model: Governance and Engineering schemas, with a "
-    "manifest-backed Activated Pipeline contracts and separate run-linked Guardrail Results]"
-    "(../assets/fabricops-metadata-model.svg)"
-)
-
 METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
     "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column "
     "containing authored Guardrails, Enrichment and profiling policies for each contract version."
