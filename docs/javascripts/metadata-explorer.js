@@ -21,21 +21,20 @@
 
   // Direction is parent -> child; the inverse cardinality is shown when
   // inspecting the child. Test-evidence and Live-release links are distinct.
-  // Visual edges match the generated SVG, including logical release links
-  // that exist inside METADATA_ACTIVATION_STATE rather than a separate table.
+  // Dashed conceptual references deliberately have no physical-table cardinality.
   const links = [
     ["DATA_STEWARD", "DATA_AGREEMENT", "1:N", "Provider or recipient"],
-    ["DATA_AGREEMENT", "ACTIVATION_STATE", "1:N", "Approved releases"],
-    ["PIPELINE_REGISTRY", "ACTIVATION_STATE", "1:N", "Releases of a registered pipeline"],
-    ["ACTIVATION_STATE", "DATA_CONTRACT", "N:N", "Frozen contracts in activated releases"],
-    ["ACTIVATION_STATE", "PIPELINE_RUN", "1:N", "Live runs of approved releases"],
+    ["DATA_AGREEMENT", "ACTIVATION_STATE", "", "Approved releases"],
+    ["PIPELINE_REGISTRY", "ACTIVATION_STATE", "", "Releases of a registered pipeline"],
+    ["ACTIVATION_STATE", "DATA_CONTRACT", "", "Frozen contracts in activated releases"],
+    ["ACTIVATION_STATE", "PIPELINE_RUN", "", "Live runs of approved releases"],
     ["DATA_CATALOGUE", "DATA_CONTRACT", "1:N", "Contracts for a table"],
     ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1:N", "Execution history"],
     ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1:N", "Run evaluations"],
     ["PIPELINE_RUN", "SOURCE_OBSERVATION", "1:N", "Run observations"],
     ["DATA_CATALOGUE", "SOURCE_OBSERVATION", "1:N", "Observed source or target"],
     ["DATA_CATALOGUE", "DATA_PROFILED", "1:N", "Profile snapshots"],
-    ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "1:N", "Frequency snapshots"],
+    ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "", "Frequency snapshots"],
     ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "1:N", "Optional statistical profile"],
     ["DATA_CATALOGUE", "DATA_LINEAGE", "1:N", "Lineage records"],
     ["DATA_CATALOGUE", "DATA_ACCESS", "1:N", "Access observations"],
@@ -48,6 +47,7 @@
   })[ch]);
   const cardinalityFrom = (edge, name) => {
     const c = edge[2];
+    if (!c) return "Reference";
     return edge[0] === name ? c : c === "1:N" ? "N:1" : c === "N:1" ? "1:N" : c;
   };
 
