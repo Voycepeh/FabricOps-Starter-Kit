@@ -751,7 +751,7 @@ PUBLIC_SYMBOL_DOCS = [
   'symbol_name': 'FabricStore',
   'use_when': 'Use in 00_env_config path mappings to define lakehouse or warehouse targets.',
   'when_to_use': ['Use through the supported FabricOps root import surface.'],
-  'parameters': 'env, workspace_id, item_id, name, kind, schema_enabled, and schema.',
+  'parameters': 'env, workspace_id, item_id, kind, schema_enabled, schema, and optional keyword-only name (physical Fabric item name; defaults to the logical alias for Warehouse execution).',
   'returns': 'Validated FabricStore configuration object.',
   'raises': 'ValueError for missing identifiers, unsupported store kind, or invalid schema names.',
   'side_effects': 'None.',

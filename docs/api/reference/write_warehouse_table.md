@@ -162,6 +162,10 @@ Raises configuration, Spark connector, or warehouse write errors when the target
 
 <div class="reference-docstring-notes" markdown="1">
 
+``store`` selects a logical configuration alias. Set ``FabricStore.name``
+to the actual Warehouse name when it differs from that alias. Without a
+configured name, the alias remains the physical name for existing deployments.
+
 Parallel processing and write concurrency
     Spark processes DataFrame partitions concurrently. Before invoking the
     Warehouse connector, ``write_warehouse_table`` can repartition the
@@ -288,7 +292,7 @@ or when physical Delta partitioning is required.
 
 `fabricops_kit/io/write_warehouse_table.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L15-L249">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L15-L253">View on GitHub</a>
 </div>
 
 
@@ -304,7 +308,7 @@ or when physical Delta partitioning is required.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 16 |
+| Live-critical dependencies | 17 |
 
 ### Release history
 
@@ -330,6 +334,7 @@ or when physical Delta partitioning is required.
 <li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_warehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
 <li><code>fabricops_kit.io.shared.write_warehouse_synapsesql</code></li>

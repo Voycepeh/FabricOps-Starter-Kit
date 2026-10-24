@@ -46,8 +46,8 @@ def test_setup_notebook_defaults_to_configured_store_keys() -> None:
     assert context.readiness_status == "ready"
 
 
-def test_setup_notebook_readiness_does_not_require_removed_store_name() -> None:
-    """Resolved stores should pass readiness without the removed FabricStore.name field."""
+def test_setup_notebook_readiness_does_not_require_optional_store_name() -> None:
+    """Resolved stores pass readiness when no physical FabricStore.name is supplied."""
     context = setup_notebook(
         _config(), env="dev", required_targets=["Bronze", "Gold"], local_fallback_name="02_pipeline"
     )
@@ -55,4 +55,4 @@ def test_setup_notebook_readiness_does_not_require_removed_store_name() -> None:
     path_checks = {check.name: check for check in context.validation_results if check.name.startswith("path:")}
     assert path_checks["path:Bronze"].status == "pass"
     assert path_checks["path:Gold"].status == "pass"
-    assert not hasattr(context.paths["Bronze"], "name")
+    assert context.paths["Bronze"].name is None

@@ -61,6 +61,7 @@ def configuration_runtime(monkeypatch, request):
                     '<PROD_WORKSPACE_ID>': 'prod-ws', '<GOVERNANCE_WORKSPACE_ID>': 'metadata-ws',
                     '<METADATA_ITEM_ID>': 'metadata-item', '<BRONZE_ITEM_ID>': 'bronze-item',
                     '<SILVER_ITEM_ID>': 'silver-item', '<GOLD_ITEM_ID>': 'gold-item',
+                    '<BRONZE_NAME>': 'lh_Bronze', '<SILVER_NAME>': 'lh_Silver', '<GOLD_NAME>': 'wh_Gold',
                 }.items():
                     source = source.replace(placeholder, value)
                 # This fixture exercises configuration loading, not metadata deployment.
@@ -86,6 +87,7 @@ def test_engineering_loads_central_config_for_caller_workspace(configuration_run
     assert result.environment == environment
     assert set(result.paths) == {'Bronze', 'Silver', 'Gold', 'Metadata'}
     assert result.paths['Silver'].env == environment
+    assert result.paths['Gold'].name == 'wh_Gold'
     assert result.paths['Metadata'].workspace_id == 'metadata-ws'
     assert result.run_id == 'caller-run'
     config, env, context = resolve_fabric_context()

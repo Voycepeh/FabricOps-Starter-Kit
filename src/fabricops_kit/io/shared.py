@@ -214,13 +214,18 @@ def resolve_lakehouse_file_path(store: FabricStore, relative_path: str) -> str:
     return _join_lakehouse_area_path(store, "Files", normalized_relative_path)
 
 
+def resolve_warehouse_name(store: FabricStore, fallback_name: str) -> str:
+    """Return the physical SQL database name, retaining the legacy alias fallback."""
+    return getattr(store, "name", None) or fallback_name
+
+
 def resolve_warehouse_table_location(
     store: FabricStore, schema: str, table_name: str, *, warehouse_name: str
 ) -> tuple[str, str, str]:
     """Resolve a Warehouse table to normalized schema, table, and connector target."""
     schema_value = _normalize_schema_name(schema)
     table_value = _normalize_table_name(table_name)
-    return schema_value, table_value, _build_warehouse_object_name(warehouse_name, schema_value, table_value)
+    return schema_value, table_value, _build_warehouse_object_name(resolve_warehouse_name(store, warehouse_name), schema_value, table_value)
 
 
 def normalize_write_mode(mode: str) -> str:
@@ -491,7 +496,7 @@ def read_warehouse_synapsesql(
     reader = (
         spark_obj.read.option(constants.WorkspaceId, store.workspace_id)
         .option(constants.DatawarehouseId, store.item_id)
-        .option(constants.DatabaseName, database_name)
+        .option(constants.DatabaseName, resolve_warehouse_name(store, database_name))
     )
     for key, value in (options or {}).items():
         reader = reader.option(key, value)
@@ -612,7 +617,8 @@ def execute_warehouse_processing(
         store, schema, table_name, context=dict(context or {})
     )
     stage_name = f"_fabricops_scd_{uuid4().hex}"
-    stage_object = _build_warehouse_object_name(store, schema_value, stage_name)
+    database_name = resolve_warehouse_name(configured_store, store)
+    stage_object = _build_warehouse_object_name(database_name, schema_value, stage_name)
 
     qschema = _quoted_warehouse_identifier(schema_value)
     qtarget = f"{qschema}.{_quoted_warehouse_identifier(table_value)}"
@@ -715,14 +721,14 @@ THROW;
 END CATCH;"""
     try:
         write_warehouse_synapsesql(df, configured_store, stage_object, mode="overwrite", options=options)
-        execute_warehouse_sql(df.sparkSession, configured_store, sql, database_name=store, options=options)
+        execute_warehouse_sql(df.sparkSession, configured_store, sql, database_name=database_name, options=options)
     except Exception:
         _drop_warehouse_stage_best_effort(
             df.sparkSession,
             configured_store,
             schema_value,
             stage_name,
-            database_name=store,
+            database_name=database_name,
             options=options,
         )
         raise

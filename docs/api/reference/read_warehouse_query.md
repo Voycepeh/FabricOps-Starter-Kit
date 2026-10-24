@@ -93,6 +93,10 @@ ValueError
 
 <div class="reference-docstring-notes" markdown="1">
 
+``store`` selects a logical configuration alias. Set ``FabricStore.name``
+to the actual Warehouse name when it differs from that alias. Without a
+configured name, the alias remains the physical name for existing deployments.
+
 FabricOps resolves the configured Warehouse store, sets the Fabric
 connector database to that warehouse artifact, and delegates the read-only
 SQL text to the Fabric Warehouse Spark connector for pushdown. Query callers
@@ -144,7 +148,7 @@ Lakehouse Delta before Spark transformations.
 
 `fabricops_kit/io/read_warehouse_query.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L15-L103">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L15-L107">View on GitHub</a>
 </div>
 
 
@@ -160,7 +164,7 @@ Lakehouse Delta before Spark transformations.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 12 |
+| Live-critical dependencies | 13 |
 
 ### Release history
 
@@ -184,6 +188,7 @@ Lakehouse Delta before Spark transformations.
 <li><code>fabricops_kit.io.shared.read_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_warehouse_query_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.validate_select_query</code></li>
 </ul>
 

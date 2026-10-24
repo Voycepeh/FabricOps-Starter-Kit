@@ -110,7 +110,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 15 |
+| Live-critical dependencies | 16 |
 
 ### Release history
 
@@ -135,6 +135,7 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 </ul>

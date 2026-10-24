@@ -236,7 +236,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 75 |
+| Live-critical dependencies | 76 |
 
 ### Release history
 
@@ -285,6 +285,7 @@ distinct snapshot identity.
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.pipeline.shared._audit_literal_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._automatic_frequency_columns</code></li>
