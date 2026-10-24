@@ -366,3 +366,40 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     assert "--check" in script
     assert "Missing FK connector" in script
     assert "Unexpected approved diagram table count" not in script
+
+
+def test_generated_svg_check_ignores_windows_line_endings_but_detects_real_drift(tmp_path) -> None:
+    """A Windows CRLF checkout must validate without concealing actual SVG differences."""
+    import shutil
+    import subprocess
+    from pathlib import Path
+
+    import pytest
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is required to execute the SVG generator")
+
+    source_root = Path(__file__).parents[2]
+    paths = (
+        "scripts/generate_metadata_erd_svg.mjs",
+        "docs/assets/fabricops-metadata-layout.svg",
+        "docs/assets/fabricops-metadata-approved.svg",
+        "docs/reference/metadata.md",
+    )
+    for relative in paths:
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        raw = (source_root / relative).read_bytes().replace(b"\\r\\n", b"\\n")
+        target.write_bytes(raw.replace(b"\\n", b"\\r\\n"))
+
+    command = [node, str(tmp_path / paths[0]), "--check"]
+    first = subprocess.run(command, cwd=tmp_path, capture_output=True, text=True)
+    assert first.returncode == 0, first.stdout + first.stderr
+
+    target = tmp_path / "docs/assets/fabricops-metadata-approved.svg"
+    corrupted = target.read_bytes().replace(b"DATA_AGREEMENT", b"DATA_AGREEMENX", 1)
+    target.write_bytes(corrupted)
+    second = subprocess.run(command, cwd=tmp_path, capture_output=True, text=True)
+    assert second.returncode != 0
+    assert "diagram drift" in second.stderr
