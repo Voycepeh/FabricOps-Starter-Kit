@@ -2122,7 +2122,12 @@ def test_internal_links_to_current_metadata_reference_pages_resolve() -> None:
                 resolved = (docs_root / link_path.lstrip("/")).resolve()
             else:
                 resolved = (document.parent / link_path).resolve()
-            if resolved == reference_dir.resolve():
+            # The overview is published at /reference/metadata/ even though
+            # its Markdown source is reference/metadata.md. Its static HTML
+            # fallback consequently uses metadata_table/ pretty-URL links.
+            if document.resolve() == overview.resolve() and link_path.startswith("metadata_"):
+                resolved = (reference_dir / link_path.rstrip("/")).with_suffix(".md").resolve()
+            elif resolved == reference_dir.resolve():
                 resolved = overview.resolve()
             elif resolved.parent == reference_dir.resolve() and resolved.suffix in ("", ".html"):
                 resolved = resolved.with_suffix(".md")
@@ -2130,5 +2135,5 @@ def test_internal_links_to_current_metadata_reference_pages_resolve() -> None:
                 inspected.append((document.relative_to(docs_root), href))
                 if not resolved.is_file():
                     unresolved.append((str(document.relative_to(docs_root)), href, str(resolved)))
-    assert inspected, "No internal metadata links found to validate"
+    assert len(inspected) >= 13, "Missing internal links to metadata references"
     assert not unresolved, f"Broken links to current metadata references: {unresolved}"
