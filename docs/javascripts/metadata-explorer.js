@@ -130,28 +130,20 @@
     root.appendChild(tooltip);
 
     const modelFor = name => canonicalModels[name] || {};
-    const brief = value => {
-      const first = String(value || "").split(/\.\s+/)[0].trim();
-      const short = first.length > 165 ? first.slice(0, 162).replace(/\s+\S*$/, "") + "…" : first;
-      return short || "Select to inspect the table";
-    };
-    let hoveredLink = null;
     const hideTooltip = () => {
-      hoveredLink = null;
       tooltip.hidden = true;
     };
     const showTooltip = (name, link) => {
       const model = modelFor(name);
       if (!model.purpose && !model.grain) return;
-      hoveredLink = link;
       tooltip.replaceChildren();
       const title = document.createElement("strong");
       title.textContent = "METADATA_" + name;
       const description = document.createElement("p");
-      description.textContent = brief(model.purpose);
+      description.textContent = model.purpose || "No description available";
       const grain = document.createElement("p");
       const label = document.createElement("b");
-      label.textContent = "Grain: ";
+      label.textContent = "One row represents: ";
       grain.append(label, document.createTextNode(model.grain || "Not defined"));
       tooltip.append(title, description, grain);
       tooltip.hidden = false;
@@ -314,9 +306,9 @@
         '<h3>METADATA_' + escapeHtml(title) + '</h3></div>' +
         '<span class="metadata-explorer-state">' + escapeHtml(status || "") + '</span></div>' +
         '<div class="metadata-explorer-summary">' +
-        '<p class="metadata-explorer-purpose">' + escapeHtml(brief(model.purpose || status || "")) + '</p>' +
+        '<p class="metadata-explorer-purpose">' + escapeHtml(model.purpose || status || "") + '</p>' +
         '<div class="metadata-explorer-detail-facts">' +
-        '<div><strong>Grain</strong><span>' + escapeHtml(model.grain || "Logical release held in activation authority") + '</span></div>' +
+        '<div><strong>One row represents</strong><span>' + escapeHtml(model.grain || "Logical release held in activation authority") + '</span></div>' +
         '<div><strong>Primary key</strong><code>' + escapeHtml((model.primary_key || pk).join(" · ")) + '</code></div>' +
         '<div><strong>Written via</strong><span>' + (writers || "See activation authority") + '</span></div>' +
         '</div></div>' +
