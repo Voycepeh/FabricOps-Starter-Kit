@@ -1,6 +1,6 @@
 # METADATA_DATA_ACCESS
 
-See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.
+Records permissions observed for governed tables across Workspace, OneLake and SQL access. It does not determine a person's effective access.
 
 ## Writer functions
 
@@ -18,7 +18,7 @@ See observable Workspace, OneLake Security, and SQL access for registered govern
 
 **Default physical schema:** `engineering`
 
-**Grain:** One observed access grant for one principal or access selector and one governed table within one access snapshot.
+**Grain:** One observed permission for a principal or access selector on a table during one scan.
 
 **Primary key:** `access_id`
 
@@ -26,6 +26,8 @@ See observable Workspace, OneLake Security, and SQL access for registered govern
 
 `METADATA_DATA_CATALOGUE` **(N → 1)**
 via `table_id`
+
+**Implementation details:** See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.
 
 ## Column summary
 
