@@ -153,10 +153,11 @@ def test_metadata_explorer_keeps_keys_readable_and_loads_canonical_details() -> 
     assert "white-space: normal" in css
     assert "overflow-wrap: anywhere" in css
     assert "DOMParser" in js and "fetch(url)" in js
-    assert "sectionDetails(section)" in js
-    assert 'document.createElement("details")' in js
+    assert "sectionDetails(implemented)" in js
+    assert 'document.createElement("section")' in js
     assert "metadata-explorer-viewport" in js
     assert "metadata-explorer-details" in js
+    assert "scrollIntoView" in js
     assert "data-reference-content" in js
     assert 'status && title === "ACTIVATED_PIPELINE"' in js
     assert '"metadata_pipeline_registry/"' in js
@@ -186,6 +187,8 @@ def test_metadata_explorer_payload_matches_canonical_model(tmp_path, monkeypatch
         assert entry["purpose"] == model["purpose"]
         assert entry["grain"] == model["grain"]
         assert entry["primary_key"] == model["primary_key"]
+        assert entry["write_entrypoints"]
+        assert all(name in public_names for name in entry["write_entrypoints"])
         assert [
             (fk["local_field"], fk["referenced_table"], fk["referenced_field"])
             for fk in entry["foreign_keys"]
@@ -215,6 +218,46 @@ def test_metadata_explorer_compact_details_and_hover_summary() -> None:
     assert "metadata-explorer-related-joins" in js
     assert "metadata-explorer-detail-quick" not in js
     assert "metadata-explorer-tooltip[hidden]" in css
-    assert ".md-typeset .fabricops-metadata-explorer details.metadata-explorer-section" in css
-    assert "background: transparent;" in css
+    assert ".metadata-explorer-implemented-schema" in css
+    assert "metadata-explorer-detail-facts" in css
     assert "font-size: 14px;" in css
+
+
+def test_metadata_explorer_writer_and_schema_display() -> None:
+    """Ensure table click focuses scan-first summary and shows the full schema."""
+    from pathlib import Path
+
+    root = Path(__file__).parents[2]
+    js = (root / "docs/javascripts/metadata-explorer.js").read_text(encoding="utf-8")
+    css = (root / "docs/stylesheets/metadata-explorer.css").read_text(encoding="utf-8")
+    assert 'section.heading === "Implemented schema"' in js
+    assert 'sectionDetails(implemented)' in js
+    assert 'detail.scrollIntoView({' in js
+    assert 'detail.focus({ preventScroll: true })' in js
+    assert 'select("DATA_AGREEMENT")' in js
+    assert 'select(name, { focusDetails: true })' in js
+    assert "model.write_entrypoints" in js
+    assert "Written via" in js
+    assert "Used in Workflow Template" not in js
+    assert "metadata-explorer-summary" in js
+    assert "metadata-explorer-detail-facts" in css
+    assert ".metadata-explorer-implemented-schema" in css
+    assert ".metadata-explorer-reference-content" in css
+    assert 'document.createElement("details")' not in js
+
+
+def test_audited_metadata_writers_cover_all_tables() -> None:
+    """Entry points are public and do not confuse read-only effective access with persistence."""
+    from scripts.reference_docs_metadata import METADATA_EXPLORER_WRITE_ENTRYPOINTS
+
+    assert set(METADATA_EXPLORER_WRITE_ENTRYPOINTS) == set(CANONICAL_METADATA_TABLES)
+    assert all(METADATA_EXPLORER_WRITE_ENTRYPOINTS.values())
+    assert set(METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_DATA_PROFILED"]) >= {
+        "orchestrate_read", "orchestrate_write", "profile_table"
+    }
+    assert "finalize_pipeline" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_RUN"]
+    assert "setup_pipeline" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
+    assert "scan_effective_access" not in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_DATA_ACCESS"]
+    assert set(METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_DATA_ACCESS"]) == {
+        "scan_workspace_access", "scan_onelake_access", "scan_sql_access"
+    }
