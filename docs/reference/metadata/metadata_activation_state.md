@@ -4,7 +4,9 @@ Single atomic central authority for environment activation revisions, immutable 
 
 ## Writer functions
 
-No public writer function is traced in the current implementation.
+* [`finalize_pipeline`](../../api/reference/finalize_pipeline.md)
+* [`setup_pipeline`](../../api/reference/setup_pipeline.md)
+* [`widget_activate_pipeline`](../../api/reference/widget_activate_pipeline.md)
 
 ## Used in Workflow Template
 
