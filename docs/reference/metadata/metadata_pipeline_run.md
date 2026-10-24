@@ -1,6 +1,6 @@
 # METADATA_PIPELINE_RUN
 
-One complete logical run, exact table mappings, operation results, per-table profiling activity outcomes, warnings and pinned activation revision. Profiling completion joins persisted result snapshots; Grain Discovery and empty Frequency Profiling use minimal success markers in operation_summary_json.
+Records the outcome of each Live pipeline run, including its tables, operations, profiling results and warnings.
 
 ## Writer functions
 
@@ -16,7 +16,7 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One Live pipeline execution attempt. Test results remain in memory.
+**Grain:** One Live pipeline execution attempt. Test runs are not stored here.
 
 **Primary key:** `run_id`
 
@@ -24,6 +24,8 @@ No starter template or solution is traced for the public writer functions.
 
 `METADATA_PIPELINE_REGISTRY` **(N → 1)**
 via `pipeline_id`
+
+**Implementation details:** One complete logical run, exact table mappings, operation results, per-table profiling activity outcomes, warnings and pinned activation revision. Profiling completion joins persisted result snapshots; Grain Discovery and empty Frequency Profiling use minimal success markers in operation_summary_json.
 
 ## Column summary
 
