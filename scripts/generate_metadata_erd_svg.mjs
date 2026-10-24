@@ -96,7 +96,10 @@ function renderMetadataSvg(layout, models) {
   return prefix+`<g id="metadata-er-relationships" aria-label="Metadata table relationships">\n${rendered}\n</g>\n`+body;
 }
 const overview = fs.readFileSync(path.join(root, "docs/reference/metadata.md"), "utf8");
-const match = overview.match(/<script type="application\\/json" class="metadata-explorer-model">\\s*([\\s\\S]*?)\\s*<\\/script>/);
+const openTag = '<script type="application/json" class="metadata-explorer-model">';
+const start = overview.indexOf(openTag);
+const end = start < 0 ? -1 : overview.indexOf("</script>", start);
+const match = start < 0 || end < 0 ? null : [null, overview.slice(start + openTag.length, end).trim()];
 if (!match) throw new Error("Missing canonical metadata model in generated overview. Regenerate metadata references first.");
 const models = JSON.parse(match[1]);
 const layout = fs.readFileSync(path.join(root, "docs/assets/fabricops-metadata-layout.svg"), "utf8");
