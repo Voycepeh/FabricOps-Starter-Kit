@@ -25,7 +25,7 @@ No starter template or solution is traced for the public writer functions.
 `METADATA_DATA_CATALOGUE` **(N → 1)**
 via `table_id` + `column_id`
 
-`METADATA_DATA_PROFILED_FREQUENCY` **(1 → 1)**
+`METADATA_DATA_PROFILED_FREQUENCY` **(1 → N)**
 via `profile_id`
 
 ## Column summary
