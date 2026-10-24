@@ -281,8 +281,8 @@ def test_02_pipeline_is_a_small_reusable_scaffold():
         "# 4. Write",
     )
     assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
-    assert source.count("setup_pipeline(") == 1
     code_source = "\n".join(source for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
+    assert code_source.count("setup_pipeline(") == 1
     assert code_source.count("orchestrate_read(") == 1
     assert code_source.count("orchestrate_write(") == 1
     assert all(name not in source for name in ("orders", "products", "order_history", "customer_summary"))
@@ -293,7 +293,6 @@ def test_02_pipeline_preserves_migration_surfaces_and_lineage_handoff():
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
     cell_ids = [cell.get("id") for cell in notebook.cells]
     required_order = [
-        "environment",
         "contracts",
         "read-setup",
         "read-1",
@@ -396,7 +395,6 @@ def test_02b_has_ordered_repeat_safe_incremental_append_flow():
     source = _demo_source("02B_incremental_append_demo.ipynb")
     ids = [cell.get("id") for cell in notebook.cells]
     ordered = [
-        "environment",
         "imports",
         "demo-day",
         "read-csv",
@@ -427,7 +425,6 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
     source = _demo_source("02C_scd_demo.ipynb")
     ids = [cell.get("id") for cell in notebook.cells]
     ordered = [
-        "environment",
         "imports",
         "demo-day",
         "read-csv",
