@@ -332,7 +332,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
       </span>
     </span>
     <span class="metadata-table-card__relationship-summary">
-      <span class="metadata-table-card__cardinality">1 → 1</span>
+      <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
         <code>METADATA_DATA_PROFILED_FREQUENCY</code>
       </span>
