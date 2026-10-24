@@ -320,7 +320,7 @@
   </a>
 </div>
 
-**See how the pieces connect:** [Explore the interactive Metadata Tables map →](reference/metadata/)
+**See how the pieces connect:** [Explore the interactive Metadata Tables map →](reference/metadata.md)
 
 <video class="fabricops-home-video" controls preload="metadata" playsinline aria-label="FabricOps overview video">
   <source src="assets/FabricOps_Overview_Video_web.mp4" type="video/mp4">
