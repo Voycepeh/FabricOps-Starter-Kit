@@ -1,4 +1,4 @@
-# 0A. Prepare the Fabric environment
+# 0A. Prepare the Fabric environment object
 
 ### Before you begin
 
@@ -105,16 +105,13 @@ The built wheel will be available under `dist/`.
 
 ## Create Fabric Environments and install FabricOps
 
-Fabric Environments are **workspace-specific**. Install and publish the same FabricOps wheel in each workspace that runs FabricOps notebooks.
+Fabric Environments can be created in one workspace and shared across all workspaces.
 
 </div>
 </div>
 
 
-
-
-
-A Fabric Environment belongs to a workspace. An Environment created in Governance is not automatically available in Engineering Development, Engineering Production, or Consumer.
+A Fabric Environment belongs to a workspace but it can be shared to different users acrosss the organization . An Environment created in Governance is not automatically available in Engineering Development, Engineering Production, or Consumer unless explicity shared with the user.
 
 Start in the **Governance** workspace and create a Fabric **Environment**. Then:
 
@@ -127,8 +124,9 @@ Publishing is required before the installed FabricOps package is available to no
 
 ![Install the FabricOps wheel as a custom library](../assets/00A/install-custom-whl.png)
 
+After you are done publishing you can share this environment with anyone in your organization where deem fit. 
 
-Use the same FabricOps wheel version in each workspace so Governance, Development, Production, and Consumer are running the same package version during the Guided Demo.
+![Share the Fabric Environment](../assets/00A/ShareEnvironment.png)
 
 ??? info "Optional: enable Fabric AI Functions for AI-assisted Governance"
 
@@ -151,4 +149,4 @@ You now have:
 
 The physical Fabric foundation is ready. The next step imports the FabricOps notebook templates and demo data.
 
-**Next:** [0B. Configure the environment and load demo data](00B-configure-environment-and-load-assets.md)
+**Next:** [0B. Configure the environment notebook and load demo data](00B-configure-environment-and-load-assets.md)
