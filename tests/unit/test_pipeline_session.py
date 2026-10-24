@@ -159,6 +159,7 @@ def test_interactive_contract_controls_and_failure_event(runtime, monkeypatch):
     monkeypatch.setattr(IPython, 'get_ipython', lambda: shell)
     displayed = Mock()
     monkeypatch.setattr(ip, 'display', displayed)
+    monkeypatch.setattr(ip, 'update_display', displayed)
     monkeypatch.setattr(shared, 'read_lakehouse_table', lambda *args, **kwargs: SimpleNamespace(collect=lambda: [_row()]))
     session = setup_pipeline(pipeline_id='interactive', pipeline_mode='Test')
     assert any(hasattr(call.args[0], "children") for call in displayed.call_args_list)

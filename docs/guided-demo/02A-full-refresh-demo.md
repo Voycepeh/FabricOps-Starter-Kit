@@ -27,7 +27,7 @@ Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite 
 
 | Notebook section | What happens |
 | --- | --- |
-| Environment | Loads the shared Fabric configuration and imports the functions used by this demo. |
+| Environment | Imports the public APIs; `setup_pipeline()` loads workspace configuration in the following block. |
 | Setup Pipeline | Initialize context, declare participants and start execution tracking. |
 | Data Contract Configuration | Choose an exact frozen version or No Contract independently for each table in Testing. |
 | Governed Read | Reads Orders, Products, and Order History in full. |
@@ -42,7 +42,11 @@ Run **0. Environment** and **1. Setup Pipeline**. Reads and Writes define partic
 ```python
 PIPELINE_ID = "02A_full_refresh_demo"
 PIPELINE_MODE = "Test"  # Test or Live
-CONTRACTS = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode=PIPELINE_MODE)
+CONTRACTS = setup_pipeline(
+    pipeline_id=PIPELINE_ID,
+    pipeline_mode=PIPELINE_MODE,
+    # Optional shared config: config_workspace_id="<configuration-workspace-id>",
+)
 ```
 
 

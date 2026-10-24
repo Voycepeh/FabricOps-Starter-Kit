@@ -13,7 +13,7 @@ module = importlib.import_module("fabricops_kit.widgets.widget_activate_pipeline
 @pytest.fixture
 def render(authority, monkeypatch):
     from IPython import display as ip
-    monkeypatch.setattr(ip, "display", lambda *_: None)
+    monkeypatch.setattr(ip, "display", lambda *_, **__: None)
     monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: ({}, "canary", authority.context))
     monkeypatch.setattr(module, "metadata_records", importlib.import_module("fabricops_kit.activated_pipeline.shared").metadata_records)
     monkeypatch.setattr(module, "read_activation_state", authority.read)

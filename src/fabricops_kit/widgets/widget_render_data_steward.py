@@ -9,6 +9,7 @@ from typing import Any
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import DEFAULT_STEWARD_ROLE_OPTIONS, resolve_fabric_context
 from fabricops_kit.widgets.shared import (
+    WidgetStartup,
     DATA_STEWARD_TABLE,
     DATA_STEWARD_VISIBLE_FIELDS,
     WIDGET_CONFIG_DEFAULTS,
@@ -63,9 +64,10 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
     >>> state = widget_render_data_steward(spark=spark)
 
     """
-    config, env, _context = resolve_fabric_context(context=context)
+    startup = WidgetStartup("Data Steward")
+    with startup.phase("initialization", "Resolving FabricOps configuration…"):
+        config, env, _context = resolve_fabric_context(context=context)
     widgets = require_ipywidgets()
-    from IPython import display as ip
 
     kind = "data_steward_widget"
     widget_config = {**WIDGET_CONFIG_DEFAULTS[kind], **dict(config_value(config, kind, {}) or {})}
@@ -80,7 +82,8 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
         row_lookup.clear()
         row_lookup.update({_row_id(row): row for row in rows if _row_id(row)})
 
-    existing_rows = [row for row in list_data_stewards(config, env, spark_session=spark, active_only=False, missing_ok=True) if _row_id(row)]
+    with startup.phase("metadata_loading", "Loading configured metadata…"):
+        existing_rows = [row for row in list_data_stewards(config, env, spark_session=spark, active_only=False, missing_ok=True) if _row_id(row)]
     _refresh_lookup(existing_rows)
     selected_selector = render_searchable_selector(
         widgets=widgets,
@@ -257,7 +260,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
         description="Create or update data stewards",
         children=[selection_section, details_section, *supporting_sections, actions],
     )
-    ip.display(container)
+    startup.display(container)
     return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": None, "fields": form, "custom_fields": custom, "refresh_stewards_button": None, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": None, "after_save_callbacks": after_save_callbacks, "save_button": save, "discard_button": discard, "status": status}
 
 

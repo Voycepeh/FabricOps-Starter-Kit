@@ -92,9 +92,9 @@ RuntimeError
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_render_data_steward.py:36`
+`fabricops_kit/widgets/widget_render_data_steward.py:37`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_steward.py#L36-L261">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_steward.py#L37-L264">View on GitHub</a>
 </div>
 
 
@@ -110,7 +110,7 @@ RuntimeError
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 48 |
+| Live-critical dependencies | 49 |
 
 ### Release history
 
@@ -148,6 +148,7 @@ RuntimeError
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.widgets.shared._coerce_row_dicts</code></li>
 <li><code>fabricops_kit.widgets.shared._html_escape</code></li>
+<li><code>fabricops_kit.widgets.shared._is_table_not_found_error</code></li>
 <li><code>fabricops_kit.widgets.shared._latest_by_key</code></li>
 <li><code>fabricops_kit.widgets.shared.action_row</code></li>
 <li><code>fabricops_kit.widgets.shared.active_steward</code></li>
