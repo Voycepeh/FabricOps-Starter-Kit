@@ -30,8 +30,6 @@ via `table_id`
 
 **Implementation details:** Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. Agreement linkage belongs to Activated Pipeline.
 
-**Implementation details:** Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. Agreement linkage belongs to Activated Pipeline.
-
 ## Column summary
 
 | Column category | Count |
