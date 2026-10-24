@@ -546,8 +546,8 @@ def test_release_history_index_renders_all_manifests_as_sorted_table_rows():
     assert "## Release history" in content
     assert "## Current release" not in content
     assert "| Release | Release date | Description |" in content
-    assert "| [FabricOps Starter Kit 0.2.0](0.2.0/) | 2026-08-01 | Expanded release workflow coverage. |" in content
-    assert "| [FabricOps Starter Kit 0.1.0](0.1.0/) | 2026-07-08 | Initial governed Fabric notebook workflows. |" in content
+    assert "| [FabricOps Starter Kit 0.2.0](0.2.0/index.md) | 2026-08-01 | Expanded release workflow coverage. |" in content
+    assert "| [FabricOps Starter Kit 0.1.0](0.1.0/index.md) | 2026-07-08 | Initial governed Fabric notebook workflows. |" in content
     assert content.index("FabricOps Starter Kit 0.2.0") < content.index("FabricOps Starter Kit 0.1.0")
 
 
