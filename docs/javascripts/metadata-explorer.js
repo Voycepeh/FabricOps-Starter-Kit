@@ -255,8 +255,12 @@
         relationshipsForTable.map(edge => {
           const other = edge[0] === name ? edge[1] : edge[0];
           const joinLines = keyJoinRows(edge[0], edge[1]);
+          const referenceOnly = !edge[2];
           return '<div class="metadata-explorer-related-row">' +
-            '<span class="metadata-explorer-cardinality-text">' + escapeHtml(cardinalityFrom(edge, name)) + '</span>' +
+            '<span class="metadata-explorer-cardinality-text' +
+            (referenceOnly ? ' metadata-explorer-reference-label' : '') +
+            '"' + (referenceOnly ? ' title="Conceptual reference without a physical foreign key"' : '') + '>' +
+            escapeHtml(cardinalityFrom(edge, name)) + '</span>' +
             '<button type="button" class="metadata-explorer-related-link" data-table="' + escapeHtml(other) + '">' +
             escapeHtml(other) + '</button>' +
             '<span class="metadata-explorer-related-joins">' +
