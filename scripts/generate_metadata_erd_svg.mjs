@@ -101,11 +101,20 @@ const end = start < 0 ? -1 : overview.indexOf("</script>", start);
 const match = start < 0 || end < 0 ? null : [null, overview.slice(start + openTag.length, end).trim()];
 if (!match) throw new Error("Missing canonical metadata model in generated overview. Regenerate metadata references first.");
 const models = JSON.parse(match[1]);
-const layout = fs.readFileSync(path.join(root, "docs/assets/fabricops-metadata-layout.svg"), "utf8");
+// Git on Windows may check out SVG and Markdown as CRLF. Normalise both
+// inputs and comparisons so line endings never look like a metadata change;
+// the emitted artifact is consistently LF on every operating system.
+const normaliseNewlines = value => value.replace(/\r\n?/g, "\n");
+const layout = normaliseNewlines(
+  fs.readFileSync(path.join(root, "docs/assets/fabricops-metadata-layout.svg"), "utf8")
+);
 const target = path.join(root, "docs/assets/fabricops-metadata-approved.svg");
-const output = renderMetadataSvg(layout, models);
+const output = normaliseNewlines(renderMetadataSvg(layout, models));
 if (process.argv.includes("--check")) {
-  if (!fs.existsSync(target) || fs.readFileSync(target,"utf8") !== output) {
+  const committed = fs.existsSync(target)
+    ? normaliseNewlines(fs.readFileSync(target, "utf8"))
+    : null;
+  if (committed !== output) {
     console.error("Generated metadata diagram drift. Run node scripts/generate_metadata_erd_svg.mjs, then commit the SVG.");
     process.exitCode = 1;
   }
