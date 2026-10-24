@@ -2610,7 +2610,7 @@
       ],
       "public_import_path": "fabricops_kit.setup_notebook",
       "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
-      "raises_documentation": "RuntimeError\n    Automatic setup requires a readable Fabric workspace ID.\nValueError\n    Raised for unregistered workspaces, mismatched configuration responses,\n    or when config sections are invalid or required targets cannot be\n    resolved for the selected environment.",
+      "raises_documentation": "RuntimeError\n    Automatic setup requires notebookutils, an available Fabric runtime\n    context, and currentWorkspaceId. Unexpected runtime access or\n    configuration notebook execution failures are reported separately.\nValueError\n    Raised for unregistered workspaces, mismatched configuration responses,\n    or when config sections are invalid or required targets cannot be\n    resolved for the selected environment.",
       "release_history": [
         {
           "status": "live",
@@ -2627,13 +2627,41 @@
       ],
       "returns_documentation": "NotebookSetupContext\n    A ``NotebookSetupContext`` containing the selected environment,\n    resolved Fabric stores, runtime and user identity, startup validation\n    results, generated or detected run ID, and overall readiness status.\n    Returned fields are ``run_id`` (generated or detected run identifier),\n    ``notebook_name`` (resolved notebook name), ``workspace_name``\n    (resolved workspace name when available), ``user_name`` (resolved user\n    identity), ``environment`` (selected environment key), ``paths``\n    (requested target names mapped to resolved Fabric store objects),\n    ``validation_results`` (startup check results), ``runtime_metadata``\n    (best-effort runtime metadata), and ``readiness_status`` (overall\n    readiness outcome).",
       "signature": "def setup_notebook(config: FrameworkConfig | dict[str, Any] | None=None, env: str='Sandbox', required_targets: list[str] | None=None, notebook_name: str | None=None, run_id_prefix: str='run', local_fallback_name: str | None=None, *, config_workspace_id: str | None=None) -> NotebookSetupContext",
-      "source_end_line": 160,
+      "source_end_line": 166,
       "source_path": "src/fabricops_kit/config/setup_notebook.py",
       "source_start_line": 10,
       "summary": "Validate notebook startup configuration and resolve required Fabric targets.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable",
-      "usage_notes": "With no arguments, load workspace configuration before the startup flow.\nBy default, use 00_env_config in the current workspace. Advanced callers\nmay supply config_workspace_id to load a shared deployment in another\nworkspace. No configuration load provisions metadata tables.\n\nStartup flow:\n\n1. Validate the supplied FabricOps framework configuration.\n2. Resolve the selected environment.\n3. Resolve every target listed in ``required_targets``.\n4. Default ``required_targets`` to all stores configured for the selected\n   environment when omitted.\n5. Collect Fabric notebook runtime information when available.\n6. Generate a fallback run ID when the Fabric runtime does not provide one.\n7. Check whether a Spark session is available.\n8. Check whether Fabric runtime context is readable.\n9. Validate that each required target contains the necessary store\n   identity fields.\n10. Validate the notebook name against supported FabricOps notebook naming\n    patterns.\n11. Return an overall readiness status.\n\nCurrent standard templates use ``00_env_config``, ``01_governance``,\nand ``02_pipeline``. Governance and pipeline names can include suffixes\nfor project-specific workflows.\n\nEach resolved target contains the configured Fabric store identity needed\nby downstream functions, such as workspace identity, Fabric item identity,\nstore name, store kind, and derived path information where applicable.\n``setup.paths`` maps each requested target name to its resolved Fabric\nstore configuration. Conceptual example:\n\n``setup = setup_notebook(CONFIG, env=\"Development\", required_targets=[\"Bronze\", \"Silver\", \"Gold\", \"Metadata\"])``\n\n``bronze_store = setup.paths[\"Bronze\"]``\n\n``gold_store = setup.paths[\"Gold\"]``\n\n``readiness_status`` is ``\"ready\"`` when every check is ``pass``,\n``warn``, or ``skipped``, and ``\"not_ready\"`` when any check fails. The\nfunction returns this status to the caller and does not automatically stop\nnotebook execution merely because readiness is ``\"not_ready\"``. Caller-side\nenforcement is optional but recommended for delivery notebooks. Conceptual\npattern:\n\n``setup = setup_notebook(CONFIG, env=\"Development\", required_targets=[\"Bronze\", \"Silver\"])``\n\n``if setup.readiness_status != \"ready\": raise RuntimeError(\"FabricOps notebook setup is not ready.\")``\n\nRuntime metadata is collected on a best-effort basis and includes notebook\nname, workspace name and ID, user name and ID, current run ID, whether the\nexecution is pipeline-driven, whether the execution is interactive, whether\nthe execution is a reference run, and whether Fabric runtime context is\navailable. Local or non-Fabric execution may produce warnings or skipped\nchecks rather than failing automatically.\n\nValidation and smoke checks are local to notebook startup. This helper does\nnot read business data, write business data, persist metadata, provision\nworkspaces, lakehouses, or warehouses, create missing Fabric resources,\nmutate the supplied configuration, or automatically stop notebook execution on failed\nreadiness checks."
+      "usage_notes": "With no arguments, load workspace configuration before the startup flow.\nBy default, use 00_env_config in the current workspace. Advanced callers\nmay supply config_workspace_id to load a shared deployment in another\nworkspace. The caller identity comes from\n``notebookutils.runtime.context[\"currentWorkspaceId\"]`` through the top-level\n``notebookutils`` package; ``environmentWorkspaceId`` and\n``config_workspace_id`` never replace it. No configuration load provisions\nmetadata tables.\n\nStartup flow:\n\n1. Validate the supplied FabricOps framework configuration.\n2. Resolve the selected environment.\n3. Resolve every target listed in ``required_targets``.\n4. Default ``required_targets`` to all stores configured for the selected\n   environment when omitted.\n5. Collect Fabric notebook runtime information when available.\n6. Generate a fallback run ID when the Fabric runtime does not provide one.\n7. Check whether a Spark session is available.\n8. Check whether Fabric runtime context is readable.\n9. Validate that each required target contains the necessary store\n   identity fields.\n10. Validate the notebook name against supported FabricOps notebook naming\n    patterns.\n11. Return an overall readiness status.\n\nCurrent standard templates use ``00_env_config``, ``01_governance``,\nand ``02_pipeline``. Governance and pipeline names can include suffixes\nfor project-specific workflows.\n\nEach resolved target contains the configured Fabric store identity needed\nby downstream functions, such as workspace identity, Fabric item identity,\nstore name, store kind, and derived path information where applicable.\n``setup.paths`` maps each requested target name to its resolved Fabric\nstore configuration. Conceptual example:\n\n``setup = setup_notebook(CONFIG, env=\"Development\", required_targets=[\"Bronze\", \"Silver\", \"Gold\", \"Metadata\"])``\n\n``bronze_store = setup.paths[\"Bronze\"]``\n\n``gold_store = setup.paths[\"Gold\"]``\n\n``readiness_status`` is ``\"ready\"`` when every check is ``pass``,\n``warn``, or ``skipped``, and ``\"not_ready\"`` when any check fails. The\nfunction returns this status to the caller and does not automatically stop\nnotebook execution merely because readiness is ``\"not_ready\"``. Caller-side\nenforcement is optional but recommended for delivery notebooks. Conceptual\npattern:\n\n``setup = setup_notebook(CONFIG, env=\"Development\", required_targets=[\"Bronze\", \"Silver\"])``\n\n``if setup.readiness_status != \"ready\": raise RuntimeError(\"FabricOps notebook setup is not ready.\")``\n\nRuntime metadata is collected on a best-effort basis and includes notebook\nname, workspace name and ID, user name and ID, current run ID, whether the\nexecution is pipeline-driven, whether the execution is interactive, whether\nthe execution is a reference run, and whether Fabric runtime context is\navailable. Local or non-Fabric execution may produce warnings or skipped\nchecks rather than failing automatically.\n\nValidation and smoke checks are local to notebook startup. This helper does\nnot read business data, write business data, persist metadata, provision\nworkspaces, lakehouses, or warehouses, create missing Fabric resources,\nmutate the supplied configuration, or automatically stop notebook execution on failed\nreadiness checks."
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "live_critical_internal",
+      "function_name": "_get_fabric_runtime_context",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.config.shared._get_fabric_runtime_metadata",
+        "fabricops_kit.config.shared.resolve_runtime_context"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "transitive_live_dependency",
+      "qualified_name": "fabricops_kit.config.shared._get_fabric_runtime_context",
+      "source_end_line": 1054,
+      "source_path": "src/fabricops_kit/config/shared.py",
+      "source_start_line": 1040,
+      "supports_live_contract": true,
+      "transitive_live_dependents": [
+        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.config.setup_notebook.setup_notebook",
+        "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+        "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+        "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+        "fabricops_kit.pipeline.profile_table.profile_table",
+        "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+        "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"
+      ],
+      "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "internal",
@@ -2646,9 +2674,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared._get_fabric_runtime_metadata",
-      "source_end_line": 1067,
+      "source_end_line": 1085,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 1032,
+      "source_start_line": 1057,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_notebook.setup_notebook"
@@ -2666,9 +2694,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared._normalize_path_config",
-      "source_end_line": 810,
+      "source_end_line": 805,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 770,
+      "source_start_line": 765,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
@@ -2703,9 +2731,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.config.shared._normalize_widget_config",
-      "source_end_line": 285,
+      "source_end_line": 280,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 273,
+      "source_start_line": 268,
       "usage": "detached"
     },
     {
@@ -2721,9 +2749,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared._validate_audit_timezone",
-      "source_end_line": 211,
+      "source_end_line": 206,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 179,
+      "source_start_line": 174,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
@@ -2751,9 +2779,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.build_column_id",
-      "source_end_line": 897,
+      "source_end_line": 892,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 895,
+      "source_start_line": 890,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -2776,9 +2804,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.build_table_id",
-      "source_end_line": 892,
+      "source_end_line": 887,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 890,
+      "source_start_line": 885,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -2801,9 +2829,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.get_audit_timezone",
-      "source_end_line": 224,
+      "source_end_line": 219,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 219,
+      "source_start_line": 214,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
@@ -2834,9 +2862,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
-      "source_end_line": 263,
+      "source_end_line": 258,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 255,
+      "source_start_line": 250,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
@@ -2926,9 +2954,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.get_store",
-      "source_end_line": 865,
+      "source_end_line": 860,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 813,
+      "source_start_line": 808,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_notebook.setup_notebook",
@@ -2968,9 +2996,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.initialize_notebook",
-      "source_end_line": 1028,
+      "source_end_line": 1036,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 900,
+      "source_start_line": 895,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -3000,9 +3028,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.is_table_not_found_error",
-      "source_end_line": 876,
+      "source_end_line": 871,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 873,
+      "source_start_line": 868,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -3040,9 +3068,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.metadata_timestamp_sort_key",
-      "source_end_line": 252,
+      "source_end_line": 247,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 246,
+      "source_start_line": 241,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -3069,9 +3097,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.normalize_audit_datetime",
-      "source_end_line": 243,
+      "source_end_line": 238,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 227,
+      "source_start_line": 222,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
@@ -3196,7 +3224,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.resolve_runtime_context",
-      "source_end_line": 171,
+      "source_end_line": 166,
       "source_path": "src/fabricops_kit/config/shared.py",
       "source_start_line": 115,
       "supports_live_contract": true,
@@ -3223,9 +3251,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.stable_metadata_id",
-      "source_end_line": 887,
+      "source_end_line": 882,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 879,
+      "source_start_line": 874,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -3252,9 +3280,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.validate_framework_config",
-      "source_end_line": 762,
+      "source_end_line": 757,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 682,
+      "source_start_line": 677,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_notebook.setup_notebook"
@@ -13989,7 +14017,7 @@
       ],
       "metrics": {
         "depth": 7,
-        "scope": 44,
+        "scope": 45,
         "width": 2
       },
       "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -14051,6 +14079,7 @@
         "fabricops_kit.config.metadata_schemas.metadata_table_owner",
         "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
         "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
+        "fabricops_kit.config.shared._get_fabric_runtime_context",
         "fabricops_kit.config.shared._normalize_path_config",
         "fabricops_kit.config.shared._validate_audit_timezone",
         "fabricops_kit.config.shared.build_column_id",
@@ -14229,7 +14258,7 @@
       ],
       "metrics": {
         "depth": 9,
-        "scope": 204,
+        "scope": 205,
         "width": 13
       },
       "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -14294,6 +14323,7 @@
         "fabricops_kit.config.metadata_schemas.metadata_table_owner",
         "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
         "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
+        "fabricops_kit.config.shared._get_fabric_runtime_context",
         "fabricops_kit.config.shared._normalize_path_config",
         "fabricops_kit.config.shared._validate_audit_timezone",
         "fabricops_kit.config.shared.build_column_id",
@@ -14496,7 +14526,7 @@
       ],
       "metrics": {
         "depth": 9,
-        "scope": 227,
+        "scope": 228,
         "width": 17
       },
       "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
@@ -14539,6 +14569,7 @@
         "fabricops_kit.config.metadata_schemas.metadata_table_owner",
         "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
         "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
+        "fabricops_kit.config.shared._get_fabric_runtime_context",
         "fabricops_kit.config.shared._normalize_path_config",
         "fabricops_kit.config.shared._validate_audit_timezone",
         "fabricops_kit.config.shared.build_table_id",
@@ -14618,7 +14649,7 @@
       ],
       "metrics": {
         "depth": 7,
-        "scope": 91,
+        "scope": 92,
         "width": 12
       },
       "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
@@ -14660,6 +14691,7 @@
         "fabricops_kit.config.metadata_schemas.metadata_table_owner",
         "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
         "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
+        "fabricops_kit.config.shared._get_fabric_runtime_context",
         "fabricops_kit.config.shared._normalize_path_config",
         "fabricops_kit.config.shared._validate_audit_timezone",
         "fabricops_kit.config.shared.build_column_id",
@@ -14726,7 +14758,7 @@
       ],
       "metrics": {
         "depth": 8,
-        "scope": 77,
+        "scope": 78,
         "width": 1
       },
       "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
@@ -15013,7 +15045,7 @@
       ],
       "metrics": {
         "depth": 5,
-        "scope": 36,
+        "scope": 37,
         "width": 14
       },
       "qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
@@ -15043,7 +15075,7 @@
       ],
       "metrics": {
         "depth": 5,
-        "scope": 37,
+        "scope": 38,
         "width": 10
       },
       "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access"
@@ -15059,7 +15091,7 @@
       ],
       "metrics": {
         "depth": 5,
-        "scope": 37,
+        "scope": 38,
         "width": 15
       },
       "qualified_name": "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
@@ -15109,6 +15141,7 @@
         "fabricops_kit.config.setup_metadata_tables._schema_fields_by_name",
         "fabricops_kit.config.setup_metadata_tables._table_column_names",
         "fabricops_kit.config.setup_metadata_tables._validate_existing_metadata_schema",
+        "fabricops_kit.config.shared._get_fabric_runtime_context",
         "fabricops_kit.config.shared._normalize_path_config",
         "fabricops_kit.config.shared._validate_audit_timezone",
         "fabricops_kit.config.shared.get_audit_timezone",
@@ -15123,7 +15156,7 @@
       ],
       "metrics": {
         "depth": 5,
-        "scope": 33,
+        "scope": 34,
         "width": 16
       },
       "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
@@ -15148,6 +15181,7 @@
         "src/fabricops_kit/io/shared.py"
       ],
       "live_critical_dependencies": [
+        "fabricops_kit.config.shared._get_fabric_runtime_context",
         "fabricops_kit.config.shared._get_fabric_runtime_metadata",
         "fabricops_kit.config.shared._normalize_path_config",
         "fabricops_kit.config.shared._validate_audit_timezone",
@@ -15160,7 +15194,7 @@
       ],
       "metrics": {
         "depth": 4,
-        "scope": 9,
+        "scope": 10,
         "width": 1
       },
       "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook"
@@ -15179,7 +15213,7 @@
       ],
       "metrics": {
         "depth": 9,
-        "scope": 72,
+        "scope": 73,
         "width": 1
       },
       "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
@@ -15211,7 +15245,7 @@
       ],
       "metrics": {
         "depth": 7,
-        "scope": 63,
+        "scope": 64,
         "width": 15
       },
       "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
@@ -15246,7 +15280,7 @@
       ],
       "metrics": {
         "depth": 6,
-        "scope": 104,
+        "scope": 105,
         "width": 41
       },
       "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
@@ -15287,6 +15321,7 @@
         "fabricops_kit.config.metadata_schemas.metadata_table_owner",
         "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
         "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
+        "fabricops_kit.config.shared._get_fabric_runtime_context",
         "fabricops_kit.config.shared._normalize_path_config",
         "fabricops_kit.config.shared._validate_audit_timezone",
         "fabricops_kit.config.shared.get_audit_timezone",
@@ -15339,7 +15374,7 @@
       ],
       "metrics": {
         "depth": 7,
-        "scope": 63,
+        "scope": 64,
         "width": 23
       },
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
@@ -15380,6 +15415,7 @@
         "fabricops_kit.config.metadata_schemas.metadata_table_owner",
         "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
         "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
+        "fabricops_kit.config.shared._get_fabric_runtime_context",
         "fabricops_kit.config.shared._normalize_path_config",
         "fabricops_kit.config.shared._validate_audit_timezone",
         "fabricops_kit.config.shared.get_audit_timezone",
@@ -15418,7 +15454,7 @@
       ],
       "metrics": {
         "depth": 6,
-        "scope": 49,
+        "scope": 50,
         "width": 17
       },
       "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
@@ -16553,6 +16589,10 @@
       "caller_qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook"
     },
     {
+      "callee_qualified_name": "fabricops_kit.config.shared._get_fabric_runtime_context",
+      "caller_qualified_name": "fabricops_kit.config.shared._get_fabric_runtime_metadata"
+    },
+    {
       "callee_qualified_name": "fabricops_kit.config.shared.stable_metadata_id",
       "caller_qualified_name": "fabricops_kit.config.shared.build_column_id"
     },
@@ -16603,6 +16643,10 @@
     {
       "callee_qualified_name": "fabricops_kit.config.shared.get_default_fabric_context",
       "caller_qualified_name": "fabricops_kit.config.shared.resolve_fabric_context"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.shared._get_fabric_runtime_context",
+      "caller_qualified_name": "fabricops_kit.config.shared.resolve_runtime_context"
     },
     {
       "callee_qualified_name": "fabricops_kit.config.shared.get_default_fabric_context",

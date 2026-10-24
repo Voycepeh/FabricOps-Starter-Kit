@@ -82,7 +82,9 @@ def setup_notebook(
     Raises
     ------
     RuntimeError
-        Automatic setup requires a readable Fabric workspace ID.
+        Automatic setup requires notebookutils, an available Fabric runtime
+        context, and currentWorkspaceId. Unexpected runtime access or
+        configuration notebook execution failures are reported separately.
     ValueError
         Raised for unregistered workspaces, mismatched configuration responses,
         or when config sections are invalid or required targets cannot be
@@ -93,7 +95,11 @@ def setup_notebook(
     With no arguments, load workspace configuration before the startup flow.
     By default, use 00_env_config in the current workspace. Advanced callers
     may supply config_workspace_id to load a shared deployment in another
-    workspace. No configuration load provisions metadata tables.
+    workspace. The caller identity comes from
+    ``notebookutils.runtime.context["currentWorkspaceId"]`` through the top-level
+    ``notebookutils`` package; ``environmentWorkspaceId`` and
+    ``config_workspace_id`` never replace it. No configuration load provisions
+    metadata tables.
 
     Startup flow:
 
