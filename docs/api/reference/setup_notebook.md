@@ -92,7 +92,9 @@ A ready context means required targets resolved and startup checks did not fail.
 ## Raises / Errors
 
 RuntimeError
-    Automatic setup requires a readable Fabric workspace ID.
+    Automatic setup requires notebookutils, an available Fabric runtime
+    context, and currentWorkspaceId. Unexpected runtime access or
+    configuration notebook execution failures are reported separately.
 ValueError
     Raised for unregistered workspaces, mismatched configuration responses,
     or when config sections are invalid or required targets cannot be
@@ -114,7 +116,11 @@ ValueError
 With no arguments, load workspace configuration before the startup flow.
 By default, use 00_env_config in the current workspace. Advanced callers
 may supply config_workspace_id to load a shared deployment in another
-workspace. No configuration load provisions metadata tables.
+workspace. The caller identity comes from
+``notebookutils.runtime.context["currentWorkspaceId"]`` through the top-level
+``notebookutils`` package; ``environmentWorkspaceId`` and
+``config_workspace_id`` never replace it. No configuration load provisions
+metadata tables.
 
 Startup flow:
 
@@ -207,7 +213,7 @@ initializes the shared context when configuration is loaded automatically.
 
 `fabricops_kit/config/setup_notebook.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L10-L160">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L10-L166">View on GitHub</a>
 </div>
 
 
@@ -223,7 +229,7 @@ initializes the shared context when configuration is loaded automatically.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 9 |
+| Live-critical dependencies | 10 |
 
 ### Release history
 
@@ -236,6 +242,7 @@ initializes the shared context when configuration is loaded automatically.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>

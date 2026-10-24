@@ -140,7 +140,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 197 |
+| Live-critical dependencies | 198 |
 
 ### Release history
 
@@ -174,6 +174,7 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.build_column_id</code></li>

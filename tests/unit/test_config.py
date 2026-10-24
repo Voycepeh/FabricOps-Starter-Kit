@@ -82,8 +82,10 @@ def test_env_config_uses_physical_item_keys_without_duplicate_names():
     notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
     source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
 
-    for key in ("Bronze", "Silver", "Gold", "Metadata"):
-        assert f'"{key}": FabricStore(' in source
+    for key in ("Bronze", "Silver", "Gold"):
+        assert f'"{key}": {{' in source
+    assert 'ENV_PATHS[env][alias] = FabricStore(' in source
+    assert 'ENV_PATHS[env]["Metadata"] = FabricStore(' in source
     for removed_alias in ("source", "unified", "product"):
         assert f'"{removed_alias}": FabricStore(' not in source
     assert "name=" not in source
