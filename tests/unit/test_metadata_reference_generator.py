@@ -174,7 +174,7 @@ def test_metadata_explorer_payload_matches_canonical_model(tmp_path, monkeypatch
     generator.generate_metadata_reference_pages()
     text = landing.read_text(encoding="utf-8")
     match = re.search(
-        r'<script type="application/json" class="metadata-explorer-model">\\s*(.*?)\\s*</script>',
+        r'<script type="application/json" class="metadata-explorer-model">\s*(.*?)\s*</script>',
         text,
         re.DOTALL,
     )
