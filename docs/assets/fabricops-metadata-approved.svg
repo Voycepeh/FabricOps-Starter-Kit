@@ -6,77 +6,82 @@
 <text x="36" y="346" font-size="23" font-family="Arial, sans-serif" font-weight="700" fill="#1168B6">Engineering Schema</text>
 <g id="metadata-er-relationships" aria-label="Metadata table relationships">
 <g class="metadata-er-relationship" data-from="DATA_STEWARD" data-to="DATA_AGREEMENT" data-cardinality="1:N" data-kind="physical">
-<title>One steward may participate in many agreements (1:N; physical relationship)</title>
+<title>One steward may participate in many agreements (1:N; physical keyed relationship)</title>
 <path d="M335 170H425" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="349" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="360" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="389" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="400" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_AGREEMENT" data-to="ACTIVATION_STATE" data-cardinality="" data-kind="logical">
 <title>Agreement to Activated Pipeline releases stored in Activation State (conceptual reference; no declared physical FK or table-row cardinality)</title>
 <path d="M725 170H815" fill="none" stroke="#7144AE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+
 </g>
 <g class="metadata-er-relationship" data-from="ACTIVATION_STATE" data-to="DATA_CONTRACT" data-cardinality="" data-kind="logical">
 <title>Activated releases reference frozen Data Contract versions (conceptual reference; no declared physical FK or table-row cardinality)</title>
 <path d="M1115 170H1205" fill="none" stroke="#7144AE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="ACTIVATION_STATE" data-cardinality="" data-kind="logical">
 <title>Registered pipeline to approved releases stored inside Activation State (conceptual reference; no declared physical FK or table-row cardinality)</title>
 <path d="M725 725H765V215H815" fill="none" stroke="#7144AE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+
 </g>
 <g class="metadata-er-relationship" data-from="ACTIVATION_STATE" data-to="PIPELINE_RUN" data-cardinality="" data-kind="logical">
 <title>Approved Activated Pipeline releases authorize Live runs (conceptual reference; no declared physical FK or table-row cardinality)</title>
 <path d="M900 253V356H575V423" fill="none" stroke="#7144AE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_CONTRACT" data-cardinality="1:N" data-kind="physical">
-<title>Catalogue table to contract versions (1:N; physical relationship)</title>
+<title>Catalogue table to contract versions (1:N; physical keyed relationship)</title>
 <path d="M1355 423V253" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="1344" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1355" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="1344" y="267" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1355" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_RUN" data-to="GUARDRAIL_RESULTS" data-cardinality="1:N" data-kind="physical">
-<title>Pipeline run to recorded guardrail outcomes (1:N; physical relationship)</title>
+<title>Pipeline run to recorded guardrail outcomes (1:N; physical keyed relationship)</title>
 <path d="M425 515H335" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="389" y="504" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="400" y="519.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="349" y="504" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="360" y="519.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_RUN" data-to="SOURCE_OBSERVATION" data-cardinality="1:N" data-kind="physical">
-<title>Pipeline run to source and publication observations (1:N; physical relationship)</title>
+<title>Pipeline run to source and publication observations (1:N; physical keyed relationship)</title>
 <path d="M725 504H815" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="739" y="493" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="750" y="508.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="779" y="493" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="790" y="508.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="SOURCE_OBSERVATION" data-cardinality="1:N" data-kind="physical">
-<title>Catalogue table to source and target observations (1:N; physical relationship)</title>
+<title>Catalogue table to source and target observations (1:N; physical keyed relationship)</title>
 <path d="M1205 545H1115" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="1169" y="534" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1180" y="549.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="1129" y="534" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1140" y="549.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="PIPELINE_RUN" data-cardinality="1:N" data-kind="physical">
-<title>Registered pipeline to its execution history (1:N; physical relationship)</title>
+<title>Registered pipeline to its execution history (1:N; physical keyed relationship)</title>
 <path d="M575 675V598" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="564" y="639" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="575" y="654.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="564" y="612" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="575" y="627.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_PROFILED" data-cardinality="1:N" data-kind="physical">
-<title>Catalogue table to column statistics (1:N; physical relationship)</title>
+<title>Catalogue table to column statistics (1:N; physical keyed relationship)</title>
 <path d="M1250 598V902H575V995" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="1239" y="612" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1250" y="627.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="564" y="959" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="575" y="974.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_PROFILED_FREQUENCY" data-cardinality="" data-kind="logical">
 <title>Catalogue column to frequency observations (conceptual reference; no declared physical FK or table-row cardinality)</title>
 <path d="M1290 598V877H185V995" fill="none" stroke="#7144AE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_LINEAGE" data-cardinality="1:N" data-kind="physical">
-<title>Catalogue table to source and target lineage (1:N; physical relationship)</title>
+<title>Catalogue table to source and target lineage (1:N; physical keyed relationship)</title>
 <path d="M1355 598V927H965V995" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="1344" y="612" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1355" y="627.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="954" y="959" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="965" y="974.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_ACCESS" data-cardinality="1:N" data-kind="physical">
-<title>Catalogue table to observed permissions (1:N; physical relationship)</title>
+<title>Catalogue table to observed permissions (1:N; physical keyed relationship)</title>
 <path d="M1430 598V963H1355V995" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="1419" y="612" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1430" y="627.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="1344" y="959" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1355" y="974.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_PROFILED" data-to="DATA_PROFILED_FREQUENCY" data-cardinality="1:N" data-kind="physical">
-<title>Optional statistical profile reference on frequency rows (1:N; physical relationship)</title>
+<title>Optional statistical profile reference on frequency rows (1:N; physical keyed relationship)</title>
 <path d="M425 1081H335" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="389" y="1070" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="400" y="1085.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="349" y="1070" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="360" y="1085.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CONTRACT" data-to="GUARDRAIL_RESULTS" data-cardinality="1:N" data-kind="physical">
-<title>Contract versions to their Guardrail results (1:N; physical relationship)</title>
+<title>Contract versions to their Guardrail results (1:N; physical keyed relationship)</title>
 <path d="M1205 218H1165V388H185V423" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="1169" y="207" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1180" y="222.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="174" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="185" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
