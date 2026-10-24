@@ -44,13 +44,13 @@ def configuration_runtime(monkeypatch, request):
     monkeypatch.setattr(importlib.import_module('fabricops_kit.io.shared'), 'get_spark_session', lambda: spark)
     cells = json.loads(Path('templates/notebooks/00_env_config.ipynb').read_text())['cells']
 
-    def run(name, timeout, arguments, *, workspaceId):
+    def run(name, timeout, arguments, *, workspace):
         assert name == '00_env_config'
-        assert workspaceId in {'central-ws', 'dev-ws', 'governance-ws'}
+        assert workspace in {'central-ws', 'dev-ws', 'governance-ws'}
         namespace = {'spark': spark, **arguments}
         # Reference execution is hosted centrally, while the passed caller ID differs.
         original_workspace = runtime.context.get('currentWorkspaceId')
-        runtime.context['currentWorkspaceId'] = workspaceId
+        runtime.context['currentWorkspaceId'] = workspace
         try:
             for cell in cells:
                 if cell['cell_type'] != 'code' or 'parameters' in cell['metadata'].get('tags', []):
@@ -66,7 +66,7 @@ def configuration_runtime(monkeypatch, request):
                     source = source.replace(placeholder, value)
                 # This fixture exercises configuration loading, not metadata deployment.
                 source = source.replace('INITIALIZE_METADATA = True', 'INITIALIZE_METADATA = False')
-                if workspaceId == 'governance-ws':
+                if workspace == 'governance-ws':
                     source = source.replace('"dev-ws"', '"governance-ws"')
                 exec(compile(source, '<00_env_config>', 'exec'), namespace)
         except NotebookExit as exc:
@@ -93,7 +93,7 @@ def test_engineering_loads_central_config_for_caller_workspace(configuration_run
     config, env, context = resolve_fabric_context()
     assert env == environment and config.path_config.paths[env]['Gold'].kind == 'warehouse'
     assert context['runtime_metadata']['workspace_id'] == workspace
-    fabric.notebook.run.assert_called_once_with('00_env_config', 120, {'caller_workspace_id': workspace}, workspaceId='central-ws')
+    fabric.notebook.run.assert_called_once_with('00_env_config', 120, {'caller_workspace_id': workspace}, workspace='central-ws')
     fabric.spark.conf.set.assert_called_once_with('spark.sql.session.timeZone', config.audit_timezone)
 
 
@@ -101,7 +101,8 @@ def test_governance_loads_its_separate_local_deployment(configuration_runtime):
     fabric = configuration_runtime
     fabric.runtime.context.update(currentWorkspaceId='governance-ws', currentNotebookName='01_governance')
     assert setup_notebook().environment == 'dev'
-    assert fabric.notebook.run.call_args.kwargs['workspaceId'] == 'governance-ws'
+    fabric.notebook.run.assert_called_once_with(
+        '00_env_config', 120, {'caller_workspace_id': 'governance-ws'}, workspace='governance-ws')
 
 
 def test_unknown_workspace_is_rejected_by_central_notebook(configuration_runtime, monkeypatch):
@@ -153,7 +154,7 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
         assert session.plan.pipeline_id == '02_pipeline_orders'
         assert session.plan.runtime_context['config'].path_config.paths['dev']['Metadata'].workspace_id == 'metadata-ws'
         configuration_runtime.notebook.run.assert_called_once_with(
-            '00_env_config', 120, {'caller_workspace_id': 'dev-ws'}, workspaceId=config_workspace or 'dev-ws')
+            '00_env_config', 120, {'caller_workspace_id': 'dev-ws'}, workspace=config_workspace or 'dev-ws')
         assert session.plan.runtime_context['runtime_metadata']['workspace_id'] == 'dev-ws'
     finally:
         if session is not None:
@@ -184,7 +185,8 @@ def test_setup_replaces_stale_notebook_namespace_context(configuration_runtime, 
 def test_default_loading_uses_current_workspace(configuration_runtime):
     result = setup_notebook()
     assert result.environment == 'dev'
-    assert configuration_runtime.notebook.run.call_args.kwargs['workspaceId'] == 'dev-ws'
+    configuration_runtime.notebook.run.assert_called_once_with(
+        '00_env_config', 120, {'caller_workspace_id': 'dev-ws'}, workspace='dev-ws')
 
 
 
@@ -271,6 +273,22 @@ def test_config_notebook_execution_failure(configuration_runtime, config_workspa
     with pytest.raises(RuntimeError, match=location + ' 00_env_config execution failed') as error:
         setup_notebook(config_workspace_id=config_workspace)
     assert 'private detail' not in str(error.value)
+    assert 'access' not in str(error.value)
+
+
+@pytest.mark.parametrize('config_workspace', [None, 'central-ws'])
+@pytest.mark.parametrize('failure', [
+    TypeError("run() got an unexpected keyword argument 'workspaceId'. Did you mean 'workspace'?"),
+    AttributeError("notebook API has no attribute 'run'"),
+    ValueError('Unknown workspace ID'),
+])
+def test_config_notebook_api_errors_propagate(configuration_runtime, config_workspace, failure):
+    configuration_runtime.notebook.run.side_effect = failure
+    with pytest.raises(type(failure)) as error:
+        setup_notebook(config_workspace_id=config_workspace)
+    assert error.value is failure
+    configuration_runtime.notebook.run.assert_called_once_with(
+        '00_env_config', 120, {'caller_workspace_id': 'dev-ws'}, workspace=config_workspace or 'dev-ws')
 
 
 def test_invalid_config_notebook_json(configuration_runtime):

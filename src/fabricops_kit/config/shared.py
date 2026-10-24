@@ -910,14 +910,14 @@ def initialize_notebook(
         config_workspace_id = config_workspace_id or workspace_id
         try:
             response = notebookutils.notebook.run(
-                "00_env_config", 120, {"caller_workspace_id": workspace_id}, workspaceId=config_workspace_id,
+                "00_env_config", 120, {"caller_workspace_id": workspace_id}, workspace=config_workspace_id,
             )
-        except ValueError:
-            # Preserve explicit registration/validation errors from the config notebook.
+        except (TypeError, AttributeError, ValueError):
+            # Preserve Python API errors and explicit config registration/validation errors.
             raise
         except Exception:
             location = "cross-workspace" if config_workspace_id != workspace_id else "same-workspace"
-            raise RuntimeError(f"{location} 00_env_config execution failed; check notebook access and configuration.") from None
+            raise RuntimeError(f"{location} 00_env_config execution failed.") from None
         try:
             payload = json.loads(response)
         except (TypeError, ValueError):
