@@ -24,7 +24,9 @@ def row(*, target="", count=2, at=NOW, status="observed"):
         "max_change_value": "2",
         "content_fingerprint": f"fingerprint-{count}",
         "is_present": True,
-        "observation_status": status,
+        "record_id": f"{target}-{status}-{count}",
+        "record_type": "drift_baseline" if status == "committed" else "source_observation",
+        "status": "committed" if status == "committed" else "observed",
         "_committed_at": at,
         "_activity_id": "run",
     }
@@ -60,8 +62,8 @@ def configure(monkeypatch, history):
 
 def test_target_baselines_are_independent_under_one_source_rule(monkeypatch):
     history = [
-        row(target="target-append", count=1, at=NOW - timedelta(hours=1), status="drift_committed"),
-        row(target="target-overwrite", count=1, at=NOW - timedelta(hours=1), status="drift_committed"),
+        row(target="target-append", count=1, at=NOW - timedelta(hours=1), status="committed"),
+        row(target="target-overwrite", count=1, at=NOW - timedelta(hours=1), status="committed"),
     ]
     configure(monkeypatch, history)
     append_result = shared.check_source_drift_for_target(
@@ -82,7 +84,7 @@ def test_source_overwrite_rule_allows_drift_even_for_append_named_target(monkeyp
     """The source strategy, not any target strategy, controls compatibility."""
     configure(
         monkeypatch,
-        [row(target="target-append", count=1, at=NOW - timedelta(hours=1), status="drift_committed")],
+        [row(target="target-append", count=1, at=NOW - timedelta(hours=1), status="committed")],
     )
     result = shared.check_source_drift_for_target(
         source_table_id="source",
@@ -116,3 +118,22 @@ def test_same_read_snapshot_is_reusable_for_two_targets(monkeypatch):
         environment_name="dev", activity_id="run", table_id="source"
     ) is first
     assert {key[-1] for key in shared._PENDING_SOURCE_DRIFT_OBSERVATIONS} == {"target-a", "target-b"}
+
+
+def test_blocked_drift_discards_pending_acceptance(monkeypatch):
+    configure(monkeypatch, [row(target="target-a", count=1, at=NOW - timedelta(hours=1), status="committed")])
+    key = ("dev", "run", "source", "target-a")
+    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS[key] = [row()]
+    result = shared.check_source_drift_for_target(source_table_id="source", target_table_id="target-a",
+                                                 source_processing={"load_strategy": "append"})
+    assert result["can_continue"] is False
+    assert key not in shared._PENDING_SOURCE_DRIFT_OBSERVATIONS
+
+
+def test_observed_and_other_environment_baselines_are_not_accepted(monkeypatch):
+    configure(monkeypatch, [row(target="target-a", count=1),
+                           {**row(target="target-a", count=1, status="committed"), "environment_name": "prod"}])
+    result = shared.check_source_drift_for_target(source_table_id="source", target_table_id="target-a",
+                                                 source_processing={"load_strategy": "append"})
+    assert result["first_observation"] is True
+    assert result["can_continue"] is True

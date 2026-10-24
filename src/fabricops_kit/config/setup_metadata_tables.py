@@ -49,6 +49,16 @@ def _validate_existing_metadata_schema(
         existing = {name: None for name in getattr(existing_schema, "fieldNames", lambda: [])()}
     if table_name == "METADATA_DATA_PROFILED" and "frequency_json" in existing:
         raise ValueError("METADATA_DATA_PROFILED has unexpected legacy column: frequency_json.")
+    if table_name == "METADATA_SOURCE_OBSERVATION" and (
+        "observation_status" in existing or "publication_payload_json" in existing
+        or set(expected) - set(existing)
+    ):
+        raise ValueError(
+            "Unsupported legacy METADATA_SOURCE_OBSERVATION schema. Stop writers, archive and reconcile "
+            "publication progress, then explicitly migrate or reset this Preview table; "
+            "see docs/maintainer/metadata-v2-target-model.md#processing-state-upgrade. "
+            "Automatic additive evolution is unsafe."
+        )
     missing = [name for name in expected if name not in existing]
     mismatches: list[str] = []
     for name, expected_field in expected.items():

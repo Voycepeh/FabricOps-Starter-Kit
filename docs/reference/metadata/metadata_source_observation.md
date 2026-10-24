@@ -1,6 +1,6 @@
 # METADATA_SOURCE_OBSERVATION
 
-Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. run_id joins METADATA_PIPELINE_RUN.run_id for planned executions; _activity_id retains the actual Fabric activity shared by different attempts. Legacy and standalone observations may have no run_id. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed records accepted incremental progress, and drift_committed records the Source Drift baseline. Warehouse publication_observed and publication_committed rows store target-only retry receipts with empty source identity and no watermark; they also cover Full Read and source-free writes.
+Processing State for source observations, incremental checkpoints, Source Drift baselines and publication receipts, distinguished by record_type. Only committed checkpoints and baselines are accepted progress. Each target publication has one typed receipt; source records link through publication_id. See the Processing State upgrade and recovery protocol in the metadata v2 maintainer guide.
 
 ## Writer functions
 
@@ -18,9 +18,9 @@ Store source evidence observed by one logical pipeline for one governed target, 
 
 **Default physical schema:** `engineering`
 
-**Grain:** One observed or committed partition-state row within one logical notebook, source table, target table, and observation; target-only Warehouse publication receipt rows have an empty source identity.
+**Grain:** One record_id per typed source observation/partition or source-to-target publication member; one publication_receipt per exact target publication. Staged members and their receipt become committed in one Delta merge.
 
-**Primary key:** `observation_id` + `partition_value` + `observation_status`
+**Primary key:** `record_id`
 
 **Relationships:**
 
@@ -30,33 +30,49 @@ via `run_id`
 `METADATA_DATA_CATALOGUE` **(N → 1)**
 via `source_table_id` + `target_table_id`
 
+`METADATA_SOURCE_OBSERVATION` **(N → 1)**
+via `publication_id`
+
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 23 |
-| Business columns | 15 |
+| Total columns | 36 |
+| Business columns | 28 |
 | Audit columns | 8 |
 
 ## Implemented schema
 
 | Column | Data type | Description |
 | --- | --- | --- |
-| `observation_id` | `string` | Identifier stored for `observation_id`. |
-| `run_id` | `string` | Logical pipeline attempt ID shared with METADATA_PIPELINE_RUN.run_id. The real Fabric activity remains in _activity_id. Null or empty for legacy and standalone observations; recovered records retain the original run identity. |
+| `record_id` | `string` | Stable SHA-256 primary key for one typed record; acceptance updates the same staged record. |
+| `record_type` | `string` | source_observation, incremental_checkpoint, drift_baseline, or publication_receipt. |
+| `status` | `string` | observed for captured source observations; staged before target publication; committed only after exact physical publication verification. |
+| `observation_id` | `string` | Identifier grouping the partitions of one captured source snapshot. |
+| `run_id` | `string` | Originating logical pipeline attempt, shared with METADATA_PIPELINE_RUN.run_id; null for standalone execution. Recovery retains the original run. |
+| `pipeline_id` | `string` | Stable pipeline identity when execution uses a pipeline plan. |
 | `source_table_id` | `string` | Identifier stored for `source_table_id`. |
-| `source_table_name` | `string` | Source table name captured from the Catalogue when this observation was written; later renames do not change it. |
+| `source_table_name` | `string` | Physical source table name captured with the observation; null on publication receipts. |
 | `target_table_id` | `string` | Identifier stored for `target_table_id`. |
-| `target_table_name` | `string` | Target table name captured from the Catalogue when this observation was written; later renames do not change it. |
+| `target_table_name` | `string` | Physical target table name captured at publication; null on unbound observations. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
-| `partition_value` | `string` | String representation of the observed partition value. |
-| `row_count` | `long` | Number of rows observed in the partition, or zero for a removal tombstone. |
-| `min_change_value` | `string` | Earliest observed change-column value, or null for a removal tombstone. |
-| `max_change_value` | `string` | Latest observed change-column value, or null for a removal tombstone. |
-| `content_fingerprint` | `string` | Metadata Source Observation field `content_fingerprint`. |
-| `is_present` | `boolean` | Whether the partition exists in this observation; false identifies a removal tombstone. |
-| `observation_status` | `string` | Metadata Source Observation field `observation_status`. |
-| `publication_payload_json` | `string` | Exact prepared-batch identity, originating pipeline run, real Fabric activity and publication timestamp staged before the physical write. Recovery verifies the Delta commit and target marker for Lakehouse writes, or the exact staged activity/timestamp pair for Warehouse writes. Target-only Warehouse receipt rows never advance source watermarks; legacy activity-only rows are not automatically promoted. |
+| `observed_at` | `timestamp` | Original source capture timestamp; distinct from acknowledgement time. |
+| `accepted_at` | `timestamp` | Timestamp of successful metadata acknowledgement, shared by the receipt and all members accepted in one merge; null before acceptance. |
+| `partition_column` | `string` | Column defining observed source partitions, or the incremental watermark column. |
+| `change_column` | `string` | Source column supplying minimum and maximum change values. |
+| `watermark_type` | `string` | Source scalar type for lossless change-value bounds, including distinct timestamp and timestamp_ntz semantics. Numeric and temporal values can be cast explicitly for queries. |
+| `partition_value` | `string` | Canonical text identity for one source partition; null on publication receipts. |
+| `row_count` | `long` | Observed source-partition row count, or zero for an empty source/removal tombstone. |
+| `min_change_value` | `string` | Lossless minimum change value encoded according to watermark_type; null for empty observations/removals. |
+| `max_change_value` | `string` | Lossless maximum change value encoded according to watermark_type; used as progress only on committed incremental_checkpoint records. |
+| `content_fingerprint` | `string` | Source partition content fingerprint for Source Drift comparison; independent of the publication batch fingerprint. |
+| `is_present` | `boolean` | Whether the observed source partition exists; false for empty observations/removal tombstones. |
+| `publication_id` | `string` | Reference to the exact target-specific publication_receipt record_id; a receipt references itself. |
+| `publication_batch_id` | `string` | Prepared business content, schema, source membership and processing fingerprint; stored only on the receipt. |
+| `publication_activity_id` | `string` | Fabric activity whose atomic target write stamped the batch; recovery does not substitute the retry activity. |
+| `publication_at` | `timestamp` | UTC timestamp stamped atomically with target rows; paired with publication_activity_id for verification. |
+| `publication_input_rows` | `long` | Prepared batch row count. Warehouse append/overwrite recovery verifies the complete marker count. |
+| `publication_strategy` | `string` | Physical append, overwrite, scd1 or scd2 strategy of the receipt. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

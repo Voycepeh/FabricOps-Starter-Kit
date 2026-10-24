@@ -1,6 +1,6 @@
 # Metadata v2: target model and migration boundaries
 
-**Status:** proposed architecture; no schema or runtime change in this document.
+**Status:** Processing State implemented; Pipeline Run and Activation State directions remain proposals.
 
 ## Goal and constraints
 
@@ -31,7 +31,7 @@ The published `docs/releases/manifests/0.2.5.yml` classifies six tables as Live 
 | `METADATA_PIPELINE_REGISTRY` | engineering | Not listed | Keep stable pipeline/environment notebook binding and its serialization control |
 | `METADATA_PIPELINE_RUN` | engineering | Not listed | Evaluate typed `run` and `operation` rows instead of opaque operation summaries |
 | `METADATA_GUARDRAIL_RESULTS` | engineering | Preview | Keep per-rule aggregate result grain; normalize only useful stable metrics |
-| `METADATA_SOURCE_OBSERVATION` | engineering | Preview | Consider `METADATA_PROCESSING_STATE` with typed observation/checkpoint/baseline/publication records |
+| `METADATA_SOURCE_OBSERVATION` | engineering | Preview | Retain this table with typed observation/checkpoint/baseline/publication records |
 
 ## Relational design rules
 
@@ -47,9 +47,47 @@ The published `docs/releases/manifests/0.2.5.yml` classifies six tables as Live 
 
 ### Processing state (engineering)
 
-Investigate renaming Preview `METADATA_SOURCE_OBSERVATION` to `METADATA_PROCESSING_STATE`. Proposed record types are `source_observation`, `incremental_checkpoint`, `drift_baseline`, and `publication_receipt`. Preserve source/target/environment/partition identities, `run_id`, source fingerprint, observed and committed status, and publication recovery identifiers as typed fields where stable.
+`engineering.METADATA_SOURCE_OBSERVATION` remains the canonical Processing State table. Its four record types separate captured source state from accepted progress and physical publication evidence. The six Live schemas and the existing governance/engineering ownership routing are unchanged.
 
-**Required invariants:** observation is not commitment; no failed write advances a watermark; successful writes with lost acknowledgement can be recovered; retry does not duplicate published data; a target's accepted checkpoint has one authoritative source. Validate Warehouse publication receipts separately from Lakehouse incremental commits. Choose final keys and columns only after tracing actual writers and readers.
+| Record type | Grain and lifecycle |
+| --- | --- |
+| `source_observation` | One captured source snapshot partition (or explicit empty-source row), `status=observed`; no target or publication link and never read as accepted progress |
+| `incremental_checkpoint` | One source/target/environment observation partition bound to a publication, `staged` → `committed` after verification |
+| `drift_baseline` | One source/target/environment observation partition or removal tombstone, `staged` → `committed` after verification and a continuing Guardrail decision |
+| `publication_receipt` | One exact target/environment publication attempt, including source-free writes, `staged` → `committed` with all source members |
+
+**Physical fields:** `record_id`, `record_type`, `status` and `environment_name` are required strings. Nullable strings are `observation_id`, `run_id`, `pipeline_id`, `source_table_id`, `source_table_name`, `target_table_id`, `target_table_name`, `partition_column`, `change_column`, `watermark_type`, `partition_value`, `min_change_value`, `max_change_value`, `content_fingerprint`, `publication_id`, `publication_batch_id`, `publication_activity_id`, and `publication_strategy`. `observed_at`, `accepted_at`, and `publication_at` are nullable timestamps; `row_count` and `publication_input_rows` are nullable longs; `is_present` is a nullable boolean. The eight existing required audit fields remain unchanged. The generated [physical reference](../reference/metadata/metadata_source_observation.md) comes from `metadata_schemas.py`.
+
+Bounds use lossless scalar text plus an explicit source type rather than a floating-point conversion that would lose decimal or integer precision. `timestamp` bounds use UTC instants; `timestamp_ntz` retains wall time. Observation column names and watermark type now survive persistence. Publication identities, timestamps and row counts are ordinary columns, with no operational JSON payload. Source content fingerprints remain partition evidence; prepared schema/processing/content are bound into `publication_batch_id`.
+
+`record_id` is a SHA-256 key over explicit, JSON-framed identity components. Captured observations key environment/source/snapshot/partition; accepted members key publication/type/source/snapshot/partition. The publication ID binds environment, target, prepared batch, physical activity and timestamp, permitting repeated SCD content at different publication boundaries. Status is outside the key: acceptance updates the existing staged records and a repeated stage cannot regress committed records. `observation_id` groups source snapshot partitions; `run_id` retains logical-attempt identity while `_activity_id` retains real Fabric activity.
+
+**Reader/writer inventory:** `capture_source_observation` captures and persists observations. `resolve_incremental_source_scope` reads only committed checkpoints; `check_source_drift_for_target` reads only committed baselines and discards blocked candidates. `PublicationBatch` resolves linked receipts and verifies the exact physical target. `stage_pipeline_write_observations` and `commit_pipeline_write_success` use one private record builder and one Delta merge each. `_recover_completed_source_observations` accepts every staged source member and the receipt of a verified target publication in one merge, including cross-run recovery. The public Read/Write orchestrator signatures and return contracts are unchanged.
+
+#### Publication and checkpoint recovery
+
+1. Read captures an observation without advancing a checkpoint. A no-change or empty incremental read leaves accepted progress intact; empty incremental publication is skipped.
+2. Write freezes the source observations and prepared batch, then stages one typed receipt and all checkpoint/baseline members in a **single metadata Delta transaction**, before any target mutation.
+3. Lakehouse publication writes its exact receipt into Delta commit metadata and stamps activity/time on business rows. Append also uses Delta transaction identity to suppress concurrent identical appends. Warehouse publication stamps the same pair in its physical target operation; SCD mutations retain their existing Warehouse SQL transaction.
+4. Verify physical completion before metadata acknowledgement. Lakehouse requires the exact Delta receipt and target markers (the commit alone attests an empty overwrite). Warehouse append/overwrite requires the **full prepared row count** with the exact marker pair; a nonzero partial count blocks retry and progress. Warehouse SCD relies on its atomic SQL mutation and requires the latest publication for retry suppression. An empty Warehouse write has no durable row receipt and fails closed, requiring reconciliation.
+5. Commit the typed receipt and all checkpoint/baseline members in **one metadata Delta merge**. Lineage and Catalogue are separate commits; their failure leaves staged Processing State recoverable. No cross-table atomicity is claimed.
+6. If interrupted before publication, staged records are not accepted. If physical publication succeeds but acknowledgement is lost, a subsequent Read or exact prepared-batch retry verifies the staged receipt, accepts its entire member set, and avoids a duplicate append. Older receipts never accept a newer Read snapshot. A failed metadata merge can be retried with the same record IDs.
+
+Warehouse attempts for one target must remain serialized under the existing writer-ownership contract. A partial publication, missing retained Delta commit evidence, missing/ambiguous receipt reference, or unprovable empty Warehouse publication requires operator reconciliation; retry must not guess completion. This PR does not introduce distributed transactions or claim exactly-once publication for independent concurrent Warehouse writers. Source Drift warns/blocks as configured, and observed structural/content changes never become baselines merely because they were captured.
+
+### Processing State upgrade
+
+This Preview layout is a breaking replacement. `observation_status` and `publication_payload_json` are removed. Old rows must **not** be additive-evolved into typed progress. Setup and runtime reject the old physical layout, including an empty old table. No compatibility reader, automatic migration, reset, or discard is performed.
+
+1. Stop/drain writers and take a durable backup of the existing table plus the code/version needed to read it. Retain target data, target audit markers, and Delta history. Inventory all source/target/environment relationships, accepted progress and unresolved publications.
+2. Reconcile every staged publication against the physical target before cutover. In the old layout, `committed` corresponds to `incremental_checkpoint`; `drift_committed` to `drift_baseline`; `publication_observed`/`publication_committed` to staged/committed receipts. Old target-bound `observed`/`drift_observed` rows are staged candidates, never automatically accepted checkpoints. Decode and deduplicate exact receipt JSON into typed receipt rows; retain originating run/audit identities. Column/type evidence missing from old records must be supplied from the verified original processing definition, not inferred silently from current configuration.
+3. Choose an explicit, reviewed cutover: an offline migration into the complete canonical schema with deterministic IDs and validated receipt references; or a reset only after reconciling/archiving progress and preparing a governed target rebuild or idempotent replay. A populated append target without an accepted baseline is intentionally rejected. Dropping only the metadata table and continuing incremental append is unsafe.
+4. For reset, remove only the reconciled Preview table through the configured Metadata Lakehouse/schema, run `setup_metadata_tables()` to recreate it, then execute the reviewed target rebuild/replay. Never reset the six Live tables, Pipeline Run, or Activation State. For migration, replace the table with the validated complete schema and run setup validation before restarting writers.
+5. Validate first/subsequent incremental execution, unchanged/empty reads, Source Drift baseline decisions, lost-acknowledgement retries and environment/target isolation. Keep the backup until these checks finish. Rollback requires stopping writers and restoring both a compatible code/schema pair and a reconciled checkpoint/target boundary; restoring metadata alone after new publications is unsafe.
+
+The new exact receipt includes its physical strategy. Old Delta commit metadata cannot be rewritten into new physical proof: retain old receipts for reconciliation, and use a reviewed target rebuild/replay to establish new-format receipts wherever automatic retry verification is needed. Migrating accepted progress alone does not retrofit old physical receipts. Recovery restores Processing State; replay the exact prepared Write if separate Catalogue or Lineage finalization also needs retry.
+
+No automatic conversion is supplied because old rows can lack watermark types, column identities or exact physical publication proof. The retained backup is the explicit record-retention policy; operators decide archival retention after reconciliation. Focused unit tests cover schema rejection and classification; Delta integration tests cover persisted source checkpoints, lost acknowledgements, retries and atomic multi-source acceptance. Warehouse transport is simulated against real Delta business rows; Fabric Warehouse itself still requires deployment validation.
 
 ### Pipeline execution (engineering)
 

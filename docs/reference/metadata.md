@@ -281,14 +281,14 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. run_id joins METADATA_PIPELINE_RUN.run_id for planned executions; _activity_id retains the actual Fabric activity shared by different attempts. Legacy and standalone observations may have no run_id. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed records accepted incremental progress, and drift_committed records the Source Drift baseline. Warehouse publication_observed and publication_committed rows store target-only retry receipts with empty source identity and no watermark; they also cover Full Read and source-free writes.</span>
+  <span class="metadata-table-card__purpose">Processing State for source observations, incremental checkpoints, Source Drift baselines and publication receipts, distinguished by record_type. Only committed checkpoints and baselines are accepted progress. Each target publication has one typed receipt; source records link through publication_id. See the Processing State upgrade and recovery protocol in the metadata v2 maintainer guide.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One observed or committed partition-state row within one logical notebook, source table, target table, and observation; target-only Warehouse publication receipt rows have an empty source identity.</span>
+    <span>One record_id per typed source observation/partition or source-to-target publication member; one publication_receipt per exact target publication. Staged members and their receipt become committed in one Delta merge.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
-    <span><code>observation_id</code> <span class="metadata-table-card__key-separator">+</span> <code>partition_value</code> <span class="metadata-table-card__key-separator">+</span> <code>observation_status</code></span>
+    <span><code>record_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
@@ -302,6 +302,12 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
       <span class="metadata-table-card__cardinality">N → 1</span>
       <span class="metadata-table-card__relationship-list">
         <code>METADATA_DATA_CATALOGUE</code>
+      </span>
+    </span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_SOURCE_OBSERVATION</code>
       </span>
     </span>
   </span>

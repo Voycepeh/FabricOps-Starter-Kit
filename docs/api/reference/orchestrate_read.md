@@ -140,7 +140,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 198 |
+| Live-critical dependencies | 200 |
 
 ### Release history
 
@@ -263,6 +263,8 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._physical_target_has_publication</code></li>
 <li><code>fabricops_kit.pipeline.shared._portable_candidate_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._portable_contract_payload</code></li>
+<li><code>fabricops_kit.pipeline.shared._processing_state_id</code></li>
+<li><code>fabricops_kit.pipeline.shared._processing_state_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_snapshot_id</code></li>

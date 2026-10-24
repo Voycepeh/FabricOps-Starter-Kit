@@ -186,30 +186,37 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
     """Persist reusable source evidence with the standard commit timestamp only."""
     fields = metadata_table_schema_registry()["METADATA_SOURCE_OBSERVATION"].fieldNames()
     assert fields == [
+        "record_id",
+        "record_type",
+        "status",
         "observation_id",
         "run_id",
+        "pipeline_id",
         "source_table_id",
         "source_table_name",
         "target_table_id",
         "target_table_name",
         "environment_name",
+        "observed_at",
+        "accepted_at",
+        "partition_column",
+        "change_column",
+        "watermark_type",
         "partition_value",
         "row_count",
         "min_change_value",
         "max_change_value",
         "content_fingerprint",
         "is_present",
-        "observation_status",
-        "publication_payload_json",
+        "publication_id",
+        "publication_batch_id",
+        "publication_activity_id",
+        "publication_at",
+        "publication_input_rows",
+        "publication_strategy",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
-    assert {
-        "observed_at",
-        "metadata_table_key",
-        "guardrail_rule_version_id",
-        "partition_column",
-        "change_column",
-    }.isdisjoint(fields)
+    assert {"metadata_table_key", "guardrail_rule_version_id", "publication_payload_json", "observation_status"}.isdisjoint(fields)
 
 
 def test_source_consumption_is_not_a_separate_metadata_table():
@@ -287,3 +294,17 @@ def test_definition_tables_are_retired_but_results_remain():
     results = registry["METADATA_GUARDRAIL_RESULTS"].fieldNames()
     assert results[:3] == ["guardrail_result_id", "guardrail_rule_id", "guardrail_version"]
     assert {"contract_id", "contract_version", "result_payload_json"} <= set(results)
+
+
+def test_processing_state_legacy_schema_requires_deliberate_cutover():
+    """Even an empty old table must not be evolved into accepted v2 progress."""
+    import importlib
+    import pytest
+    from pyspark.sql.types import StructType, StructField, StringType
+    setup = importlib.import_module("fabricops_kit.config.setup_metadata_tables")
+    schema = metadata_table_schema_registry()["METADATA_SOURCE_OBSERVATION"]
+    legacy = StructType([StructField("observation_id", StringType()), StructField("observation_status", StringType())])
+    for allow_missing in (True, False):
+        with pytest.raises(ValueError, match="Unsupported legacy.*reconcile"):
+            setup._validate_existing_metadata_schema("METADATA_SOURCE_OBSERVATION", legacy, schema, allow_missing=allow_missing)
+    assert setup._validate_existing_metadata_schema("METADATA_SOURCE_OBSERVATION", schema, schema) == []

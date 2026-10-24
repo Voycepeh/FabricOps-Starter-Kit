@@ -67,6 +67,7 @@ def test_capture_reuses_pipeline_read_dataframe_without_rescanning(monkeypatch) 
         "_activity_id": "run", "_committed_at": "2026-09-13T00:00:00+00:00",
     })
     monkeypatch.setattr(shared, "coerce_metadata_row_types", lambda table, row: row)
+    monkeypatch.setattr(shared, "_merge_source_observation_records", lambda *a, **k: None)
     result = shared.capture_source_observation(table_id="source-a", dataframe=dataframe)
     assert result[0]["source_table_id"] == "source-a"
 
@@ -104,6 +105,7 @@ def test_incremental_observation_allows_new_source_without_catalogue_or_contract
         "content_fingerprint": "hash", "is_present": True,
     }])
     frame = type("Frame", (), {"columns": ["modified_datetime"]})()
+    monkeypatch.setattr(shared, "_merge_source_observation_records", lambda *a, **k: None)
     result = shared.capture_source_observation(
         table_id="new-bronze-source",
         dataframe=frame,

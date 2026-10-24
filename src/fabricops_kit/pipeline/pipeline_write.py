@@ -426,6 +426,8 @@ def pipeline_write(
     Source Observations bind that batch to the real Fabric activity and a fresh
     publication timestamp. Both audit literals materialize in the same physical transaction
     as the business rows; an activity marker alone never proves publication.
+    Warehouse append/overwrite requires the entire batch marker count. A partial
+    marker count fails closed and requires reconciliation before retrying.
     A verified retry skips mutation and idempotently finalizes metadata. New batches
     in a reused interactive activity proceed through the existing writers and keyed
     SCD merges. Empty writes may have no row marker and can safely be replayed.
@@ -435,9 +437,14 @@ def pipeline_write(
     suppress a newly requested keyed merge. Warehouse writes also stage target-only
     publication receipts when no incremental or Source Drift observations exist;
     these receipt records never establish or advance a source watermark.
+    ``METADATA_SOURCE_OBSERVATION.record_type`` distinguishes source observations,
+    incremental checkpoints, drift baselines and publication receipts. Checkpoints
+    and baselines link to one typed receipt through publication_id; staged members
+    and their receipt are acknowledged in one Delta merge.
 
     Recovery promotes only staged observations carrying an exact verified receipt.
-    Legacy activity-only observations require explicit physical reconciliation;
+    Unsupported legacy Processing State schemas require explicit physical reconciliation
+    and migration/reset before execution;
     they are never automatically promoted. Prepared rows are cached while their
     content identity is calculated and published, then the owned cache is released.
     This identity action is required for retry safety, not display metrics.

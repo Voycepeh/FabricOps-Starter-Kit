@@ -26,6 +26,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
     if 'DeltaSparkSessionExtension' not in spark_session.conf.get('spark.sql.extensions', ''):
         pytest.skip('requires Delta Spark extensions')
     spark_session.conf.set('spark.databricks.delta.snapshotPartitions', '2')
+    merge_processing_state = shared._merge_source_observation_records
     history = []
     state = {"activity": "interactive", "fail": None, "target": "target", "mode": "append"}
     context = {"config": object(), "env": "dev", "execution_plan": SimpleNamespace(permits_persistence=True, simulations=[])}
@@ -36,6 +37,8 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
 
     def read(name, **_kwargs):
         if name == "METADATA_SOURCE_OBSERVATION":
+            if state.get("durable_metadata"):
+                return spark_session.read.format("delta").load(str(tmp_path / name))
             return list(history)
         return spark_session.read.format('delta').load(str(tmp_path / name))
 
@@ -47,13 +50,17 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
         df.write.format('delta').mode(mode).options(**(_kwargs.get('options') or {})).save(str(tmp_path / name))
 
     def merge_metadata(records, **_kwargs):
-        if state["fail"] == "finalize" and any(r['observation_status'] in {'committed', 'publication_committed'} for r in records):
+        if state["fail"] == "finalize" and any(r['status'] == 'committed' for r in records):
             raise RuntimeError('metadata finalization interrupted')
         if not getattr(shared, 'persistence_permitted', lambda _: True)(context):
             return
+        if state.get("durable_metadata"):
+            merge_processing_state(records, config=context["config"], context=context)
+            history[:] = shared.observation_rows(read("METADATA_SOURCE_OBSERVATION"))
+            return
         for record in records:
-            key = tuple(record.get(k) for k in ('observation_id', 'partition_value', 'observation_status', 'target_table_id', 'run_id'))
-            history[:] = [r for r in history if tuple(r.get(k) for k in ('observation_id', 'partition_value', 'observation_status', 'target_table_id', 'run_id')) != key]
+            key = tuple(record.get(k) for k in ('record_id',))
+            history[:] = [r for r in history if tuple(r.get(k) for k in ('record_id',)) != key]
             history.append(dict(record))
 
     def audit(**_kwargs):
@@ -101,7 +108,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
             observation = [{'observation_id': str(uuid4()), 'source_table_id': 'source', 'target_table_id': '',
                             'environment_name': 'dev', 'partition_value': '', 'row_count': len(rows),
                             'min_change_value': '1', 'max_change_value': str(maximum), 'is_present': True,
-                            'partition_column': 'id', 'change_column': 'id', **audit()}]
+                            'partition_column': 'id', 'change_column': 'id', 'watermark_type': 'bigint', **audit()}]
             scope = shared.resolve_incremental_source_scope(source_table_id='source', target_table_id=state['target'], observation=observation)
             if not scope['first_run']:
                 df = df.where(df.id > int(scope['after']))
@@ -155,11 +162,11 @@ def test_interruption_and_cross_activity_recovery(publication_runtime, failure):
     with pytest.raises(RuntimeError):
         run.publish(run.stage(2))
     assert run.read('target').count() == (8 if failure == 'before' else 12)
-    assert not any(r['max_change_value'] == '12' and r['observation_status'] == 'committed' for r in run.history)
+    assert not any(r.get('max_change_value') == '12' and r['record_type'] == 'incremental_checkpoint' and r['status'] == 'committed' for r in run.history)
     run.state.update(fail=None, activity='next-activity')
     run.publish(run.stage(3))
     assert sorted(r.id for r in run.read('target').collect()) == list(range(1, 13))
-    assert any(r['max_change_value'] == '12' and r['observation_status'] == 'committed' for r in run.history)
+    assert any(r.get('max_change_value') == '12' and r['record_type'] == 'incremental_checkpoint' and r['status'] == 'committed' for r in run.history)
 
 
 def test_testing_does_not_write_or_commit(publication_runtime):
@@ -198,9 +205,9 @@ def test_existing_divergence_requires_explicit_verified_repair(publication_runti
     run.publish(run.stage(1))
     # Reproduce historical corruption: checkpoint claims Day 2 was accepted,
     # but the physical target still contains only Day 1.
-    prior = next(r for r in run.history if r['observation_status'] == 'committed')
+    prior = next(r for r in run.history if r['record_type'] == 'incremental_checkpoint' and r['status'] == 'committed')
     run.history.append({**prior, 'observation_id': 'legacy-corruption', 'max_change_value': '12',
-                        '_committed_at': datetime.now(UTC), 'publication_payload_json': None})
+                        '_committed_at': datetime.now(UTC), 'publication_id': None, 'record_id': 'reconciled-checkpoint'})
     result = run.publish(run.stage(3))
     assert result['publication_status'] == 'empty_incremental_scope'
     assert run.read('target').count() == 8  # never silently rewind or overwrite
@@ -221,7 +228,8 @@ def test_existing_divergence_requires_explicit_verified_repair(publication_runti
     run.publish(missing)
     assert run.read('target').select(*columns).exceptAll(source.select(*columns)).count() == 0
     assert source.select(*columns).exceptAll(run.read('target').select(*columns)).count() == 0
-    assert len(run.history) == len(before)  # existing watermark not rewritten
+    assert [row for row in run.history if row["record_type"] == "incremental_checkpoint"] == [row for row in before if row["record_type"] == "incremental_checkpoint"]
+    assert len(run.history) == len(before) + 1  # repair adds only its target publication receipt
 
 
 @pytest.mark.parametrize('mode', ['scd1', 'scd2'])
@@ -278,7 +286,7 @@ def test_exact_batch_retry_finalizes_after_physical_success(publication_runtime)
     assert retried['publication_status'] == 'metadata_recovered'
     assert retried['write_metrics']['rows_committed'] == 0
     assert run.read('target').count() == 12
-    assert any(r['max_change_value'] == '12' and r['observation_status'] == 'committed' for r in run.history)
+    assert any(r.get('max_change_value') == '12' and r['record_type'] == 'incremental_checkpoint' and r['status'] == 'committed' for r in run.history)
 
 
 def test_silent_physical_skip_cannot_advance_checkpoint(publication_runtime):
@@ -289,7 +297,7 @@ def test_silent_physical_skip_cannot_advance_checkpoint(publication_runtime):
     with pytest.raises(RuntimeError, match='exact batch receipt'):
         run.publish(run.stage(2))
     assert run.read('target').count() == 8
-    assert not any(r['max_change_value'] == '12' and r['observation_status'] == 'committed' for r in run.history)
+    assert not any(r.get('max_change_value') == '12' and r['record_type'] == 'incremental_checkpoint' and r['status'] == 'committed' for r in run.history)
     run.state.update(fail=None, activity='recovery')
     run.publish(run.stage(3))
     assert run.read('target').count() == 12
@@ -318,8 +326,8 @@ def test_concurrent_exact_append_accepts_only_winning_transaction(publication_ru
     assert result['publication_status'] == 'already_applied'
     assert result['write_metrics']['rows_committed'] == 0
     assert sorted(r.id for r in run.read('target').collect()) == list(range(1, 13))
-    accepted = [r for r in run.history if r['observation_status'] == 'committed' and r['max_change_value'] == '12']
-    assert accepted and json.loads(accepted[0]['publication_payload_json'])['activity_id'] == 'competing-retry'
+    accepted = [r for r in run.history if r['record_type'] == 'incremental_checkpoint' and r['status'] == 'committed' and r.get('max_change_value') == '12']
+    assert accepted and shared._publication_receipt(accepted[0], run.history)['activity_id'] == 'competing-retry'
 
 
 def test_later_read_cannot_finalize_an_older_publication(publication_runtime, monkeypatch):
@@ -336,7 +344,7 @@ def test_later_read_cannot_finalize_an_older_publication(publication_runtime, mo
     monkeypatch.setattr(io, 'write_lakehouse_table', write_then_read)
     run.publish(run.stage(1))
     assert run.read('target').count() == 8
-    assert not any(r['max_change_value'] == '12' and r['observation_status'] == 'committed' for r in run.history)
+    assert not any(r.get('max_change_value') == '12' and r['record_type'] == 'incremental_checkpoint' and r['status'] == 'committed' for r in run.history)
     run.publish(next_read['dataframe'])
     assert sorted(r.id for r in run.read('target').collect()) == list(range(1, 13))
 
@@ -423,7 +431,7 @@ def test_newer_read_cannot_replace_an_unpublished_checkpoint(publication_runtime
             shared.resolve_incremental_source_scope(source_table_id='source', target_table_id='target', observation=newer)
         run.publish(earlier)
         assert run.read('target').count() == 12
-        assert not any(r['max_change_value'] == '16' and r['observation_status'] == 'committed' for r in run.history)
+        assert not any(r.get('max_change_value') == '16' and r['record_type'] == 'incremental_checkpoint' and r['status'] == 'committed' for r in run.history)
         scope = shared.resolve_incremental_source_scope(source_table_id='source', target_table_id='target', observation=newer)
         assert scope['after'] == '12'
         run.publish(run.read('source').where('id > 12 AND id <= 16'))
@@ -453,7 +461,7 @@ def warehouse_publication_runtime(publication_runtime, monkeypatch):
             return target.agg(F.max('_committed_at').alias('fabricops_latest_publication'))
         activity = re.search(r"\[_activity_id\] = '([^']+)'", sql).group(1)
         stamp = datetime.fromisoformat(re.search(r"CAST\('([^']+)' AS", sql).group(1)).replace(tzinfo=UTC)
-        return target.where((F.col('_activity_id') == activity) & (F.col('_committed_at') == F.lit(stamp)))
+        return target.where((F.col('_activity_id') == activity) & (F.col('_committed_at') == F.lit(stamp))).agg(F.count('*').alias('fabricops_publication_rows'))
 
     monkeypatch.setattr(io, 'write_warehouse_table', warehouse_write)
     monkeypatch.setattr(shared, 'read_warehouse_query', warehouse_query)
@@ -478,8 +486,8 @@ def test_warehouse_full_append_has_durable_retry_receipt(warehouse_publication_r
     result = publish()
     assert run.read('target').count() == 8
     assert result['publication_status'] == ('published' if failure == 'before' else 'metadata_recovered' if failure == 'finalize' else 'already_applied')
-    assert any(row['observation_status'] == 'publication_committed' for row in run.history)
-    assert not any(row['observation_status'] == 'committed' for row in run.history)
+    assert any(row['record_type'] == 'publication_receipt' and row['status'] == 'committed' for row in run.history)
+    assert not any(row['record_type'] == 'incremental_checkpoint' and row['status'] == 'committed' for row in run.history)
     publish()
     assert run.read('target').count() == 8
 
@@ -495,7 +503,7 @@ def test_retained_published_frame_cannot_accept_a_new_read_checkpoint(publicatio
         with pytest.raises(RuntimeError, match='does not match this Read'):
             run.publish(old)
         assert run.read('target').count() == 8
-        assert not any(r['max_change_value'] == '12' and r['observation_status'] == 'committed' for r in run.history)
+        assert not any(r.get('max_change_value') == '12' and r['record_type'] == 'incremental_checkpoint' and r['status'] == 'committed' for r in run.history)
         run.publish(next_batch)
         assert run.read('target').count() == 12
     finally:
@@ -542,10 +550,10 @@ def test_distinct_runs_share_real_activity_and_isolate_source_state(publication_
         assert run.read('target').count() == (expected if mode == 'scd2' else 8 if mode == 'scd1' or day == 1 else 12)
     assert {row._activity_id for row in run.read('target').select('_activity_id').collect()} == {'interactive'}
     if mode == 'append':
-        accepted = [row for row in run.history if row['observation_status'] == 'committed']
+        accepted = [row for row in run.history if row['record_type'] == 'incremental_checkpoint' and row['status'] == 'committed']
         assert {row['run_id'] for row in accepted} == {'pipeline-run-1', 'pipeline-run-2'}
         import json
-        assert {json.loads(row['publication_payload_json'])['run_id'] for row in accepted} == {'pipeline-run-1', 'pipeline-run-2'}
+        assert {shared._publication_receipt(row, run.history)['run_id'] for row in accepted} == {'pipeline-run-1', 'pipeline-run-2'}
 
 
 def test_new_run_recovers_old_run_publication_without_duplicate_append(publication_runtime):
@@ -561,7 +569,7 @@ def test_new_run_recovers_old_run_publication_without_duplicate_append(publicati
     result = run.publish(run.stage(3))
     assert result['publication_status'] == 'empty_incremental_scope'
     assert run.read('target').count() == 12
-    accepted = [row for row in run.history if row['observation_status'] == 'committed' and row['max_change_value'] == '12']
+    accepted = [row for row in run.history if row['record_type'] == 'incremental_checkpoint' and row['status'] == 'committed' and row['max_change_value'] == '12']
     assert accepted and all(row['run_id'] == 'original-run' for row in accepted)
 
 
@@ -600,4 +608,123 @@ def test_retained_old_run_cannot_append_after_a_later_run_advances_checkpoint(pu
     with pytest.raises(RuntimeError, match='checkpoint advanced'):
         run.publish(old)
     assert run.read('target').count() == 16
-    assert max(int(row['max_change_value']) for row in run.history if row['observation_status'] == 'committed') == 16
+    assert max(int(row['max_change_value']) for row in run.history if row['record_type'] == 'incremental_checkpoint' and row['status'] == 'committed') == 16
+
+
+@pytest.fixture
+def durable_processing_state(publication_runtime):
+    """Exercise the real metadata Delta merge as well as persisted business rows."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+    run = publication_runtime
+    run.spark.createDataFrame([], metadata_table_schema_registry()["METADATA_SOURCE_OBSERVATION"]).write.format("delta").save(
+        str(run.path / "METADATA_SOURCE_OBSERVATION"))
+    run.state["durable_metadata"] = True
+    return run
+
+
+@pytest.mark.parametrize("failure", ["before", "finalize"])
+def test_durable_checkpoint_recovery_preserves_exact_progress(durable_processing_state, failure):
+    run = durable_processing_state
+    run.context["execution_plan"].plan_id = "originating-run"
+    run.publish(run.stage(1))
+    run.state["fail"] = failure
+    with pytest.raises(RuntimeError):
+        run.publish(run.stage(2))
+    checkpoints = run.read("METADATA_SOURCE_OBSERVATION").where("record_type = 'incremental_checkpoint'")
+    assert {row.max_change_value for row in checkpoints.where("status = 'committed'").collect()} == {"8"}
+    assert checkpoints.where("status = 'staged' AND max_change_value = '12'").count() == 1
+    run.context["execution_plan"].plan_id = "recovery-run"
+    run.state["fail"] = None
+    shared._PENDING_SOURCE_OBSERVATIONS.clear()
+    shared._INCREMENTAL_SOURCE_SCOPES.clear()
+    run.publish(run.stage(2))
+    assert sorted(row.id for row in run.read("target").collect()) == list(range(1, 13))
+    accepted = run.read("METADATA_SOURCE_OBSERVATION").where("record_type = 'incremental_checkpoint' AND status = 'committed'")
+    assert {row.max_change_value for row in accepted.collect()} == {"8", "12"}
+    assert "publication_payload_json" not in accepted.columns
+    assert all(row.publication_id and row.accepted_at for row in accepted.collect())
+    assert run.publish(run.stage(2))["publication_status"] == "empty_incremental_scope"
+    assert run.read("target").count() == 12
+
+
+def test_durable_multi_source_recovery_is_one_transaction(durable_processing_state):
+    run = durable_processing_state
+    run.context["execution_plan"].plan_id = "one-logical-run"
+    frame = run.stage(1)
+    key = ("dev", "one-logical-run", "source", "target")
+    current = shared._PENDING_SOURCE_OBSERVATIONS[key]
+    shared._PENDING_SOURCE_OBSERVATIONS[("dev", "one-logical-run", "other-source", "target")] = [
+        {**row, "source_table_id": "other-source", "observation_id": "other-observation"} for row in current]
+    shared._CURRENT_TABLE_IDENTITIES["other-source"] = {"table_name": "other_source"}
+    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS[key] = [{**row, "partition_value": "p1"} for row in current]
+    run.state["fail"] = "finalize"
+    with pytest.raises(RuntimeError, match="metadata finalization"):
+        writer.pipeline_write(frame, store="Silver", table_name="target", source_table_ids=["source", "other-source"], verbose=False)
+    before = run.delta.forPath(run.spark, str(run.path / "METADATA_SOURCE_OBSERVATION")).history(1).first().version
+    rows = shared.observation_rows(run.read("METADATA_SOURCE_OBSERVATION"))
+    assert {row["record_type"] for row in rows} == {"publication_receipt", "incremental_checkpoint", "drift_baseline"}
+    assert {row["status"] for row in rows} == {"staged"}
+    run.state["fail"] = None
+    shared._PENDING_SOURCE_OBSERVATIONS.clear()
+    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS.clear()
+    run.context["execution_plan"].plan_id = "restarted-run"
+    shared._recover_completed_source_observations(run.read("METADATA_SOURCE_OBSERVATION"), config=run.context["config"], env="dev",
+                                                context=run.context, source_table_id="source", target_table_id="target")
+    table = run.delta.forPath(run.spark, str(run.path / "METADATA_SOURCE_OBSERVATION"))
+    assert table.history(1).first().version == before + 1
+    accepted = shared.observation_rows(table.toDF())
+    assert len(accepted) == 4
+    assert {row["status"] for row in accepted} == {"committed"}
+    assert {row["run_id"] for row in accepted} == {"one-logical-run"}
+    assert len({row["accepted_at"] for row in accepted}) == 1
+    assert len({row["publication_id"] for row in accepted}) == 1
+    # A repeated stage cannot regress a durable acknowledgement.
+    shared._merge_source_observation_records(rows, config=run.context["config"], context=run.context)
+    assert {row.status for row in table.toDF().collect()} == {"committed"}
+
+
+def test_partial_warehouse_append_is_never_accepted_or_republished(warehouse_publication_runtime, monkeypatch):
+    run = warehouse_publication_runtime
+    monkeypatch.setattr(writer, "_target_has_rows", lambda **kw: False)
+    def partial_write(frame, schema, table_name, **kwargs):
+        frame.limit(1).write.format("delta").mode("overwrite").save(str(run.path / table_name))
+    monkeypatch.setattr(io, "write_warehouse_table", partial_write)
+    frame = run.stage(1)
+    with pytest.raises(RuntimeError, match="Incomplete Warehouse publication"):
+        run.publish(frame)
+    assert run.read("target").count() == 1
+    assert {row["status"] for row in run.history} == {"staged"}
+    monkeypatch.setattr(io, "write_warehouse_table", lambda *a, **kw: pytest.fail("partial append must require reconciliation"))
+    with pytest.raises(RuntimeError, match="Incomplete Warehouse publication"):
+        run.publish(frame)
+    assert run.read("target").count() == 1
+
+
+
+def test_captured_observation_is_typed_but_never_accepted_progress(durable_processing_state, monkeypatch):
+    run = durable_processing_state
+    frame = run.stage(1)
+    monkeypatch.setattr(shared, "get_store", lambda *a, **kw: SimpleNamespace(schema_enabled=False))
+    monkeypatch.setattr(shared, "resolve_lakehouse_table_location", lambda *a, **kw: ("source", None, "source-path"))
+    monkeypatch.setattr(shared, "load_table_guardrail_rules", lambda *a, **kw: [])
+    evidence = shared.capture_source_observation(table_id="source", dataframe=frame, incremental_columns=("id", "id"),
+        source_identity={"table_id": "source", "store": "Bronze", "table_name": "source", "store_kind": "lakehouse"}, context=run.context)
+    persisted = run.read("METADATA_SOURCE_OBSERVATION")
+    row = persisted.first()
+    assert persisted.count() == 1
+    assert row.record_type == "source_observation" and row.status == "observed"
+    assert row.watermark_type == "bigint" and row.change_column == "id"
+    assert row.max_change_value == "8" and row.row_count == 8
+    assert row.observed_at and row.accepted_at is None and row.publication_id is None
+    assert shared._latest_source_target_observation(persisted, source_table_id="source", target_table_id="target", environment_name="dev") == []
+    shared._PENDING_SOURCE_OBSERVATIONS.clear()
+    shared._INCREMENTAL_SOURCE_SCOPES.clear()
+    scope = shared.resolve_incremental_source_scope(source_table_id="source", target_table_id="target", observation=evidence, context=run.context)
+    assert scope["first_run"]
+    run.publish(frame)
+    accepted = run.read("METADATA_SOURCE_OBSERVATION")
+    assert {r.record_type for r in accepted.collect()} == {"source_observation", "incremental_checkpoint", "publication_receipt"}
+    assert shared._latest_source_target_observation(accepted, source_table_id="source", target_table_id="target", environment_name="prod") == []
+    assert shared._latest_source_target_observation(accepted, source_table_id="other-source", target_table_id="target", environment_name="dev") == []
+    checkpoint = shared._latest_source_target_observation(accepted, source_table_id="source", target_table_id="target", environment_name="dev")[0]
+    assert checkpoint["watermark_type"] == "bigint" and checkpoint["max_change_value"] == "8"
