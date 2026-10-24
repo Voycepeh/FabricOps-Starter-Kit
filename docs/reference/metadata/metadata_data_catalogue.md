@@ -1,6 +1,6 @@
 # METADATA_DATA_CATALOGUE
 
-The current structural registry of known table and column assets. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.
+Lists registered tables and columns, where they are stored, their data types and whether they are still active.
 
 ## Writer functions
 
@@ -18,13 +18,15 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One table or column asset in one environment.
+**Grain:** One registered table or column in one environment.
 
 **Primary key:** `environment_name` + `table_id` + `column_id`
 
 **Relationships:**
 
 No immediate table relationship is defined in the current implementation.
+
+**Implementation details:** The current structural registry of known table and column assets. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.
 
 ## Column summary
 
