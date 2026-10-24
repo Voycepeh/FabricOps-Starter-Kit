@@ -71,7 +71,8 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "Used by" not in first_landing
     assert "0 tables" not in first_landing
     assert "No downstream tables." not in first_landing
-    assert all(cardinality in first_landing for cardinality in ("1 → N", "1 → 1", "N → 1"))
+    assert all(cardinality in first_landing for cardinality in ("1 → N", "N → 1"))
+        assert "1 → 1" not in first_landing
     assert "View full schema" not in first_landing
     assert "## Data Agreement versus Data Contract" not in first_landing
     assert "METADATA_DATA_CATALOGUE.table_id" not in first_landing
