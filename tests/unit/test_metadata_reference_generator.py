@@ -390,8 +390,8 @@ def test_generated_svg_check_ignores_windows_line_endings_but_detects_real_drift
     for relative in paths:
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
-        raw = (source_root / relative).read_bytes().replace(b"\\r\\n", b"\\n")
-        target.write_bytes(raw.replace(b"\\n", b"\\r\\n"))
+        raw = (source_root / relative).read_bytes().replace(b"\r\n", b"\n")
+        target.write_bytes(raw.replace(b"\n", b"\r\n"))
 
     command = [node, str(tmp_path / paths[0]), "--check"]
     first = subprocess.run(command, cwd=tmp_path, capture_output=True, text=True)
