@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1540" height="1220" viewBox="0 0 1540 1220" role="img" aria-label="FabricOps metadata relationship diagram">
+<rect width="1540" height="1220" fill="#FFFFFF"/>
+<rect x="17" y="16" width="1506" height="270" rx="9" fill="#F8F3FE" stroke="#B69CE2" stroke-width="1.5"/>
+<rect x="17" y="303" width="1506" height="898" rx="9" fill="#EEF7FF" stroke="#83B8EA" stroke-width="1.5"/>
+<text x="36" y="52" font-size="23" font-family="Arial, sans-serif" font-weight="700" fill="#7144AE">Governance Schema</text>
+<text x="36" y="346" font-size="23" font-family="Arial, sans-serif" font-weight="700" fill="#1168B6">Engineering Schema</text>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_steward/" target="_blank">
+<rect x="35" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
+<path d="M39 78H331Q335 78 335 82V115H35V82Q35 78 39 78Z" fill="#7144AE"/>
+<text x="185.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_STEWARD</text>
+<title>Open metadata documentation: DATA_STEWARD</title>
+</a>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_agreement/" target="_blank">
+<rect x="425" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
+<path d="M429 78H721Q725 78 725 82V115H425V82Q425 78 429 78Z" fill="#7144AE"/>
+<text x="575.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_AGREEMENT</text>
+<title>Open metadata documentation: DATA_AGREEMENT</title>
+</a>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_activation_state/" target="_blank">
+<rect x="815" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
+<path d="M819 78H1111Q1115 78 1115 82V115H815V82Q815 78 819 78Z" fill="#7144AE"/>
+<text x="965.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">ACTIVATION_STATE</text>
+<title>Open metadata documentation: ACTIVATION_STATE</title>
+</a>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract/" target="_blank">
+<rect x="1205" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
+<path d="M1209 78H1501Q1505 78 1505 82V115H1205V82Q1205 78 1209 78Z" fill="#7144AE"/>
+<text x="1355.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_CONTRACT</text>
+<title>Open metadata documentation: DATA_CONTRACT</title>
+</a>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_guardrail_results/" target="_blank">
+<rect x="35" y="423" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
+<path d="M39 423H331Q335 423 335 427V460H35V427Q35 423 39 423Z" fill="#1168B6"/>
+<text x="185.0" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">GUARDRAIL_RESULTS</text>
+<title>Open metadata documentation: GUARDRAIL_RESULTS</title>
+</a>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_run/" target="_blank">
+<rect x="425" y="423" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
+<path d="M429 423H721Q725 423 725 427V460H425V427Q425 423 429 423Z" fill="#1168B6"/>
+<text x="575.0" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_RUN</text>
+<title>Open metadata documentation: PIPELINE_RUN</title>
+</a>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_source_observation/" target="_blank">
+<rect x="815" y="423" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
+<path d="M819 423H1111Q1115 423 1115 427V460H815V427Q815 423 819 423Z" fill="#1168B6"/>
+<text x="965.0" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">SOURCE_OBSERVATION</text>
+<title>Open metadata documentation: SOURCE_OBSERVATION</title>
+</a>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_catalogue/" target="_blank">
+<rect x="1205" y="423" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
+<path d="M1209 423H1501Q1505 423 1505 427V460H1205V427Q1205 423 1209 423Z" fill="#1168B6"/>
+<text x="1355.0" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_CATALOGUE</text>
+<title>Open metadata documentation: DATA_CATALOGUE</title>
+</a>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_profiled_frequency/" target="_blank" transform="translate(0 180)">
+<rect x="35" y="815" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
+<path d="M39 815H331Q335 815 335 819V852H35V819Q35 815 39 815Z" fill="#1168B6"/>
+<text x="185.0" y="839" text-anchor="middle" font-size="13.1" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_PROFILED_FREQUENCY</text>
+<title>Open metadata documentation: DATA_PROFILED_FREQUENCY</title>
+</a>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_profiled/" target="_blank" transform="translate(0 180)">
+<rect x="425" y="815" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
+<path d="M429 815H721Q725 815 725 819V852H425V819Q425 815 429 815Z" fill="#1168B6"/>
+<text x="575.0" y="839" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_PROFILED</text>
+<title>Open metadata documentation: DATA_PROFILED</title>
+</a>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_lineage/" target="_blank" transform="translate(0 180)">
+<rect x="815" y="815" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
+<path d="M819 815H1111Q1115 815 1115 819V852H815V819Q815 815 819 815Z" fill="#1168B6"/>
+<text x="965.0" y="839" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_LINEAGE</text>
+<title>Open metadata documentation: DATA_LINEAGE</title>
+</a>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_access/" target="_blank" transform="translate(0 180)">
+<rect x="1205" y="815" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
+<path d="M1209 815H1501Q1505 815 1505 819V852H1205V819Q1205 815 1209 815Z" fill="#1168B6"/>
+<text x="1355.0" y="839" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_ACCESS</text>
+<title>Open metadata documentation: DATA_ACCESS</title>
+</a>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_registry/" target="_blank">
+<rect x="425" y="675" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
+<path d="M429 675H721Q725 675 725 679V712H425V679Q425 675 429 675Z" fill="#1168B6"/>
+<text x="575" y="699" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_REGISTRY</text>
+<title>Open metadata documentation: PIPELINE_REGISTRY</title>
+</a>
+</svg>

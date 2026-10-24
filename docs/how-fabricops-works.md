@@ -9,6 +9,18 @@
 - **Engineering Production** runs the validated pipeline with the active Data Contract. Approved consumers use the resulting data for analytics and AI.
 - **Shared Metadata** connects Governance and Engineering responsibilities throughout the lifecycle.
 
+<a class="fabricops-metadata-preview fabricops-metadata-preview--compact" href="../reference/metadata/" aria-label="Explore the interactive FabricOps metadata relationship map">
+  <span class="fabricops-metadata-preview__body">
+    <span class="fabricops-metadata-preview__eyebrow">Explore the shared metadata</span>
+    <strong class="fabricops-metadata-preview__title">Governance and Engineering, connected</strong>
+    <span class="fabricops-metadata-preview__description">Explore all 13 metadata tables and see how their records, keys and relationships fit together.</span>
+    <span class="fabricops-metadata-preview__action">Open interactive map <span aria-hidden="true">→</span></span>
+  </span>
+  <span class="fabricops-metadata-preview__image" aria-hidden="true">
+    <img src="../assets/fabricops-metadata-approved.svg" alt="" loading="lazy" decoding="async">
+  </span>
+</a>
+
 ---
 
 ## Workspace Architecture

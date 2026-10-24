@@ -1,10 +1,12 @@
 # METADATA_DATA_PROFILED
 
-See column-level profile metrics for a dataset snapshot. table_name and column_name record the names observed when written and do not follow later Catalogue renames.
+Stores statistics about table columns from profiling runs, making it easier to understand the data and track changes over time.
 
 ## Writer functions
 
-No public writer function is traced in the current implementation.
+* [`orchestrate_read`](../../api/reference/orchestrate_read.md)
+* [`orchestrate_write`](../../api/reference/orchestrate_write.md)
+* [`profile_table`](../../api/reference/profile_table.md)
 
 ## Used in Workflow Template
 
@@ -16,7 +18,7 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One observed column in one profiling snapshot.
+**Grain:** One column's statistics from one profiling snapshot.
 
 **Primary key:** `profile_id`
 
@@ -27,6 +29,8 @@ via `table_id` + `column_id`
 
 `METADATA_DATA_PROFILED_FREQUENCY` **(1 → N)**
 via `profile_id`
+
+**Implementation details:** See column-level profile metrics for a dataset snapshot. table_name and column_name record the names observed when written and do not follow later Catalogue renames.
 
 ## Column summary
 

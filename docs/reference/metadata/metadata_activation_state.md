@@ -1,10 +1,12 @@
 # METADATA_ACTIVATION_STATE
 
-Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations, transient notebook-rebind barriers and renewable profiling claims.
+Records which pipeline releases are approved to run Live in each environment, together with the agreements and approvals behind them.
 
 ## Writer functions
 
-No public writer function is traced in the current implementation.
+* [`finalize_pipeline`](../../api/reference/finalize_pipeline.md)
+* [`setup_pipeline`](../../api/reference/setup_pipeline.md)
+* [`widget_activate_pipeline`](../../api/reference/widget_activate_pipeline.md)
 
 ## Used in Workflow Template
 
@@ -16,7 +18,7 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `governance`
 
-**Grain:** One central authority row containing environment snapshots.
+**Grain:** One central record containing the approval and execution state for all environments.
 
 **Primary key:** `authority_id`
 
@@ -25,6 +27,8 @@ No starter template or solution is traced for the public writer functions.
 **Activated Pipeline (logical entity; 1 → N):** Each registered Pipeline UUID can have many immutable Activated Pipeline releases in the environment history. Activated Pipeline is a logical entity in snapshot_json, not a separate Delta table.
 
 **Live Pipeline Run (logical entity; 1 → N):** Each approved Activated Pipeline release authorizes many Live Pipeline Runs; registration alone never authorizes execution.
+
+**Implementation details:** Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations, transient notebook-rebind barriers and renewable profiling claims.
 
 ## Column summary
 

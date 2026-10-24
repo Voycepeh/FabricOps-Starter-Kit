@@ -1,6 +1,6 @@
 # METADATA_SOURCE_OBSERVATION
 
-Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. run_id joins METADATA_PIPELINE_RUN.run_id for planned executions; _activity_id retains the actual Fabric activity shared by different attempts. Legacy and standalone observations may have no run_id. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed records accepted incremental progress, and drift_committed records the Source Drift baseline. Warehouse publication_observed and publication_committed rows store target-only retry receipts with empty source identity and no watermark; they also cover Full Read and source-free writes.
+Records what a pipeline observed about its sources and published targets, so it can track changes and resume incremental processing safely.
 
 ## Writer functions
 
@@ -18,7 +18,7 @@ Store source evidence observed by one logical pipeline for one governed target, 
 
 **Default physical schema:** `engineering`
 
-**Grain:** One observed or committed partition-state row within one logical notebook, source table, target table, and observation; target-only Warehouse publication receipt rows have an empty source identity.
+**Grain:** One recorded source or target state for a pipeline operation and its affected target.
 
 **Primary key:** `observation_id` + `partition_value` + `observation_status`
 
@@ -29,6 +29,8 @@ via `run_id`
 
 `METADATA_DATA_CATALOGUE` **(N → 1)**
 via `source_table_id` + `target_table_id`
+
+**Implementation details:** Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. run_id joins METADATA_PIPELINE_RUN.run_id for planned executions; _activity_id retains the actual Fabric activity shared by different attempts. Legacy and standalone observations may have no run_id. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed records accepted incremental progress, and drift_committed records the Source Drift baseline. Warehouse publication_observed and publication_committed rows store target-only retry receipts with empty source identity and no watermark; they also cover Full Read and source-free writes.
 
 ## Column summary
 

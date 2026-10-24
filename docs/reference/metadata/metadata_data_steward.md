@@ -1,6 +1,6 @@
 # METADATA_DATA_STEWARD
 
-Know who is responsible for the data.
+Identifies the people responsible for governing data.
 
 ## Writer functions
 

@@ -736,24 +736,27 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
     assert "[`orchestrate_write`](../../api/reference/orchestrate_write.md)" in lineage_table
 
 
-def test_metadata_reference_overview_renders_model_diagram() -> None:
-    """The current model uses the illustration and describes the implemented payload column."""
+def test_metadata_reference_overview_renders_interactive_explorer() -> None:
+    """The generated metadata page uses the interactive model, not an image or duplicate cards."""
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
 
     page = ROOT / "docs" / "reference" / "metadata.md"
     text = page.read_text(encoding="utf-8")
-    image_reference = "../assets/fabricops-metadata-model.svg"
-    assert (page.parent / image_reference).resolve().is_file()
-    assert image_reference in text
-    assert "manifest-backed Activated Pipeline contracts and separate run-linked Guardrail Results" in text
-    assert "```mermaid" not in text
+    assert 'data-metadata-explorer' in text
+    assert '<nav class="metadata-explorer-fallback"' in text
+    assert "fabricops-metadata-model.png" not in text
+    assert "metadata-table-grid" not in text
     assert len(CANONICAL_METADATA_TABLES) == 13
-    assert all(name in text for name in CANONICAL_METADATA_TABLES)
+    for name in CANONICAL_METADATA_TABLES:
+        assert f'href="{name.lower()}/"' in text
     assert "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column" in text
     assert "containing authored Guardrails, Enrichment and profiling policies" in text
-    assert "reduced from" not in text
-    assert "migration" not in text.casefold()
-    assert text.index(image_reference) < text.index('<div class="metadata-table-grid">')
+    script = (ROOT / "docs" / "javascripts" / "metadata-explorer.js").read_text(encoding="utf-8")
+    for name in CANONICAL_METADATA_TABLES:
+        assert name.removeprefix("METADATA_") in script
+    assert '"PIPELINE_REGISTRY"' in script and '"metadata_pipeline_registry/"' in script
+    assert "ACTIVATION_STATE" in script
+    assert "metadata-explorer.js" in (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
 
 
 def test_template_function_map_page_stays_removed() -> None:
@@ -2084,3 +2087,53 @@ def test_current_metadata_pages_match_reduced_registry_and_have_no_retired_links
             if "releases" in path.parts:
                 continue
             assert not re.search(r"\]\([^)]*" + slug + r"(?:\.md)?/?(?:#[^)]*)?\)", path.read_text()), path
+
+
+def test_internal_links_to_current_metadata_reference_pages_resolve() -> None:
+    """Existing Markdown and HTML links keep resolving after the interactive UI change."""
+    from urllib.parse import unquote, urlsplit
+
+    docs_root = ROOT / "docs"
+    reference_dir = docs_root / "reference" / "metadata"
+    overview = docs_root / "reference" / "metadata.md"
+    canonical_pages = {path.resolve() for path in reference_dir.glob("metadata_*.md")}
+    assert len(canonical_pages) == 13
+
+    inspected = []
+    unresolved = []
+    link_pattern = re.compile(
+        r"""\]\(([^)\s]+)(?:\s+["'][^)]*)?\)|\bhref=["']([^"']+)["']"""
+    )
+    for document in docs_root.rglob("*.md"):
+        if "releases" in document.parts:
+            continue  # Historical release URLs have their own frozen documentation.
+        content = document.read_text(encoding="utf-8")
+        for match in link_pattern.finditer(content):
+            href = (match.group(1) or match.group(2) or "").strip()
+            parsed = urlsplit(href)
+            if parsed.scheme or parsed.netloc or not parsed.path:
+                continue
+            link_path = unquote(parsed.path)
+            if "metadata" not in link_path.lower():
+                continue
+            if link_path.startswith("/FabricOps-Starter-Kit/"):
+                resolved = (docs_root / link_path.removeprefix("/FabricOps-Starter-Kit/")).resolve()
+            elif link_path.startswith("/"):
+                resolved = (docs_root / link_path.lstrip("/")).resolve()
+            else:
+                resolved = (document.parent / link_path).resolve()
+            # The overview is published at /reference/metadata/ even though
+            # its Markdown source is reference/metadata.md. Its static HTML
+            # fallback consequently uses metadata_table/ pretty-URL links.
+            if document.resolve() == overview.resolve() and link_path.startswith("metadata_"):
+                resolved = (reference_dir / link_path.rstrip("/")).with_suffix(".md").resolve()
+            elif resolved == reference_dir.resolve():
+                resolved = overview.resolve()
+            elif resolved.parent == reference_dir.resolve() and resolved.suffix in ("", ".html"):
+                resolved = resolved.with_suffix(".md")
+            if resolved == overview.resolve() or resolved.parent == reference_dir.resolve():
+                inspected.append((document.relative_to(docs_root), href))
+                if not resolved.is_file():
+                    unresolved.append((str(document.relative_to(docs_root)), href, str(resolved)))
+    assert len(inspected) >= 13, "Missing internal links to metadata references"
+    assert not unresolved, f"Broken links to current metadata references: {unresolved}"

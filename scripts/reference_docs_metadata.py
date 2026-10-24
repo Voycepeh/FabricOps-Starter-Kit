@@ -116,12 +116,6 @@ METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "The contract answers: Exactly what data will be delivered, in what structure, at what quality, and how reliably?"
 )
 
-METADATA_REFERENCE_MODEL_DIAGRAM = (
-    "![FabricOps metadata model: Governance and Engineering schemas, with a "
-    "manifest-backed Activated Pipeline contracts and separate run-linked Guardrail Results]"
-    "(../assets/fabricops-metadata-model.svg)"
-)
-
 METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
     "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column "
     "containing authored Guardrails, Enrichment and profiling policies for each contract version."
@@ -129,8 +123,9 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 
 METADATA_TABLE_MODELS = {
     "METADATA_PIPELINE_REGISTRY": {
-        "purpose": "Permanent UUIDv4 identity and environment-specific notebook bindings; registration never authorizes Live. A seeded Authority control row serializes binding transactions in this same table.",
-        "grain": "One logical pipeline per environment, plus one serialization control row (central, *).",
+        "purpose": "Keeps a permanent ID for each pipeline and records which notebook represents it in each environment. Renaming or promoting a notebook does not change the pipeline's identity.",
+        "grain": "One pipeline registration per environment, plus one technical control row used to coordinate registration.",
+        "implementation_notes": "Permanent UUIDv4 identity and environment-specific notebook bindings; registration never authorizes Live. A seeded Authority control row serializes binding transactions in this same table.",
         "primary_key": ["pipeline_id", "environment_name"], "foreign_keys": [],
         "relationships": [
             {"related_table": "METADATA_PIPELINE_RUN", "fields": ["pipeline_id", "environment_name"], "cardinality": "1:N", "statement": "One environment registration has many Pipeline Runs."},
@@ -138,20 +133,22 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_PIPELINE_RUN": {
-        "purpose": "One complete logical run, exact table mappings, operation results, per-table profiling activity outcomes, warnings and pinned activation revision. Profiling completion joins persisted result snapshots; Grain Discovery and empty Frequency Profiling use minimal success markers in operation_summary_json.",
-        "grain": "One Live pipeline execution attempt. Test results remain in memory.", "primary_key": ["run_id"],
+        "purpose": "Records the outcome of each Live pipeline run, including its tables, operations, profiling results and warnings.",
+        "grain": "One Live pipeline execution attempt. Test runs are not stored here.",
+        "implementation_notes": "One complete logical run, exact table mappings, operation results, per-table profiling activity outcomes, warnings and pinned activation revision. Profiling completion joins persisted result snapshots; Grain Discovery and empty Frequency Profiling use minimal success markers in operation_summary_json.", "primary_key": ["run_id"],
         "foreign_keys": [{"local_field": "pipeline_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "pipeline_id", "cardinality": "N:1", "statement": "Each run references one registered logical Pipeline UUID in its environment."}],
         "relationships": [{"cardinality": "N:1", "statement": "Each Live run references an approved Activated Pipeline release inside METADATA_ACTIVATION_STATE."}],
     },
     "METADATA_ACTIVATION_STATE": {
-        "purpose": "Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations, transient notebook-rebind barriers and renewable profiling claims.",
-        "grain": "One central authority row containing environment snapshots.",
+        "purpose": "Records which pipeline releases are approved to run Live in each environment, together with the agreements and approvals behind them.",
+        "grain": "One central record containing the approval and execution state for all environments.",
+        "implementation_notes": "Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations, transient notebook-rebind barriers and renewable profiling claims.",
         "primary_key": ["authority_id"], "foreign_keys": [],
         "relationships": [{"logical_entity": "Activated Pipeline", "cardinality": "1:N", "statement": "Each registered Pipeline UUID can have many immutable Activated Pipeline releases in the environment history. Activated Pipeline is a logical entity in snapshot_json, not a separate Delta table."},
                           {"logical_entity": "Live Pipeline Run", "cardinality": "1:N", "statement": "Each approved Activated Pipeline release authorizes many Live Pipeline Runs; registration alone never authorizes execution."}],
     },
     "METADATA_DATA_STEWARD": {
-        "purpose": "Know who is responsible for the data.",
+        "purpose": "Identifies the people responsible for governing data.",
         "grain": "One registered Data Steward.",
         "primary_key": ["steward_id"],
         "foreign_keys": [],
@@ -161,8 +158,8 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_AGREEMENT": {
-        "purpose": "Define why the data is shared, with whom, and under what conditions.",
-        "grain": "One version of one Data Agreement.",
+        "purpose": "Records who is sharing data, with whom, why it is shared, and the conditions of that sharing.",
+        "grain": "One version of a Data Agreement.",
         "primary_key": ["agreement_id", "agreement_version"],
         "foreign_keys": [
             {"local_field": "provider_steward_id", "referenced_table": "METADATA_DATA_STEWARD", "referenced_field": "steward_id", "cardinality": "N:1", "statement": "Each Data Agreement version has one provider steward; one steward can provide many agreement versions."},
@@ -173,15 +170,17 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_CONTRACT": {
-        "purpose": "Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. Agreement linkage belongs to Activated Pipeline.",
-        "grain": "One Draft or Frozen version of one table contract; Frozen contents are immutable.",
+        "purpose": "Defines what a table means, how it should be processed, which Guardrails apply and when it should be profiled. Frozen versions can be reused but not changed.",
+        "grain": "One Draft or Frozen version of a Data Contract for a table.",
+        "implementation_notes": "Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. Agreement linkage belongs to Activated Pipeline.",
         "primary_key": ["contract_id", "contract_version"],
         "foreign_keys": [{"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "A contract defines one Catalogue table."}],
         "relationships": [{"cardinality": "N:M", "related_table": "METADATA_ACTIVATION_STATE", "statement": "Many activated manifests may reuse this exact frozen contract; manifest references are not scalar foreign keys."}],
     },
     "METADATA_DATA_CATALOGUE": {
-        "purpose": "The current structural registry of known table and column assets. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.",
-        "grain": "One table or column asset in one environment.",
+        "purpose": "Lists registered tables and columns, where they are stored, their data types and whether they are still active.",
+        "grain": "One registered table or column in one environment.",
+        "implementation_notes": "The current structural registry of known table and column assets. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.",
         "primary_key": ["environment_name", "table_id", "column_id"],
         "foreign_keys": [],
         "relationships": [
@@ -189,8 +188,9 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_SOURCE_OBSERVATION": {
-        "purpose": "Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. run_id joins METADATA_PIPELINE_RUN.run_id for planned executions; _activity_id retains the actual Fabric activity shared by different attempts. Legacy and standalone observations may have no run_id. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed records accepted incremental progress, and drift_committed records the Source Drift baseline. Warehouse publication_observed and publication_committed rows store target-only retry receipts with empty source identity and no watermark; they also cover Full Read and source-free writes.",
-        "grain": "One observed or committed partition-state row within one logical notebook, source table, target table, and observation; target-only Warehouse publication receipt rows have an empty source identity.",
+        "purpose": "Records what a pipeline observed about its sources and published targets, so it can track changes and resume incremental processing safely.",
+        "grain": "One recorded source or target state for a pipeline operation and its affected target.",
+        "implementation_notes": "Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. run_id joins METADATA_PIPELINE_RUN.run_id for planned executions; _activity_id retains the actual Fabric activity shared by different attempts. Legacy and standalone observations may have no run_id. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed records accepted incremental progress, and drift_committed records the Source Drift baseline. Warehouse publication_observed and publication_committed rows store target-only retry receipts with empty source identity and no watermark; they also cover Full Read and source-free writes.",
         "primary_key": ["observation_id", "partition_value", "observation_status"],
         "foreign_keys": [
             {"local_field": "run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Planned source observations belong to the same logical pipeline attempt as run evidence; legacy and standalone observations may have no run record."},
@@ -200,8 +200,9 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_DATA_PROFILED": {
-        "purpose": "See column-level profile metrics for a dataset snapshot. table_name and column_name record the names observed when written and do not follow later Catalogue renames.",
-        "grain": "One observed column in one profiling snapshot.",
+        "purpose": "Stores statistics about table columns from profiling runs, making it easier to understand the data and track changes over time.",
+        "grain": "One column's statistics from one profiling snapshot.",
+        "implementation_notes": "See column-level profile metrics for a dataset snapshot. table_name and column_name record the names observed when written and do not follow later Catalogue renames.",
         "primary_key": ["profile_id"],
         "foreign_keys": [
             {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many column profile snapshots can describe the same logical Catalogue table over time."},
@@ -212,8 +213,9 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_PROFILED_FREQUENCY": {
-        "purpose": "Frequency distributions retain Table ID, Column ID, environment, captured names and datatype. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.",
-        "grain": "One ranked value for a column and frequency activity snapshot. The statistical Profile reference is optional.",
+        "purpose": "Shows which values appear most often in a column and how frequently they occur.",
+        "grain": "One recorded value and its frequency for a column in a profiling snapshot.",
+        "implementation_notes": "Frequency distributions retain Table ID, Column ID, environment, captured names and datatype. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.",
         "primary_key": ["frequency_id"],
         "foreign_keys": [
             {"local_field": "profile_id", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profile_id", "cardinality": "N:1", "statement": "Combined standalone profiling links Frequency rows to their parent statistical Profile through profile_id. Independently scheduled Frequency Profiling leaves profile_id null and retains Table ID, Column ID and its own activity snapshot."},
@@ -223,8 +225,9 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_LINEAGE": {
-        "purpose": "See which registered tables participated as sources and targets in pipeline activities; table_name records the name at the participation write while table_id remains stable. The current notebook's Lineage defines Data Contract resolution scope.",
-        "grain": "One registered table participating as a source or target in one pipeline activity.",
+        "purpose": "Shows which tables a pipeline reads and writes, so you can trace how data moves through FabricOps.",
+        "grain": "One table's participation as a source or target in a pipeline operation.",
+        "implementation_notes": "See which registered tables participated as sources and targets in pipeline activities; table_name records the name at the participation write while table_id remains stable. The current notebook's Lineage defines Data Contract resolution scope.",
         "primary_key": ["lineage_id"],
         "foreign_keys": [
             {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many lineage participation records can refer to the same logical Catalogue table identity."},
@@ -232,8 +235,9 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_DATA_ACCESS": {
-        "purpose": "See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.",
-        "grain": "One observed access grant for one principal or access selector and one governed table within one access snapshot.",
+        "purpose": "Records permissions observed for governed tables across Workspace, OneLake and SQL access. It does not determine a person's effective access.",
+        "grain": "One observed permission for a principal or access selector on a table during one scan.",
+        "implementation_notes": "See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.",
         "primary_key": ["access_id"],
         "foreign_keys": [
             {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many observed SQL permission rows can reference the same logical Catalogue table identity in an environment."},
@@ -241,8 +245,9 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_GUARDRAIL_RESULTS": {
-        "purpose": "Store aggregate Live Guardrail summaries for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.",
-        "grain": "One persisted Live Guardrail outcome for one exact Data Contract version; Testing returns outcomes in memory only.",
+        "purpose": "Summarizes the Guardrail checks from Live pipeline runs, including whether the pipeline could continue. It does not store failed business rows.",
+        "grain": "One saved Guardrail outcome for an exact Data Contract version during a Live run.",
+        "implementation_notes": "Store aggregate Live Guardrail summaries for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.",
         "primary_key": ["guardrail_result_id"],
         "foreign_keys": [
             {"local_field": "run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Planned execution results belong to one logical pipeline run; standalone historical results may have no run record."},
@@ -251,6 +256,25 @@ METADATA_TABLE_MODELS = {
         ],
         "relationships": [],
     },
+}
+
+# Public entrypoints known to cause persisted metadata writes. Some entrypoints
+# delegate the physical Delta write to internal helpers. Keep this separate from
+# per-column provenance; do not list read-only access resolution as a writer.
+METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
+    "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
+    "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
+    "METADATA_DATA_CONTRACT": ["widget_data_contract"],
+    "METADATA_ACTIVATION_STATE": ["widget_activate_pipeline", "setup_pipeline", "finalize_pipeline"],
+    "METADATA_PIPELINE_REGISTRY": ["setup_pipeline"],
+    "METADATA_PIPELINE_RUN": ["finalize_pipeline"],
+    "METADATA_DATA_CATALOGUE": ["orchestrate_read", "orchestrate_write", "profile_table"],
+    "METADATA_DATA_PROFILED": ["orchestrate_read", "orchestrate_write", "profile_table"],
+    "METADATA_DATA_PROFILED_FREQUENCY": ["orchestrate_read", "orchestrate_write", "profile_table"],
+    "METADATA_DATA_LINEAGE": ["orchestrate_read", "orchestrate_write", "pipeline_read"],
+    "METADATA_SOURCE_OBSERVATION": ["orchestrate_read", "orchestrate_write"],
+    "METADATA_GUARDRAIL_RESULTS": ["orchestrate_read", "orchestrate_write"],
+    "METADATA_DATA_ACCESS": ["scan_workspace_access", "scan_onelake_access", "scan_sql_access"],
 }
 
 METADATA_REFERENCE_ORDER = [

@@ -320,6 +320,18 @@
   </a>
 </div>
 
+<a class="fabricops-metadata-preview" href="reference/metadata/" aria-label="Explore the interactive FabricOps metadata relationship map">
+  <span class="fabricops-metadata-preview__body">
+    <span class="fabricops-metadata-preview__eyebrow">Interactive reference</span>
+    <strong class="fabricops-metadata-preview__title">Explore the Metadata Tables map</strong>
+    <span class="fabricops-metadata-preview__description">See how Governance and Engineering tables connect, then inspect their keys, relationships and schemas.</span>
+    <span class="fabricops-metadata-preview__action">Open interactive map <span aria-hidden="true">→</span></span>
+  </span>
+  <span class="fabricops-metadata-preview__image" aria-hidden="true">
+    <img src="assets/fabricops-metadata-approved.svg" alt="" loading="lazy" decoding="async">
+  </span>
+</a>
+
 <video class="fabricops-home-video" controls preload="metadata" playsinline aria-label="FabricOps overview video">
   <source src="assets/FabricOps_Overview_Video_web.mp4" type="video/mp4">
   Your browser does not support embedded video. <a href="assets/FabricOps_Overview_Video_web.mp4">Open the FabricOps overview video</a>.
