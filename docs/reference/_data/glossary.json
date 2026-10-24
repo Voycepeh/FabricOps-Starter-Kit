@@ -760,5 +760,15 @@
     "id": "table-profiling-policy",
     "short_definition": "Versioned Data Contract schedules for Standard Profiling, Grain Discovery and Frequency Profiling.",
     "avoid_usage": "contract Guardrail schedule"
+  },
+  {
+    "id": "pipeline-registry",
+    "term": "Pipeline Registry",
+    "aliases": [],
+    "category": "Data Engineering concepts",
+    "short_definition": "Engineering registration of permanent Pipeline UUIDs and environment notebook bindings.",
+    "long_definition": "METADATA_PIPELINE_REGISTRY stores one logical pipeline binding per environment. Registration recovers a UUIDv4 using the exact workspace and notebook IDs. It never grants activation or Live authorization.",
+    "preferred_usage": "Use Pipeline Registry for permanent UUIDv4 registration and notebook bindings.",
+    "avoid_usage": "Activation State when describing Engineering registration"
   }
 ]

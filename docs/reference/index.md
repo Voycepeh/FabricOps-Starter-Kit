@@ -35,8 +35,8 @@ Use the finder below to search 27 public functions. Config classes stay out of t
     Maintainer inventory metrics:
 
     - Source Python files count: 52
-    - Total callables: 714
-    - Supporting functions: 365
+    - Total callables: 718
+    - Supporting functions: 369
     - Private helpers to review: 315
 
     - [Function Call Graph](../function-call-graph.md): explanatory page for the v4 normalized public-function call-flow architecture contract.
@@ -53,9 +53,9 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 <summary><span class="reference-function-group-title">Standard Orchestration</span><span class="reference-function-group-meta">4 functions · Recommended</span></summary>
 <p class="reference-function-group-description">Complete governed read and write lifecycle for the standard FabricOps pipeline.</p>
 <div class="reference-catalogue-list">
-<article id="pipeline.finalize_pipeline-finalize_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="finalize_pipeline" data-callable-module="pipeline.finalize_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Complete execution and publish Testing run and Guardrail results.">
+<article id="pipeline.finalize_pipeline-finalize_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="finalize_pipeline" data-callable-module="pipeline.finalize_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Complete execution and return Test results or commit the Live outcome.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/finalize_pipeline/"><code>finalize_pipeline</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Complete execution and publish Testing run and Guardrail results.</p>
+  <p class="reference-catalogue-item-purpose">Complete execution and return Test results or commit the Live outcome.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 <article id="pipeline.orchestrate_read-orchestrate_read" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_read" data-callable-module="pipeline.orchestrate_read" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Run the observable standard governed source lifecycle.">

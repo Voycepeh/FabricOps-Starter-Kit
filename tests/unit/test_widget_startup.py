@@ -54,9 +54,9 @@ def test_public_widget_displays_before_services_without_duplicate_reads(name, mo
         monkeypatch.setattr(module, "metadata_records", lambda table, **kw: read(table, [])())
         monkeypatch.setattr(module, "read_activation_state", read("activation", (None, {})))
         monkeypatch.setattr(module, "environment_activation", lambda *_: {"pipelines": {}, "tables": {}, "revision": 0})
-        state = module.widget_activate_pipeline()
+        state = module.widget_activate_pipeline(testing_results=[])
         root = state["widget"]
-        assert reads == ["METADATA_PIPELINE_RUN", "METADATA_DATA_AGREEMENT", "activation"]
+        assert reads == ["METADATA_DATA_AGREEMENT", "activation"]
     assert outputs[-1][1] is root
     assert root.startup_timings["metadata_loading"] >= 0
     assert "interactive_ready" not in root.startup_timings
@@ -84,6 +84,7 @@ def test_pipeline_loading_precedes_initialization_and_collect(monkeypatch, outpu
         calls.append("collect")
         return []
 
+    monkeypatch.setattr(shared, "resolve_pipeline_registration", lambda identity, **kwargs: {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "resolution": "Recovered"})
     monkeypatch.setattr(shared, "initialize_notebook", initialize)
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda **kw: (config, "dev", {}))
     monkeypatch.setattr(shared, "get_spark_session", lambda: object())

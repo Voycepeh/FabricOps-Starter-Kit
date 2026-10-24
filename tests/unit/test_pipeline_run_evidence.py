@@ -74,7 +74,7 @@ def runtime(monkeypatch):
         return Rows()
     monkeypatch.setattr(shared, "read_lakehouse_table", read_run)
 
-    def make(mode="testing", roles=("source", "source", "target", "target"), activity="fabric-activity", notebook_name="notebook"):
+    def make(mode="live", roles=("source", "source", "target", "target"), activity="fabric-activity", notebook_name="notebook"):
         identities = {f"table{i}": {"table_id": f"table{i}", "store": "Bronze" if role == "source" else "Silver", "table_name": f"table{i}",
                                    "schema": "physical", "logical_id": f"asset{i}", "roles": [role]}
                       for i, role in enumerate(roles)}
@@ -83,7 +83,12 @@ def runtime(monkeypatch):
                             "contract_payload_json": json.dumps({"table": {"table_id": key, "columns": []}})} for key in identities}), {"config": {}, "env": "canary", "activity_id": activity, "notebook_name": notebook_name,
                             "_pipeline_bindings": {key: {"store": item["store"], "schema": item.get("schema"), "table_name": item["table_name"]}
                                                    for key, item in identities.items()}},
-                                            pipeline_id="orders", testing_writes=True)
+                                            pipeline_id="orders")
+        if mode == "live":
+            preview = replace(plan, execution_mode="testing", evidence={})
+            for index in range(len(roles)):
+                operation(preview, index)
+            plan = replace(plan, activated_pipeline_id="approved-release", approved_candidate_json=shared.canonical_candidate_json(shared.pipeline_candidate(preview)[0]))
         shared.persist_pipeline_run(plan)
         return plan
 
@@ -191,14 +196,14 @@ def test_testing_completion_requires_no_executable_identity(runtime, mode, statu
 def test_candidate_determinism_changes_and_physical_binding_exclusion(runtime):
     """Code, behavior and dependency changes alter identity; routing does not."""
     make, operation, _, _, _ = runtime
-    plan = make(roles=("source",))
+    plan = make(mode="testing", roles=("source",))
     operation(plan, 0, read_mode="full", read_parameters={"b": 2, "a": 1})
     baseline = shared.pipeline_candidate(plan)[1]
     assert shared.canonical_candidate_json({"b": 2, "a": 1}) == '{"a":1,"b":2}'
     identities = json.loads(plan.participants_json)
     identities["table0"].update(schema="other", store="elsewhere", table_name="renamed")
     assert shared.pipeline_candidate(replace(plan, environment="other", participants_json=json.dumps(identities)))[1] == baseline
-    other = make(roles=("source",))
+    other = make(mode="testing", roles=("source",))
     operation(other, 0, read_mode="incremental", read_parameters={"a": 1, "b": 2})
     assert shared.pipeline_candidate(other)[1] != baseline
     with pytest.raises(ValueError):
@@ -229,6 +234,7 @@ def test_secret_inputs_and_unidentified_dependencies_cannot_qualify(runtime, sec
     assert "hidden-secret" not in json.dumps(saved[plan.plan_id], default=str)
     assert finalize_pipeline_run(plan)["status"] == "failed"
     plan = make(roles=("source",))
+    plan = replace(plan, execution_mode="testing")
     operation(plan, 0, query="SELECT * FROM externally_bound_table")
     assert finalize_pipeline_run(plan)["status"] == "incomplete"
 
@@ -426,7 +432,7 @@ def test_exact_contract_identity_changes_exact_but_not_portable_fingerprint(runt
 def test_secondary_metadata_failure_preserves_original_publication_details(runtime):
     """Do not erase an earlier committed publication when diagnostics also fail."""
     make, _, _, _, failure = runtime
-    plan = make(mode="testing", roles=("target",))
+    plan = make(mode="live", roles=("target",))
     with pytest.raises(RuntimeError) as raised:
         with shared.PipelineOperation(plan, "target", {"store": "Silver", "schema": "physical", "table_name": "table0", "sources": []}):
             error = RuntimeError("Profile failed")
@@ -444,7 +450,7 @@ def test_secondary_metadata_failure_preserves_original_publication_details(runti
 def test_post_publication_evidence_failure_retains_published_flag(runtime):
     """An evidence error cannot imply that an already completed Write rolled back."""
     make, operation, _, _, failure = runtime
-    plan = make(mode="testing", roles=("target",))
+    plan = make(mode="live", roles=("target",))
     with pytest.raises(RuntimeError) as raised:
         with shared.PipelineOperation(plan, "target", {"store": "Silver", "schema": "physical", "table_name": "table0", "sources": []}) as journal:
             journal.complete([{"stage": "Write", "status": "passed"}, {"stage": "Profile", "status": "passed"}])
@@ -470,7 +476,7 @@ def test_nested_operation_parameters_remain_exact_while_routing_is_portable(runt
     make, operation, _, _, _ = runtime
     fingerprints = []
     for value in ("before", "after"):
-        plan = make(roles=(role,))
+        plan = make(mode="testing", roles=(role,))
         operation(plan, 0, **{parameter: {"schema": value, "nested": {"table_name": value}}})
         candidate, fingerprint, _ = shared.pipeline_candidate(plan)
         configuration = candidate["operations"][0]["configuration"]
@@ -509,7 +515,7 @@ def test_operation_cannot_switch_to_case_alias_store_in_another_physical_item(ru
         with plan:
             with shared.PipelineOperation(plan, role, {"store": "silver", "schema": None, "table_name": "employees", "sources": []}):
                 pytest.fail("A mismatched physical operation must never start")
-    assert saved[plan.plan_id]["status"] == "failed"
+    assert (saved[plan.plan_id] if mode == "live" else plan.run_result)["status"] == "failed"
 
 
 @pytest.mark.parametrize('roles', [('source',), ('source', 'source', 'target', 'target')])

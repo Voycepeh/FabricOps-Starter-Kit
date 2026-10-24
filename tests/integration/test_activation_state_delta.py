@@ -80,8 +80,22 @@ def test_persisted_overlapping_commits_cannot_both_publish(authority_delta):
     assert runtime.spark.read.format("delta").load(runtime.path).count() == 1
 
 
-def test_finalization_publishes_test_results_once_with_real_delta(authority_delta, monkeypatch, tmp_path):
-    """Completed Test publishes diagnostics before its run using idempotent Delta keys."""
+def test_rebind_barrier_is_persisted_and_released_in_activation_authority(authority_delta):
+    """A notebook transfer blocks competing starts through the durable authority."""
+    runtime = authority_delta
+    pipeline_id = "8f32a471-6c91-4b7e-9d13-2f0c947eab52"
+    lease_id = service.reserve_pipeline_rebind(pipeline_id, context=runtime.context, spark_session=runtime.spark)
+    _token, state = service.read_activation_state(context=runtime.context, spark_session=runtime.spark)
+    assert service.environment_activation(state, "DEV")["runs"][lease_id]["mode"] == "rebind"
+    with pytest.raises(ValueError, match="another rebind"):
+        service.reserve_pipeline_rebind(pipeline_id, context=runtime.context, spark_session=runtime.spark)
+    service.release_pipeline_rebind(pipeline_id, lease_id, context=runtime.context, spark_session=runtime.spark)
+    _token, state = service.read_activation_state(context=runtime.context, spark_session=runtime.spark)
+    assert service.environment_activation(state, "DEV")["runs"] == {}
+
+
+def test_finalization_keeps_test_results_in_memory_with_real_delta(authority_delta, monkeypatch, tmp_path):
+    """Completed Test commits neither run nor diagnostic rows, including repeated finalization."""
     from fabricops_kit import finalize_pipeline
     from fabricops_kit.pipeline import shared
     runtime = authority_delta
@@ -109,9 +123,6 @@ def test_finalization_publishes_test_results_once_with_real_delta(authority_delt
     result = finalize_pipeline(session)
     assert result['status'] == 'ungoverned_completed' and not plan.permits_persistence
     assert finalize_pipeline(session) == result
-    stored = runtime.spark.read.format('delta').load(paths['METADATA_PIPELINE_RUN']).collect()
-    diagnostics = runtime.spark.read.format('delta').load(paths['METADATA_GUARDRAIL_RESULTS']).collect()
-    assert len(stored) == len(diagnostics) == 1
-    assert stored[0].run_id == diagnostics[0].run_id == plan.plan_id
-    assert stored[0].status == 'ungoverned_completed' and stored[0].completed_at is not None
-    assert diagnostics[0].guardrail_result_id == 'stable-result'
+    assert runtime.spark.read.format('delta').load(paths['METADATA_PIPELINE_RUN']).count() == 0
+    assert runtime.spark.read.format('delta').load(paths['METADATA_GUARDRAIL_RESULTS']).count() == 0
+    assert result['guardrail_results'][0]['guardrail_result_id'] == 'stable-result'

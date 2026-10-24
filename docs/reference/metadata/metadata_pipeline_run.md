@@ -16,13 +16,14 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One pipeline execution attempt.
+**Grain:** One Live pipeline execution attempt. Test results remain in memory.
 
 **Primary key:** `run_id`
 
 **Relationships:**
 
-No immediate table relationship is defined in the current implementation.
+`METADATA_PIPELINE_REGISTRY` **(N → 1)**
+via `pipeline_id`
 
 ## Column summary
 

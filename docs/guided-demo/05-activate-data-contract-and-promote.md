@@ -1,10 +1,10 @@
 # Step 5. Activate the tested pipeline and promote to Production
 
-Run `finalize_pipeline(CONTRACTS)` after completing Testing in [Step 4](04-validate-frozen-data-contract.md). It publishes the final `METADATA_PIPELINE_RUN` and linked `METADATA_GUARDRAIL_RESULTS` for review. Activation requires complete successful Testing, frozen contracts for every participant, an effective Data Agreement and explicit Governance approval. Interactive diagnostics alone cannot activate a release.
+Run `finalize_pipeline(CONTRACTS)` after completing Testing in [Step 4](04-validate-frozen-data-contract.md). It returns complete in-memory Test results for review; Test never commits execution metadata. Activation requires complete successful Testing, frozen contracts for every participant, an effective Data Agreement and explicit Governance approval. Interactive diagnostics alone cannot activate a release.
 
 ## Review the affected release
 
-1. Open `widget_activate_pipeline()` in `01_governance`. The resolved environment is shown automatically.
+1. Hand off the complete `pipeline_result` to the reviewer and open `widget_activate_pipeline(testing_results=[pipeline_result])` in the same environment. Independently confirm the Fabric notebook execution for each candidate, enter its run reference and attest verification in the widget. The resolved environment is shown automatically.
 2. Select the successful Testing run, immutable pipeline version, exact effective Data Agreement.
 3. Review participating tables, proposed contract versions and current writer ownership. When a shared table changes, include compatible successful Testing candidates for every affected active pipeline. Missing or failed tests and competing writers block approval.
 4. Choose **Review complete release**. Inspect the current/proposed table mappings, affected pipelines and readiness report.
@@ -24,8 +24,8 @@ A running Live plan pins its revision. Activation blocks affected changes until 
 
 See the [complete lifecycle, failure policy and limits](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#activate-deploy-and-run-unattended).
 
-## Migrate existing metadata
+## Initialize metadata
 
-Run `setup_metadata_tables()` under controlled administration to create the new singleton authority. Existing individual approvals are not trusted or imported. Reconcile old environment-specific contract histories into one global lifecycle per table, rerun complete governed Testing and approve the affected release. No data or old metadata table is deleted automatically.
+Run `setup_metadata_tables()` under controlled administration to initialize the Engineering Pipeline Registry and Governance Activation State. Carry the saved Pipeline UUID into Production, run Test there, and approve that environment explicitly. Registration never activates a pipeline.
 
 **Expected result:** one consistent approved environment revision with one table contract, at most one writer per table, and all affected pipelines tested together.

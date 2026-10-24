@@ -48,7 +48,7 @@ def _missing_contracts(row):
         return []
 
 
-def _release_view(report, candidates):
+def _release_view(report, candidates, requests):
     """Render the contract and writer decisions with expandable Testing details."""
     visible = set(report.get("changed_tables", []))
     for candidate in candidates:
@@ -67,24 +67,35 @@ def _release_view(report, candidates):
     result = "<h3>" + text(report.get("environment")) + " · " + status + "</h3>" + table
     result += "<ul>" + "".join("<li>" + text(item) + "</li>" for item in blockers) + "</ul>"
     result += "<p>Affected pipelines: " + text(", ".join(report.get("affected_pipelines", [])) or "None") + "</p>"
+    verification = {request["testing_run_id"]: request["testing_verification"] for request in requests}
     for candidate in candidates:
         detail = {"run_id": candidate["run_id"], "status": candidate["status"],
+                  "testing_notebook_binding": candidate.get("testing_notebook_binding"),
+                  "testing_verification": verification[candidate["run_id"]],
                   "configuration": json.loads(candidate["candidate_json"]),
                   "execution_results": json.loads(candidate["operation_summary_json"])}
         result += "<details><summary>" + text(candidate["pipeline_id"]) + " · Successful Testing</summary><pre>" + html.escape(json.dumps(detail, indent=2, default=str)) + "</pre></details>"
     return result
 
 
-def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=None) -> dict[str, Any]:
+def widget_activate_pipeline(*, testing_results, pipeline_id=None, spark_session=None, context=None) -> dict[str, Any]:
     """Review one successful Testing run and coordinate all affected pipeline candidates.
+
+    Pass finalized in-memory Test results using testing_results=[pipeline_result].
+    For each candidate, independently check its Fabric notebook execution,
+    enter the Fabric run reference and attest that the Test actually ran.
+    No execution metadata is committed by Test; approval freezes the reviewed
+    evidence in METADATA_ACTIVATION_STATE.
 
     Displays environment, current/proposed table contracts, writer ownership,
     affected pipelines, missing tests, conflicts and complete release readiness.
     Completed Testing runs missing contracts are listed by table ID and excluded
     from review. Extra candidate controls appear for shared-table dependencies.
     Supply an immutable release version for
-    every selected pipeline. The backend revalidates complete Testing, exact
-    contracts, Agreement and processing configuration at review and again at approval.
+    every selected pipeline. The backend checks the supplied Test result,
+    current registered notebook binding, exact contracts, Agreement and
+    processing configuration at review and again at approval. Because Test
+    commits no execution record, Governance must verify the Fabric run itself.
 
     One explicit approval publishes the entire environment revision atomically.
     Stale review, missing tests, competing writers, contract conflicts or affected
@@ -99,8 +110,11 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
         _config, env, _runtime = resolve_fabric_context(context=context)
     with startup.phase("metadata_loading", "Loading configured metadata…"):
-        all_runs = [row for row in metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session)
-                    if row.get("environment_name") == env]
+        all_runs = json.loads(json.dumps(list(testing_results), default=str))
+        if any(row.get("environment_name") != env for row in all_runs):
+            raise ValueError("Testing results must belong to the activation environment.")
+        if len({row["run_id"] for row in all_runs}) != len(all_runs):
+            raise ValueError("Select each Testing result only once.")
     runs = [row for row in all_runs if _eligible_candidate(row)]
     excluded = [(row, _missing_contracts(row)) for row in all_runs
                 if pipeline_id is None or row["pipeline_id"] == pipeline_id]
@@ -142,9 +156,11 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
         for run_id in dict.fromkeys([run_select.value, *additions.value]):
             row = next(row for row in runs if row["run_id"] == run_id)
             controls = state["candidate_controls"][run_id]
-            result.append({"testing_run_id": run_id, "candidate_fingerprint": row["candidate_fingerprint"],
+            result.append({"testing_result": row, "testing_run_id": run_id, "candidate_fingerprint": row["candidate_fingerprint"],
                 "pipeline_name": row["pipeline_id"], "pipeline_version": controls["version"].value.strip(),
-                "agreement_id": agreement.value[0], "agreement_version": agreement.value[1]})
+                "agreement_id": agreement.value[0], "agreement_version": agreement.value[1],
+                "testing_verification": {"verified": controls["verified"].value,
+                                         "reference": controls["run_reference"].value.strip()}})
         return result
 
     def refresh(*_):
@@ -158,7 +174,12 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
         for row in selected:
             controls = state["candidate_controls"].get(row["run_id"])
             if controls is None:
-                controls = {"version": widgets.Text(description="Version", layout=widgets.Layout(width="100%"))}
+                controls = {
+                    "version": widgets.Text(description="Version", layout=widgets.Layout(width="100%")),
+                    "run_reference": widgets.Text(description="Fabric run", placeholder="Verified Fabric notebook run reference",
+                        layout=widgets.Layout(width="100%")),
+                    "verified": widgets.Checkbox(description="I independently verified this Fabric Test execution", indent=False),
+                }
                 for control in controls.values():
                     control.observe(invalidate, names="value")
                 state["candidate_controls"][row["run_id"]] = controls
@@ -194,13 +215,14 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
 
     def review_release(_=None):
         invalidate()
-        token, _snapshot, _proposed, report = review_pipeline_release(requests(), context=context, spark_session=spark_session)
+        selected_requests = requests()
+        token, _snapshot, _proposed, report = review_pipeline_release(selected_requests, context=context, spark_session=spark_session)
         state["report"] = report
         selected = [row for row in runs if row["run_id"] in {run_select.value, *additions.value}]
-        details.value = _release_view(report, selected)
+        details.value = _release_view(report, selected, selected_requests)
         if report["ready"]:
             state["review_token"] = token
-            state["reviewed_requests"] = requests()
+            state["reviewed_requests"] = json.loads(json.dumps(selected_requests))
         return report
 
     def perform_activation(_=None):

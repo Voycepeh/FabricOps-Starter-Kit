@@ -343,17 +343,15 @@ def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(f
         setup_notebook(config=config, env="dev", required_targets=["missing"])
 
 
-def test_setup_notebook_uses_consolidated_governance_name_contract(fake_notebookutils):
-    """Accept 01_governance and reject the removed Governance notebook type."""
+def test_setup_notebook_names_are_informational(fake_notebookutils):
+    """Accept arbitrary notebook names while retaining runtime validation."""
     config = framework_config()
 
     governance = setup_notebook(config=config, env="dev", required_targets=["Bronze"], notebook_name="01_governance_orders")
     legacy = setup_notebook(config=config, env="dev", required_targets=["Bronze"], notebook_name="03_governance_orders")
 
-    governance_check = next(check for check in governance.validation_results if check.name == "notebook_naming")
-    legacy_check = next(check for check in legacy.validation_results if check.name == "notebook_naming")
-    assert governance_check.status == "pass"
-    assert legacy_check.status == "fail"
+    assert all(check.name != "notebook_naming" for context in (governance, legacy) for check in context.validation_results)
+    assert governance.readiness_status == legacy.readiness_status
 
 
 def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
@@ -413,7 +411,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
             self.pending_schema = None
 
         def createDataFrame(self, rows, schema=None):  # noqa: N802
-            assert rows == [] or rows[0].get("authority_id") == "central" or (
+            assert rows == [] or rows[0].get("pipeline_id") == "central" or rows[0].get("authority_id") == "central" or (
                 rows[0].get("state_id") == "central" and json.loads(rows[0]["snapshot_json"]) == {
                     "format": "fabricops.table-profiling.v1", "policies": {}, "history": {}}
             )
@@ -438,7 +436,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     ):
         assert store == "Metadata"
         assert schema in {"governance", "engineering"}
-        assert mode == ("errorifexists" if table_name == "METADATA_ACTIVATION_STATE" else "overwrite")
+        assert mode == ("errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_PIPELINE_REGISTRY"} else "overwrite")
         assert options is None
         assert verbose is False
         spark.created_tables.append(table_name)
@@ -890,7 +888,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
 
     class Spark:
         def createDataFrame(self, rows, schema=None):  # noqa: N802
-            assert rows == [] or rows[0].get("authority_id") == "central" or (
+            assert rows == [] or rows[0].get("pipeline_id") == "central" or rows[0].get("authority_id") == "central" or (
                 rows[0].get("state_id") == "central" and json.loads(rows[0]["snapshot_json"]) == {
                     "format": "fabricops.table-profiling.v1", "policies": {}, "history": {}}
             )
@@ -902,7 +900,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
         return existing[table_name]
 
     def write_table(frame, table_name, **kwargs):
-        assert kwargs.get("mode") == ("errorifexists" if table_name == "METADATA_ACTIVATION_STATE" else "overwrite")
+        assert kwargs.get("mode") == ("errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_PIPELINE_REGISTRY"} else "overwrite")
         created[table_name] = frame.schema
         existing[table_name] = frame
 

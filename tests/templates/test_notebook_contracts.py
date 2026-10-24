@@ -160,13 +160,14 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     assert 'store="Metadata"' not in source
     assert 'TABLE_ID = table_selection["table_id"]' not in source
     assert source.count("widget_data_contract(spark_session=spark)") == 1
-    assert source.count("widget_activate_pipeline(spark_session=spark)") == 1
+    assert source.count("widget_activate_pipeline(testing_results=TESTING_RESULTS, spark_session=spark)") == 1
+    assert "TESTING_RESULTS = []" in source
     assert "Data Steward" in source
     assert "Data Agreement" in source
     assert "**Table**, **Columns**, and **Review**" in source
     assert "Freezing creates an immutable candidate for Engineering validation" in source
     assert "Governance authoring and Engineering validation intentionally loop" in source
-    assert "Activation creates an immutable" in source
+    assert "Activation freezes the approved manifest" in source
     assert "does **not** promote or deploy `02_pipeline`" in source
     for demoted_widget in (
         "widget_enrich_table_metadata",
@@ -483,7 +484,7 @@ def test_guided_demo_explains_explicit_testing_writes_and_contract_selection():
     assert 'PIPELINE_MODE = "Test"' in step_2a
     assert "PIPELINE_TESTING_WRITES" not in step_2a
     assert "finalize_pipeline(CONTRACTS)" in step_2a
-    assert "Guardrail" in step_4 and "results are in memory" in step_4.casefold()
+    assert "Guardrail" in step_4 and "results remain in memory" in step_4.casefold()
 
 
 

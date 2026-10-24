@@ -979,27 +979,6 @@ def initialize_notebook(
         else:
             checks.append(ConfigSmokeCheckResult(f"path:{store_name}", "pass", "Store is populated."))
 
-    if resolved_notebook_name:
-        normalized_name = "_".join(str(resolved_notebook_name).strip().lower().split())
-        patterns = [
-            r"^00_env_config$",
-            r"^02_pipeline(?:_[a-z0-9_]+)?$",
-            r"^01_governance(?:_[a-z0-9_]+)?$",
-            r"^99_explore(?:_[a-z0-9_]+)?$",
-        ]
-        naming_errors = [] if any(re.match(pattern, normalized_name) for pattern in patterns) else [
-            "Notebook name does not match accepted FabricOps naming patterns."
-        ]
-        checks.append(
-            ConfigSmokeCheckResult(
-                "notebook_naming",
-                "pass" if not naming_errors else "fail",
-                "; ".join(naming_errors) or "Notebook name is valid.",
-            )
-        )
-    else:
-        checks.append(ConfigSmokeCheckResult("notebook_naming", "skipped", "Notebook name check skipped."))
-
     readiness_status = "ready" if all(r.status in {"pass", "warn", "skipped"} for r in checks) else "not_ready"
 
     result = NotebookSetupContext(

@@ -25,7 +25,8 @@ def authority(runtime, monkeypatch, tmp_path):
     monkeypatch.setattr(service, "resolve_fabric_context", lambda context=None: (context["config"], context["env"], dict(context)))
     monkeypatch.setattr(pipeline, "resolve_fabric_context", service.resolve_fabric_context)
     monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **kw: {})
-    contracts, diagnostics = [], []
+    contracts, diagnostics, registrations = [], [], []
+    monkeypatch.setattr(pipeline, "read_pipeline_registry", lambda **kw: ("registry-token", copy.deepcopy(registrations)))
     agreement = {"agreement_id": "agreement", "agreement_version": "1", "start_date": "2020-01-01", "expiry_date": "2099-01-01"}
     central = {"token": "initial", "state": json.loads(service.empty_activation_state()), "fail": False}
     lock = Lock()
@@ -47,8 +48,8 @@ def authority(runtime, monkeypatch, tmp_path):
             return central["token"]
     monkeypatch.setattr(service, "read_activation_state", read)
     monkeypatch.setattr(service, "commit_activation_state", commit)
-    def candidate(pipeline_id="A", version=3, roles=("target",), env="canary", tables=None, destinations=None):
-        plan = make(roles=roles)
+    def candidate(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596", version=3, roles=("target",), env="canary", tables=None, destinations=None):
+        plan = make(mode="testing", roles=roles)
         identities = json.loads(plan.participants_json)
         frozen, bindings = {}, {}
         tables = tables or list(identities)
@@ -72,14 +73,22 @@ def authority(runtime, monkeypatch, tmp_path):
         pipeline.persist_pipeline_run(plan)
         with plan:
             for table_id in identities:
-                operation(plan, int(table_id.removeprefix("table")))
-        run = saved[plan.plan_id]
+                operation(plan, int(table_id.removeprefix("table")), stages=[{"stage": "Read" if identities[table_id]["roles"] == ["source"] else "Processing", "status": "passed"}])
+        run = plan.run_result
+        # Results are retained by the test reviewer, never committed by Test.
+        saved[plan.plan_id] = run
+        run['guardrail_results'] = copy.deepcopy(diagnostics)
+        run['testing_notebook_binding'] = {'workspace_id': 'workspace', 'notebook_id': 'notebook', 'activity_id': 'fabric-test-run'}
+        registrations[:] = [row for row in registrations if (row['pipeline_id'], row['environment_name']) != (pipeline_id, env)]
+        registrations.append({'pipeline_id': pipeline_id, 'environment_name': env, 'registration_status': 'Active',
+                              'workspace_id': 'workspace', 'notebook_id': 'notebook'})
         run.update(_workspace_id="workspace", _notebook_id="notebook")
         return plan, run
     def request(run, release=None):
-        return {"testing_run_id": run["run_id"], "candidate_fingerprint": run["candidate_fingerprint"],
+        return {"testing_result": run, "testing_run_id": run["run_id"], "candidate_fingerprint": run["candidate_fingerprint"],
                 "pipeline_name": run["pipeline_id"], "pipeline_version": release or run["run_id"],
-                "agreement_id": "agreement", "agreement_version": "1"}
+            "agreement_id": "agreement", "agreement_version": "1",
+            "testing_verification": {"verified": True, "reference": "fabric-test-run"}}
     def approve(*runs, env="canary"):
         return service.approve_pipeline_release([request(run) for run in runs], expected_token=central["token"],
             governance_confirmed=True, context={**context, "env": env})
@@ -95,21 +104,21 @@ def test_single_pipeline_activation_has_no_business_or_deployment_side_effects(a
     _, run = state.candidate()
     before = set(tmp_path.iterdir())
     result = state.approve(run)
-    assert result["pipelines"]["A"]["testing_run_id"] == run["run_id"]
-    assert state.current()["tables"]["table0"]["writer"] == "A"
+    assert result["pipelines"]["4c7ae400-85ab-4023-9427-e8fde20bd596"]["testing_run_id"] == run["run_id"]
+    assert state.current()["tables"]["table0"]["writer"] == "4c7ae400-85ab-4023-9427-e8fde20bd596"
     assert set(tmp_path.iterdir()) == before
 
 
 def test_two_readers_are_allowed_and_competing_writers_rejected(authority):
     state = authority
-    _, a = state.candidate("A", roles=("source",))
-    _, b = state.candidate("B", roles=("source",))
+    _, a = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596", roles=("source",))
+    _, b = state.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", roles=("source",))
     state.approve(a); state.approve(b)
-    assert set(state.current()["tables"]["table0"]["readers"]) == {"A", "B"}
-    _, writer = state.candidate("Writer")
+    assert set(state.current()["tables"]["table0"]["readers"]) == {"4c7ae400-85ab-4023-9427-e8fde20bd596", "f5ee4669-5b76-4baf-9875-6cfecba2e031"}
+    _, writer = state.candidate("e6a217ed-7303-41ff-9764-c6a1c9840723")
     # Writer ownership change requires replacing directly affected readers too.
     state.approve(writer, a, b)
-    _, competing = state.candidate("OtherWriter")
+    _, competing = state.candidate("c7c4db41-dada-4574-8cfd-df096eaf7c33")
     before = copy.deepcopy(state.central)
     with pytest.raises(ValueError, match="Competing writer"):
         state.approve(competing, a, b, writer)
@@ -118,18 +127,18 @@ def test_two_readers_are_allowed_and_competing_writers_rejected(authority):
 
 def test_v3_to_v4_requires_complete_coordinated_testing(authority):
     state = authority
-    _, a3 = state.candidate("A")
-    _, b3 = state.candidate("B", roles=("source",))
+    _, a3 = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596")
+    _, b3 = state.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", roles=("source",))
     state.approve(a3); state.approve(b3)
-    _, a4 = state.candidate("A", version=4)
+    _, a4 = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596", version=4)
     before = copy.deepcopy(state.central)
-    with pytest.raises(ValueError, match="Missing replacement Testing candidate: B"):
+    with pytest.raises(ValueError, match="Missing replacement Testing candidate:"):
         state.approve(a4)
     assert state.central == before
-    _, b4 = state.candidate("B", version=4, roles=("source",))
+    _, b4 = state.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", version=4, roles=("source",))
     state.approve(a4, b4)
     assert state.current()["tables"]["table0"]["contract_version"] == 4
-    assert set(state.current()["pipelines"]) == {"A", "B"}
+    assert set(state.current()["pipelines"]) == {"4c7ae400-85ab-4023-9427-e8fde20bd596", "f5ee4669-5b76-4baf-9875-6cfecba2e031"}
     assert all(service.manifest_table_mappings(service.validate_manifest(row))["table0"]["contract_version"] == 4
                for row in state.current()["pipelines"].values())
 
@@ -145,11 +154,27 @@ def test_invalid_evidence_never_activates(authority, field, value):
     assert not state.current()["pipelines"]
 
 
+def test_unverified_handoff_and_previous_notebook_test_cannot_activate(authority):
+    state = authority
+    _, run = state.candidate()
+    request = state.request(run)
+    request["testing_verification"] = {"verified": False, "reference": "fabric-test-run"}
+    with pytest.raises(ValueError, match="independently verify"):
+        service.review_pipeline_release([request], context=state.context)
+    request["testing_verification"] = {"verified": True, "reference": ""}
+    with pytest.raises(ValueError, match="run reference"):
+        service.review_pipeline_release([request], context=state.context)
+    request = state.request(run)
+    run["testing_notebook_binding"]["notebook_id"] = "previous-notebook"
+    with pytest.raises(ValueError, match="current registered notebook"):
+        service.review_pipeline_release([request], context=state.context)
+
+
 def test_affected_failed_evidence_blocks_entire_release(authority):
     state = authority
-    _, a = state.candidate("A"); _, b = state.candidate("B", roles=("source",))
+    _, a = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596"); _, b = state.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", roles=("source",))
     state.approve(a); state.approve(b)
-    _, a4 = state.candidate("A", version=4); _, b4 = state.candidate("B", version=4, roles=("source",))
+    _, a4 = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596", version=4); _, b4 = state.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", version=4, roles=("source",))
     b4["status"] = "failed"
     before = copy.deepcopy(state.central)
     with pytest.raises(ValueError, match="complete successful"):
@@ -159,8 +184,8 @@ def test_affected_failed_evidence_blocks_entire_release(authority):
 
 def test_environment_isolation_shares_global_frozen_versions(authority):
     state = authority
-    _, prod = state.candidate("A", version=3)
-    _, dev = state.candidate("A", version=4, env="DEV")
+    _, prod = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596", version=3)
+    _, dev = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596", version=4, env="DEV")
     state.approve(prod); state.approve(dev, env="DEV")
     assert state.current()["tables"]["table0"]["contract_version"] == 3
     assert state.current("DEV")["tables"]["table0"]["contract_version"] == 4
@@ -186,7 +211,7 @@ def test_failed_commit_and_stale_review_expose_no_partial_state(authority):
 
 def test_concurrent_reviews_cannot_bypass_writer_consistency(authority):
     state = authority
-    _, a = state.candidate("A"); _, b = state.candidate("B")
+    _, a = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596"); _, b = state.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031")
     token = state.central["token"]
     def approve(run):
         try:
@@ -207,7 +232,7 @@ def test_live_run_pins_revision_and_drains_before_switch(authority, monkeypatch)
     identities = json.loads(plan.participants_json)
     monkeypatch.setattr(service, "resolve_pipeline_participants", lambda *a, **kw: identities)
     monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda *a, **kw: plan.runtime_context["_pipeline_bindings"])
-    live = service.build_live_pipeline_plan(pipeline_id="A", context=state.context)
+    live = service.build_live_pipeline_plan(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596", context=state.context)
     pinned = live.activation_revision
     _, next_run = state.candidate(version=4)
     with pytest.raises(ValueError, match="Drain running execution"):
@@ -220,44 +245,33 @@ def test_live_run_pins_revision_and_drains_before_switch(authority, monkeypatch)
     assert live.activation_revision == pinned != state.current()["revision"]
 
 
-def test_testing_writes_reserve_separate_destinations_and_respect_live(authority):
+def test_rebind_reservation_drains_live_and_blocks_new_live(authority, monkeypatch):
     state = authority
     plan, run = state.candidate()
     state.approve(run)
-    testing = replace(plan, plan_id="testing-write", evidence={}, testing_writes=True)
-    with pytest.raises(ValueError, match="Live-owned"):
-        service.reserve_testing_destinations(testing)
-    bindings = copy.deepcopy(plan.runtime_context["_pipeline_bindings"])
-    bindings["table0"]["item_id"] = "separate-testing-lakehouse"
-    testing = replace(testing, runtime_context={**testing.runtime_context, "config": {"bindings": bindings}, "_pipeline_bindings": bindings}, evidence={})
-    service.reserve_testing_destinations(testing)
-    assert testing.permits_persistence and testing.plan_id in state.current()["runs"]
-    service.release_pipeline_lease(testing)
-    assert testing.plan_id not in state.current()["runs"]
+    identities = json.loads(plan.participants_json)
+    monkeypatch.setattr(service, "resolve_pipeline_participants", lambda *a, **kw: identities)
+    monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda *a, **kw: plan.runtime_context["_pipeline_bindings"])
+    identity = run["pipeline_id"]
+    live = service.build_live_pipeline_plan(pipeline_id=identity, context=state.context)
+    with pytest.raises(ValueError, match="Drain active Live runs"):
+        service.reserve_pipeline_rebind(identity, context=state.context)
+    live.evidence["boundary_completed"] = True
+    pipeline.finalize_pipeline_run(live)
+    lease_id = service.reserve_pipeline_rebind(identity, context=state.context)
+    with pytest.raises(ValueError, match="rebinding is in progress"):
+        service.build_live_pipeline_plan(pipeline_id=identity, context=state.context)
+    service.release_pipeline_rebind(identity, lease_id, context=state.context)
+    assert not state.current()["runs"]
 
 
-def test_same_environment_activation_respects_testing_reservation_under_another_table_identity(authority):
-    state = authority
-    plan, _ = state.candidate("TestingA")
-    testing = replace(plan, plan_id="running-testing", evidence={}, testing_writes=True)
-    service.reserve_testing_destinations(testing)
-    physical = plan.runtime_context["_pipeline_bindings"]["table0"]
-    _, run = state.candidate("LiveB", tables=["table1"], destinations={"table1": physical})
-    before = copy.deepcopy(state.central)
-    _, _, _, report = service.review_pipeline_release([state.request(run)], context=state.context)
-    assert not report["ready"]
-    assert any("running-testing" in conflict for conflict in report["blocking_conflicts"])
-    with pytest.raises(ValueError, match="Drain Testing execution"):
-        state.approve(run)
-    assert state.central == before
-    service.release_pipeline_lease(testing)
-    state.approve(run)
-    assert state.current()["tables"]["table1"]["destination"] == physical
+
+
 
 
 def test_late_empty_boundary_cannot_authorize_previously_executed_operations(authority):
     state = authority
-    original, _ = state.candidate("A")
+    original, _ = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596")
     plan = replace(original, plan_id="outside-boundary", evidence={})
     pipeline.persist_pipeline_run(plan)
     state.operation(plan, 0)
@@ -266,7 +280,8 @@ def test_late_empty_boundary_cannot_authorize_previously_executed_operations(aut
     with pytest.raises(RuntimeError, match="before executing any operation"):
         with plan:
             pass
-    run = state.saved[plan.plan_id]
+    run = pipeline.persist_pipeline_run(plan)
+    assert plan.plan_id not in state.saved
     assert run["status"] == "incomplete"
     assert json.loads(run["operation_summary_json"])["boundary_completed"] is False
     with pytest.raises(ValueError, match="complete successful"):
@@ -288,38 +303,28 @@ def test_notebook_rename_preserves_pipeline_and_candidate_identity(authority):
     plan, _run = state.candidate()
     renamed = replace(plan, notebook_id="renamed-notebook", runtime_context={**plan.runtime_context, "notebook_name": "new-name"})
     assert pipeline.pipeline_candidate(renamed)[1] == pipeline.pipeline_candidate(plan)[1]
-    assert renamed.pipeline_id == "A"
+    assert renamed.pipeline_id == "4c7ae400-85ab-4023-9427-e8fde20bd596"
 
 
 def test_downstream_retesting_follows_changed_output_expectations_only(authority):
     state = authority
-    _, a3 = state.candidate("A")
-    _, b3 = state.candidate("B", roles=("source", "target"))
-    _, c3 = state.candidate("C", roles=("source",), tables=["table1"])
+    _, a3 = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596")
+    _, b3 = state.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", roles=("source", "target"))
+    _, c3 = state.candidate("967adc28-d152-4c40-8f4b-44934515a312", roles=("source",), tables=["table1"])
     state.approve(a3); state.approve(b3); state.approve(c3)
-    _, a4 = state.candidate("A", version=4)
-    _, b4 = state.candidate("B", version={"table0": 4, "table1": 3}, roles=("source", "target"))
+    _, a4 = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596", version=4)
+    _, b4 = state.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", version={"table0": 4, "table1": 3}, roles=("source", "target"))
     state.approve(a4, b4)
-    c_before = state.current()["pipelines"]["C"]["activated_pipeline_id"]
-    _, changed_output = state.candidate("B", version=4, roles=("source", "target"))
-    with pytest.raises(ValueError, match="Missing replacement Testing candidate: C"):
+    c_before = state.current()["pipelines"]["967adc28-d152-4c40-8f4b-44934515a312"]["activated_pipeline_id"]
+    _, changed_output = state.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", version=4, roles=("source", "target"))
+    with pytest.raises(ValueError, match="Missing replacement Testing candidate:"):
         state.approve(changed_output)
-    assert state.current()["pipelines"]["C"]["activated_pipeline_id"] == c_before
-    _, c4 = state.candidate("C", version=4, roles=("source",), tables=["table1"])
+    assert state.current()["pipelines"]["967adc28-d152-4c40-8f4b-44934515a312"]["activated_pipeline_id"] == c_before
+    _, c4 = state.candidate("967adc28-d152-4c40-8f4b-44934515a312", version=4, roles=("source",), tables=["table1"])
     state.approve(changed_output, c4)
     assert state.current()["tables"]["table1"]["contract_version"] == 4
 
 
-def test_real_testing_run_in_another_environment_does_not_block_distinct_destinations(authority):
-    state = authority
-    plan, _run = state.candidate("A", env="DEV")
-    testing = replace(plan, plan_id="dev-testing", evidence={}, testing_writes=True)
-    service.reserve_testing_destinations(testing)
-    _, prod = state.candidate("A", env="canary")
-    state.approve(prod)
-    assert state.current("DEV")["runs"]["dev-testing"]["mode"] == "testing"
-    service.validate_testing_destinations(testing)
-    service.release_pipeline_lease(testing)
 
 
 def test_live_operational_differences_warn_and_unsafe_changes_fail(authority, monkeypatch):
@@ -328,13 +333,13 @@ def test_live_operational_differences_warn_and_unsafe_changes_fail(authority, mo
     state.approve(run)
     monkeypatch.setattr(service, "resolve_pipeline_participants", lambda *a, **kw: json.loads(plan.participants_json))
     monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda *a, **kw: plan.runtime_context["_pipeline_bindings"])
-    live = service.build_live_pipeline_plan(pipeline_id="A", context=state.context)
+    live = service.build_live_pipeline_plan(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596", context=state.context)
     with pytest.warns(UserWarning, match="frequency_top_n"):
         with live:
             state.operation(live, 0, frequency_top_n=2)
     summary = json.loads(live.run_result["operation_summary_json"])
     assert summary["warnings"][0]["operational_parameters"] == ["frequency_top_n"]
-    live = service.build_live_pipeline_plan(pipeline_id="A", context=state.context)
+    live = service.build_live_pipeline_plan(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596", context=state.context)
     with pytest.raises(ValueError, match="configuration differs"):
         with live:
             state.operation(live, 0, write_mode="append")
@@ -358,26 +363,15 @@ def test_testing_destination_bindings_are_part_of_exact_candidate_identity(autho
     assert original_candidate["portable_fingerprint"] == changed_candidate["portable_fingerprint"]
 
 
-def test_testing_write_rejects_a_midrun_destination_configuration_change(authority):
-    state = authority
-    plan, _ = state.candidate(env="DEV")
-    testing = replace(plan, plan_id="testing-change", evidence={}, testing_writes=True)
-    service.reserve_testing_destinations(testing)
-    changed = copy.deepcopy(testing.runtime_context["_pipeline_bindings"])
-    changed["table0"]["item_id"] = "unreviewed-destination"
-    rerouted = replace(testing, runtime_context={**testing.runtime_context, "config": {"bindings": changed}})
-    with pytest.raises(ValueError, match="physical destinations changed"):
-        service.validate_testing_destinations(rerouted)
-    service.release_pipeline_lease(testing)
 
 
 def test_standalone_consumer_does_not_choose_an_arbitrary_agreement(authority):
     state = authority
-    _, a = state.candidate("A", roles=("source",))
-    _, b = state.candidate("B", roles=("source",))
+    _, a = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596", roles=("source",))
+    _, b = state.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", roles=("source",))
     state.approve(a); state.approve(b)
     assert service.resolve_approved_consumer_contract({}, "canary", "table0")["agreement_id"] == "agreement"
-    row = state.current()["pipelines"]["B"]
+    row = state.current()["pipelines"]["f5ee4669-5b76-4baf-9875-6cfecba2e031"]
     manifest = json.loads(row["manifest_json"])
     manifest["agreement"]["agreement_id"] = "another-approved-agreement"
     row.update(agreement_id="another-approved-agreement", manifest_json=pipeline.canonical_candidate_json(manifest),
@@ -388,23 +382,15 @@ def test_standalone_consumer_does_not_choose_an_arbitrary_agreement(authority):
 
 def test_table_aliases_cannot_bypass_physical_writer_ownership(authority):
     state = authority
-    plan, a = state.candidate("A")
+    plan, a = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596")
     state.approve(a)
-    _, alias = state.candidate("B", tables=["table1"], destinations={"table1": plan.runtime_context["_pipeline_bindings"]["table0"]})
+    _, alias = state.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", tables=["table1"], destinations={"table1": plan.runtime_context["_pipeline_bindings"]["table0"]})
     before = copy.deepcopy(state.central["state"])
     with pytest.raises(ValueError, match="Conflicting table identities share a physical destination"):
         state.approve(alias)
     assert state.central["state"] == before
 
 
-def test_testing_write_cannot_overwrite_an_active_read_only_consumers_input(authority):
-    state = authority
-    _, reader = state.candidate("Reader", roles=("source",))
-    state.approve(reader)
-    plan, _ = state.candidate("TestingWriter")
-    testing = replace(plan, plan_id="testing-consumer-input", evidence={}, testing_writes=True)
-    with pytest.raises(ValueError, match="Live-owned"):
-        service.reserve_testing_destinations(testing)
 
 
 def test_manual_finalization_qualifies_without_executable_integrity(authority, monkeypatch):
@@ -419,7 +405,7 @@ def test_manual_finalization_qualifies_without_executable_integrity(authority, m
     previous, _ = state.candidate()
     plan = replace(previous, plan_id=previous.plan_id + '-manual', evidence={}, results=[])
     pipeline.persist_pipeline_run(plan)
-    state.operation(plan, 0)
+    state.operation(plan, 0, stages=[{"stage": "Processing", "status": "passed"}])
     plan.evidence["boundary_completed"] = True
     run = finalize_pipeline(plan)
     assert run['status'] == 'succeeded'
@@ -483,9 +469,9 @@ def test_live_resolves_approved_versions_after_mixed_testing(authority, monkeypa
         state.approve(run)
     # Live receives no manual contract choices or participant lists.
     monkeypatch.setattr(service, "resolve_pipeline_participants", lambda *args, **kwargs: json.loads(previous.participants_json))
-    live = service.build_live_pipeline_plan(pipeline_id="A", context=previous.runtime_context)
+    live = service.build_live_pipeline_plan(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596", context=previous.runtime_context)
     assert {key: row["contract_version"] for key, row in json.loads(live.contracts_json).items()} == {"table0": 1, "table1": 2}
-    assert live.activated_pipeline_id == state.current()["pipelines"]["A"]["activated_pipeline_id"]
+    assert live.activated_pipeline_id == state.current()["pipelines"]["4c7ae400-85ab-4023-9427-e8fde20bd596"]["activated_pipeline_id"]
     with live:
         state.operation(live, 0)
         state.operation(live, 1)
@@ -497,7 +483,7 @@ def test_activation_preserves_exact_profiling_and_policy_changes_require_new_tes
     tested, run = state.candidate()
     state.approve(run)
     monkeypatch.setattr(service, 'resolve_pipeline_participants', lambda *args, **kwargs: json.loads(tested.participants_json))
-    live = service.build_live_pipeline_plan(pipeline_id='A', context=tested.runtime_context)
+    live = service.build_live_pipeline_plan(pipeline_id='4c7ae400-85ab-4023-9427-e8fde20bd596', context=tested.runtime_context)
     expected = json.loads(tested.contracts_json)
     actual = json.loads(live.contracts_json)
     for table_id, contract in actual.items():
@@ -511,3 +497,14 @@ def test_activation_preserves_exact_profiling_and_policy_changes_require_new_tes
     revised = replace(tested, contracts_json=pipeline.canonical_candidate_json(changed))
     assert pipeline.pipeline_candidate(revised)[1] != pipeline.pipeline_candidate(tested)[1]
     assert json.loads(live.contracts_json) == actual
+
+
+def test_registered_pipeline_cannot_run_live_without_environment_approval(authority):
+    """An Active Engineering binding and successful Test never grant Live authority."""
+    state = authority
+    plan, _result = state.candidate()
+    before = copy.deepcopy(state.central)
+    with pytest.raises(ValueError, match='No approved pipeline configuration'):
+        service.build_live_pipeline_plan(pipeline_id=plan.pipeline_id, context=plan.runtime_context)
+    assert state.central == before
+    assert not state.current()['history'] and not state.current()['runs']

@@ -110,7 +110,6 @@ def runtime(monkeypatch, spark_session):
         return journal(replace(plan, execution_mode="testing") if plan.execution_mode == "live" else plan, role, arguments)
     for name in ("orchestrate_read", "orchestrate_write"):
         monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline." + name), "PipelineOperation", verified_journal)
-    monkeypatch.setattr(activation, "validate_testing_destinations", lambda *a, **kw: set())
     def make(mode="testing", contracted=False, strategy="overwrite", parameters=None):
         if contracted and not rows:
             rows.extend([frozen(SOURCE_ID, active=mode == "live"), frozen(TARGET_ID, active=mode == "live", strategy=strategy, parameters=parameters)])
@@ -118,7 +117,7 @@ def runtime(monkeypatch, spark_session):
         if not contracted:
             selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
         plan = setup_pipeline(execution_mode="testing" if mode == "live" else mode, sources=[SOURCE], targets=[TARGET],
-                                              selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders", configuration={})
+                                              selections=selections, context=context, spark_session=spark_session, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", configuration={})
         return replace(plan, execution_mode="live", activated_pipeline_id="verified-by-boundary") if mode == "live" else plan
     for name in ("orchestrate_read", "orchestrate_write"):
         monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline." + name), "schedule_table_profiling",
@@ -213,9 +212,9 @@ def test_headless_requires_mode_and_every_explicit_choice(runtime):
     """Headless callers cannot infer Live or silently omit table choices."""
     _, _, _, context = runtime
     with pytest.raises(ValueError, match="every participating"):
-        setup_pipeline(execution_mode="testing", sources=[SOURCE], targets=[TARGET], selections={}, context=context, pipeline_id="test-orders")
+        setup_pipeline(execution_mode="testing", sources=[SOURCE], targets=[TARGET], selections={}, context=context, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
     with pytest.raises(ValueError, match="every participating"):
-        setup_pipeline(execution_mode="testing", sources=[SOURCE], targets=[TARGET], selections={}, context=context, pipeline_id="test-orders")
+        setup_pipeline(execution_mode="testing", sources=[SOURCE], targets=[TARGET], selections={}, context=context, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
 
 
 @pytest.mark.parametrize("strategy,parameters", [("append", None), ("scd1", {"key_columns": ["id"]}),
@@ -271,11 +270,11 @@ def test_mixed_relationship_respects_explicit_no_contract(runtime, spark_session
     if mode == "live":
         with pytest.raises(ValueError, match="Live"):
             setup_pipeline(execution_mode=mode, sources=[SOURCE], targets=[TARGET],
-                selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders")
+                selections=selections, context=context, spark_session=spark_session, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
         assert_testing_mutations_are_diagnostics_only(spies)
         return
     plan = setup_pipeline(execution_mode=mode, sources=[SOURCE], targets=[TARGET],
-                          selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders")
+                          selections=selections, context=context, spark_session=spark_session, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
     source = read(plan, spark_session)
     result = write(plan, source, spark_session)
     assert result["validation_passed"] and not result["published"]
@@ -361,11 +360,11 @@ def test_no_contract_target_does_not_exempt_failed_source_checks(runtime, spark_
     if mode == "live":
         with pytest.raises(ValueError, match="Live"):
             setup_pipeline(execution_mode=mode, sources=[SOURCE], targets=[TARGET],
-                selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders")
+                selections=selections, context=context, spark_session=spark_session, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
         assert_testing_mutations_are_diagnostics_only(spies)
         return
     plan = setup_pipeline(execution_mode=mode, sources=[SOURCE], targets=[TARGET],
-                          selections=selections, context=context, spark_session=spark_session, pipeline_id="test-orders")
+                          selections=selections, context=context, spark_session=spark_session, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
     bad = spark_session.createDataFrame([(None,)], "id long")
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: bad)
     source = read(plan, spark_session)
@@ -541,20 +540,16 @@ def test_iterable_sources_are_materialized_once_for_evidence_and_execution(runti
     assert finalize_pipeline_run(plan, spark_session=spark_session)["status"] == "incomplete"
 
 
-def test_explicit_real_testing_write_uses_the_actual_publication_path(runtime, spark_session, monkeypatch):
-    """Authorization permits one governed Testing write without a second dry-run execution."""
-    from dataclasses import replace
+def test_test_mode_never_uses_business_publication_path(runtime, spark_session, monkeypatch):
+    """Test transformations and Guardrails cannot authorize a business write."""
     make, _, spies, _ = runtime
-    plan = replace(make("testing", contracted=True), testing_writes=True)
-    monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
+    plan = make("testing", contracted=True)
     owner = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
     monkeypatch.setattr(owner, "schedule_table_profiling", lambda *args, **kw: {"row_count": 2})
     with plan:
         result = write(plan, read(plan, spark_session), spark_session)
-    assert result["published"] is True and result["execution_mode"] == "testing"
-    assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 1
-    assert plan.run_result["status"] == "succeeded"
-    assert json.loads(plan.run_result["operation_summary_json"])["testing_writes"] is True
+    assert result["published"] is False and not plan.permits_persistence
+    assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 0
 
 
 @pytest.mark.parametrize("coverage", ["all", "none", "mixed", "source_only"])
@@ -571,7 +566,7 @@ def test_independent_contract_coverage_executes_and_records_every_table(runtime,
     choices = {row["table_id"]: {"contract_id": row["contract_id"], "contract_version": row["contract_version"]}
                if row["table_id"] in selected else {"no_contract": True} for row in rows}
     plan = setup_pipeline(execution_mode="testing", sources=[SOURCE, customers], targets=[TARGET],
-                          selections=choices, pipeline_id="mixed-orders", context=context, spark_session=spark_session)
+                          selections=choices, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", context=context, spark_session=spark_session)
     source = read(plan, spark_session)
     customer = run_pipeline_operation(orchestrate_read, plan=plan, **customers, spark_session=spark_session,
                                  verbose=False)

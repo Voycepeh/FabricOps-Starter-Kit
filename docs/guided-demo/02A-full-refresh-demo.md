@@ -40,7 +40,7 @@ Bounded DataFrame previews also remain directly below each Read and Write call.
 Run **0. Environment** and **1. Setup Pipeline**. Reads and Writes define participants directly:
 
 ```python
-PIPELINE_ID = "02A_full_refresh_demo"
+PIPELINE_ID = None  # First run: save the displayed UUID here before promotion.
 PIPELINE_MODE = "Test"  # Test or Live
 CONTRACTS = setup_pipeline(
     pipeline_id=PIPELINE_ID,
@@ -212,4 +212,4 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 
 **Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
 
-Run `pipeline_result = finalize_pipeline(CONTRACTS)` after the last Write to record completion. Test publishes its run and Guardrail results at this step.
+Run `pipeline_result = finalize_pipeline(CONTRACTS)` after the last Write to record completion. Test returns its run and Guardrail results in memory at this step; pass the complete result to explicit activation review.

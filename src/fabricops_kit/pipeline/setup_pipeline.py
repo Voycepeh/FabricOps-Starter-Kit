@@ -129,33 +129,42 @@ def _inspector(row, roles, results=()):
 
 def setup_pipeline(
     *, pipeline_id: str | None = None, pipeline_mode: str = "Test", config_workspace_id: str | None = None,
+    new_pipeline: bool = False, previous_workspace_id: str | None = None,
+    previous_notebook_id: str | None = None,
 ):
     """Start an isolated pipeline using exactly Test or Live.
 
     Test evaluates reads, transformations and Guardrails without business or
-    metadata commits during Read and Write. finalize_pipeline publishes the final
-    run and Guardrail results for activation review. Select frozen contracts in the returned interface before
+    metadata commits, including finalization. Only administrative Engineering
+    registration may write in Test. finalize_pipeline returns in-memory results
+    for explicit activation review. Select frozen contracts in the returned interface before
     the first operation; headless Test explicitly uses No Contract. Live resolves
     only the approved environment manifest and retains revision/ownership checks.
-    Spark and supported Fabric runtime identity are resolved internally. A missing
-    notebook ID is allowed: pipeline_id identifies the logical pipeline.
+    Spark and supported Fabric runtime identity are resolved internally. The caller workspace and notebook IDs are required for registration.
 
     Parameters
     ----------
     pipeline_id : str | None, optional
-        Stable logical pipeline identity. Defaults to the current notebook name.
-        Supply an explicit identity when notebook renames must preserve it.
+        Permanent UUIDv4. Omit to recover the exact notebook binding or register
+        a new UUID. Save the displayed UUID in the notebook for promotion.
+        A changed same-environment binding requires both previous notebook IDs.
     pipeline_mode : {"Test", "Live"}, default="Test"
         Evaluation-only operations or execution under an approved manifest.
-
     config_workspace_id : str | None, optional
         Workspace hosting 00_env_config. Defaults to the current workspace.
         Supply an ID only when using a shared cross-workspace configuration.
+    new_pipeline : bool, default=False
+        Explicitly create a new identity for an independent notebook copy. Omit
+        pipeline_id when set. An already registered notebook is rejected.
+    previous_workspace_id, previous_notebook_id : str | None, optional
+        Supply both old binding IDs to explicitly rebind a reuploaded notebook.
+        Rebinding requires Test mode and no active Live runs.
 
     Returns
     -------
     PipelineSession
-        Contract selection and automatically refreshed execution report. Read and
+        Contract selection, pipeline_id containing the permanent UUID, registration
+        details and the automatically refreshed execution report. Read and
         Write calls use this execution through a context-local binding.
 
     Notes
@@ -170,28 +179,41 @@ def setup_pipeline(
     Fabric cell events identify failures, not successful notebook completion.
     Call finalize_pipeline after all Reads, transformations and Writes.
     Neither a successful Write nor interpreter shutdown proves completion. Test
-    results stay in memory until explicit finalization publishes them.
+    results remain in memory after finalization.
 
     Raises
     ------
     ValueError
-        For an empty pipeline identity, unsupported mode or missing Live approval.
+        For an invalid UUIDv4, conflicting notebook binding, unsupported mode or
+        missing Live approval.
     RuntimeError
         For missing environment configuration or an unavailable Spark session.
 
     Examples
     --------
-    >>> contracts = setup_pipeline(pipeline_id="orders", pipeline_mode="Test")
+    >>> contracts = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
     >>> orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+    >>> independent_copy = setup_pipeline(pipeline_mode="Test", new_pipeline=True)
+    >>> reuploaded = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Test",
+    ...     previous_workspace_id=old_workspace_id, previous_notebook_id=old_notebook_id)
 
     """
     from fabricops_kit.pipeline.shared import start_pipeline_session
 
-    if pipeline_id is not None and (not isinstance(pipeline_id, str) or not pipeline_id.strip()):
-        raise ValueError("pipeline_id must be a nonempty stable identity.")
+    if pipeline_id is not None:
+        from fabricops_kit.pipeline.shared import validate_pipeline_id
+        pipeline_id = validate_pipeline_id(pipeline_id)
     if pipeline_mode not in {"Test", "Live"}:
         raise ValueError("pipeline_mode must be exactly Test or Live.")
+    if not isinstance(new_pipeline, bool) or (new_pipeline and pipeline_id is not None):
+        raise ValueError("new_pipeline=True requires an omitted pipeline_id.")
+    if (previous_workspace_id is None) != (previous_notebook_id is None):
+        raise ValueError("Supply both previous_workspace_id and previous_notebook_id for rebinding.")
+    if previous_workspace_id is not None and (pipeline_id is None or new_pipeline or pipeline_mode != "Test"):
+        raise ValueError("Rebinding requires a saved pipeline_id and pipeline_mode='Test'.")
     return start_pipeline_session(
-        pipeline_id.strip() if pipeline_id is not None else None, pipeline_mode,
+        pipeline_id, pipeline_mode,
         inspector=_inspector, config_workspace_id=config_workspace_id,
+        new_pipeline=new_pipeline,
+        previous_binding=(previous_workspace_id, previous_notebook_id) if previous_workspace_id is not None else None,
     )

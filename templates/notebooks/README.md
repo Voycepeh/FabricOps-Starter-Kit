@@ -52,7 +52,7 @@ pipeline = setup_pipeline()  # Notebook name supplies pipeline_id; Test is the d
 finalize_pipeline()
 ```
 
-An explicit `pipeline_id` remains useful when notebook names can change; `pipeline_mode="Live"` retains the existing approved-manifest behavior. Neither requires an environment argument. Explicit `setup_notebook(CONFIG, env=...)` remains supported for local validation and advanced callers.
+Omit `pipeline_id` on first execution to register or recover a permanent UUIDv4. Save the displayed UUID as `PIPELINE_ID` and carry it into each environment; `pipeline_mode="Live"` retains the existing approved-manifest behavior. Neither requires an environment argument. Explicit `setup_notebook(CONFIG, env=...)` remains supported for local validation and advanced callers.
 
 Configuration loads do not create metadata tables. At deployment, run the Governance config notebook directly with `INITIALIZE_METADATA = True` once, then restore `False` before ordinary use.
 
@@ -79,7 +79,7 @@ See the [Microsoft Fabric Spark Warehouse connector documentation](https://learn
 The pipeline flow is **Setup Pipeline → Read → Transform → Write**. Environment routing is resolved automatically from the caller workspace by the selected `00_env_config`. A stable `pipeline_id` identifies the logical pipeline independently of notebook names and paths.
 
 ```python
-CONTRACTS = setup_pipeline(pipeline_id="example-orders", pipeline_mode="Test")
+CONTRACTS = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
 source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 transformed = transform(source["dataframe"])
 result = orchestrate_write(transformed, store="Gold", schema="demo",
@@ -87,7 +87,7 @@ result = orchestrate_write(transformed, store="Gold", schema="demo",
 pipeline_result = finalize_pipeline(CONTRACTS)
 ```
 
-`pipeline_mode` accepts exactly `Test` or `Live`. Test runs real reads, transformations and selected Guardrails without business or operational metadata commits during Read and Write. The explicit Finalize step publishes only run and Guardrail results for activation review. In a notebook, choose exact frozen contracts or No Contract in the setup interface before the first operation. Headless Test starts with No Contract; its returned session supports explicit `select_contract(table_id, contract_id, contract_version)` for automated diagnostics. Choices lock when operations start. The displayed report updates automatically, with red Test and green Live mode treatment and textual operation/Guardrail status.
+`pipeline_mode` accepts exactly `Test` or `Live`. Test runs real reads, transformations and selected Guardrails without business or operational metadata commits during Read and Write. The explicit Finalize step returns complete in-memory Test results for activation review. In a notebook, choose exact frozen contracts or No Contract in the setup interface before the first operation. Headless Test starts with No Contract; its returned session supports explicit `select_contract(table_id, contract_id, contract_version)` for automated diagnostics. Choices lock when operations start. The displayed report updates automatically, with red Test and green Live mode treatment and textual operation/Guardrail status.
 
 Live resolves participants, frozen contracts, project configuration and physical bindings exclusively from the approved environment manifest. Every operation retains destination, strategy, contract and activation-revision validation. Spark and supported Fabric notebook context are resolved internally. Missing notebook audit identity is represented as absent, never fabricated or substituted for approval identity.
 
@@ -95,7 +95,7 @@ Live resolves participants, frozen contracts, project configuration and physical
 
 Every successful Read registers with the current execution instance. Every subsequent Write receives that execution's registered sources. These associations describe pipeline participation, not proven DataFrame transformation lineage. Context-local state and unique run IDs isolate executions; failure, repeated setup and shutdown clear source references.
 
-Run `finalize_pipeline(CONTRACTS)` after all Reads, transformations and Writes, including read-only pipelines. It records the complete outcome and releases Live reservations. Pass `failed=True` for a caught project exception. Test publishes `METADATA_GUARDRAIL_RESULTS` first and its authoritative `METADATA_PIPELINE_RUN` snapshot last; normal Test operations still commit no metadata. Publication requires complete runtime audit identity. Repeating finalization with the same session is idempotent, including retries after an interrupted diagnostic publication.
+Run `finalize_pipeline(CONTRACTS)` after all Reads, transformations and Writes, including read-only pipelines. It records the complete outcome and releases Live reservations. Pass `failed=True` for a caught project exception. Test returns the complete run and Guardrail results without metadata commits. Pass the result to `widget_activate_pipeline(testing_results=[pipeline_result])` for explicit approval. Live outcome publication requires complete runtime audit identity. Repeating finalization with the same session is idempotent.
 
 A successful Write or Fabric cell does not prove whole-notebook completion. Observed errors seal failure; repeated setup and shutdown seal unfinalized runs as **incomplete**. A killed process may retain an incomplete Live record and reservation. Operators must confirm execution stopped before repairing a reservation. Headless code must call Finalize after its full transformation workflow, or use `failed=True` when it catches a project failure.
 
@@ -103,7 +103,7 @@ Activation still requires a complete successful Testing record, exact frozen con
 
 ## Activate, deploy and run unattended
 
-Use `widget_activate_pipeline()` in `01_governance`. Select a successful Testing run in the activation environment, its immutable release version and exact effective Agreement. The widget shows current/proposed contracts, writer ownership, affected pipelines, available tests and blockers. Include compatible successful candidates for every directly affected active pipeline. Downstream pipelines require replacement tests when a selected replacement changes their input table's contract or writer expectations; unchanged output expectations stop propagation. There is no inferred compatibility engine.
+Hand off the completed in-memory result to the reviewer and use `widget_activate_pipeline(testing_results=[pipeline_result])` in the activation environment. For every candidate, independently confirm the actual Fabric notebook execution, enter its run reference and attest verification in the widget. Select its immutable release version and exact effective Agreement. The widget shows current/proposed contracts, writer ownership, affected pipelines, available tests and blockers. Include compatible successful candidates for every directly affected active pipeline. Downstream pipelines require replacement tests when a selected replacement changes their input table's contract or writer expectations; unchanged output expectations stop propagation. There is no inferred compatibility engine.
 
 Review the complete release and explicitly approve it once. The backend independently rechecks every selected candidate, complete operation/rule results, processing configuration, contract payloads and Agreement. It checks the current authority token again at commit. Failed validation, missing tests, competing writers, inconsistent contracts, stale review or a failed commit expose no partial release. Refresh and review again after a conflict.
 
@@ -118,7 +118,7 @@ Live setup automatically resolves the approved environment configuration and res
 Deploy notebooks through Engineering source control, CI/CD and Microsoft Fabric tooling. Approval never deploys a notebook or writes business data. No FabricOps packaging or deployment verification call is required. Live validates exact global tables, environment destinations, Data Contract versions, ownership and transformation settings against central approval.
 
 ```python
-CONTRACTS = setup_pipeline(pipeline_id="example-orders", pipeline_mode="Live")
+CONTRACTS = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Live")
 # Read → Transform → Write; approved authority is resolved internally.
 ```
 
@@ -159,3 +159,12 @@ After upgrading, run `setup_metadata_tables()` under controlled administration. 
 Run `setup_metadata_tables()` once under controlled metadata administration to create the singleton authority. Existing per-pipeline approvals are not imported or trusted. Existing environment-specific contract histories need deliberate reconciliation into one global lifecycle per table, followed by complete Testing and activation; no compatibility shim or automatic migration is provided. Old tables are not deleted automatically.
 
 The authority uses a single JSON snapshot to guarantee metadata atomicity, trading scalability for a conservative first implementation. Large estates may need a transactional metadata service later. Actual Fabric/Delta runtime validation remains required before deployment. Managed token-vault and caller-owned mapping dependencies without verifiable immutable identities remain ineligible for activation. Notebook deployments, business-table transactions, guardrail diagnostics and run evidence retain separate failure boundaries.
+
+
+### Permanent pipeline identity
+
+`setup_pipeline(pipeline_mode="Test")` resolves the caller workspace and notebook IDs, recovers their exact Active registration, or allocates a UUIDv4 in `engineering.METADATA_PIPELINE_REGISTRY`. Registration is the only administrative Test write. Save the displayed UUID in `PIPELINE_ID`, then pass `pipeline_id=PIPELINE_ID` on subsequent runs and promotions. The returned session exposes `pipeline.pipeline_id`; its execution ID remains separate.
+
+Notebook names are informational. A rename preserves identity. After reupload, call `setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Test", previous_workspace_id=..., previous_notebook_id=...)` to approve moving the existing environment binding to the caller. For an independent notebook copy, omit the copied UUID and call `setup_pipeline(pipeline_mode="Test", new_pipeline=True)`; save its newly generated UUID. Neither action changes approved releases. Promotion adds an environment binding and requires fresh environment Testing and explicit activation before Live.
+
+`pipeline_result = finalize_pipeline(CONTRACTS)` retains Test results in memory. Hand the complete result to the reviewer and call `widget_activate_pipeline(testing_results=[pipeline_result])` in the activation environment. For a separate Governance notebook, transfer the complete result through your reviewed Fabric notebook handoff; no execution metadata table is used for Test. Governance must independently check the Fabric notebook run, enter its reference and attest that verification for every candidate. Approval revalidates the result's structure, current notebook binding, contracts, exact configuration, Guardrail diagnostics and Agreement, then freezes the result and verification reference inside `governance.METADATA_ACTIVATION_STATE`. Live alone commits `METADATA_PIPELINE_RUN` and execution results. Preserve the entire result without editing it.

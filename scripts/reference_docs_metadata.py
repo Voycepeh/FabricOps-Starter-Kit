@@ -119,7 +119,7 @@ METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
 METADATA_REFERENCE_MODEL_DIAGRAM = (
     "![FabricOps metadata model: Governance and Engineering schemas, with a "
     "manifest-backed Activated Pipeline contracts and separate run-linked Guardrail Results]"
-    "(../assets/fabricops-metadata-model.png)"
+    "(../assets/fabricops-metadata-model.svg)"
 )
 
 METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
@@ -128,14 +128,27 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 )
 
 METADATA_TABLE_MODELS = {
+    "METADATA_PIPELINE_REGISTRY": {
+        "purpose": "Permanent UUIDv4 identity and environment-specific notebook bindings; registration never authorizes Live. A seeded Authority control row serializes binding transactions in this same table.",
+        "grain": "One logical pipeline per environment, plus one serialization control row (central, *).",
+        "primary_key": ["pipeline_id", "environment_name"], "foreign_keys": [],
+        "relationships": [
+            {"related_table": "METADATA_PIPELINE_RUN", "fields": ["pipeline_id", "environment_name"], "cardinality": "1:N", "statement": "One environment registration has many Pipeline Runs."},
+            {"logical_entity": "Activated Pipeline", "cardinality": "1:N", "statement": "One registered Pipeline UUID has many immutable releases inside governance.METADATA_ACTIVATION_STATE; Activated Pipeline is a logical entity, not a separate Delta table."},
+        ],
+    },
     "METADATA_PIPELINE_RUN": {
         "purpose": "One complete logical run, exact table mappings, operation results, per-table profiling activity outcomes, warnings and pinned activation revision. Profiling completion joins persisted result snapshots; Grain Discovery and empty Frequency Profiling use minimal success markers in operation_summary_json.",
-        "grain": "One pipeline execution attempt.", "primary_key": ["run_id"], "foreign_keys": [], "relationships": [],
+        "grain": "One Live pipeline execution attempt. Test results remain in memory.", "primary_key": ["run_id"],
+        "foreign_keys": [{"local_field": "pipeline_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "pipeline_id", "cardinality": "N:1", "statement": "Each run references one registered logical Pipeline UUID in its environment."}],
+        "relationships": [{"cardinality": "N:1", "statement": "Each Live run references an approved Activated Pipeline release inside METADATA_ACTIVATION_STATE."}],
     },
     "METADATA_ACTIVATION_STATE": {
-        "purpose": "Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations and renewable profiling claims.",
+        "purpose": "Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations, transient notebook-rebind barriers and renewable profiling claims.",
         "grain": "One central authority row containing environment snapshots.",
-        "primary_key": ["authority_id"], "foreign_keys": [], "relationships": [],
+        "primary_key": ["authority_id"], "foreign_keys": [],
+        "relationships": [{"logical_entity": "Activated Pipeline", "cardinality": "1:N", "statement": "Each registered Pipeline UUID can have many immutable Activated Pipeline releases in the environment history. Activated Pipeline is a logical entity in snapshot_json, not a separate Delta table."},
+                          {"logical_entity": "Live Pipeline Run", "cardinality": "1:N", "statement": "Each approved Activated Pipeline release authorizes many Live Pipeline Runs; registration alone never authorizes execution."}],
     },
     "METADATA_DATA_STEWARD": {
         "purpose": "Know who is responsible for the data.",
@@ -241,6 +254,7 @@ METADATA_TABLE_MODELS = {
 }
 
 METADATA_REFERENCE_ORDER = [
+    "METADATA_PIPELINE_REGISTRY",
     "METADATA_PIPELINE_RUN",
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
@@ -894,7 +908,7 @@ PUBLIC_SYMBOL_DOCS = [
  'do_not_use_when': 'Use lower-level capabilities directly when intentionally composing a non-standard lifecycle.',
  'parameters': 'Source coordinates, read strategy and query options; execution context is internal.',
  'returns': 'Governed source DataFrame and table identity together with every stage result.',
- 'side_effects': 'Test retains diagnostics in memory until finalize_pipeline publishes the run and Guardrail results; business publication remains disabled. Live commits Guardrail Results and full-read '
+ 'side_effects': 'Test retains diagnostics in memory until finalize_pipeline returns in-memory Test results; business publication remains disabled. Live commits Guardrail Results and full-read '
                  'Catalogue/Profile metadata.',
  'preferred_example': 'source = orchestrate_read(store="Bronze", schema="demo", '
                       'table_name="orders")',
@@ -911,7 +925,7 @@ PUBLIC_SYMBOL_DOCS = [
  'parameters': 'Transformed DataFrame, target coordinates '
                'and strategy.',
  'returns': 'Prepared input, Guardrail outcomes, execution mode and actual publication/persistence status.',
- 'side_effects': 'Test retains diagnostics in memory until finalize_pipeline publishes run and Guardrail results. Live publishes and commits metadata at existing '
+ 'side_effects': 'Test retains diagnostics in memory, including after finalize_pipeline. Live publishes and commits metadata at existing '
                  'lifecycle boundaries.',
  'preferred_example': 'result = orchestrate_write(transformed_df, '
                       'store="Silver", schema="demo", table_name="orders", write_mode="overwrite")',
@@ -1581,7 +1595,7 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function', 'module': 'widgets.widget_activate_pipeline', 'function_type': 'callable',
   'summary_override': 'Review complete persisted Testing and activate an exact whole pipeline.',
   'symbol_name': 'widget_activate_pipeline', 'template_notebook': '01_governance', 'template_segment': 'Pipeline activation',
-  'use_when': 'Use after finalize_pipeline publishes complete successful governed Testing results.',
+  'use_when': 'Use after finalize_pipeline returns complete successful governed Test results.',
   'expanded_purpose': 'Shows exact contracts/rules and processing configuration identity, diagnostics, warnings, Agreement and fingerprint before explicit Governance confirmation. Activation neither deploys nor publishes.',
   'related_functions': ['setup_pipeline']},
 
@@ -1598,7 +1612,7 @@ PUBLIC_SYMBOL_DOCS = [
  'template_segment': 'Configure the pipeline and whole-run boundary',
  'use_when': 'Use once before Read, Transform and Write with pipeline_id and pipeline_mode.',
  'related_functions': ['finalize_pipeline', 'widget_data_contract', 'orchestrate_read', 'orchestrate_write'],
- 'return_interpretation': 'Returns a context-local execution session with contract selection and automatic reporting; finalize_pipeline records completion and publishes Testing results; interrupted runs remain incomplete.',
+ 'return_interpretation': 'Returns a context-local execution session with contract selection and automatic reporting; finalize_pipeline records completion and returns Test results; interrupted runs remain incomplete.',
  'expanded_purpose': 'Select a frozen contract or No Contract independently for each Testing participant. Live resolves and pins one approved revision from the central authority.',
  'common_failure_causes': ['Missing explicit table choices or invalid frozen contract selections.', 'Unsafe Testing write destination.', 'Missing complete governed Testing for activation or approved Live configuration.']},
 
@@ -1705,7 +1719,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
 
 PUBLIC_SYMBOL_DOCS.append({'kind': 'function', 'module': 'pipeline.finalize_pipeline',
     'function_type': 'callable', 'symbol_name': 'finalize_pipeline',
-    'summary_override': 'Complete execution and publish Testing run and Guardrail results.',
+    'summary_override': 'Complete execution and return Test results or commit the Live outcome.',
     'template_notebook': '02_pipeline', 'template_segment': 'Finalize Pipeline',
     'related_functions': ['setup_pipeline', 'orchestrate_read', 'orchestrate_write'],
     'use_when': 'Call after all Reads, transformations and Writes, including read-only runs.'})
@@ -2072,3 +2086,15 @@ def _metadata_row(symbol_name: str) -> PublicSymbolDocMetadata:
 def related_guides(symbol_name: str) -> list[dict[str, str]]:
     """Return related guides for a public symbol."""
     return RELATED_GUIDES_BY_SYMBOL.get(symbol_name, [])
+
+
+METADATA_TABLE_PURPOSES["METADATA_PIPELINE_REGISTRY"] = METADATA_TABLE_MODELS["METADATA_PIPELINE_REGISTRY"]["purpose"]
+METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"] = {
+    name: ["fabricops_kit.pipeline.shared.commit_pipeline_registration", "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"]
+    for name in ("pipeline_id", "environment_name", "workspace_id", "notebook_id", "notebook_name", "registered_at", "registered_by", "updated_at", "registration_status", "registry_token")
+}
+METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"]["__audit__"] = ["fabricops_kit.config.audit.build_runtime_audit_fields"]
+
+METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"]["__default__"] = [
+    "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
+]
