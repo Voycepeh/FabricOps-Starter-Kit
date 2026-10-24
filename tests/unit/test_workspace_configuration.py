@@ -1,6 +1,8 @@
 """Execute the shared config template across a simulated Fabric notebook boundary."""
 # ruff: noqa: D103
+from contextlib import redirect_stdout
 from dataclasses import asdict
+from io import StringIO
 import importlib
 import json
 from pathlib import Path
@@ -68,7 +70,9 @@ def configuration_runtime(monkeypatch, request):
                 source = source.replace('INITIALIZE_METADATA = True', 'INITIALIZE_METADATA = False')
                 if workspace == 'governance-ws':
                     source = source.replace('"dev-ws"', '"governance-ws"')
-                exec(compile(source, '<00_env_config>', 'exec'), namespace)
+                # Fabric keeps child output in its execution snapshot.
+                with redirect_stdout(StringIO()):
+                    exec(compile(source, '<00_env_config>', 'exec'), namespace)
         except NotebookExit as exc:
             return exc.args[0]
         finally:
@@ -133,7 +137,7 @@ def test_invalid_response_reuses_validation(configuration_runtime, change, messa
 
 @pytest.mark.parametrize('mode', ['Test', 'Live'])
 @pytest.mark.parametrize('config_workspace', [None, 'central-ws'])
-def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeypatch, mode, config_workspace):
+def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeypatch, capsys, mode, config_workspace):
     shared = importlib.import_module('fabricops_kit.pipeline.shared')
     monkeypatch.setattr(shared, 'get_spark_session', lambda: configuration_runtime.spark)
     monkeypatch.setattr(shared.PipelineSession, 'refresh', lambda self: None)
@@ -156,6 +160,13 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
         configuration_runtime.notebook.run.assert_called_once_with(
             '00_env_config', 120, {'caller_workspace_id': 'dev-ws'}, workspace=config_workspace or 'dev-ws')
         assert session.plan.runtime_context['runtime_metadata']['workspace_id'] == 'dev-ws'
+        from fabricops_kit import __version__
+        output = capsys.readouterr().out
+        assert output.count(f'FabricOps v{__version__}') == 1
+        location = 'cross-workspace' if config_workspace else 'same-workspace'
+        assert f'Configuration: 00_env_config ({location}; workspace: {config_workspace or "dev-ws"})' in output
+        assert 'Environment: dev' in output
+        assert 'Readiness: ready' in output
     finally:
         if session is not None:
             import atexit
@@ -319,3 +330,52 @@ def test_runtime_context_supports_object_and_getter_shapes(configuration_runtime
     assert result.runtime_metadata['workspace_id'] == 'dev-ws'
     assert result.workspace_name == 'Engineering'
     assert resolve_runtime_context(active_context={})['workspace_id'] == 'dev-ws'
+
+
+@pytest.mark.parametrize('config_workspace', [None, 'central-ws'])
+@pytest.mark.parametrize('caller_workspace', ['dev-ws', ' DEV-WS '])
+def test_setup_summary_is_visible_without_child_notebook_output(configuration_runtime, capsys, config_workspace, caller_workspace):
+    from fabricops_kit import __version__
+
+    configuration_runtime.runtime.context['currentWorkspaceId'] = caller_workspace
+    raw = asdict(_config())
+    stores = raw['path_config']['paths'].pop('dev')
+    raw['path_config']['paths']['POC'] = stores
+    for store in stores.values():
+        store['env'] = 'POC'
+    stores['Gold']['name'] = 'wh_Gold'
+    raw['audit_timezone'] = 'Asia/Singapore'
+    configuration_runtime.notebook.run.side_effect = None
+    configuration_runtime.notebook.run.return_value = json.dumps({
+        'workspace_id': 'dev-ws', 'env': 'POC', 'config': raw,
+    })
+
+    result = setup_notebook(config_workspace_id=config_workspace, required_targets=['Gold', 'Metadata'])
+
+    output = capsys.readouterr().out
+    assert output.count(f'FabricOps v{__version__}') == 1
+    assert 'Docs, examples, releases & support:' in output
+    assert 'https://github.com/Voycepeh/FabricOps-Starter-Kit' in output
+    location = 'cross-workspace' if config_workspace else 'same-workspace'
+    assert f'Configuration: 00_env_config ({location}; workspace: {config_workspace or "dev-ws"})' in output
+    assert 'Caller workspace: Engineering (dev-ws)' in output
+    assert 'Notebook: 02_pipeline_orders' in output
+    assert 'Run ID: caller-run' in output
+    assert 'Environment: POC' in output
+    assert 'Audit timezone: Asia/Singapore' in output
+    assert 'Metadata schemas: governance=governance, engineering=engineering' in output
+    assert '- Gold: wh_Gold (warehouse;' in output
+    assert '- Metadata: Metadata (lakehouse; schema: governance; workspace: workspace)' in output
+    assert '- Bronze:' not in output
+    assert 'Readiness: ready' in output
+    assert 'abfss://' not in output
+    assert 'path_config' not in output
+    assert result.environment == 'POC'
+    configuration_runtime.spark.conf.set.assert_called_once_with('spark.sql.session.timeZone', 'Asia/Singapore')
+
+
+def test_failed_config_load_does_not_print_success_summary(configuration_runtime, capsys):
+    configuration_runtime.notebook.run.side_effect = RuntimeError('execution failed')
+    with pytest.raises(RuntimeError, match='00_env_config execution failed'):
+        setup_notebook()
+    assert capsys.readouterr().out == ''
