@@ -287,4 +287,30 @@ def test_metadata_explorer_full_text_and_prominent_navigation() -> None:
     assert 'width: min(430px' in styles
     assert 'Explore the interactive Metadata Tables map' in homepage
     assert 'Explore the interactive Metadata Tables map' in how_it_works
-    assert "[Explore the interactive Metadata Tables map" in homepage
+    assert 'class="fabricops-home-metadata-map"' in homepage
+    assert 'href="reference/metadata.md"' in homepage
+    assert "## The Big Picture" in how_it_works
+    assert how_it_works.index("Explore the interactive Metadata Tables map") < how_it_works.index("## Workspace Architecture")
+
+
+def test_metadata_table_summaries_remain_human_readable_and_detailed_notes_preserved() -> None:
+    """Reader-facing summaries should be concise without losing technical reference detail."""
+    from pathlib import Path
+
+    root = Path(__file__).parents[2]
+    for table_name, model in METADATA_TABLE_MODELS.items():
+        purpose = model["purpose"]
+        grain = model["grain"]
+        assert len(purpose) <= 190, (table_name, purpose)
+        assert len(grain) <= 125, (table_name, grain)
+        assert "immutable frozen table definition" not in purpose.lower()
+        page = (root / "docs/reference/metadata" / f"{table_name.lower()}.md").read_text(
+            encoding="utf-8"
+        )
+        assert f"\n\n{purpose}\n\n## Writer functions" in page
+        assert f"**Grain:** {grain}" in page
+        notes = model.get("implementation_notes")
+        if notes:
+            assert f"**Implementation details:** {notes}" in page
+        else:
+            assert "**Implementation details:**" not in page
