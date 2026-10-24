@@ -4409,7 +4409,14 @@ def render_metadata_reference_index(
             "purpose": table_purposes.get(name) or table_models[name]["purpose"],
             "grain": table_models[name]["grain"],
             "primary_key": table_models[name]["primary_key"],
-            "foreign_keys": table_models[name]["foreign_keys"],
+            "foreign_keys": [
+                {
+                    "local_field": fk["local_field"],
+                    "referenced_table": fk["referenced_table"],
+                    "referenced_field": fk["referenced_field"],
+                }
+                for fk in table_models[name]["foreign_keys"]
+            ],
         }
         for name in reference_order
     }
