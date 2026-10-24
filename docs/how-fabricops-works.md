@@ -69,6 +69,8 @@
 
 **FabricOps turns Governance and Engineering into one executable cycle around the same `table_id`.**
 
+[Explore the interactive Metadata Tables map →](reference/metadata.md) to inspect Governance and Engineering table relationships, keys, and implemented schemas.
+
 Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read()` and `orchestrate_write()`; those entrypoints resolve the contract, run the applicable checks and treatments, record Guardrail Results, and decide whether execution can continue. Project-owned transformations stay between Read and Write.
 
 - **Engineering** records observed data and profiling metadata.
