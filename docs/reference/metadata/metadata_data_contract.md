@@ -1,6 +1,6 @@
 # METADATA_DATA_CONTRACT
 
-Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. Agreement linkage belongs to Activated Pipeline.
+Defines what a table means, how it should be processed, which Guardrails apply and when it should be profiled. Frozen versions can be reused but not changed.
 
 ## Writer functions
 
@@ -16,7 +16,7 @@ Reusable immutable frozen table definition with Enrichment, executable Guardrail
 
 **Default physical schema:** `governance`
 
-**Grain:** One Draft or Frozen version of one table contract; Frozen contents are immutable.
+**Grain:** One Draft or Frozen version of a Data Contract for a table.
 
 **Primary key:** `contract_id` + `contract_version`
 
@@ -27,6 +27,8 @@ via Not defined in the current implementation.
 
 `METADATA_DATA_CATALOGUE` **(N → 1)**
 via `table_id`
+
+**Implementation details:** Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. Agreement linkage belongs to Activated Pipeline.
 
 ## Column summary
 
