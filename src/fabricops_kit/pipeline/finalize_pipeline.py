@@ -3,12 +3,11 @@
 from fabricops_kit.pipeline.shared import (
     PipelineSession,
     current_pipeline_session,
-    publish_pipeline_testing_results,
 )
 
 
 def finalize_pipeline(pipeline=None, *, failed=False):
-    """Complete the pipeline and publish its run and Guardrail results.
+    """Complete execution and return Test diagnostics or commit the Live outcome.
 
     Call once after all Reads, transformations and Writes, including read-only
     runs. Pass the session returned by setup_pipeline, or omit it to use the
@@ -16,9 +15,9 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     A successful Write or cell never completes the whole pipeline by itself.
 
     Test Read/Write operations do not commit business or operational metadata.
-    This explicit boundary publishes only METADATA_GUARDRAIL_RESULTS and
-    METADATA_PIPELINE_RUN, with strict runtime audit identity. Complete governed
-    Testing can then be reviewed for activation. Failed, partial and No Contract
+    Test results remain in memory, including at finalization. Pass the returned
+    result to widget_activate_pipeline(testing_results=[pipeline_result]) for
+    explicit governance review. Complete governed Testing can then be approved. Failed, partial and No Contract
     runs cannot authorize activation. Live finalization releases its reservation
     after recording the final outcome. Interrupted runs remain incomplete.
 
@@ -32,7 +31,7 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     Returns
     -------
     dict
-        Final METADATA_PIPELINE_RUN snapshot. Repeating with the same session
+        In-memory Test result or final Live METADATA_PIPELINE_RUN snapshot. Repeating with the same session
         returns the original result without additional successful commits.
 
     Raises
@@ -45,7 +44,7 @@ def finalize_pipeline(pipeline=None, *, failed=False):
 
     Examples
     --------
-    >>> pipeline = setup_pipeline(pipeline_id="orders", pipeline_mode="Test")
+    >>> pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
     >>> source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
     >>> pipeline_result = finalize_pipeline(pipeline)
 
@@ -59,6 +58,6 @@ def finalize_pipeline(pipeline=None, *, failed=False):
         if not pipeline.closed:
             pipeline.plan.evidence["boundary_completed"] = not failed
             pipeline.close(failed=failed)
-        if pipeline.plan.execution_mode == "testing":
-            publish_pipeline_testing_results(pipeline.plan, spark_session=pipeline.spark)
+        if pipeline.report is None:
+            print(f"FabricOps Pipeline · {pipeline.plan.run_result['status']}\nPipeline ID: {pipeline.pipeline_id}")
         return pipeline.plan.run_result

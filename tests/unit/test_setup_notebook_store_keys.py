@@ -68,9 +68,9 @@ def test_explicit_setup_summary_reports_failed_checks(capsys) -> None:
     assert "ignored-workspace" not in output
     assert "Environment: dev" in output
     assert "- Gold: Gold (warehouse;" in output
-    assert "Readiness: not_ready" in output
-    assert "- fail: notebook_naming:" in output
-    assert "Notebook name does not match accepted FabricOps naming patterns." in output
+    assert "Readiness: ready" in output
+    assert "notebook_naming" not in output
+    assert "Notebook name does not match" not in output
     assert "- warn: spark_session:" in output
 
 

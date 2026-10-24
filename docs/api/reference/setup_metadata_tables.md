@@ -143,7 +143,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:169`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L552">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L561">View on GitHub</a>
 </div>
 
 
@@ -180,6 +180,7 @@ count.
 The current metadata tables created or validated from
 ``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
 ``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,
+``METADATA_ACTIVATION_STATE``, ``METADATA_PIPELINE_REGISTRY``, ``METADATA_PIPELINE_RUN``,
 ``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
 ``METADATA_DATA_PROFILED_FREQUENCY``, ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
 ``METADATA_GUARDRAIL_RESULTS``, and ``METADATA_SOURCE_OBSERVATION``.
@@ -250,7 +251,10 @@ because their schema differs. Processing continues for remaining metadata
 tables, and ``raise_on_failure=True`` raises only after all tables have
 been processed when failures exist.
 
-A missing table is created by writing an empty Spark DataFrame with the
+Activation State and Pipeline Registry are seeded with their control row
+using error-if-exists creation; repeat initialization validates existing rows
+without replacing identity or approval history. A missing ordinary table is
+created by writing an empty Spark DataFrame with the
 required FabricOps table structure. This creates the metadata table structure but
 does not populate business metadata records. The function does not
 automatically create steward records, agreements, contracts, catalogue

@@ -75,8 +75,12 @@ def _release_view(report, candidates):
     return result
 
 
-def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=None) -> dict[str, Any]:
+def widget_activate_pipeline(*, testing_results, pipeline_id=None, spark_session=None, context=None) -> dict[str, Any]:
     """Review one successful Testing run and coordinate all affected pipeline candidates.
+
+    Pass finalized in-memory Test results using testing_results=[pipeline_result].
+    No execution metadata is committed by Test; approval freezes the reviewed
+    evidence in METADATA_ACTIVATION_STATE.
 
     Displays environment, current/proposed table contracts, writer ownership,
     affected pipelines, missing tests, conflicts and complete release readiness.
@@ -99,8 +103,11 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
         _config, env, _runtime = resolve_fabric_context(context=context)
     with startup.phase("metadata_loading", "Loading configured metadata…"):
-        all_runs = [row for row in metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session)
-                    if row.get("environment_name") == env]
+        all_runs = json.loads(json.dumps(list(testing_results), default=str))
+        if any(row.get("environment_name") != env for row in all_runs):
+            raise ValueError("Testing results must belong to the activation environment.")
+        if len({row["run_id"] for row in all_runs}) != len(all_runs):
+            raise ValueError("Select each Testing result only once.")
     runs = [row for row in all_runs if _eligible_candidate(row)]
     excluded = [(row, _missing_contracts(row)) for row in all_runs
                 if pipeline_id is None or row["pipeline_id"] == pipeline_id]
@@ -142,7 +149,7 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
         for run_id in dict.fromkeys([run_select.value, *additions.value]):
             row = next(row for row in runs if row["run_id"] == run_id)
             controls = state["candidate_controls"][run_id]
-            result.append({"testing_run_id": run_id, "candidate_fingerprint": row["candidate_fingerprint"],
+            result.append({"testing_result": row, "testing_run_id": run_id, "candidate_fingerprint": row["candidate_fingerprint"],
                 "pipeline_name": row["pipeline_id"], "pipeline_version": controls["version"].value.strip(),
                 "agreement_id": agreement.value[0], "agreement_version": agreement.value[1]})
         return result
@@ -200,7 +207,7 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
         details.value = _release_view(report, selected)
         if report["ready"]:
             state["review_token"] = token
-            state["reviewed_requests"] = requests()
+            state["reviewed_requests"] = json.loads(json.dumps(requests()))
         return report
 
     def perform_activation(_=None):

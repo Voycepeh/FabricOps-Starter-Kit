@@ -51,8 +51,7 @@ def setup_notebook(
         proceed. When omitted, all stores configured for the selected
         environment are required.
     notebook_name : str | None, optional
-        Explicit notebook name override used for runtime metadata and naming
-        validation.
+        Explicit notebook name override used for display and runtime metadata.
     run_id_prefix : str, default="run"
         Prefix used only when no Fabric runtime run identifier is available.
     local_fallback_name : str | None, optional
@@ -122,13 +121,12 @@ def setup_notebook(
     8. Check whether Fabric runtime context is readable.
     9. Validate that each required target contains the necessary store
        identity fields.
-    10. Validate the notebook name against supported FabricOps notebook naming
-        patterns.
+    10. Retain the notebook name for informational display and audit metadata.
     11. Return an overall readiness status.
 
     Current standard templates use ``00_env_config``, ``01_governance``,
-    and ``02_pipeline``. Governance and pipeline names can include suffixes
-    for project-specific workflows.
+    and ``02_pipeline``. Notebook names are informational and never determine
+    pipeline identity or execution eligibility.
 
     Each resolved target contains the configured Fabric store identity needed
     by downstream functions, such as workspace identity, Fabric item identity,

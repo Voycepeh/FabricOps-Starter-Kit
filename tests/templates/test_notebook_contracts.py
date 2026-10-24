@@ -483,7 +483,7 @@ def test_guided_demo_explains_explicit_testing_writes_and_contract_selection():
     assert 'PIPELINE_MODE = "Test"' in step_2a
     assert "PIPELINE_TESTING_WRITES" not in step_2a
     assert "finalize_pipeline(CONTRACTS)" in step_2a
-    assert "Guardrail" in step_4 and "results are in memory" in step_4.casefold()
+    assert "Guardrail" in step_4 and "results remain in memory" in step_4.casefold()
 
 
 

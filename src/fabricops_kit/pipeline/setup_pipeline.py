@@ -133,18 +133,19 @@ def setup_pipeline(
     """Start an isolated pipeline using exactly Test or Live.
 
     Test evaluates reads, transformations and Guardrails without business or
-    metadata commits during Read and Write. finalize_pipeline publishes the final
-    run and Guardrail results for activation review. Select frozen contracts in the returned interface before
+    metadata commits, including finalization. Only administrative Engineering
+    registration may write in Test. finalize_pipeline returns in-memory results
+    for explicit activation review. Select frozen contracts in the returned interface before
     the first operation; headless Test explicitly uses No Contract. Live resolves
     only the approved environment manifest and retains revision/ownership checks.
-    Spark and supported Fabric runtime identity are resolved internally. A missing
-    notebook ID is allowed: pipeline_id identifies the logical pipeline.
+    Spark and supported Fabric runtime identity are resolved internally. The caller workspace and notebook IDs are required for registration.
 
     Parameters
     ----------
     pipeline_id : str | None, optional
-        Stable logical pipeline identity. Defaults to the current notebook name.
-        Supply an explicit identity when notebook renames must preserve it.
+        Permanent UUIDv4. Omit to recover the exact notebook binding or register
+        a new UUID. Save the displayed UUID in the notebook for promotion.
+        Changed same-environment bindings require explicit rebind_pipeline.
     pipeline_mode : {"Test", "Live"}, default="Test"
         Evaluation-only operations or execution under an approved manifest.
 
@@ -155,7 +156,8 @@ def setup_pipeline(
     Returns
     -------
     PipelineSession
-        Contract selection and automatically refreshed execution report. Read and
+        Contract selection, pipeline_id containing the permanent UUID, registration
+        details and the automatically refreshed execution report. Read and
         Write calls use this execution through a context-local binding.
 
     Notes
@@ -170,28 +172,30 @@ def setup_pipeline(
     Fabric cell events identify failures, not successful notebook completion.
     Call finalize_pipeline after all Reads, transformations and Writes.
     Neither a successful Write nor interpreter shutdown proves completion. Test
-    results stay in memory until explicit finalization publishes them.
+    results remain in memory after finalization.
 
     Raises
     ------
     ValueError
-        For an empty pipeline identity, unsupported mode or missing Live approval.
+        For an invalid UUIDv4, conflicting notebook binding, unsupported mode or
+        missing Live approval.
     RuntimeError
         For missing environment configuration or an unavailable Spark session.
 
     Examples
     --------
-    >>> contracts = setup_pipeline(pipeline_id="orders", pipeline_mode="Test")
+    >>> contracts = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
     >>> orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 
     """
     from fabricops_kit.pipeline.shared import start_pipeline_session
 
-    if pipeline_id is not None and (not isinstance(pipeline_id, str) or not pipeline_id.strip()):
-        raise ValueError("pipeline_id must be a nonempty stable identity.")
+    if pipeline_id is not None:
+        from fabricops_kit.pipeline.shared import validate_pipeline_id
+        pipeline_id = validate_pipeline_id(pipeline_id)
     if pipeline_mode not in {"Test", "Live"}:
         raise ValueError("pipeline_mode must be exactly Test or Live.")
     return start_pipeline_session(
-        pipeline_id.strip() if pipeline_id is not None else None, pipeline_mode,
+        pipeline_id, pipeline_mode,
         inspector=_inspector, config_workspace_id=config_workspace_id,
     )

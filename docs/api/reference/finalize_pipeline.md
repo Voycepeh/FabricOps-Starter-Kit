@@ -6,7 +6,7 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Complete execution and publish Testing run and Guardrail results.
+Complete execution and return Test results or commit the Live outcome.
 
 
 ## Usage notes
@@ -19,7 +19,7 @@ Call after all Reads, transformations and Writes, including read-only runs.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-pipeline = setup_pipeline(pipeline_id="orders", pipeline_mode="Test")
+pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
 source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 pipeline_result = finalize_pipeline(pipeline)
 ```
@@ -57,7 +57,7 @@ Required describes the Python signature. An optional parameter may still be need
 ## Returns
 
 dict
-    Final METADATA_PIPELINE_RUN snapshot. Repeating with the same session
+    In-memory Test result or final Live METADATA_PIPELINE_RUN snapshot. Repeating with the same session
     returns the original result without additional successful commits.
 
 ## Raises / Errors
@@ -78,9 +78,9 @@ current execution. Set failed=True when a project exception was caught.
 A successful Write or cell never completes the whole pipeline by itself.
 
 Test Read/Write operations do not commit business or operational metadata.
-This explicit boundary publishes only METADATA_GUARDRAIL_RESULTS and
-METADATA_PIPELINE_RUN, with strict runtime audit identity. Complete governed
-Testing can then be reviewed for activation. Failed, partial and No Contract
+Test results remain in memory, including at finalization. Pass the returned
+result to widget_activate_pipeline(testing_results=[pipeline_result]) for
+explicit governance review. Complete governed Testing can then be approved. Failed, partial and No Contract
 runs cannot authorize activation. Live finalization releases its reservation
 after recording the final outcome. Interrupted runs remain incomplete.
 
@@ -93,9 +93,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/finalize_pipeline.py:10`
+`fabricops_kit/pipeline/finalize_pipeline.py:9`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L10-L64">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L9-L63">View on GitHub</a>
 </div>
 
 

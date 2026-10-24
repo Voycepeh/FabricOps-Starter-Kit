@@ -19,7 +19,7 @@ Use once before Read, Transform and Write with pipeline_id and pipeline_mode.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-contracts = setup_pipeline(pipeline_id="orders", pipeline_mode="Test")
+contracts = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
 orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 ```
 
@@ -53,7 +53,7 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `pipeline_id` | `str \| None` | No | `None` | Stable logical pipeline identity. Defaults to the current notebook name. Supply an explicit identity when notebook renames must preserve it. |
+| `pipeline_id` | `str \| None` | No | `None` | Permanent UUIDv4. Omit to recover the exact notebook binding or register a new UUID. Save the displayed UUID in the notebook for promotion. Changed same-environment bindings require explicit rebind_pipeline. |
 | `pipeline_mode` | `str` | No | `'Test'` | Evaluation-only operations or execution under an approved manifest. |
 | `config_workspace_id` | `str \| None` | No | `None` | Workspace hosting 00_env_config. Defaults to the current workspace. Supply an ID only when using a shared cross-workspace configuration. |
 
@@ -62,17 +62,19 @@ Required describes the Python signature. An optional parameter may still be need
 ## Returns
 
 PipelineSession
-    Contract selection and automatically refreshed execution report. Read and
+    Contract selection, pipeline_id containing the permanent UUID, registration
+    details and the automatically refreshed execution report. Read and
     Write calls use this execution through a context-local binding.
 
 ### Return interpretation
 
-Returns a context-local execution session with contract selection and automatic reporting; finalize_pipeline records completion and publishes Testing results; interrupted runs remain incomplete.
+Returns a context-local execution session with contract selection and automatic reporting; finalize_pipeline records completion and returns Test results; interrupted runs remain incomplete.
 
 ## Raises / Errors
 
 ValueError
-    For an empty pipeline identity, unsupported mode or missing Live approval.
+    For an invalid UUIDv4, conflicting notebook binding, unsupported mode or
+    missing Live approval.
 RuntimeError
     For missing environment configuration or an unavailable Spark session.
 
@@ -96,7 +98,7 @@ calling notebook.
 Fabric cell events identify failures, not successful notebook completion.
 Call finalize_pipeline after all Reads, transformations and Writes.
 Neither a successful Write nor interpreter shutdown proves completion. Test
-results stay in memory until explicit finalization publishes them.
+results remain in memory after finalization.
 
 </div>
 
@@ -105,12 +107,12 @@ results stay in memory until explicit finalization publishes them.
 <div class="reference-docstring-intro" markdown="1">
 
 Test evaluates reads, transformations and Guardrails without business or
-metadata commits during Read and Write. finalize_pipeline publishes the final
-run and Guardrail results for activation review. Select frozen contracts in the returned interface before
+metadata commits, including finalization. Only administrative Engineering
+registration may write in Test. finalize_pipeline returns in-memory results
+for explicit activation review. Select frozen contracts in the returned interface before
 the first operation; headless Test explicitly uses No Contract. Live resolves
 only the approved environment manifest and retains revision/ownership checks.
-Spark and supported Fabric runtime identity are resolved internally. A missing
-notebook ID is allowed: pipeline_id identifies the logical pipeline.
+Spark and supported Fabric runtime identity are resolved internally. The caller workspace and notebook IDs are required for registration.
 
 </div>
 
@@ -123,7 +125,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L197">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L201">View on GitHub</a>
 </div>
 
 

@@ -32,7 +32,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
         if cell.cell_type == 'code' and cell.id not in {'environment','imports'}:
             exec(compile(cell.source, f'{path.name}:{cell.id}', 'exec'), namespace)
     namespace['finalize_pipeline'].assert_called_once_with(setup.return_value)
-    setup.assert_called_once_with(pipeline_id=path.stem, pipeline_mode='Test')
+    setup.assert_called_once_with(pipeline_id=None, pipeline_mode='Test')
     expected = {
         '02_pipeline': (1, ['overwrite']),
         '02A_full_refresh_demo': (3, ['overwrite','overwrite']),

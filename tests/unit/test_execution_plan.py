@@ -32,7 +32,7 @@ def plan_runtime(monkeypatch):
             sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}],
             targets=[{"store": "Silver", "schema": "demo", "table_name": "target"}],
             selections=selections if selections is not None else {"source": {"no_contract": True}, "target": {"no_contract": True}},
-            context=runtime, pipeline_id="example")
+            context=runtime, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
     def row(table_id="source", version=1, active=False):
         result = frozen(table_id, version=version, active=active)
         result["environment_name"] = runtime["env"]
@@ -137,7 +137,7 @@ def test_read_only_headless_plan_needs_no_target(plan_runtime, mode):
         rows.append(row(active=True))
     plan = build_pipeline_execution_plan(execution_mode=mode,
         sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}], targets=[],
-        selections={"source": {"contract_id": "contract-source", "contract_version": 1} if mode == "live" else {"no_contract": True}}, context=runtime, pipeline_id="example")
+        selections={"source": {"contract_id": "contract-source", "contract_version": 1} if mode == "live" else {"no_contract": True}}, context=runtime, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
     assert json.loads(plan.participants_json)["source"]["roles"] == ["source"]
     assert set(json.loads(plan.contracts_json)) == {"source"}
 

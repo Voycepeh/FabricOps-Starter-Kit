@@ -63,7 +63,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `config` | `FrameworkConfig \| dict[str, Any] \| None` | No | `None` | Explicit configuration for local or advanced use. When omitted, run 00_env_config in config_workspace_id (or the caller workspace when omitted), passing Fabric currentWorkspaceId. The notebook rejects unregistered workspaces and returns the environment and FrameworkConfig as JSON. This automatic path initializes the shared Fabric context and applies the configured Spark audit timezone. |
 | `env` | `str` | No | `'Sandbox'` | Environment section for explicit config only; automatic setup resolves it from the workspace. |
 | `required_targets` | `list[str] \| None` | No | `None` | Logical Fabric target names the notebook requires before execution can proceed. When omitted, all stores configured for the selected environment are required. |
-| `notebook_name` | `str \| None` | No | `None` | Explicit notebook name override used for runtime metadata and naming validation. |
+| `notebook_name` | `str \| None` | No | `None` | Explicit notebook name override used for display and runtime metadata. |
 | `run_id_prefix` | `str` | No | `'run'` | Prefix used only when no Fabric runtime run identifier is available. |
 | `local_fallback_name` | `str \| None` | No | `None` | Notebook name used only when neither ``notebook_name`` nor Fabric runtime notebook context provides one. |
 | `config_workspace_id` | `str \| None` | No | `None` | Workspace hosting 00_env_config for automatic loading. Defaults to the caller workspace. Supply a workspace ID only for cross-workspace setup. Ignored when config is supplied explicitly. |
@@ -143,13 +143,12 @@ Startup flow:
 8. Check whether Fabric runtime context is readable.
 9. Validate that each required target contains the necessary store
    identity fields.
-10. Validate the notebook name against supported FabricOps notebook naming
-    patterns.
+10. Retain the notebook name for informational display and audit metadata.
 11. Return an overall readiness status.
 
 Current standard templates use ``00_env_config``, ``01_governance``,
-and ``02_pipeline``. Governance and pipeline names can include suffixes
-for project-specific workflows.
+and ``02_pipeline``. Notebook names are informational and never determine
+pipeline identity or execution eligibility.
 
 Each resolved target contains the configured Fabric store identity needed
 by downstream functions, such as workspace identity, Fabric item identity,
@@ -221,7 +220,7 @@ initializes the shared context when configuration is loaded automatically.
 
 `fabricops_kit/config/setup_notebook.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L10-L174">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L10-L172">View on GitHub</a>
 </div>
 
 

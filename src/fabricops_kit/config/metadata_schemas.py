@@ -15,6 +15,7 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_DATA_PROFILED_FREQUENCY",
     "METADATA_DATA_LINEAGE",
     "METADATA_DATA_ACCESS",
+    "METADATA_PIPELINE_REGISTRY",
     "METADATA_PIPELINE_RUN",
     "METADATA_GUARDRAIL_RESULTS",
     "METADATA_SOURCE_OBSERVATION",
@@ -288,6 +289,13 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("object_type", "string"),
                 *audit,
             ],
+        ),
+        "METADATA_PIPELINE_REGISTRY": build_metadata_schema(
+            "METADATA_PIPELINE_REGISTRY",
+            [("pipeline_id", "string", False), ("environment_name", "string", False),
+             ("workspace_id", "string"), ("notebook_id", "string"), ("notebook_name", "string"),
+             ("registered_at", "timestamp"), ("registered_by", "string"), ("updated_at", "timestamp"),
+             ("registration_status", "string", False), ("registry_token", "string"), *audit],
         ),
         "METADATA_PIPELINE_RUN": build_metadata_schema(
             "METADATA_PIPELINE_RUN",

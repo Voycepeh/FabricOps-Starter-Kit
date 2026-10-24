@@ -8,7 +8,7 @@ Need the complete implementation-level dependency graph? Use the [Call Flow Dash
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">27</strong>
+    <strong class="reference-kpi-value">29</strong>
     <span class="reference-kpi-title">Public functions</span>
     <p class="reference-kpi-note">Notebook-facing Starter Kit functions.</p>
   </section>
@@ -18,14 +18,14 @@ Need the complete implementation-level dependency graph? Use the [Call Flow Dash
 
 ## Find a function
 
-Use the finder below to search 27 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
+Use the finder below to search 29 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
 
 <div class="callable-finder" data-callable-finder>
   <label class="callable-finder-label" for="callable-finder-input">Search public functions</label>
   <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">
   <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, starter path, usage source, or description.</p>
   <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">lineage</span> <span class="callable-finder-chip">guardrail</span></p>
-  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 27 public functions.</p>
+  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 29 public functions.</p>
   <p class="callable-finder-empty" data-callable-finder-empty hidden>No public functions match your search.</p>
 </div>
 
@@ -34,9 +34,9 @@ Use the finder below to search 27 public functions. Config classes stay out of t
 
     Maintainer inventory metrics:
 
-    - Source Python files count: 52
-    - Total callables: 714
-    - Supporting functions: 365
+    - Source Python files count: 54
+    - Total callables: 719
+    - Supporting functions: 368
     - Private helpers to review: 315
 
     - [Function Call Graph](../function-call-graph.md): explanatory page for the v4 normalized public-function call-flow architecture contract.
@@ -50,12 +50,17 @@ Use the finder below to search 27 public functions. Config classes stay out of t
 Expand a group to browse its public functions. Standard Orchestration is open by default.
 
 <details class="reference-function-group" data-callable-group="standard-orchestration" data-default-open="true" open>
-<summary><span class="reference-function-group-title">Standard Orchestration</span><span class="reference-function-group-meta">4 functions · Recommended</span></summary>
+<summary><span class="reference-function-group-title">Standard Orchestration</span><span class="reference-function-group-meta">6 functions · Recommended</span></summary>
 <p class="reference-function-group-description">Complete governed read and write lifecycle for the standard FabricOps pipeline.</p>
 <div class="reference-catalogue-list">
-<article id="pipeline.finalize_pipeline-finalize_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="finalize_pipeline" data-callable-module="pipeline.finalize_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Complete execution and publish Testing run and Guardrail results.">
+<article id="pipeline.create_pipeline-create_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="create_pipeline" data-callable-module="pipeline.create_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Generate and register a UUIDv4 for an independent, unregistered notebook.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/create_pipeline/"><code>create_pipeline</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Generate and register a UUIDv4 for an independent, unregistered notebook.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
+</article>
+<article id="pipeline.finalize_pipeline-finalize_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="finalize_pipeline" data-callable-module="pipeline.finalize_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Complete execution and return Test results or commit the Live outcome.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/finalize_pipeline/"><code>finalize_pipeline</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Complete execution and publish Testing run and Guardrail results.</p>
+  <p class="reference-catalogue-item-purpose">Complete execution and return Test results or commit the Live outcome.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 <article id="pipeline.orchestrate_read-orchestrate_read" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_read" data-callable-module="pipeline.orchestrate_read" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Run the observable standard governed source lifecycle.">
@@ -67,6 +72,11 @@ Expand a group to browse its public functions. Standard Orchestration is open by
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_write/"><code>orchestrate_write</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run the observable standard governed target lifecycle.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.5</span><span class="reference-chip">02_pipeline</span></p>
+</article>
+<article id="pipeline.rebind_pipeline-rebind_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="rebind_pipeline" data-callable-module="pipeline.rebind_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Move an existing environment binding to the caller after notebook reupload.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/rebind_pipeline/"><code>rebind_pipeline</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Move an existing environment binding to the caller after notebook reupload.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 <article id="pipeline.setup_pipeline-setup_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_pipeline" data-callable-module="pipeline.setup_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Prepare Testing or resolve an approved environment configuration for Live.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_pipeline/"><code>setup_pipeline</code></a></h3>

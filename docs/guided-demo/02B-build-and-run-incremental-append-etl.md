@@ -41,7 +41,7 @@ Profiling schedules and Read/Write triggers are saved per table in Data Contract
 Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparation cell. That setup can change Bronze before pipeline selection. The default pipeline setup is:
 
 ```python
-PIPELINE_ID = "02B_incremental_append_demo"
+PIPELINE_ID = None  # First run: save the displayed UUID here before promotion.
 PIPELINE_MODE = "Test"  # Test or Live
 CONTRACTS = setup_pipeline(
     pipeline_id=PIPELINE_ID,

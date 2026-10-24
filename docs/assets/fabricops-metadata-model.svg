@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1540 1420" role="img" aria-labelledby="title desc">
+<title id="title">FabricOps pipeline identity, execution and activation metadata</title>
+<desc id="desc">Engineering Pipeline Registry owns permanent UUIDs. Governance Activated Pipeline is a logical immutable release inside Activation State. Each registry identity has many runs and releases. Live runs require an approved release.</desc>
+<style>text{font-family:Segoe UI,Arial,sans-serif;font-size:16px;fill:#243449}.title{font-size:21px;font-weight:600}.head{font-size:17px;font-weight:600;fill:white}.key{fill:#007f64;font-weight:600}.fk{fill:#0f6cbd}.edge{fill:none;stroke:#0f6cbd;stroke-width:2}.label{font-size:14px;fill:#164c80}.note{font-size:14px;fill:#526477}</style>
+<rect width="1540" height="1420" fill="#fff"/>
+<rect x="20" y="25" width="1500" height="310" rx="8" fill="#f4effb" stroke="#7954b3"/>
+<text x="40" y="60" class="title">Governance Schema</text>
+<rect x="20" y="360" width="1500" height="1010" rx="8" fill="#edf7ff" stroke="#0f6cbd"/>
+<text x="40" y="395" class="title">Engineering Schema</text>
+<path class="edge" d="M360 165 H420"/>
+<text x="370" y="154" class="label">1</text>
+<text x="399" y="154" class="label">N</text>
+<path class="edge" d="M720 165 H780"/>
+<text x="730" y="154" class="label">1</text>
+<text x="759" y="154" class="label">N</text>
+<path class="edge" d="M1080 165 H1140" stroke-dasharray="7 5"/>
+<text x="1088" y="154" class="label">N</text>
+<text x="1118" y="154" class="label">M</text>
+<path class="edge" d="M300 435 V325 H810 V295"/>
+<text x="308" y="422" class="label">1</text>
+<text x="818" y="314" class="label">N</text>
+<path class="edge" d="M360 530 H420"/>
+<text x="369" y="517" class="label">1</text>
+<text x="398" y="517" class="label">N</text>
+<path class="edge" d="M930 295 V350 H570 V435"/>
+<text x="938" y="317" class="label">1</text>
+<text x="578" y="424" class="label">N · Live</text>
+<path class="edge" d="M780 540 H720"/>
+<text x="733" y="528" class="label">1</text>
+<text x="758" y="528" class="label">N</text>
+<path class="edge" d="M1290 295 V435"/>
+<text x="1298" y="317" class="label">N</text>
+<text x="1298" y="424" class="label">1</text>
+<path class="edge" d="M570 635 V700 H1290 V635" stroke-dasharray="7 5"/>
+<text x="579" y="656" class="label">N</text>
+<text x="1300" y="657" class="label">M · participants</text>
+<path class="edge" d="M1290 635 V735 H210 V770"/>
+<text x="1298" y="720" class="label">1</text>
+<text x="218" y="759" class="label">N</text>
+<path class="edge" d="M930 735 V770"/>
+<text x="938" y="760" class="label">N</text>
+<path class="edge" d="M1290 735 V770"/>
+<text x="1298" y="760" class="label">N</text>
+<path class="edge" d="M360 860 H420"/>
+<text x="369" y="848" class="label">1</text>
+<text x="398" y="848" class="label">N</text>
+<path class="edge" d="M1440 600 H1480 V1060 H930 V1100"/>
+<text x="1487" y="668" class="label">1</text>
+<text x="938" y="1087" class="label">N</text>
+<rect x="60" y="95" width="300" height="200" rx="4" fill="white" stroke="#7954b3" stroke-width="2"/>
+<path d="M64 95 H356 Q360 95 360 99 V135 H60 V99 Q60 95 64 95" fill="#7954b3"/>
+<text x="210.0" y="121" text-anchor="middle" class="head">DATA_STEWARD</text>
+<text x="72" y="161" class="key">PK</text>
+<text x="108" y="161" class="">steward_id</text>
+<rect x="420" y="95" width="300" height="200" rx="4" fill="white" stroke="#7954b3" stroke-width="2"/>
+<path d="M424 95 H716 Q720 95 720 99 V135 H420 V99 Q420 95 424 95" fill="#7954b3"/>
+<text x="570.0" y="121" text-anchor="middle" class="head">DATA_AGREEMENT</text>
+<text x="432" y="161" class="key">PK</text>
+<text x="468" y="161" class="">agreement_id</text>
+<text x="432" y="188" class="key">PK</text>
+<text x="468" y="188" class="">agreement_version</text>
+<text x="432" y="215" class="key">FK</text>
+<text x="468" y="215" class="fk">provider_steward_id</text>
+<text x="432" y="242" class="key">FK</text>
+<text x="468" y="242" class="fk">recipient_steward_id</text>
+<rect x="780" y="95" width="300" height="200" rx="4" fill="white" stroke="#7954b3" stroke-width="2"/>
+<path d="M784 95 H1076 Q1080 95 1080 99 V135 H780 V99 Q780 95 784 95" fill="#7954b3"/>
+<text x="930.0" y="121" text-anchor="middle" class="head">ACTIVATED_PIPELINE</text>
+<text x="792" y="161" class="key">PK</text>
+<text x="828" y="161" class="">activated_pipeline_id</text>
+<text x="792" y="188" class="key">FK</text>
+<text x="828" y="188" class="fk">pipeline_id</text>
+<text x="792" y="215" class="key">FK</text>
+<text x="828" y="215" class="fk">agreement_id + version</text>
+<text x="792" y="242" class="">manifest_json</text>
+<text x="792" y="269" class="note">Logical release in Activation State</text>
+<rect x="1140" y="95" width="300" height="200" rx="4" fill="white" stroke="#7954b3" stroke-width="2"/>
+<path d="M1144 95 H1436 Q1440 95 1440 99 V135 H1140 V99 Q1140 95 1144 95" fill="#7954b3"/>
+<text x="1290.0" y="121" text-anchor="middle" class="head">DATA_CONTRACT</text>
+<text x="1152" y="161" class="key">PK</text>
+<text x="1188" y="161" class="">contract_id</text>
+<text x="1152" y="188" class="key">PK</text>
+<text x="1188" y="188" class="">contract_version</text>
+<text x="1152" y="215" class="key">FK</text>
+<text x="1188" y="215" class="fk">table_id</text>
+<text x="1152" y="242" class="">contract_payload_json</text>
+<rect x="60" y="435" width="300" height="200" rx="4" fill="white" stroke="#0f6cbd" stroke-width="2"/>
+<path d="M64 435 H356 Q360 435 360 439 V475 H60 V439 Q60 435 64 435" fill="#0f6cbd"/>
+<text x="210.0" y="461" text-anchor="middle" class="head">PIPELINE_REGISTRY</text>
+<text x="72" y="501" class="key">PK</text>
+<text x="108" y="501" class="">pipeline_id + environment_name</text>
+<text x="72" y="528" class="">workspace_id + notebook_id</text>
+<text x="72" y="555" class="">notebook_name</text>
+<text x="72" y="582" class="">registration_status</text>
+<rect x="420" y="435" width="300" height="200" rx="4" fill="white" stroke="#0f6cbd" stroke-width="2"/>
+<path d="M424 435 H716 Q720 435 720 439 V475 H420 V439 Q420 435 424 435" fill="#0f6cbd"/>
+<text x="570.0" y="461" text-anchor="middle" class="head">PIPELINE_RUN</text>
+<text x="432" y="501" class="key">PK</text>
+<text x="468" y="501" class="">run_id</text>
+<text x="432" y="528" class="key">FK</text>
+<text x="468" y="528" class="fk">pipeline_id</text>
+<text x="432" y="555" class="key">FK</text>
+<text x="468" y="555" class="fk">activated_pipeline_id (Live)</text>
+<text x="432" y="582" class="">Test results stay in memory</text>
+<rect x="780" y="435" width="300" height="200" rx="4" fill="white" stroke="#0f6cbd" stroke-width="2"/>
+<path d="M784 435 H1076 Q1080 435 1080 439 V475 H780 V439 Q780 435 784 435" fill="#0f6cbd"/>
+<text x="930.0" y="461" text-anchor="middle" class="head">GUARDRAIL_RESULTS</text>
+<text x="792" y="501" class="key">PK</text>
+<text x="828" y="501" class="">guardrail_result_id</text>
+<text x="792" y="528" class="key">FK</text>
+<text x="828" y="528" class="fk">run_id</text>
+<text x="792" y="555" class="key">FK</text>
+<text x="828" y="555" class="fk">contract_id + version</text>
+<text x="792" y="582" class="key">FK</text>
+<text x="828" y="582" class="fk">table_id</text>
+<rect x="1140" y="435" width="300" height="200" rx="4" fill="white" stroke="#0f6cbd" stroke-width="2"/>
+<path d="M1144 435 H1436 Q1440 435 1440 439 V475 H1140 V439 Q1140 435 1144 435" fill="#0f6cbd"/>
+<text x="1290.0" y="461" text-anchor="middle" class="head">DATA_CATALOGUE</text>
+<text x="1152" y="501" class="key">PK</text>
+<text x="1188" y="501" class="">environment_name + table_id</text>
+<text x="1152" y="528" class="key">PK</text>
+<text x="1188" y="528" class="">column_id</text>
+<rect x="60" y="770" width="300" height="200" rx="4" fill="white" stroke="#0f6cbd" stroke-width="2"/>
+<path d="M64 770 H356 Q360 770 360 774 V810 H60 V774 Q60 770 64 770" fill="#0f6cbd"/>
+<text x="210.0" y="796" text-anchor="middle" class="head">DATA_PROFILED</text>
+<text x="72" y="836" class="key">PK</text>
+<text x="108" y="836" class="">profile_id</text>
+<text x="72" y="863" class="key">FK</text>
+<text x="108" y="863" class="fk">table_id + column_id</text>
+<rect x="420" y="770" width="300" height="200" rx="4" fill="white" stroke="#0f6cbd" stroke-width="2"/>
+<path d="M424 770 H716 Q720 770 720 774 V810 H420 V774 Q420 770 424 770" fill="#0f6cbd"/>
+<text x="570.0" y="796" text-anchor="middle" class="head">DATA_PROFILED_FREQUENCY</text>
+<text x="432" y="836" class="key">PK</text>
+<text x="468" y="836" class="">frequency_id</text>
+<text x="432" y="863" class="key">FK</text>
+<text x="468" y="863" class="fk">profile_id</text>
+<rect x="780" y="770" width="300" height="200" rx="4" fill="white" stroke="#0f6cbd" stroke-width="2"/>
+<path d="M784 770 H1076 Q1080 770 1080 774 V810 H780 V774 Q780 770 784 770" fill="#0f6cbd"/>
+<text x="930.0" y="796" text-anchor="middle" class="head">DATA_LINEAGE</text>
+<text x="792" y="836" class="key">PK</text>
+<text x="828" y="836" class="">lineage_id</text>
+<text x="792" y="863" class="key">FK</text>
+<text x="828" y="863" class="fk">table_id</text>
+<rect x="1140" y="770" width="300" height="200" rx="4" fill="white" stroke="#0f6cbd" stroke-width="2"/>
+<path d="M1144 770 H1436 Q1440 770 1440 774 V810 H1140 V774 Q1140 770 1144 770" fill="#0f6cbd"/>
+<text x="1290.0" y="796" text-anchor="middle" class="head">DATA_ACCESS</text>
+<text x="1152" y="836" class="key">PK</text>
+<text x="1188" y="836" class="">access_id</text>
+<text x="1152" y="863" class="key">FK</text>
+<text x="1188" y="863" class="fk">table_id</text>
+<rect x="780" y="1100" width="300" height="200" rx="4" fill="white" stroke="#0f6cbd" stroke-width="2"/>
+<path d="M784 1100 H1076 Q1080 1100 1080 1104 V1140 H780 V1104 Q780 1100 784 1100" fill="#0f6cbd"/>
+<text x="930.0" y="1126" text-anchor="middle" class="head">SOURCE_OBSERVATION</text>
+<text x="792" y="1166" class="key">PK</text>
+<text x="828" y="1166" class="">observation_id</text>
+<text x="792" y="1193" class="key">FK</text>
+<text x="828" y="1193" class="fk">source_table_id</text>
+<text x="792" y="1220" class="key">FK</text>
+<text x="828" y="1220" class="fk">target_table_id</text>
+<text x="792" y="1247" class="">environment_name</text>
+<text x="60" y="1355" class="note">All physical table names use METADATA_. Activated Pipeline is stored inside governance.METADATA_ACTIVATION_STATE.</text>
+<text x="60" y="1385" class="note">Registry pipeline_id is a logical UUID shared across environment bindings. Standard audit columns and serialization control row omitted.</text>
+</svg>

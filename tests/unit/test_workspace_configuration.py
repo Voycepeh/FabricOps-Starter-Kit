@@ -139,6 +139,7 @@ def test_invalid_response_reuses_validation(configuration_runtime, change, messa
 @pytest.mark.parametrize('config_workspace', [None, 'central-ws'])
 def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeypatch, capsys, mode, config_workspace):
     shared = importlib.import_module('fabricops_kit.pipeline.shared')
+    monkeypatch.setattr(shared, 'resolve_pipeline_registration', lambda identity, **kwargs: {'pipeline_id': '8f32a471-6c91-4b7e-9d13-2f0c947eab52', 'resolution': 'Recovered'})
     monkeypatch.setattr(shared, 'get_spark_session', lambda: configuration_runtime.spark)
     monkeypatch.setattr(shared.PipelineSession, 'refresh', lambda self: None)
     if mode == 'Live':
@@ -155,7 +156,7 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
     try:
         session = setup_pipeline(pipeline_mode=mode, config_workspace_id=config_workspace)
         assert session.plan.environment == 'dev'
-        assert session.plan.pipeline_id == '02_pipeline_orders'
+        assert session.plan.pipeline_id == '8f32a471-6c91-4b7e-9d13-2f0c947eab52'
         assert session.plan.runtime_context['config'].path_config.paths['dev']['Metadata'].workspace_id == 'metadata-ws'
         configuration_runtime.notebook.run.assert_called_once_with(
             '00_env_config', 120, {'caller_workspace_id': 'dev-ws'}, workspace=config_workspace or 'dev-ws')

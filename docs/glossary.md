@@ -331,6 +331,11 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p><strong>Also known as:</strong> pipelines</p>
 </details>
 
+<details id="pipeline-registry">
+<summary><strong>Pipeline Registry</strong> — Engineering registration of permanent Pipeline UUIDs and environment notebook bindings.</summary>
+<p>METADATA_PIPELINE_REGISTRY stores one logical pipeline binding per environment. Registration recovers a UUIDv4 using the exact workspace and notebook IDs. It never grants activation or Live authorization.</p>
+</details>
+
 <details id="pipeline-run">
 <summary><strong>pipeline run</strong> — One logical pipeline execution across every declared Read and Write.</summary>
 <p>METADATA_PIPELINE_RUN records one logical attempt across all declared Reads and Writes, stable pipeline_id, candidate identity, operations and status. Notebook cell events detect failure but do not establish whole-run success. finalize_pipeline records whole-run completion; unfinalized runs remain incomplete. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.</p>

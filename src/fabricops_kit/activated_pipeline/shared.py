@@ -55,7 +55,7 @@ def validate_manifest(row):
     manifest = json.loads(row["manifest_json"])
     if manifest.get("format") != "fabricops.activated-pipeline.v1" or manifest_digest(manifest) != row["activated_pipeline_id"]:
         raise ValueError("Activated Pipeline manifest integrity mismatch.")
-    for key in ("pipeline_id", "pipeline_name", "pipeline_version", "testing_run_id"):
+    for key in ("pipeline_id", "pipeline_name", "pipeline_version", "testing_run_id", "environment_name"):
         if manifest.get(key) != row[key]:
             raise ValueError("Activated Pipeline immutable identity mismatch.")
     candidate = manifest["candidate"]
@@ -83,13 +83,23 @@ def validate_manifest(row):
 
 
 def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_name, pipeline_version,
-                             agreement_id, agreement_version, context, spark_session=None):
-    """Revalidate committed complete Testing evidence independently of any widget."""
+                             agreement_id, agreement_version, testing_result, context, spark_session=None):
+    """Revalidate explicit complete in-memory Testing before freezing approval."""
     config, env, runtime = resolve_fabric_context(context=context)
-    run = exact_record(metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session), run_id=testing_run_id)
+    from fabricops_kit.pipeline.shared import read_pipeline_registry, validate_pipeline_id
+    run = dict(testing_result)
+    if run.get("run_id") != testing_run_id:
+        raise ValueError("Testing result does not match the selected run ID.")
+    validate_pipeline_id(run.get("pipeline_id"))
+    _registry_token, registrations = read_pipeline_registry(context=context, spark_session=spark_session)
+    registration = exact_record(registrations, pipeline_id=run["pipeline_id"], environment_name=env)
+    if registration["registration_status"] != "Active":
+        raise ValueError("Activation requires an Active Engineering registration.")
     if run.get("environment_name") != env:
         raise ValueError("Testing evidence must cover the activation environment; other environments are isolated.")
     candidate = json.loads(run["candidate_json"])
+    if candidate.get("pipeline_id") != run["pipeline_id"]:
+        raise ValueError("Testing candidate Pipeline UUID mismatch.")
     if not candidate_fingerprint or candidate_fingerprint != run.get("candidate_fingerprint") or manifest_digest(candidate) != candidate_fingerprint:
         raise ValueError("Exact tested candidate fingerprint mismatch.")
     missing = sorted(item["table_id"] for item in candidate["participants"] if item.get("contract") is None)
@@ -139,7 +149,7 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
         logical = participant["participant"]
         for role in participant["roles"]:
             operation = operations[f"{role}:{logical}"]
-            required_stages = {"Read"} if role == "source" else ({"Write", "Profile"} if summary.get("testing_writes") else {"Processing"})
+            required_stages = {"Read"} if role == "source" else {"Processing"}
             if role == "source" and operation["configuration"].get("read_mode") == "full":
                 required_stages.add("Profile")
             for rule in rule_sets[logical]:
@@ -162,8 +172,9 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
     current, fingerprint, _bindings = pipeline_candidate(plan)
     if fingerprint != candidate_fingerprint or current != candidate:
         raise ValueError("Contracts or processing configuration differ from the tested candidate.")
-    diagnostics = [row for row in metadata_records("METADATA_GUARDRAIL_RESULTS", context={**runtime, "config": config, "env": run["environment_name"]}, spark_session=spark_session)
-                   if row.get("run_id") == testing_run_id]
+    diagnostics = list(run.get("guardrail_results", []))
+    if any(row.get("run_id") != testing_run_id for row in diagnostics):
+        raise ValueError("Testing Guardrail diagnostics must reference the selected run.")
     if any(row.get("can_continue") is not True or row.get("execution_type") != "testing" for row in diagnostics):
         raise ValueError("Testing has blocking or invalid Guardrail diagnostics.")
     from collections import Counter
@@ -193,9 +204,9 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
     validate_agreement(agreement)
     if not str(pipeline_name).strip() or not str(pipeline_version).strip():
         raise ValueError("Pipeline name and version are required.")
-    return {"format": "fabricops.activated-pipeline.v1", "pipeline_id": run["pipeline_id"],
+    return {"format": "fabricops.activated-pipeline.v1", "pipeline_id": run["pipeline_id"], "environment_name": env,
             "pipeline_name": str(pipeline_name).strip(), "pipeline_version": str(pipeline_version).strip(),
-            "testing_run_id": testing_run_id, "candidate": candidate, "physical_bindings": summary["physical_bindings"],
+            "testing_run_id": testing_run_id, "testing_evidence": json.loads(json.dumps(run, default=lambda value: value.isoformat() if isinstance(value, date) else str(value))), "candidate": candidate, "physical_bindings": summary["physical_bindings"],
             "contracts": sorted(definitions, key=lambda item: item["participant"]),
             "agreement": agreement_definition(agreement),
             "warnings": ["Testing does not verify deployment permissions, target transactions or concurrent business writes."]
@@ -353,12 +364,6 @@ def review_pipeline_release(requests, *, context, spark_session=None):
     if not proposed:
         raise ValueError("Select at least one successful Testing candidate.")
     report = activation_impact(current, proposed)
-    changed_destinations = [item["destination"] for table_id, item in report["tables"].items()
-                            if table_id in report["changed_tables"]]
-    for other in state["environments"].values():
-        for run_id, run in other["runs"].items():
-            if run.get("mode") == "testing" and any(destination in run.get("destinations", []) for destination in changed_destinations):
-                report["blocking_conflicts"].append(f"Drain Testing execution reserving a proposed destination: {run_id}.")
     report["ready"] = not report["blocking_conflicts"]
     return token, state, proposed, {**report, "environment": env}
 
@@ -379,47 +384,6 @@ def approve_pipeline_release(requests, *, expected_token, governance_confirmed=F
     current["revision"] = manifest_digest({"previous": current["revision"], "pipelines": current["pipelines"]})
     commit_activation_state(state, expected_token=token, context=context, spark_session=spark_session)
     return {"environment": report["environment"], "revision": current["revision"], "pipelines": proposed}
-
-
-def validate_testing_destinations(plan, *, spark_session=None, require_reservation=True):
-    """Prevent explicitly authorized Testing writes to any Live-owned destination."""
-    _token, state = read_activation_state(context=plan.runtime_context, spark_session=spark_session)
-    targets = {key for key, item in json.loads(plan.participants_json).items() if "target" in item["roles"]}
-    bindings = plan.runtime_context["_pipeline_bindings"]
-    from fabricops_kit.pipeline.shared import pipeline_physical_bindings
-    physical = pipeline_physical_bindings(json.loads(plan.participants_json), config=plan.runtime_context["config"], environment=plan.environment)
-    if physical != bindings:
-        raise ValueError("Testing physical destinations changed; create a new plan and review them again.")
-    for current in state["environments"].values():
-        for table_id in targets:
-            if any(item.get("destination") == bindings[table_id] for item in current["tables"].values()):
-                raise ValueError("Testing cannot write Live-owned destinations: " + table_id)
-    if require_reservation:
-        current = environment_activation(state, plan.environment)
-        reservation = current["runs"].get(plan.plan_id)
-        expected_destinations = [bindings[key] for key in sorted(targets)]
-        if not reservation or reservation.get("mode") != "testing" or reservation.get("destinations") != expected_destinations:
-            raise ValueError("Testing write reservation is missing or changed; create a new run.")
-    return targets
-
-
-def reserve_testing_destinations(plan, *, spark_session=None):
-    """Reserve Testing destinations against activation until the boundary completes."""
-    targets = validate_testing_destinations(plan, spark_session=spark_session, require_reservation=False)
-    token, state = read_activation_state(context=plan.runtime_context, spark_session=spark_session)
-    bindings = plan.runtime_context["_pipeline_bindings"]
-    destinations = [bindings[key] for key in sorted(targets)]
-    if any(item.get("destination") in destinations
-           for other in state["environments"].values() for item in other["tables"].values()):
-        raise ValueError("Testing destination became Live-owned; choose a separate destination.")
-    current = environment_activation(state, plan.environment)
-    if any(destination in run.get("destinations", []) for destination in destinations
-           for other in state["environments"].values() for run in other["runs"].values()):
-        raise ValueError("Testing destination is reserved by a running execution.")
-    current["runs"][plan.plan_id] = {"pipeline_id": plan.pipeline_id, "tables": sorted(targets),
-                                  "destinations": destinations, "mode": "testing"}
-    commit_activation_state(state, expected_token=token, context=plan.runtime_context, spark_session=spark_session)
-    plan.evidence["lease_token"] = plan.plan_id
 
 
 def release_pipeline_lease(plan, *, spark_session=None):
@@ -457,6 +421,14 @@ def build_live_pipeline_plan(*, pipeline_id, context=None, spark_session=None):
     from uuid import uuid4
     from fabricops_kit.pipeline.shared import persist_pipeline_run, pipeline_physical_bindings
     config, env, runtime = resolve_fabric_context(context=context)
+    from fabricops_kit.pipeline.shared import read_pipeline_registry, validate_pipeline_id
+    pipeline_id = validate_pipeline_id(pipeline_id)
+    _registration_token, registrations = read_pipeline_registry(context=context, spark_session=spark_session)
+    registration = exact_record(registrations, pipeline_id=pipeline_id, environment_name=env)
+    if registration["registration_status"] != "Active" or any(
+        registration[key] != runtime.get(key) for key in ("workspace_id", "notebook_id")
+    ):
+        raise ValueError("Live caller does not own the Active Engineering notebook binding.")
     token, state = read_activation_state(context=context, spark_session=spark_session)
     current = environment_activation(state, env)
     approved = current["pipelines"].get(pipeline_id)

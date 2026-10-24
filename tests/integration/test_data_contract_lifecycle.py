@@ -245,10 +245,10 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
     return frozen
 
 
-def _activation(state):
+def _activation(state, testing_results=()):
     """Open whole-pipeline Governance review with the real headless service."""
     module = importlib.import_module("fabricops_kit.widgets.widget_activate_pipeline")
-    return module.widget_activate_pipeline(pipeline_id="orders-pipeline",
+    return module.widget_activate_pipeline(testing_results=testing_results, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52",
         spark_session=state.spark, context=state.context)
 
 
@@ -262,7 +262,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     before = _activation(state)
     assert not before["eligible_runs"] and before["activate"].disabled
     assert not state.metadata["METADATA_DATA_LINEAGE"]
-    coordinates = {"pipeline_id": "orders-pipeline", "configuration": {}, "sources": [
+    coordinates = {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "configuration": {}, "sources": [
         {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
         {"store": "Bronze", "schema": "dbo", "table_name": "products"}],
         "targets": [{"store": "Silver", "schema": "dbo", "table_name": "curated_orders"}]}
@@ -302,8 +302,8 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert completed["status"] == "succeeded"
     assert all(row["run_id"] == plan.plan_id for row in plan.results)
     assert all(row["rule_type"] != "contract_validation" for row in plan.results)
-    widget = _activation(state)
-    assert not widget["eligible_runs"] and widget["activate"].disabled
+    widget = _activation(state, testing_results=[completed])
+    assert len(widget["eligible_runs"]) == 1 and widget["activate"].disabled
     assert state.metadata["METADATA_PIPELINE_RUN"] == snapshot["METADATA_PIPELINE_RUN"]
     assert state.metadata["METADATA_GUARDRAIL_RESULTS"] == snapshot["METADATA_GUARDRAIL_RESULTS"]
     assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]]

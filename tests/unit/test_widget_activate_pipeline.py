@@ -17,12 +17,12 @@ def render(authority, monkeypatch):
     monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: ({}, "canary", authority.context))
     monkeypatch.setattr(module, "metadata_records", importlib.import_module("fabricops_kit.activated_pipeline.shared").metadata_records)
     monkeypatch.setattr(module, "read_activation_state", authority.read)
-    return lambda **kw: module.widget_activate_pipeline(context=authority.context, **kw)
+    return lambda **kw: module.widget_activate_pipeline(testing_results=list(authority.saved.values()), context=authority.context, **kw)
 
 
 def test_single_pipeline_review_and_one_approval(authority, render):
     _, run = authority.candidate()
-    widget = render(pipeline_id="A")
+    widget = render(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596")
     assert widget["additional_runs"].layout.display == "none"
     assert widget["activate"].disabled
     widget["candidate_controls"][run["run_id"]]["version"].value = "1"
@@ -31,25 +31,25 @@ def test_single_pipeline_review_and_one_approval(authority, render):
         widget["perform_activation"]()
     widget["confirmed"].value = True
     assert not widget["activate"].disabled
-    assert widget["perform_activation"]()["pipelines"]["A"]["testing_run_id"] == run["run_id"]
+    assert widget["perform_activation"]()["pipelines"]["4c7ae400-85ab-4023-9427-e8fde20bd596"]["testing_run_id"] == run["run_id"]
 
 
 def test_dependency_controls_show_missing_tests_and_coordinated_candidates(authority, render):
-    _, a3 = authority.candidate("A"); _, b3 = authority.candidate("B", roles=("source",))
+    _, a3 = authority.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596"); _, b3 = authority.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", roles=("source",))
     authority.approve(a3); authority.approve(b3)
-    _, a4 = authority.candidate("A", version=4); _, b4 = authority.candidate("B", version=4, roles=("source",))
-    widget = render(pipeline_id="A")
+    _, a4 = authority.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596", version=4); _, b4 = authority.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", version=4, roles=("source",))
+    widget = render(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596")
     widget["run_select"].value = a4["run_id"]
     assert widget["additional_runs"].layout.display != "none"
     widget["candidate_controls"][a4["run_id"]]["version"].value = "4"
     report = widget["review_release"]()
-    assert report["missing_pipelines"] == ["B"] and not report["ready"]
+    assert report["missing_pipelines"] == ["f5ee4669-5b76-4baf-9875-6cfecba2e031"] and not report["ready"]
     widget["additional_runs"].value = (b4["run_id"],)
     widget["candidate_controls"][b4["run_id"]]["version"].value = "4"
     assert widget["review_release"]()["ready"]
     widget["confirmed"].value = True
     result = widget["perform_activation"]()
-    assert set(result["pipelines"]) == {"A", "B"}
+    assert set(result["pipelines"]) == {"4c7ae400-85ab-4023-9427-e8fde20bd596", "f5ee4669-5b76-4baf-9875-6cfecba2e031"}
 
 
 def test_review_is_invalidated_when_candidate_configuration_changes(authority, render):
@@ -72,10 +72,10 @@ def test_empty_widget_does_not_mutate_authority(authority, render):
 
 
 def test_unchanged_shared_contract_keeps_coordination_controls_hidden(authority, render):
-    _, a = authority.candidate("A")
+    _, a = authority.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596")
     authority.approve(a)
-    _, b = authority.candidate("B", roles=("source",))
-    widget = render(pipeline_id="B")
+    _, b = authority.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", roles=("source",))
+    widget = render(pipeline_id="f5ee4669-5b76-4baf-9875-6cfecba2e031")
     assert widget["run_select"].value == b["run_id"]
     assert widget["additional_runs"].layout.display == "none"
     widget["candidate_controls"][b["run_id"]]["version"].value = "1"
@@ -113,9 +113,9 @@ def test_missing_contract_runs_show_diagnostics_but_cannot_be_reviewed(authority
     assert run['status'] == ('succeeded' if len(missing) == 1 else 'ungoverned_completed')
     if not has_eligible_run:
         authority.saved.clear()
-        authority.saved[run['run_id']] = run
+    authority.saved[run['run_id']] = run
     before = deepcopy(authority.central)
-    widget = render(pipeline_id='A')
+    widget = render(pipeline_id='4c7ae400-85ab-4023-9427-e8fde20bd596')
     notice = next(
         child for child in widget['widget'].children if 'Testing completed, but these runs cannot activate.' in str(getattr(child, 'value', '')))
     assert run['run_id'] in notice.value
@@ -150,7 +150,7 @@ def test_missing_coverage_notice_escapes_identifiers_and_handles_malformed_rows(
     candidate['participants'][0].update(table_id=table_id, contract=None)
     summary['frozen_contracts'][0].update(table_id=table_id, contract=None)
     run.update(candidate_json=json.dumps(candidate), operation_summary_json=json.dumps(summary))
-    widget = render(pipeline_id='A')
+    widget = render(pipeline_id='4c7ae400-85ab-4023-9427-e8fde20bd596')
     notice = next(child for child in widget['widget'].children if 'Testing completed, but these runs cannot activate.' in str(getattr(child, 'value', '')))
     assert '&lt;script&gt;example&lt;/script&gt;' in notice.value
     assert table_id not in notice.value
@@ -159,3 +159,16 @@ def test_missing_coverage_notice_escapes_identifiers_and_handles_malformed_rows(
     summary['frozen_contracts'] = [None]
     run.update(candidate_json=json.dumps(candidate), operation_summary_json=json.dumps(summary))
     assert module._missing_contracts(run) == []
+
+
+def test_testing_evidence_cannot_change_after_governance_review(authority, render):
+    """Approval must freeze exactly the reviewed input, including in-memory evidence."""
+    _, run = authority.candidate()
+    widget = render()
+    widget['candidate_controls'][run['run_id']]['version'].value = '1'
+    assert widget['review_release']()['ready']
+    widget['confirmed'].value = True
+    widget['eligible_runs'][0]['started_at'] = 'changed after review'
+    with pytest.raises(ValueError, match='explicitly approve'):
+        widget['perform_activation']()
+    assert not authority.current()['pipelines']

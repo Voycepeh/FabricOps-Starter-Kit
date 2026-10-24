@@ -57,7 +57,7 @@ Run the Environment import cell first. The notebook does not need a separate con
 ### Run the Data Contract block
 
 ```python
-PIPELINE_ID = "02_pipeline"
+PIPELINE_ID = None  # First run: save the displayed UUID here before promotion.
 PIPELINE_MODE = "Test"  # Test or Live
 CONTRACTS = setup_pipeline(
     pipeline_id=PIPELINE_ID,

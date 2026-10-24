@@ -1,6 +1,6 @@
 # List of Metadata Tables
 
-![FabricOps metadata model: Governance and Engineering schemas, with a manifest-backed Activated Pipeline contracts and separate run-linked Guardrail Results](../assets/fabricops-metadata-model.png)
+![FabricOps metadata model: Governance and Engineering schemas, with a manifest-backed Activated Pipeline contracts and separate run-linked Guardrail Results](../assets/fabricops-metadata-model.svg)
 
 FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas:
 
@@ -36,6 +36,33 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
 </style>
 
 <div class="metadata-table-grid">
+<a class="metadata-table-card metadata-table-card--engineering" href="metadata_pipeline_registry/" aria-label="Open METADATA_PIPELINE_REGISTRY schema">
+  <span class="metadata-table-card__header">
+    <span class="metadata-table-card__identity">
+      <span class="metadata-table-card__title">METADATA_PIPELINE_REGISTRY</span>
+      <span class="metadata-table-card__schema">engineering</span>
+    </span>
+    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
+  </span>
+  <span class="metadata-table-card__purpose">Permanent UUIDv4 identity and environment-specific notebook bindings; registration never authorizes Live. A seeded Authority control row serializes binding transactions in this same table.</span>
+  <span class="metadata-table-card__meta">
+    <strong>Grain</strong>
+    <span>One logical pipeline per environment, plus one serialization control row (central, *).</span>
+  </span>
+  <span class="metadata-table-card__meta">
+    <strong>Primary key</strong>
+    <span><code>pipeline_id</code> <span class="metadata-table-card__key-separator">+</span> <code>environment_name</code></span>
+  </span>
+  <span class="metadata-table-card__relationships">
+    <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_PIPELINE_RUN</code>
+      </span>
+    </span>
+  </span>
+</a>
 <a class="metadata-table-card metadata-table-card--engineering" href="metadata_pipeline_run/" aria-label="Open METADATA_PIPELINE_RUN schema">
   <span class="metadata-table-card__header">
     <span class="metadata-table-card__identity">
@@ -47,7 +74,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
   <span class="metadata-table-card__purpose">One complete logical run, exact table mappings, operation results, per-table profiling activity outcomes, warnings and pinned activation revision. Profiling completion joins persisted result snapshots; Grain Discovery and empty Frequency Profiling use minimal success markers in operation_summary_json.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One pipeline execution attempt.</span>
+    <span>One Live pipeline execution attempt. Test results remain in memory.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -55,6 +82,12 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">N → 1</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_PIPELINE_REGISTRY</code>
+      </span>
+    </span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">

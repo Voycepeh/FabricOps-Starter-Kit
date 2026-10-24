@@ -146,7 +146,7 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
     2. Check Grain and Data Quality after Sensitive Data treatment, enforcing the selected Data Contract policies before publication.
     3. In Live mode, publish through the selected Write strategy, record lineage in `METADATA_DATA_LINEAGE`, and profile the complete persisted target.
 
-    Evaluation-only Testing runs checks and profiles prepared input without business publication; run records and Guardrail diagnostics still persist centrally. Explicit `testing_writes=True` can publish to reviewed safe destinations protected from Live ownership. Explicit `finalize_pipeline()` records complete-run status after all declared operations. The Grain check covers prepared input; it does not guarantee resulting-table uniqueness for Append or SCD strategies.
+    Evaluation-only Testing runs checks and profiles prepared input without business publication; run records and Guardrail diagnostics remain in memory. Only permanent UUID registration writes to the Engineering registry. Explicit `finalize_pipeline()` records complete-run status after all declared operations. The Grain check covers prepared input; it does not guarantee resulting-table uniqueness for Append or SCD strategies.
 
     ### Finalize Pipeline
 

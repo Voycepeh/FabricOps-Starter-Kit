@@ -22,7 +22,9 @@ No starter template or solution is traced for the public writer functions.
 
 **Relationships:**
 
-No immediate table relationship is defined in the current implementation.
+**Activated Pipeline (logical entity; 1 → N):** Each registered Pipeline UUID can have many immutable Activated Pipeline releases in the environment history. Activated Pipeline is a logical entity in snapshot_json, not a separate Delta table.
+
+**Live Pipeline Run (logical entity; 1 → N):** Each approved Activated Pipeline release authorizes many Live Pipeline Runs; registration alone never authorizes execution.
 
 ## Column summary
 

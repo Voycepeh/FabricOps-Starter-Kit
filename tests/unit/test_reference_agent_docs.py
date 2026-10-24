@@ -742,12 +742,12 @@ def test_metadata_reference_overview_renders_model_diagram() -> None:
 
     page = ROOT / "docs" / "reference" / "metadata.md"
     text = page.read_text(encoding="utf-8")
-    image_reference = "../assets/fabricops-metadata-model.png"
+    image_reference = "../assets/fabricops-metadata-model.svg"
     assert (page.parent / image_reference).resolve().is_file()
     assert image_reference in text
     assert "manifest-backed Activated Pipeline contracts and separate run-linked Guardrail Results" in text
     assert "```mermaid" not in text
-    assert len(CANONICAL_METADATA_TABLES) == 12
+    assert len(CANONICAL_METADATA_TABLES) == 13
     assert all(name in text for name in CANONICAL_METADATA_TABLES)
     assert "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column" in text
     assert "containing authored Guardrails, Enrichment and profiling policies" in text
@@ -2076,7 +2076,7 @@ def test_current_metadata_pages_match_reduced_registry_and_have_no_retired_links
 
     pages = {path.name for path in (REFERENCE_DIR / "metadata").glob("*.md")}
     assert pages == {name.lower() + ".md" for name in CANONICAL_METADATA_TABLES}
-    assert len(pages) == 12
+    assert len(pages) == 13
     for slug in ("metadata_enrichment", "metadata_guardrail", "metadata_table_profiling"):
         assert not (REFERENCE_DIR / "metadata" / f"{slug}.md").exists()
         assert f"metadata/{slug}.md" not in (ROOT / "mkdocs.yml").read_text()

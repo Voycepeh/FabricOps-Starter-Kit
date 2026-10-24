@@ -208,6 +208,20 @@ METADATA_FIELD_DESCRIPTIONS = {
     "quality_notes": "Quality notes recorded for the row.",
 }
 
+PIPELINE_REGISTRY_FIELD_DESCRIPTIONS = {
+    "pipeline_id": "Permanent system-generated UUIDv4 of the logical pipeline. The serialization control row uses central.",
+    "environment_name": "Resolved environment; together with pipeline_id identifies one notebook binding. The control row uses *.",
+    "workspace_id": "Workspace ID of the registered physical notebook; never part of the logical UUID.",
+    "notebook_id": "Current physical Fabric notebook ID; promotion or explicit rebinding preserves the UUID.",
+    "notebook_name": "Informational notebook display name; never used for identity matching or execution eligibility.",
+    "registered_at": "Timestamp when this environment binding was first registered; preserved by rebinding.",
+    "registered_by": "Principal that first registered this environment binding; preserved by rebinding.",
+    "updated_at": "Timestamp of the most recent notebook binding or informational name update.",
+    "registration_status": "Active or Retired for pipeline bindings; Authority identifies the single serialization control row.",
+    "registry_token": "Compare-and-swap token updated with each binding mutation in the same Serializable Delta transaction.",
+}
+
+
 SOURCE_OBSERVATION_FIELD_DESCRIPTIONS = {
     "run_id": "Logical pipeline attempt ID shared with METADATA_PIPELINE_RUN.run_id. The real Fabric activity remains in _activity_id. Null or empty for legacy and standalone observations; recovered records retain the original run identity.",
     "publication_payload_json": "Exact prepared-batch identity, originating pipeline run, real Fabric activity and publication timestamp staged before the physical write. Recovery verifies the Delta commit and target marker for Lakehouse writes, or the exact staged activity/timestamp pair for Warehouse writes. Target-only Warehouse receipt rows never advance source watermarks; legacy activity-only rows are not automatically promoted.",
@@ -4285,6 +4299,8 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
     """Return generated metadata column guidance."""
     if column_name in AUDIT_FIELD_DESCRIPTIONS:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
+    if table_name == "METADATA_PIPELINE_REGISTRY" and column_name in PIPELINE_REGISTRY_FIELD_DESCRIPTIONS:
+        return PIPELINE_REGISTRY_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_SOURCE_OBSERVATION" and column_name in SOURCE_OBSERVATION_FIELD_DESCRIPTIONS:
         return SOURCE_OBSERVATION_FIELD_DESCRIPTIONS[column_name]
     if column_name in METADATA_FIELD_DESCRIPTIONS:
@@ -4536,6 +4552,12 @@ def generate_metadata_reference_pages() -> None:
                 f"via {_model_key_text(relationship['fields'])}",
                 "",
             ])
+        for relationship in table_models[table_name].get("relationships", []):
+            if relationship.get("logical_entity"):
+                rendered.extend([
+                    f"**{relationship['logical_entity']} (logical entity; {_metadata_cardinality_display(relationship['cardinality'])}):** "
+                    + relationship["statement"], "",
+                ])
         if rendered:
             rendered.pop()
         return rendered or ["No immediate table relationship is defined in the current implementation."]
@@ -5458,7 +5480,7 @@ def main() -> None:
             "title": "Standard Orchestration",
             "note": "Recommended",
             "description": "Complete governed read and write lifecycle for the standard FabricOps pipeline.",
-            "functions": {"setup_pipeline", "finalize_pipeline", "orchestrate_read", "orchestrate_write"},
+            "functions": {"setup_pipeline", "create_pipeline", "rebind_pipeline", "finalize_pipeline", "orchestrate_read", "orchestrate_write"},
             "open": True,
         },
         {

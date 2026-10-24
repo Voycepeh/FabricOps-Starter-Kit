@@ -144,7 +144,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 223 |
+| Live-critical dependencies | 222 |
 
 ### Release history
 
@@ -164,7 +164,6 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.read_activation_state</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_manifest</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.validate_testing_destinations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_live_plan</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
 <li><code>fabricops_kit.config.audit._context_get</code></li>

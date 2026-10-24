@@ -16,6 +16,7 @@ from fabricops_kit.pipeline import shared
 @pytest.fixture
 def runtime(monkeypatch):
     """Keep session, journal and orchestrators real; replace physical runtime boundaries."""
+    monkeypatch.setattr(shared, "resolve_pipeline_registration", lambda identity, **kwargs: {"pipeline_id": identity or "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "resolution": "Recovered"})
     monkeypatch.setattr(shared, "initialize_notebook",
                         lambda **kwargs: SimpleNamespace(notebook_name="02_pipeline"))
     config = {}
@@ -52,18 +53,18 @@ def runtime(monkeypatch):
 @pytest.mark.parametrize('mode', ['test', 'live', 'Testing', '', None, 'TEST'])
 def test_exact_mode_validation(runtime, mode):
     with pytest.raises(ValueError, match='exactly Test or Live'):
-        setup_pipeline(pipeline_id='orders', pipeline_mode=mode)
+        setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode=mode)
 
 
 def test_only_pipeline_identity_mode_and_config_location_are_setup_arguments(runtime):
     import inspect
     assert list(inspect.signature(setup_pipeline).parameters) == ['pipeline_id', 'pipeline_mode', 'config_workspace_id']
     with pytest.raises(TypeError):
-        setup_pipeline(pipeline_id='orders', pipeline_mode='Test', testing_writes=True)
+        setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test', testing_writes=True)
 
 
 def test_headless_test_without_notebook_identity_or_metadata_writes(runtime):
-    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     source = orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     result = orchestrate_write(source['dataframe'], store='Gold', schema='demo', table_name='summary', write_mode='overwrite')
     assert session.plan.notebook_id == ''
@@ -77,7 +78,7 @@ def test_headless_test_without_notebook_identity_or_metadata_writes(runtime):
 
 
 def test_multi_read_multi_write_sources_and_no_early_success(runtime):
-    session = setup_pipeline(pipeline_id='multi', pipeline_mode='Test')
+    session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     for name in ['orders', 'products']:
         orchestrate_read(store='Bronze', schema='demo', table_name=name)
     for name in ['summary', 'history']:
@@ -91,19 +92,19 @@ def test_multi_read_multi_write_sources_and_no_early_success(runtime):
 
 
 def test_transformation_failure_and_repeated_setup_clear_sources(runtime):
-    first = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    first = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     first.cell_completed(SimpleNamespace(error_in_exec=ValueError('bad transform')))
     assert first.closed and not first.sources
     assert first.plan.run_result['status'] == 'failed'
-    next_run = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    next_run = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     assert next_run.plan.plan_id != first.plan.plan_id and not next_run.sources
     with pytest.raises(RuntimeError, match='closed'):
         first.operation_plan('source', {})
 
 
 def test_operation_failure_seals_run_and_clears_reads(runtime, monkeypatch):
-    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     monkeypatch.setattr(runtime.write, 'pipeline_write', Mock(side_effect=RuntimeError('failed write')))
     with pytest.raises(RuntimeError):
@@ -114,7 +115,7 @@ def test_operation_failure_seals_run_and_clears_reads(runtime, monkeypatch):
 
 def test_contexts_isolate_same_pipeline_name(runtime):
     contexts = [Context(), Context()]
-    sessions = [context.run(setup_pipeline, pipeline_id='same', pipeline_mode='Test') for context in contexts]
+    sessions = [context.run(setup_pipeline, pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test') for context in contexts]
     try:
         for index, context in enumerate(contexts):
             context.run(orchestrate_read, store='Bronze', schema='demo', table_name=f'source{index}')
@@ -131,12 +132,12 @@ def test_live_resolves_only_approved_manifest(runtime, monkeypatch):
     builder = Mock(side_effect=ValueError('No approved pipeline configuration'))
     monkeypatch.setattr(activation, 'build_live_pipeline_plan', builder)
     with pytest.raises(ValueError, match='No approved'):
-        setup_pipeline(pipeline_id='orders', pipeline_mode='Live')
+        setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Live')
     assert set(builder.call_args.kwargs) == {'pipeline_id', 'context', 'spark_session'}
 
 
 def test_contract_selection_freezes_at_first_operation(runtime, monkeypatch):
-    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     row = {'table_id': 'orders', 'contract_id': 'frozen', 'contract_version': 2}
     session.frozen_rows = [row]
     session.select_contract('orders', 'frozen', 2)
@@ -161,7 +162,7 @@ def test_interactive_contract_controls_and_failure_event(runtime, monkeypatch):
     monkeypatch.setattr(ip, 'display', displayed)
     monkeypatch.setattr(ip, 'update_display', displayed)
     monkeypatch.setattr(shared, 'read_lakehouse_table', lambda *args, **kwargs: SimpleNamespace(collect=lambda: [_row()]))
-    session = setup_pipeline(pipeline_id='interactive', pipeline_mode='Test')
+    session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     assert any(hasattr(call.args[0], "children") for call in displayed.call_args_list)
     assert '#a4262c' in session.report.value and 'Test' in session.report.value
     session.controls[0].value = 'contract-source\n1'
@@ -175,11 +176,11 @@ def test_interactive_contract_controls_and_failure_event(runtime, monkeypatch):
 def test_concurrent_async_tasks_do_not_close_an_inherited_execution(runtime):
     import asyncio
     async def scenario():
-        parent = setup_pipeline(pipeline_id='same', pipeline_mode='Test')
+        parent = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
         async def child(name):
             with pytest.raises(RuntimeError, match='another task'):
                 shared.current_pipeline_session()
-            session = setup_pipeline(pipeline_id='same', pipeline_mode='Test')
+            session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
             await asyncio.sleep(0)
             orchestrate_read(store='Bronze', schema='demo', table_name=name)
             assert [row['table_id'] for row in session.sources] == [name]
@@ -194,7 +195,7 @@ def test_concurrent_async_tasks_do_not_close_an_inherited_execution(runtime):
 
 
 def test_invalid_participant_closes_execution_before_operation_journal(runtime, monkeypatch):
-    session = setup_pipeline(pipeline_id='invalid', pipeline_mode='Test')
+    session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     monkeypatch.setattr(shared, 'resolve_physical_table_identity', Mock(side_effect=ValueError('invalid destination')))
     with pytest.raises(ValueError, match='invalid destination'):
@@ -204,7 +205,7 @@ def test_invalid_participant_closes_execution_before_operation_journal(runtime, 
 
 
 def test_headless_selection_resolves_and_pins_exact_frozen_payload(runtime, monkeypatch):
-    session = setup_pipeline(pipeline_id='headless', pipeline_mode='Test')
+    session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     payload = {'contract': {'contract_id':'frozen', 'contract_version':1, 'status':'frozen'},
                'table': {'table_id':'orders', 'columns':[]}, 'guardrails':[], 'enrichment':{'table':[], 'columns':[]}}
     row = {'table_id':'orders', 'contract_id':'frozen', 'contract_version':1,
@@ -218,7 +219,7 @@ def test_headless_selection_resolves_and_pins_exact_frozen_payload(runtime, monk
 
 
 def test_changed_frozen_payload_is_rejected_before_read(runtime, monkeypatch):
-    session = setup_pipeline(pipeline_id='changed-contract', pipeline_mode='Test')
+    session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     row = {'table_id':'orders', 'contract_id':'frozen', 'contract_version':1, 'contract_payload_json':'original'}
     monkeypatch.setattr(shared, 'resolve_data_contract_version', Mock(return_value=row))
     session.select_contract('orders', 'frozen', 1)
@@ -238,7 +239,7 @@ def test_headless_setup_works_without_optional_ipython(runtime, monkeypatch):
         return original(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, '__import__', without_ipython)
-    session = setup_pipeline(pipeline_id='headless', pipeline_mode='Test')
+    session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     assert shared.current_pipeline_session() is session
     assert session.shell is None
 
@@ -248,32 +249,32 @@ def test_closed_sessions_release_shutdown_callback(runtime, monkeypatch):
     register, unregister = Mock(), Mock()
     monkeypatch.setattr(atexit, 'register', register)
     monkeypatch.setattr(atexit, 'unregister', unregister)
-    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     register.assert_called_once_with(session.close)
     session.close()
     unregister.assert_called_once_with(session.close)
 
 
-def test_finalization_completes_and_publishes_only_run_metadata(runtime, monkeypatch):
+def test_finalization_retains_test_result_without_metadata_commits(runtime, monkeypatch):
     from fabricops_kit import finalize_pipeline
     committed = []
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kwargs: committed.append(dict(row)))
-    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     assert not committed
     result = finalize_pipeline(session)
     assert result['status'] == 'ungoverned_completed'
     assert json.loads(result['operation_summary_json'])['boundary_completed'] is True
     assert session.closed and not session.sources
-    assert len(committed) == 1
-    assert finalize_pipeline(session) == result and len(committed) == 1
+    assert len(committed) == 0
+    assert finalize_pipeline(session) == result and len(committed) == 0
     runtime.writes.assert_not_called()
 
 
 def test_finalization_records_caught_failure_and_releases_live_reservation(runtime, monkeypatch):
     from fabricops_kit import finalize_pipeline
     activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
-    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     session.plan = replace(session.plan, execution_mode='live')
     session.plan.evidence['lease_token'] = session.plan.plan_id
@@ -286,47 +287,6 @@ def test_finalization_records_caught_failure_and_releases_live_reservation(runti
     release.assert_called_once()
 
 
-def test_finalization_retains_all_diagnostics_and_retries_without_duplicates(runtime, monkeypatch):
-    from fabricops_kit import finalize_pipeline
-    import sys
-    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
-    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
-    session.plan.evidence['guardrail_history'] = [{'guardrail_result_id': 'first', 'run_id': session.plan.plan_id}]
-    session.plan.results.clear()  # The per-operation lookup may discard earlier results.
-    stored = {}
-    attempts = []
-
-    class Frame:
-        def alias(self, name):
-            return self
-
-    class Delta:
-        def alias(self, name):
-            return self
-        def merge(self, frame, condition):
-            assert condition == 'target.guardrail_result_id = source.guardrail_result_id'
-            return self
-        def whenNotMatchedInsertAll(self):
-            return self
-        def execute(self):
-            stored['first'] = True
-            attempts.append(True)
-            if len(attempts) == 1:
-                raise OSError('lost acknowledgement')
-
-    runtime.spark.createDataFrame = Mock(return_value=Frame())
-    monkeypatch.setitem(sys.modules, 'delta.tables', SimpleNamespace(DeltaTable=SimpleNamespace(forPath=lambda *args: Delta())))
-    monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', lambda *args, **kwargs: (None, None, None, 'configured/results'))
-    monkeypatch.setattr(shared, '_merge_pipeline_run_row', Mock())
-    with pytest.raises(OSError, match='lost acknowledgement'):
-        finalize_pipeline(session)
-    shared._merge_pipeline_run_row.assert_not_called()
-    assert session.closed and not session.plan.permits_persistence
-    result = finalize_pipeline(session)
-    assert len(stored) == 1 and result['status'] == 'ungoverned_completed'
-    shared._merge_pipeline_run_row.assert_called_once()
-    rows = runtime.spark.createDataFrame.call_args.args[0]
-    assert rows[0]['guardrail_result_id'] == 'first'
 
 
 def test_active_finalization_cannot_be_claimed_from_another_task(runtime):
@@ -334,7 +294,7 @@ def test_active_finalization_cannot_be_claimed_from_another_task(runtime):
     import asyncio
 
     async def scenario():
-        session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+        session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
         async def child():
             with pytest.raises(RuntimeError, match='another task'):
                 finalize_pipeline(session)
@@ -349,7 +309,7 @@ def test_finalized_governed_test_can_build_new_activation_manifest(runtime, monk
     from fabricops_kit import finalize_pipeline
     from datetime import date, timedelta
     activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
-    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
+    session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     payload = {'contract': {'contract_id': 'frozen', 'contract_version': 1, 'status': 'frozen'},
                'table': {'table_id': 'orders', 'columns': []}, 'guardrails': [],
                'enrichment': {'table': [], 'columns': []}}
@@ -362,35 +322,25 @@ def test_finalized_governed_test_can_build_new_activation_manifest(runtime, monk
     committed = []
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kwargs: committed.append(dict(row)))
     result = finalize_pipeline(session)
-    assert result['status'] == 'succeeded' and committed == [result]
+    assert result['status'] == 'succeeded' and committed == []
     agreement = {'agreement_id': 'agreement', 'agreement_version': '1.0.0',
                  'start_date': date.today().isoformat(), 'expiry_date': (date.today() + timedelta(days=30)).isoformat()}
     records = {'METADATA_PIPELINE_RUN': committed, 'METADATA_DATA_CONTRACT': [row],
                'METADATA_GUARDRAIL_RESULTS': [], 'METADATA_DATA_AGREEMENT': [agreement]}
     monkeypatch.setattr(activation, 'metadata_records', lambda table, **kwargs: records[table])
     monkeypatch.setattr(activation, 'resolve_fabric_context', shared.resolve_fabric_context)
+    monkeypatch.setattr(shared, 'read_pipeline_registry', lambda **kwargs: ('token', [{'pipeline_id': result['pipeline_id'], 'environment_name': 'dev', 'registration_status': 'Active'}]))
     manifest = activation.tested_pipeline_manifest(testing_run_id=result['run_id'],
         candidate_fingerprint=result['candidate_fingerprint'], pipeline_name='Orders', pipeline_version='1',
-        agreement_id='agreement', agreement_version='1.0.0', context={'config': {}, 'env': 'dev'})
+        agreement_id='agreement', agreement_version='1.0.0', testing_result=result, context={'config': {}, 'env': 'dev'})
     assert manifest['testing_run_id'] == result['run_id']
-    assert manifest['candidate']['pipeline_id'] == 'orders'
+    assert manifest['candidate']['pipeline_id'] == '8f32a471-6c91-4b7e-9d13-2f0c947eab52'
 
 
-def test_finalization_requires_durable_audit_before_any_testing_publication(runtime, monkeypatch):
-    from fabricops_kit import finalize_pipeline
-    session = setup_pipeline(pipeline_id='orders', pipeline_mode='Test')
-    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
-    monkeypatch.setattr(shared, 'build_runtime_audit_fields', Mock(side_effect=ValueError('missing audit identity')))
-    commit = Mock()
-    monkeypatch.setattr(shared, '_merge_pipeline_run_row', commit)
-    with pytest.raises(ValueError, match='missing audit identity'):
-        finalize_pipeline(session)
-    commit.assert_not_called()
-    runtime.writes.assert_not_called()
 
 
 def test_failed_configuration_reload_closes_previous_execution(runtime, monkeypatch):
-    previous = setup_pipeline(pipeline_id='previous', pipeline_mode='Test')
+    previous = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     previous.sources.append({'table_id': 'previous-source'})
 
     def unavailable(**kwargs):
@@ -398,8 +348,22 @@ def test_failed_configuration_reload_closes_previous_execution(runtime, monkeypa
 
     monkeypatch.setattr(shared, 'initialize_notebook', unavailable)
     with pytest.raises(RuntimeError, match='Configuration notebook unavailable'):
-        setup_pipeline(pipeline_id='next', pipeline_mode='Test', config_workspace_id='remote-workspace')
+        setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test', config_workspace_id='remote-workspace')
     assert previous.closed
     assert previous.sources == []
     with pytest.raises(RuntimeError, match='Run setup_pipeline'):
         shared.current_pipeline_session()
+
+
+def test_setup_and_finalization_display_the_registered_uuid(runtime, capsys):
+    """The returned context and both notebook summaries expose the permanent ID."""
+    from fabricops_kit import finalize_pipeline
+    session = setup_pipeline(pipeline_mode='Test')
+    assert session.pipeline_id == session.plan.pipeline_id
+    output = capsys.readouterr().out
+    assert f'Pipeline ID: {session.pipeline_id}' in output
+    assert f'PIPELINE_ID = "{session.pipeline_id}"' in output
+    assert 'Environment: dev' in output
+    finalize_pipeline(session)
+    assert f'Pipeline ID: {session.pipeline_id}' in capsys.readouterr().out
+    runtime.writes.assert_not_called()
