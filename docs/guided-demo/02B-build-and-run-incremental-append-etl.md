@@ -43,7 +43,11 @@ Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparati
 ```python
 PIPELINE_ID = "02B_incremental_append_demo"
 PIPELINE_MODE = "Test"  # Test or Live
-CONTRACTS = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode=PIPELINE_MODE)
+CONTRACTS = setup_pipeline(
+    pipeline_id=PIPELINE_ID,
+    pipeline_mode=PIPELINE_MODE,
+    # Optional shared config: config_workspace_id="<configuration-workspace-id>",
+)
 ```
 
 
