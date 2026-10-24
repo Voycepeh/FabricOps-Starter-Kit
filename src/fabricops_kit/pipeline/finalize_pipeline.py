@@ -3,11 +3,12 @@
 from fabricops_kit.pipeline.shared import (
     PipelineSession,
     current_pipeline_session,
+    publish_pipeline_testing_results,
 )
 
 
 def finalize_pipeline(pipeline=None, *, failed=False):
-    """Complete execution and return Test diagnostics or commit the Live outcome.
+    """Finalize execution and commit the complete Test or Live outcome.
 
     Call once after all Reads, transformations and Writes, including read-only
     runs. Pass the session returned by setup_pipeline, or omit it to use the
@@ -15,9 +16,8 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     A successful Write or cell never completes the whole pipeline by itself.
 
     Test Read/Write operations do not commit business or operational metadata.
-    Test results remain in memory, including at finalization. Pass the returned
-    result to widget_activate_pipeline(testing_results=[pipeline_result]) for
-    explicit governance review. Complete governed Testing can then be approved. Failed, partial and No Contract
+    Explicit finalization commits the complete Test run and Guardrail results
+    for Governance review. The activation widget reads these committed records. Complete governed Testing can then be approved. Failed, partial and No Contract
     runs cannot authorize activation. Live finalization releases its reservation
     after recording the final outcome. Interrupted runs remain incomplete.
 
@@ -31,7 +31,7 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     Returns
     -------
     dict
-        In-memory Test result or final Live METADATA_PIPELINE_RUN snapshot. Repeating with the same session
+        Final METADATA_PIPELINE_RUN snapshot. Repeating with the same session
         returns the original result without additional successful commits.
 
     Raises
@@ -58,6 +58,8 @@ def finalize_pipeline(pipeline=None, *, failed=False):
         if not pipeline.closed:
             pipeline.plan.evidence["boundary_completed"] = not failed
             pipeline.close(failed=failed)
+        if pipeline.plan.execution_mode == "testing":
+            publish_pipeline_testing_results(pipeline.plan, spark_session=pipeline.spark)
         if pipeline.report is None:
             print(f"FabricOps Pipeline · {pipeline.plan.run_result['status']}\nPipeline ID: {pipeline.pipeline_id}")
         return pipeline.plan.run_result

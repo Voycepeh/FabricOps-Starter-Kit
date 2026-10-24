@@ -212,4 +212,4 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 
 **Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
 
-Run `pipeline_result = finalize_pipeline(CONTRACTS)` after the last Write to record completion. Test returns its run and Guardrail results in memory at this step; pass the complete result to explicit activation review.
+Run `pipeline_result = finalize_pipeline(CONTRACTS)` after the last Write to record completion. Test commits its run and Guardrail results at this step for activation review.

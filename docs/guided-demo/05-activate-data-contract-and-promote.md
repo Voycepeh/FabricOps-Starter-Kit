@@ -1,10 +1,10 @@
 # Step 5. Activate the tested pipeline and promote to Production
 
-Run `finalize_pipeline(CONTRACTS)` after completing Testing in [Step 4](04-validate-frozen-data-contract.md). It returns complete in-memory Test results for review; Test never commits execution metadata. Activation requires complete successful Testing, frozen contracts for every participant, an effective Data Agreement and explicit Governance approval. Interactive diagnostics alone cannot activate a release.
+Run `finalize_pipeline(CONTRACTS)` after completing Testing in [Step 4](04-validate-frozen-data-contract.md). It commits the complete Test run and Guardrail results for review. Activation requires complete successful Testing, frozen contracts for every participant, an effective Data Agreement and explicit Governance approval. Interactive diagnostics alone cannot activate a release.
 
 ## Review the affected release
 
-1. Hand off the complete `pipeline_result` to the reviewer and open `widget_activate_pipeline(testing_results=[pipeline_result])` in the same environment. Independently confirm the Fabric notebook execution for each candidate, enter its run reference and attest verification in the widget. The resolved environment is shown automatically.
+1. Open `widget_activate_pipeline()` in Governance in the same environment. It loads the Test outcomes committed by explicit pipeline finalization.
 2. Select the successful Testing run, immutable pipeline version, exact effective Data Agreement.
 3. Review participating tables, proposed contract versions and current writer ownership. When a shared table changes, include compatible successful Testing candidates for every affected active pipeline. Missing or failed tests and competing writers block approval.
 4. Choose **Review complete release**. Inspect the current/proposed table mappings, affected pipelines and readiness report.

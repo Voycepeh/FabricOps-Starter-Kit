@@ -133,8 +133,8 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_PIPELINE_RUN": {
-        "purpose": "Records the outcome of each Live pipeline run, including its tables, operations, profiling results and warnings.",
-        "grain": "One Live pipeline execution attempt. Test runs are not stored here.",
+        "purpose": "Records explicitly finalized Test runs and Live execution outcomes, including their tables, operations, profiling results and warnings.",
+        "grain": "One explicitly finalized Test run or Live execution attempt.",
         "implementation_notes": "One complete logical run, exact table mappings, operation results, per-table profiling activity outcomes, warnings and pinned activation revision. Profiling completion joins persisted result snapshots; Grain Discovery and empty Frequency Profiling use minimal success markers in operation_summary_json.", "primary_key": ["run_id"],
         "foreign_keys": [{"local_field": "pipeline_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "pipeline_id", "cardinality": "N:1", "statement": "Each run references one registered logical Pipeline UUID in its environment."}],
         "relationships": [{"cardinality": "N:1", "statement": "Each Live run references an approved Activated Pipeline release inside METADATA_ACTIVATION_STATE."}],
@@ -247,9 +247,9 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_GUARDRAIL_RESULTS": {
-        "purpose": "Summarizes the Guardrail checks from Live pipeline runs, including whether the pipeline could continue. It does not store failed business rows.",
-        "grain": "One saved Guardrail outcome for an exact Data Contract version during a Live run.",
-        "implementation_notes": "Store aggregate Live Guardrail summaries for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.",
+        "purpose": "Summarizes Guardrail checks from finalized Test runs and Live runs, including whether execution could continue. It does not store failed business rows.",
+        "grain": "One saved Guardrail outcome for an exact Data Contract version; Test outcomes are committed at explicit finalization.",
+        "implementation_notes": "Store aggregate Guardrail summaries for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.",
         "primary_key": ["guardrail_result_id"],
         "foreign_keys": [
             {"local_field": "run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Planned execution results belong to one logical pipeline run; standalone historical results may have no run record."},
@@ -937,7 +937,7 @@ PUBLIC_SYMBOL_DOCS = [
  'do_not_use_when': 'Use lower-level capabilities directly when intentionally composing a non-standard lifecycle.',
  'parameters': 'Source coordinates, read strategy and query options; execution context is internal.',
  'returns': 'Governed source DataFrame and table identity together with every stage result.',
- 'side_effects': 'Test retains diagnostics in memory until finalize_pipeline returns in-memory Test results; business publication remains disabled. Live commits Guardrail Results and full-read '
+ 'side_effects': 'Test retains diagnostics in memory until finalize_pipeline commits Test run and Guardrail results; business publication remains disabled. Live commits Guardrail Results and full-read '
                  'Catalogue/Profile metadata.',
  'preferred_example': 'source = orchestrate_read(store="Bronze", schema="demo", '
                       'table_name="orders")',
@@ -954,7 +954,7 @@ PUBLIC_SYMBOL_DOCS = [
  'parameters': 'Transformed DataFrame, target coordinates '
                'and strategy.',
  'returns': 'Prepared input, Guardrail outcomes, execution mode and actual publication/persistence status.',
- 'side_effects': 'Test retains diagnostics in memory, including after finalize_pipeline. Live publishes and commits metadata at existing '
+ 'side_effects': 'Test retains diagnostics in memory, until explicit finalize_pipeline commits the run and Guardrail results. Live publishes and commits metadata at existing '
                  'lifecycle boundaries.',
  'preferred_example': 'result = orchestrate_write(transformed_df, '
                       'store="Silver", schema="demo", table_name="orders", write_mode="overwrite")',
@@ -1624,7 +1624,7 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function', 'module': 'widgets.widget_activate_pipeline', 'function_type': 'callable',
   'summary_override': 'Review complete persisted Testing and activate an exact whole pipeline.',
   'symbol_name': 'widget_activate_pipeline', 'template_notebook': '01_governance', 'template_segment': 'Pipeline activation',
-  'use_when': 'Use after finalize_pipeline returns complete successful governed Test results.',
+  'use_when': 'Use after finalize_pipeline commits complete successful governed Test results.',
   'expanded_purpose': 'Shows exact contracts/rules and processing configuration identity, diagnostics, warnings, Agreement and fingerprint before explicit Governance confirmation. Activation neither deploys nor publishes.',
   'related_functions': ['setup_pipeline']},
 
@@ -1641,7 +1641,7 @@ PUBLIC_SYMBOL_DOCS = [
  'template_segment': 'Configure the pipeline and whole-run boundary',
  'use_when': 'Use once before Read, Transform and Write with pipeline_id and pipeline_mode.',
  'related_functions': ['finalize_pipeline', 'widget_data_contract', 'orchestrate_read', 'orchestrate_write'],
- 'return_interpretation': 'Returns a context-local execution session with contract selection and automatic reporting; finalize_pipeline records completion and returns Test results; interrupted runs remain incomplete.',
+ 'return_interpretation': 'Returns a context-local execution session with contract selection and automatic reporting; finalize_pipeline records completion and commits Test results; interrupted runs remain incomplete.',
  'expanded_purpose': 'Select a frozen contract or No Contract independently for each Testing participant. Live resolves and pins one approved revision from the central authority.',
  'common_failure_causes': ['Missing explicit table choices or invalid frozen contract selections.', 'Unsafe Testing write destination.', 'Missing complete governed Testing for activation or approved Live configuration.']},
 

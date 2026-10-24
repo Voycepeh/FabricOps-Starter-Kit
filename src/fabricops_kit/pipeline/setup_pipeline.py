@@ -135,9 +135,9 @@ def setup_pipeline(
     """Start an isolated pipeline using exactly Test or Live.
 
     Test evaluates reads, transformations and Guardrails without business or
-    metadata commits, including finalization. Only administrative Engineering
-    registration may write in Test. finalize_pipeline returns in-memory results
-    for explicit activation review. Select frozen contracts in the returned interface before
+    metadata commits during operations. Explicit finalize_pipeline commits the
+    Test run and Guardrail results for activation review. Engineering registration
+    may also write during setup. Select frozen contracts in the returned interface before
     the first operation; headless Test explicitly uses No Contract. Live resolves
     only the approved environment manifest and retains revision/ownership checks.
     Spark and supported Fabric runtime identity are resolved internally. The caller workspace and notebook IDs are required for registration.
@@ -179,7 +179,7 @@ def setup_pipeline(
     Fabric cell events identify failures, not successful notebook completion.
     Call finalize_pipeline after all Reads, transformations and Writes.
     Neither a successful Write nor interpreter shutdown proves completion. Test
-    results remain in memory after finalization.
+    results are committed only by explicit finalization.
 
     Raises
     ------

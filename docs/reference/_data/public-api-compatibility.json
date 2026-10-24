@@ -1479,7 +1479,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -1515,7 +1515,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -2039,7 +2039,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -3159,7 +3159,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -3183,7 +3183,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -3531,7 +3531,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -4575,7 +4575,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -4599,7 +4599,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -4859,7 +4859,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -5240,7 +5240,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -5276,7 +5276,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -5684,7 +5684,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -5708,7 +5708,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -5968,7 +5968,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -5992,7 +5992,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6035,39 +6035,25 @@
       "changes": [
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
-          "reasons": [
-            "Optional parameter added: new_pipeline.",
-            "Optional parameter added: previous_notebook_id.",
-            "Optional parameter added: previous_workspace_id."
-          ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)"
-        },
-        {
-          "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
-            "Required parameter added: testing_results."
+            "Parameter removed: testing_results."
           ],
-          "signature_after": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
-          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_before": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
         }
       ],
       "summary": {
         "added": 0,
-        "modified": 2,
-        "nonbreaking": 1,
+        "modified": 1,
+        "nonbreaking": 0,
         "potentially_breaking": 1,
         "removed": 0,
         "review_required": 0,
-        "total": 2
+        "total": 1
       },
       "target": "working-tree"
     },
@@ -6449,7 +6435,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6881,7 +6867,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -7165,7 +7151,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -7211,36 +7197,22 @@
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
-          "reasons": [
-            "Parameter removed: new_pipeline.",
-            "Parameter removed: previous_notebook_id.",
-            "Parameter removed: previous_workspace_id."
-          ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
-            "Parameter removed: testing_results."
+            "Required parameter added: testing_results."
           ],
-          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
-          "signature_before": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_after": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
         }
       ],
       "summary": {
         "added": 0,
-        "modified": 2,
+        "modified": 1,
         "nonbreaking": 0,
-        "potentially_breaking": 2,
+        "potentially_breaking": 1,
         "removed": 0,
         "review_required": 0,
-        "total": 2
+        "total": 1
       },
       "target": "main"
     }
@@ -14443,11 +14415,35 @@
               "kind": "keyword_only",
               "name": "config_workspace_id",
               "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "new_pipeline",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "previous_workspace_id",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "previous_notebook_id",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "return_annotation": null,
-          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None)",
+          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "source_path": "src/fabricops_kit/pipeline/setup_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline"
         },
@@ -14456,6 +14452,14 @@
           "extraction_error": null,
           "lifecycle": "Preview",
           "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "testing_results",
+              "required": true
+            },
             {
               "annotation": null,
               "default": "None",
@@ -14483,7 +14487,7 @@
           ],
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "return_annotation": "dict[str, Any]",
-          "signature": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/widgets/widget_activate_pipeline.py",
           "source_qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline"
         },
@@ -14591,7 +14595,7 @@
       "certainty": "certain",
       "lifecycle_source": "public_api_registry",
       "notes": [],
-      "revision": "7a8017a3e0f8b3bb374f87da01bd45cc6258308e",
+      "revision": "5d13472555cba025abe41b43c459334e9a0010e4",
       "source_kind": "git_branch",
       "version": "main"
     },
@@ -16168,14 +16172,6 @@
           "parameters": [
             {
               "annotation": null,
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "testing_results",
-              "required": true
-            },
-            {
-              "annotation": null,
               "default": "None",
               "has_default": true,
               "kind": "keyword_only",
@@ -16201,7 +16197,7 @@
           ],
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "return_annotation": "dict[str, Any]",
-          "signature": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/widgets/widget_activate_pipeline.py",
           "source_qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline"
         },
@@ -16312,7 +16308,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:8228b890701016c473fe146e42450bf345ff9b156866674674e569e3387acb45",
+      "source_digest": "sha256:ba35d77a45c95d8181ca17eed95696848f99b8b18784c5e6f67a071f14658490",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

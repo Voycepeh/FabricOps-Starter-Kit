@@ -5729,9 +5729,11 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
      .whenMatchedUpdateAll().whenNotMatchedInsertAll().execute())
 
 
-def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", completed_at=None):
+def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", completed_at=None, persist_testing=False):
     """Persist one authoritative Delta snapshot; confirm lost acknowledgements by read-back."""
-    durable = plan.permits_persistence
+    if persist_testing and (plan.execution_mode != "testing" or not plan.evidence.get("sealed")):
+        raise RuntimeError("Only explicitly finalized Test results may be committed.")
+    durable = plan.permits_persistence or persist_testing
     row = None
     try:
         candidate, fingerprint, bindings = pipeline_candidate(plan)
@@ -5789,6 +5791,35 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
         # Connector exception messages can contain credentials or business values.
         plan.evidence["failures"].append({"code": "evidence_persistence_failed", "exception_type": type(exc).__name__})
         raise RuntimeError("Pipeline run evidence persistence failed; create a new plan.") from exc
+
+
+def publish_pipeline_testing_results(plan, *, spark_session=None):
+    """Publish stable diagnostic IDs before the final authoritative Testing record."""
+    if plan.execution_mode != "testing" or not plan.evidence.get("sealed"):
+        raise RuntimeError("Only completed Testing sessions can publish results.")
+    if plan.evidence.get("testing_results_published"):
+        return plan.run_result
+    if plan.evidence.get("persistence_failed"):
+        raise RuntimeError("Pipeline result persistence is uncertain; inspect its committed run before retrying.")
+    audit = build_runtime_audit_fields(config=plan.runtime_context["config"], env=plan.environment,
+        runtime_context=plan.runtime_context)
+    rows = plan.evidence.get("guardrail_history", [])
+    if rows:
+        from delta.tables import DeltaTable
+        table = "METADATA_GUARDRAIL_RESULTS"
+        spark = get_spark_session(spark_session)
+        frame = spark.createDataFrame([coerce_metadata_row_types(table, {**row, **audit}) for row in rows],
+            schema=metadata_table_schema_registry()[table])
+        _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", table,
+            metadata_table_physical_schema(plan.runtime_context["config"], table), context=plan.runtime_context)
+        (DeltaTable.forPath(spark, path).alias("target")
+         .merge(frame.alias("source"), "target.guardrail_result_id = source.guardrail_result_id")
+         .whenNotMatchedInsertAll().execute())
+    final = plan.run_result
+    row = persist_pipeline_run(plan, spark_session=spark_session, status=final["status"],
+        completed_at=final["completed_at"], persist_testing=True)
+    plan.evidence.update(testing_results_published=True, final_result=row)
+    return row
 
 
 class PipelineOperation:

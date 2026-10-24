@@ -94,8 +94,8 @@ def test_rebind_barrier_is_persisted_and_released_in_activation_authority(author
     assert service.environment_activation(state, "DEV")["runs"] == {}
 
 
-def test_finalization_keeps_test_results_in_memory_with_real_delta(authority_delta, monkeypatch, tmp_path):
-    """Completed Test commits neither run nor diagnostic rows, including repeated finalization."""
+def test_finalization_commits_complete_test_results_with_real_delta(authority_delta, monkeypatch, tmp_path):
+    """Explicit Test finalization commits run and diagnostic rows exactly once."""
     from fabricops_kit import finalize_pipeline
     from fabricops_kit.pipeline import shared
     runtime = authority_delta
@@ -123,6 +123,6 @@ def test_finalization_keeps_test_results_in_memory_with_real_delta(authority_del
     result = finalize_pipeline(session)
     assert result['status'] == 'ungoverned_completed' and not plan.permits_persistence
     assert finalize_pipeline(session) == result
-    assert runtime.spark.read.format('delta').load(paths['METADATA_PIPELINE_RUN']).count() == 0
-    assert runtime.spark.read.format('delta').load(paths['METADATA_GUARDRAIL_RESULTS']).count() == 0
-    assert result['guardrail_results'][0]['guardrail_result_id'] == 'stable-result'
+    assert runtime.spark.read.format('delta').load(paths['METADATA_PIPELINE_RUN']).count() == 1
+    assert runtime.spark.read.format('delta').load(paths['METADATA_GUARDRAIL_RESULTS']).count() == 1
+    assert runtime.spark.read.format('delta').load(paths['METADATA_GUARDRAIL_RESULTS']).first().guardrail_result_id == 'stable-result'
