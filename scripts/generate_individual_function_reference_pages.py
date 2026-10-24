@@ -4641,7 +4641,15 @@ def generate_metadata_reference_pages() -> None:
             column_owners=column_owners,
             public_callable_set=public_callable_set,
         )
+        # Workflow-template provenance stays based on direct column-owner tracing.
         writer_templates = _metadata_writer_templates(writer_functions, docs_metadata)
+        # The UI and table references additionally list verified notebook-facing
+        # orchestration entrypoints whose delegated writers persist these records.
+        audited_writers = namespace["METADATA_EXPLORER_WRITE_ENTRYPOINTS"][table_name]
+        unknown_writers = set(audited_writers) - public_callable_set
+        if unknown_writers:
+            raise ValueError(f"Unknown public metadata writers: {sorted(unknown_writers)}")
+        writer_functions = sorted(set(writer_functions) | set(audited_writers))
         lines = [
             f"# {table_name}",
             "",
