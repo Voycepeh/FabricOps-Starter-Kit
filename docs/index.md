@@ -1,4 +1,39 @@
 <style>
+.fabricops-home-metadata-map {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.85rem 1rem;
+  margin: -0.7rem 0 1.5rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--md-primary-fg-color) 4%, var(--md-default-bg-color));
+  text-decoration: none;
+  color: var(--md-default-fg-color) !important;
+}
+.fabricops-home-metadata-map:hover,
+.fabricops-home-metadata-map:focus-visible {
+  border-color: var(--md-primary-fg-color);
+  background: var(--md-accent-fg-color--transparent);
+}
+.fabricops-home-metadata-map__icon {
+  flex: none;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--md-primary-fg-color);
+  border: 1px solid currentColor;
+  border-radius: 0.35rem;
+  padding: 0.4rem 0.5rem;
+}
+.fabricops-home-metadata-map__copy { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.fabricops-home-metadata-map__copy strong { font-size: 0.9rem; line-height: 1.3; }
+.fabricops-home-metadata-map__copy small { font-size: 0.75rem; line-height: 1.45; color: var(--md-default-fg-color--light); }
+.fabricops-home-metadata-map__arrow { margin-left: auto; color: var(--md-primary-fg-color); font-size: 1.1rem; }
+@media (max-width: 640px) {
+  .fabricops-home-metadata-map { padding: 0.7rem 0.8rem; }
+  .fabricops-home-metadata-map__icon { display: none; }
+}
+
 .fabricops-home-video {
   display: block;
   width: 100%;
@@ -320,7 +355,14 @@
   </a>
 </div>
 
-**See how the pieces connect:** [Explore the interactive Metadata Tables map →](reference/metadata.md)
+<a class="fabricops-home-metadata-map" href="reference/metadata.md">
+  <span class="fabricops-home-metadata-map__icon" aria-hidden="true">01 / 02</span>
+  <span class="fabricops-home-metadata-map__copy">
+    <strong>Explore the interactive Metadata Tables map</strong>
+    <small>See how Governance and Engineering tables connect, and inspect each table's keys, purpose and schema.</small>
+  </span>
+  <span class="fabricops-home-metadata-map__arrow" aria-hidden="true">→</span>
+</a>
 
 <video class="fabricops-home-video" controls preload="metadata" playsinline aria-label="FabricOps overview video">
   <source src="assets/FabricOps_Overview_Video_web.mp4" type="video/mp4">
