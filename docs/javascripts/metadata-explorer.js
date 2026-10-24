@@ -6,7 +6,6 @@
   const definitions = [
     ["DATA_STEWARD", "governance", ["steward_id"], [], "metadata_data_steward/"],
     ["DATA_AGREEMENT", "governance", ["agreement_id", "agreement_version"], ["provider_steward_id", "recipient_steward_id"], "metadata_data_agreement/"],
-    ["ACTIVATED_PIPELINE", "governance", ["activated_pipeline_id"], ["pipeline_id", "agreement_id", "agreement_version", "testing_run_id"], "metadata_activation_state/", "Logical release in the activation authority snapshot"],
     ["DATA_CONTRACT", "governance", ["contract_id", "contract_version"], ["table_id"], "metadata_data_contract/"],
     ["ACTIVATION_STATE", "governance", ["authority_id"], [], "metadata_activation_state/", "Physical atomic activation authority"],
     ["PIPELINE_REGISTRY", "engineering", ["pipeline_id", "environment_name"], [], "metadata_pipeline_registry/"],
@@ -22,23 +21,24 @@
 
   // Direction is parent -> child; the inverse cardinality is shown when
   // inspecting the child. Test-evidence and Live-release links are distinct.
+  // Visual edges match the generated SVG, including logical release links
+  // that exist inside METADATA_ACTIVATION_STATE rather than a separate table.
   const links = [
     ["DATA_STEWARD", "DATA_AGREEMENT", "1:N", "Provider or recipient"],
-    ["DATA_AGREEMENT", "ACTIVATED_PIPELINE", "1:N", "Governed releases"],
-    ["ACTIVATION_STATE", "ACTIVATED_PIPELINE", "1:N", "Logical releases inside authority snapshot"],
-    ["PIPELINE_REGISTRY", "ACTIVATED_PIPELINE", "1:N", "Activated releases"],
+    ["DATA_AGREEMENT", "ACTIVATION_STATE", "1:N", "Approved releases"],
+    ["PIPELINE_REGISTRY", "ACTIVATION_STATE", "1:N", "Releases of a registered pipeline"],
+    ["ACTIVATION_STATE", "DATA_CONTRACT", "N:N", "Frozen contracts in activated releases"],
+    ["ACTIVATION_STATE", "PIPELINE_RUN", "1:N", "Live runs of approved releases"],
+    ["DATA_CATALOGUE", "DATA_CONTRACT", "1:N", "Contracts for a table"],
     ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1:N", "Execution history"],
-    ["ACTIVATED_PIPELINE", "PIPELINE_RUN", "1:N", "Live executions"],
-    ["ACTIVATED_PIPELINE", "DATA_CONTRACT", "N:N", "Frozen contracts in manifest"],
-    ["DATA_CATALOGUE", "DATA_CONTRACT", "1:N", "Contracts for table"],
+    ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1:N", "Run evaluations"],
+    ["PIPELINE_RUN", "SOURCE_OBSERVATION", "1:N", "Run observations"],
+    ["DATA_CATALOGUE", "SOURCE_OBSERVATION", "1:N", "Observed source or target"],
     ["DATA_CATALOGUE", "DATA_PROFILED", "1:N", "Profile snapshots"],
     ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "1:N", "Frequency snapshots"],
-    ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "1:N", "Optional profile reference"],
+    ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "1:N", "Optional statistical profile"],
     ["DATA_CATALOGUE", "DATA_LINEAGE", "1:N", "Lineage records"],
-    ["DATA_CATALOGUE", "SOURCE_OBSERVATION", "1:N", "Source or target"],
     ["DATA_CATALOGUE", "DATA_ACCESS", "1:N", "Access observations"],
-    ["PIPELINE_RUN", "SOURCE_OBSERVATION", "1:N", "Run observations"],
-    ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1:N", "Run evaluations"],
     ["DATA_CONTRACT", "GUARDRAIL_RESULTS", "1:N", "Contract evaluations"]
   ];
 
@@ -208,7 +208,7 @@
     }).catch(() => {
       graph.innerHTML = '<p class="metadata-explorer-loading">Unable to load the diagram. Open a metadata table directly:</p>' +
         '<nav aria-label="Metadata table references">' +
-        definitions.filter(row => row[4] && row[0] !== "ACTIVATED_PIPELINE")
+        definitions.filter(row => row[4])
           .map(row => '<a href="' + escapeHtml(row[4]) + '">METADATA_' + escapeHtml(row[0]) + '</a>')
           .join(" · ") + '</nav>';
       select("DATA_AGREEMENT");
@@ -223,14 +223,10 @@
     }
 
     const logicalJoinKeys = {
-      "DATA_AGREEMENT|ACTIVATED_PIPELINE": ["ACTIVATED_PIPELINE.agreement_id + agreement_version → DATA_AGREEMENT.agreement_id + agreement_version (approved manifest)"],
-      "ACTIVATION_STATE|ACTIVATED_PIPELINE": ["ACTIVATION_STATE.snapshot_json → Activated Pipeline release (logical record)"],
-      "PIPELINE_REGISTRY|ACTIVATED_PIPELINE": ["ACTIVATED_PIPELINE.pipeline_id → PIPELINE_REGISTRY.pipeline_id (release identity)"],
-      "ACTIVATED_PIPELINE|PIPELINE_RUN": [
-        "PIPELINE_RUN.activated_pipeline_id → ACTIVATED_PIPELINE.activated_pipeline_id (Live)",
-        "ACTIVATED_PIPELINE.testing_run_id → PIPELINE_RUN.run_id (Testing evidence)"
-      ],
-      "ACTIVATED_PIPELINE|DATA_CONTRACT": ["ACTIVATED_PIPELINE.manifest_json contract_id + contract_version → DATA_CONTRACT.contract_id + contract_version (N:N manifest reference)"],
+      "DATA_AGREEMENT|ACTIVATION_STATE": ["ACTIVATION_STATE.snapshot_json references agreement_id + agreement_version in each Activated Pipeline release (logical, not a physical FK)"],
+      "PIPELINE_REGISTRY|ACTIVATION_STATE": ["ACTIVATION_STATE.snapshot_json contains pipeline_id for each registered Activated Pipeline release (logical, not a physical FK)"],
+      "ACTIVATION_STATE|PIPELINE_RUN": ["PIPELINE_RUN.activated_pipeline_id identifies a release inside ACTIVATION_STATE.snapshot_json (logical release reference)"],
+      "ACTIVATION_STATE|DATA_CONTRACT": ["ACTIVATION_STATE.snapshot_json contains frozen contract_id + contract_version references (N:N logical manifest link)"],
       "DATA_CATALOGUE|DATA_PROFILED_FREQUENCY": ["DATA_PROFILED_FREQUENCY.table_id + column_id → DATA_CATALOGUE.table_id + column_id (logical table/column reference)"]
     };
     const keyJoinRows = (from, to) => {
