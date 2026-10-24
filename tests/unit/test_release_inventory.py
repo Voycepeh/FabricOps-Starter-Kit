@@ -247,7 +247,7 @@ def test_release_contract_pages_render_live_manifest_snapshot():
     assert (ri.ROOT / "docs" / "releases" / version).exists()
     manifest = ri._load_manifest(ri.manifest_path(version))
     assert manifest is not None
-    assert f"| [FabricOps Starter Kit {version}]({version}/) | {manifest['release_date']} |" in content
+    assert f"| [FabricOps Starter Kit {version}]({version}/index.md) | {manifest['release_date']} |" in content
     assert "No completed FabricOps Starter Kit releases have been published yet." not in content
 
 
@@ -372,7 +372,7 @@ def test_release_overview_lists_live_release_with_inventory():
     version = ri.read_package_version()
     manifest = ri._load_manifest(ri.manifest_path(version))
     assert manifest is not None
-    assert f"| [FabricOps Starter Kit {version}]({version}/) | {manifest['release_date']} |" in content
+    assert f"| [FabricOps Starter Kit {version}]({version}/index.md) | {manifest['release_date']} |" in content
     assert "functions/read_lakehouse_table.md" not in content
 
 
