@@ -102,6 +102,13 @@
   function init(root) {
     if (root.dataset.ready) return;
     root.dataset.ready = "true";
+    const modelSource = root.querySelector(".metadata-explorer-model");
+    let canonicalModels = {};
+    try {
+      canonicalModels = JSON.parse(modelSource?.textContent || "{}");
+    } catch (_error) {
+      // The navigation links remain accessible if the data payload is invalid.
+    }
     root.innerHTML =
       '<div class="metadata-explorer-topbar">' +
       '<span class="metadata-explorer-legend"><i class="metadata-dot governance"></i> Governance <i class="metadata-dot engineering"></i> Engineering</span>' +
@@ -115,6 +122,49 @@
     const graph = root.querySelector(".metadata-explorer-graph");
     const detail = root.querySelector(".metadata-explorer-details");
     const viewport = root.querySelector(".metadata-explorer-viewport");
+    const tooltip = document.createElement("div");
+    tooltip.className = "metadata-explorer-tooltip";
+    tooltip.id = "metadata-explorer-tooltip";
+    tooltip.setAttribute("role", "tooltip");
+    tooltip.hidden = true;
+    root.appendChild(tooltip);
+
+    const modelFor = name => canonicalModels[name] || {};
+    const brief = value => {
+      const first = String(value || "").split(/\\.\\s+/)[0].trim();
+      const short = first.length > 165 ? first.slice(0, 162).replace(/\\s+\\S*$/, "") + "…" : first;
+      return short || "Select to inspect the table";
+    };
+    let hoveredLink = null;
+    const hideTooltip = () => {
+      hoveredLink = null;
+      tooltip.hidden = true;
+    };
+    const showTooltip = (name, link) => {
+      const model = modelFor(name);
+      if (!model.purpose && !model.grain) return;
+      hoveredLink = link;
+      tooltip.replaceChildren();
+      const title = document.createElement("strong");
+      title.textContent = "METADATA_" + name;
+      const description = document.createElement("p");
+      description.textContent = brief(model.purpose);
+      const grain = document.createElement("p");
+      const label = document.createElement("b");
+      label.textContent = "Grain: ";
+      grain.append(label, document.createTextNode(model.grain || "Not defined"));
+      tooltip.append(title, description, grain);
+      tooltip.hidden = false;
+      const rect = link.getBoundingClientRect();
+      const bounds = tooltip.getBoundingClientRect();
+      const left = Math.max(10, Math.min(rect.left, window.innerWidth - bounds.width - 10));
+      const below = rect.bottom + 10;
+      const top = below + bounds.height > window.innerHeight ? Math.max(10, rect.top - bounds.height - 10) : below;
+      tooltip.style.left = left + "px";
+      tooltip.style.top = top + "px";
+    };
+    viewport.addEventListener("scroll", hideTooltip, { passive: true });
+    window.addEventListener("scroll", hideTooltip, { passive: true });
     // Keep the reviewed SVG as the exact visual model, while reusing the
     // existing selection/details panel for every physical metadata table.
     const buttons = {};
@@ -133,17 +183,26 @@
       svg.classList.add("metadata-explorer-approved-svg");
       svg.setAttribute("aria-label", "FabricOps metadata ERD. Select a table to inspect its details.");
       svg.querySelectorAll("a").forEach(link => {
-        const caption = link.querySelector("title")?.textContent || "";
+        const nativeTitle = link.querySelector("title");
+        const caption = nativeTitle?.textContent || "";
         const name = caption.split("Open metadata documentation: ").pop().trim();
         if (!byName.has(name)) return;
         link.setAttribute("role", "button");
         link.setAttribute("tabindex", "0");
         link.setAttribute("aria-label", "Inspect " + name);
+        link.setAttribute("aria-describedby", tooltip.id);
+        nativeTitle?.remove();
+        link.addEventListener("mouseenter", () => showTooltip(name, link));
+        link.addEventListener("mouseleave", hideTooltip);
+        link.addEventListener("focus", () => showTooltip(name, link));
+        link.addEventListener("blur", hideTooltip);
         link.addEventListener("click", event => {
+          hideTooltip();
           event.preventDefault();
           select(name);
         });
         link.addEventListener("keydown", event => {
+          if (event.key === "Escape") hideTooltip();
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
             select(name);
@@ -170,26 +229,51 @@
       return links.filter(edge => edge[0] === name || edge[1] === name);
     }
 
+    const logicalJoinKeys = {
+      "DATA_AGREEMENT|ACTIVATED_PIPELINE": ["ACTIVATED_PIPELINE.agreement_id + agreement_version → DATA_AGREEMENT.agreement_id + agreement_version (approved manifest)"],
+      "ACTIVATION_STATE|ACTIVATED_PIPELINE": ["ACTIVATION_STATE.snapshot_json → Activated Pipeline release (logical record)"],
+      "PIPELINE_REGISTRY|ACTIVATED_PIPELINE": ["ACTIVATED_PIPELINE.pipeline_id → PIPELINE_REGISTRY.pipeline_id (release identity)"],
+      "ACTIVATED_PIPELINE|PIPELINE_RUN": [
+        "PIPELINE_RUN.activated_pipeline_id → ACTIVATED_PIPELINE.activated_pipeline_id (Live)",
+        "ACTIVATED_PIPELINE.testing_run_id → PIPELINE_RUN.run_id (Testing evidence)"
+      ],
+      "ACTIVATED_PIPELINE|DATA_CONTRACT": ["ACTIVATED_PIPELINE.manifest_json contract_id + contract_version → DATA_CONTRACT.contract_id + contract_version (N:N manifest reference)"],
+      "DATA_CATALOGUE|DATA_PROFILED_FREQUENCY": ["DATA_PROFILED_FREQUENCY.table_id + column_id → DATA_CATALOGUE.table_id + column_id (logical table/column reference)"]
+    };
+    const keyJoinRows = (from, to) => {
+      const rows = [];
+      for (const child of [from, to]) {
+        const other = child === from ? to : from;
+        for (const fk of (modelFor(child).foreign_keys || [])) {
+          if (fk.referenced_table?.replace(/^METADATA_/, "") !== other) continue;
+          rows.push(child + "." + fk.local_field + " → " + other + "." + fk.referenced_field);
+        }
+      }
+      if (rows.length) return rows;
+      return logicalJoinKeys[from + "|" + to] || logicalJoinKeys[to + "|" + from] || ["Logical relationship; no physical FK declared"];
+    };
     function renderRelationships(name) {
       const relationshipsForTable = relationships(name);
-      if (!relationshipsForTable.length) {
-        return '<p>No direct logical relationship is shown.</p>';
-      }
+      if (!relationshipsForTable.length) return '<p>No direct logical relationship is shown.</p>';
       return '<div class="metadata-explorer-related">' +
         relationshipsForTable.map(edge => {
           const other = edge[0] === name ? edge[1] : edge[0];
+          const joinLines = keyJoinRows(edge[0], edge[1]);
           return '<div class="metadata-explorer-related-row">' +
             '<span class="metadata-explorer-cardinality-text">' + escapeHtml(cardinalityFrom(edge, name)) + '</span>' +
             '<button type="button" class="metadata-explorer-related-link" data-table="' + escapeHtml(other) + '">' +
             escapeHtml(other) + '</button>' +
-            '<span class="metadata-explorer-related-note">' + escapeHtml(edge[3]) + '</span></div>';
+            '<span class="metadata-explorer-related-joins">' +
+            joinLines.map(line => '<code>' + escapeHtml(line) + '</code>').join('') +
+            '</span></div>';
         }).join("") + '</div>';
     }
 
-    function sectionDetails(section) {
+        function sectionDetails(section) {
       const wrapper = document.createElement("details");
       wrapper.className = "metadata-explorer-section";
-      if (section.heading === "Model") wrapper.open = true;
+      // All reference sections start collapsed. Quick purpose, grain and
+      // physical joins are already visible immediately above them.
       const summary = document.createElement("summary");
       summary.textContent = section.heading;
       wrapper.appendChild(summary);
@@ -210,14 +294,16 @@
       pathEntries.forEach(({ edge, group }) => {
         group.classList.toggle("selected", edge[0] === name || edge[1] === name);
       });
+      const model = modelFor(name);
       detail.innerHTML =
         '<div class="metadata-explorer-detail-head"><div>' +
         '<span class="metadata-explorer-schema-tag ' + schema + '">' + escapeHtml(schema) + '</span>' +
         '<h3>METADATA_' + escapeHtml(title) + '</h3>' +
         '</div><span class="metadata-explorer-state">' + escapeHtml(status || "") + '</span></div>' +
-        '<div class="metadata-explorer-detail-quick">' +
-        '<div><strong>Primary key</strong><p>' + escapeHtml(pk.join(" · ")) + '</p></div>' +
-        (fk.length ? '<div><strong>Foreign keys</strong><p>' + escapeHtml(fk.join(" · ")) + '</p></div>' : "") +
+        '<p class="metadata-explorer-purpose">' + escapeHtml(model.purpose || status || "") + '</p>' +
+        '<div class="metadata-explorer-detail-facts">' +
+        '<span><strong>Grain</strong> ' + escapeHtml(model.grain || "See reference model") + '</span>' +
+        '<span><strong>PK</strong> <code>' + escapeHtml((model.primary_key || pk).join(" · ")) + '</code></span>' +
         '</div>' +
         '<details class="metadata-explorer-section" open><summary>Relationships (' + relationships(name).length +
         ')</summary>' + renderRelationships(name) + '</details>' +
@@ -240,7 +326,9 @@
         const sections = await loadReference(url);
         if (activeSelection !== selectionId) return;
         content.innerHTML = "";
-        sections.forEach(section => content.appendChild(sectionDetails(section)));
+        sections.filter(section => section.heading !== "Overview").forEach(section =>
+          content.appendChild(sectionDetails(section))
+        );
       } catch (_error) {
         if (activeSelection !== selectionId) return;
         content.innerHTML = '<p>Could not load the detailed reference. ' +
