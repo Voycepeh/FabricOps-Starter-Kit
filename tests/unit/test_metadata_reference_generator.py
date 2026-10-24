@@ -285,12 +285,14 @@ def test_metadata_explorer_full_text_and_prominent_navigation() -> None:
     assert 'One row represents' in script
     assert 'overflow-wrap: anywhere;' in styles
     assert 'width: min(430px' in styles
-    assert 'Explore the interactive Metadata Tables map' in homepage
-    assert 'Explore the interactive Metadata Tables map' in how_it_works
-    assert 'class="fabricops-home-metadata-map"' in homepage
-    assert 'class="fabricops-home-metadata-map" href="reference/metadata/"' in homepage
+    assert 'class="fabricops-metadata-preview" href="reference/metadata/"' in homepage
+    assert 'src="assets/fabricops-metadata-approved.svg"' in homepage
+    assert 'class="fabricops-metadata-preview fabricops-metadata-preview--compact"' in how_it_works
+    assert 'href="../reference/metadata/"' in how_it_works
+    assert 'src="../assets/fabricops-metadata-approved.svg"' in how_it_works
+    assert ".fabricops-metadata-preview__image" in styles
     assert "## The Big Picture" in how_it_works
-    assert how_it_works.index("Explore the interactive Metadata Tables map") < how_it_works.index("## Workspace Architecture")
+    assert how_it_works.index('class="fabricops-metadata-preview') < how_it_works.index("## Workspace Architecture")
 
 
 def test_metadata_table_summaries_remain_human_readable_and_detailed_notes_preserved() -> None:
