@@ -316,3 +316,50 @@ def test_metadata_table_summaries_remain_human_readable_and_detailed_notes_prese
             assert f"**Implementation details:** {notes}" in page
         else:
             assert "**Implementation details:**" not in page
+
+
+def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_relationships() -> None:
+    """Show actual table-to-table relationships, not arrowheads or phantom self-links."""
+    from pathlib import Path
+    import xml.etree.ElementTree as ET
+
+    root = Path(__file__).parents[2]
+    svg = root / "docs/assets/fabricops-metadata-approved.svg"
+    layout = root / "docs/assets/fabricops-metadata-layout.svg"
+    generator_script = root / "scripts/generate_metadata_erd_svg.mjs"
+    assert svg.is_file() and layout.is_file() and generator_script.is_file()
+    svg_tree = ET.parse(svg)
+    namespace = "{http://www.w3.org/2000/svg}"
+    titles = [
+        node.text
+        for node in svg_tree.findall(f".//{namespace}a/{namespace}title")
+    ]
+    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 13
+    assert set(titles) == {
+        f"Open metadata documentation: {name.removeprefix('METADATA_')}"
+        for name in CANONICAL_METADATA_TABLES
+    }
+
+    connectors = svg_tree.findall(
+        f".//{namespace}g[@id='metadata-er-relationships']/{namespace}g"
+    )
+    assert len(connectors) >= 16
+    actual = {
+        (edge.get("data-from"), edge.get("data-to")): edge
+        for edge in connectors
+    }
+    assert len(actual) == len(connectors)
+    assert all(source != target for source, target in actual)
+    assert all(edge.get("data-cardinality") in {"1:N", "N:N"} for edge in connectors)
+    assert all(edge.find(f"{namespace}path") is not None for edge in connectors)
+    assert ("PIPELINE_REGISTRY", "ACTIVATION_STATE") in actual
+    assert ("ACTIVATION_STATE", "PIPELINE_RUN") in actual
+    assert ("ACTIVATION_STATE", "DATA_CONTRACT") in actual
+    assert actual[("PIPELINE_REGISTRY", "ACTIVATION_STATE")].get("data-kind") == "logical"
+    assert "stroke-dasharray" in svg.read_text(encoding="utf-8")
+    # Keep design asset, generated output and canonical reference in sync.
+    script = generator_script.read_text(encoding="utf-8")
+    assert "renderMetadataSvg(layout, models)" in script
+    assert "--check" in script
+    assert "Missing FK connector" in script
+    assert "Unexpected approved diagram table count" not in script
