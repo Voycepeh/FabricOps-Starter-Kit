@@ -544,7 +544,7 @@ def render_releases_index(manifests: list[dict[str, Any]], notice: str) -> str:
         for manifest in sort_release_manifests(live_manifests):
             version = str(manifest["release_version"])
             release_date = _parse_release_date(manifest.get("release_date"))
-            lines.append(f"| [FabricOps Starter Kit {version}]({version}/) | {release_date} | {_release_description(manifest)} |")
+            lines.append(f"| [FabricOps Starter Kit {version}]({version}/index.md) | {release_date} | {_release_description(manifest)} |")
     else:
         lines.append("No completed FabricOps Starter Kit releases have been published yet.")
     preparing_manifests = [manifest for manifest in manifests if str(manifest.get("release_status") or "").lower() == "preparing"]
