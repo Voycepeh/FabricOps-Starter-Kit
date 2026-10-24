@@ -1,6 +1,6 @@
 # METADATA_DATA_AGREEMENT
 
-Define why the data is shared, with whom, and under what conditions.
+Records who is sharing data, with whom, why it is shared, and the conditions of that sharing.
 
 ## Writer functions
 
@@ -16,7 +16,7 @@ Define why the data is shared, with whom, and under what conditions.
 
 **Default physical schema:** `governance`
 
-**Grain:** One version of one Data Agreement.
+**Grain:** One version of a Data Agreement.
 
 **Primary key:** `agreement_id` + `agreement_version`
 
