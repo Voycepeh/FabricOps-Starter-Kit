@@ -164,7 +164,9 @@ def test_metadata_explorer_keeps_keys_readable_and_loads_canonical_details() -> 
     assert "metadata-explorer-details" in js
     assert "scrollIntoView" in js
     assert "data-reference-content" in js
-    assert 'status && title === "ACTIVATED_PIPELINE"' in js
+    assert 'status && title === "ACTIVATED_PIPELINE"' not in js
+    assert '["ACTIVATED_PIPELINE", "governance"' not in js
+    assert "metadata-explorer-reference-label" in js
     assert '"metadata_pipeline_registry/"' in js
     assert "Proposed table; not yet implemented" not in js
 
