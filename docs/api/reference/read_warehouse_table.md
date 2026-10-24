@@ -93,6 +93,10 @@ Raises configuration, Spark SQL, or warehouse-read errors when the target/table 
 
 <div class="reference-docstring-notes" markdown="1">
 
+``store`` selects a logical configuration alias. Set ``FabricStore.name``
+to the actual Warehouse name when it differs from that alias. Without a
+configured name, the alias remains the physical name for existing deployments.
+
 FabricOps resolves the configured Warehouse target and table name, then
 delegates to the Fabric Warehouse Spark connector. Conceptual example:
 
@@ -140,7 +144,7 @@ table because notebook cells can hit runtime limits.
 
 `fabricops_kit/io/read_warehouse_table.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L91">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L95">View on GitHub</a>
 </div>
 
 
@@ -156,7 +160,7 @@ table because notebook cells can hit runtime limits.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 15 |
+| Live-critical dependencies | 16 |
 
 ### Release history
 
@@ -183,6 +187,7 @@ table because notebook cells can hit runtime limits.
 <li><code>fabricops_kit.io.shared.read_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_warehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 </ul>
 

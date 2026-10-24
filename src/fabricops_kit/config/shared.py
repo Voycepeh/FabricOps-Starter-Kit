@@ -297,7 +297,12 @@ DEFAULT_STEWARD_ROLE_OPTIONS = [
 
 @dataclass(frozen=True)
 class FabricStore:
-    """Configured Fabric lakehouse or warehouse connection details."""
+    """Fabric connection details with an optional physical item name.
+
+    ``name`` is keyword-only to preserve existing positional constructors.
+    When omitted, Warehouse execution uses the configured logical store key.
+    Workspace/item IDs continue to route Lakehouse storage independently of name.
+    """
 
     env: str
     workspace_id: str
@@ -305,6 +310,7 @@ class FabricStore:
     kind: str
     schema_enabled: bool = False
     schema: str | None = None
+    name: str | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         """Validate and normalize initialized values."""
@@ -312,6 +318,10 @@ class FabricStore:
             value = getattr(self, field_name)
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f"{field_name} must be a non-empty string.")
+        if self.name is not None:
+            if not isinstance(self.name, str) or not self.name.strip():
+                raise ValueError("name must be a non-empty physical Fabric item name when supplied.")
+            object.__setattr__(self, "name", self.name.strip())
         normalized_kind = self.kind.strip().lower()
         if normalized_kind not in {"lakehouse", "warehouse"}:
             raise ValueError("kind must be one of: lakehouse, warehouse.")
@@ -808,7 +818,8 @@ def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> Reso
     env : str
         Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
     store : str
-        Configured store key and physical Fabric item name, such as ``Bronze`` or ``Gold``.
+        Logical configured store key, such as ``Bronze`` or ``Gold``.
+        The optional FabricStore.name supplies a different physical item name.
     config : FrameworkConfig | PathConfig | None
         Configuration that contains environment-to-store mappings.
 
@@ -850,6 +861,7 @@ def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> Reso
         schema_enabled=configured_store.schema_enabled,
         schema=configured_store.schema,
         key=store,
+        name=configured_store.name,
     )
 
 

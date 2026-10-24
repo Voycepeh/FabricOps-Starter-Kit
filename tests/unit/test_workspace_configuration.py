@@ -52,12 +52,14 @@ def configuration_runtime(monkeypatch):
                 if cell['cell_type'] != 'code' or 'parameters' in cell['metadata'].get('tags', []):
                     continue
                 source = ''.join(cell['source'])
-                source = source.replace('<engineering-development-workspace-id>', 'dev-ws')
-                source = source.replace('<engineering-production-workspace-id>', 'prod-ws')
-                source = source.replace('workspace_id=""', 'workspace_id="resource-ws"')
-                source = source.replace('item_id=""', 'item_id="resource-item"')
-                source = source.replace('METADATA_WORKSPACE_ID = ""', 'METADATA_WORKSPACE_ID = "metadata-ws"')
-                source = source.replace('METADATA_ITEM_ID = ""', 'METADATA_ITEM_ID = "metadata-item"')
+                for placeholder, value in {
+                    '<DEV_WORKSPACE_ID>': 'dev-ws', '<TEST_WORKSPACE_ID>': 'test-ws',
+                    '<PROD_WORKSPACE_ID>': 'prod-ws', '<GOVERNANCE_WORKSPACE_ID>': 'metadata-ws',
+                    '<METADATA_ITEM_ID>': 'metadata-item', '<BRONZE_ITEM_ID>': 'bronze-item',
+                    '<SILVER_ITEM_ID>': 'silver-item', '<GOLD_ITEM_ID>': 'gold-item',
+                    '<BRONZE_NAME>': 'lh_Bronze', '<SILVER_NAME>': 'lh_Silver', '<GOLD_NAME>': 'wh_Gold',
+                }.items():
+                    source = source.replace(placeholder, value)
                 if workspaceId == 'governance-ws':
                     source = source.replace('"dev-ws"', '"governance-ws"')
                 exec(compile(source, '<00_env_config>', 'exec'), namespace)
@@ -79,6 +81,7 @@ def test_engineering_loads_central_config_for_caller_workspace(configuration_run
     assert result.environment == environment
     assert set(result.paths) == {'Bronze', 'Silver', 'Gold', 'Metadata'}
     assert result.paths['Silver'].env == environment
+    assert result.paths['Gold'].name == 'wh_Gold'
     assert result.paths['Metadata'].workspace_id == 'metadata-ws'
     assert result.run_id == 'caller-run'
     config, env, context = resolve_fabric_context()
@@ -152,7 +155,7 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
 
 def test_duplicate_workspace_assignments_are_rejected(configuration_runtime):
     for cell in configuration_runtime.cells:
-        cell['source'] = [line.replace('<engineering-production-workspace-id>', '<engineering-development-workspace-id>')
+        cell['source'] = [line.replace('<PROD_WORKSPACE_ID>', '<DEV_WORKSPACE_ID>')
                           for line in cell['source']]
     with pytest.raises(ValueError, match='strict 1:1 mapping'):
         setup_notebook()

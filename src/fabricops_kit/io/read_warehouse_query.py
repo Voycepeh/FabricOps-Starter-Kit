@@ -75,6 +75,10 @@ def read_warehouse_query(
 
     Notes
     -----
+    ``store`` selects a logical configuration alias. Set ``FabricStore.name``
+    to the actual Warehouse name when it differs from that alias. Without a
+    configured name, the alias remains the physical name for existing deployments.
+
     FabricOps resolves the configured Warehouse store, sets the Fabric
     connector database to that warehouse artifact, and delegates the read-only
     SQL text to the Fabric Warehouse Spark connector for pushdown. Query callers

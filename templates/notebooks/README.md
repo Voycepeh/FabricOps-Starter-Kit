@@ -56,6 +56,24 @@ An explicit `pipeline_id` remains useful when notebook names can change; `pipeli
 
 Configuration loads do not create metadata tables. At deployment, run the Governance config notebook directly with `INITIALIZE_METADATA = True` once, then restore `False` before ordinary use.
 
+## Logical aliases and physical Fabric names
+
+Store keys such as `Gold` select FabricOps configuration, contracts and metadata.
+`FabricStore.name` supplies the actual Fabric item name; for example, an alias
+`Gold` with `name="wh_Example_Product"` routes Warehouse reads and writes to
+`wh_Example_Product.dbo.orders`. Query `DatabaseName`, staging and cleanup use
+that same physical Warehouse name. Workspace and item UUIDs still select the
+Fabric workspace and item. Lakehouse storage paths continue to use those UUIDs.
+
+Set `name` when the Warehouse name differs from its alias. Existing configurations
+without `name` continue to use the alias as the physical name. The new field is
+optional and keyword-only, so existing positional constructors retain their meaning.
+Environment names and store aliases are project choices: `dev` / `test` / `prod`
+and Bronze / Silver / Gold are examples, and custom aliases such as `Source`,
+`Unified` and `Product` remain supported. Replace every ID/name placeholder in
+`00_env_config` before running it; the template validates them before deployment IO.
+See the [Microsoft Fabric Spark Warehouse connector documentation](https://learn.microsoft.com/en-us/fabric/data-engineering/spark-data-warehouse-connector) for query and three-part target semantics.
+
 ## Pipeline execution mode
 
 The pipeline flow is **Setup Pipeline → Read → Transform → Write**. Environment routing is resolved automatically from the caller workspace by the selected `00_env_config`. A stable `pipeline_id` identifies the logical pipeline independently of notebook names and paths.

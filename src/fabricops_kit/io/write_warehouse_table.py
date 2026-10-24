@@ -90,6 +90,10 @@ def write_warehouse_table(
 
     Notes
     -----
+    ``store`` selects a logical configuration alias. Set ``FabricStore.name``
+    to the actual Warehouse name when it differs from that alias. Without a
+    configured name, the alias remains the physical name for existing deployments.
+
     Parallel processing and write concurrency
         Spark processes DataFrame partitions concurrently. Before invoking the
         Warehouse connector, ``write_warehouse_table`` can repartition the

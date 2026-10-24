@@ -32,20 +32,14 @@ from tests.helpers import framework_config, store
 pytestmark = pytest.mark.unit
 
 
-def test_fabric_store_name_is_derived_only_when_resolved():
-    """Configured keys, not duplicated fields, identify physical Fabric items."""
-    configured = FabricStore(env="dev", workspace_id="workspace", item_id="item", kind="warehouse")
+def test_fabric_store_preserves_physical_name_and_logical_key():
+    """Physical names are optional; configured aliases retain exact lookup semantics."""
+    configured = FabricStore(env="poc", workspace_id="workspace", item_id="item", kind="warehouse", name=" wh_Example ")
+    resolved = get_store(PathConfig(paths={"poc": {"Product": configured}}), "poc", "Product")
+    assert resolved.key == "Product"
+    assert configured.name == resolved.name == "wh_Example"
+    assert FabricStore("poc", "workspace", "item", "warehouse").name is None
 
-    with pytest.raises(TypeError, match="unexpected keyword argument 'name'"):
-        FabricStore(env="dev", workspace_id="workspace", item_id="item", kind="warehouse", name="Gold")
-
-    resolved = get_store(PathConfig(paths={"dev": {"Gold": configured}}), "dev", "Gold")
-    assert resolved.key == "Gold"
-    assert not hasattr(configured, "name")
-
-    for removed_alias in ("source", "unified", "product"):
-        with pytest.raises(ValueError, match=f"Store '{removed_alias}' was not found"):
-            get_store(PathConfig(paths={"dev": {"Bronze": configured}}), "dev", removed_alias)
 
 
 def test_get_store_requires_exact_canonical_metadata_case():
@@ -82,11 +76,13 @@ def test_env_config_uses_physical_item_keys_without_duplicate_names():
     notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
     source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
 
-    for key in ("Bronze", "Silver", "Gold", "Metadata"):
-        assert f'"{key}": FabricStore(' in source
+    for key in ("Bronze", "Silver", "Gold"):
+        assert f'"{key}": {{' in source
+    assert 'ENV_PATHS[env][alias] = FabricStore(' in source
+    assert 'ENV_PATHS[env]["Metadata"] = FabricStore(' in source
     for removed_alias in ("source", "unified", "product"):
         assert f'"{removed_alias}": FabricStore(' not in source
-    assert "name=" not in source
+    assert 'name=_required_config_value(item.get("name")' in source
 
 
 def test_framework_config_allows_shared_metadata_store_across_environments():

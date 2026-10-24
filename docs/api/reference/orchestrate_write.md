@@ -144,7 +144,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 221 |
+| Live-critical dependencies | 222 |
 
 ### Release history
 
@@ -220,6 +220,7 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_configured_warehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.write_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.pipeline.check_dq.check_dq</code></li>

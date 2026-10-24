@@ -2646,9 +2646,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared._get_fabric_runtime_metadata",
-      "source_end_line": 1055,
+      "source_end_line": 1067,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 1020,
+      "source_start_line": 1032,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_notebook.setup_notebook"
@@ -2666,9 +2666,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared._normalize_path_config",
-      "source_end_line": 800,
+      "source_end_line": 810,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 760,
+      "source_start_line": 770,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
@@ -2751,9 +2751,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.build_column_id",
-      "source_end_line": 885,
+      "source_end_line": 897,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 883,
+      "source_start_line": 895,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -2776,9 +2776,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.build_table_id",
-      "source_end_line": 880,
+      "source_end_line": 892,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 878,
+      "source_start_line": 890,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -2926,9 +2926,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.get_store",
-      "source_end_line": 853,
+      "source_end_line": 865,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 803,
+      "source_start_line": 813,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_notebook.setup_notebook",
@@ -2968,9 +2968,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.initialize_notebook",
-      "source_end_line": 1016,
+      "source_end_line": 1028,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 888,
+      "source_start_line": 900,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -3000,9 +3000,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.is_table_not_found_error",
-      "source_end_line": 864,
+      "source_end_line": 876,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 861,
+      "source_start_line": 873,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -3223,9 +3223,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.stable_metadata_id",
-      "source_end_line": 875,
+      "source_end_line": 887,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 867,
+      "source_start_line": 879,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -3252,9 +3252,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.shared.validate_framework_config",
-      "source_end_line": 752,
+      "source_end_line": 762,
       "source_path": "src/fabricops_kit/config/shared.py",
-      "source_start_line": 672,
+      "source_start_line": 682,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_notebook.setup_notebook"
@@ -4786,13 +4786,13 @@
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame containing exactly the rows and columns returned by\n    the supplied Warehouse SQL query.",
       "signature": "def read_warehouse_query(query: str, *, store: str='warehouse', spark_session=None, context: dict[str, Any] | None=None, **options)",
-      "source_end_line": 103,
+      "source_end_line": 107,
       "source_path": "src/fabricops_kit/io/read_warehouse_query.py",
       "source_start_line": 15,
       "summary": "Execute a read-only Warehouse SQL query and return the query result.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable",
-      "usage_notes": "FabricOps resolves the configured Warehouse store, sets the Fabric\nconnector database to that warehouse artifact, and delegates the read-only\nSQL text to the Fabric Warehouse Spark connector for pushdown. Query callers\ncan use two-part names such as ``dbo.orders`` when the configured store\nidentifies the warehouse database/artifact. Conceptual example:\n\n``df = read_warehouse_query(\"\"\"SELECT DepartmentId, DepartmentName FROM dbo.DimDepartment WHERE IsActive = 1\"\"\")``\n\nThat query returns only the selected columns, filters rows in the\nWarehouse engine, and transfers only the resulting dataset to Spark."
+      "usage_notes": "``store`` selects a logical configuration alias. Set ``FabricStore.name``\nto the actual Warehouse name when it differs from that alias. Without a\nconfigured name, the alias remains the physical name for existing deployments.\n\nFabricOps resolves the configured Warehouse store, sets the Fabric\nconnector database to that warehouse artifact, and delegates the read-only\nSQL text to the Fabric Warehouse Spark connector for pushdown. Query callers\ncan use two-part names such as ``dbo.orders`` when the configured store\nidentifies the warehouse database/artifact. Conceptual example:\n\n``df = read_warehouse_query(\"\"\"SELECT DepartmentId, DepartmentName FROM dbo.DimDepartment WHERE IsActive = 1\"\"\")``\n\nThat query returns only the selected columns, filters rows in the\nWarehouse engine, and transfers only the resulting dataset to Spark."
     },
     {
       "architecture_classification": "foundational_io",
@@ -4858,13 +4858,13 @@
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame containing all rows and columns returned from the\n    resolved Warehouse table.",
       "signature": "def read_warehouse_table(schema: str, table_name: str, *, store: str='warehouse', spark_session=None, context: dict[str, Any] | None=None, **options)",
-      "source_end_line": 91,
+      "source_end_line": 95,
       "source_path": "src/fabricops_kit/io/read_warehouse_table.py",
       "source_start_line": 10,
       "summary": "Read every row and every column from a Microsoft Fabric Warehouse table.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable",
-      "usage_notes": "FabricOps resolves the configured Warehouse target and table name, then\ndelegates to the Fabric Warehouse Spark connector. Conceptual example:\n\n``df = read_warehouse_table(schema=\"dbo\", table_name=\"DimDepartment\")``\n\nUse ``read_warehouse_query`` instead when you need selected columns, row\nfiltering, aggregation, joins, row limits, or other caller-controlled SQL\npushdown before Spark receives rows."
+      "usage_notes": "``store`` selects a logical configuration alias. Set ``FabricStore.name``\nto the actual Warehouse name when it differs from that alias. Without a\nconfigured name, the alias remains the physical name for existing deployments.\n\nFabricOps resolves the configured Warehouse target and table name, then\ndelegates to the Fabric Warehouse Spark connector. Conceptual example:\n\n``df = read_warehouse_table(schema=\"dbo\", table_name=\"DimDepartment\")``\n\nUse ``read_warehouse_query`` instead when you need selected columns, row\nfiltering, aggregation, joins, row limits, or other caller-controlled SQL\npushdown before Spark receives rows."
     },
     {
       "architecture_classification": "internal",
@@ -4904,9 +4904,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.io.shared._drop_warehouse_stage_best_effort",
-      "source_end_line": 566,
+      "source_end_line": 571,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 548,
+      "source_start_line": 553,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -5039,9 +5039,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.io.shared._quoted_warehouse_identifier",
-      "source_end_line": 525,
+      "source_end_line": 530,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 523,
+      "source_start_line": 528,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -5223,9 +5223,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.io.shared._warehouse_column_list",
-      "source_end_line": 531,
+      "source_end_line": 536,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 528,
+      "source_start_line": 533,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -5243,9 +5243,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.io.shared._warehouse_null_safe_difference",
-      "source_end_line": 545,
+      "source_end_line": 550,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 534,
+      "source_start_line": 539,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -5265,9 +5265,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.io.shared.configured_lakehouse_schema",
-      "source_end_line": 483,
+      "source_end_line": 488,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 475,
+      "source_start_line": 480,
       "usage": "public_flow_reachable"
     },
     {
@@ -5285,9 +5285,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.convert_single_parquet_ns_to_us",
-      "source_end_line": 764,
+      "source_end_line": 770,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 749,
+      "source_start_line": 755,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -5302,9 +5302,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.execute_warehouse_processing",
-      "source_end_line": 728,
+      "source_end_line": 734,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 569,
+      "source_start_line": 574,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -5323,9 +5323,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.execute_warehouse_sql",
-      "source_end_line": 520,
+      "source_end_line": 525,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 516,
+      "source_start_line": 521,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -5421,9 +5421,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.normalize_write_mode",
-      "source_end_line": 231,
+      "source_end_line": 236,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 226,
+      "source_start_line": 231,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -5442,9 +5442,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.read_csv_path",
-      "source_end_line": 314,
+      "source_end_line": 319,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 309,
+      "source_start_line": 314,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -5463,9 +5463,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.read_delta_path",
-      "source_end_line": 306,
+      "source_end_line": 311,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 301,
+      "source_start_line": 306,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -5484,9 +5484,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.read_excel_file",
-      "source_end_line": 746,
+      "source_end_line": 752,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 731,
+      "source_start_line": 737,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -5505,9 +5505,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.read_json_path",
-      "source_end_line": 322,
+      "source_end_line": 327,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 317,
+      "source_start_line": 322,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -5534,9 +5534,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.read_warehouse_synapsesql",
-      "source_end_line": 498,
+      "source_end_line": 503,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 486,
+      "source_start_line": 491,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -5562,9 +5562,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.repartition_dataframe_for_write",
-      "source_end_line": 372,
+      "source_end_line": 377,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 325,
+      "source_start_line": 330,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -5822,6 +5822,35 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
+      "function_name": "resolve_warehouse_name",
+      "function_type": "shared_function",
+      "inbound_source_references": [
+        "fabricops_kit.io.shared.execute_warehouse_processing",
+        "fabricops_kit.io.shared.read_warehouse_synapsesql",
+        "fabricops_kit.io.shared.resolve_warehouse_table_location"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "transitive_live_dependency",
+      "qualified_name": "fabricops_kit.io.shared.resolve_warehouse_name",
+      "source_end_line": 219,
+      "source_path": "src/fabricops_kit/io/shared.py",
+      "source_start_line": 217,
+      "supports_live_contract": true,
+      "transitive_live_dependents": [
+        "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+        "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+        "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
+        "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+        "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+        "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+        "fabricops_kit.pipeline.profile_table.profile_table",
+        "fabricops_kit.pipeline.resolve_table_id.resolve_table_id"
+      ],
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "live_critical_internal",
       "function_name": "resolve_warehouse_table_location",
       "function_type": "shared_function",
       "inbound_source_references": [
@@ -5835,9 +5864,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.resolve_warehouse_table_location",
-      "source_end_line": 223,
+      "source_end_line": 228,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 217,
+      "source_start_line": 222,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
@@ -5868,9 +5897,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.validate_dataframe_writer",
-      "source_end_line": 237,
+      "source_end_line": 242,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 234,
+      "source_start_line": 239,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -5893,9 +5922,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.validate_select_query",
-      "source_end_line": 298,
+      "source_end_line": 303,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 240,
+      "source_start_line": 245,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -5914,9 +5943,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.write_delta_path",
-      "source_end_line": 386,
+      "source_end_line": 391,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 375,
+      "source_start_line": 380,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -5936,9 +5965,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.write_warehouse_synapsesql",
-      "source_end_line": 513,
+      "source_end_line": 518,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 501,
+      "source_start_line": 506,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -6139,13 +6168,13 @@
       ],
       "returns_documentation": "None\n    The function performs the Fabric Warehouse connector write before\n    returning.",
       "signature": "def write_warehouse_table(df, schema: str, table_name: str, *, store: str='warehouse', mode: str='append', repartition_by=None, options: dict[str, Any] | None=None, context: dict[str, Any] | None=None)",
-      "source_end_line": 249,
+      "source_end_line": 253,
       "source_path": "src/fabricops_kit/io/write_warehouse_table.py",
       "source_start_line": 15,
       "summary": "Write a Spark DataFrame to a configured Fabric Warehouse table.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable",
-      "usage_notes": "Parallel processing and write concurrency\n    Spark processes DataFrame partitions concurrently. Before invoking the\n    Warehouse connector, ``write_warehouse_table`` can repartition the\n    input DataFrame so the transfer is prepared and executed through a\n    larger or more appropriately distributed set of Spark tasks.\n\n    This is Spark distributed processing. The function does not create\n    Python threads, does not run several independent Warehouse write calls,\n    and does not provide unrestricted concurrent mutation of the same\n    Warehouse table.\n\n    The repartitioned DataFrame is the DataFrame passed to the Warehouse\n    connector.\n\nInteger repartitioning\n    Passing a positive integer creates that number of Spark DataFrame\n    partitions before the Warehouse write path is invoked by calling\n    ``df.repartition(number)``. For a large fact dataset, this allows Spark\n    to prepare and transfer multiple partitions concurrently, subject to\n    available executor capacity and Warehouse connector behaviour or\n    limits.\n\nColumn-based repartitioning\n    Passing a column name, string-only list, or string-only tuple repartitions\n    the Spark DataFrame by the selected keys before the Warehouse connector\n    receives it by calling ``df.repartition(*columns)``. A list or tuple\n    such as ``(32, \"academic_year\", \"semester\")`` calls\n    ``df.repartition(32, \"academic_year\", \"semester\")`` and controls both\n    Spark task count and distribution keys for the current write. This\n    affects only Spark-side row distribution for the current write. It does\n    not declare Warehouse\n    partitions, indexes, distribution keys, clustered columns, or any other\n    physical Warehouse design.\n\nNo ``partition_by`` for Warehouse\n    ``write_warehouse_table`` must not expose or document lakehouse-style\n    ``partition_by`` behaviour. Physical Delta partitioning belongs only to\n    ``write_lakehouse_table``. Warehouse physical design is managed through\n    Warehouse-supported table and indexing features, not through Spark\n    DataFrame ``partitionBy``.\n\nImplementation sequence\n    The function validates the DataFrame writer, validates\n    ``repartition_by``, calls ``df.repartition(number)`` for a positive\n    integer, ``df.repartition(*columns)`` for a column name/list/tuple, or\n    ``df.repartition(number, *columns)`` when a list or tuple begins with a\n    positive integer, resolves the Warehouse connection and table\n    identity, passes the repartitioned DataFrame into the Warehouse write\n    connector, executes the requested connector write mode, and returns\n    ``None``. It does not resolve Data Contracts or processing strategies\n    and does not commit pipeline metadata.\n\nPerformance notes\n    Repartitioning can improve write throughput when the existing\n    DataFrame has too few partitions for the available Spark executors. It\n    also requires a Spark shuffle. Excessive partitions may increase\n    scheduling overhead, transfer overhead, or connector pressure.\n    Column-based repartitioning should avoid severely skewed or very\n    low-cardinality keys when they would create uneven task sizes.\n    Warehouse write concurrency is also constrained by the connector,\n    Warehouse capacity, transaction behaviour, table locks, and\n    service-level limits. ``repartition_by`` increases Spark-side\n    parallelism but does not guarantee linear write-speed improvement.\n\nConcurrency safety clarification\n    Parallel Spark tasks within one ``write_warehouse_table`` call are not\n    the same as several notebooks or jobs writing to the same Warehouse\n    table concurrently. The function does not coordinate multiple\n    independent writers, serialize competing jobs, retry transaction\n    conflicts, or guarantee safe simultaneous overwrite operations.\n\nErrors and edge cases\n    ``repartition_by`` rejects zero or negative integers, missing columns\n    when DataFrame columns are available, unsupported value types, empty lists or\n    tuples, and non-string column values after any leading partition count.\n    Schema or table not found, unsupported write modes, authentication\n    failure, connector failure, Warehouse permission failure, unsupported\n    Spark-to-Warehouse type conversion, connector-managed transfer or\n    staging failure, transaction or lock conflicts,\n    empty DataFrames, large transfer timeout or resource exhaustion, and\n    accidental use of the original DataFrame after repartitioning are\n    handled by Spark, the Fabric connector, or Warehouse runtime errors.\n\n\nSide effects\n    This function performs a physical Warehouse write and triggers Spark\n    execution. Depending on the selected mode, it may append to, create,\n    replace, or overwrite Warehouse data according to the implementation\n    and connector semantics. Supplying ``repartition_by`` triggers a Spark\n    shuffle before the Warehouse transfer."
+      "usage_notes": "``store`` selects a logical configuration alias. Set ``FabricStore.name``\nto the actual Warehouse name when it differs from that alias. Without a\nconfigured name, the alias remains the physical name for existing deployments.\n\nParallel processing and write concurrency\n    Spark processes DataFrame partitions concurrently. Before invoking the\n    Warehouse connector, ``write_warehouse_table`` can repartition the\n    input DataFrame so the transfer is prepared and executed through a\n    larger or more appropriately distributed set of Spark tasks.\n\n    This is Spark distributed processing. The function does not create\n    Python threads, does not run several independent Warehouse write calls,\n    and does not provide unrestricted concurrent mutation of the same\n    Warehouse table.\n\n    The repartitioned DataFrame is the DataFrame passed to the Warehouse\n    connector.\n\nInteger repartitioning\n    Passing a positive integer creates that number of Spark DataFrame\n    partitions before the Warehouse write path is invoked by calling\n    ``df.repartition(number)``. For a large fact dataset, this allows Spark\n    to prepare and transfer multiple partitions concurrently, subject to\n    available executor capacity and Warehouse connector behaviour or\n    limits.\n\nColumn-based repartitioning\n    Passing a column name, string-only list, or string-only tuple repartitions\n    the Spark DataFrame by the selected keys before the Warehouse connector\n    receives it by calling ``df.repartition(*columns)``. A list or tuple\n    such as ``(32, \"academic_year\", \"semester\")`` calls\n    ``df.repartition(32, \"academic_year\", \"semester\")`` and controls both\n    Spark task count and distribution keys for the current write. This\n    affects only Spark-side row distribution for the current write. It does\n    not declare Warehouse\n    partitions, indexes, distribution keys, clustered columns, or any other\n    physical Warehouse design.\n\nNo ``partition_by`` for Warehouse\n    ``write_warehouse_table`` must not expose or document lakehouse-style\n    ``partition_by`` behaviour. Physical Delta partitioning belongs only to\n    ``write_lakehouse_table``. Warehouse physical design is managed through\n    Warehouse-supported table and indexing features, not through Spark\n    DataFrame ``partitionBy``.\n\nImplementation sequence\n    The function validates the DataFrame writer, validates\n    ``repartition_by``, calls ``df.repartition(number)`` for a positive\n    integer, ``df.repartition(*columns)`` for a column name/list/tuple, or\n    ``df.repartition(number, *columns)`` when a list or tuple begins with a\n    positive integer, resolves the Warehouse connection and table\n    identity, passes the repartitioned DataFrame into the Warehouse write\n    connector, executes the requested connector write mode, and returns\n    ``None``. It does not resolve Data Contracts or processing strategies\n    and does not commit pipeline metadata.\n\nPerformance notes\n    Repartitioning can improve write throughput when the existing\n    DataFrame has too few partitions for the available Spark executors. It\n    also requires a Spark shuffle. Excessive partitions may increase\n    scheduling overhead, transfer overhead, or connector pressure.\n    Column-based repartitioning should avoid severely skewed or very\n    low-cardinality keys when they would create uneven task sizes.\n    Warehouse write concurrency is also constrained by the connector,\n    Warehouse capacity, transaction behaviour, table locks, and\n    service-level limits. ``repartition_by`` increases Spark-side\n    parallelism but does not guarantee linear write-speed improvement.\n\nConcurrency safety clarification\n    Parallel Spark tasks within one ``write_warehouse_table`` call are not\n    the same as several notebooks or jobs writing to the same Warehouse\n    table concurrently. The function does not coordinate multiple\n    independent writers, serialize competing jobs, retry transaction\n    conflicts, or guarantee safe simultaneous overwrite operations.\n\nErrors and edge cases\n    ``repartition_by`` rejects zero or negative integers, missing columns\n    when DataFrame columns are available, unsupported value types, empty lists or\n    tuples, and non-string column values after any leading partition count.\n    Schema or table not found, unsupported write modes, authentication\n    failure, connector failure, Warehouse permission failure, unsupported\n    Spark-to-Warehouse type conversion, connector-managed transfer or\n    staging failure, transaction or lock conflicts,\n    empty DataFrames, large transfer timeout or resource exhaustion, and\n    accidental use of the original DataFrame after repartitioning are\n    handled by Spark, the Fabric connector, or Warehouse runtime errors.\n\n\nSide effects\n    This function performs a physical Warehouse write and triggers Spark\n    execution. Depending on the selected mode, it may append to, create,\n    replace, or overwrite Warehouse data according to the implementation\n    and connector semantics. Supplying ``repartition_by`` triggers a Spark\n    shuffle before the Warehouse transfer."
     },
     {
       "architecture_classification": "internal",
@@ -14048,6 +14077,7 @@
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
         "fabricops_kit.io.shared.resolve_lakehouse_table_location",
         "fabricops_kit.io.shared.resolve_store",
+        "fabricops_kit.io.shared.resolve_warehouse_name",
         "fabricops_kit.io.shared.resolve_warehouse_table_location",
         "fabricops_kit.pipeline.check_dq.check_dq",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
@@ -14199,7 +14229,7 @@
       ],
       "metrics": {
         "depth": 9,
-        "scope": 203,
+        "scope": 204,
         "width": 13
       },
       "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -14306,6 +14336,7 @@
         "fabricops_kit.io.shared.resolve_configured_warehouse_table",
         "fabricops_kit.io.shared.resolve_lakehouse_table_location",
         "fabricops_kit.io.shared.resolve_store",
+        "fabricops_kit.io.shared.resolve_warehouse_name",
         "fabricops_kit.io.shared.resolve_warehouse_table_location",
         "fabricops_kit.io.shared.write_warehouse_synapsesql",
         "fabricops_kit.pipeline.check_dq.check_dq",
@@ -14465,7 +14496,7 @@
       ],
       "metrics": {
         "depth": 9,
-        "scope": 226,
+        "scope": 227,
         "width": 17
       },
       "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
@@ -14533,6 +14564,7 @@
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
         "fabricops_kit.io.shared.resolve_lakehouse_table_location",
         "fabricops_kit.io.shared.resolve_store",
+        "fabricops_kit.io.shared.resolve_warehouse_name",
         "fabricops_kit.io.shared.resolve_warehouse_table_location",
         "fabricops_kit.pipeline.pipeline_read._filter_lakehouse_incremental",
         "fabricops_kit.pipeline.pipeline_read._resolve_requested_incremental_columns",
@@ -14586,7 +14618,7 @@
       ],
       "metrics": {
         "depth": 7,
-        "scope": 90,
+        "scope": 91,
         "width": 12
       },
       "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
@@ -14652,6 +14684,7 @@
         "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
         "fabricops_kit.io.shared.resolve_lakehouse_table_location",
         "fabricops_kit.io.shared.resolve_store",
+        "fabricops_kit.io.shared.resolve_warehouse_name",
         "fabricops_kit.io.shared.resolve_warehouse_table_location",
         "fabricops_kit.pipeline.shared._audit_literal_columns",
         "fabricops_kit.pipeline.shared._automatic_frequency_columns",
@@ -14693,7 +14726,7 @@
       ],
       "metrics": {
         "depth": 8,
-        "scope": 76,
+        "scope": 77,
         "width": 1
       },
       "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
@@ -14883,11 +14916,12 @@
         "fabricops_kit.io.shared.read_warehouse_synapsesql",
         "fabricops_kit.io.shared.resolve_configured_warehouse_query_store",
         "fabricops_kit.io.shared.resolve_store",
+        "fabricops_kit.io.shared.resolve_warehouse_name",
         "fabricops_kit.io.shared.validate_select_query"
       ],
       "metrics": {
         "depth": 4,
-        "scope": 12,
+        "scope": 13,
         "width": 4
       },
       "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query"
@@ -14913,11 +14947,12 @@
         "fabricops_kit.io.shared.read_warehouse_synapsesql",
         "fabricops_kit.io.shared.resolve_configured_warehouse_table",
         "fabricops_kit.io.shared.resolve_store",
+        "fabricops_kit.io.shared.resolve_warehouse_name",
         "fabricops_kit.io.shared.resolve_warehouse_table_location"
       ],
       "metrics": {
         "depth": 4,
-        "scope": 15,
+        "scope": 16,
         "width": 3
       },
       "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table"
@@ -14943,12 +14978,13 @@
         "fabricops_kit.io.shared._resolve_lakehouse_schema",
         "fabricops_kit.io.shared._resolve_lakehouse_table_path",
         "fabricops_kit.io.shared.resolve_lakehouse_table_location",
+        "fabricops_kit.io.shared.resolve_warehouse_name",
         "fabricops_kit.io.shared.resolve_warehouse_table_location",
         "fabricops_kit.pipeline.shared.resolve_physical_table_identity"
       ],
       "metrics": {
         "depth": 4,
-        "scope": 15,
+        "scope": 16,
         "width": 2
       },
       "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id"
@@ -14961,7 +14997,7 @@
       ],
       "metrics": {
         "depth": 5,
-        "scope": 42,
+        "scope": 43,
         "width": 7
       },
       "qualified_name": "fabricops_kit.access_scanner.scan_effective_access.scan_effective_access"
@@ -15007,7 +15043,7 @@
       ],
       "metrics": {
         "depth": 5,
-        "scope": 36,
+        "scope": 37,
         "width": 10
       },
       "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access"
@@ -15143,7 +15179,7 @@
       ],
       "metrics": {
         "depth": 9,
-        "scope": 71,
+        "scope": 72,
         "width": 1
       },
       "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
@@ -15456,13 +15492,14 @@
         "fabricops_kit.io.shared.repartition_dataframe_for_write",
         "fabricops_kit.io.shared.resolve_configured_warehouse_table",
         "fabricops_kit.io.shared.resolve_store",
+        "fabricops_kit.io.shared.resolve_warehouse_name",
         "fabricops_kit.io.shared.resolve_warehouse_table_location",
         "fabricops_kit.io.shared.validate_dataframe_writer",
         "fabricops_kit.io.shared.write_warehouse_synapsesql"
       ],
       "metrics": {
         "depth": 4,
-        "scope": 16,
+        "scope": 17,
         "width": 4
       },
       "qualified_name": "fabricops_kit.io.write_warehouse_table.write_warehouse_table"
@@ -17460,6 +17497,10 @@
       "caller_qualified_name": "fabricops_kit.io.shared.execute_warehouse_processing"
     },
     {
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_warehouse_name",
+      "caller_qualified_name": "fabricops_kit.io.shared.execute_warehouse_processing"
+    },
+    {
       "callee_qualified_name": "fabricops_kit.io.shared.write_warehouse_synapsesql",
       "caller_qualified_name": "fabricops_kit.io.shared.execute_warehouse_processing"
     },
@@ -17489,6 +17530,10 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.io.shared._require_fabric_connector",
+      "caller_qualified_name": "fabricops_kit.io.shared.read_warehouse_synapsesql"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_warehouse_name",
       "caller_qualified_name": "fabricops_kit.io.shared.read_warehouse_synapsesql"
     },
     {
@@ -17581,6 +17626,10 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.io.shared._normalize_table_name",
+      "caller_qualified_name": "fabricops_kit.io.shared.resolve_warehouse_table_location"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_warehouse_name",
       "caller_qualified_name": "fabricops_kit.io.shared.resolve_warehouse_table_location"
     },
     {
