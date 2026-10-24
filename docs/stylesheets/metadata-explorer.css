@@ -103,32 +103,176 @@
 .metadata-explorer-schema-tag.governance { color: #7c24af; }
 .metadata-explorer-schema-tag.engineering { color: #03668e; }
 .metadata-explorer-state { color: var(--md-default-fg-color--light); font-size: .75rem; }
-.metadata-explorer-detail-quick { display:flex; flex-wrap:wrap; gap: 10px 24px; padding: .5rem 0 1rem; }
-.metadata-explorer-detail-quick > div { flex: 1 1 250px; min-width:0; }
-.metadata-explorer-detail-quick strong { font-size: .76rem; color: var(--md-default-fg-color--light); }
-.metadata-explorer-detail-quick p { font-family: var(--md-code-font-family); overflow-wrap:anywhere; margin: .25rem 0 0; font-size: .77rem; }
-.metadata-explorer-section { border-top: 1px solid var(--md-default-fg-color--lightest); padding: 0; }
-.metadata-explorer-section summary { cursor:pointer; padding: .78rem .15rem; font-size: .87rem; font-weight: 650; }
-.metadata-explorer-section summary:hover { color: var(--md-typeset-a-color); }
-.metadata-explorer-section-body { padding: 0 .15rem 1rem; overflow-x:auto; }
-.metadata-explorer-section-body > :first-child { margin-top: 0; }
-.metadata-explorer-section-body table { width:100%; min-width: 460px; display: table; font-size: .72rem; }
-.metadata-explorer-section-body th, .metadata-explorer-section-body td { white-space:normal; vertical-align:top; overflow-wrap:anywhere; }
+
+/* Compact details, scoped to override Material's global green admonition style. */
+.md-typeset .fabricops-metadata-explorer .metadata-explorer-purpose {
+  margin: .25rem 0 .65rem;
+  color: var(--md-default-fg-color);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.metadata-explorer-detail-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem 1.35rem;
+  padding: 0 0 .9rem;
+  font-size: 13px;
+  color: var(--md-default-fg-color);
+}
+.metadata-explorer-detail-facts > span { max-width:100%; overflow-wrap:anywhere; }
+.metadata-explorer-detail-facts strong {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--md-default-fg-color--light);
+  margin-right: .4rem;
+}
+.metadata-explorer-detail-facts code { white-space:normal; overflow-wrap:anywhere; }
+.md-typeset .fabricops-metadata-explorer details.metadata-explorer-section {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 14px;
+  color: var(--md-default-fg-color);
+}
+.md-typeset .fabricops-metadata-explorer details.metadata-explorer-section > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style: none;
+  cursor: pointer;
+  margin: 0;
+  padding: 12px 4px;
+  background: transparent;
+  color: var(--md-default-fg-color);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.35;
+  min-height: 42px;
+}
+.md-typeset .fabricops-metadata-explorer details.metadata-explorer-section > summary::-webkit-details-marker { display:none; }
+.md-typeset .fabricops-metadata-explorer details.metadata-explorer-section > summary::before {
+  display: none;
+  content: none;
+}
+.md-typeset .fabricops-metadata-explorer details.metadata-explorer-section > summary::after {
+  content: "›";
+  display: inline-block;
+  position: static;
+  float: none;
+  width: auto;
+  height: auto;
+  margin: 0 5px 0 12px;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  transform: rotate(0deg);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--md-default-fg-color--light);
+  transition: transform .15s ease;
+}
+.md-typeset .fabricops-metadata-explorer details.metadata-explorer-section[open] > summary::after { transform: rotate(90deg); }
+.md-typeset .fabricops-metadata-explorer details.metadata-explorer-section > summary:hover { color: var(--md-typeset-a-color); }
+.metadata-explorer-section-body {
+  padding: 0 4px 14px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.metadata-explorer-section-body > :first-child { margin-top:0; }
+.metadata-explorer-section-body p,
+.metadata-explorer-section-body li { font-size: 13px; line-height:1.55; }
+.metadata-explorer-section-body table { width:100%; min-width: 460px; display: table; font-size: 12px; }
+.metadata-explorer-section-body th,
+.metadata-explorer-section-body td { white-space:normal; vertical-align:top; overflow-wrap:anywhere; }
 .metadata-explorer-section-body code { overflow-wrap:anywhere; white-space:normal; }
-.metadata-explorer-related { padding: .2rem 0 .9rem; display:grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap: .45rem 1rem; }
-.metadata-explorer-related-row { display:grid; grid-template-columns:46px minmax(0,1fr); gap: .2rem .65rem; align-items:center; padding: .3rem 0; }
-.metadata-explorer-cardinality-text { display: inline-flex; justify-content:center; align-items:center; padding: 3px 6px; border-radius: 4px; border: 1px solid #0284c7; color: #03668e; font-size: .72rem; font-weight: 800; }
-.metadata-explorer-related-link { font-size:.78rem; color:var(--md-typeset-a-color); font-weight: 600; border:0; background:none; text-align:left; padding:0; cursor:pointer; overflow-wrap:anywhere; }
+.metadata-explorer-related { display:grid; gap: 0; padding: 2px 0 12px; }
+.metadata-explorer-related-row {
+  display: grid;
+  grid-template-columns: 46px minmax(120px,200px) minmax(0,1fr);
+  column-gap: 12px;
+  align-items:start;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  font-size: 13px;
+}
+.metadata-explorer-related-row:last-child { border-bottom:0; }
+.metadata-explorer-cardinality-text {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:4px;
+  border:1px solid #0284c7;
+  padding:3px 6px;
+  font-size:12px;
+  font-weight:700;
+  color:#03668e;
+  white-space:nowrap;
+}
+.metadata-explorer-related-link {
+  border:0;
+  padding: 3px 0;
+  background:none;
+  color:var(--md-typeset-a-color);
+  text-align:left;
+  font-size:13px;
+  font-weight:650;
+  overflow-wrap:anywhere;
+  cursor:pointer;
+}
 .metadata-explorer-related-link:hover { text-decoration:underline; }
-.metadata-explorer-related-note { grid-column:2; color:var(--md-default-fg-color--light); font-size:.7rem; }
-.metadata-explorer-reference-content { font-size:.82rem; }
-.metadata-explorer-loading { color: var(--md-default-fg-color--light); }
+.metadata-explorer-related-joins {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:flex-start;
+  gap:4px;
+  min-width:0;
+  padding-top:2px;
+}
+.metadata-explorer-related-joins code {
+  display:inline-block;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  font-size:12px;
+  line-height:1.45;
+  padding:2px 5px;
+  border-radius:3px;
+}
+.metadata-explorer-reference-content { font-size:13px; }
+.metadata-explorer-loading { color:var(--md-default-fg-color--light); }
 .metadata-explorer-details a { overflow-wrap:anywhere; }
-@media (max-width: 720px) {
-  .metadata-explorer-details { padding: 14px; }
-  .metadata-explorer-topbar { padding: .7rem; }
-  .metadata-explorer-hint { font-size: .72rem; }
-  .metadata-explorer-related { grid-template-columns: 1fr; }
+.metadata-explorer-tooltip {
+  position:fixed;
+  z-index:120;
+  box-sizing:border-box;
+  max-width:min(350px, calc(100vw - 20px));
+  padding:12px 14px;
+  border:1px solid var(--md-default-fg-color--lightest);
+  border-radius:8px;
+  background:var(--md-default-bg-color);
+  color:var(--md-default-fg-color);
+  box-shadow:0 5px 20px rgba(0,0,0,.15);
+  font-size:13px;
+  line-height:1.45;
+  pointer-events:none;
+}
+.metadata-explorer-tooltip[hidden] { display:none; }
+.metadata-explorer-tooltip strong { display:block; font-size:13px; margin-bottom:6px; }
+.metadata-explorer-tooltip p { font-size:12px; margin:5px 0; }
+.metadata-explorer-tooltip b { font-weight:700; }
+@media (max-width:720px) {
+  .metadata-explorer-details { padding:14px; }
+  .metadata-explorer-topbar { padding:.7rem; }
+  .metadata-explorer-hint { font-size:12px; }
+  .metadata-explorer-related-row {
+    grid-template-columns:46px minmax(0,1fr);
+    gap:5px 9px;
+  }
+  .metadata-explorer-related-joins { grid-column:2; }
 }
 
 /* The approved SVG owns all geometry and relationship ends. */
