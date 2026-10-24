@@ -31,6 +31,8 @@ via `pipeline_id` + `environment_name`
 
 **Implementation details:** Permanent UUIDv4 identity and environment-specific notebook bindings; registration never authorizes Live. A seeded Authority control row serializes binding transactions in this same table.
 
+**Implementation details:** Permanent UUIDv4 identity and environment-specific notebook bindings; registration never authorizes Live. A seeded Authority control row serializes binding transactions in this same table.
+
 ## Column summary
 
 | Column category | Count |
