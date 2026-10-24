@@ -54,9 +54,9 @@ def test_public_widget_displays_before_services_without_duplicate_reads(name, mo
         monkeypatch.setattr(module, "metadata_records", lambda table, **kw: read(table, [])())
         monkeypatch.setattr(module, "read_activation_state", read("activation", (None, {})))
         monkeypatch.setattr(module, "environment_activation", lambda *_: {"pipelines": {}, "tables": {}, "revision": 0})
-        state = module.widget_activate_pipeline(testing_results=[])
+        state = module.widget_activate_pipeline()
         root = state["widget"]
-        assert reads == ["METADATA_DATA_AGREEMENT", "activation"]
+        assert reads == ["METADATA_PIPELINE_RUN", "METADATA_DATA_AGREEMENT", "activation"]
     assert outputs[-1][1] is root
     assert root.startup_timings["metadata_loading"] >= 0
     assert "interactive_ready" not in root.startup_timings

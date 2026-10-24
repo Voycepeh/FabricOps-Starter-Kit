@@ -23,7 +23,7 @@ def runtime(monkeypatch):
     spark = SimpleNamespace(conf=SimpleNamespace(get=lambda key: 'test'))
     monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: (config, 'dev', context or {'config': config, 'env': 'dev'}))
     monkeypatch.setattr(shared, 'get_spark_session', lambda *args: spark)
-    monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kwargs: {})
+    monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kwargs: {'_workspace_id': 'workspace', '_notebook_id': 'notebook'})
     monkeypatch.setattr(shared, 'resolve_physical_table_identity', lambda config, env, **kwargs: {**kwargs, 'table_id': kwargs['table_name']})
     monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, **kwargs: {key: {'store': value['store'], 'table_name': value['table_name']} for key, value in identities.items()})
     monkeypatch.setattr(shared, 'load_table_guardrail_rules', lambda *args, **kwargs: [])
@@ -274,7 +274,7 @@ def test_closed_sessions_release_shutdown_callback(runtime, monkeypatch):
     unregister.assert_called_once_with(session.close)
 
 
-def test_finalization_retains_test_result_without_metadata_commits(runtime, monkeypatch):
+def test_finalization_commits_test_result_once(runtime, monkeypatch):
     from fabricops_kit import finalize_pipeline
     committed = []
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kwargs: committed.append(dict(row)))
@@ -285,8 +285,8 @@ def test_finalization_retains_test_result_without_metadata_commits(runtime, monk
     assert result['status'] == 'ungoverned_completed'
     assert json.loads(result['operation_summary_json'])['boundary_completed'] is True
     assert session.closed and not session.sources
-    assert len(committed) == 0
-    assert finalize_pipeline(session) == result and len(committed) == 0
+    assert len(committed) == 1
+    assert finalize_pipeline(session) == result and len(committed) == 1
     runtime.writes.assert_not_called()
 
 
@@ -344,7 +344,7 @@ def test_finalized_governed_test_can_build_new_activation_manifest(runtime, monk
     committed = []
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kwargs: committed.append(dict(row)))
     result = finalize_pipeline(session)
-    assert result['status'] == 'succeeded' and committed == []
+    assert result['status'] == 'succeeded' and len(committed) == 1
     agreement = {'agreement_id': 'agreement', 'agreement_version': '1.0.0',
                  'start_date': date.today().isoformat(), 'expiry_date': (date.today() + timedelta(days=30)).isoformat()}
     records = {'METADATA_PIPELINE_RUN': committed, 'METADATA_DATA_CONTRACT': [row],
@@ -354,8 +354,7 @@ def test_finalized_governed_test_can_build_new_activation_manifest(runtime, monk
     monkeypatch.setattr(shared, 'read_pipeline_registry', lambda **kwargs: ('token', [{'pipeline_id': result['pipeline_id'], 'environment_name': 'dev', 'registration_status': 'Active', 'workspace_id': 'workspace', 'notebook_id': 'notebook'}]))
     manifest = activation.tested_pipeline_manifest(testing_run_id=result['run_id'],
         candidate_fingerprint=result['candidate_fingerprint'], pipeline_name='Orders', pipeline_version='1',
-        agreement_id='agreement', agreement_version='1.0.0', testing_result=result,
-        testing_verification={'verified': True, 'reference': 'fabric-test-run'}, context={'config': {}, 'env': 'dev'})
+        agreement_id='agreement', agreement_version='1.0.0', context={'config': {}, 'env': 'dev', 'workspace_id': 'workspace'})
     assert manifest['testing_run_id'] == result['run_id']
     assert manifest['candidate']['pipeline_id'] == '8f32a471-6c91-4b7e-9d13-2f0c947eab52'
 
@@ -378,7 +377,7 @@ def test_failed_configuration_reload_closes_previous_execution(runtime, monkeypa
         shared.current_pipeline_session()
 
 
-def test_setup_and_finalization_display_the_registered_uuid(runtime, capsys):
+def test_setup_and_finalization_display_the_registered_uuid(runtime, capsys, monkeypatch):
     """The returned context and both notebook summaries expose the permanent ID."""
     from fabricops_kit import finalize_pipeline
     session = setup_pipeline(pipeline_mode='Test')
@@ -387,6 +386,7 @@ def test_setup_and_finalization_display_the_registered_uuid(runtime, capsys):
     assert f'Pipeline ID: {session.pipeline_id}' in output
     assert f'PIPELINE_ID = "{session.pipeline_id}"' in output
     assert 'Environment: dev' in output
+    monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda *args, **kwargs: None)
     finalize_pipeline(session)
     assert f'Pipeline ID: {session.pipeline_id}' in capsys.readouterr().out
     runtime.writes.assert_not_called()

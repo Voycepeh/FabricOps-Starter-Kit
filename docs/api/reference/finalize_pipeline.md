@@ -57,7 +57,7 @@ Required describes the Python signature. An optional parameter may still be need
 ## Returns
 
 dict
-    In-memory Test result or final Live METADATA_PIPELINE_RUN snapshot. Repeating with the same session
+    Final METADATA_PIPELINE_RUN snapshot. Repeating with the same session
     returns the original result without additional successful commits.
 
 ## Raises / Errors
@@ -78,9 +78,8 @@ current execution. Set failed=True when a project exception was caught.
 A successful Write or cell never completes the whole pipeline by itself.
 
 Test Read/Write operations do not commit business or operational metadata.
-Test results remain in memory, including at finalization. Pass the returned
-result to widget_activate_pipeline(testing_results=[pipeline_result]) for
-explicit governance review. Complete governed Testing can then be approved. Failed, partial and No Contract
+Explicit finalization commits the complete Test run and Guardrail results
+for Governance review. The activation widget reads these committed records. Complete governed Testing can then be approved. Failed, partial and No Contract
 runs cannot authorize activation. Live finalization releases its reservation
 after recording the final outcome. Interrupted runs remain incomplete.
 
@@ -93,9 +92,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/finalize_pipeline.py:9`
+`fabricops_kit/pipeline/finalize_pipeline.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L9-L63">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L10-L65">View on GitHub</a>
 </div>
 
 

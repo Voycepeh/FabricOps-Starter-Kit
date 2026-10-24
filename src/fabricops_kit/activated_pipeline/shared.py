@@ -58,10 +58,6 @@ def validate_manifest(row):
     for key in ("pipeline_id", "pipeline_name", "pipeline_version", "testing_run_id", "environment_name"):
         if manifest.get(key) != row[key]:
             raise ValueError("Activated Pipeline immutable identity mismatch.")
-    verification = manifest.get("testing_verification")
-    if (not isinstance(verification, dict) or verification.get("verified") is not True
-            or not isinstance(verification.get("reference"), str) or not verification["reference"].strip()):
-        raise ValueError("Activated Pipeline lacks independent Fabric Test execution verification.")
     candidate = manifest["candidate"]
     if manifest.get("physical_bindings") != candidate.get("physical_bindings"):
         raise ValueError("Activated Pipeline physical binding integrity mismatch.")
@@ -87,14 +83,11 @@ def validate_manifest(row):
 
 
 def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_name, pipeline_version,
-                             agreement_id, agreement_version, testing_result, testing_verification,
-                             context, spark_session=None):
-    """Revalidate explicit complete in-memory Testing before freezing approval."""
+                             agreement_id, agreement_version, context, spark_session=None):
+    """Revalidate committed complete Test evidence before freezing approval."""
     config, env, runtime = resolve_fabric_context(context=context)
     from fabricops_kit.pipeline.shared import read_pipeline_registry, validate_pipeline_id
-    run = dict(testing_result)
-    if run.get("run_id") != testing_run_id:
-        raise ValueError("Testing result does not match the selected run ID.")
+    run = exact_record(metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session), run_id=testing_run_id)
     validate_pipeline_id(run.get("pipeline_id"))
     _registry_token, registrations = read_pipeline_registry(context=context, spark_session=spark_session)
     registration = exact_record(registrations, pipeline_id=run["pipeline_id"], environment_name=env)
@@ -102,6 +95,8 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
         raise ValueError("Activation requires an Active Engineering registration.")
     if run.get("environment_name") != env:
         raise ValueError("Testing evidence must cover the activation environment; other environments are isolated.")
+    if not runtime.get("workspace_id") or run.get("_workspace_id") != runtime["workspace_id"]:
+        raise ValueError("Testing must cover the current activation workspace.")
     candidate = json.loads(run["candidate_json"])
     if candidate.get("pipeline_id") != run["pipeline_id"]:
         raise ValueError("Testing candidate Pipeline UUID mismatch.")
@@ -112,15 +107,8 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
         raise ValueError("Activation requires an exact frozen contract for every source and target. Missing contracts for table IDs: " + ", ".join(missing))
     if run.get("execution_mode") != "testing" or run.get("status") != "succeeded" or not run.get("completed_at"):
         raise ValueError("Activation requires a complete successful Testing run; Bootstrap and partial results cannot authorize it.")
-    binding = run.get("testing_notebook_binding")
-    if (not isinstance(binding, dict)
-            or not all(binding.get(key) for key in ("workspace_id", "notebook_id"))
-            or any(binding.get(key) != registration.get(key) for key in ("workspace_id", "notebook_id"))):
+    if any(run.get("_" + key) != registration.get(key) for key in ("workspace_id", "notebook_id")):
         raise ValueError("Testing was not run by the current registered notebook; rerun Test after rebinding.")
-    if (not isinstance(testing_verification, dict) or testing_verification.get("verified") is not True
-            or not isinstance(testing_verification.get("reference"), str)
-            or not testing_verification["reference"].strip()):
-        raise ValueError("Governance must independently verify the Fabric Test execution and supply its run reference.")
     summary = json.loads(run["operation_summary_json"])
     operations = summary["operations"]
     expected = {f"{role}:{item['participant']}" for item in candidate["participants"] for role in item["roles"]}
@@ -186,7 +174,8 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
     current, fingerprint, _bindings = pipeline_candidate(plan)
     if fingerprint != candidate_fingerprint or current != candidate:
         raise ValueError("Contracts or processing configuration differ from the tested candidate.")
-    diagnostics = list(run.get("guardrail_results", []))
+    diagnostics = [row for row in metadata_records("METADATA_GUARDRAIL_RESULTS", context=context, spark_session=spark_session)
+                   if row.get("run_id") == testing_run_id]
     if any(row.get("run_id") != testing_run_id for row in diagnostics):
         raise ValueError("Testing Guardrail diagnostics must reference the selected run.")
     if any(row.get("can_continue") is not True or row.get("execution_type") != "testing" for row in diagnostics):
@@ -220,8 +209,7 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
         raise ValueError("Pipeline name and version are required.")
     return {"format": "fabricops.activated-pipeline.v1", "pipeline_id": run["pipeline_id"], "environment_name": env,
             "pipeline_name": str(pipeline_name).strip(), "pipeline_version": str(pipeline_version).strip(),
-            "testing_run_id": testing_run_id, "testing_evidence": json.loads(json.dumps(run, default=lambda value: value.isoformat() if isinstance(value, date) else str(value))),
-            "testing_verification": {"verified": True, "reference": testing_verification["reference"].strip()},
+            "testing_run_id": testing_run_id, "testing_evidence": json.loads(json.dumps({**run, "guardrail_results": diagnostics}, default=lambda value: value.isoformat() if isinstance(value, date) else str(value))),
             "candidate": candidate, "physical_bindings": summary["physical_bindings"],
             "contracts": sorted(definitions, key=lambda item: item["participant"]),
             "agreement": agreement_definition(agreement),

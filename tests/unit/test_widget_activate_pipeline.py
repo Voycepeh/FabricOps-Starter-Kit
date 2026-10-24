@@ -17,13 +17,7 @@ def render(authority, monkeypatch):
     monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: ({}, "canary", authority.context))
     monkeypatch.setattr(module, "metadata_records", importlib.import_module("fabricops_kit.activated_pipeline.shared").metadata_records)
     monkeypatch.setattr(module, "read_activation_state", authority.read)
-    def render_widget(**kw):
-        widget = module.widget_activate_pipeline(testing_results=list(authority.saved.values()), context=authority.context, **kw)
-        for controls in widget['candidate_controls'].values():
-            controls['run_reference'].value = 'fabric-test-run'
-            controls['verified'].value = True
-        return widget
-    return render_widget
+    return lambda **kw: module.widget_activate_pipeline(context=authority.context, **kw)
 
 
 def test_single_pipeline_review_and_one_approval(authority, render):
@@ -40,26 +34,6 @@ def test_single_pipeline_review_and_one_approval(authority, render):
     assert widget["perform_activation"]()["pipelines"]["4c7ae400-85ab-4023-9427-e8fde20bd596"]["testing_run_id"] == run["run_id"]
 
 
-def test_governance_must_verify_the_fabric_run_before_review(authority, render):
-    _, run = authority.candidate()
-    widget = render()
-    controls = widget['candidate_controls'][run['run_id']]
-    controls['version'].value = '1'
-    controls['verified'].value = False
-    with pytest.raises(ValueError, match='independently verify'):
-        widget['review_release']()
-    controls['verified'].value = True
-    controls['run_reference'].value = ''
-    with pytest.raises(ValueError, match='run reference'):
-        widget['review_release']()
-    controls['run_reference'].value = 'fabric-test-run'
-    assert widget['review_release']()['ready']
-    assert 'fabric-test-run' in widget['details'].value
-    controls['run_reference'].value = 'another-run'
-    assert widget['activate'].disabled
-    assert not authority.current()['pipelines']
-
-
 def test_dependency_controls_show_missing_tests_and_coordinated_candidates(authority, render):
     _, a3 = authority.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596"); _, b3 = authority.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", roles=("source",))
     authority.approve(a3); authority.approve(b3)
@@ -68,14 +42,10 @@ def test_dependency_controls_show_missing_tests_and_coordinated_candidates(autho
     widget["run_select"].value = a4["run_id"]
     assert widget["additional_runs"].layout.display != "none"
     widget["candidate_controls"][a4["run_id"]]["version"].value = "4"
-    widget["candidate_controls"][a4["run_id"]]["run_reference"].value = "fabric-test-run"
-    widget["candidate_controls"][a4["run_id"]]["verified"].value = True
     report = widget["review_release"]()
     assert report["missing_pipelines"] == ["f5ee4669-5b76-4baf-9875-6cfecba2e031"] and not report["ready"]
     widget["additional_runs"].value = (b4["run_id"],)
     widget["candidate_controls"][b4["run_id"]]["version"].value = "4"
-    widget["candidate_controls"][b4["run_id"]]["run_reference"].value = "fabric-test-run"
-    widget["candidate_controls"][b4["run_id"]]["verified"].value = True
     assert widget["review_release"]()["ready"]
     widget["confirmed"].value = True
     result = widget["perform_activation"]()
@@ -191,14 +161,24 @@ def test_missing_coverage_notice_escapes_identifiers_and_handles_malformed_rows(
     assert module._missing_contracts(run) == []
 
 
-def test_testing_evidence_cannot_change_after_governance_review(authority, render):
-    """Approval must freeze exactly the reviewed input, including in-memory evidence."""
+def test_detached_widget_evidence_cannot_replace_committed_run(authority, render):
     _, run = authority.candidate()
     widget = render()
     widget['candidate_controls'][run['run_id']]['version'].value = '1'
     assert widget['review_release']()['ready']
     widget['confirmed'].value = True
-    widget['eligible_runs'][0]['started_at'] = 'changed after review'
-    with pytest.raises(ValueError, match='explicitly approve'):
+    widget['eligible_runs'][0]['status'] = 'failed'
+    assert widget['perform_activation']()['pipelines']
+    assert authority.saved[run['run_id']]['status'] == 'succeeded'
+
+
+def test_committed_failure_after_review_prevents_activation(authority, render):
+    _, run = authority.candidate()
+    widget = render()
+    widget['candidate_controls'][run['run_id']]['version'].value = '1'
+    assert widget['review_release']()['ready']
+    widget['confirmed'].value = True
+    authority.saved[run['run_id']]['status'] = 'failed'
+    with pytest.raises(ValueError, match='complete successful'):
         widget['perform_activation']()
     assert not authority.current()['pipelines']

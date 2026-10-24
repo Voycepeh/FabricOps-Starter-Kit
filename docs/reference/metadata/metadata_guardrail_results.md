@@ -1,6 +1,6 @@
 # METADATA_GUARDRAIL_RESULTS
 
-Summarizes the Guardrail checks from Live pipeline runs, including whether the pipeline could continue. It does not store failed business rows.
+Summarizes Guardrail checks from finalized Test runs and Live runs, including whether execution could continue. It does not store failed business rows.
 
 ## Writer functions
 
@@ -18,7 +18,7 @@ Summarizes the Guardrail checks from Live pipeline runs, including whether the p
 
 **Default physical schema:** `engineering`
 
-**Grain:** One saved Guardrail outcome for an exact Data Contract version during a Live run.
+**Grain:** One saved Guardrail outcome for an exact Data Contract version; Test outcomes are committed at explicit finalization.
 
 **Primary key:** `guardrail_result_id`
 
@@ -30,7 +30,7 @@ via `run_id`
 `METADATA_DATA_CONTRACT` **(N → 1)**
 via `contract_id` + `contract_version`
 
-**Implementation details:** Store aggregate Live Guardrail summaries for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.
+**Implementation details:** Store aggregate Guardrail summaries for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.
 
 ## Column summary
 

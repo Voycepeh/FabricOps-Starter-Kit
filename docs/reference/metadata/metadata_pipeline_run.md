@@ -1,6 +1,6 @@
 # METADATA_PIPELINE_RUN
 
-Records the outcome of each Live pipeline run, including its tables, operations, profiling results and warnings.
+Records explicitly finalized Test runs and Live execution outcomes, including their tables, operations, profiling results and warnings.
 
 ## Writer functions
 
@@ -16,7 +16,7 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One Live pipeline execution attempt. Test runs are not stored here.
+**Grain:** One explicitly finalized Test run or Live execution attempt.
 
 **Primary key:** `run_id`
 

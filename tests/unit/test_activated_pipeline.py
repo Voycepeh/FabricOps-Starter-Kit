@@ -85,11 +85,14 @@ def authority(runtime, monkeypatch, tmp_path):
         run.update(_workspace_id="workspace", _notebook_id="notebook")
         return plan, run
     def request(run, release=None):
-        return {"testing_result": run, "testing_run_id": run["run_id"], "candidate_fingerprint": run["candidate_fingerprint"],
+        return {"testing_run_id": run["run_id"], "candidate_fingerprint": run["candidate_fingerprint"],
                 "pipeline_name": run["pipeline_id"], "pipeline_version": release or run["run_id"],
-            "agreement_id": "agreement", "agreement_version": "1",
-            "testing_verification": {"verified": True, "reference": "fabric-test-run"}}
+            "agreement_id": "agreement", "agreement_version": "1"}
     def approve(*runs, env="canary"):
+        for run in runs:
+            run.setdefault("_workspace_id", "workspace")
+            run.setdefault("_notebook_id", "notebook")
+            saved[run["run_id"]] = run
         return service.approve_pipeline_release([request(run) for run in runs], expected_token=central["token"],
             governance_confirmed=True, context={**context, "env": env})
     def current(env="canary"):
@@ -154,20 +157,12 @@ def test_invalid_evidence_never_activates(authority, field, value):
     assert not state.current()["pipelines"]
 
 
-def test_unverified_handoff_and_previous_notebook_test_cannot_activate(authority):
+def test_previous_notebook_test_cannot_activate(authority):
     state = authority
     _, run = state.candidate()
-    request = state.request(run)
-    request["testing_verification"] = {"verified": False, "reference": "fabric-test-run"}
-    with pytest.raises(ValueError, match="independently verify"):
-        service.review_pipeline_release([request], context=state.context)
-    request["testing_verification"] = {"verified": True, "reference": ""}
-    with pytest.raises(ValueError, match="run reference"):
-        service.review_pipeline_release([request], context=state.context)
-    request = state.request(run)
-    run["testing_notebook_binding"]["notebook_id"] = "previous-notebook"
+    run["_notebook_id"] = "previous-notebook"
     with pytest.raises(ValueError, match="current registered notebook"):
-        service.review_pipeline_release([request], context=state.context)
+        service.review_pipeline_release([state.request(run)], context=state.context)
 
 
 def test_affected_failed_evidence_blocks_entire_release(authority):
