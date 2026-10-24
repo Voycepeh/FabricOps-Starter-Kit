@@ -247,6 +247,25 @@ METADATA_TABLE_MODELS = {
     },
 }
 
+# Public entrypoints known to cause persisted metadata writes. Some entrypoints
+# delegate the physical Delta write to internal helpers. Keep this separate from
+# per-column provenance; do not list read-only access resolution as a writer.
+METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
+    "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
+    "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
+    "METADATA_DATA_CONTRACT": ["widget_data_contract"],
+    "METADATA_ACTIVATION_STATE": ["widget_activate_pipeline", "setup_pipeline", "finalize_pipeline"],
+    "METADATA_PIPELINE_REGISTRY": ["setup_pipeline"],
+    "METADATA_PIPELINE_RUN": ["finalize_pipeline"],
+    "METADATA_DATA_CATALOGUE": ["orchestrate_read", "orchestrate_write", "profile_table"],
+    "METADATA_DATA_PROFILED": ["orchestrate_read", "orchestrate_write", "profile_table"],
+    "METADATA_DATA_PROFILED_FREQUENCY": ["orchestrate_read", "orchestrate_write", "profile_table"],
+    "METADATA_DATA_LINEAGE": ["orchestrate_read", "orchestrate_write", "pipeline_read"],
+    "METADATA_SOURCE_OBSERVATION": ["orchestrate_read", "orchestrate_write"],
+    "METADATA_GUARDRAIL_RESULTS": ["orchestrate_read", "orchestrate_write"],
+    "METADATA_DATA_ACCESS": ["scan_workspace_access", "scan_onelake_access", "scan_sql_access"],
+}
+
 METADATA_REFERENCE_ORDER = [
     "METADATA_PIPELINE_REGISTRY",
     "METADATA_PIPELINE_RUN",
