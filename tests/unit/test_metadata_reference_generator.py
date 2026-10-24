@@ -187,6 +187,7 @@ def test_metadata_explorer_payload_matches_canonical_model(tmp_path, monkeypatch
     assert match is not None
     payload = json.loads(match.group(1))
     assert set(payload) == {name.removeprefix("METADATA_") for name in CANONICAL_METADATA_TABLES}
+    public_names = generator.public_callable_names()
     for name, model in METADATA_TABLE_MODELS.items():
         entry = payload[name.removeprefix("METADATA_")]
         assert entry["purpose"] == model["purpose"]
@@ -266,3 +267,24 @@ def test_audited_metadata_writers_cover_all_tables() -> None:
     assert set(METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_DATA_ACCESS"]) == {
         "scan_workspace_access", "scan_onelake_access", "scan_sql_access"
     }
+
+
+def test_metadata_explorer_full_text_and_prominent_navigation() -> None:
+    """Full table descriptions remain readable and the architecture map is discoverable."""
+    from pathlib import Path
+
+    root = Path(__file__).parents[2]
+    script = (root / "docs/javascripts/metadata-explorer.js").read_text(encoding="utf-8")
+    styles = (root / "docs/stylesheets/metadata-explorer.css").read_text(encoding="utf-8")
+    homepage = (root / "docs/index.md").read_text(encoding="utf-8")
+    how_it_works = (root / "docs/how-fabricops-works.md").read_text(encoding="utf-8")
+
+    assert 'description.textContent = model.purpose' in script
+    assert 'escapeHtml(model.purpose || status || "")' in script
+    assert 'brief(model.purpose' not in script
+    assert 'One row represents' in script
+    assert 'overflow-wrap: anywhere;' in styles
+    assert 'width: min(430px' in styles
+    assert 'Explore the interactive Metadata Tables map' in homepage
+    assert 'Explore the interactive Metadata Tables map' in how_it_works
+    assert "[Explore the interactive Metadata Tables map" in homepage
