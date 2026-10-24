@@ -37,7 +37,7 @@ The notebook follows one visible lifecycle:
 
 | Notebook section | What happens |
 | --- | --- |
-| Environment | Loads the shared Fabric configuration and imports the public functions used by the pipeline. |
+| Environment | Imports the public APIs; `setup_pipeline()` loads workspace configuration in the following block. |
 | Setup Pipeline | Initializes context and resolves environment authority. |
 | Data Contract Configuration | Defaults to interactive **Testing**; choose a frozen version or No Contract independently for each participant. |
 | Governed Read | Reads each configured source and runs the applicable source checks. |
@@ -48,13 +48,9 @@ The notebook follows one visible lifecycle:
 
 The template starts with one Read, one transformation, and one Write. Add more Read or Write blocks only when your pipeline needs them.
 
-### Load workspace configuration
-
-The Setup Pipeline block below loads `00_env_config` from the current workspace, resolves the environment and configured stores, and captures notebook identity. To use a shared deployment in another workspace, pass `config_workspace_id` to `setup_pipeline()`.
-
 ### Import required pipeline functions
 
-Then run the import cell immediately below it. The import cell provides the public APIs used by that notebook, so its exact list can vary by demo.
+Run the Environment import cell first. The notebook does not need a separate configuration-loading code cell. The following Setup Pipeline block calls `setup_pipeline()`, which loads `00_env_config` from the current workspace. For shared deployments, optionally pass `config_workspace_id`; the import list can vary by demo.
 
 ![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
 
@@ -63,11 +59,15 @@ Then run the import cell immediately below it. The import cell provides the publ
 ```python
 PIPELINE_ID = "02_pipeline"
 PIPELINE_MODE = "Test"  # Test or Live
-CONTRACTS = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode=PIPELINE_MODE)
+CONTRACTS = setup_pipeline(
+    pipeline_id=PIPELINE_ID,
+    pipeline_mode=PIPELINE_MODE,
+    # Optional shared config: config_workspace_id="<configuration-workspace-id>",
+)
 ```
 
 
-Supply a stable `pipeline_id` and external transformation configuration. FabricOps governs Data Contracts; Engineering and Microsoft Fabric own code integrity and deployment. Explicit real Testing writes require reviewed safe destinations; they can produce real data and ordinary metadata side effects. Headless Testing sets `interactive=False` and may supply saved exact selections. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
+Supply a stable `pipeline_id`. In Test, Read and Write do not publish business or operational metadata; finalize publishes the Test review outcome. FabricOps governs Data Contracts; Engineering and Microsoft Fabric own code integrity and deployment. Explicit real Testing writes require reviewed safe destinations; they can produce real data and ordinary metadata side effects. Headless Testing sets `interactive=False` and may supply saved exact selections. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
