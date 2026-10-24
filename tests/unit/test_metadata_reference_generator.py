@@ -75,6 +75,11 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         assert f">{table_name}</a>" in first_landing
         page = first_pages[f"{slug}.md"]
         assert "## Writer functions" in page
+        writer_section = page.split("## Writer functions", 1)[1].split(
+            "## Used in Workflow Template", 1
+        )[0]
+        assert "No public writer function" not in writer_section
+        assert "../../api/reference/" in writer_section
         assert page.index("## Writer functions") < page.index("## Model")
         assert "## Used in Workflow Template" in page
         assert page.index("## Used in Workflow Template") < page.index("## Model")
