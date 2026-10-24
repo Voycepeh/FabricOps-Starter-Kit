@@ -287,3 +287,104 @@
   outline: 2px dashed #1168b6;
   outline-offset: 3px;
 }
+
+
+/* Preview cards link to the full interactive metadata explorer rather than
+   loading the diagram twice. Shared by Home and How FabricOps Works. */
+.md-typeset .fabricops-metadata-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, 34%);
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+  margin: 0.65rem 0 1.25rem;
+  padding: 0.95rem 1.05rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.65rem;
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  text-decoration: none;
+  box-shadow: 0 0.1rem 0.35rem rgba(0,0,0,.035);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.md-typeset .fabricops-metadata-preview:hover,
+.md-typeset .fabricops-metadata-preview:focus-visible {
+  border-color: var(--md-primary-fg-color);
+  box-shadow: 0 0.2rem 0.65rem rgba(0,0,0,.075);
+}
+.md-typeset .fabricops-metadata-preview:focus-visible {
+  outline: 2px solid var(--md-primary-fg-color);
+  outline-offset: 2px;
+}
+.fabricops-metadata-preview__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+.fabricops-metadata-preview__eyebrow {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--md-default-fg-color--light);
+}
+.fabricops-metadata-preview__title {
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.3;
+  color: var(--md-default-fg-color);
+}
+.fabricops-metadata-preview__description {
+  font-size: .78rem;
+  line-height: 1.5;
+  color: var(--md-default-fg-color--light);
+}
+.fabricops-metadata-preview__action {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  margin-top: .25rem;
+  font-size: .78rem;
+  font-weight: 750;
+  color: var(--md-primary-fg-color);
+}
+.fabricops-metadata-preview__image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 9rem;
+  overflow: hidden;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: .4rem;
+  background: #fff;
+}
+.md-typeset .fabricops-metadata-preview__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: .12rem;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
+}
+.md-typeset .fabricops-metadata-preview--compact {
+  margin-top: .75rem;
+  padding: .8rem .95rem;
+}
+.fabricops-metadata-preview--compact .fabricops-metadata-preview__image { height: 7.5rem; }
+@media (max-width: 600px) {
+  .md-typeset .fabricops-metadata-preview {
+    grid-template-columns: minmax(0, 1fr) 7rem;
+    gap: .7rem;
+    padding: .75rem;
+  }
+  .fabricops-metadata-preview__image,
+  .fabricops-metadata-preview--compact .fabricops-metadata-preview__image { height: 6rem; }
+  .fabricops-metadata-preview__title { font-size: .86rem; }
+  .fabricops-metadata-preview__description { font-size: .72rem; }
+}
