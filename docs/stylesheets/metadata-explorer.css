@@ -161,7 +161,7 @@
 .metadata-explorer-related { display: grid; gap: 0; padding: 0; }
 .metadata-explorer-related-row {
   display: grid;
-  grid-template-columns: 46px minmax(140px, 195px) minmax(0, 1fr);
+  grid-template-columns: 94px minmax(140px, 195px) minmax(0, 1fr);
   gap: 9px 12px;
   align-items: start;
   border-bottom: 1px solid var(--md-default-fg-color--lightest);
@@ -171,6 +171,9 @@
 .metadata-explorer-related-row:last-child { border-bottom: none; }
 .metadata-explorer-cardinality-text {
   display: inline-flex;
+  box-sizing: border-box;
+  max-width: 100%;
+  justify-self: start;
   align-items: center;
   justify-content: center;
   padding: 3px 6px;
@@ -180,6 +183,16 @@
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
+}
+/* A JSON/conceptual reference has no physical row cardinality: don't style
+   it as if it were a 1:N or N:1 key constraint. */
+.metadata-explorer-reference-label {
+  border: 0;
+  border-radius: 0;
+  padding: 3px 0;
+  color: var(--md-default-fg-color--light);
+  font-weight: 600;
+  justify-content: flex-start;
 }
 .metadata-explorer-related-link {
   border: none;
@@ -264,7 +277,7 @@
 @media(max-width: 720px) {
   .metadata-explorer-details { padding: 14px; }
   .metadata-explorer-detail-facts { grid-template-columns: minmax(0,1fr); }
-  .metadata-explorer-related-row { grid-template-columns: 46px minmax(0,1fr); }
+  .metadata-explorer-related-row { grid-template-columns: 94px minmax(0,1fr); }
   .metadata-explorer-related-joins { grid-column: 2; }
 }
 
