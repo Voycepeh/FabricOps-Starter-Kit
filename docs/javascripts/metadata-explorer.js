@@ -300,7 +300,7 @@
         '<span class="metadata-explorer-schema-tag ' + schema + '">' + escapeHtml(schema) + '</span>' +
         '<h3>METADATA_' + escapeHtml(title) + '</h3>' +
         '</div><span class="metadata-explorer-state">' + escapeHtml(status || "") + '</span></div>' +
-        '<p class="metadata-explorer-purpose">' + escapeHtml(model.purpose || status || "") + '</p>' +
+        '<p class="metadata-explorer-purpose">' + escapeHtml(brief(model.purpose || status || "")) + '</p>' +
         '<div class="metadata-explorer-detail-facts">' +
         '<span><strong>Grain</strong> ' + escapeHtml(model.grain || "See reference model") + '</span>' +
         '<span><strong>PK</strong> <code>' + escapeHtml((model.primary_key || pk).join(" · ")) + '</code></span>' +
@@ -326,9 +326,9 @@
         const sections = await loadReference(url);
         if (activeSelection !== selectionId) return;
         content.innerHTML = "";
-        sections.filter(section => section.heading !== "Overview").forEach(section =>
-          content.appendChild(sectionDetails(section))
-        );
+        sections.filter(section =>
+          section.heading !== "Overview" || String(model.purpose || "").length > 165
+        ).forEach(section => content.appendChild(sectionDetails(section)));
       } catch (_error) {
         if (activeSelection !== selectionId) return;
         content.innerHTML = '<p>Could not load the detailed reference. ' +
