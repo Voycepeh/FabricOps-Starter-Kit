@@ -4402,6 +4402,21 @@ def render_metadata_reference_index(
     table_purposes: dict[str, str],
 ) -> str:
     """Render a compact interactive metadata map instead of redundant full table cards."""
+    # Keep browser tooltips and join-key summaries on the same canonical
+    # model as the generated physical-table reference pages.
+    explorer_models = {
+        name.removeprefix("METADATA_"): {
+            "purpose": table_purposes.get(name) or table_models[name]["purpose"],
+            "grain": table_models[name]["grain"],
+            "primary_key": table_models[name]["primary_key"],
+            "foreign_keys": table_models[name]["foreign_keys"],
+        }
+        for name in reference_order
+    }
+    # JSON is embedded as inert data, never executed as JavaScript.
+    explorer_json = json.dumps(explorer_models, ensure_ascii=True, sort_keys=True).replace(
+        "<", "\\u003c"
+    )
     lines = [
         "# List of Metadata Tables",
         "",
@@ -4410,6 +4425,9 @@ def render_metadata_reference_index(
         "## Metadata relationships",
         "",
         '<div class="fabricops-metadata-explorer" data-metadata-explorer>',
+        '  <script type="application/json" class="metadata-explorer-model">',
+        explorer_json,
+        "  </script>",
         '  <nav class="metadata-explorer-fallback" aria-label="Metadata table references">',
     ]
     # Progressive enhancement: links remain navigable when JavaScript is unavailable.
