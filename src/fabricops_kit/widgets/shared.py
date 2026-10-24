@@ -10,6 +10,9 @@ from dataclasses import dataclass, field as dataclass_field
 from datetime import date, datetime, timezone
 import hashlib
 import json
+import logging
+from contextlib import contextmanager
+from time import perf_counter
 from typing import Any, Iterable, Mapping
 import uuid
 
@@ -71,6 +74,8 @@ _FORM_STYLE = """<style>
     padding:16px 20px; color:var(--form-text);
 }
 .fabricops-form .fabricops-page-title { font-size:21px; font-weight:650; line-height:1.3; }
+.fabricops-form.fabricops-started .fabricops-page-title { display:none; }
+.fabricops-form.fabricops-started .fabricops-page-header { background:transparent; border:0; padding:0; }
 .fabricops-form .fabricops-page-description { color:#526477; margin-top:5px; max-width:80ch; }
 .fabricops-form .fabricops-section {
     background:#fff; border:1px solid var(--form-border) !important; border-radius:8px;
@@ -212,6 +217,91 @@ def form_page(widgets: Any, *, title: str, description: str, children: Iterable[
         add_class("fabricops-form")
         add_class("fabricops-governance" if tone == "governance" else "fabricops-engineering")
     return page
+
+
+class WidgetStartup:
+    """Publish plain HTML before blocking I/O, independently of widget comms.
+
+    Timings describe kernel milestones, not browser paint. A frontend view-count
+    acknowledgement records readiness separately when the widget manager supports it.
+    Spark always remains on the calling notebook thread.
+    """
+
+    def __init__(self, title: str, *, tone: str = "governance"):
+        """Submit the themed banner and initial loading state as ordinary HTML."""
+        from IPython import display as ip
+
+        self.ip = ip
+        self.title = title
+        self.started = perf_counter()
+        self.timings: dict[str, float] = {}
+        self.phase_elapsed = 0.0
+        self.logger = logging.getLogger(__name__)
+        self.display_id = "fabricops-startup-" + uuid.uuid4().hex
+        self.html_available = callable(getattr(ip, "HTML", None))
+        accent, tint = ("#6750a4", "#f1edf8") if tone == "governance" else ("#0f6cbd", "#eaf3fb")
+        self.banner = (
+            '<div style="font:13px/1.5 Segoe UI,Arial,sans-serif;color:#243449;'
+            f'background:{tint};border-left:4px solid {accent};padding:16px 20px;border-radius:6px">'
+            f'<div style="font-size:21px;font-weight:650">{_html_escape(title)}</div></div>'
+        )
+        if self.html_available:
+            ip.display(ip.HTML(self.banner), display_id=self.display_id + "-banner")
+            ip.display(ip.HTML('<p role="status" aria-live="polite">Initializing FabricOps…</p>'),
+                       display_id=self.display_id)
+        self.mark("first_display_submitted")
+
+    def mark(self, name: str) -> None:
+        """Record an elapsed kernel milestone without claiming frontend paint."""
+        self.timings[name] = perf_counter() - self.started
+        self.logger.info("FabricOps startup %s: %s=%.3fs", self.title, name, self.timings[name])
+
+    @contextmanager
+    def phase(self, name: str, message: str):
+        """Time one synchronous stage and retain actionable failure output."""
+        began = perf_counter()
+        if self.html_available:
+            self.ip.update_display(self.ip.HTML(f'<p role="status">{_html_escape(message)}</p>'),
+                                   display_id=self.display_id)
+        try:
+            yield
+        except BaseException:
+            if self.html_available:
+                self.ip.update_display(self.ip.HTML(
+                    '<p role="alert">Unable to load ' + _html_escape(self.title)
+                    + '. Check the active FabricOps configuration, Metadata store access and Spark session, '
+                    'then rerun this cell. The original error is reported below.</p>'), display_id=self.display_id)
+            self.mark("failed")
+            raise
+        finally:
+            elapsed = perf_counter() - began
+            self.phase_elapsed += elapsed
+            self.timings[name] = self.timings.get(name, 0.0) + elapsed
+            self.logger.info("FabricOps startup %s: %s=%.3fs", self.title, name, self.timings[name])
+
+    def display(self, root: Any) -> None:
+        """Populate the output once; keep the already visible banner in place."""
+        self.timings["widget_construction"] = max(0.0, perf_counter() - self.started
+            - self.phase_elapsed - self.timings["first_display_submitted"])
+        self.mark("controls_constructed")
+        if self.html_available:
+            # The static banner does not depend on widget-model creation. Keep the
+            # canonical header in the returned page, but hide its duplicate view.
+            root.add_class("fabricops-started")
+            if hasattr(root, "_view_count"):
+                root._view_count = 0
+
+                def viewed(change):
+                    if change["new"] and "interactive_ready" not in self.timings:
+                        self.mark("interactive_ready")
+                        root.unobserve(viewed, names="_view_count")
+
+                root.observe(viewed, names="_view_count")
+            self.ip.update_display(root, display_id=self.display_id)
+        else:
+            self.ip.display(root)
+        root.startup_timings = self.timings
+        self.mark("form_display_submitted")
 
 
 def status_message(widgets: Any) -> Any:
@@ -784,8 +874,8 @@ def list_data_stewards(config: Any, env: str, *, spark_session: Any = None, acti
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     try:
         rows = read_lakehouse_table(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), store="Metadata", schema=metadata_schema, spark_session=spark_session, context={"config": config, "env": env})
-    except Exception:
-        if missing_ok:
+    except Exception as exc:
+        if missing_ok and _is_table_not_found_error(exc):
             return []
         raise
     latest = _latest_by_key(rows, "steward_id")
@@ -846,8 +936,8 @@ def list_all_data_agreement_rows(config: Any, env: str, *, spark_session: Any = 
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     try:
         rows = read_lakehouse_table(str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), store="Metadata", schema=metadata_table_physical_schema(config, DATA_AGREEMENT_TABLE), context={"config": config, "env": env}, spark_session=spark_session)
-    except Exception:
-        if missing_ok:
+    except Exception as exc:
+        if missing_ok and _is_table_not_found_error(exc):
             return []
         raise
     return _coerce_row_dicts(rows)

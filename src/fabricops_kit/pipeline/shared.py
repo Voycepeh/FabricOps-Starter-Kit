@@ -6215,49 +6215,57 @@ def current_pipeline_session():
 def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None, config_workspace_id=None):
     """Resolve runtime services and install conservative notebook lifecycle reporting."""
     import atexit
+    from contextlib import nullcontext
+    try:
+        from IPython import get_ipython
+    except ModuleNotFoundError as exc:
+        if exc.name != "IPython":
+            raise
+        shell = None
+    else:
+        shell = get_ipython()
+    startup = None
+    if shell is not None:
+        from fabricops_kit.widgets.shared import WidgetStartup
+        startup = WidgetStartup("Pipeline execution", tone="engineering")
     from types import MappingProxyType
     from fabricops_kit.config.shared import resolve_runtime_context
     previous = _ACTIVE_PIPELINE.get()
     if previous is not None and previous.owns_current_execution():
         previous.close()
-    context = initialize_notebook(config_workspace_id=config_workspace_id)
-    if pipeline_id is None:
-        pipeline_id = context.notebook_name
-        if not pipeline_id:
-            raise ValueError("pipeline_id is required when the current notebook name is unavailable.")
-    config, env, runtime = resolve_fabric_context()
-    runtime = {**runtime, **{key: value for key, value in resolve_runtime_context(context=runtime).items() if value is not None},
-               "config": config, "env": env}
-    spark = get_spark_session()
-    if pipeline_mode == "Live":
-        from fabricops_kit.activated_pipeline.shared import build_live_pipeline_plan
-        plan = build_live_pipeline_plan(pipeline_id=pipeline_id, context=runtime, spark_session=spark)
-    else:
-        plan = PipelineExecutionPlan("testing", env, str(runtime.get("notebook_id") or ""), str(uuid4()),
-            "{}", "{}", "{}", MappingProxyType({**runtime, "_pipeline_spark": spark, "_pipeline_bindings": {}}),
-            pipeline_id=pipeline_id)
-        plan.evidence["dynamic_participants"] = True
+    with startup.phase("initialization", "Initializing FabricOps configuration…") if startup else nullcontext():
+        context = initialize_notebook(config_workspace_id=config_workspace_id)
+        if pipeline_id is None:
+            pipeline_id = context.notebook_name
+            if not pipeline_id:
+                raise ValueError("pipeline_id is required when the current notebook name is unavailable.")
+        config, env, runtime = resolve_fabric_context()
+        runtime = {**runtime, **{key: value for key, value in resolve_runtime_context(context=runtime).items() if value is not None},
+                   "config": config, "env": env}
+    with startup.phase("spark_loading", "Resolving the Spark session…") if startup else nullcontext():
+        spark = get_spark_session()
+    with startup.phase("metadata_loading", "Resolving the execution plan…") if startup else nullcontext():
+        if pipeline_mode == "Live":
+            from fabricops_kit.activated_pipeline.shared import build_live_pipeline_plan
+            plan = build_live_pipeline_plan(pipeline_id=pipeline_id, context=runtime, spark_session=spark)
+        else:
+            plan = PipelineExecutionPlan("testing", env, str(runtime.get("notebook_id") or ""), str(uuid4()),
+                "{}", "{}", "{}", MappingProxyType({**runtime, "_pipeline_spark": spark, "_pipeline_bindings": {}}),
+                pipeline_id=pipeline_id)
+            plan.evidence["dynamic_participants"] = True
     session = PipelineSession(plan, spark, inspector=inspector)
     try:
-        try:
-            from IPython import get_ipython
-        except ModuleNotFoundError as exc:
-            if exc.name != "IPython":
-                raise
-            shell = None
-        else:
-            shell = get_ipython()
         if shell is not None:
-            from IPython import display as ip
             from fabricops_kit.widgets.shared import require_ipywidgets, form_page
             widgets = require_ipywidgets()
             session.report = widgets.HTML()
             children = [session.report]
             if pipeline_mode == "Test":
-                rows = read_lakehouse_table("METADATA_DATA_CONTRACT", store="Metadata",
-                    schema=metadata_table_physical_schema(config, "METADATA_DATA_CONTRACT"),
-                    spark_session=spark, context=runtime).collect()
-                session.frozen_rows = [_row_to_dict(row) for row in rows if str(_row_to_dict(row).get("status", "")).lower() == "frozen"]
+                with startup.phase("metadata_loading", "Loading frozen Data Contracts…"):
+                    rows = read_lakehouse_table("METADATA_DATA_CONTRACT", store="Metadata",
+                        schema=metadata_table_physical_schema(config, "METADATA_DATA_CONTRACT"),
+                        spark_session=spark, context=runtime).collect()
+                    session.frozen_rows = [_row_to_dict(row) for row in rows if str(_row_to_dict(row).get("status", "")).lower() == "frozen"]
                 for table_id in sorted({row["table_id"] for row in session.frozen_rows}):
                     versions = [row for row in session.frozen_rows if row["table_id"] == table_id]
                     options = [("No Contract", "")] + [(f"{row.get('contract_name') or row['contract_id']} · v{row['contract_version']}",
@@ -6279,14 +6287,16 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None, config
                     control.observe(change, names="value")
                     session.controls.append(control)
                     children.extend([control, detail])
-            root = form_page(widgets, title="Pipeline execution", description="Review contracts and execution outcomes.", children=children)
+            root = form_page(widgets, title="Pipeline execution", description="", children=children)
             root.layout.height = "auto"
-            ip.display(root)
+            startup.display(root)
             session.shell = shell
             shell.events.register("post_run_cell", session.cell_completed)
         _ACTIVE_PIPELINE.set(session)
         atexit.register(session.close)
         session.refresh()
+        if startup:
+            session.startup_timings = startup.timings
         return session
     except BaseException:
         session.close(failed=True)

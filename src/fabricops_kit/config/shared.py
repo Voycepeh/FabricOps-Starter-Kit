@@ -1043,31 +1043,51 @@ def _print_notebook_setup_summary(
     """Show resolved startup details in the calling notebook output."""
     from fabricops_kit import __version__
 
-    print(f"FabricOps v{__version__}")
-    print("Docs, examples, releases & support:")
-    print("https://github.com/Voycepeh/FabricOps-Starter-Kit")
+    lines = [f"FabricOps v{__version__}"]
+    lines.append("Docs, examples, releases & support:")
+    lines.append("https://github.com/Voycepeh/FabricOps-Starter-Kit")
     caller_workspace = str(context.runtime_metadata.get("workspace_id") or "").strip().lower()
     if config_workspace_id is not None:
         location = "same-workspace" if config_workspace_id == caller_workspace else "cross-workspace"
-        print(f"Configuration: 00_env_config ({location}; workspace: {config_workspace_id})")
+        lines.append(f"Configuration: 00_env_config ({location}; workspace: {config_workspace_id})")
     else:
-        print("Configuration: explicit configuration")
-    print(f"Caller workspace: {context.workspace_name or 'unknown'} ({caller_workspace or 'unknown'})")
-    print(f"Notebook: {context.notebook_name or 'unknown'}")
-    print(f"Run ID: {context.run_id}")
-    print(f"Environment: {context.environment}")
-    print(f"Audit timezone: {config.audit_timezone}")
-    print(f"Metadata schemas: governance={config.governance_metadata_schema}, engineering={config.engineering_metadata_schema}")
-    print("Targets:")
+        lines.append("Configuration: explicit configuration")
+    lines.append(f"Caller workspace: {context.workspace_name or 'unknown'} ({caller_workspace or 'unknown'})")
+    lines.append(f"Notebook: {context.notebook_name or 'unknown'}")
+    lines.append(f"Run ID: {context.run_id}")
+    lines.append(f"Environment: {context.environment}")
+    lines.append(f"Audit timezone: {config.audit_timezone}")
+    lines.append(f"Metadata schemas: governance={config.governance_metadata_schema}, engineering={config.engineering_metadata_schema}")
+    lines.append("Targets:")
     for key, store in context.paths.items():
         schema = store.schema if store.schema_enabled else "disabled"
-        print(f"- {key}: {store.name or key} ({store.kind}; schema: {schema}; workspace: {store.workspace_id})")
+        lines.append(f"- {key}: {store.name or key} ({store.kind}; schema: {schema}; workspace: {store.workspace_id})")
     if not context.paths:
-        print("- None requested")
-    print(f"Readiness: {context.readiness_status}")
+        lines.append("- None requested")
+    lines.append(f"Readiness: {context.readiness_status}")
     for check in context.validation_results:
         if check.status != "pass":
-            print(f"- {check.status}: {check.name}: {check.message}")
+            lines.append(f"- {check.status}: {check.name}: {check.message}")
+
+    try:
+        from IPython import get_ipython, display as ip
+    except ModuleNotFoundError:
+        shell = None
+    else:
+        shell = get_ipython()
+    if shell is None:
+        print("\n".join(lines))
+        return
+    from html import escape
+
+    ip.display(ip.HTML(
+        '<div style="font:13px/1.5 Segoe UI,Arial,sans-serif;color:#243449;'
+        'background:#eaf3fb;border-left:4px solid #0f6cbd;border-radius:6px;padding:16px 20px">'
+        f'<div style="font-size:21px;font-weight:650">{escape(lines[0])}</div>'
+        '<a href="https://github.com/Voycepeh/FabricOps-Starter-Kit">Docs, examples, releases &amp; support</a>'
+        '<div style="white-space:pre-wrap;margin-top:8px">'
+        + escape("\n".join(lines[3:])) + '</div></div>'
+    ))
 
 
 def _get_fabric_runtime_context() -> tuple[Any, str]:

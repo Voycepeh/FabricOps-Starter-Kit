@@ -101,9 +101,9 @@ appends one complete agreement row only after final validation.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_render_data_agreement.py:44`
+`fabricops_kit/widgets/widget_render_data_agreement.py:45`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L44-L489">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L45-L493">View on GitHub</a>
 </div>
 
 
@@ -119,7 +119,7 @@ appends one complete agreement row only after final validation.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 62 |
+| Live-critical dependencies | 63 |
 
 ### Release history
 
@@ -158,6 +158,7 @@ appends one complete agreement row only after final validation.
 <li><code>fabricops_kit.widgets.shared._audit_date</code></li>
 <li><code>fabricops_kit.widgets.shared._coerce_row_dicts</code></li>
 <li><code>fabricops_kit.widgets.shared._html_escape</code></li>
+<li><code>fabricops_kit.widgets.shared._is_table_not_found_error</code></li>
 <li><code>fabricops_kit.widgets.shared._latest_by_key</code></li>
 <li><code>fabricops_kit.widgets.shared._parse_agreement_version</code></li>
 <li><code>fabricops_kit.widgets.shared.action_row</code></li>

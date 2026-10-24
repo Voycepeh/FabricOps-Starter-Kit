@@ -11,6 +11,7 @@ import uuid
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.widgets.shared import (
+    WidgetStartup,
     DATA_AGREEMENT_TABLE,
     DATA_AGREEMENT_VISIBLE_FIELDS,
     FIELD_LABELS,
@@ -75,9 +76,10 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     >>> state = widget_render_data_agreement(spark=spark)
 
     """
-    config, env, _context = resolve_fabric_context(context=context)
+    startup = WidgetStartup("Data Agreement")
+    with startup.phase("initialization", "Resolving FabricOps configuration…"):
+        config, env, _context = resolve_fabric_context(context=context)
     widgets = require_ipywidgets()
-    from IPython import display as ip
 
     kind = "data_agreement_widget"
     widget_config = {**WIDGET_CONFIG_DEFAULTS[kind], **dict(config_value(config, kind, {}) or {})}
@@ -98,9 +100,10 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         row_lookup.clear()
         row_lookup.update({_row_id(row): row for row in rows if _row_id(row)})
 
-    existing_rows = [
-        row for row in list_data_agreements(config, env, spark_session=spark, missing_ok=True) if _row_id(row)
-    ]
+    with startup.phase("metadata_loading", "Loading configured metadata…"):
+        existing_rows = [
+            row for row in list_data_agreements(config, env, spark_session=spark, missing_ok=True) if _row_id(row)
+        ]
     _refresh_lookup(existing_rows)
     selected_selector = render_searchable_selector(
         widgets=widgets,
@@ -115,7 +118,8 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     )
     selected = selected_selector["selector"]
 
-    active_steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
+    with startup.phase("metadata_loading", "Loading Data Stewards…"):
+        active_steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
     active_steward_ids = {
         steward_id for row in active_steward_rows if (steward_id := str(row.get("steward_id") or "").strip())
     }
@@ -463,7 +467,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         ),
         children=[form_flow, actions],
     )
-    ip.display(container)
+    startup.display(container)
     return {
         "container": container,
         "draft": draft,

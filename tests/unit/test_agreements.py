@@ -64,6 +64,7 @@ def test_agreement_metadata_schemas_and_widget_fields_keep_only_supported_busine
 
 def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypatch):
     """Verify steward and agreement create update write append only metadata."""
+    monkeypatch.setattr(agreement_widget, "list_all_data_agreement_rows", lambda *a, **kw: [])
     audit_columns = agreement.STANDARD_RUNTIME_AUDIT_COLUMNS
     writes = []
 
@@ -202,6 +203,7 @@ def test_agreement_two_party_append_only_identity_and_no_change(monkeypatch):
 )
 def test_agreement_requires_two_different_active_stewards(monkeypatch, overrides, message):
     """Require distinct active stewards in both agreement roles."""
+    monkeypatch.setattr(agreement_widget, "list_all_data_agreement_rows", lambda *a, **kw: [])
     monkeypatch.setattr(
         agreement_widget,
         "list_data_stewards",

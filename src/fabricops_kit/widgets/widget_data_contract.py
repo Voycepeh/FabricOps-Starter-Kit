@@ -724,9 +724,9 @@ def widget_data_contract(
     setup_pipeline
 
     """
-    from IPython import display as ip
-
-    config, env, resolved = resolve_fabric_context(context=context)
+    startup = shared.WidgetStartup("Data Contract")
+    with startup.phase("initialization", "Resolving FabricOps configuration…"):
+        config, env, resolved = resolve_fabric_context(context=context)
     governance_config = getattr(config, "governance_config", None)
     ai_enrichment = dict(getattr(governance_config, "ai_enrichment", {}) or {})
     classification_levels = [
@@ -735,11 +735,13 @@ def widget_data_contract(
         if str(value).strip()
     ] or ["Public", "Restricted", "Confidential", "Highly Sensitive"]
     classification_options = ("", *classification_levels)
-    spark = get_spark_session(spark_session)
-    catalogue = contracts.list_contract_governance_state(config=config, env=env, spark_session=spark)
-    table_rows = catalogue["tables"]
-    if table_id is not None and str(table_id) not in {str(row.get("table_id")) for row in table_rows}:
-        raise ValueError("table_id has no active table-level Catalogue row in the authoring environment.")
+    with startup.phase("spark_loading", "Resolving the Spark session…"):
+        spark = get_spark_session(spark_session)
+    with startup.phase("metadata_loading", "Loading configured metadata…"):
+        catalogue = contracts.list_contract_governance_state(config=config, env=env, spark_session=spark)
+        table_rows = catalogue["tables"]
+        if table_id is not None and str(table_id) not in {str(row.get("table_id")) for row in table_rows}:
+            raise ValueError("table_id has no active table-level Catalogue row in the authoring environment.")
     state: dict[str, Any] = {
         "environment_name": env, "table_id": None, "contract_version": None,
         "pending_table_id": table_id, "pending_contract_version": contract_version,
@@ -5978,5 +5980,5 @@ def widget_data_contract(
         "confirm_exit_discard": confirm_exit_discard,
         "cancel_exit": cancel_exit,
     })
-    ip.display(page)
+    startup.display(page)
     return state

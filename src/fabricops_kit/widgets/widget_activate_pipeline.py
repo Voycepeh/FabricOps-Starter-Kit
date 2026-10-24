@@ -93,12 +93,14 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
     refresh, review_release and perform_activation. Metadata errors raise or are
     displayed by button actions; opening the widget changes no approval.
     """
-    from IPython import display as ip
     import ipywidgets as widgets
 
-    _config, env, _runtime = resolve_fabric_context(context=context)
-    all_runs = [row for row in metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session)
-                if row.get("environment_name") == env]
+    startup = shared.WidgetStartup("Pipeline Activation")
+    with startup.phase("initialization", "Resolving FabricOps configuration…"):
+        _config, env, _runtime = resolve_fabric_context(context=context)
+    with startup.phase("metadata_loading", "Loading configured metadata…"):
+        all_runs = [row for row in metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session)
+                    if row.get("environment_name") == env]
     runs = [row for row in all_runs if _eligible_candidate(row)]
     excluded = [(row, _missing_contracts(row)) for row in all_runs
                 if pipeline_id is None or row["pipeline_id"] == pipeline_id]
@@ -110,7 +112,8 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
         coverage_notice.value = ('<div style="overflow-wrap:anywhere"><p><b>Testing completed, but these runs cannot activate.</b></p><ul>'
             + "".join(missing_rows) + "</ul><p>Select a valid frozen Data Contract for every listed table and rerun complete Testing. "
             "All existing Guardrail, operation and Data Agreement checks must also pass.</p></div>")
-    agreements = metadata_records("METADATA_DATA_AGREEMENT", context=context, spark_session=spark_session)
+    with startup.phase("metadata_loading", "Loading Data Agreements…"):
+        agreements = metadata_records("METADATA_DATA_AGREEMENT", context=context, spark_session=spark_session)
     primary = [row for row in runs if pipeline_id is None or row["pipeline_id"] == pipeline_id]
     run_select = widgets.Dropdown(description="Testing run", options=[(f"{r['pipeline_id']} · {r['run_id']}", r["run_id"]) for r in primary], layout=widgets.Layout(width="100%"))
     additions = widgets.SelectMultiple(description="Include tests", options=[(f"{r['pipeline_id']} · {r['run_id']}", r["run_id"]) for r in runs], layout=widgets.Layout(width="100%"))
@@ -230,6 +233,7 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
         children=[coverage_notice, run_select, additions, fields, agreement, details, review_button, confirm,
                   shared.action_row(widgets, [activate]), status])
     state.update(widget=root, refresh=refresh, review_release=review_release, perform_activation=perform_activation)
-    refresh()
-    ip.display(root)
+    with startup.phase("metadata_loading", "Loading activation state…"):
+        refresh()
+    startup.display(root)
     return state
