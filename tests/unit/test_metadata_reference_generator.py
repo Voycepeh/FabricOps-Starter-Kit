@@ -350,12 +350,15 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     }
     assert len(actual) == len(connectors)
     assert all(source != target for source, target in actual)
-    assert all(edge.get("data-cardinality") in {"1:N", "N:N"} for edge in connectors)
+    assert all(edge.get("data-cardinality") in {"1:N", ""} for edge in connectors)
     assert all(edge.find(f"{namespace}path") is not None for edge in connectors)
     assert ("PIPELINE_REGISTRY", "ACTIVATION_STATE") in actual
     assert ("ACTIVATION_STATE", "PIPELINE_RUN") in actual
     assert ("ACTIVATION_STATE", "DATA_CONTRACT") in actual
     assert actual[("PIPELINE_REGISTRY", "ACTIVATION_STATE")].get("data-kind") == "logical"
+    assert all(edge.get("data-cardinality") == "" for edge in connectors if edge.get("data-kind") == "logical")
+    assert all(edge.get("data-cardinality") == "1:N" for edge in connectors if edge.get("data-kind") == "physical")
+    assert all("arrow" not in (edge.find(f"{namespace}title").text or "").lower() for edge in connectors)
     assert "stroke-dasharray" in svg.read_text(encoding="utf-8")
     # Keep design asset, generated output and canonical reference in sync.
     script = generator_script.read_text(encoding="utf-8")
