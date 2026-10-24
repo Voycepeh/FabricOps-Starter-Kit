@@ -4,7 +4,7 @@ One complete logical run, exact table mappings, operation results, per-table pro
 
 ## Writer functions
 
-No public writer function is traced in the current implementation.
+* [`finalize_pipeline`](../../api/reference/finalize_pipeline.md)
 
 ## Used in Workflow Template
 
