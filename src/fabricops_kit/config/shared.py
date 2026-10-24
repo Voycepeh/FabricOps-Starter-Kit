@@ -157,12 +157,7 @@ def resolve_runtime_context(
         except RuntimeError:
             active_context = {}
 
-    try:
-        import notebookutils  # type: ignore
-
-        live_context = getattr(getattr(notebookutils, "runtime", None), "context", None) or {}
-    except Exception:
-        live_context = {}
+    live_context, _runtime_status = _get_fabric_runtime_context()
 
     sources = (_canonicalize(context or {}), _canonicalize(active_context or {}), _canonicalize(live_context))
     return {
@@ -893,15 +888,28 @@ def initialize_notebook(
     runtime_meta = _get_fabric_runtime_metadata(notebook_name=notebook_name, local_fallback_name=local_fallback_name)
     automatic = config is None
     if automatic:
+        if not runtime_meta["runtime_available"]:
+            raise RuntimeError(runtime_meta["runtime_status"])
         workspace_id = str(runtime_meta.get("workspace_id") or "").strip().lower()
         if not workspace_id:
             raise RuntimeError("Automatic setup requires Fabric currentWorkspaceId.")
         import notebookutils
 
         config_workspace_id = config_workspace_id or workspace_id
-        payload = json.loads(notebookutils.notebook.run(
-            "00_env_config", 120, {"caller_workspace_id": workspace_id}, workspaceId=config_workspace_id,
-        ))
+        try:
+            response = notebookutils.notebook.run(
+                "00_env_config", 120, {"caller_workspace_id": workspace_id}, workspaceId=config_workspace_id,
+            )
+        except ValueError:
+            # Preserve explicit registration/validation errors from the config notebook.
+            raise
+        except Exception:
+            location = "cross-workspace" if config_workspace_id != workspace_id else "same-workspace"
+            raise RuntimeError(f"{location} 00_env_config execution failed; check notebook access and configuration.") from None
+        try:
+            payload = json.loads(response)
+        except (TypeError, ValueError):
+            raise ValueError("00_env_config returned an invalid configuration JSON response.") from None
         if payload["workspace_id"] != workspace_id:
             raise ValueError("Configuration response does not match the caller workspace ID.")
         env = payload["env"]
@@ -943,7 +951,7 @@ def initialize_notebook(
             "pass" if runtime_meta.get("runtime_available") else "skipped",
             "Fabric runtime context is readable."
             if runtime_meta.get("runtime_available")
-            else "notebookutils.runtime unavailable outside Fabric runtime.",
+            else runtime_meta["runtime_status"],
         )
     )
     for store_name, store in resolved_paths.items():
@@ -1017,28 +1025,37 @@ def initialize_notebook(
 
 
 
-def _get_fabric_runtime_metadata(*, notebook_name: str | None, local_fallback_name: str | None) -> dict[str, Any]:
-    """Collect best-effort runtime metadata for setup_notebook."""
-    context = None
+def _get_fabric_runtime_context() -> tuple[Any, str]:
+    """Read Fabric's runtime attribute without assuming an importable submodule."""
     try:
-        import notebookutils.runtime as nb_runtime  # type: ignore
-
-        context = getattr(nb_runtime, "context", None)
+        import notebookutils  # type: ignore
+    except ModuleNotFoundError as exc:
+        if exc.name == "notebookutils":
+            return None, "Outside Microsoft Fabric: notebookutils is not installed."
+        raise RuntimeError("Fabric notebookutils import failed; a runtime dependency is unavailable.") from None
     except Exception:
-        context = None
+        raise RuntimeError("Fabric notebookutils import failed unexpectedly.") from None
+    try:
+        context = getattr(getattr(notebookutils, "runtime", None), "context", None)
+    except Exception:
+        raise RuntimeError("Fabric runtime context access failed unexpectedly.") from None
+    return context, "Fabric runtime context is readable." if context is not None else "Fabric runtime context is unavailable."
+
+
+def _get_fabric_runtime_metadata(*, notebook_name: str | None, local_fallback_name: str | None) -> dict[str, Any]:
+    """Collect runtime metadata for notebook and pipeline setup."""
+    context, runtime_status = _get_fabric_runtime_context()
 
     def ctx(key: str) -> Any:
         if context is None:
             return None
-        if isinstance(context, dict):
-            return context.get(key)
-        get_method = getattr(context, "get", None)
-        if callable(get_method):
-            try:
-                return get_method(key)
-            except Exception:
-                return None
-        return getattr(context, key, None)
+        try:
+            if isinstance(context, dict):
+                return context.get(key)
+            get_method = getattr(context, "get", None)
+            return get_method(key) if callable(get_method) else getattr(context, key, None)
+        except Exception:
+            raise RuntimeError(f"Fabric runtime context field {key} could not be read.") from None
 
     return {
         "notebook_name": notebook_name or ctx("currentNotebookName") or local_fallback_name,
@@ -1052,4 +1069,5 @@ def _get_fabric_runtime_metadata(*, notebook_name: str | None, local_fallback_na
         "is_for_interactive": ctx("isForInteractive"),
         "is_reference_run": ctx("isReferenceRun"),
         "runtime_available": context is not None,
+        "runtime_status": runtime_status,
     }
