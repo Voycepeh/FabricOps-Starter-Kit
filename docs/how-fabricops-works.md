@@ -9,6 +9,8 @@
 - **Engineering Production** runs the validated pipeline with the active Data Contract. Approved consumers use the resulting data for analytics and AI.
 - **Shared Metadata** connects Governance and Engineering responsibilities throughout the lifecycle.
 
+**See how the records connect:** [Explore the interactive Metadata Tables map →](reference/metadata.md) to inspect all 13 Governance and Engineering tables, their relationships and schemas.
+
 ---
 
 ## Workspace Architecture
@@ -68,8 +70,6 @@
 ![FabricOps Governance and Engineering cycle](assets/fabricops-roles.png)
 
 **FabricOps turns Governance and Engineering into one executable cycle around the same `table_id`.**
-
-[Explore the interactive Metadata Tables map →](reference/metadata.md) to inspect Governance and Engineering table relationships, keys, and implemented schemas.
 
 Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read()` and `orchestrate_write()`; those entrypoints resolve the contract, run the applicable checks and treatments, record Guardrail Results, and decide whether execution can continue. Project-owned transformations stay between Read and Write.
 
