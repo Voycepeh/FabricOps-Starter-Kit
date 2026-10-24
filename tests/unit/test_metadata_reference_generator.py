@@ -161,3 +161,60 @@ def test_metadata_explorer_keeps_keys_readable_and_loads_canonical_details() -> 
     assert 'status && title === "ACTIVATED_PIPELINE"' in js
     assert '"metadata_pipeline_registry/"' in js
     assert "Proposed table; not yet implemented" not in js
+
+
+def test_metadata_explorer_payload_matches_canonical_model(tmp_path, monkeypatch) -> None:
+    """The on-page hover/relationship data is generated, never hand-authored."""
+    import json
+    import re
+
+    landing = tmp_path / "metadata.md"
+    monkeypatch.setattr(generator, "METADATA_REFERENCE_DIR", tmp_path / "metadata")
+    monkeypatch.setattr(generator, "METADATA_REFERENCE_INDEX_PATH", landing)
+    generator.generate_metadata_reference_pages()
+    text = landing.read_text(encoding="utf-8")
+    match = re.search(
+        r'<script type="application/json" class="metadata-explorer-model">\\s*(.*?)\\s*</script>',
+        text,
+        re.DOTALL,
+    )
+    assert match is not None
+    payload = json.loads(match.group(1))
+    assert set(payload) == {name.removeprefix("METADATA_") for name in CANONICAL_METADATA_TABLES}
+    for name, model in METADATA_TABLE_MODELS.items():
+        entry = payload[name.removeprefix("METADATA_")]
+        assert entry["purpose"] == model["purpose"]
+        assert entry["grain"] == model["grain"]
+        assert entry["primary_key"] == model["primary_key"]
+        assert [
+            (fk["local_field"], fk["referenced_table"], fk["referenced_field"])
+            for fk in entry["foreign_keys"]
+        ] == [
+            (fk["local_field"], fk["referenced_table"], fk["referenced_field"])
+            for fk in model["foreign_keys"]
+        ]
+    agreement_fk = payload["DATA_AGREEMENT"]["foreign_keys"]
+    assert [fk["local_field"] for fk in agreement_fk] == [
+        "provider_steward_id", "recipient_steward_id"
+    ]
+
+
+def test_metadata_explorer_compact_details_and_hover_summary() -> None:
+    """Ensure the explorer does not regress to oversized admonitions or key-only lists."""
+    from pathlib import Path
+
+    root = Path(__file__).parents[2]
+    js = (root / "docs/javascripts/metadata-explorer.js").read_text(encoding="utf-8")
+    css = (root / "docs/stylesheets/metadata-explorer.css").read_text(encoding="utf-8")
+    assert "canonicalModels = JSON.parse" in js
+    assert "metadata-explorer-model" in js
+    assert "mouseenter" in js and "focus" in js and "showTooltip" in js
+    assert "model.grain" in js and "model.purpose" in js
+    assert "keyJoinRows" in js and "fk.referenced_field" in js
+    assert "logicalJoinKeys" in js
+    assert "metadata-explorer-related-joins" in js
+    assert "metadata-explorer-detail-quick" not in js
+    assert "metadata-explorer-tooltip[hidden]" in css
+    assert ".md-typeset .fabricops-metadata-explorer details.metadata-explorer-section" in css
+    assert "background: transparent;" in css
+    assert "font-size: 14px;" in css
