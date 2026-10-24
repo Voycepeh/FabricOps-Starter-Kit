@@ -7,17 +7,17 @@ const root = path.resolve(import.meta.dirname, "..");
 function renderMetadataSvg(layout, models) {
   const routes = [
     ["DATA_STEWARD","DATA_AGREEMENT","1:N","physical","M335 170H425",[335,170],[425,170],"One steward may participate in many agreements"],
-    ["DATA_AGREEMENT","ACTIVATION_STATE","1:N","logical","M725 170H815",[725,170],[815,170],"Agreement to Activated Pipeline releases stored in Activation State"],
-    ["ACTIVATION_STATE","DATA_CONTRACT","N:N","logical","M1115 170H1205",[1115,170],[1205,170],"Activated releases reference frozen Data Contract versions"],
-    ["PIPELINE_REGISTRY","ACTIVATION_STATE","1:N","logical","M725 725H765V215H815",[725,725],[815,215],"Registered pipeline to approved releases stored inside Activation State"],
-    ["ACTIVATION_STATE","PIPELINE_RUN","1:N","logical","M900 253V356H575V423",[900,253],[575,423],"Approved Activated Pipeline releases authorize Live runs"],
+    ["DATA_AGREEMENT","ACTIVATION_STATE","","logical","M725 170H815",[725,170],[815,170],"Agreement to Activated Pipeline releases stored in Activation State"],
+    ["ACTIVATION_STATE","DATA_CONTRACT","","logical","M1115 170H1205",[1115,170],[1205,170],"Activated releases reference frozen Data Contract versions"],
+    ["PIPELINE_REGISTRY","ACTIVATION_STATE","","logical","M725 725H765V215H815",[725,725],[815,215],"Registered pipeline to approved releases stored inside Activation State"],
+    ["ACTIVATION_STATE","PIPELINE_RUN","","logical","M900 253V356H575V423",[900,253],[575,423],"Approved Activated Pipeline releases authorize Live runs"],
     ["DATA_CATALOGUE","DATA_CONTRACT","1:N","physical","M1355 423V253",[1355,423],[1355,253],"Catalogue table to contract versions"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1:N","physical","M425 515H335",[425,515],[335,515],"Pipeline run to recorded guardrail outcomes"],
     ["PIPELINE_RUN","SOURCE_OBSERVATION","1:N","physical","M725 504H815",[725,504],[815,504],"Pipeline run to source and publication observations"],
     ["DATA_CATALOGUE","SOURCE_OBSERVATION","1:N","physical","M1205 545H1115",[1205,545],[1115,545],"Catalogue table to source and target observations"],
     ["PIPELINE_REGISTRY","PIPELINE_RUN","1:N","physical","M575 675V598",[575,675],[575,598],"Registered pipeline to its execution history"],
     ["DATA_CATALOGUE","DATA_PROFILED","1:N","physical","M1250 598V902H575V995",[1250,598],[575,995],"Catalogue table to column statistics"],
-    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1:N","logical","M1290 598V877H185V995",[1290,598],[185,995],"Catalogue column to frequency observations"],
+    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","","logical","M1290 598V877H185V995",[1290,598],[185,995],"Catalogue column to frequency observations"],
     ["DATA_CATALOGUE","DATA_LINEAGE","1:N","physical","M1355 598V927H965V995",[1355,598],[965,995],"Catalogue table to source and target lineage"],
     ["DATA_CATALOGUE","DATA_ACCESS","1:N","physical","M1430 598V963H1355V995",[1430,598],[1355,995],"Catalogue table to observed permissions"],
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1:N","physical","M425 1081H335",[425,1081],[335,1081],"Optional statistical profile reference on frequency rows"],
@@ -80,18 +80,17 @@ function renderMetadataSvg(layout, models) {
   const rendered=routes.map(r=>{
     const [from,to,card,kind,d,p0,p1,label]=r;
     const color=kind==="logical"?"#7144AE":"#1168B6";
-    const nums=(d.match(/-?\d+(?:\.\d+)?/g)||[]).map(Number);
     // Explicit orientation follows the first and last path segments.
     const first=d.match(/^M(-?[\d.]+) (-?[\d.]+)([HV])(-?[\d.]+)/);
     const last=d.match(/([HV])(-?[\d.]+)$/);
     let start=[p0[0],p0[1]],end=[p1[0],p1[1]];
     if(first){const immediate=first[3]==="H"?[Number(first[4]),p0[1]]:[p0[0],Number(first[4])];let v=direction(p0,immediate);start=[p0[0]+v[0]*25,p0[1]+v[1]*25];}
-    if(last){const horiz=last[1]==="H";const prev=horiz?end[0]:end[1];let side=(horiz?end[0]-p0[0]:end[1]-p0[1])>=0?-1:1;
+    if(last){const horiz=last[1]==="H";let side=(horiz?end[0]-p0[0]:end[1]-p0[1])>=0?-1:1;
       // Clamped badge offset stays outside the table, close to its connector.
       end=horiz?[end[0]+side*25,end[1]]:[end[0],end[1]+side*25];
     }
-    const [one,many]=card.split(":");
-    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label)} (${esc(card)}; ${kind} relationship)</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round"${kind==="logical"?' stroke-dasharray="7 7"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}\n</g>`;
+    const [one,many]=card ? card.split(":") : ["", ""];
+    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label)} (${card ? esc(card) + "; " : ""}${kind === "logical" ? "reference through an Activated Pipeline in the authority snapshot; no physical FK/cardinality" : "physical keyed relationship"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round"${kind==="logical"?' stroke-dasharray="7 7"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}\n</g>`;
   }).join("\n");
   return prefix+`<g id="metadata-er-relationships" aria-label="Metadata table relationships">\n${rendered}\n</g>\n`+body;
 }
