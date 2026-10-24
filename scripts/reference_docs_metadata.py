@@ -116,12 +116,6 @@ METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "The contract answers: Exactly what data will be delivered, in what structure, at what quality, and how reliably?"
 )
 
-METADATA_REFERENCE_MODEL_DIAGRAM = (
-    "![FabricOps metadata model: Governance and Engineering schemas, with a "
-    "manifest-backed Activated Pipeline contracts and separate run-linked Guardrail Results]"
-    "(../assets/fabricops-metadata-model.svg)"
-)
-
 METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
     "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column "
     "containing authored Guardrails, Enrichment and profiling policies for each contract version."
@@ -251,6 +245,25 @@ METADATA_TABLE_MODELS = {
         ],
         "relationships": [],
     },
+}
+
+# Public entrypoints known to cause persisted metadata writes. Some entrypoints
+# delegate the physical Delta write to internal helpers. Keep this separate from
+# per-column provenance; do not list read-only access resolution as a writer.
+METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
+    "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
+    "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
+    "METADATA_DATA_CONTRACT": ["widget_data_contract"],
+    "METADATA_ACTIVATION_STATE": ["widget_activate_pipeline", "setup_pipeline", "finalize_pipeline"],
+    "METADATA_PIPELINE_REGISTRY": ["setup_pipeline"],
+    "METADATA_PIPELINE_RUN": ["finalize_pipeline"],
+    "METADATA_DATA_CATALOGUE": ["orchestrate_read", "orchestrate_write", "profile_table"],
+    "METADATA_DATA_PROFILED": ["orchestrate_read", "orchestrate_write", "profile_table"],
+    "METADATA_DATA_PROFILED_FREQUENCY": ["orchestrate_read", "orchestrate_write", "profile_table"],
+    "METADATA_DATA_LINEAGE": ["orchestrate_read", "orchestrate_write", "pipeline_read"],
+    "METADATA_SOURCE_OBSERVATION": ["orchestrate_read", "orchestrate_write"],
+    "METADATA_GUARDRAIL_RESULTS": ["orchestrate_read", "orchestrate_write"],
+    "METADATA_DATA_ACCESS": ["scan_workspace_access", "scan_onelake_access", "scan_sql_access"],
 }
 
 METADATA_REFERENCE_ORDER = [

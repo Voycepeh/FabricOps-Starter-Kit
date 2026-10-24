@@ -995,10 +995,9 @@ def parse_metadata_reference_overview() -> list[str]:
     namespace = runpy.run_path(str(DOCS_METADATA_PATH))
     intro = str(namespace.get("METADATA_REFERENCE_OVERVIEW_INTRO", "")).strip()
     caption = str(namespace.get("METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION", "")).strip()
-    diagram = str(namespace.get("METADATA_REFERENCE_MODEL_DIAGRAM", "")).strip()
-    if not intro or not caption or not diagram:
-        raise RuntimeError("Metadata reference overview content must include intro, caption, and diagram")
-    return [diagram, "", intro, "", caption]
+    if not intro or not caption:
+        raise RuntimeError("Metadata reference overview content must include intro and caption")
+    return [intro, "", caption]
 
 
 def parse_metadata_reference_contract() -> tuple[dict[str, str], dict[str, dict[str, list[Any]]]]:
@@ -4402,76 +4401,57 @@ def render_metadata_reference_index(
     reference_order: list[str],
     table_purposes: dict[str, str],
 ) -> str:
-    """Render the compact, clickable metadata model landing page."""
+    """Render a compact interactive metadata map instead of redundant full table cards."""
+    # Keep browser tooltips and join-key summaries on the same canonical
+    # model as the generated physical-table reference pages.
+    write_entrypoints = runpy.run_path(str(DOCS_METADATA_PATH))[
+        "METADATA_EXPLORER_WRITE_ENTRYPOINTS"
+    ]
+    if set(write_entrypoints) != set(reference_order):
+        raise ValueError("Every canonical metadata table must have audited write entrypoints")
+    explorer_models = {
+        name.removeprefix("METADATA_"): {
+            "purpose": table_purposes.get(name) or table_models[name]["purpose"],
+            "write_entrypoints": write_entrypoints[name],
+            "grain": table_models[name]["grain"],
+            "primary_key": table_models[name]["primary_key"],
+            "foreign_keys": [
+                {
+                    "local_field": fk["local_field"],
+                    "referenced_table": fk["referenced_table"],
+                    "referenced_field": fk["referenced_field"],
+                }
+                for fk in table_models[name]["foreign_keys"]
+            ],
+        }
+        for name in reference_order
+    }
+    # JSON is embedded as inert data, never executed as JavaScript.
+    explorer_json = json.dumps(explorer_models, ensure_ascii=True, sort_keys=True).replace(
+        "<", "\\u003c"
+    )
     lines = [
         "# List of Metadata Tables",
         "",
         *parse_metadata_reference_overview(),
         "",
-        "## Metadata tables",
+        "## Metadata relationships",
         "",
-        "<style>",
-        ".metadata-table-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 1.25rem 0 2rem; }",
-        ".metadata-table-card { --metadata-schema-accent: var(--md-default-fg-color--light); --metadata-schema-tint: color-mix(in srgb, var(--metadata-schema-accent) 10%, transparent); display: flex; flex-direction: column; gap: .55rem; padding: 1rem 1.1rem; border: 1px solid var(--md-default-fg-color--lightest); border-left: .25rem solid var(--metadata-schema-accent); border-radius: .7rem; background: var(--md-default-bg-color); color: inherit !important; text-decoration: none !important; box-shadow: 0 1px 2px rgba(0, 0, 0, .04); transition: border-color .15s ease, background .15s ease, transform .15s ease; }",
-        ".metadata-table-card--governance { --metadata-schema-accent: #7e57c2; }",
-        ".metadata-table-card--engineering { --metadata-schema-accent: #1976d2; }",
-        ".metadata-table-card:hover { background: var(--metadata-schema-tint); transform: translateY(-1px); }",
-        ".metadata-table-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }",
-        ".metadata-table-card__identity { display: flex; flex-wrap: wrap; gap: .4rem .6rem; align-items: center; min-width: 0; }",
-        ".metadata-table-card__title { font-family: var(--md-code-font-family); font-size: .82rem; font-weight: 700; color: var(--metadata-schema-accent); overflow-wrap: anywhere; }",
-        ".metadata-table-card__schema { display: inline-flex; align-items: center; padding: .12rem .45rem; border: 1px solid color-mix(in srgb, var(--metadata-schema-accent) 38%, transparent); border-radius: 999px; background: var(--metadata-schema-tint); color: var(--metadata-schema-accent); font-size: .67rem; font-weight: 700; letter-spacing: .025em; line-height: 1.35; }",
-        ".metadata-table-card__arrow { flex: 0 0 auto; font-size: 1rem; color: var(--metadata-schema-accent); }",
-        ".metadata-table-card__purpose { line-height: 1.45; }",
-        ".metadata-table-card__meta { display: grid; grid-template-columns: 6.4rem minmax(0, 1fr); gap: .5rem; align-items: start; font-size: .84rem; line-height: 1.4; }",
-        ".metadata-table-card__meta strong, .metadata-table-card__relationships-label { color: var(--md-default-fg-color--light); font-size: .74rem; letter-spacing: .02em; text-transform: uppercase; }",
-        ".metadata-table-card__relationships { display: flex; flex-direction: column; gap: .35rem; padding-top: .15rem; }",
-        ".metadata-table-card__relationship-summary { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: .5rem; align-items: start; }",
-        ".metadata-table-card__relationship-list { display: flex; flex-wrap: wrap; gap: .35rem .5rem; min-width: 0; }",
-        ".metadata-table-card__relationship-list code { font-size: .74rem; overflow-wrap: anywhere; }",
-        ".metadata-table-card__cardinality { font-weight: 700; color: var(--md-primary-fg-color); white-space: nowrap; }",
-        "@media (max-width: 720px) { .metadata-table-grid { gap: .8rem; } .metadata-table-card { padding: .9rem 1rem; } .metadata-table-card__meta { grid-template-columns: 1fr; gap: .15rem; } .metadata-table-card__relationship-summary { grid-template-columns: 3rem minmax(0, 1fr); } }",
-        "</style>",
-        "",
-        '<div class="metadata-table-grid">',
+        '<div class="fabricops-metadata-explorer" data-metadata-explorer>',
+        '  <script type="application/json" class="metadata-explorer-model">',
+        explorer_json,
+        "  </script>",
+        '  <nav class="metadata-explorer-fallback" aria-label="Metadata table references">',
     ]
+    # Progressive enhancement: links remain navigable when JavaScript is unavailable.
     for table_name in reference_order:
         slug = table_name.lower()
-        schema_owner = metadata_table_owner(table_name)
-        model = table_models[table_name]
-        purpose = _metadata_table_purpose(table_name, table_purposes)
-        relationships = _metadata_relationships(table_name, table_models, include_inbound=True)
-        lines.extend([
-            f'<a class="metadata-table-card metadata-table-card--{schema_owner}" href="{slug}/" aria-label="Open {html_escape(table_name)} schema">',
-            '  <span class="metadata-table-card__header">',
-            '    <span class="metadata-table-card__identity">',
-            f'      <span class="metadata-table-card__title">{html_escape(table_name)}</span>',
-            f'      <span class="metadata-table-card__schema">{schema_owner}</span>',
-            '    </span>',
-            '    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>',
-            '  </span>',
-            f'  <span class="metadata-table-card__purpose">{html_escape(purpose)}</span>',
-            '  <span class="metadata-table-card__meta">',
-            '    <strong>Grain</strong>',
-            f'    <span>{html_escape(str(model["grain"]))}</span>',
-            '  </span>',
-            '  <span class="metadata-table-card__meta">',
-            '    <strong>Primary key</strong>',
-            f'    <span>{_metadata_index_key_html(model["primary_key"])}</span>',
-            '  </span>',
-            '  <span class="metadata-table-card__relationships">',
-            '    <span class="metadata-table-card__relationships-label">Relationships</span>',
-        ])
-        for relationship in relationships:
-            lines.extend([
-                '    <span class="metadata-table-card__relationship-summary">',
-                f'      <span class="metadata-table-card__cardinality">{_metadata_cardinality_display(relationship["cardinality"])}</span>',
-                '      <span class="metadata-table-card__relationship-list">',
-                f'        <code>{html_escape(relationship["table"])}</code>',
-                '      </span>',
-                '    </span>',
-            ])
-        lines.extend(['  </span>', '</a>'])
-    lines.extend(['</div>', ''])
+        lines.append(f'    <a href="{slug}/">{html_escape(table_name)}</a>')
+    lines.extend([
+        "  </nav>",
+        "</div>",
+        "",
+    ])
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -4531,7 +4511,6 @@ def generate_metadata_reference_pages() -> None:
     from fabricops_kit.config.metadata_schemas import (
         AUDIT_SCHEMA_FIELDS,
         CANONICAL_METADATA_TABLES,
-        metadata_table_owner,
         metadata_table_schema_registry,
         metadata_table_schema_rows,
     )
@@ -4662,7 +4641,15 @@ def generate_metadata_reference_pages() -> None:
             column_owners=column_owners,
             public_callable_set=public_callable_set,
         )
+        # Workflow-template provenance stays based on direct column-owner tracing.
         writer_templates = _metadata_writer_templates(writer_functions, docs_metadata)
+        # The UI and table references additionally list verified notebook-facing
+        # orchestration entrypoints whose delegated writers persist these records.
+        audited_writers = namespace["METADATA_EXPLORER_WRITE_ENTRYPOINTS"][table_name]
+        unknown_writers = set(audited_writers) - public_callable_set
+        if unknown_writers:
+            raise ValueError(f"Unknown public metadata writers: {sorted(unknown_writers)}")
+        writer_functions = sorted(set(writer_functions) | set(audited_writers))
         lines = [
             f"# {table_name}",
             "",
