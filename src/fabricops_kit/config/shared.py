@@ -1046,7 +1046,7 @@ def _print_notebook_setup_summary(
     print(f"FabricOps v{__version__}")
     print("Docs, examples, releases & support:")
     print("https://github.com/Voycepeh/FabricOps-Starter-Kit")
-    caller_workspace = context.runtime_metadata.get("workspace_id")
+    caller_workspace = str(context.runtime_metadata.get("workspace_id") or "").strip().lower()
     if config_workspace_id is not None:
         location = "same-workspace" if config_workspace_id == caller_workspace else "cross-workspace"
         print(f"Configuration: 00_env_config ({location}; workspace: {config_workspace_id})")

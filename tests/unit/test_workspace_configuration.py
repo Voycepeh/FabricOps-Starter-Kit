@@ -333,9 +333,11 @@ def test_runtime_context_supports_object_and_getter_shapes(configuration_runtime
 
 
 @pytest.mark.parametrize('config_workspace', [None, 'central-ws'])
-def test_setup_summary_is_visible_without_child_notebook_output(configuration_runtime, capsys, config_workspace):
+@pytest.mark.parametrize('caller_workspace', ['dev-ws', ' DEV-WS '])
+def test_setup_summary_is_visible_without_child_notebook_output(configuration_runtime, capsys, config_workspace, caller_workspace):
     from fabricops_kit import __version__
 
+    configuration_runtime.runtime.context['currentWorkspaceId'] = caller_workspace
     raw = asdict(_config())
     stores = raw['path_config']['paths'].pop('dev')
     raw['path_config']['paths']['POC'] = stores
