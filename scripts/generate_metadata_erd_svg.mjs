@@ -90,7 +90,7 @@ function renderMetadataSvg(layout, models) {
       end=horiz?[end[0]+side*25,end[1]]:[end[0],end[1]+side*25];
     }
     const [one,many]=card ? card.split(":") : ["", ""];
-    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label)} (${card ? esc(card) + "; " : ""}${kind === "logical" ? "reference through an Activated Pipeline in the authority snapshot; no physical FK/cardinality" : "physical keyed relationship"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round"${kind==="logical"?' stroke-dasharray="7 7"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}\n</g>`;
+    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label)} (${card ? esc(card) + "; " : ""}${kind === "logical" ? "conceptual reference; no declared physical FK or table-row cardinality" : "physical keyed relationship"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round"${kind==="logical"?' stroke-dasharray="7 7"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}\n</g>`;
   }).join("\n");
   return prefix+`<g id="metadata-er-relationships" aria-label="Metadata table relationships">\n${rendered}\n</g>\n`+body;
 }
