@@ -4690,6 +4690,11 @@ def generate_metadata_reference_pages() -> None:
             "",
             *_relationship_lines(table_name),
             "",
+            *(
+                ["**Implementation details:** " + model["implementation_notes"], ""]
+                if model.get("implementation_notes")
+                else []
+            ),
             "## Column summary",
             "",
             "| Column category | Count |",
