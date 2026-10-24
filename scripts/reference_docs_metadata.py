@@ -208,7 +208,7 @@ METADATA_TABLE_MODELS = {
             {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Many profile snapshots can describe the same logical Catalogue column over time."},
         ],
         "relationships": [
-            {"related_table": "METADATA_DATA_PROFILED_FREQUENCY", "fields": ["profile_id"], "cardinality": "1:1", "statement": "A combined standalone profile may link a frequency distribution. Scheduled Standard and Frequency Profiling have independent snapshots and eligibility."},
+            {"related_table": "METADATA_DATA_PROFILED_FREQUENCY", "fields": ["profile_id"], "cardinality": "1:N", "statement": "A combined standalone statistical Profile may link multiple ranked frequency-value rows through profile_id. Independently scheduled Frequency Profiling has its own snapshot and leaves profile_id null."},
         ],
     },
     "METADATA_DATA_PROFILED_FREQUENCY": {
