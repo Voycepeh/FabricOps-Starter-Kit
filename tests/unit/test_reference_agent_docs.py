@@ -2087,3 +2087,48 @@ def test_current_metadata_pages_match_reduced_registry_and_have_no_retired_links
             if "releases" in path.parts:
                 continue
             assert not re.search(r"\]\([^)]*" + slug + r"(?:\.md)?/?(?:#[^)]*)?\)", path.read_text()), path
+
+
+def test_internal_links_to_current_metadata_reference_pages_resolve() -> None:
+    """Existing Markdown and HTML links keep resolving after the interactive UI change."""
+    from urllib.parse import unquote, urlsplit
+
+    docs_root = ROOT / "docs"
+    reference_dir = docs_root / "reference" / "metadata"
+    overview = docs_root / "reference" / "metadata.md"
+    canonical_pages = {path.resolve() for path in reference_dir.glob("metadata_*.md")}
+    assert len(canonical_pages) == 13
+
+    inspected = []
+    unresolved = []
+    link_pattern = re.compile(
+        r"""\]\(([^)\s]+)(?:\s+["'][^)]*)?\)|\bhref=["']([^"']+)["']"""
+    )
+    for document in docs_root.rglob("*.md"):
+        if "releases" in document.parts:
+            continue  # Historical release URLs have their own frozen documentation.
+        content = document.read_text(encoding="utf-8")
+        for match in link_pattern.finditer(content):
+            href = (match.group(1) or match.group(2) or "").strip()
+            parsed = urlsplit(href)
+            if parsed.scheme or parsed.netloc or not parsed.path:
+                continue
+            link_path = unquote(parsed.path)
+            if "metadata" not in link_path.lower():
+                continue
+            if link_path.startswith("/FabricOps-Starter-Kit/"):
+                resolved = (docs_root / link_path.removeprefix("/FabricOps-Starter-Kit/")).resolve()
+            elif link_path.startswith("/"):
+                resolved = (docs_root / link_path.lstrip("/")).resolve()
+            else:
+                resolved = (document.parent / link_path).resolve()
+            if resolved == reference_dir.resolve():
+                resolved = overview.resolve()
+            elif resolved.parent == reference_dir.resolve() and resolved.suffix in ("", ".html"):
+                resolved = resolved.with_suffix(".md")
+            if resolved == overview.resolve() or resolved.parent == reference_dir.resolve():
+                inspected.append((document.relative_to(docs_root), href))
+                if not resolved.is_file():
+                    unresolved.append((str(document.relative_to(docs_root)), href, str(resolved)))
+    assert inspected, "No internal metadata links found to validate"
+    assert not unresolved, f"Broken links to current metadata references: {unresolved}"
