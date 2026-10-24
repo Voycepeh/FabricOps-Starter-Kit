@@ -1,10 +1,12 @@
 # METADATA_DATA_PROFILED_FREQUENCY
 
-Frequency distributions retain Table ID, Column ID, environment, captured names and datatype. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.
+Shows which values appear most often in a column and how frequently they occur.
 
 ## Writer functions
 
-No public writer function is traced in the current implementation.
+* [`orchestrate_read`](../../api/reference/orchestrate_read.md)
+* [`orchestrate_write`](../../api/reference/orchestrate_write.md)
+* [`profile_table`](../../api/reference/profile_table.md)
 
 ## Used in Workflow Template
 
@@ -16,7 +18,7 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One ranked value for a column and frequency activity snapshot. The statistical Profile reference is optional.
+**Grain:** One recorded value and its frequency for a column in a profiling snapshot.
 
 **Primary key:** `frequency_id`
 
@@ -24,6 +26,8 @@ No starter template or solution is traced for the public writer functions.
 
 `METADATA_DATA_PROFILED` **(N → 1)**
 via `profile_id`
+
+**Implementation details:** Frequency distributions retain Table ID, Column ID, environment, captured names and datatype. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.
 
 ## Column summary
 

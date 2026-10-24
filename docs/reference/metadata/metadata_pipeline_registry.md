@@ -1,6 +1,6 @@
 # METADATA_PIPELINE_REGISTRY
 
-Permanent UUIDv4 identity and environment-specific notebook bindings; registration never authorizes Live. A seeded Authority control row serializes binding transactions in this same table.
+Keeps a permanent ID for each pipeline and records which notebook represents it in each environment. Renaming or promoting a notebook does not change the pipeline's identity.
 
 ## Writer functions
 
@@ -18,7 +18,7 @@ Permanent UUIDv4 identity and environment-specific notebook bindings; registrati
 
 **Default physical schema:** `engineering`
 
-**Grain:** One logical pipeline per environment, plus one serialization control row (central, *).
+**Grain:** One pipeline registration per environment, plus one technical control row used to coordinate registration.
 
 **Primary key:** `pipeline_id` + `environment_name`
 
@@ -28,6 +28,8 @@ Permanent UUIDv4 identity and environment-specific notebook bindings; registrati
 via `pipeline_id` + `environment_name`
 
 **Activated Pipeline (logical entity; 1 → N):** One registered Pipeline UUID has many immutable releases inside governance.METADATA_ACTIVATION_STATE; Activated Pipeline is a logical entity, not a separate Delta table.
+
+**Implementation details:** Permanent UUIDv4 identity and environment-specific notebook bindings; registration never authorizes Live. A seeded Authority control row serializes binding transactions in this same table.
 
 ## Column summary
 

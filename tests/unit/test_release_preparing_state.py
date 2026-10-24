@@ -22,4 +22,4 @@ def test_live_release_renders_frozen_pages_and_release_history():
     assert release_dir.exists()
     assert release_index.exists()
     assert "## Release history" in overview
-    assert f"[FabricOps Starter Kit {version}]({version}/)" in overview
+    assert f"[FabricOps Starter Kit {version}]({version}/index.md)" in overview

@@ -118,6 +118,7 @@ plugins:
 extra_javascript:
   - https://unpkg.com/mermaid@10/dist/mermaid.min.js
   - javascripts/mermaid-init.js
+  - javascripts/metadata-explorer.js
   - javascripts/callable-finder.js
   - javascripts/table-controls.js
 
@@ -133,3 +134,4 @@ extra_css:
   - stylesheets/workflow.css
   - stylesheets/table-controls.css
   - stylesheets/image-borders.css
+  - stylesheets/metadata-explorer.css

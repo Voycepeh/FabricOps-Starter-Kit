@@ -1,6 +1,6 @@
 # METADATA_DATA_LINEAGE
 
-See which registered tables participated as sources and targets in pipeline activities; table_name records the name at the participation write while table_id remains stable. The current notebook's Lineage defines Data Contract resolution scope.
+Shows which tables a pipeline reads and writes, so you can trace how data moves through FabricOps.
 
 ## Writer functions
 
@@ -20,7 +20,7 @@ See which registered tables participated as sources and targets in pipeline acti
 
 **Default physical schema:** `engineering`
 
-**Grain:** One registered table participating as a source or target in one pipeline activity.
+**Grain:** One table's participation as a source or target in a pipeline operation.
 
 **Primary key:** `lineage_id`
 
@@ -28,6 +28,8 @@ See which registered tables participated as sources and targets in pipeline acti
 
 `METADATA_DATA_CATALOGUE` **(N → 1)**
 via `table_id`
+
+**Implementation details:** See which registered tables participated as sources and targets in pipeline activities; table_name records the name at the participation write while table_id remains stable. The current notebook's Lineage defines Data Contract resolution scope.
 
 ## Column summary
 
