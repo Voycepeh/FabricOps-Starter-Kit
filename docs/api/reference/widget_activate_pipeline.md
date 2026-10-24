@@ -90,7 +90,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_activate_pipeline.py:78`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L78-L235">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L78-L239">View on GitHub</a>
 </div>
 
 
