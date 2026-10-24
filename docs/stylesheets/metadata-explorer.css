@@ -240,7 +240,10 @@
   position: fixed;
   z-index: 120;
   box-sizing: border-box;
-  max-width: min(350px, calc(100vw - 20px));
+  width: min(430px, calc(100vw - 20px));
+  max-width: calc(100vw - 20px);
+  overflow-wrap: anywhere;
+  white-space: normal;
   padding: 12px 14px;
   border: 1px solid var(--md-default-fg-color--lightest);
   border-radius: 8px;
