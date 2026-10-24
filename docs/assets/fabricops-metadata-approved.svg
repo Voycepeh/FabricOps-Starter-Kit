@@ -10,25 +10,21 @@
 <path d="M335 170H425" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="349" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="360" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="389" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="400" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
-<g class="metadata-er-relationship" data-from="DATA_AGREEMENT" data-to="ACTIVATION_STATE" data-cardinality="1:N" data-kind="logical">
-<title>Agreement to Activated Pipeline releases stored in Activation State (1:N; logical relationship)</title>
+<g class="metadata-er-relationship" data-from="DATA_AGREEMENT" data-to="ACTIVATION_STATE" data-cardinality="" data-kind="logical">
+<title>Agreement to Activated Pipeline releases stored in Activation State (conceptual reference; no declared physical FK or table-row cardinality)</title>
 <path d="M725 170H815" fill="none" stroke="#7144AE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
-<rect x="739" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="750" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">1</text><rect x="779" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="790" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">N</text>
 </g>
-<g class="metadata-er-relationship" data-from="ACTIVATION_STATE" data-to="DATA_CONTRACT" data-cardinality="N:N" data-kind="logical">
-<title>Activated releases reference frozen Data Contract versions (N:N; logical relationship)</title>
+<g class="metadata-er-relationship" data-from="ACTIVATION_STATE" data-to="DATA_CONTRACT" data-cardinality="" data-kind="logical">
+<title>Activated releases reference frozen Data Contract versions (conceptual reference; no declared physical FK or table-row cardinality)</title>
 <path d="M1115 170H1205" fill="none" stroke="#7144AE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
-<rect x="1129" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="1140" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">N</text><rect x="1169" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="1180" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">N</text>
 </g>
-<g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="ACTIVATION_STATE" data-cardinality="1:N" data-kind="logical">
-<title>Registered pipeline to approved releases stored inside Activation State (1:N; logical relationship)</title>
+<g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="ACTIVATION_STATE" data-cardinality="" data-kind="logical">
+<title>Registered pipeline to approved releases stored inside Activation State (conceptual reference; no declared physical FK or table-row cardinality)</title>
 <path d="M725 725H765V215H815" fill="none" stroke="#7144AE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
-<rect x="739" y="714" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="750" y="729.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">1</text><rect x="779" y="204" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="790" y="219.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">N</text>
 </g>
-<g class="metadata-er-relationship" data-from="ACTIVATION_STATE" data-to="PIPELINE_RUN" data-cardinality="1:N" data-kind="logical">
-<title>Approved Activated Pipeline releases authorize Live runs (1:N; logical relationship)</title>
+<g class="metadata-er-relationship" data-from="ACTIVATION_STATE" data-to="PIPELINE_RUN" data-cardinality="" data-kind="logical">
+<title>Approved Activated Pipeline releases authorize Live runs (conceptual reference; no declared physical FK or table-row cardinality)</title>
 <path d="M900 253V356H575V423" fill="none" stroke="#7144AE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
-<rect x="889" y="267" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="900" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">1</text><rect x="564" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="575" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_CONTRACT" data-cardinality="1:N" data-kind="physical">
 <title>Catalogue table to contract versions (1:N; physical relationship)</title>
@@ -60,10 +56,9 @@
 <path d="M1250 598V902H575V995" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="1239" y="612" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1250" y="627.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="564" y="959" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="575" y="974.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
-<g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_PROFILED_FREQUENCY" data-cardinality="1:N" data-kind="logical">
-<title>Catalogue column to frequency observations (1:N; logical relationship)</title>
+<g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_PROFILED_FREQUENCY" data-cardinality="" data-kind="logical">
+<title>Catalogue column to frequency observations (conceptual reference; no declared physical FK or table-row cardinality)</title>
 <path d="M1290 598V877H185V995" fill="none" stroke="#7144AE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
-<rect x="1279" y="612" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="1290" y="627.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">1</text><rect x="174" y="959" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="185" y="974.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_LINEAGE" data-cardinality="1:N" data-kind="physical">
 <title>Catalogue table to source and target lineage (1:N; physical relationship)</title>
