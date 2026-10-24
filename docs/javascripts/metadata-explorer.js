@@ -246,8 +246,16 @@
         const other = child === from ? to : from;
         for (const fk of (modelFor(child).foreign_keys || [])) {
           if (fk.referenced_table?.replace(/^METADATA_/, "") !== other) continue;
-          rows.push(child + "." + fk.local_field + " → " + other + "." + fk.referenced_field);
+          const suffix = child === "DATA_PROFILED_FREQUENCY" && fk.local_field === "profile_id"
+            ? " (optional profile reference)" : "";
+          rows.push(child + "." + fk.local_field + " → " + other + "." + fk.referenced_field + suffix);
         }
+      }
+      // Pipeline Registry identity is unique inside each environment, not
+      // globally on the pipeline_id alone.
+      if ((from === "PIPELINE_REGISTRY" && to === "PIPELINE_RUN") ||
+          (to === "PIPELINE_REGISTRY" && from === "PIPELINE_RUN")) {
+        rows.push("PIPELINE_RUN.environment_name → PIPELINE_REGISTRY.environment_name (environment scope)");
       }
       if (rows.length) return rows;
       return logicalJoinKeys[from + "|" + to] || logicalJoinKeys[to + "|" + from] || ["Logical relationship; no physical FK declared"];
