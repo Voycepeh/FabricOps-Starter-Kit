@@ -24,7 +24,7 @@ Canonical operating guide for Codex and agent contributions in this repository. 
   - `METADATA_PIPELINE_REGISTRY` stores permanent UUIDv4 pipeline identities and environment notebook bindings; its seeded control row serializes registration transactions. Registration never grants activation.
   - `METADATA_PIPELINE_RUN` stores one logical pipeline execution across all declared operations, candidate identity, status and safe failures, and the activated version for Live.
   - `METADATA_GUARDRAIL_RESULTS` stores Guardrail evaluation results and continuation decisions.
-  - `METADATA_GUARDRAIL_ROW_RESULTS` stores row-level failures linked to Guardrail Results where applicable.
+  - Guardrail results persist aggregate rule outcomes, not full failed business rows; `METADATA_GUARDRAIL_ROW_RESULTS` is not a canonical metadata table.
   - `METADATA_SOURCE_OBSERVATION` stores source-state evidence and history used by incremental execution; successful watermark progress is stored on governed targets.
 
 ## Canonical terminology and glossary
