@@ -4404,9 +4404,15 @@ def render_metadata_reference_index(
     """Render a compact interactive metadata map instead of redundant full table cards."""
     # Keep browser tooltips and join-key summaries on the same canonical
     # model as the generated physical-table reference pages.
+    write_entrypoints = runpy.run_path(str(DOCS_METADATA_PATH))[
+        "METADATA_EXPLORER_WRITE_ENTRYPOINTS"
+    ]
+    if set(write_entrypoints) != set(reference_order):
+        raise ValueError("Every canonical metadata table must have audited write entrypoints")
     explorer_models = {
         name.removeprefix("METADATA_"): {
             "purpose": table_purposes.get(name) or table_models[name]["purpose"],
+            "write_entrypoints": write_entrypoints[name],
             "grain": table_models[name]["grain"],
             "primary_key": table_models[name]["primary_key"],
             "foreign_keys": [
