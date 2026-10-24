@@ -199,13 +199,13 @@
         link.addEventListener("click", event => {
           hideTooltip();
           event.preventDefault();
-          select(name);
+          select(name, { focusDetails: true });
         });
         link.addEventListener("keydown", event => {
           if (event.key === "Escape") hideTooltip();
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            select(name);
+            select(name, { focusDetails: true });
           }
         });
         buttons[name] = link;
@@ -223,6 +223,7 @@
     });
 
     detail.id = "metadata-explorer-selected-table";
+    detail.tabIndex = -1;
 
     let activeSelection = 0;
     function relationships(name) {
@@ -277,14 +278,13 @@
         }).join("") + '</div>';
     }
 
-        function sectionDetails(section) {
-      const wrapper = document.createElement("details");
-      wrapper.className = "metadata-explorer-section";
-      // All reference sections start collapsed. Quick purpose, grain and
-      // physical joins are already visible immediately above them.
-      const summary = document.createElement("summary");
-      summary.textContent = section.heading;
-      wrapper.appendChild(summary);
+        // Exact schema is the only large reference section; it stays visible.
+    function sectionDetails(section) {
+      const wrapper = document.createElement("section");
+      wrapper.className = "metadata-explorer-implemented-schema";
+      const heading = document.createElement("h4");
+      heading.textContent = "Implemented schema";
+      wrapper.appendChild(heading);
       const content = document.createElement("div");
       content.className = "metadata-explorer-section-body";
       section.nodes.forEach(node => content.appendChild(node.cloneNode(true)));
@@ -292,7 +292,7 @@
       return wrapper;
     }
 
-    async function select(name) {
+    async function select(name, { focusDetails = false } = {}) {
       const [title, schema, pk, fk, url, status] = byName.get(name);
       const selectionId = ++activeSelection;
       Object.entries(buttons).forEach(([key, button]) => {
@@ -303,21 +303,39 @@
         group.classList.toggle("selected", edge[0] === name || edge[1] === name);
       });
       const model = modelFor(name);
+      const writerNames = model.write_entrypoints || [];
+      const writers = writerNames.map(fn =>
+        '<a href="../../api/reference/' + encodeURIComponent(fn) + '/"><code>' +
+        escapeHtml(fn) + '()</code></a>'
+      ).join(' · ');
       detail.innerHTML =
         '<div class="metadata-explorer-detail-head"><div>' +
         '<span class="metadata-explorer-schema-tag ' + schema + '">' + escapeHtml(schema) + '</span>' +
-        '<h3>METADATA_' + escapeHtml(title) + '</h3>' +
-        '</div><span class="metadata-explorer-state">' + escapeHtml(status || "") + '</span></div>' +
+        '<h3>METADATA_' + escapeHtml(title) + '</h3></div>' +
+        '<span class="metadata-explorer-state">' + escapeHtml(status || "") + '</span></div>' +
+        '<div class="metadata-explorer-summary">' +
         '<p class="metadata-explorer-purpose">' + escapeHtml(brief(model.purpose || status || "")) + '</p>' +
         '<div class="metadata-explorer-detail-facts">' +
-        '<span><strong>Grain</strong> ' + escapeHtml(model.grain || "See reference model") + '</span>' +
-        '<span><strong>PK</strong> <code>' + escapeHtml((model.primary_key || pk).join(" · ")) + '</code></span>' +
-        '</div>' +
-        '<details class="metadata-explorer-section" open><summary>Relationships (' + relationships(name).length +
-        ')</summary>' + renderRelationships(name) + '</details>' +
+        '<div><strong>Grain</strong><span>' + escapeHtml(model.grain || "Logical release held in activation authority") + '</span></div>' +
+        '<div><strong>Primary key</strong><code>' + escapeHtml((model.primary_key || pk).join(" · ")) + '</code></div>' +
+        '<div><strong>Written via</strong><span>' + (writers || "See activation authority") + '</span></div>' +
+        '</div></div>' +
+        '<div class="metadata-explorer-relationship-summary"><h4>Relationships</h4>' +
+        renderRelationships(name) + '</div>' +
         '<div class="metadata-explorer-reference-content" data-reference-content></div>';
+      if (focusDetails) {
+        // Selection from the SVG scrolls the newly populated details into
+        // view. Do not jump when rendering the initial default selection.
+        window.requestAnimationFrame(() => {
+          detail.focus({ preventScroll: true });
+          detail.scrollIntoView({
+            block: "start",
+            behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+          });
+        });
+      }
       detail.querySelectorAll("[data-table]").forEach(button => {
-        button.addEventListener("click", () => select(button.dataset.table));
+        button.addEventListener("click", () => select(button.dataset.table, { focusDetails: false }));
       });
       const content = detail.querySelector("[data-reference-content]");
       if (!url) {
@@ -334,9 +352,13 @@
         const sections = await loadReference(url);
         if (activeSelection !== selectionId) return;
         content.innerHTML = "";
-        sections.filter(section =>
-          section.heading !== "Overview" || String(model.purpose || "").length > 165
-        ).forEach(section => content.appendChild(sectionDetails(section)));
+        const implemented = sections.find(section => section.heading === "Implemented schema");
+        if (implemented) {
+          content.appendChild(sectionDetails(implemented));
+        } else {
+          content.innerHTML = '<p>Schema details are available on the ' +
+            '<a href="' + escapeHtml(url) + '">full table reference page</a>.</p>';
+        }
       } catch (_error) {
         if (activeSelection !== selectionId) return;
         content.innerHTML = '<p>Could not load the detailed reference. ' +
