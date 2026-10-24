@@ -30,8 +30,6 @@ No starter template or solution is traced for the public writer functions.
 
 **Implementation details:** Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations, transient notebook-rebind barriers and renewable profiling claims.
 
-**Implementation details:** Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations, transient notebook-rebind barriers and renewable profiling claims.
-
 ## Column summary
 
 | Column category | Count |
