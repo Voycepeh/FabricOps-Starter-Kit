@@ -131,8 +131,8 @@
 
     const modelFor = name => canonicalModels[name] || {};
     const brief = value => {
-      const first = String(value || "").split(/\\.\\s+/)[0].trim();
-      const short = first.length > 165 ? first.slice(0, 162).replace(/\\s+\\S*$/, "") + "…" : first;
+      const first = String(value || "").split(/\.\s+/)[0].trim();
+      const short = first.length > 165 ? first.slice(0, 162).replace(/\s+\S*$/, "") + "…" : first;
       return short || "Select to inspect the table";
     };
     let hoveredLink = null;
