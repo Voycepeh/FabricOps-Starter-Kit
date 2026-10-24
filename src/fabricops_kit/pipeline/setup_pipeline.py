@@ -163,7 +163,9 @@ def setup_pipeline(
     Workspace configuration is loaded through the same initialization as
     setup_notebook. Load the current workspace configuration by default, or
     supply config_workspace_id for a shared deployment. The caller workspace
-    determines the environment in both cases.
+    determines the environment in both cases. Initialization prints the FabricOps
+    version, resolved configuration and targets, and startup readiness in the
+    calling notebook.
 
     Fabric cell events identify failures, not successful notebook completion.
     Call finalize_pipeline after all Reads, transformations and Writes.

@@ -56,3 +56,28 @@ def test_setup_notebook_readiness_does_not_require_optional_store_name() -> None
     assert path_checks["path:Bronze"].status == "pass"
     assert path_checks["path:Gold"].status == "pass"
     assert context.paths["Bronze"].name is None
+
+
+def test_explicit_setup_summary_reports_failed_checks(capsys) -> None:
+    """Make startup warnings and failures visible even when the result is discarded."""
+    setup_notebook(_config(), env="dev", notebook_name="invalid_name", config_workspace_id="ignored-workspace")
+
+    output = capsys.readouterr().out
+    assert "Configuration: explicit configuration" in output
+    assert "00_env_config" not in output
+    assert "ignored-workspace" not in output
+    assert "Environment: dev" in output
+    assert "- Gold: Gold (warehouse;" in output
+    assert "Readiness: not_ready" in output
+    assert "- fail: notebook_naming:" in output
+    assert "Notebook name does not match accepted FabricOps naming patterns." in output
+    assert "- warn: spark_session:" in output
+
+
+def test_setup_summary_handles_no_requested_targets(capsys) -> None:
+    """Empty target selection should still show readiness and a useful summary."""
+    setup_notebook(_config(), env="dev", required_targets=[], local_fallback_name="02_pipeline")
+
+    output = capsys.readouterr().out
+    assert "Targets:\n- None requested" in output
+    assert "Readiness: ready" in output

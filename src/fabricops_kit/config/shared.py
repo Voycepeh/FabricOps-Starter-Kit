@@ -1033,8 +1033,41 @@ def initialize_notebook(
             shell = get_ipython()
         if shell is not None:
             shell.user_ns["FABRIC_CONTEXT"] = active_context
+    _print_notebook_setup_summary(result, config=normalized, config_workspace_id=config_workspace_id if automatic else None)
     return result
 
+
+def _print_notebook_setup_summary(
+    context: NotebookSetupContext, *, config: FrameworkConfig, config_workspace_id: str | None,
+) -> None:
+    """Show resolved startup details in the calling notebook output."""
+    from fabricops_kit import __version__
+
+    print(f"FabricOps v{__version__}")
+    print("Docs, examples, releases & support:")
+    print("https://github.com/Voycepeh/FabricOps-Starter-Kit")
+    caller_workspace = context.runtime_metadata.get("workspace_id")
+    if config_workspace_id is not None:
+        location = "same-workspace" if config_workspace_id == caller_workspace else "cross-workspace"
+        print(f"Configuration: 00_env_config ({location}; workspace: {config_workspace_id})")
+    else:
+        print("Configuration: explicit configuration")
+    print(f"Caller workspace: {context.workspace_name or 'unknown'} ({caller_workspace or 'unknown'})")
+    print(f"Notebook: {context.notebook_name or 'unknown'}")
+    print(f"Run ID: {context.run_id}")
+    print(f"Environment: {context.environment}")
+    print(f"Audit timezone: {config.audit_timezone}")
+    print(f"Metadata schemas: governance={config.governance_metadata_schema}, engineering={config.engineering_metadata_schema}")
+    print("Targets:")
+    for key, store in context.paths.items():
+        schema = store.schema if store.schema_enabled else "disabled"
+        print(f"- {key}: {store.name or key} ({store.kind}; schema: {schema}; workspace: {store.workspace_id})")
+    if not context.paths:
+        print("- None requested")
+    print(f"Readiness: {context.readiness_status}")
+    for check in context.validation_results:
+        if check.status != "pass":
+            print(f"- {check.status}: {check.name}: {check.message}")
 
 
 def _get_fabric_runtime_context() -> tuple[Any, str]:

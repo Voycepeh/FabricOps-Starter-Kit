@@ -101,6 +101,14 @@ def setup_notebook(
     ``config_workspace_id`` never replace it. No configuration load provisions
     metadata tables.
 
+    Print a startup summary in the calling notebook with the installed FabricOps
+    version, documentation link, configuration source, caller workspace, notebook
+    and run identity, resolved environment, audit timezone, metadata schemas,
+    requested targets, readiness status, and any warning, skipped, or failed
+    checks. This output is visible even when Fabric keeps the configuration
+    notebook output in a separate execution snapshot. Explicit configuration
+    also prints the summary.
+
     Startup flow:
 
     1. Validate the supplied FabricOps framework configuration.

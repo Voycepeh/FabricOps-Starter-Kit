@@ -122,6 +122,14 @@ workspace. The caller identity comes from
 ``config_workspace_id`` never replace it. No configuration load provisions
 metadata tables.
 
+Print a startup summary in the calling notebook with the installed FabricOps
+version, documentation link, configuration source, caller workspace, notebook
+and run identity, resolved environment, audit timezone, metadata schemas,
+requested targets, readiness status, and any warning, skipped, or failed
+checks. This output is visible even when Fabric keeps the configuration
+notebook output in a separate execution snapshot. Explicit configuration
+also prints the summary.
+
 Startup flow:
 
 1. Validate the supplied FabricOps framework configuration.
@@ -213,7 +221,7 @@ initializes the shared context when configuration is loaded automatically.
 
 `fabricops_kit/config/setup_notebook.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L10-L166">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L10-L174">View on GitHub</a>
 </div>
 
 
@@ -229,7 +237,7 @@ initializes the shared context when configuration is loaded automatically.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 10 |
+| Live-critical dependencies | 11 |
 
 ### Release history
 
@@ -245,6 +253,7 @@ initializes the shared context when configuration is loaded automatically.
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared._print_notebook_setup_summary</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
