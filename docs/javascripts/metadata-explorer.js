@@ -112,7 +112,7 @@
     root.innerHTML =
       '<div class="metadata-explorer-topbar">' +
       '<span class="metadata-explorer-legend"><i class="metadata-dot governance"></i> Governance <i class="metadata-dot engineering"></i> Engineering</span>' +
-      '<span class="metadata-explorer-hint">Select a table to show relationships and details</span>' +
+      '<span class="metadata-explorer-hint">Solid: keyed joins · Dashed: conceptual references</span>' +
       '</div>' +
       '<div class="metadata-explorer-layout">' +
       '<div class="metadata-explorer-viewport" role="region" tabindex="0" aria-label="Scrollable metadata relationship diagram">' +
@@ -160,7 +160,6 @@
     // Keep the reviewed SVG as the exact visual model, while reusing the
     // existing selection/details panel for every physical metadata table.
     const buttons = {};
-    const pathEntries = [];
     const approvedDiagram = new URL("../../assets/fabricops-metadata-approved.svg", document.baseURI);
     graph.style.width = "100%";
     graph.style.minWidth = "860px";
@@ -287,8 +286,9 @@
         button.classList.toggle("selected", key === name);
         button.setAttribute("aria-pressed", String(key === name));
       });
-      pathEntries.forEach(({ edge, group }) => {
-        group.classList.toggle("selected", edge[0] === name || edge[1] === name);
+      graph.querySelectorAll(".metadata-er-relationship").forEach(group => {
+        group.classList.toggle("selected",
+          group.getAttribute("data-from") === name || group.getAttribute("data-to") === name);
       });
       const model = modelFor(name);
       const writerNames = model.write_entrypoints || [];
@@ -328,11 +328,6 @@
       const content = detail.querySelector("[data-reference-content]");
       if (!url) {
         content.textContent = "This table is proposed and has no implemented schema yet.";
-        return;
-      }
-      if (status && title === "ACTIVATED_PIPELINE") {
-        content.innerHTML = '<p>Activated Pipeline is a logical release stored inside the activation authority snapshot, not a separate implemented metadata table.</p>' +
-          '<p><a href="' + escapeHtml(url) + '">Open activation-state authority reference →</a></p>';
         return;
       }
       content.innerHTML = '<p class="metadata-explorer-loading">Loading table reference…</p>';
