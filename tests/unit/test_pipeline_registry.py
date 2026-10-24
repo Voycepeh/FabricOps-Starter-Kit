@@ -18,6 +18,9 @@ def registry(monkeypatch):
                "notebook_id": "notebook-one", "notebook_name": "Supplier Ingestion"}
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda context: (context["config"], context["env"], context))
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kwargs: {"_committed_by": "engineer"})
+    from fabricops_kit.activated_pipeline import shared as activation
+    monkeypatch.setattr(activation, "reserve_pipeline_rebind", lambda *args, **kwargs: "rebind-lease")
+    monkeypatch.setattr(activation, "release_pipeline_rebind", lambda *args, **kwargs: None)
 
     def read(**kwargs):
         with lock:
@@ -63,15 +66,31 @@ def test_reupload_requires_explicit_expected_binding(registry):
     context, rows, *_ = registry
     identity = shared.resolve_pipeline_registration(context=context)['pipeline_id']
     uploaded = {**context, 'notebook_id': 'reuploaded'}
-    with pytest.raises(ValueError, match='rebind_pipeline'):
+    with pytest.raises(ValueError, match='previous_workspace_id'):
         shared.resolve_pipeline_registration(identity, context=uploaded)
     assert rows[0]['notebook_id'] == context['notebook_id']
-    with pytest.raises(ValueError, match='rebind_pipeline'):
+    with pytest.raises(ValueError, match='previous_workspace_id'):
         shared.resolve_pipeline_registration(identity, context=uploaded, previous_binding=('wrong', 'old'))
     rebound = shared.resolve_pipeline_registration(identity, context=uploaded,
         previous_binding=(context['workspace_id'], context['notebook_id']))
     assert rebound['pipeline_id'] == identity and rebound['resolution'] == 'Rebound'
     assert shared.resolve_pipeline_registration(context=uploaded)['pipeline_id'] == identity
+
+
+def test_failed_rebind_releases_live_start_barrier(registry, monkeypatch):
+    context, rows, *_ = registry
+    identity = shared.resolve_pipeline_registration(context=context)['pipeline_id']
+    from fabricops_kit.activated_pipeline import shared as activation
+    released = []
+    monkeypatch.setattr(activation, 'release_pipeline_rebind',
+        lambda pipeline_id, lease_id, **kwargs: released.append((pipeline_id, lease_id)))
+    monkeypatch.setattr(shared, 'commit_pipeline_registration',
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('registry write failed')))
+    with pytest.raises(RuntimeError, match='registry write failed'):
+        shared.resolve_pipeline_registration(identity, context={**context, 'notebook_id': 'reuploaded'},
+            previous_binding=(context['workspace_id'], context['notebook_id']))
+    assert released == [(identity, 'rebind-lease')]
+    assert rows[0]['notebook_id'] == context['notebook_id']
 
 
 def test_promotion_adds_binding_without_activation(registry):

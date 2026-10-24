@@ -21,6 +21,9 @@ Use once before Read, Transform and Write with pipeline_id and pipeline_mode.
 ```python
 contracts = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
 orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+independent_copy = setup_pipeline(pipeline_mode="Test", new_pipeline=True)
+reuploaded = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Test",
+    previous_workspace_id=old_workspace_id, previous_notebook_id=old_notebook_id)
 ```
 
 </div>
@@ -38,6 +41,9 @@ def setup_pipeline(
     pipeline_id: str | None=None,
     pipeline_mode: str='Test',
     config_workspace_id: str | None=None,
+    new_pipeline: bool=False,
+    previous_workspace_id: str | None=None,
+    previous_notebook_id: str | None=None,
 ):
 ```
 
@@ -53,9 +59,12 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `pipeline_id` | `str \| None` | No | `None` | Permanent UUIDv4. Omit to recover the exact notebook binding or register a new UUID. Save the displayed UUID in the notebook for promotion. Changed same-environment bindings require explicit rebind_pipeline. |
+| `pipeline_id` | `str \| None` | No | `None` | Permanent UUIDv4. Omit to recover the exact notebook binding or register a new UUID. Save the displayed UUID in the notebook for promotion. A changed same-environment binding requires both previous notebook IDs. |
 | `pipeline_mode` | `str` | No | `'Test'` | Evaluation-only operations or execution under an approved manifest. |
 | `config_workspace_id` | `str \| None` | No | `None` | Workspace hosting 00_env_config. Defaults to the current workspace. Supply an ID only when using a shared cross-workspace configuration. |
+| `new_pipeline` | `bool` | No | `False` | Explicitly create a new identity for an independent notebook copy. Omit pipeline_id when set. An already registered notebook is rejected. |
+| `previous_workspace_id` | `str \| None` | No | `None` | Supply both old binding IDs to explicitly rebind a reuploaded notebook. Rebinding requires Test mode and no active Live runs. |
+| `previous_notebook_id` | `str \| None` | No | `None` | Not documented yet |
 
 </div>
 
@@ -125,7 +134,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L201">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L219">View on GitHub</a>
 </div>
 
 

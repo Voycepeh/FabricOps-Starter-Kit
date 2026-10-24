@@ -67,6 +67,8 @@ Not documented yet
 <div class="reference-docstring-intro" markdown="1">
 
 Pass finalized in-memory Test results using testing_results=[pipeline_result].
+For each candidate, independently check its Fabric notebook execution,
+enter the Fabric run reference and attest that the Test actually ran.
 No execution metadata is committed by Test; approval freezes the reviewed
 evidence in METADATA_ACTIVATION_STATE.
 
@@ -75,8 +77,10 @@ affected pipelines, missing tests, conflicts and complete release readiness.
 Completed Testing runs missing contracts are listed by table ID and excluded
 from review. Extra candidate controls appear for shared-table dependencies.
 Supply an immutable release version for
-every selected pipeline. The backend revalidates complete Testing, exact
-contracts, Agreement and processing configuration at review and again at approval.
+every selected pipeline. The backend checks the supplied Test result,
+current registered notebook binding, exact contracts, Agreement and
+processing configuration at review and again at approval. Because Test
+commits no execution record, Governance must verify the Fabric run itself.
 
 One explicit approval publishes the entire environment revision atomically.
 Stale review, missing tests, competing writers, contract conflicts or affected
@@ -94,9 +98,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_activate_pipeline.py:78`
+`fabricops_kit/widgets/widget_activate_pipeline.py:81`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L78-L246">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L81-L261">View on GitHub</a>
 </div>
 
 

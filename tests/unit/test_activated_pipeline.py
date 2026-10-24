@@ -78,6 +78,7 @@ def authority(runtime, monkeypatch, tmp_path):
         # Results are retained by the test reviewer, never committed by Test.
         saved[plan.plan_id] = run
         run['guardrail_results'] = copy.deepcopy(diagnostics)
+        run['testing_notebook_binding'] = {'workspace_id': 'workspace', 'notebook_id': 'notebook', 'activity_id': 'fabric-test-run'}
         registrations[:] = [row for row in registrations if (row['pipeline_id'], row['environment_name']) != (pipeline_id, env)]
         registrations.append({'pipeline_id': pipeline_id, 'environment_name': env, 'registration_status': 'Active',
                               'workspace_id': 'workspace', 'notebook_id': 'notebook'})
@@ -86,7 +87,8 @@ def authority(runtime, monkeypatch, tmp_path):
     def request(run, release=None):
         return {"testing_result": run, "testing_run_id": run["run_id"], "candidate_fingerprint": run["candidate_fingerprint"],
                 "pipeline_name": run["pipeline_id"], "pipeline_version": release or run["run_id"],
-                "agreement_id": "agreement", "agreement_version": "1"}
+            "agreement_id": "agreement", "agreement_version": "1",
+            "testing_verification": {"verified": True, "reference": "fabric-test-run"}}
     def approve(*runs, env="canary"):
         return service.approve_pipeline_release([request(run) for run in runs], expected_token=central["token"],
             governance_confirmed=True, context={**context, "env": env})
@@ -150,6 +152,22 @@ def test_invalid_evidence_never_activates(authority, field, value):
     with pytest.raises((ValueError, TypeError)):
         state.approve(run)
     assert not state.current()["pipelines"]
+
+
+def test_unverified_handoff_and_previous_notebook_test_cannot_activate(authority):
+    state = authority
+    _, run = state.candidate()
+    request = state.request(run)
+    request["testing_verification"] = {"verified": False, "reference": "fabric-test-run"}
+    with pytest.raises(ValueError, match="independently verify"):
+        service.review_pipeline_release([request], context=state.context)
+    request["testing_verification"] = {"verified": True, "reference": ""}
+    with pytest.raises(ValueError, match="run reference"):
+        service.review_pipeline_release([request], context=state.context)
+    request = state.request(run)
+    run["testing_notebook_binding"]["notebook_id"] = "previous-notebook"
+    with pytest.raises(ValueError, match="current registered notebook"):
+        service.review_pipeline_release([request], context=state.context)
 
 
 def test_affected_failed_evidence_blocks_entire_release(authority):
@@ -225,6 +243,26 @@ def test_live_run_pins_revision_and_drains_before_switch(authority, monkeypatch)
         state.operation(live, 0)
     state.approve(next_run)
     assert live.activation_revision == pinned != state.current()["revision"]
+
+
+def test_rebind_reservation_drains_live_and_blocks_new_live(authority, monkeypatch):
+    state = authority
+    plan, run = state.candidate()
+    state.approve(run)
+    identities = json.loads(plan.participants_json)
+    monkeypatch.setattr(service, "resolve_pipeline_participants", lambda *a, **kw: identities)
+    monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda *a, **kw: plan.runtime_context["_pipeline_bindings"])
+    identity = run["pipeline_id"]
+    live = service.build_live_pipeline_plan(pipeline_id=identity, context=state.context)
+    with pytest.raises(ValueError, match="Drain active Live runs"):
+        service.reserve_pipeline_rebind(identity, context=state.context)
+    live.evidence["boundary_completed"] = True
+    pipeline.finalize_pipeline_run(live)
+    lease_id = service.reserve_pipeline_rebind(identity, context=state.context)
+    with pytest.raises(ValueError, match="rebinding is in progress"):
+        service.build_live_pipeline_plan(pipeline_id=identity, context=state.context)
+    service.release_pipeline_rebind(identity, lease_id, context=state.context)
+    assert not state.current()["runs"]
 
 
 

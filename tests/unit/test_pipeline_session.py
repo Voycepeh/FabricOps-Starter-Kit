@@ -56,11 +56,30 @@ def test_exact_mode_validation(runtime, mode):
         setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode=mode)
 
 
-def test_only_pipeline_identity_mode_and_config_location_are_setup_arguments(runtime):
+def test_setup_arguments_cover_explicit_copy_and_rebind_without_write_flags(runtime):
     import inspect
-    assert list(inspect.signature(setup_pipeline).parameters) == ['pipeline_id', 'pipeline_mode', 'config_workspace_id']
+    assert list(inspect.signature(setup_pipeline).parameters) == [
+        'pipeline_id', 'pipeline_mode', 'config_workspace_id', 'new_pipeline',
+        'previous_workspace_id', 'previous_notebook_id']
     with pytest.raises(TypeError):
         setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test', testing_writes=True)
+    with pytest.raises(ValueError, match='omitted pipeline_id'):
+        setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', new_pipeline=True)
+    with pytest.raises(ValueError, match='Supply both'):
+        setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', previous_workspace_id='old')
+
+
+def test_setup_forwards_new_identity_and_rebind_requests(runtime, monkeypatch):
+    requests = []
+    def resolve(identity, **kwargs):
+        requests.append((identity, kwargs['new_pipeline'], kwargs['previous_binding']))
+        return {'pipeline_id': identity or '8f32a471-6c91-4b7e-9d13-2f0c947eab52', 'resolution': 'New'}
+    monkeypatch.setattr(shared, 'resolve_pipeline_registration', resolve)
+    setup_pipeline(pipeline_mode='Test', new_pipeline=True)
+    setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test',
+        previous_workspace_id='old-workspace', previous_notebook_id='old-notebook')
+    assert requests == [(None, True, None),
+        ('8f32a471-6c91-4b7e-9d13-2f0c947eab52', False, ('old-workspace', 'old-notebook'))]
 
 
 def test_headless_test_without_notebook_identity_or_metadata_writes(runtime):
@@ -309,6 +328,9 @@ def test_finalized_governed_test_can_build_new_activation_manifest(runtime, monk
     from fabricops_kit import finalize_pipeline
     from datetime import date, timedelta
     activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
+    config_shared = importlib.import_module('fabricops_kit.config.shared')
+    monkeypatch.setattr(config_shared, 'resolve_runtime_context',
+        lambda context=None: {'workspace_id': 'workspace', 'notebook_id': 'notebook', 'activity_id': 'fabric-test-run'})
     session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     payload = {'contract': {'contract_id': 'frozen', 'contract_version': 1, 'status': 'frozen'},
                'table': {'table_id': 'orders', 'columns': []}, 'guardrails': [],
@@ -329,10 +351,11 @@ def test_finalized_governed_test_can_build_new_activation_manifest(runtime, monk
                'METADATA_GUARDRAIL_RESULTS': [], 'METADATA_DATA_AGREEMENT': [agreement]}
     monkeypatch.setattr(activation, 'metadata_records', lambda table, **kwargs: records[table])
     monkeypatch.setattr(activation, 'resolve_fabric_context', shared.resolve_fabric_context)
-    monkeypatch.setattr(shared, 'read_pipeline_registry', lambda **kwargs: ('token', [{'pipeline_id': result['pipeline_id'], 'environment_name': 'dev', 'registration_status': 'Active'}]))
+    monkeypatch.setattr(shared, 'read_pipeline_registry', lambda **kwargs: ('token', [{'pipeline_id': result['pipeline_id'], 'environment_name': 'dev', 'registration_status': 'Active', 'workspace_id': 'workspace', 'notebook_id': 'notebook'}]))
     manifest = activation.tested_pipeline_manifest(testing_run_id=result['run_id'],
         candidate_fingerprint=result['candidate_fingerprint'], pipeline_name='Orders', pipeline_version='1',
-        agreement_id='agreement', agreement_version='1.0.0', testing_result=result, context={'config': {}, 'env': 'dev'})
+        agreement_id='agreement', agreement_version='1.0.0', testing_result=result,
+        testing_verification={'verified': True, 'reference': 'fabric-test-run'}, context={'config': {}, 'env': 'dev'})
     assert manifest['testing_run_id'] == result['run_id']
     assert manifest['candidate']['pipeline_id'] == '8f32a471-6c91-4b7e-9d13-2f0c947eab52'
 

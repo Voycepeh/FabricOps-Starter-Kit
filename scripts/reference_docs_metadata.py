@@ -144,7 +144,7 @@ METADATA_TABLE_MODELS = {
         "relationships": [{"cardinality": "N:1", "statement": "Each Live run references an approved Activated Pipeline release inside METADATA_ACTIVATION_STATE."}],
     },
     "METADATA_ACTIVATION_STATE": {
-        "purpose": "Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations and renewable profiling claims.",
+        "purpose": "Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations, transient notebook-rebind barriers and renewable profiling claims.",
         "grain": "One central authority row containing environment snapshots.",
         "primary_key": ["authority_id"], "foreign_keys": [],
         "relationships": [{"logical_entity": "Activated Pipeline", "cardinality": "1:N", "statement": "Each registered Pipeline UUID can have many immutable Activated Pipeline releases in the environment history. Activated Pipeline is a logical entity in snapshot_json, not a separate Delta table."},
@@ -2093,15 +2093,8 @@ METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"] = {
     name: ["fabricops_kit.pipeline.shared.commit_pipeline_registration", "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"]
     for name in ("pipeline_id", "environment_name", "workspace_id", "notebook_id", "notebook_name", "registered_at", "registered_by", "updated_at", "registration_status", "registry_token")
 }
-for name in ("create_pipeline", "rebind_pipeline"):
-    PUBLIC_SYMBOL_DOCS.append({"kind": "function", "module": "pipeline." + name,
-        "function_type": "callable", "symbol_name": name, "template_notebook": "02_pipeline",
-        "related_functions": ["setup_pipeline"], "use_when": "Explicit administration of an Engineering Pipeline Registry binding."})
-
 METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"]["__audit__"] = ["fabricops_kit.config.audit.build_runtime_audit_fields"]
 
 METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"]["__default__"] = [
     "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
-    "fabricops_kit.pipeline.create_pipeline.create_pipeline",
-    "fabricops_kit.pipeline.rebind_pipeline.rebind_pipeline",
 ]

@@ -5969,6 +5969,11 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
         row = persist_pipeline_run(plan, spark_session=spark_session, status=status, completed_at=datetime.now(UTC))
         if plan.execution_mode == "testing":
             row["guardrail_results"] = list(plan.evidence.get("guardrail_history", []))
+            row["testing_notebook_binding"] = {
+                "workspace_id": plan.runtime_context.get("workspace_id"),
+                "notebook_id": plan.notebook_id,
+                "activity_id": plan.runtime_context.get("activity_id"),
+            }
         plan.evidence.update(sealed=True, final_result=row)
         if plan.evidence.get("lease_token"):
             from fabricops_kit.activated_pipeline.shared import release_pipeline_lease
@@ -6259,6 +6264,8 @@ def resolve_pipeline_registration(pipeline_id=None, *, context, spark_session=No
     if not workspace or not notebook:
         raise ValueError("Pipeline registration requires the caller's Fabric workspace_id and notebook_id.")
     supplied = pipeline_id is not None
+    if new_pipeline and supplied:
+        raise ValueError("New pipeline registration requires an omitted pipeline_id.")
     if supplied:
         pipeline_id = validate_pipeline_id(pipeline_id)
     token, rows = read_pipeline_registry(context=context, spark_session=spark_session)
@@ -6281,7 +6288,7 @@ def resolve_pipeline_registration(pipeline_id=None, *, context, spark_session=No
         old = (existing["workspace_id"], existing["notebook_id"])
         if old != (workspace, notebook):
             if previous_binding != old:
-                raise ValueError("Pipeline UUID belongs to another notebook in this environment. Use rebind_pipeline with its previous workspace and notebook IDs, or create_pipeline in an unregistered notebook for an independent copy.")
+                raise ValueError("Pipeline UUID belongs to another notebook in this environment. Call setup_pipeline with previous_workspace_id and previous_notebook_id to rebind, or omit pipeline_id with new_pipeline=True in an independent copy.")
             status = "Rebound"
         elif previous_binding is not None and previous_binding != old:
             raise ValueError("Previous binding changed; refresh the registry before rebinding.")
@@ -6299,22 +6306,20 @@ def resolve_pipeline_registration(pipeline_id=None, *, context, spark_session=No
            "registered_by": existing["registered_by"] if existing else audit["_committed_by"],
            "updated_at": now, "registration_status": "Active"}
     if not existing or any(row.get(key) != existing.get(key) for key in ("workspace_id", "notebook_id", "notebook_name")):
-        commit_pipeline_registration(row, expected_token=token, context=context, spark_session=spark_session)
+        if status == "Rebound":
+            from fabricops_kit.activated_pipeline.shared import reserve_pipeline_rebind, release_pipeline_rebind
+            lease_id = reserve_pipeline_rebind(pipeline_id, context=context, spark_session=spark_session)
+            try:
+                commit_pipeline_registration(row, expected_token=token, context=context, spark_session=spark_session)
+            finally:
+                release_pipeline_rebind(pipeline_id, lease_id, context=context, spark_session=spark_session)
+        else:
+            commit_pipeline_registration(row, expected_token=token, context=context, spark_session=spark_session)
     return {**row, "resolution": status}
 
 
-def administer_pipeline_registration(pipeline_id=None, *, previous_binding=None, config_workspace_id=None):
-    """Initialize the actual caller and register without starting a pipeline run."""
-    from fabricops_kit.config.shared import resolve_runtime_context
-    initialize_notebook(config_workspace_id=config_workspace_id)
-    config, env, runtime = resolve_fabric_context()
-    runtime = {**runtime, **{key: value for key, value in resolve_runtime_context(context=runtime).items() if value is not None},
-               "config": config, "env": env}
-    return resolve_pipeline_registration(pipeline_id, context=runtime, spark_session=get_spark_session(),
-        new_pipeline=pipeline_id is None, previous_binding=previous_binding)["pipeline_id"]
-
-
-def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None, config_workspace_id=None):
+def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None, config_workspace_id=None,
+                           new_pipeline=False, previous_binding=None):
     """Resolve runtime services and install conservative notebook lifecycle reporting."""
     import atexit
     from contextlib import nullcontext
@@ -6343,7 +6348,8 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None, config
     with startup.phase("spark_loading", "Resolving the Spark session…") if startup else nullcontext():
         spark = get_spark_session()
     with startup.phase("metadata_loading", "Resolving the execution plan…") if startup else nullcontext():
-        registration = resolve_pipeline_registration(pipeline_id, context=runtime, spark_session=spark)
+        registration = resolve_pipeline_registration(pipeline_id, context=runtime, spark_session=spark,
+            new_pipeline=new_pipeline, previous_binding=previous_binding)
         pipeline_id = registration["pipeline_id"]
         print(f'FabricOps Pipeline\nPipeline ID: {pipeline_id}\nEnvironment: {env}\nRegistration: {registration["resolution"]}')
         print(f'\nSave this Pipeline ID in your notebook:\n\nPIPELINE_ID = "{pipeline_id}"')

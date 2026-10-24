@@ -4,7 +4,7 @@ Run `finalize_pipeline(CONTRACTS)` after completing Testing in [Step 4](04-valid
 
 ## Review the affected release
 
-1. Hand off the complete `pipeline_result` to the reviewer and open `widget_activate_pipeline(testing_results=[pipeline_result])` in the same environment. The resolved environment is shown automatically.
+1. Hand off the complete `pipeline_result` to the reviewer and open `widget_activate_pipeline(testing_results=[pipeline_result])` in the same environment. Independently confirm the Fabric notebook execution for each candidate, enter its run reference and attest verification in the widget. The resolved environment is shown automatically.
 2. Select the successful Testing run, immutable pipeline version, exact effective Data Agreement.
 3. Review participating tables, proposed contract versions and current writer ownership. When a shared table changes, include compatible successful Testing candidates for every affected active pipeline. Missing or failed tests and competing writers block approval.
 4. Choose **Review complete release**. Inspect the current/proposed table mappings, affected pipelines and readiness report.

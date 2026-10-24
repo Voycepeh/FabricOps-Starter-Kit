@@ -129,6 +129,8 @@ def _inspector(row, roles, results=()):
 
 def setup_pipeline(
     *, pipeline_id: str | None = None, pipeline_mode: str = "Test", config_workspace_id: str | None = None,
+    new_pipeline: bool = False, previous_workspace_id: str | None = None,
+    previous_notebook_id: str | None = None,
 ):
     """Start an isolated pipeline using exactly Test or Live.
 
@@ -145,13 +147,18 @@ def setup_pipeline(
     pipeline_id : str | None, optional
         Permanent UUIDv4. Omit to recover the exact notebook binding or register
         a new UUID. Save the displayed UUID in the notebook for promotion.
-        Changed same-environment bindings require explicit rebind_pipeline.
+        A changed same-environment binding requires both previous notebook IDs.
     pipeline_mode : {"Test", "Live"}, default="Test"
         Evaluation-only operations or execution under an approved manifest.
-
     config_workspace_id : str | None, optional
         Workspace hosting 00_env_config. Defaults to the current workspace.
         Supply an ID only when using a shared cross-workspace configuration.
+    new_pipeline : bool, default=False
+        Explicitly create a new identity for an independent notebook copy. Omit
+        pipeline_id when set. An already registered notebook is rejected.
+    previous_workspace_id, previous_notebook_id : str | None, optional
+        Supply both old binding IDs to explicitly rebind a reuploaded notebook.
+        Rebinding requires Test mode and no active Live runs.
 
     Returns
     -------
@@ -186,6 +193,9 @@ def setup_pipeline(
     --------
     >>> contracts = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
     >>> orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+    >>> independent_copy = setup_pipeline(pipeline_mode="Test", new_pipeline=True)
+    >>> reuploaded = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Test",
+    ...     previous_workspace_id=old_workspace_id, previous_notebook_id=old_notebook_id)
 
     """
     from fabricops_kit.pipeline.shared import start_pipeline_session
@@ -195,7 +205,15 @@ def setup_pipeline(
         pipeline_id = validate_pipeline_id(pipeline_id)
     if pipeline_mode not in {"Test", "Live"}:
         raise ValueError("pipeline_mode must be exactly Test or Live.")
+    if not isinstance(new_pipeline, bool) or (new_pipeline and pipeline_id is not None):
+        raise ValueError("new_pipeline=True requires an omitted pipeline_id.")
+    if (previous_workspace_id is None) != (previous_notebook_id is None):
+        raise ValueError("Supply both previous_workspace_id and previous_notebook_id for rebinding.")
+    if previous_workspace_id is not None and (pipeline_id is None or new_pipeline or pipeline_mode != "Test"):
+        raise ValueError("Rebinding requires a saved pipeline_id and pipeline_mode='Test'.")
     return start_pipeline_session(
         pipeline_id, pipeline_mode,
         inspector=_inspector, config_workspace_id=config_workspace_id,
+        new_pipeline=new_pipeline,
+        previous_binding=(previous_workspace_id, previous_notebook_id) if previous_workspace_id is not None else None,
     )

@@ -203,7 +203,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations and renewable profiling claims.</span>
+  <span class="metadata-table-card__purpose">Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations, transient notebook-rebind barriers and renewable profiling claims.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
     <span>One central authority row containing environment snapshots.</span>

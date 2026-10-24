@@ -211,8 +211,6 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'write_warehouse_table',
         'finalize_pipeline',
         'setup_pipeline',
-        'create_pipeline',
-        'rebind_pipeline',
         'profile_table',
         'resolve_table_id',
         'pipeline_read',

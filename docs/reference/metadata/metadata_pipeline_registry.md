@@ -4,15 +4,12 @@ Permanent UUIDv4 identity and environment-specific notebook bindings; registrati
 
 ## Writer functions
 
-* [`create_pipeline`](../../api/reference/create_pipeline.md)
-* [`rebind_pipeline`](../../api/reference/rebind_pipeline.md)
 * [`setup_metadata_tables`](../../api/reference/setup_metadata_tables.md)
 * [`setup_pipeline`](../../api/reference/setup_pipeline.md)
 
 ## Used in Workflow Template
 
 * [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Environment bootstrap
-* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
 * [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Configure the pipeline and whole-run boundary
 
 ## Model
