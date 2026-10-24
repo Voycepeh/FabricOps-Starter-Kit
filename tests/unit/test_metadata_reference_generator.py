@@ -288,7 +288,7 @@ def test_metadata_explorer_full_text_and_prominent_navigation() -> None:
     assert 'Explore the interactive Metadata Tables map' in homepage
     assert 'Explore the interactive Metadata Tables map' in how_it_works
     assert 'class="fabricops-home-metadata-map"' in homepage
-    assert 'href="reference/metadata.md"' in homepage
+    assert 'class="fabricops-home-metadata-map" href="reference/metadata/"' in homepage
     assert "## The Big Picture" in how_it_works
     assert how_it_works.index("Explore the interactive Metadata Tables map") < how_it_works.index("## Workspace Architecture")
 
