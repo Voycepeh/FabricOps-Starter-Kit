@@ -309,7 +309,7 @@ _TARGET_TECHNICAL_COLUMNS = {
 
 
 _LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
-_SOURCE_OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
+_PROCESSING_STATE_TABLE = "METADATA_PROCESSING_STATE"
 _CURRENT_SOURCE_OBSERVATIONS: dict[tuple[str, str, str], Any] = {}
 _CURRENT_FRESHNESS_EVIDENCE: dict[tuple[str, str, str], dict[str, Any]] = {}
 _PENDING_SOURCE_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
@@ -969,6 +969,7 @@ class PublicationBatch:
         self.already_applied = False
         self.finalization_recovery = False
         self.receipt = {}
+        self.publication_snapshot = []
         self._owns_cache = not dataframe.is_cached
 
     def __enter__(self):
@@ -1009,8 +1010,8 @@ class PublicationBatch:
             history_rows = []
             try:
                 history = read_lakehouse_table(
-                    _SOURCE_OBSERVATION_TABLE, store="Metadata",
-                    schema=metadata_table_physical_schema(self.context["config"], _SOURCE_OBSERVATION_TABLE),
+                    _PROCESSING_STATE_TABLE, store="Metadata",
+                    schema=metadata_table_physical_schema(self.context["config"], _PROCESSING_STATE_TABLE),
                     context=self.context,
                 )
                 receipts = []
@@ -1026,10 +1027,6 @@ class PublicationBatch:
                     if _accepts_publication_receipt(self, receipt):
                         self.receipt = receipt
                         self.already_applied = True
-                        self.finalization_recovery = not any(
-                            row.get("record_type") == "publication_receipt" and row.get("status") == "committed"
-                            and _publication_receipt(row, history_rows) == receipt for row in history_rows
-                        )
                         break
             except Exception as exc:
                 if not is_table_not_found_error(exc):
@@ -1043,6 +1040,7 @@ class PublicationBatch:
                     self.already_applied = True
             if self.already_applied:
                 _verify_retry_observations(self, history_rows)
+                self._freeze_publication_snapshot(history_rows)
             _verify_publication_progress(self, history_rows)
             self._active_sources = {
                 key: [dict(row) for row in _PENDING_SOURCE_OBSERVATIONS.get(key, [])]
@@ -1055,6 +1053,18 @@ class PublicationBatch:
             if self._owns_cache:
                 self.dataframe.unpersist()
             raise
+
+    def _freeze_publication_snapshot(self, history):
+        """Bind retry acknowledgement to the full durable membership of the winning receipt."""
+        publication_id = _processing_state_id(
+            self.context["env"], self.identity["table_id"], self.receipt["batch_id"],
+            self.receipt["activity_id"], self.receipt["committed_at"],
+        )
+        self.publication_snapshot = [dict(row) for row in history
+            if row.get("publication_id") == publication_id
+            and row.get("environment_name") == self.context["env"]
+            and row.get("target_table_id") == self.identity["table_id"]]
+        self.finalization_recovery = any(row.get("status") == "staged" for row in self.publication_snapshot)
 
     def confirm(self):
         """Refuse metadata advancement if a writer silently omitted this batch."""
@@ -1071,6 +1081,11 @@ class PublicationBatch:
             if receipt:
                 self.receipt = receipt
                 self.already_applied = True
+                history = read_lakehouse_table(
+                    _PROCESSING_STATE_TABLE, store="Metadata",
+                    schema=metadata_table_physical_schema(self.context["config"], _PROCESSING_STATE_TABLE), context=self.context,
+                )
+                self._freeze_publication_snapshot(_processing_state_rows(history))
                 return
             raise RuntimeError(
                 "Physical publication did not establish the exact batch receipt; "
@@ -1186,18 +1201,18 @@ def _find_applied_publication(identity, batch_id, *, context, spark_session):
 
 def _processing_state_rows(history):
     """Reject unsupported Preview layouts before interpreting any persisted progress."""
-    required = set(metadata_table_schema_registry()[_SOURCE_OBSERVATION_TABLE].fieldNames())
+    required = set(metadata_table_schema_registry()[_PROCESSING_STATE_TABLE].fieldNames())
     if hasattr(history, "columns") and (
         required - set(history.columns) or {"observation_status", "publication_payload_json"} & set(history.columns)
     ):
-        raise RuntimeError("Unsupported legacy METADATA_SOURCE_OBSERVATION schema; reconcile and explicitly migrate or reset the Preview table before retrying.")
+        raise RuntimeError("Unsupported legacy METADATA_PROCESSING_STATE schema; reconcile and explicitly migrate or reset the Preview table before retrying.")
     rows = observation_rows(history)
     for row in rows:
         if ("observation_status" in row or "publication_payload_json" in row
                 or row.get("record_type") not in {"source_observation", "incremental_checkpoint", "drift_baseline", "publication_receipt"}
                 or row.get("status") not in ({"observed"} if row.get("record_type") == "source_observation" else {"staged", "committed"})
                 or not row.get("record_id")):
-            raise RuntimeError("Unsupported legacy or invalid METADATA_SOURCE_OBSERVATION record; reconcile and explicitly migrate or reset the Preview table before retrying.")
+            raise RuntimeError("Unsupported legacy or invalid METADATA_PROCESSING_STATE record; reconcile and explicitly migrate or reset the Preview table before retrying.")
     return rows
 
 
@@ -1292,7 +1307,7 @@ def _physical_target_has_publication(
 def _merge_source_observation_records(
     records: list[dict[str, Any]], *, config: Any, context: Mapping[str, Any]
 ) -> None:
-    """Idempotently merge target-specific Source Observation records."""
+    """Idempotently merge typed Processing State records at the configured metadata target."""
     if not records or not persistence_permitted(context):
         return
     try:
@@ -1302,10 +1317,10 @@ def _merge_source_observation_records(
             "Delta Lake merge support is required for idempotent Source Observation commits."
         ) from exc
     spark = get_spark_session()
-    frame = spark.createDataFrame(records, schema=metadata_table_schema_registry()[_SOURCE_OBSERVATION_TABLE])
+    frame = spark.createDataFrame(records, schema=metadata_table_schema_registry()[_PROCESSING_STATE_TABLE])
     _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        "Metadata", _SOURCE_OBSERVATION_TABLE,
-        metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE), context=context,
+        "Metadata", _PROCESSING_STATE_TABLE,
+        metadata_table_physical_schema(config, _PROCESSING_STATE_TABLE), context=context,
     )
     target = DeltaTable.forPath(spark, path)
     _processing_state_rows(target.toDF().limit(0))
@@ -1342,8 +1357,9 @@ def _recover_completed_source_observations(
         receipt = _publication_receipt(members[0], rows)
         if _physical_target_has_publication(identity, receipt, context=context):
             accepted_at = datetime.now(UTC)
-            recovered.extend({**row, "status": "committed", "accepted_at": accepted_at}
-                             for row in members if row.get("status") == "staged")
+            recovered.extend(row if row.get("status") == "committed" else
+                             {**row, "status": "committed", "accepted_at": accepted_at}
+                             for row in members if row.get("status") == "staged" or row.get("record_type") == "publication_receipt")
     if recovered and not persistence_permitted(context):
         context["execution_plan"].simulations.append({"check": "Source Observation recovery", "outcome": "simulated",
                                                     "source_table_id": source_table_id, "target_table_id": target_table_id})
@@ -1395,9 +1411,9 @@ def resolve_incremental_source_scope(
         raise ValueError(f"Current source observation for {source_table_id!r} is empty.")
     try:
         history = read_lakehouse_table(
-            _SOURCE_OBSERVATION_TABLE,
+            _PROCESSING_STATE_TABLE,
             store="Metadata",
-            schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
+            schema=metadata_table_physical_schema(config, _PROCESSING_STATE_TABLE),
             context=context,
         )
         history = _recover_completed_source_observations(
@@ -1571,9 +1587,9 @@ def check_source_drift_for_target(
     committed_at = current[0]["_committed_at"]
     try:
         history = read_lakehouse_table(
-            _SOURCE_OBSERVATION_TABLE,
+            _PROCESSING_STATE_TABLE,
             store="Metadata",
-            schema=metadata_table_physical_schema(config, _SOURCE_OBSERVATION_TABLE),
+            schema=metadata_table_physical_schema(config, _PROCESSING_STATE_TABLE),
             spark_session=spark_session,
             context=context,
         )
@@ -1595,8 +1611,9 @@ def check_source_drift_for_target(
             ) from exc
         previous = []
 
-    current_by = {str(row["partition_value"]): row for row in current if row.get("is_present", True)}
-    previous_by = {str(row["partition_value"]): row for row in previous}
+    # An empty-source header has no partition identity; NULL partitions remain ordinary partitions.
+    current_by = {row["partition_value"]: row for row in current if row.get("is_present", True)}
+    previous_by = {row["partition_value"]: row for row in previous if row.get("is_present") is not None}
     new, changed, reappeared = [], [], []
     for value, row in current_by.items():
         prior = previous_by.get(value)
@@ -1615,6 +1632,7 @@ def check_source_drift_for_target(
         if row.get("is_present", True) and value not in current_by
     ]
     pending = [dict(row) for row in current]
+    # Retain absent partitions so repeated empty snapshots and reappearance checks stay stable.
     pending.extend(
         {
             **current[0],
@@ -1625,7 +1643,8 @@ def check_source_drift_for_target(
             "content_fingerprint": None,
             "is_present": False,
         }
-        for value in removed
+        for value in previous_by
+        if value not in current_by
     )
     parameters = json.loads(selected_rule.get("rule_parameters_json") or "{}")
     first_observation = not previous
@@ -1704,6 +1723,10 @@ def _pipeline_write_state_records(success_context, *, audit, env, status):
     receipt = success_context.get("publication")
     if not receipt:
         raise ValueError("Processing State acceptance requires an exact publication receipt.")
+    persisted = success_context.get("publication_snapshot") or []
+    if persisted:
+        return [dict(row) if status == "staged" or row["status"] == "committed" else
+                {**row, "status": "committed", "accepted_at": audit["_committed_at"]} for row in persisted]
     context = success_context.get("context") or {}
     target_id = success_context["target_table_id"]
     publication_id = _processing_state_id(env, target_id, receipt["batch_id"], receipt["activity_id"], receipt["committed_at"])
@@ -1726,15 +1749,16 @@ def _pipeline_write_state_records(success_context, *, audit, env, status):
                     "observation_id", "partition_value", "row_count", "min_change_value", "max_change_value",
                     "content_fingerprint", "is_present", "partition_column", "change_column", "watermark_type")},
                     **common, "record_type": record_type,
-                    "record_id": _processing_state_id(publication_id, record_type, source_id, row["observation_id"], row.get("partition_value")),
+                    "record_id": _processing_state_id(publication_id, record_type, source_id, row["observation_id"],
+                        {"empty_source": True} if row.get("is_present") is None else row.get("partition_value")),
                     "source_table_id": source_id, "source_table_name": source_name,
                     "run_id": source_observation_run_id(context),
                     "observed_at": row.get("observed_at") or row.get("_committed_at")})
-    return [coerce_metadata_row_types(_SOURCE_OBSERVATION_TABLE, row) for row in records]
+    return [coerce_metadata_row_types(_PROCESSING_STATE_TABLE, row) for row in records]
 
 
 def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[dict[str, Any]]:
-    """Commit target Lineage and promote current source observations after a write."""
+    """Commit target Lineage and acknowledge the publication's original source members."""
     if not isinstance(success_context, Mapping):
         raise ValueError("success_context must be returned by write_pipeline_prep().")
     target_table_id = str(success_context.get("target_table_id") or "").strip()
@@ -5155,7 +5179,6 @@ def schema_check_core(
     return result
 
 
-OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
 _IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
@@ -5207,7 +5230,7 @@ def _compact_rows(frame: Any, *, timestamp_columns: set[str] | None = None) -> l
                 "partition_value": _compact_value(
                     value.get("partition_value"), timestamp="partition_value" in timestamp_columns,
                     timestamp_ntz="partition_value" in ntz_columns,
-                ) or "",
+                ),
                 "watermark_type": ("timestamp" if "max_change_value" in timestamp_columns else "timestamp_ntz" if "max_change_value" in ntz_columns else source_types.get("max_change_value", "string")),
                 "is_present": int(value.get("row_count") or 0) > 0,
                 "row_count": int(value.get("row_count") or 0),
@@ -5454,12 +5477,12 @@ def capture_source_observation(
                 watermark_only=watermark_only,
             )
         if not current:
-            current = [{"partition_value": "", "row_count": 0, "is_present": False}]
+            current = [{"partition_value": None, "row_count": 0, "is_present": None}]
         observation_id = str(uuid4())
         values = [
             {
                 **coerce_metadata_row_types(
-                    OBSERVATION_TABLE,
+                    _PROCESSING_STATE_TABLE,
                     {
                         **row,
                         "observation_id": observation_id,
@@ -5467,7 +5490,8 @@ def capture_source_observation(
                         "target_table_id": None,
                         "environment_name": env,
                         "run_id": source_observation_run_id(context),
-                        "record_id": _processing_state_id(env, governed_table_id, observation_id, row.get("partition_value")),
+                        "record_id": _processing_state_id(env, governed_table_id, observation_id,
+                            {"empty_source": True} if row.get("is_present") is None else row.get("partition_value")),
                         "record_type": "source_observation", "status": "observed",
                         "source_table_name": table_value, "observed_at": audit["_committed_at"],
                         "pipeline_id": getattr(context.get("execution_plan"), "pipeline_id", None),
@@ -5480,7 +5504,7 @@ def capture_source_observation(
             for row in current
         ]
         _merge_source_observation_records(values, config=config, context=context)
-        return spark.createDataFrame(values, schema=metadata_table_schema_registry()[OBSERVATION_TABLE])
+        return spark.createDataFrame(values, schema=metadata_table_schema_registry()[_PROCESSING_STATE_TABLE])
 
     drift_observation = None
     if drift_rule is not None:

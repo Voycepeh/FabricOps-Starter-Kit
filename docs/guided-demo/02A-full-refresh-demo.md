@@ -192,7 +192,7 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 | `METADATA_DATA_PROFILED` | Profile snapshots for the three Full Read sources and both published targets. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to those profile snapshots where applicable. |
 | `METADATA_DATA_LINEAGE` | Source and target participation for this notebook pipeline. |
-| `METADATA_SOURCE_OBSERVATION` | Source-state observations associated with successful target publication where applicable. |
+| `METADATA_PROCESSING_STATE` | Typed source observations, checkpoints, Source Drift baselines and target publication receipts. |
 | `METADATA_GUARDRAIL_RESULTS` | Guardrail evaluation results when a selected Data Contract supplies executable Guardrails. |
 
 !!! note "Reset the demo to a clean data state"

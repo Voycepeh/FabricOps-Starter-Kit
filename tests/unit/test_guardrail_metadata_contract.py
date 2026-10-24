@@ -68,7 +68,7 @@ _ROW_RESULT_COLUMNS = [
     *_AUDIT_COLUMNS,
 ]
 
-_SOURCE_OBSERVATION_COLUMNS = [
+_PROCESSING_STATE_COLUMNS = [
     "record_id",
     "record_type",
     "status",
@@ -317,6 +317,6 @@ def test_guardrail_result_writer_rejects_per_rule_execution_overrides(
 
 def test_source_observation_uses_standard_audit_timestamp_only() -> None:
     """Capture and acceptance retain distinct lifecycle timestamps."""
-    assert _field_names("METADATA_SOURCE_OBSERVATION") == _SOURCE_OBSERVATION_COLUMNS
-    assert "observed_at" in _SOURCE_OBSERVATION_COLUMNS
-    assert "_committed_at" in _SOURCE_OBSERVATION_COLUMNS
+    assert _field_names("METADATA_PROCESSING_STATE") == _PROCESSING_STATE_COLUMNS
+    assert "observed_at" in _PROCESSING_STATE_COLUMNS
+    assert "_committed_at" in _PROCESSING_STATE_COLUMNS

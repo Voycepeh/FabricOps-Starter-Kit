@@ -32,7 +32,7 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_GUARDRAIL_RESULTS": "engineering",
         "METADATA_PIPELINE_RUN": "engineering",
         "METADATA_PIPELINE_REGISTRY": "engineering",
-        "METADATA_SOURCE_OBSERVATION": "engineering",
+        "METADATA_PROCESSING_STATE": "engineering",
     }
     assert set(GOVERNANCE_METADATA_TABLES).isdisjoint(ENGINEERING_METADATA_TABLES)
     assert set(GOVERNANCE_METADATA_TABLES) | set(ENGINEERING_METADATA_TABLES) == set(CANONICAL_METADATA_TABLES)
@@ -46,7 +46,7 @@ def test_physical_schema_resolution_uses_framework_ownership_config():
         engineering_metadata_schema = "observed"
 
     assert metadata_table_physical_schema(Config(), "METADATA_DATA_CONTRACT") == "approved"
-    assert metadata_table_physical_schema(Config(), "METADATA_SOURCE_OBSERVATION") == "observed"
+    assert metadata_table_physical_schema(Config(), "METADATA_PROCESSING_STATE") == "observed"
 
 
 def test_data_contract_uses_versioned_one_table_schema():
@@ -184,7 +184,7 @@ def test_stage2_lineage_schema_uses_pipeline_language():
 
 def test_stage2_source_observation_schema_is_guardrail_independent():
     """Persist reusable source evidence with the standard commit timestamp only."""
-    fields = metadata_table_schema_registry()["METADATA_SOURCE_OBSERVATION"].fieldNames()
+    fields = metadata_table_schema_registry()["METADATA_PROCESSING_STATE"].fieldNames()
     assert fields == [
         "record_id",
         "record_type",
@@ -302,9 +302,16 @@ def test_processing_state_legacy_schema_requires_deliberate_cutover():
     import pytest
     from pyspark.sql.types import StructType, StructField, StringType
     setup = importlib.import_module("fabricops_kit.config.setup_metadata_tables")
-    schema = metadata_table_schema_registry()["METADATA_SOURCE_OBSERVATION"]
+    schema = metadata_table_schema_registry()["METADATA_PROCESSING_STATE"]
     legacy = StructType([StructField("observation_id", StringType()), StructField("observation_status", StringType())])
     for allow_missing in (True, False):
         with pytest.raises(ValueError, match="Unsupported legacy.*reconcile"):
-            setup._validate_existing_metadata_schema("METADATA_SOURCE_OBSERVATION", legacy, schema, allow_missing=allow_missing)
-    assert setup._validate_existing_metadata_schema("METADATA_SOURCE_OBSERVATION", schema, schema) == []
+            setup._validate_existing_metadata_schema("METADATA_PROCESSING_STATE", legacy, schema, allow_missing=allow_missing)
+    assert setup._validate_existing_metadata_schema("METADATA_PROCESSING_STATE", schema, schema) == []
+
+
+def test_processing_state_table_has_no_legacy_alias():
+    """Only the renamed table is canonical; release history does not grant an alias."""
+    registry = metadata_table_schema_registry()
+    assert "METADATA_PROCESSING_STATE" in registry
+    assert "METADATA_SOURCE_OBSERVATION" not in registry

@@ -1,4 +1,4 @@
-# METADATA_SOURCE_OBSERVATION
+# METADATA_PROCESSING_STATE
 
 Processing State for source observations, incremental checkpoints, Source Drift baselines and publication receipts, distinguished by record_type. Only committed checkpoints and baselines are accepted progress. Each target publication has one typed receipt; source records link through publication_id. See the Processing State upgrade and recovery protocol in the metadata v2 maintainer guide.
 
@@ -18,7 +18,7 @@ Processing State for source observations, incremental checkpoints, Source Drift 
 
 **Default physical schema:** `engineering`
 
-**Grain:** One record_id per typed source observation/partition or source-to-target publication member; one publication_receipt per exact target publication. Staged members and their receipt become committed in one Delta merge.
+**Grain:** One record_id per source snapshot partition or empty-source header, or per source-to-target publication member; one publication_receipt per exact target publication. Staged members and their receipt become committed in one Delta merge.
 
 **Primary key:** `record_id`
 
@@ -30,7 +30,7 @@ via `run_id`
 `METADATA_DATA_CATALOGUE` **(N → 1)**
 via `source_table_id` + `target_table_id`
 
-`METADATA_SOURCE_OBSERVATION` **(N → 1)**
+`METADATA_PROCESSING_STATE` **(N → 1)**
 via `publication_id`
 
 ## Column summary
@@ -61,12 +61,12 @@ via `publication_id`
 | `partition_column` | `string` | Column defining observed source partitions, or the incremental watermark column. |
 | `change_column` | `string` | Source column supplying minimum and maximum change values. |
 | `watermark_type` | `string` | Source scalar type for lossless change-value bounds, including distinct timestamp and timestamp_ntz semantics. Numeric and temporal values can be cast explicitly for queries. |
-| `partition_value` | `string` | Canonical text identity for one source partition; null on publication receipts. |
+| `partition_value` | `string` | Canonical source partition text; SQL null remains null and is distinct from an empty string. Null also applies to receipt and empty-source header rows. |
 | `row_count` | `long` | Observed source-partition row count, or zero for an empty source/removal tombstone. |
 | `min_change_value` | `string` | Lossless minimum change value encoded according to watermark_type; null for empty observations/removals. |
 | `max_change_value` | `string` | Lossless maximum change value encoded according to watermark_type; used as progress only on committed incremental_checkpoint records. |
 | `content_fingerprint` | `string` | Source partition content fingerprint for Source Drift comparison; independent of the publication batch fingerprint. |
-| `is_present` | `boolean` | Whether the observed source partition exists; false for empty observations/removal tombstones. |
+| `is_present` | `boolean` | True for a present source partition; false for an absent partition or empty incremental aggregate; null for an empty-source header with no partition identity. |
 | `publication_id` | `string` | Reference to the exact target-specific publication_receipt record_id; a receipt references itself. |
 | `publication_batch_id` | `string` | Prepared business content, schema, source membership and processing fingerprint; stored only on the receipt. |
 | `publication_activity_id` | `string` | Fabric activity whose atomic target write stamped the batch; recovery does not substitute the retry activity. |

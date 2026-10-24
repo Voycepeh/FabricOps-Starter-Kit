@@ -188,15 +188,15 @@ METADATA_TABLE_MODELS = {
             {"cardinality": "1:N", "statement": "A Catalogue table identity can be referenced by many Profile, Lineage, Source Observation, Enrichment, Access and Guardrail rows over time."},
         ],
     },
-    "METADATA_SOURCE_OBSERVATION": {
+    "METADATA_PROCESSING_STATE": {
         "purpose": "Processing State for source observations, incremental checkpoints, Source Drift baselines and publication receipts, distinguished by record_type. Only committed checkpoints and baselines are accepted progress. Each target publication has one typed receipt; source records link through publication_id. See the Processing State upgrade and recovery protocol in the metadata v2 maintainer guide.",
-        "grain": "One record_id per typed source observation/partition or source-to-target publication member; one publication_receipt per exact target publication. Staged members and their receipt become committed in one Delta merge.",
+        "grain": "One record_id per source snapshot partition or empty-source header, or per source-to-target publication member; one publication_receipt per exact target publication. Staged members and their receipt become committed in one Delta merge.",
         "primary_key": ["record_id"],
         "foreign_keys": [
             {"local_field": "run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Planned records retain the originating logical run; standalone records may have no run record."},
             {"local_field": "source_table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Observed source identity; null on target-only publication receipts. Physical sources can be observed before Catalogue registration."},
             {"local_field": "target_table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Target whose verified publication accepts progress; null on unbound source observations."},
-            {"local_field": "publication_id", "referenced_table": "METADATA_SOURCE_OBSERVATION", "referenced_field": "record_id", "cardinality": "N:1", "statement": "Target-specific publication_receipt referenced by checkpoints and baselines; the receipt uses its own record_id."},
+            {"local_field": "publication_id", "referenced_table": "METADATA_PROCESSING_STATE", "referenced_field": "record_id", "cardinality": "N:1", "statement": "Target-specific publication_receipt referenced by checkpoints and baselines; the receipt uses its own record_id."},
         ],
         "relationships": [],
     },
@@ -262,7 +262,7 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_CONTRACT",
     "METADATA_ACTIVATION_STATE",
     "METADATA_DATA_CATALOGUE",
-    "METADATA_SOURCE_OBSERVATION",
+    "METADATA_PROCESSING_STATE",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
     "METADATA_DATA_LINEAGE",
@@ -507,7 +507,7 @@ METADATA_COLUMN_OWNERS = {
         "__default__": ["fabricops_kit.pipeline.shared.persist_pipeline_run"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
-    "METADATA_SOURCE_OBSERVATION": {
+    "METADATA_PROCESSING_STATE": {
         "__default__": [
             "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
             "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",

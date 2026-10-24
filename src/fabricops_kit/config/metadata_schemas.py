@@ -18,7 +18,7 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_PIPELINE_REGISTRY",
     "METADATA_PIPELINE_RUN",
     "METADATA_GUARDRAIL_RESULTS",
-    "METADATA_SOURCE_OBSERVATION",
+    "METADATA_PROCESSING_STATE",
 ]
 
 GOVERNANCE_METADATA_TABLES = (
@@ -339,8 +339,8 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 *audit,
             ],
         ),
-        "METADATA_SOURCE_OBSERVATION": build_metadata_schema(
-            "METADATA_SOURCE_OBSERVATION",
+        "METADATA_PROCESSING_STATE": build_metadata_schema(
+            "METADATA_PROCESSING_STATE",
             [
                 ("record_id", "string", False),
                 ("record_type", "string", False),

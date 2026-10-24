@@ -428,7 +428,9 @@ def pipeline_write(
     as the business rows; an activity marker alone never proves publication.
     Warehouse append/overwrite requires the entire batch marker count. A partial
     marker count fails closed and requires reconciliation before retrying.
-    A verified retry skips mutation and idempotently finalizes metadata. New batches
+    A verified retry skips mutation and idempotently finalizes metadata. It restores
+    every original source member from persisted Processing State if pending
+    in-memory snapshots were lost, and preserves their originating run identities. New batches
     in a reused interactive activity proceed through the existing writers and keyed
     SCD merges. Empty writes may have no row marker and can safely be replayed.
 
@@ -437,7 +439,7 @@ def pipeline_write(
     suppress a newly requested keyed merge. Warehouse writes also stage target-only
     publication receipts when no incremental or Source Drift observations exist;
     these receipt records never establish or advance a source watermark.
-    ``METADATA_SOURCE_OBSERVATION.record_type`` distinguishes source observations,
+    ``METADATA_PROCESSING_STATE.record_type`` distinguishes source observations,
     incremental checkpoints, drift baselines and publication receipts. Checkpoints
     and baselines link to one typed receipt through publication_id; staged members
     and their receipt are acknowledged in one Delta merge.
@@ -619,6 +621,7 @@ def pipeline_write(
             return {"table_id": target_table_id, "strategy": strategy, "published": False,
                     "publication_status": "empty_incremental_scope", "write_metrics": write_metrics}
         success_context["publication"] = batch.receipt
+        success_context["publication_snapshot"] = batch.publication_snapshot
         io_context["_fabricops_publication_receipt"] = batch.receipt
         if store_kind == "lakehouse" and strategy in {"append", "overwrite"}:
             physical_options["userMetadata"] = json.dumps(batch.receipt, sort_keys=True)
@@ -735,6 +738,7 @@ def pipeline_write(
         batch.confirm()
         if batch.receipt != attempted_receipt:
             success_context["publication"] = batch.receipt
+            success_context["publication_snapshot"] = batch.publication_snapshot
             stage_pipeline_write_observations(success_context)
             write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="already_applied")
         try:

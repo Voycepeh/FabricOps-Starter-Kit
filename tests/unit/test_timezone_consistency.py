@@ -44,7 +44,8 @@ def test_observation_scope_and_bounded_read_preserve_timestamp_semantics(spark_s
     scope = shared.resolve_incremental_source_scope(source_table_id="source-orders", target_table_id="target-a", observation=evidence)
     future = spark_session.createDataFrame([(later,)], frame.schema)
     assert reader._filter_lakehouse_incremental(frame.union(future), scope).count() == 2
-    _configure_scope(monkeypatch, [_row(target="target-a", maximum=expected)])
+    _configure_scope(monkeypatch, [{**_row(target="target-a", maximum=expected),
+                                  "change_column": "modified_at", "watermark_type": kind}])
     next_observed = shared._observe_dataframe(future, "modified_at", "modified_at", watermark_only=True)
     scope = shared.resolve_incremental_source_scope(
         source_table_id="source-orders", target_table_id="target-a",

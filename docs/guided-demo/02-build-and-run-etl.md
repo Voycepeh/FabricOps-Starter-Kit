@@ -149,7 +149,7 @@ For Incremental reads, add `read_parameters` and `target_table_id` rather than i
     5. Evaluate **Data Quality** Guardrails when defined.
     6. **Profile** the full source and store the snapshot in `METADATA_DATA_PROFILED` and, where applicable, `METADATA_DATA_PROFILED_FREQUENCY`.
 
-    Only configured Guardrails execute and appear in stage output. Without a selected Data Contract, Development prints one message and continues with Read. Absent checks retain skipped fields in the returned result for inspection. Incremental batches are not profiled; FabricOps instead returns the eligible scope and uses `METADATA_SOURCE_OBSERVATION` plus the governed target's successful watermark progress to manage incremental execution.
+    Only configured Guardrails execute and appear in stage output. Without a selected Data Contract, Development prints one message and continues with Read. Absent checks retain skipped fields in the returned result for inspection. Incremental batches are not profiled; FabricOps instead returns the eligible scope and uses accepted checkpoints in `METADATA_PROCESSING_STATE` plus verified target publication markers to manage incremental execution.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
@@ -247,7 +247,7 @@ display(writes["target"]["dataframe"].limit(10))
 
     With **Testing**, FabricOps evaluates the prepared input and supported strategy checks, returning `published=False`. No stage writes business data, Catalogue, Profile, frequency rows, Guardrail Results, Lineage, Source Observation, mappings or staging. With **Live**, passing required checks permits publication and metadata commits at their existing lifecycle boundaries. These independent Fabric operations are not one atomic transaction.
 
-    A successful Write also records the source and target pipeline participation in `METADATA_DATA_LINEAGE`. Source Observation history used by Source Drift and incremental execution is committed only through the successful write path.
+    A successful Write also records the source and target pipeline participation in `METADATA_DATA_LINEAGE`. `METADATA_PROCESSING_STATE` records source observations at Read and accepts incremental checkpoints and Source Drift baselines only after verified target publication, together with the typed publication receipt.
 
 Read and Write previews appear directly in their respective orchestration code cells. The printed stage summaries already provide governance outcomes; the previews show the actual records. To inspect persisted target tables, read them separately after publication.
 

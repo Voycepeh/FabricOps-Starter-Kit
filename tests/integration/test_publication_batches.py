@@ -36,7 +36,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
         return {"table_id": name, "table_name": name, "store": "Silver", "store_type": "lakehouse", "store_kind": "lakehouse", "schema": None}
 
     def read(name, **_kwargs):
-        if name == "METADATA_SOURCE_OBSERVATION":
+        if name == "METADATA_PROCESSING_STATE":
             if state.get("durable_metadata"):
                 return spark_session.read.format("delta").load(str(tmp_path / name))
             return list(history)
@@ -56,7 +56,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
             return
         if state.get("durable_metadata"):
             merge_processing_state(records, config=context["config"], context=context)
-            history[:] = shared.observation_rows(read("METADATA_SOURCE_OBSERVATION"))
+            history[:] = shared.observation_rows(read("METADATA_PROCESSING_STATE"))
             return
         for record in records:
             key = tuple(record.get(k) for k in ('record_id',))
@@ -303,11 +303,14 @@ def test_silent_physical_skip_cannot_advance_checkpoint(publication_runtime):
     assert run.read('target').count() == 12
 
 
-def test_concurrent_exact_append_accepts_only_winning_transaction(publication_runtime, monkeypatch):
+@pytest.mark.parametrize("durable_winner", [False, True])
+def test_concurrent_exact_append_accepts_only_winning_transaction(publication_runtime, monkeypatch, request, durable_winner):
     """Delta's batch transaction identity suppresses a competing identical write."""
     import json
     from pyspark.sql import functions as F
     run = publication_runtime
+    if durable_winner:
+        request.getfixturevalue("durable_processing_state")
     run.publish(run.stage(1))
     day2 = run.stage(2)
     write = io.write_lakehouse_table
@@ -316,6 +319,16 @@ def test_concurrent_exact_append_accepts_only_winning_transaction(publication_ru
         attempted = dict(kwargs['options'])
         winner = json.loads(attempted['userMetadata'])
         winner.update(activity_id='competing-retry', committed_at=datetime.now(UTC).isoformat())
+        if durable_winner:
+            winner["run_id"] = "competing-run"
+            origin = shared.source_observation_run_id(run.context) or run.state["activity"]
+            snapshot = shared.snapshot_pipeline_write_observations(environment_name="dev", activity_id=origin,
+                target_table_id="target", source_table_ids=["source"])
+            winner_context = {**run.context, "execution_plan": SimpleNamespace(permits_persistence=True, plan_id="competing-run")}
+            staged = shared._pipeline_write_state_records({"target_table_id": "target", "source_table_ids": ["source"],
+                "publication": winner, "observation_snapshot": snapshot, "context": winner_context},
+                audit={**writer.resolve_target_audit_fields(run.context), "_activity_id": winner["activity_id"]}, env="dev", status="staged")
+            shared._merge_source_observation_records(staged, config=run.context["config"], context=run.context)
         competing = df.withColumn('_activity_id', F.lit(winner['activity_id'])).withColumn('_committed_at', F.lit(datetime.fromisoformat(winner['committed_at'])))
         write(competing, name, **{**kwargs, 'options': {**attempted, 'userMetadata': json.dumps(winner, sort_keys=True)}})
         # Same txnAppId/version: this physical attempt is atomically skipped.
@@ -323,11 +336,15 @@ def test_concurrent_exact_append_accepts_only_winning_transaction(publication_ru
 
     monkeypatch.setattr(io, 'write_lakehouse_table', competing_write)
     result = run.publish(day2)
-    assert result['publication_status'] == 'already_applied'
+    assert result['publication_status'] == ('metadata_recovered' if durable_winner else 'already_applied')
     assert result['write_metrics']['rows_committed'] == 0
     assert sorted(r.id for r in run.read('target').collect()) == list(range(1, 13))
     accepted = [r for r in run.history if r['record_type'] == 'incremental_checkpoint' and r['status'] == 'committed' and r.get('max_change_value') == '12']
     assert accepted and shared._publication_receipt(accepted[0], run.history)['activity_id'] == 'competing-retry'
+    if durable_winner:
+        assert {row["run_id"] for row in accepted} == {"competing-run"}
+        members = [row for row in run.history if row.get("publication_id") == accepted[0]["publication_id"]]
+        assert {row["status"] for row in members} == {"committed"}
 
 
 def test_later_read_cannot_finalize_an_older_publication(publication_runtime, monkeypatch):
@@ -616,8 +633,8 @@ def durable_processing_state(publication_runtime):
     """Exercise the real metadata Delta merge as well as persisted business rows."""
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
     run = publication_runtime
-    run.spark.createDataFrame([], metadata_table_schema_registry()["METADATA_SOURCE_OBSERVATION"]).write.format("delta").save(
-        str(run.path / "METADATA_SOURCE_OBSERVATION"))
+    run.spark.createDataFrame([], metadata_table_schema_registry()["METADATA_PROCESSING_STATE"]).write.format("delta").save(
+        str(run.path / "METADATA_PROCESSING_STATE"))
     run.state["durable_metadata"] = True
     return run
 
@@ -630,7 +647,7 @@ def test_durable_checkpoint_recovery_preserves_exact_progress(durable_processing
     run.state["fail"] = failure
     with pytest.raises(RuntimeError):
         run.publish(run.stage(2))
-    checkpoints = run.read("METADATA_SOURCE_OBSERVATION").where("record_type = 'incremental_checkpoint'")
+    checkpoints = run.read("METADATA_PROCESSING_STATE").where("record_type = 'incremental_checkpoint'")
     assert {row.max_change_value for row in checkpoints.where("status = 'committed'").collect()} == {"8"}
     assert checkpoints.where("status = 'staged' AND max_change_value = '12'").count() == 1
     run.context["execution_plan"].plan_id = "recovery-run"
@@ -639,7 +656,7 @@ def test_durable_checkpoint_recovery_preserves_exact_progress(durable_processing
     shared._INCREMENTAL_SOURCE_SCOPES.clear()
     run.publish(run.stage(2))
     assert sorted(row.id for row in run.read("target").collect()) == list(range(1, 13))
-    accepted = run.read("METADATA_SOURCE_OBSERVATION").where("record_type = 'incremental_checkpoint' AND status = 'committed'")
+    accepted = run.read("METADATA_PROCESSING_STATE").where("record_type = 'incremental_checkpoint' AND status = 'committed'")
     assert {row.max_change_value for row in accepted.collect()} == {"8", "12"}
     assert "publication_payload_json" not in accepted.columns
     assert all(row.publication_id and row.accepted_at for row in accepted.collect())
@@ -660,17 +677,17 @@ def test_durable_multi_source_recovery_is_one_transaction(durable_processing_sta
     run.state["fail"] = "finalize"
     with pytest.raises(RuntimeError, match="metadata finalization"):
         writer.pipeline_write(frame, store="Silver", table_name="target", source_table_ids=["source", "other-source"], verbose=False)
-    before = run.delta.forPath(run.spark, str(run.path / "METADATA_SOURCE_OBSERVATION")).history(1).first().version
-    rows = shared.observation_rows(run.read("METADATA_SOURCE_OBSERVATION"))
+    before = run.delta.forPath(run.spark, str(run.path / "METADATA_PROCESSING_STATE")).history(1).first().version
+    rows = shared.observation_rows(run.read("METADATA_PROCESSING_STATE"))
     assert {row["record_type"] for row in rows} == {"publication_receipt", "incremental_checkpoint", "drift_baseline"}
     assert {row["status"] for row in rows} == {"staged"}
     run.state["fail"] = None
     shared._PENDING_SOURCE_OBSERVATIONS.clear()
     shared._PENDING_SOURCE_DRIFT_OBSERVATIONS.clear()
     run.context["execution_plan"].plan_id = "restarted-run"
-    shared._recover_completed_source_observations(run.read("METADATA_SOURCE_OBSERVATION"), config=run.context["config"], env="dev",
+    shared._recover_completed_source_observations(run.read("METADATA_PROCESSING_STATE"), config=run.context["config"], env="dev",
                                                 context=run.context, source_table_id="source", target_table_id="target")
-    table = run.delta.forPath(run.spark, str(run.path / "METADATA_SOURCE_OBSERVATION"))
+    table = run.delta.forPath(run.spark, str(run.path / "METADATA_PROCESSING_STATE"))
     assert table.history(1).first().version == before + 1
     accepted = shared.observation_rows(table.toDF())
     assert len(accepted) == 4
@@ -709,7 +726,7 @@ def test_captured_observation_is_typed_but_never_accepted_progress(durable_proce
     monkeypatch.setattr(shared, "load_table_guardrail_rules", lambda *a, **kw: [])
     evidence = shared.capture_source_observation(table_id="source", dataframe=frame, incremental_columns=("id", "id"),
         source_identity={"table_id": "source", "store": "Bronze", "table_name": "source", "store_kind": "lakehouse"}, context=run.context)
-    persisted = run.read("METADATA_SOURCE_OBSERVATION")
+    persisted = run.read("METADATA_PROCESSING_STATE")
     row = persisted.first()
     assert persisted.count() == 1
     assert row.record_type == "source_observation" and row.status == "observed"
@@ -722,9 +739,115 @@ def test_captured_observation_is_typed_but_never_accepted_progress(durable_proce
     scope = shared.resolve_incremental_source_scope(source_table_id="source", target_table_id="target", observation=evidence, context=run.context)
     assert scope["first_run"]
     run.publish(frame)
-    accepted = run.read("METADATA_SOURCE_OBSERVATION")
+    accepted = run.read("METADATA_PROCESSING_STATE")
     assert {r.record_type for r in accepted.collect()} == {"source_observation", "incremental_checkpoint", "publication_receipt"}
     assert shared._latest_source_target_observation(accepted, source_table_id="source", target_table_id="target", environment_name="prod") == []
     assert shared._latest_source_target_observation(accepted, source_table_id="other-source", target_table_id="target", environment_name="dev") == []
     checkpoint = shared._latest_source_target_observation(accepted, source_table_id="source", target_table_id="target", environment_name="dev")[0]
     assert checkpoint["watermark_type"] == "bigint" and checkpoint["max_change_value"] == "8"
+
+
+@pytest.mark.parametrize("store_kind", ["lakehouse", "warehouse"])
+def test_exact_retry_without_volatile_snapshots_accepts_all_original_members(durable_processing_state, request, monkeypatch, store_kind):
+    """A restarted exact Write must acknowledge the durable batch, including every source."""
+    run = durable_processing_state
+    if store_kind == "warehouse":
+        request.getfixturevalue("warehouse_publication_runtime")
+        monkeypatch.setattr(writer, "_target_has_rows", lambda **kw: False)
+        shared._CURRENT_TABLE_IDENTITIES["target"] = {
+            "table_id": "target", "table_name": "target", "store": "Silver", "schema": "dbo", "store_type": "warehouse"}
+    run.context["execution_plan"].plan_id = "original-run"
+    frame = run.stage(1)
+    key = ("dev", "original-run", "source", "target")
+    original = shared._PENDING_SOURCE_OBSERVATIONS[key]
+    shared._PENDING_SOURCE_OBSERVATIONS[("dev", "original-run", "other-source", "target")] = [
+        {**row, "source_table_id": "other-source", "observation_id": "other-snapshot"} for row in original]
+    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS[key] = [{**row, "partition_value": "p1"} for row in original]
+    shared._CURRENT_TABLE_IDENTITIES["other-source"] = {"table_name": "other_source"}
+
+    def publish(dataframe):
+        return writer.pipeline_write(dataframe, store="Silver", table_name="target", source_table_ids=["source", "other-source"], verbose=False)
+
+    run.state["fail"] = "finalize"
+    with pytest.raises(RuntimeError, match="metadata finalization"):
+        publish(frame)
+    staged = shared.observation_rows(run.read("METADATA_PROCESSING_STATE"))
+    assert len(staged) == 4 and {row["status"] for row in staged} == {"staged"}
+    run.state["fail"] = None
+    run.context["execution_plan"].plan_id = "restarted-run"
+    for cache in (shared._PENDING_SOURCE_OBSERVATIONS, shared._PENDING_SOURCE_DRIFT_OBSERVATIONS, shared._INCREMENTAL_SOURCE_SCOPES):
+        cache.clear()
+    writer_name = "write_warehouse_table" if store_kind == "warehouse" else "write_lakehouse_table"
+    monkeypatch.setattr(io, writer_name, lambda *a, **kw: pytest.fail("an exact verified retry must not publish twice"))
+    result = publish(run.read("source"))
+    accepted = shared.observation_rows(run.read("METADATA_PROCESSING_STATE"))
+    assert result["publication_status"] == "metadata_recovered"
+    assert {row["record_id"] for row in accepted} == {row["record_id"] for row in staged}
+    assert {row["status"] for row in accepted} == {"committed"}
+    assert {row["run_id"] for row in accepted} == {"original-run"}
+    assert len({row["accepted_at"] for row in accepted}) == 1
+    for source_id in ("source", "other-source"):
+        checkpoint = shared._latest_source_target_observation(accepted, source_table_id=source_id, target_table_id="target", environment_name="dev")
+        assert len(checkpoint) == 1 and checkpoint[0]["max_change_value"] == "8"
+    publish(run.read("source"))
+    assert {row["record_id"]: row for row in shared.observation_rows(run.read("METADATA_PROCESSING_STATE"))} == {
+        row["record_id"]: row for row in accepted}
+    assert run.read("target").count() == 8
+
+
+def test_recovery_includes_a_previously_acknowledged_receipt(durable_processing_state):
+    """Repair a receipt-only acknowledgement without losing or rewriting its origin."""
+    run = durable_processing_state
+    frame = run.stage(1)
+    run.state["fail"] = "finalize"
+    with pytest.raises(RuntimeError, match="metadata finalization"):
+        run.publish(frame)
+    run.state["fail"] = None
+    rows = shared.observation_rows(run.read("METADATA_PROCESSING_STATE"))
+    receipt = next(row for row in rows if row["record_type"] == "publication_receipt")
+    receipt = {**receipt, "status": "committed", "accepted_at": datetime.now(UTC)}
+    shared._merge_source_observation_records([receipt], config=run.context["config"], context=run.context)
+    table = run.delta.forPath(run.spark, str(run.path / "METADATA_PROCESSING_STATE"))
+    receipt = next(row for row in shared.observation_rows(table.toDF()) if row["record_type"] == "publication_receipt")
+    before = table.history(1).first().version
+    recovered = shared._recover_completed_source_observations(table.toDF(), config=run.context["config"], env="dev",
+        context=run.context, source_table_id="source", target_table_id="target")
+    assert table.history(1).first().version == before + 1
+    assert {row["status"] for row in recovered} == {"committed"}
+    persisted = shared.observation_rows(run.read("METADATA_PROCESSING_STATE"))
+    assert {row["status"] for row in persisted} == {"committed"}
+    assert next(row for row in persisted if row["record_type"] == "publication_receipt") == receipt
+    assert run.read("target").count() == 8
+
+
+@pytest.mark.parametrize("partition_value", [None, "", [None, ""]])
+def test_empty_drift_snapshot_has_unique_durable_partition_keys(durable_processing_state, monkeypatch, partition_value):
+    """The empty-source row must not duplicate a null/empty partition tombstone."""
+    import json
+    run = durable_processing_state
+    run.state["processing"] = {"load_strategy": "overwrite"}
+    source_rule = {"table_id": "source", "environment_name": "dev", "guardrail_type": "source_drift", "rule_type": "historical_mutation",
+                   "action": "Block", "is_active": True, "guardrail_rule_id": "source-drift",
+                   "rule_parameters_json": json.dumps({"partition_column": "partition", "change_column": "modified"})}
+    monkeypatch.setattr(shared, "get_store", lambda *a, **kw: SimpleNamespace(schema_enabled=False))
+    monkeypatch.setattr(shared, "resolve_lakehouse_table_location", lambda *a, **kw: ("source", None, "source-path"))
+    monkeypatch.setattr(shared, "load_table_guardrail_rules", lambda *a, **kw: [source_rule])
+    monkeypatch.setattr(shared, "write_guardrail_result_row", lambda **kw: None)
+    partitions = partition_value if isinstance(partition_value, list) else [partition_value]
+    initial = run.spark.createDataFrame([(index, value, 1) for index, value in enumerate(partitions)], "id long, partition string, modified long")
+    for frame in (initial, initial.limit(0), initial.limit(0)):
+        shared.capture_source_observation(table_id="source", dataframe=frame, context=run.context,
+            source_identity={"table_id": "source", "store": "Bronze", "table_name": "source", "store_kind": "lakehouse"})
+        check = shared.check_source_drift_for_target(source_table_id="source", target_table_id="target",
+            source_processing={"load_strategy": "overwrite"}, context=run.context)
+        assert check["can_continue"]
+        run.publish(frame)
+        metadata = run.read("METADATA_PROCESSING_STATE")
+        assert metadata.groupBy("record_id").count().where("count > 1").count() == 0
+    assert run.read("target").count() == 0
+    baseline = shared._previous_source_target_observation(run.read("METADATA_PROCESSING_STATE"), source_table_id="source",
+        target_table_id="target", environment_name="dev", committed_at=datetime.now(UTC).replace(tzinfo=None))
+    assert len(baseline) == len(partitions) + 1
+    assert len([row for row in baseline if row["is_present"] is None]) == 1
+    removed = [row for row in baseline if row["is_present"] is False]
+    assert {row["partition_value"] for row in removed} == set(partitions)

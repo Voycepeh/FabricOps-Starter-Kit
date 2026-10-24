@@ -161,9 +161,14 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p><strong>Also known as:</strong> classification</p>
 </details>
 
+<details id="processing-state">
+<summary><strong>Processing State</strong> — Typed source observations, accepted checkpoints, Source Drift baselines and publication receipts.</summary>
+<p>METADATA_PROCESSING_STATE stores Processing State using record_type. Source capture is separate from accepted incremental progress and Source Drift baselines. Target publication receipts link the source records accepted atomically after physical verification.</p>
+</details>
+
 <details id="source-observation">
-<summary><strong>Source Observation</strong> — A recorded view of source state used as the baseline for Source Drift checks.</summary>
-<p>FabricOps compares the current source state with the latest committed observation for the same source, target, and environment. A new observation is committed only after the target write succeeds.</p>
+<summary><strong>Source Observation</strong> — Captured source state used to evaluate incremental execution and Source Drift.</summary>
+<p>METADATA_PROCESSING_STATE distinguishes source_observation records from incremental_checkpoint, drift_baseline and publication_receipt records. Capturing an observation does not accept progress. Checkpoints and baselines become committed only after the corresponding target publication is verified.</p>
 <p><strong>Also known as:</strong> source observations</p>
 </details>
 

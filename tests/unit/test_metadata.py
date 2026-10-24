@@ -361,7 +361,7 @@ def test_persistent_checkpoint_tables_are_not_registered():
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 
     registry = metadata_table_schema_registry()
-    assert "METADATA_SOURCE_OBSERVATION" in CANONICAL_METADATA_TABLES
+    assert "METADATA_PROCESSING_STATE" in CANONICAL_METADATA_TABLES
     assert "METADATA_SOURCE_CONSUMPTION" not in CANONICAL_METADATA_TABLES
     assert all("CHECKPOINT" not in table_name for table_name in CANONICAL_METADATA_TABLES)
     assert all("CHECKPOINT" not in table_name for table_name in registry)

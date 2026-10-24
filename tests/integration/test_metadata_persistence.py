@@ -39,6 +39,8 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
             raise AssertionError(f"metadata setup must not call spark.sql: {statement}")
 
     def read_table(table_name: str, **_kwargs) -> Table:
+        if table_name not in registry:
+            raise RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")
         reads.append(table_name)
         return Table(registry[table_name].fieldNames())
 
@@ -68,6 +70,8 @@ def test_central_metadata_setup_rejects_known_legacy_schema(monkeypatch):
         pass
 
     def read_table(table_name: str, **_kwargs) -> Table:
+        if table_name not in CANONICAL_METADATA_TABLES:
+            raise RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")
         columns = metadata_table_schema_registry()[table_name].fieldNames()
         if table_name == "METADATA_DATA_PROFILED":
             columns = [*columns, "frequency_json"]

@@ -67,7 +67,7 @@ def runtime(monkeypatch, spark_session):
             return self
         def toDF(self):
             from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-            return spark_session.createDataFrame([], metadata_table_schema_registry()["METADATA_SOURCE_OBSERVATION"])
+            return spark_session.createDataFrame([], metadata_table_schema_registry()["METADATA_PROCESSING_STATE"])
         def whenMatchedUpdate(self, **kwargs): return self
         def whenMatchedUpdateAll(self): return self
         def whenNotMatchedInsertAll(self): return self
@@ -89,7 +89,7 @@ def runtime(monkeypatch, spark_session):
     monkeypatch.setattr(shared, "PublicationBatch", lambda dataframe, **kw: nullcontext(SimpleNamespace(
         dataframe=dataframe, audit=kw["audit"], receipt={"batch_id": "batch", "activity_id": kw["audit"]["_activity_id"],
                                                        "committed_at": "2026-09-11T02:00:00+00:00", "input_rows": 2,
-                                                       "strategy": kw["processing"]["load_strategy"], "run_id": shared.source_observation_run_id(kw["context"])}, input_rows=2, already_applied=False, finalization_recovery=False, confirm=lambda: None,
+                                                       "strategy": kw["processing"]["load_strategy"], "run_id": shared.source_observation_run_id(kw["context"])}, input_rows=2, already_applied=False, finalization_recovery=False, publication_snapshot=[], confirm=lambda: None,
     )))
     monkeypatch.setattr(write_module, "_target_has_rows", lambda **kw: False)
     # Every mutation reachable from Read, validation, recovery and Write is observed.

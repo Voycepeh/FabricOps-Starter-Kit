@@ -137,3 +137,18 @@ def test_observed_and_other_environment_baselines_are_not_accepted(monkeypatch):
                                                  source_processing={"load_strategy": "append"})
     assert result["first_observation"] is True
     assert result["can_continue"] is True
+
+
+
+def test_null_partition_after_an_empty_baseline_is_new_not_reappeared(monkeypatch):
+    """An empty-source header must not impersonate a historical NULL partition."""
+    header = {**row(target="target-a", status="committed", at=NOW - timedelta(hours=1)),
+              "partition_value": None, "row_count": 0, "is_present": None}
+    configure(monkeypatch, [header])
+    shared.set_current_source_observation(environment_name="dev", activity_id="run", table_id="source",
+        observation=[{**row(), "partition_value": None}])
+    result = shared.check_source_drift_for_target(source_table_id="source", target_table_id="target-a",
+        source_processing={"load_strategy": "append"})
+    assert result["can_continue"] is True
+    assert result["new_partitions"] == [None]
+    assert result["reappeared_partitions"] == []

@@ -222,7 +222,7 @@ PIPELINE_REGISTRY_FIELD_DESCRIPTIONS = {
 }
 
 
-SOURCE_OBSERVATION_FIELD_DESCRIPTIONS = {
+PROCESSING_STATE_FIELD_DESCRIPTIONS = {
     "record_id": "Stable SHA-256 primary key for one typed record; acceptance updates the same staged record.",
     "record_type": "source_observation, incremental_checkpoint, drift_baseline, or publication_receipt.",
     "status": "observed for captured source observations; staged before target publication; committed only after exact physical publication verification.",
@@ -236,12 +236,12 @@ SOURCE_OBSERVATION_FIELD_DESCRIPTIONS = {
     "partition_column": "Column defining observed source partitions, or the incremental watermark column.",
     "change_column": "Source column supplying minimum and maximum change values.",
     "watermark_type": "Source scalar type for lossless change-value bounds, including distinct timestamp and timestamp_ntz semantics. Numeric and temporal values can be cast explicitly for queries.",
-    "partition_value": "Canonical text identity for one source partition; null on publication receipts.",
+    "partition_value": "Canonical source partition text; SQL null remains null and is distinct from an empty string. Null also applies to receipt and empty-source header rows.",
     "row_count": "Observed source-partition row count, or zero for an empty source/removal tombstone.",
     "min_change_value": "Lossless minimum change value encoded according to watermark_type; null for empty observations/removals.",
     "max_change_value": "Lossless maximum change value encoded according to watermark_type; used as progress only on committed incremental_checkpoint records.",
     "content_fingerprint": "Source partition content fingerprint for Source Drift comparison; independent of the publication batch fingerprint.",
-    "is_present": "Whether the observed source partition exists; false for empty observations/removal tombstones.",
+    "is_present": "True for a present source partition; false for an absent partition or empty incremental aggregate; null for an empty-source header with no partition identity.",
     "publication_id": "Reference to the exact target-specific publication_receipt record_id; a receipt references itself.",
     "publication_batch_id": "Prepared business content, schema, source membership and processing fingerprint; stored only on the receipt.",
     "publication_activity_id": "Fabric activity whose atomic target write stamped the batch; recovery does not substitute the retry activity.",
@@ -260,7 +260,7 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_GUARDRAIL_RESULTS": [
         "check_schema", "check_freshness", "check_source_drift", "check_dq",
     ],
-    "METADATA_SOURCE_OBSERVATION": ["pipeline_read"],
+    "METADATA_PROCESSING_STATE": ["pipeline_read"],
 }
 
 
@@ -4311,8 +4311,8 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_PIPELINE_REGISTRY" and column_name in PIPELINE_REGISTRY_FIELD_DESCRIPTIONS:
         return PIPELINE_REGISTRY_FIELD_DESCRIPTIONS[column_name]
-    if table_name == "METADATA_SOURCE_OBSERVATION" and column_name in SOURCE_OBSERVATION_FIELD_DESCRIPTIONS:
-        return SOURCE_OBSERVATION_FIELD_DESCRIPTIONS[column_name]
+    if table_name == "METADATA_PROCESSING_STATE" and column_name in PROCESSING_STATE_FIELD_DESCRIPTIONS:
+        return PROCESSING_STATE_FIELD_DESCRIPTIONS[column_name]
     if column_name in METADATA_FIELD_DESCRIPTIONS:
         return METADATA_FIELD_DESCRIPTIONS[column_name]
     if column_name.endswith("_json"):

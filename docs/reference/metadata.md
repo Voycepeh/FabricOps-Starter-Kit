@@ -91,7 +91,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
-        <code>METADATA_SOURCE_OBSERVATION</code>
+        <code>METADATA_PROCESSING_STATE</code>
       </span>
     </span>
     <span class="metadata-table-card__relationship-summary">
@@ -250,7 +250,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
-        <code>METADATA_SOURCE_OBSERVATION</code>
+        <code>METADATA_PROCESSING_STATE</code>
       </span>
     </span>
     <span class="metadata-table-card__relationship-summary">
@@ -273,10 +273,10 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     </span>
   </span>
 </a>
-<a class="metadata-table-card metadata-table-card--engineering" href="metadata_source_observation/" aria-label="Open METADATA_SOURCE_OBSERVATION schema">
+<a class="metadata-table-card metadata-table-card--engineering" href="metadata_processing_state/" aria-label="Open METADATA_PROCESSING_STATE schema">
   <span class="metadata-table-card__header">
     <span class="metadata-table-card__identity">
-      <span class="metadata-table-card__title">METADATA_SOURCE_OBSERVATION</span>
+      <span class="metadata-table-card__title">METADATA_PROCESSING_STATE</span>
       <span class="metadata-table-card__schema">engineering</span>
     </span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
@@ -284,7 +284,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
   <span class="metadata-table-card__purpose">Processing State for source observations, incremental checkpoints, Source Drift baselines and publication receipts, distinguished by record_type. Only committed checkpoints and baselines are accepted progress. Each target publication has one typed receipt; source records link through publication_id. See the Processing State upgrade and recovery protocol in the metadata v2 maintainer guide.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One record_id per typed source observation/partition or source-to-target publication member; one publication_receipt per exact target publication. Staged members and their receipt become committed in one Delta merge.</span>
+    <span>One record_id per source snapshot partition or empty-source header, or per source-to-target publication member; one publication_receipt per exact target publication. Staged members and their receipt become committed in one Delta merge.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -307,7 +307,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">N → 1</span>
       <span class="metadata-table-card__relationship-list">
-        <code>METADATA_SOURCE_OBSERVATION</code>
+        <code>METADATA_PROCESSING_STATE</code>
       </span>
     </span>
   </span>
