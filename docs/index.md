@@ -355,7 +355,7 @@
   </a>
 </div>
 
-<a class="fabricops-home-metadata-map" href="reference/metadata.md">
+<a class="fabricops-home-metadata-map" href="reference/metadata/">
   <span class="fabricops-home-metadata-map__icon" aria-hidden="true">01 / 02</span>
   <span class="fabricops-home-metadata-map__copy">
     <strong>Explore the interactive Metadata Tables map</strong>
