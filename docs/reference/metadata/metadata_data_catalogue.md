@@ -4,7 +4,9 @@ The current structural registry of known table and column assets. table_id ident
 
 ## Writer functions
 
-No public writer function is traced in the current implementation.
+* [`orchestrate_read`](../../api/reference/orchestrate_read.md)
+* [`orchestrate_write`](../../api/reference/orchestrate_write.md)
+* [`profile_table`](../../api/reference/profile_table.md)
 
 ## Used in Workflow Template
 
