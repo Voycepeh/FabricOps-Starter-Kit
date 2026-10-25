@@ -1458,7 +1458,8 @@ def test_setup_metadata_tables_existing_tables_prints_compact_ready_summary(monk
     assert result["status"] == "ready"
     assert result["failed_tables"] == []
     assert result["data_agreement"]["active_steward_count"] == 1
-    assert output == f"\nFabricOps metadata tables ready ({total}/{total}).\nActive steward present: Yes\n"
+    assert output.endswith(f"\nFabricOps metadata tables ready ({total}/{total}).\nActive steward present: Yes\n")
+    assert "METADATA_SOURCE_OBSERVATION is no longer used" in output
     assert "Checking" not in output
     assert "Validated" not in output
     assert "Failed tables:" not in output
@@ -1736,10 +1737,10 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
 
 
 @pytest.mark.parametrize("canonical_exists", [False, True])
-def test_processing_state_rename_never_discards_legacy_progress(monkeypatch, canonical_exists):
-    """An old physical table blocks setup, including when the new table already exists."""
+@pytest.mark.parametrize("verbose", [False, True])
+def test_processing_state_cutover_ignores_obsolete_table(monkeypatch, capsys, canonical_exists, verbose):
+    """The obsolete table is untouched while canonical setup creates or validates normally."""
     from importlib import import_module
-    from types import SimpleNamespace
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
     setup_module = import_module("fabricops_kit.config.setup_metadata_tables")
     registry = metadata_table_schema_registry()
@@ -1752,18 +1753,36 @@ def test_processing_state_rename_never_discards_legacy_progress(monkeypatch, can
         def limit(self, _value): return self
         def take(self, _value): return []
 
+    class Spark:
+        def createDataFrame(self, rows, schema):
+            assert rows == []
+            return Frame(schema)
+
     def read(name, **kwargs):
         routes.append((name, kwargs["store"], kwargs["schema"]))
         if name == "METADATA_SOURCE_OBSERVATION":
-            return SimpleNamespace(columns=["observation_status"], collect=lambda: [{"observation_status": "committed"}])
-        if name == "METADATA_PROCESSING_STATE" and not canonical_exists:
+            raise AssertionError("Obsolete tables must not be inspected or consumed")
+        if name == "METADATA_PROCESSING_STATE" and not canonical_exists and not writes:
             raise RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")
         return Frame(registry[name])
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table", read)
     monkeypatch.setattr(setup_module, "write_lakehouse_table", lambda *args, **kw: writes.append((args, kw)))
-    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
-    assert result["failed_tables"] == ["METADATA_PROCESSING_STATE"]
-    assert "explicitly migrate/rename or reset" in result["table_results"]["METADATA_PROCESSING_STATE"]["message"]
-    assert ("METADATA_SOURCE_OBSERVATION", "Metadata", "engineering") in routes
-    assert writes == []
+    result = setup_metadata_tables(
+        spark=Spark(), config=framework_config(), env="dev", verbose=verbose, raise_on_failure=True,
+    )
+    assert result["status"] == "ready"
+    assert result["failed_tables"] == []
+    expected_status = "validated" if canonical_exists else "created"
+    assert result["table_results"]["METADATA_PROCESSING_STATE"]["status"] == expected_status
+    assert ("METADATA_PROCESSING_STATE", "Metadata", "engineering") in routes
+    assert all(name != "METADATA_SOURCE_OBSERVATION" for name, _, _ in routes)
+    assert len(writes) == (0 if canonical_exists else 1)
+    if writes:
+        assert writes[0][0][1] == "METADATA_PROCESSING_STATE"
+    output = capsys.readouterr().out
+    if verbose:
+        assert "From FabricOps v0.3.0, METADATA_SOURCE_OBSERVATION is no longer used" in output
+        assert "Delete the old table" in output
+    else:
+        assert output == ""

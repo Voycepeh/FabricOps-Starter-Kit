@@ -128,6 +128,10 @@ In the Governance workspace, set `INITIALIZE_METADATA = True` and run `00_env_co
 
 This prepares the metadata Lakehouse before `01_governance` starts creating Data Stewards, Data Agreements, and later Data Contracts. Authored Enrichment and Guardrails live in `METADATA_DATA_CONTRACT.contract_payload_json`; separate definition tables are no longer setup requirements. Existing installations should follow the [report-first migration instructions](03-author-and-freeze-data-contract.md#manifest-freeze) before resuming authoring. Setup never deletes old physical tables.
 
+!!! note "Preview table cleanup from v0.3.0"
+
+    `METADATA_SOURCE_OBSERVATION` is no longer used; `METADATA_PROCESSING_STATE` replaces it. You should delete the old table after reconciling any retained progress. Its presence does not block setup, and FabricOps does not migrate or delete it automatically. Fresh metadata and demo targets can start immediately. For existing targets, follow the [Processing State cutover guidance](../maintainer/metadata-v2-target-model.md#processing-state-upgrade) before resuming incremental processing.
+
 ![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
 
 <div class="fabricops-section-banner" markdown="1">

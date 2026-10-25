@@ -141,9 +141,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:196`
+`fabricops_kit/config/setup_metadata_tables.py:179`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L196-L595">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L179-L582">View on GitHub</a>
 </div>
 
 
@@ -239,9 +239,10 @@ Standard audit fields are ``_committed_by``, ``_committed_at``,
 ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
 The Preview Processing State table is named ``METADATA_PROCESSING_STATE``.
-Setup rejects the legacy ``METADATA_SOURCE_OBSERVATION`` physical name,
-including when the new table also exists. Reconcile and explicitly migrate
-or reset the old table before setup; no alias or empty replacement is created.
+From v0.3.0, ``METADATA_SOURCE_OBSERVATION`` is no longer used and should
+be deleted after reconciling any retained operational progress. Its presence
+does not block setup. Only ``METADATA_PROCESSING_STATE`` is read or written;
+no automatic migration, fallback reader, or deletion is performed.
 
 Existing tables are validated by canonical column name and compatible
 Spark data type. Physical Spark/Delta nullability is intentionally not
@@ -276,7 +277,7 @@ their respective FabricOps workflows.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 33 |
+| Live-critical dependencies | 32 |
 
 ### Release history
 
@@ -305,7 +306,6 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.config.setup_metadata_tables._active_steward_presence</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._add_missing_metadata_columns</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._print_setup_summary</code></li>
-<li><code>fabricops_kit.config.setup_metadata_tables._reject_legacy_processing_state_table</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._result</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._schema_fields_by_name</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._table_column_names</code></li>

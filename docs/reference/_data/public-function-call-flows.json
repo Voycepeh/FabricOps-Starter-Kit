@@ -2353,9 +2353,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.setup_metadata_tables._active_steward_presence",
-      "source_end_line": 152,
+      "source_end_line": 135,
       "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
-      "source_start_line": 133,
+      "source_start_line": 116,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -2373,9 +2373,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.setup_metadata_tables._add_missing_metadata_columns",
-      "source_end_line": 122,
+      "source_end_line": 105,
       "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
-      "source_start_line": 100,
+      "source_start_line": 83,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -2393,29 +2393,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.setup_metadata_tables._print_setup_summary",
-      "source_end_line": 193,
+      "source_end_line": 176,
       "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
-      "source_start_line": 155,
-      "supports_live_contract": true,
-      "usage": "public_flow_reachable"
-    },
-    {
-      "architecture_classification": "internal",
-      "contract_classification": "live_critical_internal",
-      "direct_live_dependents": [
-        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
-      ],
-      "function_name": "_reject_legacy_processing_state_table",
-      "function_type": "private_function",
-      "inbound_source_references": [
-        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
-      ],
-      "lifecycle_status": "internal",
-      "live_impact_level": "direct_live_dependency",
-      "qualified_name": "fabricops_kit.config.setup_metadata_tables._reject_legacy_processing_state_table",
-      "source_end_line": 52,
-      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
-      "source_start_line": 38,
+      "source_start_line": 138,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -2433,9 +2413,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.setup_metadata_tables._result",
-      "source_end_line": 130,
+      "source_end_line": 113,
       "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
-      "source_start_line": 125,
+      "source_start_line": 108,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -2494,9 +2474,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.setup_metadata_tables._validate_existing_metadata_schema",
-      "source_end_line": 97,
+      "source_end_line": 80,
       "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
-      "source_start_line": 55,
+      "source_start_line": 38,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -2567,9 +2547,9 @@
       ],
       "returns_documentation": "dict[str, Any]\n    A dictionary summarizing the completed metadata lakehouse setup,\n    including the resolved governance and engineering metadata schemas,\n    metadata tables checked,\n    tables created, additively evolved, successfully validated, failed tables,\n    per-table messages, active steward readiness, fully qualified table\n    names, and overall setup status. Key fields are ``status``,\n    ``data_agreement``, ``governance``, ``engineering``, ``tables``,\n    ``table_results``,\n    ``metadata_schemas``, ``fully_qualified_tables``, ``created_tables``,\n    ``evolved_tables``, ``validated_tables``, ``failed_tables``,\n    ``created_or_checked_tables``,\n    ``warnings``, ``active_metadata_tables``, and\n    ``active_metadata_table_count``.\n\n    ``status`` is ``\"ready\"`` when no table failures occur,\n    ``\"partial_failure\"`` when some tables succeed and some fail, and\n    ``\"failed\"`` when all table operations fail. ``data_agreement``\n    summarizes steward, agreement, and contract readiness. ``governance``\n    summarizes governance-authored tables, and ``engineering`` summarizes\n    engineering-written tables. Active steward readiness depends on\n    whether active steward rows already exist.",
       "signature": "def setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool=False, verbose: bool=True, raise_on_failure: bool=False) -> dict[str, Any]",
-      "source_end_line": 595,
+      "source_end_line": 582,
       "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
-      "source_start_line": 196,
+      "source_start_line": 179,
       "summary": "Create or check the FabricOps metadata tables for one environment.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
@@ -3051,7 +3031,6 @@
       "function_name": "is_table_not_found_error",
       "function_type": "shared_function",
       "inbound_source_references": [
-        "fabricops_kit.config.setup_metadata_tables._reject_legacy_processing_state_table",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.config.setup_metadata_tables::<module>",
         "fabricops_kit.data_contract.migrate_contract_definitions.migrate_contract_definitions",
@@ -4694,7 +4673,6 @@
       "function_type": "public_function",
       "inbound_source_references": [
         "fabricops_kit.activated_pipeline.shared.metadata_records",
-        "fabricops_kit.config.setup_metadata_tables._reject_legacy_processing_state_table",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.data_contract.migrate_contract_definitions.migrate_contract_definitions",
         "fabricops_kit.data_contract.shared._confirm_contract_mutation",
@@ -15346,7 +15324,6 @@
         "fabricops_kit.config.setup_metadata_tables._active_steward_presence",
         "fabricops_kit.config.setup_metadata_tables._add_missing_metadata_columns",
         "fabricops_kit.config.setup_metadata_tables._print_setup_summary",
-        "fabricops_kit.config.setup_metadata_tables._reject_legacy_processing_state_table",
         "fabricops_kit.config.setup_metadata_tables._result",
         "fabricops_kit.config.setup_metadata_tables._schema_fields_by_name",
         "fabricops_kit.config.setup_metadata_tables._table_column_names",
@@ -15366,8 +15343,8 @@
       ],
       "metrics": {
         "depth": 5,
-        "scope": 35,
-        "width": 17
+        "scope": 34,
+        "width": 16
       },
       "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
       "refactor_signals": [
@@ -15375,7 +15352,7 @@
           "evidence": [
             {
               "depth": 5,
-              "width": 17
+              "width": 16
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -16738,20 +16715,6 @@
       "caller_qualified_name": "fabricops_kit.config.setup_metadata_tables._add_missing_metadata_columns"
     },
     {
-      "callee_qualified_name": "fabricops_kit.config.shared.is_table_not_found_error",
-      "caller_qualified_name": "fabricops_kit.config.setup_metadata_tables._reject_legacy_processing_state_table"
-    },
-    {
-      "architecture_signals": [
-        {
-          "detail": "Calls foundational Fabric I/O.",
-          "type": "Type 0"
-        }
-      ],
-      "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-      "caller_qualified_name": "fabricops_kit.config.setup_metadata_tables._reject_legacy_processing_state_table"
-    },
-    {
       "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_schema_type_name",
       "caller_qualified_name": "fabricops_kit.config.setup_metadata_tables._validate_existing_metadata_schema"
     },
@@ -16789,10 +16752,6 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.config.setup_metadata_tables._print_setup_summary",
-      "caller_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
-    },
-    {
-      "callee_qualified_name": "fabricops_kit.config.setup_metadata_tables._reject_legacy_processing_state_table",
       "caller_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
     },
     {

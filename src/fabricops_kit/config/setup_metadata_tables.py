@@ -35,23 +35,6 @@ def _table_column_names(table: Any) -> list[str]:
     return list(getattr(table, "columns", []) or [])
 
 
-def _reject_legacy_processing_state_table(*, schema, spark, context):
-    """Require an explicit cutover before the renamed Preview table is initialized."""
-    try:
-        read_lakehouse_table("METADATA_SOURCE_OBSERVATION", store="Metadata", schema=schema,
-                             spark_session=spark, context=context)
-    except Exception as exc:
-        if not is_table_not_found_error(exc):
-            raise RuntimeError(f"Unable to check the legacy Processing State table: {exc}") from exc
-    else:
-        raise ValueError(
-            "Legacy METADATA_SOURCE_OBSERVATION exists. Stop writers, archive and reconcile its progress, "
-            "then explicitly migrate/rename or reset it as METADATA_PROCESSING_STATE before setup. "
-            "No compatibility alias or automatic empty replacement is created. "
-            "See docs/maintainer/metadata-v2-target-model.md#processing-state-upgrade."
-        )
-
-
 def _validate_existing_metadata_schema(
     table_name: str,
     existing_schema: Any,
@@ -362,9 +345,10 @@ def setup_metadata_tables(
     ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
     The Preview Processing State table is named ``METADATA_PROCESSING_STATE``.
-    Setup rejects the legacy ``METADATA_SOURCE_OBSERVATION`` physical name,
-    including when the new table also exists. Reconcile and explicitly migrate
-    or reset the old table before setup; no alias or empty replacement is created.
+    From v0.3.0, ``METADATA_SOURCE_OBSERVATION`` is no longer used and should
+    be deleted after reconciling any retained operational progress. Its presence
+    does not block setup. Only ``METADATA_PROCESSING_STATE`` is read or written;
+    no automatic migration, fallback reader, or deletion is performed.
 
     Existing tables are validated by canonical column name and compatible
     Spark data type. Physical Spark/Delta nullability is intentionally not
@@ -413,8 +397,6 @@ def setup_metadata_tables(
         resolved_metadata_schema = metadata_table_physical_schema(normalized, table_name)
         try:
             created = False
-            if table_name == "METADATA_PROCESSING_STATE":
-                _reject_legacy_processing_state_table(schema=resolved_metadata_schema, spark=spark, context=context)
             try:
                 table = read_lakehouse_table(
                     table_name, store="Metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
@@ -580,6 +562,11 @@ def setup_metadata_tables(
         "active_metadata_table_count": len(successful),
     }
     if verbose:
+        print(
+            "From FabricOps v0.3.0, METADATA_SOURCE_OBSERVATION is no longer used; "
+            "METADATA_PROCESSING_STATE replaces it. Delete the old table after reconciling "
+            "any retained progress. Its presence does not block setup; no data is migrated or deleted.\n"
+        )
         _print_setup_summary(
             total=total_tables,
             created=created_tables,
