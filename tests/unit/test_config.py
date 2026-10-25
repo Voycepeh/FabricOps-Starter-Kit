@@ -1459,7 +1459,8 @@ def test_setup_metadata_tables_existing_tables_prints_compact_ready_summary(monk
     assert result["failed_tables"] == []
     assert result["data_agreement"]["active_steward_count"] == 1
     assert output.endswith(f"\nFabricOps metadata tables ready ({total}/{total}).\nActive steward present: Yes\n")
-    assert "METADATA_SOURCE_OBSERVATION is no longer used" in output
+    assert "Warning:" not in output
+    assert result["warnings"] == []
     assert "Checking" not in output
     assert "Validated" not in output
     assert "Failed tables:" not in output
@@ -1738,7 +1739,7 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
 
 @pytest.mark.parametrize("canonical_exists", [False, True])
 @pytest.mark.parametrize("verbose", [False, True])
-def test_processing_state_cutover_ignores_obsolete_table(monkeypatch, capsys, canonical_exists, verbose):
+def test_processing_state_cutover_reports_obsolete_table(monkeypatch, capsys, canonical_exists, verbose):
     """The obsolete table is untouched while canonical setup creates or validates normally."""
     from importlib import import_module
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
@@ -1760,8 +1761,10 @@ def test_processing_state_cutover_ignores_obsolete_table(monkeypatch, capsys, ca
 
     def read(name, **kwargs):
         routes.append((name, kwargs["store"], kwargs["schema"]))
-        if name == "METADATA_SOURCE_OBSERVATION":
-            raise AssertionError("Obsolete tables must not be inspected or consumed")
+        if name == "METADATA_SOURCE_OBSERVATION" and kwargs["schema"] == "engineering":
+            return object()  # Presence only; no row/schema access is available.
+        if name not in registry:
+            raise RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")
         if name == "METADATA_PROCESSING_STATE" and not canonical_exists and not writes:
             raise RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")
         return Frame(registry[name])
@@ -1776,13 +1779,86 @@ def test_processing_state_cutover_ignores_obsolete_table(monkeypatch, capsys, ca
     expected_status = "validated" if canonical_exists else "created"
     assert result["table_results"]["METADATA_PROCESSING_STATE"]["status"] == expected_status
     assert ("METADATA_PROCESSING_STATE", "Metadata", "engineering") in routes
-    assert all(name != "METADATA_SOURCE_OBSERVATION" for name, _, _ in routes)
+    assert ("METADATA_SOURCE_OBSERVATION", "Metadata", "engineering") in routes
+    assert len(result["warnings"]) == 1
+    assert "engineering.METADATA_SOURCE_OBSERVATION" in result["warnings"][0]
+    assert "v0.3.0" in result["warnings"][0]
+    assert "METADATA_PROCESSING_STATE" in result["warnings"][0]
     assert len(writes) == (0 if canonical_exists else 1)
     if writes:
         assert writes[0][0][1] == "METADATA_PROCESSING_STATE"
     output = capsys.readouterr().out
     if verbose:
-        assert "From FabricOps v0.3.0, METADATA_SOURCE_OBSERVATION is no longer used" in output
-        assert "Delete the old table" in output
+        assert "Retired Preview table engineering.METADATA_SOURCE_OBSERVATION is no longer supported" in output
+        assert "Delete it after preserving" in output
     else:
         assert output == ""
+
+
+@pytest.mark.parametrize("probe_error", [False, True])
+def test_retired_preview_alerts_use_configured_schemas_and_preserve_readiness(monkeypatch, capsys, probe_error):
+    """All retired names are advisory, including inaccessible probes, with no legacy row reads."""
+    from importlib import import_module
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+    module = import_module("fabricops_kit.config.setup_metadata_tables")
+    registry = metadata_table_schema_registry()
+    from dataclasses import replace
+    config = replace(framework_config(), governance_metadata_schema="approved", engineering_metadata_schema="observed")
+    probes = []
+
+    class Frame:
+        def __init__(self, schema): self.schema = schema
+        def where(self, _expr): return self
+        def limit(self, _value): return self
+        def take(self, _value): return []
+
+    def read(name, **kwargs):
+        assert kwargs["store"] == "Metadata"
+        assert kwargs["schema"] in {"approved", "observed"}
+        if name in registry:
+            return Frame(registry[name])
+        probes.append((kwargs["schema"], name))
+        if kwargs["schema"] == "approved":
+            if probe_error:
+                raise PermissionError("access denied")
+            return object()  # A collected row would fail this test.
+        raise RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")
+
+    monkeypatch.setattr(module, "read_lakehouse_table", read)
+    monkeypatch.setattr(module, "write_lakehouse_table", lambda *_a, **_k: pytest.fail("No table mutation expected"))
+    result = setup_metadata_tables(spark=object(), config=config, env="dev", verbose=False, raise_on_failure=True)
+    assert result["status"] == "ready"
+    assert result["failed_tables"] == []
+    assert len(result["warnings"]) == 9
+    assert len(probes) == 18
+    assert capsys.readouterr().out == ""
+    assert all("approved." in warning for warning in result["warnings"])
+    if probe_error:
+        assert all("Could not check" in warning and "PermissionError" in warning for warning in result["warnings"])
+        assert all("is no longer supported" not in warning for warning in result["warnings"])
+    else:
+        assert all("is no longer supported" in warning for warning in result["warnings"])
+        assert all("No automatic Preview migration or deletion" in warning for warning in result["warnings"])
+        assert all("Do not append incompatible rows" in warning for warning in result["warnings"])
+
+
+def test_retired_preview_inventory_matches_release_history():
+    """Retirement notices cover removed release tables and never supported Live tables."""
+    from importlib import import_module
+    import yaml
+    from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
+    module = import_module("fabricops_kit.config.setup_metadata_tables")
+    manifests = Path(__file__).resolve().parents[2] / "docs" / "releases" / "manifests"
+    retired = set()
+    for path in manifests.glob("*.yml"):
+        payload = yaml.safe_load(path.read_text())
+        for entries in payload.values():
+            if isinstance(entries, list):
+                for entry in entries:
+                    if isinstance(entry, dict) and entry.get("name", "").startswith("METADATA_"):
+                        name = entry["name"]
+                        if name not in CANONICAL_METADATA_TABLES:
+                            assert entry["status"] in {"preview", "discontinued"}
+                            retired.add(name)
+    assert retired == set(module._RETIRED_PREVIEW_TABLES)
+    assert retired.isdisjoint(CANONICAL_METADATA_TABLES)

@@ -128,9 +128,11 @@ In the Governance workspace, set `INITIALIZE_METADATA = True` and run `00_env_co
 
 This prepares the metadata Lakehouse before `01_governance` starts creating Data Stewards, Data Agreements, and later Data Contracts. Authored Enrichment and Guardrails live in `METADATA_DATA_CONTRACT.contract_payload_json`; separate definition tables are no longer setup requirements. Existing installations should follow the [report-first migration instructions](03-author-and-freeze-data-contract.md#manifest-freeze) before resuming authoring. Setup never deletes old physical tables.
 
-!!! note "Preview table cleanup from v0.3.0"
+!!! note "Retired Preview table alerts"
 
-    `METADATA_SOURCE_OBSERVATION` is no longer used; `METADATA_PROCESSING_STATE` replaces it. You should delete the old table after reconciling any retained progress. Its presence does not block setup, and FabricOps does not migrate or delete it automatically. Fresh metadata and demo targets can start immediately. For existing targets, follow the [Processing State cutover guidance](../maintainer/metadata-v2-target-model.md#processing-state-upgrade) before resuming incremental processing.
+    Setup checks both configured metadata schemas for known retired Preview tables. If one exists, it prints its retirement version, current model and cleanup guidance; the same messages are returned in `result["warnings"]`, including with `verbose=False`. These notices do not block setup or delete/migrate data. Preserve required definitions, progress or history before deleting old tables; retained records need explicit mapping rather than a blind append into the new schema. For example, from v0.3.0, `METADATA_SOURCE_OBSERVATION` is replaced by `METADATA_PROCESSING_STATE`. Fresh metadata and demo targets can start immediately. For existing targets, follow the [Processing State cutover guidance](../maintainer/metadata-v2-target-model.md#processing-state-upgrade) before resuming incremental processing.
+
+    Live metadata tables are preserved. Compatible missing columns are added automatically. An intentional column removal, rename or type change requires a supported automatic migration shipped with that change; setup does not guess conversions or silently replace existing data.
 
 ![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
 

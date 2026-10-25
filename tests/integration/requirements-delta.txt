@@ -1,3 +1,0 @@
-# Fabric-compatible Delta runtime, isolated from the general PySpark test group.
-pyspark==3.5.9
-delta-spark==3.3.2

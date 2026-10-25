@@ -18,6 +18,46 @@ from .metadata_schemas import (
 from .shared import FrameworkConfig, get_store, is_table_not_found_error, validate_framework_config
 
 
+# Retired Preview names are advisory inventory, never supported runtime aliases.
+_RETIRED_PREVIEW_TABLES = {
+    "METADATA_DATA_AGREEMENT_EVIDENCE": ("0.2.0", "Review current Data Agreement and frozen Data Contract records."),
+    "METADATA_DATA_LINEAGE_TABLE": ("0.2.0", "Current pipeline participation is stored in METADATA_DATA_LINEAGE."),
+    "METADATA_ENRICHMENT_RULES": ("0.2.0", "Authored Enrichment is stored in METADATA_DATA_CONTRACT.contract_payload_json."),
+    "METADATA_GUARDRAIL_RULES": ("0.2.0", "Authored Guardrails are stored in METADATA_DATA_CONTRACT.contract_payload_json."),
+    "METADATA_NOTEBOOK_REGISTRY": ("0.2.0", "Current pipeline bindings are stored in METADATA_PIPELINE_REGISTRY."),
+    "METADATA_PIPELINE_RUNS": ("0.2.0", "Current execution results are stored in METADATA_PIPELINE_RUN."),
+    "METADATA_ENRICHMENT": ("0.3.0", "Authored Enrichment is stored in METADATA_DATA_CONTRACT.contract_payload_json."),
+    "METADATA_GUARDRAIL": ("0.3.0", "Authored Guardrails are stored in METADATA_DATA_CONTRACT.contract_payload_json."),
+    "METADATA_SOURCE_OBSERVATION": ("0.3.0", "Current source progress is stored in METADATA_PROCESSING_STATE."),
+}
+
+
+def _retired_preview_table_warnings(*, config, spark, context):
+    """Probe known retired names in configured schemas without collecting their rows."""
+    notices = []
+    schemas = dict.fromkeys((config.governance_metadata_schema, config.engineering_metadata_schema))
+    for schema in schemas:
+        for name, (version, guidance) in _RETIRED_PREVIEW_TABLES.items():
+            try:
+                read_lakehouse_table(name, store="Metadata", schema=schema, spark_session=spark, context=context)
+            except Exception as exc:
+                if not is_table_not_found_error(exc):
+                    notices.append(
+                        f"Could not check for retired Preview table {schema}.{name} "
+                        f"({type(exc).__name__}). Check metadata access/storage before cleanup; setup continues."
+                    )
+            else:
+                notices.append(
+                    f"Retired Preview table {schema}.{name} is no longer supported "
+                    f"(cutover: v{version}). {guidance} "
+                    "Delete it after preserving any required definitions, progress or history, "
+                    "or explicitly map and migrate retained data into the supported model. "
+                    "Do not append incompatible rows. No automatic Preview migration or deletion is performed; "
+                    "its presence does not block setup."
+                )
+    return notices
+
+
 def _schema_fields_by_name(schema: Any) -> dict[str, Any]:
     """Return schema fields keyed by name for Spark-like schemas."""
     return {field.name: field for field in getattr(schema, "fields", [])}
@@ -242,7 +282,9 @@ def setup_metadata_tables(
         summarizes steward, agreement, and contract readiness. ``governance``
         summarizes governance-authored tables, and ``engineering`` summarizes
         engineering-written tables. Active steward readiness depends on
-        whether active steward rows already exist.
+        whether active steward rows already exist. ``warnings`` contains
+        advisory strings for detected retired Preview tables and failed
+        retirement probes; these do not change canonical table readiness.
 
     Raises
     ------
@@ -345,10 +387,15 @@ def setup_metadata_tables(
     ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
     The Preview Processing State table is named ``METADATA_PROCESSING_STATE``.
-    From v0.3.0, ``METADATA_SOURCE_OBSERVATION`` is no longer used and should
-    be deleted after reconciling any retained operational progress. Its presence
-    does not block setup. Only ``METADATA_PROCESSING_STATE`` is read or written;
-    no automatic migration, fallback reader, or deletion is performed.
+    From v0.3.0, ``METADATA_SOURCE_OBSERVATION`` is no longer used.
+    Setup probes known retired Preview names in both configured metadata schemas
+    without collecting rows. Detected tables produce advisory cleanup/migration
+    messages in ``warnings`` and, with ``verbose=True``, in printed output.
+    Probe errors other than a missing table also produce advisory warnings;
+    they do not claim the table is absent. No Preview data is automatically
+    migrated or deleted, and old tables do not block setup. Runtime uses only
+    canonical tables. Preserve required data before deleting retired tables;
+    explicitly map incompatible records rather than blindly appending them.
 
     Existing tables are validated by canonical column name and compatible
     Spark data type. Physical Spark/Delta nullability is intentionally not
@@ -543,6 +590,7 @@ def setup_metadata_tables(
         "engineering": normalized.engineering_metadata_schema,
     }
     fully_qualified_tables = [f"{metadata_table_physical_schema(normalized, table)}.{table}" for table in registry]
+    retirement_warnings = _retired_preview_table_warnings(config=normalized, spark=spark, context=context)
     result = {
         "status": status,
         "data_agreement": data_agreement,
@@ -557,16 +605,13 @@ def setup_metadata_tables(
         "validated_tables": validated_tables,
         "failed_tables": failed_tables,
         "created_or_checked_tables": successful,
-        "warnings": [],
+        "warnings": retirement_warnings,
         "active_metadata_tables": successful,
         "active_metadata_table_count": len(successful),
     }
     if verbose:
-        print(
-            "From FabricOps v0.3.0, METADATA_SOURCE_OBSERVATION is no longer used; "
-            "METADATA_PROCESSING_STATE replaces it. Delete the old table after reconciling "
-            "any retained progress. Its presence does not block setup; no data is migrated or deleted.\n"
-        )
+        for warning in retirement_warnings:
+            print(f"Warning: {warning}")
         _print_setup_summary(
             total=total_tables,
             created=created_tables,

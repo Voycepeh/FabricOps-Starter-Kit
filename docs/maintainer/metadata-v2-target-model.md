@@ -78,7 +78,7 @@ Warehouse attempts for one target must remain serialized under the existing writ
 
 ### Processing State upgrade
 
-**From FabricOps v0.3.0, `METADATA_SOURCE_OBSERVATION` is no longer used. Delete it after reconciling any retained operational progress.** `METADATA_PROCESSING_STATE` is the sole canonical table. The obsolete table may remain during cutover: setup and runtime neither inspect nor consume it, and its presence does not block setup.
+**From FabricOps v0.3.0, `METADATA_SOURCE_OBSERVATION` is no longer used. Delete it after reconciling any retained operational progress.** `METADATA_PROCESSING_STATE` is the sole canonical table. The obsolete table may remain during cutover: setup checks its presence only to issue an advisory notice, runtime does not consume it, and its presence does not block setup.
 
 This is an intentional Preview breaking change. There is no automatic migration, compatibility reader, dual write, or automatic deletion. `observation_status` and `publication_payload_json` are removed. An incompatible layout under the new canonical name still fails validation; old rows must not be additive-evolved into typed progress.
 
@@ -110,7 +110,8 @@ Do not split contract rule expressions into separate physical tables by default.
 
 Before a structural implementation PR, document for **every changed table**: old and new fields with Spark types/nullability, logical key, `record_type` values, all readers and writers, transformation mapping, retained records, discard policy, cutover preconditions, rollback boundary, and test coverage.
 
-- Existing Live tables must remain readable without a rebuild.
+- Existing Live tables must remain readable without a rebuild. Compatible added columns can be applied automatically while preserving rows. An approved Live column removal, rename or type change must ship with a tested automatic data-preserving migration, repeat-run safety, validation and a rollback boundary; do not require users to drop/rebuild supported tables.
+- Known retired Preview tables are detected in both configured metadata schemas. Setup returns and prints advisory notices with the retirement version and current model. Their presence never blocks canonical setup. Preview migration remains explicit; cleanup never automatically deletes old records.
 - Preview breaking changes do not need compatibility shims, but deployed state must be classified as safely migratable or explicitly resettable.
 - Never reset incremental checkpoints, publication receipts, active reservations, or approval history casually. Drain in-flight Live runs before a breaking cutover.
 - `setup_metadata_tables()` should fail clearly on incompatible physical schemas; no silent data loss or accidental schema evolution.

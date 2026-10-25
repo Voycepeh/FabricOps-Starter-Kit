@@ -95,6 +95,11 @@ Do not preserve obsolete internal wrappers, aliases, adapters, resolver layers, 
 
 An unchanged function signature alone does not prove backward compatibility. Verify observable behaviour, accepted inputs, return contracts, side effects, persisted outputs, and failure behaviour.
 
+Metadata upgrade policy:
+
+- Retired Preview tables may remain physically present. Setup should detect known obsolete names in the configured Metadata schemas and report their retirement version, current model and cleanup guidance without blocking canonical setup. Do not automatically delete Preview data or blindly append old records into replacement tables. Any retained records require explicit mapping and validation.
+- Preserve Live metadata tables and existing rows by default. Compatible additive columns may be applied automatically without replacing existing data. If an intentional Live column removal, rename or type change is approved, ship and test an explicit automatic migration with the change, including data preservation, repeat-run safety, validation and a rollback boundary. Do not leave users to drop or rebuild a supported Live table manually, and do not silently evolve incompatible schemas.
+
 Preview callables are not covered by Live backward-compatibility guarantees. Preserve only behaviour required by the task and relevant tests unless the callable is being promoted or frozen.
 
 Discontinued callables do not imply current support. Preserve historical behaviour only when explicitly required.

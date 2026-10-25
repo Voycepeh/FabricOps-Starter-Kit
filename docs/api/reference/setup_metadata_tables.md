@@ -91,7 +91,9 @@ dict[str, Any]
     summarizes steward, agreement, and contract readiness. ``governance``
     summarizes governance-authored tables, and ``engineering`` summarizes
     engineering-written tables. Active steward readiness depends on
-    whether active steward rows already exist.
+    whether active steward rows already exist. ``warnings`` contains
+    advisory strings for detected retired Preview tables and failed
+    retirement probes; these do not change canonical table readiness.
 
 ### Return interpretation
 
@@ -141,9 +143,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:179`
+`fabricops_kit/config/setup_metadata_tables.py:219`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L179-L582">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L219-L627">View on GitHub</a>
 </div>
 
 
@@ -239,10 +241,15 @@ Standard audit fields are ``_committed_by``, ``_committed_at``,
 ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
 The Preview Processing State table is named ``METADATA_PROCESSING_STATE``.
-From v0.3.0, ``METADATA_SOURCE_OBSERVATION`` is no longer used and should
-be deleted after reconciling any retained operational progress. Its presence
-does not block setup. Only ``METADATA_PROCESSING_STATE`` is read or written;
-no automatic migration, fallback reader, or deletion is performed.
+From v0.3.0, ``METADATA_SOURCE_OBSERVATION`` is no longer used.
+Setup probes known retired Preview names in both configured metadata schemas
+without collecting rows. Detected tables produce advisory cleanup/migration
+messages in ``warnings`` and, with ``verbose=True``, in printed output.
+Probe errors other than a missing table also produce advisory warnings;
+they do not claim the table is absent. No Preview data is automatically
+migrated or deleted, and old tables do not block setup. Runtime uses only
+canonical tables. Preserve required data before deleting retired tables;
+explicitly map incompatible records rather than blindly appending them.
 
 Existing tables are validated by canonical column name and compatible
 Spark data type. Physical Spark/Delta nullability is intentionally not
@@ -277,7 +284,7 @@ their respective FabricOps workflows.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 32 |
+| Live-critical dependencies | 33 |
 
 ### Release history
 
@@ -307,6 +314,7 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.config.setup_metadata_tables._add_missing_metadata_columns</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._print_setup_summary</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._result</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._retired_preview_table_warnings</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._schema_fields_by_name</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._table_column_names</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._validate_existing_metadata_schema</code></li>
