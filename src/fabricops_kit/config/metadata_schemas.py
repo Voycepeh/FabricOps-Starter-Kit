@@ -348,7 +348,7 @@ def metadata_table_schema_registry() -> dict[str, Any]:
             "METADATA_PIPELINE_REGISTRY",
             [("pipeline_id", "string", False), ("environment_name", "string", False),
              ("workspace_id", "string"), ("notebook_id", "string"), ("notebook_name", "string"),
-             ("registered_at", "timestamp"), ("registered_by", "string"), ("updated_at", "timestamp"),
+             ("registered_at", "timestamp"), ("registered_by", "string"),
              ("registration_status", "string", False), ("registry_token", "string"), *audit],
         ),
         "METADATA_PIPELINE_RUN": build_metadata_schema(

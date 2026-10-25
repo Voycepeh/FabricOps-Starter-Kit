@@ -6469,7 +6469,7 @@ def resolve_pipeline_registration(pipeline_id=None, *, context, spark_session=No
            "notebook_id": notebook, "notebook_name": str(runtime.get("notebook_name") or ""),
            "registered_at": existing["registered_at"] if existing else now,
            "registered_by": existing["registered_by"] if existing else audit["_committed_by"],
-           "updated_at": now, "registration_status": "Active"}
+           "registration_status": "Active"}
     if not existing or any(row.get(key) != existing.get(key) for key in ("workspace_id", "notebook_id", "notebook_name")):
         if status == "Rebound":
             from fabricops_kit.activated_pipeline.shared import reserve_pipeline_rebind, release_pipeline_rebind
