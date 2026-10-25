@@ -21,6 +21,47 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_PROCESSING_STATE",
 ]
 
+# Intentional lifecycle declarations, independent of physical schema ownership.
+# Historical release manifests validate this registry in test_metadata_retirements.py.
+RETIRED_PREVIEW_METADATA_TABLES = {
+    "METADATA_DATA_AGREEMENT_EVIDENCE": {
+        "retired_in": "0.2.0",
+        "guidance": "Use exact Data Agreement and Testing references in METADATA_ACTIVATION_STATE where applicable.",
+    },
+    "METADATA_DATA_LINEAGE_TABLE": {
+        "retired_in": "0.2.0",
+        "guidance": "Current pipeline participation is stored in METADATA_DATA_LINEAGE.",
+    },
+    "METADATA_ENRICHMENT_RULES": {
+        "retired_in": "0.2.0",
+        "guidance": "Author descriptive Enrichment in METADATA_DATA_CONTRACT.contract_payload_json.",
+    },
+    "METADATA_GUARDRAIL_RULES": {
+        "retired_in": "0.2.0",
+        "guidance": "Author executable Guardrails in METADATA_DATA_CONTRACT.contract_payload_json.",
+    },
+    "METADATA_NOTEBOOK_REGISTRY": {
+        "retired_in": "0.2.0",
+        "guidance": "Current pipeline identities and notebook bindings use METADATA_PIPELINE_REGISTRY.",
+    },
+    "METADATA_PIPELINE_RUNS": {
+        "retired_in": "0.2.0",
+        "guidance": "Current execution history uses the typed METADATA_PIPELINE_RUN model.",
+    },
+    "METADATA_ENRICHMENT": {
+        "retired_in": "0.3.0",
+        "guidance": "Author descriptive Enrichment in METADATA_DATA_CONTRACT.contract_payload_json.",
+    },
+    "METADATA_GUARDRAIL": {
+        "retired_in": "0.3.0",
+        "guidance": "Author executable Guardrails in METADATA_DATA_CONTRACT.contract_payload_json.",
+    },
+    "METADATA_SOURCE_OBSERVATION": {
+        "retired_in": "0.3.0",
+        "guidance": "METADATA_PROCESSING_STATE is the sole runtime model; reconcile checkpoints and publication receipts before explicit migration or target rebuild/replay.",
+    },
+}
+
 GOVERNANCE_METADATA_TABLES = (
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",

@@ -8,6 +8,7 @@ from typing import Any
 
 from .metadata_schemas import (
     CANONICAL_METADATA_TABLES,
+    RETIRED_PREVIEW_METADATA_TABLES,
     GOVERNANCE_METADATA_TABLES,
     ENGINEERING_METADATA_TABLES,
     metadata_table_physical_schema,
@@ -35,21 +36,45 @@ def _table_column_names(table: Any) -> list[str]:
     return list(getattr(table, "columns", []) or [])
 
 
-def _reject_legacy_processing_state_table(*, schema, spark, context):
-    """Require an explicit cutover before the renamed Preview table is initialized."""
-    try:
-        read_lakehouse_table("METADATA_SOURCE_OBSERVATION", store="Metadata", schema=schema,
-                             spark_session=spark, context=context)
-    except Exception as exc:
-        if not is_table_not_found_error(exc):
-            raise RuntimeError(f"Unable to check the legacy Processing State table: {exc}") from exc
-    else:
-        raise ValueError(
-            "Legacy METADATA_SOURCE_OBSERVATION exists. Stop writers, archive and reconcile its progress, "
-            "then explicitly migrate/rename or reset it as METADATA_PROCESSING_STATE before setup. "
-            "No compatibility alias or automatic empty replacement is created. "
-            "See docs/maintainer/metadata-v2-target-model.md#processing-state-upgrade."
-        )
+def _retired_table_is_missing(exc):
+    """Recognize table/path absence without swallowing generic storage failures."""
+    if isinstance(exc, (PermissionError, OSError)):
+        return False
+    message = str(exc).lower()
+    return any(token in message for token in (
+        "[table_or_view_not_found]", "[path_not_found]", "[delta_table_not_found]",
+        "table or view not found", "table not found", "table does not exist",
+        "delta table doesn't exist",
+    ))
+
+
+def _retired_preview_warnings(*, config, spark, context):
+    """Probe declared retired names without evaluating their historical rows."""
+    warnings = []
+    schemas = dict.fromkeys((config.governance_metadata_schema, config.engineering_metadata_schema))
+    for schema in schemas:
+        for table_name, retirement in RETIRED_PREVIEW_METADATA_TABLES.items():
+            physical_name = f"{schema}.{table_name}"
+            try:
+                # Delta loading resolves presence/schema only; never run a row action.
+                read_lakehouse_table(table_name, store="Metadata", schema=schema,
+                                     spark_session=spark, context=context)
+            except Exception as exc:
+                if not _retired_table_is_missing(exc):
+                    warnings.append(
+                        f"Unable to inspect {physical_name} in the configured Metadata Lakehouse: "
+                        f"{type(exc).__name__}: {exc}. Retirement presence is unknown; "
+                        "check access/storage and rerun setup. This diagnostic is advisory."
+                    )
+            else:
+                warnings.append(
+                    f"{physical_name} in the configured Metadata Lakehouse is a former Preview table "
+                    f"that is no longer supported (retired in v{retirement['retired_in']}). "
+                    f"{retirement['guidance']} Preserve required definitions, progress or history, "
+                    "then delete this table or explicitly map/migrate retained records. "
+                    "Do not blindly append old rows into current tables. Setup does not migrate or delete data."
+                )
+    return warnings
 
 
 def _validate_existing_metadata_schema(
@@ -370,9 +395,15 @@ def setup_metadata_tables(
     ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
     The Preview Processing State table is named ``METADATA_PROCESSING_STATE``.
-    Setup rejects the legacy ``METADATA_SOURCE_OBSERVATION`` physical name,
-    including when the new table also exists. Reconcile and explicitly migrate
-    or reset the old table before setup; no alias or empty replacement is created.
+    Retired Preview tables, including ``METADATA_SOURCE_OBSERVATION``, may
+    remain physically present. Presence checks in both configured metadata
+    schemas return advisory ``warnings`` with retirement versions and cleanup
+    guidance; access/storage errors return diagnostics rather than absence.
+    No historical rows are collected, migrated or deleted. Alerts never affect
+    canonical readiness or ``raise_on_failure``. Only ``verbose=True`` prints
+    alerts and underlying I/O messages. A fresh Processing State table does not
+    establish progress for populated targets; reconcile retained progress or
+    deliberately rebuild/replay targets before resuming incremental work.
 
     ``METADATA_PIPELINE_RUN`` requires one run row with a typed operations array.
     Old summary rows, multirow layouts and incomplete typed layouts require verified offline
@@ -409,8 +440,10 @@ def setup_metadata_tables(
         raise ValueError(f"Target '{env}/metadata' is not a lakehouse store.")
     if metadata_store.schema_enabled is not True:
         raise ValueError("FabricOps Metadata Lakehouse must be schema-enabled.")
-    context = {"config": normalized, "env": env}
+    context = {"config": normalized, "env": env, "_fabricops_suppress_io_log": not verbose}
     registry = metadata_table_schema_registry()
+
+    warnings = _retired_preview_warnings(config=normalized, spark=spark, context=context)
 
     table_results: dict[str, dict[str, Any]] = {}
     created_tables: list[str] = []
@@ -425,8 +458,6 @@ def setup_metadata_tables(
         resolved_metadata_schema = metadata_table_physical_schema(normalized, table_name)
         try:
             created = False
-            if table_name == "METADATA_PROCESSING_STATE":
-                _reject_legacy_processing_state_table(schema=resolved_metadata_schema, spark=spark, context=context)
             try:
                 table = read_lakehouse_table(
                     table_name, store="Metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
@@ -587,11 +618,13 @@ def setup_metadata_tables(
         "validated_tables": validated_tables,
         "failed_tables": failed_tables,
         "created_or_checked_tables": successful,
-        "warnings": [],
+        "warnings": warnings,
         "active_metadata_tables": successful,
         "active_metadata_table_count": len(successful),
     }
     if verbose:
+        for warning in warnings:
+            print(f"Warning: {warning}")
         _print_setup_summary(
             total=total_tables,
             created=created_tables,
