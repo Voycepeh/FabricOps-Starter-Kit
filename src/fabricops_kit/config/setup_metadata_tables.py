@@ -66,6 +66,14 @@ def _validate_existing_metadata_schema(
         existing = {name: None for name in getattr(existing_schema, "fieldNames", lambda: [])()}
     if table_name == "METADATA_DATA_PROFILED" and "frequency_json" in existing:
         raise ValueError("METADATA_DATA_PROFILED has unexpected legacy column: frequency_json.")
+    if table_name == "METADATA_PIPELINE_RUN" and (
+        "operation_summary_json" in existing or set(expected) - set(existing)
+    ):
+        raise ValueError(
+            "Unsupported METADATA_PIPELINE_RUN physical schema. Stop writers, back up run history, "
+            "and perform the verified offline conversion in docs/maintainer/pipeline-run-normalization.md. "
+            "Automatic additive evolution is unsafe."
+        )
     if table_name == "METADATA_PROCESSING_STATE" and (
         "observation_status" in existing or "publication_payload_json" in existing
         or set(expected) - set(existing)
@@ -365,6 +373,10 @@ def setup_metadata_tables(
     Setup rejects the legacy ``METADATA_SOURCE_OBSERVATION`` physical name,
     including when the new table also exists. Reconcile and explicitly migrate
     or reset the old table before setup; no alias or empty replacement is created.
+
+    ``METADATA_PIPELINE_RUN`` requires typed run and operation records.
+    Old summary rows and incomplete typed layouts require verified offline
+    conversion; setup never adds columns to reinterpret existing run history.
 
     Existing tables are validated by canonical column name and compatible
     Spark data type. Physical Spark/Delta nullability is intentionally not

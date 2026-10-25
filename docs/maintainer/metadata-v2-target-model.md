@@ -1,6 +1,6 @@
 # Metadata v2: target model and migration boundaries
 
-**Status:** Processing State implemented; Pipeline Run and Activation State directions remain proposals.
+**Status:** Processing State and typed Pipeline Run records implemented; Activation State physical redesign remains a proposal. Pipeline Run preserves merged #1697 finalized Test evidence.
 
 ## Goal and constraints
 
@@ -11,7 +11,7 @@ Treat FabricOps metadata as an operational application database, not a reporting
 - Preview contracts may change without deprecated aliases, dual writes, or transitional API wrappers. Operational checkpoints, frozen contracts, and approval history still need a deliberate migration or safe cutover.
 - Do not introduce Azure SQL, extra metadata schemas, or a separate control-plane database.
 - Do not require the physical table count to decrease. A `record_type` discriminator is appropriate only when row types have compatible identity, lifecycle, and transaction semantics.
-- Preserve public notebook workflows and the distinction between in-memory Test results and persisted Live results.
+- Preserve public notebook workflows: Test operations stay in memory; explicit finalization persists only the allowed Test run and Guardrail diagnostics for activation, as implemented by #1697.
 
 ## Release classification versus current canonical registry
 
@@ -92,9 +92,9 @@ No automatic conversion is supplied because old rows can lack watermark types, c
 
 ### Pipeline execution (engineering)
 
-Investigate typed `run` and `operation` records within `METADATA_PIPELINE_RUN`. The parent `run` row is the sole authoritative final outcome; operation rows carry stable operation identity, type, participating table, status, and timing. Keep variable diagnostics in JSON only where justified.
+Typed `run` and `operation` records are implemented within `METADATA_PIPELINE_RUN`; see the [schema, reader/writer inventory and offline migration procedure](pipeline-run-normalization.md). The parent `run` row is the sole authoritative final outcome; operation rows carry stable operation identity, type, participating table, status, and timing. Keep variable diagnostics in JSON only where justified.
 
-**Required invariants:** interrupted notebooks cannot be finalized as successful; Test does not unexpectedly persist Live run evidence; retries and repeated finalization are idempotent; a successful operation does not imply a successful run. Prove whether a shared table actually simplifies persistence before committing to this shape.
+**Required invariants:** interrupted notebooks cannot be finalized as successful; explicitly finalized Test preserves its allowed durable activation diagnostics; retries and repeated finalization are idempotent; a successful operation does not imply a successful run. Prove whether a shared table actually simplifies persistence before committing to this shape.
 
 ### Activation authority (governance)
 
@@ -124,7 +124,7 @@ Before a structural implementation PR, document for **every changed table**: old
 | A. Architecture and lifecycle audit (this document) | ChatGPT | latest main | Documentation only |
 | B. Focused metadata reference fixes | ChatGPT | A | Small generator/source or docs PR; no schema change |
 | C. Processing State redesign | Codex | A; writer/reader inventory | Self-contained backend PR, targeted Delta recovery tests |
-| D. Pipeline Run normalization | Codex | A; run/finalization inventory | Separate backend PR, targeted persistence tests |
+| D. Pipeline Run normalization | Codex | A; merged #1697 and #1698 baseline | Typed records implemented; separate review with persisted Delta tests and explicit offline cutover |
 | E. Activation authority redesign | Codex | A; concurrency design proof | Isolated PR with persisted Delta CAS/conflict tests |
 | F. Contract/Guardrail/Access cleanup | ChatGPT for bounded fixes, otherwise Codex | A; demonstrated benefit | Skip if no justified change |
 | G. Final integration/reference generation | Appropriate owner of affected source | C–F | Only directly affected artifacts |

@@ -749,7 +749,7 @@
     "aliases": [],
     "category": "Data Engineering concepts",
     "short_definition": "One logical pipeline execution across every declared Read and Write.",
-    "long_definition": "METADATA_PIPELINE_RUN records one logical attempt across all declared Reads and Writes, stable pipeline_id, candidate identity, operations and status. Notebook cell events detect failure but do not establish whole-run success. finalize_pipeline records whole-run completion; unfinalized runs remain incomplete. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.",
+    "long_definition": "METADATA_PIPELINE_RUN stores one authoritative run record and typed operation records for every declared Read and Write, sharing run_id and one atomic snapshot token. Operation records expose table and exact frozen contract identity, configuration hash, status and timing. Notebook cell events detect failure but do not establish whole-run success. finalize_pipeline records whole-run completion; unfinalized runs remain incomplete. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.",
     "preferred_usage": "Use pipeline run for the complete execution; distinguish it from table participation and rule-level Guardrail Results.",
     "avoid_usage": "one run per participating table"
   },

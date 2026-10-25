@@ -123,6 +123,6 @@ def test_finalization_commits_complete_test_results_with_real_delta(authority_de
     result = finalize_pipeline(session)
     assert result['status'] == 'ungoverned_completed' and not plan.permits_persistence
     assert finalize_pipeline(session) == result
-    assert runtime.spark.read.format('delta').load(paths['METADATA_PIPELINE_RUN']).count() == 1
+    assert runtime.spark.read.format('delta').load(paths['METADATA_PIPELINE_RUN']).count() == 2
     assert runtime.spark.read.format('delta').load(paths['METADATA_GUARDRAIL_RESULTS']).count() == 1
     assert runtime.spark.read.format('delta').load(paths['METADATA_GUARDRAIL_RESULTS']).first().guardrail_result_id == 'stable-result'

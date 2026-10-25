@@ -147,7 +147,7 @@
 <path d="M429 423H721Q725 423 725 427V460H425V427Q425 423 429 423Z" fill="#1168B6"/>
 <text x="575.0" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_RUN</text>
 <text x="438" y="480" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="476" y="480" fill="#243550" font-size="14" font-family="Arial, sans-serif">run_id</text>
+<text x="476" y="480" fill="#243550" font-size="14" font-family="Arial, sans-serif">record_id</text>
 <text x="438" y="504" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
 <text x="476" y="504" fill="#243550" font-size="14" font-family="Arial, sans-serif">pipeline_id</text>
 <title>Open metadata documentation: PIPELINE_RUN</title>

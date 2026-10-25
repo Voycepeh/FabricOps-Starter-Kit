@@ -222,6 +222,31 @@ PIPELINE_REGISTRY_FIELD_DESCRIPTIONS = {
 }
 
 
+PIPELINE_RUN_FIELD_DESCRIPTIONS = {
+    "record_id": "SHA-256 over run_id and record type, plus logical operation key for operation rows; physical merge key.",
+    "record_type": "run for the sole authoritative whole-run outcome; operation for one declared Read/Write.",
+    "snapshot_token": "Publication token shared by the parent and every operation in one atomic Delta transaction.",
+    "run_id": "Execution attempt identity shared by the run and its operation rows; not a unique physical key.",
+    "status": "Run: incomplete, failed, succeeded or ungoverned_completed. Operation: not_started, incomplete, failed or succeeded.",
+    "candidate_json": "Exact candidate identity and physical bindings on the run row; null on operation rows.",
+    "run_details_json": "Run-level frozen contract references, profiling events, warnings, sanitized failures and activation provenance; excludes operations and completion authority.",
+    "boundary_completed": "Whole-run completion boundary on the run row; operation success never sets this authority.",
+    "operation_count": "Exact number of declared operation records expected in the verified snapshot.",
+    "operations_digest": "SHA-256 over sorted typed operation identities and payloads; rejects partial or mismatched snapshots.",
+    "operation_id": "Deterministic SHA-256 of run_id and the role-qualified logical operation key.",
+    "operation_key": "Stable role:logical-participant identity within the run.",
+    "role": "source or target for an operation row.",
+    "operation_type": "Read for a source; Write for a target.",
+    "contract_payload_sha256": "Exact frozen contract payload hash selected for this operation; null for No Contract.",
+    "operation_started_at": "Actual operation start timestamp; null for an unstarted operation or unknown historical timing.",
+    "operation_completed_at": "Actual operation completion timestamp; null for an unfinished operation or unknown historical timing.",
+    "configuration_sha256": "Identity of the frozen processing configuration for this operation.",
+    "configuration_json": "Exact extensible processing configuration for one operation, retained for candidate verification.",
+    "stages_json": "Sanitized stage names, statuses and evaluation statuses for one operation.",
+    "failure_code": "blocked for a blocking stage, failed for other operation failure; null otherwise.",
+}
+
+
 PROCESSING_STATE_FIELD_DESCRIPTIONS = {
     "record_id": "Stable SHA-256 primary key for one typed record; acceptance updates the same staged record.",
     "record_type": "source_observation, incremental_checkpoint, drift_baseline, or publication_receipt.",
@@ -4310,6 +4335,8 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_PIPELINE_REGISTRY" and column_name in PIPELINE_REGISTRY_FIELD_DESCRIPTIONS:
         return PIPELINE_REGISTRY_FIELD_DESCRIPTIONS[column_name]
+    if table_name == "METADATA_PIPELINE_RUN" and column_name in PIPELINE_RUN_FIELD_DESCRIPTIONS:
+        return PIPELINE_RUN_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_PROCESSING_STATE" and column_name in PROCESSING_STATE_FIELD_DESCRIPTIONS:
         return PROCESSING_STATE_FIELD_DESCRIPTIONS[column_name]
     if column_name in METADATA_FIELD_DESCRIPTIONS:

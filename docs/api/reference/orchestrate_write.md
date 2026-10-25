@@ -144,7 +144,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 229 |
+| Live-critical dependencies | 233 |
 
 ### Release history
 
@@ -281,6 +281,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._parse_rule_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared._persist_grain_candidates</code></li>
 <li><code>fabricops_kit.pipeline.shared._physical_target_has_publication</code></li>
+<li><code>fabricops_kit.pipeline.shared._pipeline_operations_digest</code></li>
 <li><code>fabricops_kit.pipeline.shared._pipeline_write_state_records</code></li>
 <li><code>fabricops_kit.pipeline.shared._portable_candidate_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._portable_contract_payload</code></li>
@@ -291,6 +292,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_snapshot_id</code></li>
 <li><code>fabricops_kit.pipeline.shared._publication_receipt</code></li>
+<li><code>fabricops_kit.pipeline.shared._read_pipeline_run_records</code></li>
 <li><code>fabricops_kit.pipeline.shared._recover_completed_source_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared._replace_frequency_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._replace_snapshot_rows</code></li>
@@ -355,6 +357,8 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.pipeline_candidate</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_run_records</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_run_snapshots</code></li>
 <li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_guardrail_result</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_pipeline_contract</code></li>

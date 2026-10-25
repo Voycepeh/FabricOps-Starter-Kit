@@ -20,12 +20,21 @@ def manifest_digest(value):
     return hashlib.sha256(canonical_candidate_json(value).encode("utf-8")).hexdigest()
 
 
-def metadata_records(table, *, context, spark_session=None):
+def metadata_records(table, *, context, spark_session=None, run_id=None):
     """Read domain metadata through its configured owner schema."""
     config, _env, _runtime = resolve_fabric_context(context=context)
     frame = read_lakehouse_table(table, store="Metadata", schema=metadata_table_physical_schema(config, table),
                                 spark_session=spark_session, context=context)
-    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in frame.collect()]
+    if table == "METADATA_PIPELINE_RUN":
+        from pyspark.sql import functions as F
+        frame = frame.filter(F.col("environment_name") == _env)
+        if run_id is not None:
+            frame = frame.filter(F.col("run_id") == run_id)
+    rows = [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in frame.collect()]
+    if table == "METADATA_PIPELINE_RUN":
+        from fabricops_kit.pipeline.shared import pipeline_run_snapshots
+        return pipeline_run_snapshots(rows)
+    return rows
 
 
 def exact_record(rows, **identity):
@@ -87,7 +96,8 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
     """Revalidate committed complete Test evidence before freezing approval."""
     config, env, runtime = resolve_fabric_context(context=context)
     from fabricops_kit.pipeline.shared import read_pipeline_registry, validate_pipeline_id
-    run = exact_record(metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session), run_id=testing_run_id)
+    run = exact_record(metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session,
+                                       run_id=testing_run_id), run_id=testing_run_id)
     validate_pipeline_id(run.get("pipeline_id"))
     _registry_token, registrations = read_pipeline_registry(context=context, spark_session=spark_session)
     registration = exact_record(registrations, pipeline_id=run["pipeline_id"], environment_name=env)
@@ -120,6 +130,7 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
         item.get("status") != "succeeded" or not item.get("configuration_sha256") or not isinstance(item.get("configuration"), dict)
         or not item.get("stages") or any(stage.get("status") in {"blocked", "failed"} or stage.get("evaluation_status") == "not_fully_evaluated"
                                          for stage in item["stages"])
+        or len({stage["stage"] for stage in item["stages"]}) != len(item["stages"])
         for item in operations.values()
     ):
         raise ValueError("Testing operation evidence is failed, incomplete or lacks processing configuration; rerun Testing.")
@@ -180,6 +191,10 @@ def tested_pipeline_manifest(*, testing_run_id, candidate_fingerprint, pipeline_
         raise ValueError("Testing Guardrail diagnostics must reference the selected run.")
     if any(row.get("can_continue") is not True or row.get("execution_type") != "testing" for row in diagnostics):
         raise ValueError("Testing has blocking or invalid Guardrail diagnostics.")
+    if any(row.get("environment_name") != env or any(
+        row.get(key) != run.get(key) for key in ("_workspace_id", "_notebook_id", "_activity_id")
+    ) for row in diagnostics):
+        raise ValueError("Testing Guardrail provenance differs from the exact run.")
     from collections import Counter
     observed = Counter((row.get("table_id"), row.get("contract_id"), row.get("contract_version"),
                         row.get("guardrail_rule_id"), row.get("guardrail_version")) for row in diagnostics)
