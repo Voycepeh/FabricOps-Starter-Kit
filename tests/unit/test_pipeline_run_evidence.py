@@ -22,12 +22,22 @@ def runtime(monkeypatch):
     saved, writes = {}, []
     failure = {"enabled": False, "after_commit": False, "read_unavailable": False}
 
-    physical = {}
+    physical, definitions, contracts = {}, {}, []
+    from fabricops_kit.activated_pipeline import shared as authority
+    monkeypatch.setattr(authority, "metadata_records", lambda table, **kw: contracts if table == "METADATA_DATA_CONTRACT" else [])
+    def seal(candidate, *, environment, fingerprint, **kw):
+        row = shared.pipeline_definition_row(candidate, environment=environment, fingerprint=fingerprint)
+        shared.pipeline_definition_candidate(row)
+        definitions[row["definition_id"]] = row
+        return row["definition_id"]
+    monkeypatch.setattr(shared, "seal_pipeline_definition", seal)
+    monkeypatch.setattr(shared, "read_pipeline_definition", lambda key, **kw: copy.deepcopy(definitions[key]))
     def merge(plan, row, **kwargs):
         if failure["enabled"]:
             raise OSError("credential=never persist this message")
+        shared.seal_pipeline_definition(json.loads(row["candidate_json"]), environment=plan.environment, fingerprint=row.get("candidate_fingerprint"))
         record = shared.pipeline_run_row(row)
-        shared.pipeline_run_result(record)
+        shared.validate_pipeline_run_result(row)
         physical[row["run_id"]] = copy.deepcopy(record)
         saved[row["run_id"]] = copy.deepcopy(row)
         writes.append(copy.deepcopy(row))
@@ -43,7 +53,7 @@ def runtime(monkeypatch):
     monkeypatch.setattr(shared, "resolve_physical_table_identity", lambda config, env, **kw:
                         {**kw, "table_id": kw["table_name"]})
     monkeypatch.setattr(shared, "pipeline_physical_bindings", lambda identities, **kw: {
-        key: {"store": item["store"], "schema": item.get("schema"), "table_name": item["table_name"]}
+        key: {"workspace_id": "workspace", "item_id": item["store"], "kind": "lakehouse", "schema": item.get("schema"), "table_name": item["table_name"]}
         for key, item in identities.items()
     })
 
@@ -67,10 +77,11 @@ def runtime(monkeypatch):
                       for i, role in enumerate(roles)}
         plan = shared.PipelineExecutionPlan(mode, "canary", "notebook", f"run-{len(saved)}", json.dumps(identities),
                                             "{}", json.dumps({key: {"table_id": key, "contract_id": "contract-" + key, "contract_version": 1,
-                            "contract_payload_json": json.dumps({"table": {"table_id": key, "columns": []}})} for key in identities}), {"config": {}, "env": "canary", "activity_id": activity, "notebook_name": notebook_name,
-                            "_pipeline_bindings": {key: {"store": item["store"], "schema": item.get("schema"), "table_name": item["table_name"]}
+                            "status": "frozen", "contract_payload_json": json.dumps({"table": {"table_id": key, "columns": []}})} for key in identities}), {"config": {}, "env": "canary", "activity_id": activity, "notebook_name": notebook_name,
+                            "_pipeline_bindings": {key: {"workspace_id": "workspace", "item_id": item["store"], "kind": "lakehouse", "schema": item.get("schema"), "table_name": item["table_name"]}
                                                    for key, item in identities.items()}},
                                             pipeline_id="orders")
+        contracts.extend(item for item in json.loads(plan.contracts_json).values() if item not in contracts)
         if mode == "live":
             preview = replace(plan, execution_mode="testing", evidence={})
             for index in range(len(roles)):
@@ -268,10 +279,10 @@ def test_run_schema_has_only_independent_lifecycle_fields():
     """Keep standard audit fields and avoid redundant activation/failure columns."""
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
     fields = metadata_table_schema_registry()["METADATA_PIPELINE_RUN"].fieldNames()
-    assert len(fields) == 21
+    assert len(fields) == 23
     assert fields[0] == "run_id"
     assert {"record_id", "record_type", "snapshot_token", "operation_count", "operations_digest", "operation_summary_json"}.isdisjoint(fields)
-    assert {"operations", "run_details_json", "boundary_completed"} <= set(fields)
+    assert {"operations", "definition_id", "approval_id", "profiling", "boundary_completed"} <= set(fields)
     assert fields[-8:] == [name for name, *_ in AUDIT_SCHEMA_FIELDS]
 
 
@@ -495,7 +506,7 @@ def test_operation_cannot_switch_to_case_alias_store_in_another_physical_item(ru
     original = make(roles=(role,))
     contracts = {declared["table_id"]: json.loads(original.contracts_json)["table0"]}
     plan = replace(original, execution_mode=mode, environment="dev", participants_json=json.dumps(identities),
-                   contracts_json=json.dumps(contracts), evidence={},
+                   contracts_json=json.dumps({key: None for key in contracts}), evidence={}, approved_candidate_json="",
                    runtime_context={"config": config, "env": "dev", "_pipeline_bindings": bindings})
     monkeypatch.setattr(shared, "resolve_physical_table_identity", resolve_physical_table_identity)
     monkeypatch.setattr(shared, "pipeline_physical_bindings", pipeline_physical_bindings)

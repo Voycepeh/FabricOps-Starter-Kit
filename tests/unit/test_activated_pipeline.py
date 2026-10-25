@@ -26,9 +26,9 @@ def authority(runtime, monkeypatch, tmp_path):
     monkeypatch.setattr(pipeline, "resolve_fabric_context", service.resolve_fabric_context)
     monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **kw: {})
     contracts, diagnostics, registrations = [], [], []
-    monkeypatch.setattr(pipeline, "read_pipeline_registry", lambda **kw: ("registry-token", copy.deepcopy(registrations)))
+    monkeypatch.setattr(pipeline, "read_pipeline_registry", lambda **kw: (central["token"], copy.deepcopy(registrations)))
     agreement = {"agreement_id": "agreement", "agreement_version": "1", "start_date": "2020-01-01", "expiry_date": "2099-01-01"}
-    central = {"token": "initial", "state": json.loads(service.empty_activation_state()), "fail": False}
+    central = {"token": "initial", "state": {"environments": {}, "registrations": [], "profiling_claims": {}}, "fail": False}
     lock = Lock()
     def records(table, **kwargs):
         return {"METADATA_PIPELINE_RUN": list(saved.values()), "METADATA_DATA_CONTRACT": contracts,
@@ -46,8 +46,8 @@ def authority(runtime, monkeypatch, tmp_path):
             central["state"] = copy.deepcopy(state)
             central["token"] = str(int(central["token"]) + 1) if central["token"].isdigit() else "1"
             return central["token"]
-    monkeypatch.setattr(service, "read_activation_state", read)
-    monkeypatch.setattr(service, "commit_activation_state", commit)
+    monkeypatch.setattr(service, "read_pipeline_authority", read)
+    monkeypatch.setattr(service, "commit_pipeline_authority", commit)
     def candidate(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596", version=3, roles=("target",), env="canary", tables=None, destinations=None):
         plan = make(mode="testing", roles=roles)
         identities = json.loads(plan.participants_json)
@@ -503,3 +503,15 @@ def test_registered_pipeline_cannot_run_live_without_environment_approval(author
         service.build_live_pipeline_plan(pipeline_id=plan.pipeline_id, context=plan.runtime_context)
     assert state.central == before
     assert not state.current()['history'] and not state.current()['runs']
+
+
+def test_rebound_notebook_cannot_run_an_old_test_approval(authority, monkeypatch):
+    state = authority
+    plan, run = state.candidate()
+    state.approve(run)
+    monkeypatch.setattr(pipeline, "read_pipeline_registry", lambda **kw: (state.central["token"], [{
+        "pipeline_id": plan.pipeline_id, "environment_name": "canary", "registration_status": "Active",
+        "workspace_id": "workspace", "notebook_id": "replacement"}]))
+    with pytest.raises(ValueError, match="rerun Test and approve the new binding"):
+        service.build_live_pipeline_plan(pipeline_id=plan.pipeline_id, context={**state.context, "notebook_id": "replacement"})
+    assert not state.current()["runs"]

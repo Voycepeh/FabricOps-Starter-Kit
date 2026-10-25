@@ -59,7 +59,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "The deliberate pipeline-wide mode that permits governed publication and operational metadata commits.",
-    "long_definition": "Live automatically resolves an approved environment configuration from METADATA_ACTIVATION_STATE and pins its revision. Exact contracts, writer ownership, transformation settings and physical destinations are enforced. Affected running executions drain before coordinated activation.",
+    "long_definition": "Live automatically resolves an approved environment configuration from METADATA_PIPELINE_REGISTRY and pins its revision. Exact contracts, writer ownership, transformation settings and physical destinations are enforced. Affected running executions drain before coordinated activation.",
     "preferred_usage": "Use Live for the execution decision in any configured environment; scheduled runs select it explicitly.",
     "avoid_usage": "an execution default inferred from an environment name"
   },
@@ -761,14 +761,14 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "An immutable approved version of a completely and successfully tested whole pipeline.",
-    "long_definition": "METADATA_ACTIVATION_STATE contains immutable approved pipeline manifests and the active configuration for each environment and pipeline_id. Each manifest binds successful whole-run Testing, an exact effective Agreement, global frozen contracts, transformation settings and physical destinations. Governance approves affected pipelines together; new Live runs resolve the coordinated revision automatically. Activation neither deploys notebooks nor writes business data.",
+    "long_definition": "METADATA_PIPELINE_REGISTRY contains typed immutable approval references and the active selections for each environment and pipeline_id. Each decision binds a successful finalized Test, an exact Agreement version/hash and a sealed METADATA_PIPELINE_DEFINITION with global frozen contracts, transformation settings and physical destinations. Governance approves affected pipelines together; new Live runs resolve the coordinated revision automatically. Activation neither deploys notebooks nor writes business data.",
     "preferred_usage": "Use Activated Pipeline for exact whole-pipeline Live authority.",
     "avoid_usage": "activated contract as Live authority"
   },
   {
     "term": "table profiling policy",
     "category": "FabricOps concepts",
-    "long_definition": "METADATA_DATA_CONTRACT.contract_payload_json stores independently versioned profiling policies. METADATA_PIPELINE_RUN records per-table activity outcomes and completion markers linked to persisted METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY snapshots. METADATA_ACTIVATION_STATE coordinates renewable claims. Schedules share successful history across pipelines for the same Table ID, environment and physical destination.",
+    "long_definition": "METADATA_DATA_CONTRACT.contract_payload_json stores independently versioned profiling policies. METADATA_PIPELINE_RUN records per-table activity outcomes and completion markers linked to persisted METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY snapshots. METADATA_PIPELINE_REGISTRY coordinates renewable claims. Schedules share successful history across pipelines for the same Table ID, environment and physical destination.",
     "preferred_usage": "Describe scheduling as table-level operational configuration, independently of Guardrail enforcement.",
     "aliases": [],
     "id": "table-profiling-policy",
@@ -779,10 +779,20 @@
     "id": "pipeline-registry",
     "term": "Pipeline Registry",
     "aliases": [],
-    "category": "Data Engineering concepts",
-    "short_definition": "Engineering registration of permanent Pipeline UUIDs and environment notebook bindings.",
-    "long_definition": "METADATA_PIPELINE_REGISTRY stores one logical pipeline binding per environment. Registration recovers a UUIDv4 using the exact workspace and notebook IDs. It never grants activation or Live authorization.",
-    "preferred_usage": "Use Pipeline Registry for permanent UUIDv4 registration and notebook bindings.",
-    "avoid_usage": "Activation State when describing Engineering registration"
+    "category": "FabricOps concepts",
+    "short_definition": "Atomic authority for pipeline registrations, immutable approval references, Live selections and reservations.",
+    "long_definition": "METADATA_PIPELINE_REGISTRY stores one native central authority row in Engineering. Typed collections separate Engineering notebook bindings, Governance decisions, Live selections, table ownership and execution/profiling reservations. All share one CAS token. Registration recovers a permanent UUIDv4 using exact workspace and notebook IDs and never grants Live authorization.",
+    "preferred_usage": "Use Pipeline Registry for the consolidated pipeline authority; distinguish registration from Governance approval.",
+    "avoid_usage": "registration as Live authorization"
+  },
+  {
+    "id": "pipeline-definition",
+    "term": "Pipeline Definition",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "A complete immutable configuration for one pipeline and environment.",
+    "long_definition": "METADATA_PIPELINE_DEFINITION seals content-addressed configurations with declared Read/Write participants, global table IDs, exact frozen contract references, physical destinations and project/operation settings. Finalized Test and Live Run rows reference exact definitions; Governance decisions select tested definitions through METADATA_PIPELINE_REGISTRY. A definition alone never authorizes Live, and referenced content must remain retained and hash-verifiable.",
+    "preferred_usage": "Use Pipeline Definition for sealed reusable configuration; distinguish it from an approval decision or observed Pipeline Run.",
+    "avoid_usage": "a mutable latest configuration as an approved definition"
   }
 ]

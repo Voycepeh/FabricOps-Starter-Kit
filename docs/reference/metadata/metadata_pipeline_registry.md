@@ -1,16 +1,17 @@
 # METADATA_PIPELINE_REGISTRY
 
-Keeps a permanent ID for each pipeline and records which notebook represents it in each environment. Renaming or promoting a notebook does not change the pipeline's identity.
+Coordinates Engineering registrations and Governance decisions through one atomic native authority.
 
 ## Writer functions
 
-* [`setup_metadata_tables`](../../api/reference/setup_metadata_tables.md)
+* [`finalize_pipeline`](../../api/reference/finalize_pipeline.md)
+* [`profile_table`](../../api/reference/profile_table.md)
 * [`setup_pipeline`](../../api/reference/setup_pipeline.md)
+* [`widget_activate_pipeline`](../../api/reference/widget_activate_pipeline.md)
 
 ## Used in Workflow Template
 
-* [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Environment bootstrap
-* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Configure the pipeline and whole-run boundary
+No starter template or solution is traced for the public writer functions.
 
 ## Model
 
@@ -18,18 +19,22 @@ Keeps a permanent ID for each pipeline and records which notebook represents it 
 
 **Default physical schema:** `engineering`
 
-**Grain:** One pipeline registration per environment, plus one technical control row used to coordinate registration.
+**Grain:** One central row: native registrations, approvals, selections, ownership and execution/profiling reservations.
 
-**Primary key:** `pipeline_id` + `environment_name`
+**Primary key:** `authority_id`
 
 **Relationships:**
 
+`METADATA_PIPELINE_DEFINITION` **(1 → N)**
+via `approvals`
+
 `METADATA_PIPELINE_RUN` **(1 → N)**
-via `pipeline_id` + `environment_name`
+via `approvals` + `reservations`
 
-**Activated Pipeline (logical entity; 1 → N):** One registered Pipeline UUID has many immutable releases inside governance.METADATA_ACTIVATION_STATE; Activated Pipeline is a logical entity, not a separate Delta table.
+`METADATA_DATA_AGREEMENT` **(N → M)**
+via `approvals`
 
-**Implementation details:** Permanent UUIDv4 identity and environment-specific notebook bindings; registration never authorizes Live. A seeded Authority control row serializes binding transactions in this same table. registered_at and registered_by retain the original registration; _committed_at and _committed_by record the latest binding mutation.
+**Implementation details:** A matched-only Delta compare-and-swap publishes all typed collections together. Registration, approval, admission, rebind and profiling share one token; no snapshot JSON or child-row insertion is authoritative. Approved definitions, finalized Tests and exact Agreements resolve by immutable content-checked references.
 
 ## Column summary
 
@@ -43,15 +48,15 @@ via `pipeline_id` + `environment_name`
 
 | Column | Data type | Description |
 | --- | --- | --- |
-| `pipeline_id` | `string` | Permanent system-generated UUIDv4 of the logical pipeline. The serialization control row uses central. |
-| `environment_name` | `string` | Resolved environment; together with pipeline_id identifies one notebook binding. The control row uses *. |
-| `workspace_id` | `string` | Workspace ID of the registered physical notebook; never part of the logical UUID. |
-| `notebook_id` | `string` | Current physical Fabric notebook ID; promotion or explicit rebinding preserves the UUID. |
-| `notebook_name` | `string` | Informational notebook display name; never used for identity matching or execution eligibility. |
-| `registered_at` | `timestamp` | Timestamp when this environment binding was first registered; preserved by rebinding. |
-| `registered_by` | `string` | Principal that first registered this environment binding; preserved by rebinding. |
-| `registration_status` | `string` | Active or Retired for pipeline bindings; Authority identifies the single serialization control row. |
-| `registry_token` | `string` | Compare-and-swap token updated with each binding mutation in the same Serializable Delta transaction. |
+| `authority_id` | `string` | Singleton publication identity central; runtime writers never insert a missing authority. |
+| `token` | `string` | Shared compare-and-swap fence for registration, approval, admission, rebind and profiling mutations. |
+| `registrations` | `array<struct<pipeline_id:string,environment_name:string,workspace_id:string,notebook_id:string,notebook_name:string,registered_at:timestamp,registered_by:string,registration_status:string,_committed_by:string,_committed_at:timestamp,_workspace_id:string,_workspace_name:string,_notebook_id:string,_notebook_name:string,_metadata_lakehouse_name:string,_activity_id:string>>` | Native permanent Pipeline UUID and environment notebook bindings; registration never permits Live. |
+| `revisions` | `array<struct<environment_name:string,revision:string>>` | Native environment activation revisions published with selections and ownership. |
+| `approvals` | `array<struct<approval_id:string,definition_id:string,pipeline_id:string,environment_name:string,pipeline_name:string,pipeline_version:string,testing_run_id:string,testing_evidence_sha256:string,agreement_id:string,agreement_version:string,agreement_sha256:string,warnings:array<string>,_committed_by:string,_committed_at:timestamp,_workspace_id:string,_workspace_name:string,_notebook_id:string,_notebook_name:string,_metadata_lakehouse_name:string,_activity_id:string>>` | Append-only decisions referencing sealed definitions, complete finalized Tests and exact Agreement versions/hashes. |
+| `selections` | `array<struct<environment_name:string,pipeline_id:string,approval_id:string>>` | Current approved decision per pipeline and environment, published atomically with ownership. |
+| `table_ownership` | `array<struct<environment_name:string,table_id:string,contract_id:string,contract_version:int,payload_sha256:string,writer:string,readers:array<string>,destination:struct<workspace_id:string,item_id:string,kind:string,schema:string,table_name:string>>>` | Native exact contract, physical destination, writer and readers per environment/table. |
+| `reservations` | `array<struct<environment_name:string,reservation_id:string,pipeline_id:string,mode:string,tables:array<string>,revision:string,destinations:array<struct<workspace_id:string,item_id:string,kind:string,schema:string,table_name:string>>>>` | Native Live reservations and transient rebind barriers protected by the shared authority token. |
+| `profiling_claims` | `array<struct<claim_key:string,token:string,key:string,table_id:string,environment:string,physical:struct<workspace_id:string,item_id:string,kind:string,schema:string,table_name:string>,activity:string,trigger:string,expires_at:string,execution_id:string,completed_at:string>>` | Renewable native claims with exact owner tokens, physical context and expiry. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |

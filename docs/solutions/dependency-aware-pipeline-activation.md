@@ -83,7 +83,7 @@ Testing evaluates without business publication by default. Explicit `testing_wri
     | [`METADATA_PIPELINE_RUN`](../reference/metadata/metadata_pipeline_run.md) | Whole-run completion, participants, exact contract mappings, Data Contract and processing configuration identity, operation outcomes and environment. |
     | [`METADATA_GUARDRAIL_RESULTS`](../reference/metadata/metadata_guardrail_results.md) | Rule-level diagnostics linked to the Testing run. |
     | [`METADATA_DATA_AGREEMENT`](../reference/metadata/metadata_data_agreement.md) | The exact effective Agreement selected for approval. |
-    | [`METADATA_ACTIVATION_STATE`](../reference/metadata/metadata_activation_state.md) | One authority snapshot containing environment revisions, active pipelines, contract/writer mappings, immutable approval history and running reservations. |
+    | [`METADATA_PIPELINE_REGISTRY`](../reference/metadata/metadata_pipeline_registry.md) | One native authority row containing environment revisions, active pipelines, contract/writer mappings, immutable approval history and running reservations. |
 
 ??? info "Shared-table rules and safe cutover"
 

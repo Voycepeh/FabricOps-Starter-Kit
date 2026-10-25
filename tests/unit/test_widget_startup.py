@@ -52,7 +52,7 @@ def test_public_widget_displays_before_services_without_duplicate_reads(name, mo
         assert reads == ["catalogue"]
     else:
         monkeypatch.setattr(module, "metadata_records", lambda table, **kw: read(table, [])())
-        monkeypatch.setattr(module, "read_activation_state", read("activation", (None, {})))
+        monkeypatch.setattr(module, "read_pipeline_authority", read("activation", (None, {})))
         monkeypatch.setattr(module, "environment_activation", lambda *_: {"pipelines": {}, "tables": {}, "revision": 0})
         state = module.widget_activate_pipeline()
         root = state["widget"]

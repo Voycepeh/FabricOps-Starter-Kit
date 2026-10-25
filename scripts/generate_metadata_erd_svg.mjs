@@ -7,21 +7,22 @@ const root = path.resolve(import.meta.dirname, "..");
 function renderMetadataSvg(layout, models) {
   const routes = [
     ["DATA_STEWARD","DATA_AGREEMENT","1:N","physical","M335 170H425",[335,170],[425,170],"One steward may participate in many agreements"],
-    ["DATA_AGREEMENT","ACTIVATION_STATE","","logical","M725 170H815",[725,170],[815,170],"Agreement to Activated Pipeline releases stored in Activation State"],
-    ["ACTIVATION_STATE","DATA_CONTRACT","","logical","M1115 170H1205",[1115,170],[1205,170],"Activated releases reference frozen Data Contract versions"],
-    ["PIPELINE_REGISTRY","ACTIVATION_STATE","","logical","M725 725H765V215H815",[725,725],[815,215],"Registered pipeline to approved releases stored inside Activation State"],
-    ["ACTIVATION_STATE","PIPELINE_RUN","","logical","M900 253V356H575V423",[900,253],[575,423],"Approved Activated Pipeline releases authorize Live runs"],
+    ["DATA_AGREEMENT","PIPELINE_REGISTRY","","logical","M725 170H775V725H815",[725,170],[815,725],"Agreement to Activated Pipeline releases stored in the Registry"],
+    ["PIPELINE_DEFINITION","DATA_CONTRACT","","logical","M725 770H765V885H1175V218H1205",[725,770],[1205,218],"Activated releases reference frozen Data Contract versions"],
+    ["PIPELINE_DEFINITION","PIPELINE_REGISTRY","","logical","M725 725H815",[725,725],[815,725],"Registered pipeline to approved releases stored inside the Registry"],
+    ["PIPELINE_REGISTRY","PIPELINE_RUN","","logical","M900 675V635H575V598",[900,675],[575,598],"Approved Activated Pipeline releases authorize Live runs"],
     ["DATA_CATALOGUE","DATA_CONTRACT","1:N","physical","M1355 423V253",[1355,423],[1355,253],"Catalogue table to contract versions"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1:N","physical","M425 515H335",[425,515],[335,515],"Pipeline run to recorded guardrail outcomes"],
     ["PIPELINE_RUN","PROCESSING_STATE","1:N","physical","M725 504H815",[725,504],[815,504],"Pipeline run to typed processing state"],
     ["DATA_CATALOGUE","PROCESSING_STATE","1:N","physical","M1205 545H1115",[1205,545],[1115,545],"Catalogue table to source and target processing state"],
-    ["PIPELINE_REGISTRY","PIPELINE_RUN","1:N","physical","M575 675V598",[575,675],[575,598],"Registered pipeline to its execution history"],
+    ["PIPELINE_DEFINITION","PIPELINE_RUN","1:N","physical","M575 675V598",[575,675],[575,598],"Registered pipeline to its execution history"],
     ["DATA_CATALOGUE","DATA_PROFILED","1:N","physical","M1250 598V902H575V995",[1250,598],[575,995],"Catalogue table to column statistics"],
     ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","","logical","M1290 598V877H185V995",[1290,598],[185,995],"Catalogue column to frequency observations"],
     ["DATA_CATALOGUE","DATA_LINEAGE","1:N","physical","M1355 598V927H965V995",[1355,598],[965,995],"Catalogue table to source and target lineage"],
     ["DATA_CATALOGUE","DATA_ACCESS","1:N","physical","M1430 598V963H1355V995",[1430,598],[1355,995],"Catalogue table to observed permissions"],
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1:N","physical","M425 1081H335",[425,1081],[335,1081],"Optional statistical profile reference on frequency rows"],
     ["DATA_CONTRACT","GUARDRAIL_RESULTS","1:N","physical","M1205 218H1165V388H185V423",[1205,218],[185,423],"Contract versions to their Guardrail results"]
+    ,["DATA_CATALOGUE","PIPELINE_DEFINITION","","logical","M1290 598V877H575V850",[1290,598],[575,850],"Declared definition participants reference global Catalogue table IDs"]
   ];
   const esc = value => String(value).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const source = layout.indexOf("<a ");

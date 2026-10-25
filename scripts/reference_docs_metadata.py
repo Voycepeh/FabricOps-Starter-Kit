@@ -123,29 +123,29 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 
 METADATA_TABLE_MODELS = {
     "METADATA_PIPELINE_REGISTRY": {
-        "purpose": "Keeps a permanent ID for each pipeline and records which notebook represents it in each environment. Renaming or promoting a notebook does not change the pipeline's identity.",
-        "grain": "One pipeline registration per environment, plus one technical control row used to coordinate registration.",
-        "implementation_notes": "Permanent UUIDv4 identity and environment-specific notebook bindings; registration never authorizes Live. A seeded Authority control row serializes binding transactions in this same table. registered_at and registered_by retain the original registration; _committed_at and _committed_by record the latest binding mutation.",
-        "primary_key": ["pipeline_id", "environment_name"], "foreign_keys": [],
-        "relationships": [
-            {"related_table": "METADATA_PIPELINE_RUN", "fields": ["pipeline_id", "environment_name"], "cardinality": "1:N", "statement": "One environment registration has many Pipeline Runs."},
-            {"logical_entity": "Activated Pipeline", "cardinality": "1:N", "statement": "One registered Pipeline UUID has many immutable releases inside governance.METADATA_ACTIVATION_STATE; Activated Pipeline is a logical entity, not a separate Delta table."},
-        ],
+        "purpose": "Coordinates Engineering registrations and Governance decisions through one atomic native authority.",
+        "grain": "One central row: native registrations, approvals, selections, ownership and execution/profiling reservations.",
+        "implementation_notes": "A matched-only Delta compare-and-swap publishes all typed collections together. Registration, approval, admission, rebind and profiling share one token; no snapshot JSON or child-row insertion is authoritative. Approved definitions, finalized Tests and exact Agreements resolve by immutable content-checked references.",
+        "primary_key": ["authority_id"], "foreign_keys": [],
+        "relationships": [{"related_table": "METADATA_PIPELINE_DEFINITION", "fields": ["approvals"], "cardinality": "1:N", "statement": "Native approvals reference sealed definition IDs. Registrations alone never authorize execution."},
+                          {"related_table": "METADATA_DATA_AGREEMENT", "fields": ["approvals"], "cardinality": "N:M", "statement": "Native approvals retain exact Agreement version and content hash references."},
+                          {"related_table": "METADATA_PIPELINE_RUN", "fields": ["approvals", "reservations"], "cardinality": "1:N", "statement": "Approvals retain exact finalized Test identities; selected approvals authorize reserved Live runs."}],
+    },
+    "METADATA_PIPELINE_DEFINITION": {
+        "purpose": "Stores complete immutable pipeline configuration once, shared by Test, approval and Live runs.",
+        "grain": "One immutable pipeline/environment definition with native participants, contract references, destinations and settings.",
+        "implementation_notes": "One complete append seals the definition; stable Delta transaction identity prevents concurrent duplicate insertion. Exact retained contract payloads reconstruct candidate identity and are hash-verified. Only project and operation settings remain variable configuration JSON. Orphaned definitions grant no authority.",
+        "primary_key": ["definition_id"], "foreign_keys": [],
+        "relationships": [{"related_table": "METADATA_DATA_CONTRACT", "fields": ["participants"], "cardinality": "N:M", "statement": "Typed participants reference exact contract_id, contract_version and payload_sha256; authored payloads remain in Data Contract."},
+                          {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["participants"], "cardinality": "N:M", "statement": "Typed declared participants retain global table_id; observed participation remains in Live Lineage."}],
     },
     "METADATA_PIPELINE_RUN": {
-        "purpose": "Records explicitly finalized Test runs and Live execution outcomes, including their tables, operations, profiling results and warnings.",
-        "grain": "One row per execution attempt, with a native typed operations array for all declared Reads and Writes.",
-        "implementation_notes": "One authoritative run row atomically contains typed Read/Write operations and typed stages. Operation keys identify source/target roles and logical participants; nested fields expose exact table/contract identity, configuration hash, status and timing without JSON parsing. Readers verify complete operation membership against the candidate. Profiling markers remain in run_details_json and join persisted result snapshots.", "primary_key": ["run_id"],
-        "foreign_keys": [{"local_field": "pipeline_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "pipeline_id", "cardinality": "N:1", "statement": "Each run references one registered logical Pipeline UUID in its environment."}],
-        "relationships": [{"cardinality": "N:1", "statement": "Each Live run references an approved Activated Pipeline release inside METADATA_ACTIVATION_STATE."}],
-    },
-    "METADATA_ACTIVATION_STATE": {
-        "purpose": "Records which pipeline releases are approved to run Live in each environment, together with the agreements and approvals behind them.",
-        "grain": "One central record containing the approval and execution state for all environments.",
-        "implementation_notes": "Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations, transient notebook-rebind barriers and renewable profiling claims.",
-        "primary_key": ["authority_id"], "foreign_keys": [],
-        "relationships": [{"logical_entity": "Activated Pipeline", "cardinality": "1:N", "statement": "Each registered Pipeline UUID can have many immutable Activated Pipeline releases in the environment history. Activated Pipeline is a logical entity in snapshot_json, not a separate Delta table."},
-                          {"logical_entity": "Live Pipeline Run", "cardinality": "1:N", "statement": "Each approved Activated Pipeline release authorizes many Live Pipeline Runs; registration alone never authorizes execution."}],
+        "purpose": "Records explicitly finalized Test and Live execution outcomes against exact immutable definitions.",
+        "grain": "One row per execution with native observed operation/stage status, timing, finalization, profiling and safe failures.",
+        "implementation_notes": "Whole-row CAS atomically publishes the parent and all operations/stages. Expected configuration and exact participant contracts resolve through definition_id; Live pins approval_id. Profiling completion joins physical result snapshots. warnings_json contains variable sanitized operational-parameter diagnostics only.",
+        "primary_key": ["run_id"],
+        "foreign_keys": [{"local_field": "definition_id", "referenced_table": "METADATA_PIPELINE_DEFINITION", "referenced_field": "definition_id", "cardinality": "N:1", "statement": "Each run resolves one exact immutable definition."}],
+        "relationships": [{"related_table": "METADATA_PIPELINE_REGISTRY", "cardinality": "N:1", "statement": "Live runs pin an exact native approval and environment revision in the Registry authority."}],
     },
     "METADATA_DATA_STEWARD": {
         "purpose": "Identifies the people responsible for governing data.",
@@ -175,7 +175,7 @@ METADATA_TABLE_MODELS = {
         "implementation_notes": "Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. Agreement linkage belongs to Activated Pipeline.",
         "primary_key": ["contract_id", "contract_version"],
         "foreign_keys": [{"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "A contract defines one Catalogue table."}],
-        "relationships": [{"cardinality": "N:M", "related_table": "METADATA_ACTIVATION_STATE", "statement": "Many activated manifests may reuse this exact frozen contract; manifest references are not scalar foreign keys."}],
+        "relationships": [{"cardinality": "N:M", "related_table": "METADATA_PIPELINE_REGISTRY", "statement": "Many activated manifests may reuse this exact frozen contract; manifest references are not scalar foreign keys."}],
     },
     "METADATA_DATA_CATALOGUE": {
         "purpose": "Lists registered tables and columns, where they are stored, their data types and whether they are still active.",
@@ -267,8 +267,8 @@ METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
     "METADATA_DATA_CONTRACT": ["widget_data_contract"],
-    "METADATA_ACTIVATION_STATE": ["widget_activate_pipeline", "setup_pipeline", "finalize_pipeline"],
-    "METADATA_PIPELINE_REGISTRY": ["setup_pipeline"],
+    "METADATA_PIPELINE_REGISTRY": ["widget_activate_pipeline", "setup_pipeline", "finalize_pipeline", "profile_table"],
+    "METADATA_PIPELINE_DEFINITION": ["finalize_pipeline", "setup_pipeline"],
     "METADATA_PIPELINE_RUN": ["finalize_pipeline"],
     "METADATA_DATA_CATALOGUE": ["orchestrate_read", "orchestrate_write", "profile_table"],
     "METADATA_DATA_PROFILED": ["orchestrate_read", "orchestrate_write", "profile_table"],
@@ -285,7 +285,7 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
-    "METADATA_ACTIVATION_STATE",
+    "METADATA_PIPELINE_DEFINITION",
     "METADATA_DATA_CATALOGUE",
     "METADATA_PROCESSING_STATE",
     "METADATA_DATA_PROFILED",
@@ -366,8 +366,8 @@ METADATA_COLUMN_OWNERS = {
         "__default__": ["fabricops_kit.widgets.widget_data_contract.widget_data_contract", "fabricops_kit.data_contract.shared.create_contract_draft", "fabricops_kit.data_contract.shared.save_contract_draft", "fabricops_kit.data_contract.shared.freeze_contract"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
-    "METADATA_ACTIVATION_STATE": {
-        "__default__": ["fabricops_kit.activated_pipeline.shared.commit_activation_state"],
+    "METADATA_PIPELINE_DEFINITION": {
+        "__default__": ["fabricops_kit.pipeline.shared.seal_pipeline_definition"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
     "METADATA_DATA_CATALOGUE": {
@@ -2119,11 +2119,10 @@ def related_guides(symbol_name: str) -> list[dict[str, str]]:
 
 METADATA_TABLE_PURPOSES["METADATA_PIPELINE_REGISTRY"] = METADATA_TABLE_MODELS["METADATA_PIPELINE_REGISTRY"]["purpose"]
 METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"] = {
-    name: ["fabricops_kit.pipeline.shared.commit_pipeline_registration", "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"]
-    for name in ("pipeline_id", "environment_name", "workspace_id", "notebook_id", "notebook_name", "registered_at", "registered_by", "registration_status", "registry_token")
+    "__default__": ["fabricops_kit.activated_pipeline.shared.commit_pipeline_authority"],
+    "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+    "registrations": ["fabricops_kit.pipeline.shared.commit_pipeline_registration"],
+    "approvals": ["fabricops_kit.activated_pipeline.shared.approve_pipeline_release"],
+    "reservations": ["fabricops_kit.activated_pipeline.shared.build_live_pipeline_plan", "fabricops_kit.activated_pipeline.shared.release_pipeline_lease"],
+    "profiling_claims": ["fabricops_kit.pipeline.shared.claim_table_profile", "fabricops_kit.pipeline.shared.maintain_table_profile_claim"],
 }
-METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"]["__audit__"] = ["fabricops_kit.config.audit.build_runtime_audit_fields"]
-
-METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"]["__default__"] = [
-    "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
-]

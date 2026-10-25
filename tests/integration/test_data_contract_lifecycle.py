@@ -78,7 +78,7 @@ class _DeltaTransport:
                     target.update(deepcopy(source))
                 elif self.updates:
                     for key, expression in self.updates.items():
-                        match = re.search(r"source\.(\w+)", expression)
+                        match = re.search(r"source\.`?(\w+)", expression)
                         assert match or expression in {"true", "false"}, expression
                         value = source.get(match.group(1)) if match else expression == "true"
                         if value is not None or not expression.startswith("coalesce("):
@@ -111,15 +111,7 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
     state = SimpleNamespace(config=config, context=context, metadata={name: [] for name in registry}, business={}, reads=[], commits={})
 
     from fabricops_kit.activated_pipeline import shared as activation
-    state.metadata["METADATA_ACTIVATION_STATE"] = [{"authority_id": "central", "token": "initial", "snapshot_json": activation.empty_activation_state()}]
-    def commit_authority(snapshot, *, expected_token, **kwargs):
-        row = state.metadata["METADATA_ACTIVATION_STATE"][0]
-        if row["token"] != expected_token:
-            raise ValueError("Concurrent approval")
-        from uuid import uuid4
-        row.update(token=str(uuid4()), snapshot_json=runtime.canonical_candidate_json(snapshot))
-        return row["token"]
-    monkeypatch.setattr(activation, "commit_activation_state", commit_authority)
+    state.metadata["METADATA_PIPELINE_REGISTRY"] = [{**activation.empty_pipeline_authority(), **audit}]
     activity_times = {}
     def audit_fields(**kwargs):
         activity = context["activity_id"]
@@ -174,8 +166,13 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         forPath=lambda spark, name: _DeltaTransport(state, name),
         isDeltaTable=lambda spark, name: name in state.business)))
     def persist_run(plan, row, **kwargs):
+        candidate = json.loads(row['candidate_json'])
+        definition = runtime.pipeline_definition_row(candidate, environment=plan.environment,
+            fingerprint=row.get('candidate_fingerprint'), audit={key: value for key, value in row.items() if key.startswith('_')})
+        if not any(item['definition_id'] == definition['definition_id'] for item in state.metadata['METADATA_PIPELINE_DEFINITION']):
+            state.metadata['METADATA_PIPELINE_DEFINITION'].append(definition)
         record = runtime.pipeline_run_row(row)
-        runtime.pipeline_run_result(record)
+        runtime.pipeline_run_result(record, context=plan.runtime_context, spark_session=spark_session)
         state.metadata['METADATA_PIPELINE_RUN'] = [item for item in state.metadata['METADATA_PIPELINE_RUN']
             if item['run_id'] != plan.plan_id] + [record]
     monkeypatch.setattr(runtime, '_merge_pipeline_run_row', persist_run)

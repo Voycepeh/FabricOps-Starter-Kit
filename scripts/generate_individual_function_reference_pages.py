@@ -209,26 +209,31 @@ METADATA_FIELD_DESCRIPTIONS = {
 }
 
 PIPELINE_REGISTRY_FIELD_DESCRIPTIONS = {
-    "pipeline_id": "Permanent system-generated UUIDv4 of the logical pipeline. The serialization control row uses central.",
-    "environment_name": "Resolved environment; together with pipeline_id identifies one notebook binding. The control row uses *.",
-    "workspace_id": "Workspace ID of the registered physical notebook; never part of the logical UUID.",
-    "notebook_id": "Current physical Fabric notebook ID; promotion or explicit rebinding preserves the UUID.",
-    "notebook_name": "Informational notebook display name; never used for identity matching or execution eligibility.",
-    "registered_at": "Timestamp when this environment binding was first registered; preserved by rebinding.",
-    "registered_by": "Principal that first registered this environment binding; preserved by rebinding.",
-    # Latest update time is supplied by the shared _committed_at audit description.
-    "registration_status": "Active or Retired for pipeline bindings; Authority identifies the single serialization control row.",
-    "registry_token": "Compare-and-swap token updated with each binding mutation in the same Serializable Delta transaction.",
+    "authority_id": "Singleton publication identity central; runtime writers never insert a missing authority.",
+    "token": "Shared compare-and-swap fence for registration, approval, admission, rebind and profiling mutations.",
 }
 
-
-PIPELINE_RUN_FIELD_DESCRIPTIONS = {
+PIPELINE_METADATA_FIELD_DESCRIPTIONS = {
     "run_id": "Unique execution attempt and physical merge key; one authoritative row contains every Read/Write.",
     "status": "Whole-run outcome: incomplete, failed, succeeded or ungoverned_completed; operation success alone never completes a run.",
-    "candidate_json": "Exact candidate identity, configuration and physical bindings retained for fingerprint verification.",
-    "run_details_json": "Frozen contract references, profiling events, warnings, sanitized failures and activation provenance; operations and completion authority are typed fields.",
+    "definition_id": "Exact immutable content-addressed pipeline/environment definition; missing or altered references fail closed.",
+    "approval_id": "Exact Governance decision retained in the Registry authority; Live runs pin this decision.",
+    "registrations": "Native permanent Pipeline UUID and environment notebook bindings; registration never permits Live.",
+    "revisions": "Native environment activation revisions published with selections and ownership.",
+    "approvals": "Append-only decisions referencing sealed definitions, complete finalized Tests and exact Agreement versions/hashes.",
+    "selections": "Current approved decision per pipeline and environment, published atomically with ownership.",
+    "table_ownership": "Native exact contract, physical destination, writer and readers per environment/table.",
+    "reservations": "Native Live reservations and transient rebind barriers protected by the shared authority token.",
+    "profiling_claims": "Renewable native claims with exact owner tokens, physical context and expiry.",
+    "participants": "Complete declared logical participants, global table IDs, roles and exact frozen contract references.",
+    "operation_configurations": "Expected operation keys and variable settings sealed in the immutable definition.",
+    "physical_bindings": "Typed exact destinations: workspace, item, kind, schema and table, keyed by global table ID.",
+    "project_configuration_json": "Variable sanitized project settings and authored transformation dependencies; no authority or lifecycle state.",
+    "profiling": "Typed per-table activity outcomes and physical result snapshot completion markers.",
+    "warnings_json": "Variable sanitized operational-parameter diagnostics, including tested and actual values; no activation authority.",
+    "failures": "Native safe failure codes and exception class names; never raw exception messages.",
     "boundary_completed": "Whether the explicit whole-run completion boundary finished; independent of operation success.",
-    "operations": "Native array of typed Read/Write structs: operation_key, table_id, status, timing, exact frozen contract, configuration identity/JSON and typed stages. Query with explode(operations); no operational JSON parsing is required.",
+    "operations": "Native observed Read/Write operations: operation key, status, timing and typed stages. Resolve declared table, contract and configuration through the exact definition; query with explode(operations).",
 }
 
 PROCESSING_STATE_FIELD_DESCRIPTIONS = {
@@ -4319,8 +4324,8 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_PIPELINE_REGISTRY" and column_name in PIPELINE_REGISTRY_FIELD_DESCRIPTIONS:
         return PIPELINE_REGISTRY_FIELD_DESCRIPTIONS[column_name]
-    if table_name == "METADATA_PIPELINE_RUN" and column_name in PIPELINE_RUN_FIELD_DESCRIPTIONS:
-        return PIPELINE_RUN_FIELD_DESCRIPTIONS[column_name]
+    if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_DEFINITION"} and column_name in PIPELINE_METADATA_FIELD_DESCRIPTIONS:
+        return PIPELINE_METADATA_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_PROCESSING_STATE" and column_name in PROCESSING_STATE_FIELD_DESCRIPTIONS:
         return PROCESSING_STATE_FIELD_DESCRIPTIONS[column_name]
     if column_name in METADATA_FIELD_DESCRIPTIONS:

@@ -16,11 +16,11 @@
 <text x="575.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_AGREEMENT</text>
 <title>Open metadata documentation: DATA_AGREEMENT</title>
 </a>
-<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_activation_state/" target="_blank">
-<rect x="815" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
-<path d="M819 78H1111Q1115 78 1115 82V115H815V82Q815 78 819 78Z" fill="#7144AE"/>
-<text x="965.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">ACTIVATION_STATE</text>
-<title>Open metadata documentation: ACTIVATION_STATE</title>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_registry/" target="_blank" transform="translate(0 597)">
+<rect x="815" y="78" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
+<path d="M819 78H1111Q1115 78 1115 82V115H815V82Q815 78 819 78Z" fill="#1168B6"/>
+<text x="965.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_REGISTRY</text>
+<title>Open metadata documentation: PIPELINE_REGISTRY</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract/" target="_blank">
 <rect x="1205" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
@@ -76,10 +76,10 @@
 <text x="1355.0" y="839" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_ACCESS</text>
 <title>Open metadata documentation: DATA_ACCESS</title>
 </a>
-<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_registry/" target="_blank">
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_definition/" target="_blank">
 <rect x="425" y="675" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
 <path d="M429 675H721Q725 675 725 679V712H425V679Q425 675 429 675Z" fill="#1168B6"/>
-<text x="575" y="699" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_REGISTRY</text>
-<title>Open metadata documentation: PIPELINE_REGISTRY</title>
+<text x="575" y="699" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_DEFINITION</text>
+<title>Open metadata documentation: PIPELINE_DEFINITION</title>
 </a>
 </svg>

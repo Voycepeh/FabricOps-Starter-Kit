@@ -22,7 +22,7 @@ NOW = datetime(2026, 10, 23, 9, tzinfo=UTC)
 
 @pytest.fixture
 def metadata(monkeypatch):
-    store = {'token': '0', 'state': json.loads(activation.empty_activation_state()), 'commits': 0}
+    store = {'token': '0', 'state': {"environments": {}, "registrations": [], "profiling_claims": {}}, 'commits': 0}
     lock = Lock()
     rows = {'METADATA_PIPELINE_RUN': {}, 'METADATA_DATA_PROFILED': [], 'METADATA_DATA_PROFILED_FREQUENCY': []}
     def context(run_id='A', **overrides):
@@ -46,8 +46,8 @@ def metadata(monkeypatch):
             store['commits'] += 1
             store['token'] = str(store['commits'])
             return store['token']
-    monkeypatch.setattr(activation, 'read_activation_state', read)
-    monkeypatch.setattr(activation, 'commit_activation_state', commit)
+    monkeypatch.setattr(activation, 'read_pipeline_authority', read)
+    monkeypatch.setattr(activation, 'commit_pipeline_authority', commit)
     history_reads = []
     def history(table_id, *, context, activity=None, **kwargs):
         history_reads.append(activity)
@@ -131,7 +131,7 @@ def test_shared_history_survives_a_new_pipeline_and_process(metadata):
     assert result['activities']['standard']['reason'] == 'interval_not_elapsed'
     assert result['activities']['grain']['reason'] == 'already_completed'
     assert not metadata.store['state']['profiling_claims']
-    assert set(metadata.store['state']) == {'format', 'environments', 'profiling_claims'}
+    assert set(metadata.store['state']) == {'registrations', 'environments', 'profiling_claims'}
     assert len(metadata.rows['METADATA_PIPELINE_RUN']) == 2
 
 
@@ -309,7 +309,7 @@ def test_run_commit_failure_does_not_leave_in_memory_success_as_durable_history(
 
 
 def test_metadata_outage_is_not_reported_as_a_legitimate_skip(metadata, monkeypatch):
-    monkeypatch.setattr(activation, 'commit_activation_state', Mock(side_effect=OSError('unavailable')))
+    monkeypatch.setattr(activation, 'commit_pipeline_authority', Mock(side_effect=OSError('unavailable')))
     with pytest.raises(shared.ProfilingConflict, match='could not be confirmed'):
         shared.claim_table_profile('orders', 'standard', 'read', context=metadata.context)
     metadata.profiler.assert_not_called()
@@ -325,10 +325,10 @@ def test_slow_retry_rechecks_expiry(metadata, monkeypatch):
     def contend(*args, **kwargs):
         metadata.store['token'] = 'changed'
         raise RuntimeError('contention')
-    monkeypatch.setattr(activation, 'commit_activation_state', Mock(side_effect=contend))
+    monkeypatch.setattr(activation, 'commit_pipeline_authority', Mock(side_effect=contend))
     with pytest.raises(shared.ProfilingConflict, match='expired'):
         shared.maintain_table_profile_claim(claim, context=metadata.context, complete=True)
-    activation.commit_activation_state.assert_called_once()
+    activation.commit_pipeline_authority.assert_called_once()
 
 
 def test_no_publication_records_all_skips_without_claims(metadata):
@@ -415,8 +415,8 @@ def test_history_filters_and_aggregates_in_spark(metadata, spark_session, monkey
              'profile_snapshot_id': 'missing-snapshot', 'completed_at': '2099-01-01T00:00:00+00:00'}]})}
     metadata.rows['METADATA_DATA_PROFILED'].append({'table_id': 'orders', 'environment_name': 'dev', 'profile_snapshot_id': 'other-snapshot'})
     tables = {table: spark_session.createDataFrame(
-        [{**row, 'run_details_json': row['operation_summary_json']} for row in rows.values()] if isinstance(rows, dict) else rows,
-        'run_id string, environment_name string, run_details_json string' if table == 'METADATA_PIPELINE_RUN'
+        [{**row, 'profiling': json.loads(row['operation_summary_json'])['profiling']} for row in rows.values()] if isinstance(rows, dict) else rows,
+        'run_id string, environment_name string, profiling array<struct<context_key:string,activity:string,status:string,results_persisted:boolean,empty_result:boolean,profile_snapshot_id:string,completed_at:string>>' if table == 'METADATA_PIPELINE_RUN'
         else 'table_id string, environment_name string, profile_snapshot_id string')
         for table, rows in metadata.rows.items()}
     reads = []

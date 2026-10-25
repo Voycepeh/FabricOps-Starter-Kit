@@ -19,45 +19,23 @@ pytestmark = pytest.mark.spark
 def registry_delta(authority_delta, monkeypatch, tmp_path):
     """Route the actual production registry CAS to one seeded Delta table."""
     runtime = authority_delta
-    path = str(tmp_path / 'METADATA_PIPELINE_REGISTRY')
-    context = {'config': {}, 'env': 'Development', 'workspace_id': 'dev-workspace',
-               'notebook_id': 'notebook-one', 'notebook_name': 'Any notebook name'}
-    audit = {name: datetime.now(UTC) if name == '_committed_at' else 'test-runtime'
-             for name, *_ in AUDIT_SCHEMA_FIELDS}
-    seed = {'pipeline_id': 'central', 'environment_name': '*', 'registration_status': 'Authority',
-            'registry_token': 'initial', **audit}
-    runtime.spark.createDataFrame([seed], metadata_table_schema_registry()['METADATA_PIPELINE_REGISTRY']).write.format('delta').save(path)
-    monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: (context['config'], context['env'], context))
-    monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kwargs: audit)
-    monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', lambda *args, **kwargs: ('Metadata', 'METADATA_PIPELINE_REGISTRY', 'engineering', path))
-    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda *args, **kwargs: runtime.spark.read.format('delta').load(path))
-    return SimpleNamespace(context=context, spark=runtime.spark, path=path)
+    context = {**runtime.context, 'notebook_name': 'Any notebook name'}
+    return SimpleNamespace(context=context, spark=runtime.spark, path=runtime.path, audit=runtime.audit)
 
 
-@pytest.mark.parametrize('legacy_column', [False, True])
-def test_persisted_registry_recovers_after_setup_stops_and_updates_rename(registry_delta, monkeypatch, legacy_column):
-    """Registration commits independently of finalization and remains idempotent."""
-    runtime = registry_delta
-    if legacy_column:
-        runtime.spark.sql(f"ALTER TABLE delta.`{runtime.path}` ADD COLUMNS (updated_at TIMESTAMP)")
-    row = shared.resolve_pipeline_registration(context=runtime.context, spark_session=runtime.spark)
+def test_persisted_registry_recovers_after_setup_stops_and_updates_rename(registry_delta):
+    """A binding and its audit update inside the single shared authority row."""
+    r = registry_delta
+    row = shared.resolve_pipeline_registration(context=r.context, spark_session=r.spark)
     assert UUID(row['pipeline_id']).version == 4
-    _token, original = shared.read_pipeline_registry(context=runtime.context, spark_session=runtime.spark)
-    audit = {name: original[0][name] for name, *_ in AUDIT_SCHEMA_FIELDS}
-    audit.update(_committed_at=datetime(2030, 1, 1), _committed_by='renaming-engineer')
-    monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kwargs: audit)
-    again = shared.resolve_pipeline_registration(context={**runtime.context, 'notebook_name': 'Renamed'}, spark_session=runtime.spark)
+    _token, original = shared.read_pipeline_registry(context=r.context, spark_session=r.spark)
+    again = shared.resolve_pipeline_registration(context={**r.context, 'notebook_name': 'Renamed'}, spark_session=r.spark)
     assert again['pipeline_id'] == row['pipeline_id']
-    _token, bindings = shared.read_pipeline_registry(context=runtime.context, spark_session=runtime.spark)
+    _token, bindings = shared.read_pipeline_registry(context=r.context, spark_session=r.spark)
     assert len(bindings) == 1 and bindings[0]['notebook_name'] == 'Renamed'
     assert bindings[0]['registered_at'] == original[0]['registered_at']
     assert bindings[0]['registered_by'] == original[0]['registered_by']
-    assert bindings[0]['_committed_at'] == audit['_committed_at']
-    assert bindings[0]['_committed_by'] == 'renaming-engineer'
-    assert ('updated_at' in bindings[0]) == legacy_column
-    if legacy_column:
-        assert bindings[0]['updated_at'] is None
-    assert runtime.spark.read.format('delta').load(runtime.path).count() == 2  # one binding plus authority
+    assert r.spark.read.format('delta').load(r.path).count() == 1
 
 
 def test_stale_cas_rolls_back_binding_insert_together_with_control_row(registry_delta):

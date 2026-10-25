@@ -6,7 +6,7 @@ import json
 from typing import Any
 
 from fabricops_kit.activated_pipeline.shared import (
-    metadata_records, manifest_digest, read_activation_state, environment_activation,
+    metadata_records, manifest_digest, read_pipeline_authority, environment_activation,
     manifest_table_mappings, validate_manifest, review_pipeline_release, approve_pipeline_release,
 )
 from fabricops_kit.config.shared import resolve_fabric_context
@@ -150,7 +150,7 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
     def refresh(*_):
         invalidate()
         review_button.disabled = run_select.value is None
-        token, snapshot = read_activation_state(context=context, spark_session=spark_session)
+        token, snapshot = read_pipeline_authority(context=context, spark_session=spark_session)
         current = environment_activation(snapshot, env)
         selected = [r for r in runs if r["run_id"] in {run_select.value, *additions.value}]
         children = []

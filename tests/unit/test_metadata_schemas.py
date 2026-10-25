@@ -23,7 +23,7 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_DATA_STEWARD": "governance",
         "METADATA_DATA_AGREEMENT": "governance",
         "METADATA_DATA_CONTRACT": "governance",
-        "METADATA_ACTIVATION_STATE": "governance",
+        "METADATA_PIPELINE_DEFINITION": "engineering",
         "METADATA_DATA_CATALOGUE": "engineering",
         "METADATA_DATA_PROFILED": "engineering",
         "METADATA_DATA_PROFILED_FREQUENCY": "engineering",
@@ -326,7 +326,7 @@ def test_pipeline_run_old_schema_requires_offline_conversion():
     schema = metadata_table_schema_registry()['METADATA_PIPELINE_RUN']
     legacy = StructType([StructField('run_id', StringType()), StructField('operation_summary_json', StringType())])
     for allow_missing in (True, False):
-        with pytest.raises(ValueError, match='offline conversion'):
+        with pytest.raises(ValueError, match='reconcile retained history'):
             setup._validate_existing_metadata_schema('METADATA_PIPELINE_RUN', legacy, schema, allow_missing=allow_missing)
     assert setup._validate_existing_metadata_schema('METADATA_PIPELINE_RUN', schema, schema) == []
 
@@ -348,3 +348,15 @@ def test_nested_pipeline_run_schema_documentation_matches_without_pyspark():
     actual = {name: namespace['metadata_table_schema_rows'](schema)
               for name, schema in namespace['metadata_table_schema_registry']().items()}
     assert actual == expected
+
+
+@pytest.mark.parametrize('table', ['METADATA_PIPELINE_REGISTRY', 'METADATA_PIPELINE_DEFINITION', 'METADATA_PIPELINE_RUN'])
+def test_joint_pipeline_partial_schema_never_additive_evolves(table):
+    """An empty or partial pipeline layout still needs explicit stopped cutover."""
+    from importlib import import_module
+    from pyspark.sql.types import StructType
+    setup = import_module('fabricops_kit.config.setup_metadata_tables')
+    expected = metadata_table_schema_registry()[table]
+    for existing in (StructType([]), StructType(expected.fields[:-1])):
+        with pytest.raises(ValueError, match='reconcile retained history'):
+            setup._validate_existing_metadata_schema(table, existing, expected, allow_missing=True)

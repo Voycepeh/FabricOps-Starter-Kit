@@ -101,9 +101,9 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "widget_register_data_contract.md" not in contract_page
     assert "[`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Data Contract authoring" in contract_page
     assert "`METADATA_DATA_AGREEMENT` **(N → 1)**" not in contract_page
-    activated_page = first_pages["metadata_activation_state.md"]
-    assert "`snapshot_json`" in activated_page and "`authority_id`" in activated_page
-    assert "atomic central authority" in activated_page
+    activated_page = first_pages["metadata_pipeline_registry.md"]
+    assert "`approvals`" in activated_page and "`authority_id`" in activated_page
+    assert "atomic native authority" in activated_page
     assert "via `agreement_id` + `agreement_version`" not in activated_page
     assert "`METADATA_DATA_CATALOGUE` **(N → 1)**" in contract_page
     assert "via `table_id`" in contract_page
@@ -354,10 +354,10 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     assert all(source != target for source, target in actual)
     assert all(edge.get("data-cardinality") in {"1:N", ""} for edge in connectors)
     assert all(edge.find(f"{namespace}path") is not None for edge in connectors)
-    assert ("PIPELINE_REGISTRY", "ACTIVATION_STATE") in actual
-    assert ("ACTIVATION_STATE", "PIPELINE_RUN") in actual
-    assert ("ACTIVATION_STATE", "DATA_CONTRACT") in actual
-    assert actual[("PIPELINE_REGISTRY", "ACTIVATION_STATE")].get("data-kind") == "logical"
+    assert ("PIPELINE_DEFINITION", "PIPELINE_REGISTRY") in actual
+    assert ("PIPELINE_REGISTRY", "PIPELINE_RUN") in actual
+    assert ("PIPELINE_DEFINITION", "DATA_CONTRACT") in actual
+    assert actual[("PIPELINE_DEFINITION", "PIPELINE_REGISTRY")].get("data-kind") == "logical"
     assert all(edge.get("data-cardinality") == "" for edge in connectors if edge.get("data-kind") == "logical")
     assert all(edge.get("data-cardinality") == "1:N" for edge in connectors if edge.get("data-kind") == "physical")
     assert all("arrow" not in (edge.find(f"{namespace}title").text or "").lower() for edge in connectors)

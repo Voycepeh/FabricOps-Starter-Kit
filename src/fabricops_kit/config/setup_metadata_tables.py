@@ -91,12 +91,10 @@ def _validate_existing_metadata_schema(
         existing = {name: None for name in getattr(existing_schema, "fieldNames", lambda: [])()}
     if table_name == "METADATA_DATA_PROFILED" and "frequency_json" in existing:
         raise ValueError("METADATA_DATA_PROFILED has unexpected legacy column: frequency_json.")
-    if table_name == "METADATA_PIPELINE_RUN" and (
-        "operation_summary_json" in existing or "record_type" in existing or set(expected) - set(existing)
-    ):
+    if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_DEFINITION"} and set(expected) != set(existing):
         raise ValueError(
-            "Unsupported METADATA_PIPELINE_RUN physical schema. Stop writers, back up run history, "
-            "and perform the verified offline conversion in docs/maintainer/metadata-v2-target-model.md#pipeline-execution-engineering. "
+            f"Unsupported {table_name} physical schema. Stop writers, back up and reconcile retained history; "
+            "follow docs/maintainer/metadata-v2-target-model.md#joint-redesign-rollout-and-reset-policy. "
             "Automatic additive evolution is unsafe."
         )
     if table_name == "METADATA_PROCESSING_STATE" and (
@@ -336,7 +334,7 @@ def setup_metadata_tables(
     The current metadata tables created or validated from
     ``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
     ``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,
-    ``METADATA_ACTIVATION_STATE``, ``METADATA_PIPELINE_REGISTRY``, ``METADATA_PIPELINE_RUN``,
+    ``METADATA_PIPELINE_REGISTRY``, ``METADATA_PIPELINE_DEFINITION``, ``METADATA_PIPELINE_RUN``,
     ``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
     ``METADATA_DATA_PROFILED_FREQUENCY``, ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
     ``METADATA_GUARDRAIL_RESULTS``, and ``METADATA_PROCESSING_STATE``.
@@ -405,9 +403,11 @@ def setup_metadata_tables(
     establish progress for populated targets; reconcile retained progress or
     deliberately rebuild/replay targets before resuming incremental work.
 
-    ``METADATA_PIPELINE_RUN`` requires one run row with a typed operations array.
-    Old summary rows, multirow layouts and incomplete typed layouts require verified offline
-    conversion; setup never adds columns to reinterpret existing run history.
+    ``METADATA_PIPELINE_REGISTRY`` requires one native authority row.
+    ``METADATA_PIPELINE_DEFINITION`` seals reusable immutable configuration.
+    ``METADATA_PIPELINE_RUN`` requires native execution facts and an exact definition reference.
+    Old Registry/Run layouts and incomplete native layouts require explicit
+    stopped-deployment reconciliation or a deliberate disposable Preview reset; setup never adds columns to reinterpret existing run history.
 
     Existing tables are validated by canonical column name and compatible
     Spark data type. Physical Spark/Delta nullability is intentionally not
@@ -422,8 +422,8 @@ def setup_metadata_tables(
     tables, and ``raise_on_failure=True`` raises only after all tables have
     been processed when failures exist.
 
-    Activation State and Pipeline Registry are seeded with their control row
-    using error-if-exists creation; repeat initialization validates existing rows
+    Pipeline Registry is seeded with its native authority row using
+    error-if-exists creation; repeat initialization validates the existing schema
     without replacing identity or approval history. A missing ordinary table is
     created by writing an empty Spark DataFrame with the
     required FabricOps table structure. This creates the metadata table structure but
@@ -468,16 +468,10 @@ def setup_metadata_tables(
                         f"Unable to read metadata table {table_name!r}. Original {type(exc).__name__}: {exc}"
                     ) from exc
                 initial_rows = []
-                if table_name == "METADATA_ACTIVATION_STATE":
-                    from fabricops_kit.config.audit import build_runtime_audit_fields
-                    from fabricops_kit.activated_pipeline.shared import empty_activation_state
-                    initial_rows = [{"authority_id": "central", "token": "initial",
-                                     "snapshot_json": empty_activation_state(),
-                                     **build_runtime_audit_fields(config=normalized, env=env, runtime_context=context)}]
                 if table_name == "METADATA_PIPELINE_REGISTRY":
                     from fabricops_kit.config.audit import build_runtime_audit_fields
-                    initial_rows = [{"pipeline_id": "central", "environment_name": "*",
-                                     "registration_status": "Authority", "registry_token": "initial",
+                    from fabricops_kit.activated_pipeline.shared import empty_pipeline_authority
+                    initial_rows = [{**empty_pipeline_authority(),
                                      **build_runtime_audit_fields(config=normalized, env=env, runtime_context=context)}]
                 empty_frame = spark.createDataFrame(initial_rows, schema=schema)
                 write_lakehouse_table(
@@ -485,7 +479,7 @@ def setup_metadata_tables(
                     table_name,
                     store="Metadata",
                     schema=resolved_metadata_schema,
-                    mode="errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_PIPELINE_REGISTRY"} else "overwrite",
+                    mode="errorifexists" if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_DEFINITION", "METADATA_PIPELINE_RUN"} else "overwrite",
                     verbose=False,
                     context=context,
                 )

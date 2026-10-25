@@ -1,6 +1,6 @@
 # METADATA_PIPELINE_RUN
 
-Records explicitly finalized Test runs and Live execution outcomes, including their tables, operations, profiling results and warnings.
+Records explicitly finalized Test and Live execution outcomes against exact immutable definitions.
 
 ## Writer functions
 
@@ -16,23 +16,26 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One row per execution attempt, with a native typed operations array for all declared Reads and Writes.
+**Grain:** One row per execution with native observed operation/stage status, timing, finalization, profiling and safe failures.
 
 **Primary key:** `run_id`
 
 **Relationships:**
 
 `METADATA_PIPELINE_REGISTRY` **(N → 1)**
-via `pipeline_id`
+via Not defined in the current implementation.
 
-**Implementation details:** One authoritative run row atomically contains typed Read/Write operations and typed stages. Operation keys identify source/target roles and logical participants; nested fields expose exact table/contract identity, configuration hash, status and timing without JSON parsing. Readers verify complete operation membership against the candidate. Profiling markers remain in run_details_json and join persisted result snapshots.
+`METADATA_PIPELINE_DEFINITION` **(N → 1)**
+via `definition_id`
+
+**Implementation details:** Whole-row CAS atomically publishes the parent and all operations/stages. Expected configuration and exact participant contracts resolve through definition_id; Live pins approval_id. Profiling completion joins physical result snapshots. warnings_json contains variable sanitized operational-parameter diagnostics only.
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 21 |
-| Business columns | 13 |
+| Total columns | 23 |
+| Business columns | 15 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -40,18 +43,20 @@ via `pipeline_id`
 | Column | Data type | Description |
 | --- | --- | --- |
 | `run_id` | `string` | Unique execution attempt and physical merge key; one authoritative row contains every Read/Write. |
-| `activated_pipeline_id` | `string` | Identifier stored for `activated_pipeline_id`. |
+| `approval_id` | `string` | Exact Governance decision retained in the Registry authority; Live runs pin this decision. |
+| `definition_id` | `string` | Exact immutable content-addressed pipeline/environment definition; missing or altered references fail closed. |
 | `pipeline_id` | `string` | Identifier stored for `pipeline_id`. |
 | `execution_mode` | `string` | Metadata Pipeline Run field `execution_mode`. |
 | `environment_name` | `string` | Environment name recorded for the metadata row. |
 | `started_at` | `timestamp` | Pipeline bootstrap timestamp captured when the pipeline context is initialized. |
 | `completed_at` | `timestamp` | Timestamp captured when the pipeline run summary is written. Pipeline duration is derived from the difference between `started_at` and `completed_at`. |
 | `status` | `string` | Whole-run outcome: incomplete, failed, succeeded or ungoverned_completed; operation success alone never completes a run. |
-| `candidate_fingerprint` | `string` | Metadata Pipeline Run field `candidate_fingerprint`. |
-| `candidate_json` | `string` | Exact candidate identity, configuration and physical bindings retained for fingerprint verification. |
+| `activation_revision` | `string` | Metadata Pipeline Run field `activation_revision`. |
 | `boundary_completed` | `boolean` | Whether the explicit whole-run completion boundary finished; independent of operation success. |
-| `operations` | `array<struct<operation_key:string,table_id:string,status:string,started_at:timestamp,completed_at:timestamp,configuration_sha256:string,configuration_json:string,contract_id:string,contract_version:int,contract_payload_sha256:string,stages:array<struct<stage:string,status:string,evaluation_status:string>>>>` | Native array of typed Read/Write structs: operation_key, table_id, status, timing, exact frozen contract, configuration identity/JSON and typed stages. Query with explode(operations); no operational JSON parsing is required. |
-| `run_details_json` | `string` | Frozen contract references, profiling events, warnings, sanitized failures and activation provenance; operations and completion authority are typed fields. |
+| `operations` | `array<struct<operation_key:string,status:string,started_at:timestamp,completed_at:timestamp,stages:array<struct<stage:string,status:string,evaluation_status:string>>>>` | Native observed Read/Write operations: operation key, status, timing and typed stages. Resolve declared table, contract and configuration through the exact definition; query with explode(operations). |
+| `profiling` | `array<struct<context_key:string,activity:string,status:string,results_persisted:boolean,empty_result:boolean,profile_snapshot_id:string,completed_at:string,reason:string,table_id:string,row_count:bigint,trigger:string,environment:string,pipeline_run_id:string,executed_at:string,physical:struct<workspace_id:string,item_id:string,kind:string,schema:string,table_name:string>>>` | Typed per-table activity outcomes and physical result snapshot completion markers. |
+| `warnings_json` | `string` | Variable sanitized operational-parameter diagnostics, including tested and actual values; no activation authority. |
+| `failures` | `array<struct<code:string,exception_type:string>>` | Native safe failure codes and exception class names; never raw exception messages. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |
