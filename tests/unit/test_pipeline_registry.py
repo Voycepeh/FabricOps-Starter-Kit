@@ -67,7 +67,8 @@ def test_invalid_uuid_fails(identity):
 
 def test_reupload_requires_explicit_expected_binding(registry):
     context, rows, *_ = registry
-    identity = shared.resolve_pipeline_registration(context=context)['pipeline_id']
+    original = shared.resolve_pipeline_registration(context=context)
+    identity = original['pipeline_id']
     uploaded = {**context, 'notebook_id': 'reuploaded'}
     with pytest.raises(ValueError, match='previous_workspace_id'):
         shared.resolve_pipeline_registration(identity, context=uploaded)
@@ -77,6 +78,9 @@ def test_reupload_requires_explicit_expected_binding(registry):
     rebound = shared.resolve_pipeline_registration(identity, context=uploaded,
         previous_binding=(context['workspace_id'], context['notebook_id']))
     assert rebound['pipeline_id'] == identity and rebound['resolution'] == 'Rebound'
+    assert rows[0]['registered_at'] == original['registered_at']
+    assert rows[0]['registered_by'] == original['registered_by']
+    assert 'updated_at' not in rows[0]
     assert shared.resolve_pipeline_registration(context=uploaded)['pipeline_id'] == identity
 
 
