@@ -267,7 +267,15 @@ def _upgrade_catalogue(*, spark, table, expected_schema, metadata_schema, contex
         replacement.write.mode("errorifexists").parquet(stage)
         replacement = spark.read.schema(target_schema).parquet(stage)
         metadata = json.loads(txn.metadata().json())
-        metadata["metaData"]["schemaString"] = target_schema.json()
+        # Spark's read schema hides Delta column-mapping IDs/physical names.
+        # Retain those from the transaction metadata, including unchanged nested
+        # extension columns. Delta assigns IDs only to the new struct members.
+        physical_schema = StructType.fromJson(json.loads(metadata["metaData"]["schemaString"]))
+        replacement_metadata_schema = StructType([
+            StructField(f.name, expected[f.name].dataType, f.nullable, f.metadata)
+            if f.name in historical else f for f in physical_schema.fields
+        ] + [f for f in target_schema.fields if f.name not in actual])
+        metadata["metaData"]["schemaString"] = replacement_metadata_schema.json()
         txn.updateMetadata(delta.actions.Action.fromJson(json.dumps(metadata)), False)
         added = txn.writeFiles(replacement._jdf)
         actions = jvm.java.util.ArrayList()

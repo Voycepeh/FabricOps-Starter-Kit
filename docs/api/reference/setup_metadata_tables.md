@@ -152,9 +152,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:373`
+`fabricops_kit/config/setup_metadata_tables.py:381`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L373-L808">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L381-L816">View on GitHub</a>
 </div>
 
 

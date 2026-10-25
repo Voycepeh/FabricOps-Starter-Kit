@@ -52,7 +52,8 @@ the complete replacement to a separate durable staging path. All rows and
 physical columns are retained, including inactive table/column rows, unexpected
 extension columns and existing audit values. Setup never recreates row audit
 timestamps. Table identity, existing properties, field metadata and configured
-location are preserved.
+location are preserved. Mapped Delta tables retain existing physical column IDs
+and names; Delta advances its internal ID allocator for the new struct members.
 
 The transaction changes schema and replaces data files together in one atomic
 Delta commit. Delta's metadata-changing whole-table transaction rejects

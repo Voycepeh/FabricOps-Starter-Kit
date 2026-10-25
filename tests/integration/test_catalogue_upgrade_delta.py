@@ -401,3 +401,30 @@ def test_fresh_setup_race_cannot_reset_a_newly_populated_catalogue(catalogue_del
     version = rt.version()
     assert rt.read().first()['table_id'] == 'newly-written'
     assert rt.run()['status'] == 'ready' and rt.version() == version
+
+
+def test_delta_column_mapping_identity_is_retained(catalogue_delta):
+    """Use raw Delta metadata because Spark deliberately hides column mapping IDs."""
+    rt = catalogue_delta
+    rt.seed([rt.row(load_strategy_parameters_json='{}', extension='preserve')])
+    rt.spark.sql(f"ALTER TABLE delta.`{rt.path}` SET TBLPROPERTIES "
+                 "('delta.columnMapping.mode'='name', 'delta.minReaderVersion'='2', 'delta.minWriterVersion'='5')")
+    log = rt.spark._jvm.org.apache.spark.sql.delta.DeltaLog.forTable(rt.spark._jsparkSession, rt.path)
+    def metadata():
+        return json.loads(log.startTransaction().metadata().json())['metaData']
+    original = metadata()
+    original_fields = json.loads(original['schemaString'])['fields']
+    rt.upgrade()
+    current = metadata()
+    current_fields = json.loads(current['schemaString'])['fields']
+    for before, after in zip(original_fields, current_fields):
+        assert before['name'] == after['name'] and before['metadata'] == after['metadata']
+    # Delta advances its internal allocator for newly introduced nested members;
+    # existing user properties, mapping mode, protocol and physical IDs persist.
+    for key, value in original['configuration'].items():
+        if key != 'delta.columnMapping.maxColumnId':
+            assert current['configuration'][key] == value
+    assert current['id'] == original['id']
+    assert rt.read().first()['extension'] == 'preserve'
+    version = rt.version()
+    assert rt.upgrade()[1] is None and rt.version() == version
