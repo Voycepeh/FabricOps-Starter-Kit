@@ -81,7 +81,7 @@ def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
     }
     catalogue = [{
         "table_id": "orders", "environment_name": "dev", "metadata_level": "table",
-        "load_strategy": None, "load_strategy_parameters_json": "{}", "is_active": True,
+        "load_strategy": None, "load_strategy_parameters_json": {}, "is_active": True,
     }]
     rows = [frozen]
     writes = []
@@ -383,7 +383,7 @@ def test_contract_payload_captures_normalized_scheduled_refresh_snapshot():
         "METADATA_DATA_CATALOGUE": [{
             "table_id": "orders", "environment_name": "dev", "metadata_level": "table",
             "schema_name": "sales", "table_name": "orders", "load_strategy": "append",
-            "load_strategy_parameters_json": "{}", "is_active": True,
+            "load_strategy_parameters_json": {}, "is_active": True,
         }],
         "enrichment": [],
         "guardrails": [],

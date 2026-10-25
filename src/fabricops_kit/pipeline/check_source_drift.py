@@ -1,7 +1,5 @@
 """Internal Source Drift Guardrail check for a source-to-target relationship."""
 
-import json
-
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import (
@@ -65,8 +63,8 @@ def check_source_drift(
     source_load_strategy = str(source.get("load_strategy") or "").strip().lower()
     processing_origin = "FabricOps Catalogue"
     if source_load_strategy:
-        raw_parameters = source.get("load_strategy_parameters_json") or "{}"
-        parameters = json.loads(raw_parameters) if isinstance(raw_parameters, str) else dict(raw_parameters)
+        parameters = {name: value for name, value in (source.get("load_strategy_parameters_json") or {}).items()
+                      if value is not None}
         authored_processing = {"load_strategy": source_load_strategy, **parameters}
         source_processing = resolve_table_processing_definition(
             config,

@@ -30,7 +30,7 @@ def _identity(table_id="warehouse:source:dbo:student_source", *, store_type="war
         "schema": "dbo",
         "table_name": table_id.rsplit(":", 1)[-1],
         "load_strategy": "overwrite",
-        "load_strategy_parameters_json": "{}",
+        "load_strategy_parameters_json": {},
     }
 
 
@@ -596,7 +596,7 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
         def whenMatchedUpdate(self, **_kwargs):
             return self
 
-        def whenNotMatchedInsertAll(self):
+        def whenNotMatchedInsert(self, *, values):
             return self
 
         def execute(self):
@@ -652,7 +652,7 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
     assert rows[0]["load_strategy"] == "scd2"
     assert rows[0]["_workspace_name"] == "Workspace"
     assert rows[0]["_metadata_lakehouse_name"] == "Metadata"
-    assert json.loads(rows[0]["load_strategy_parameters_json"]) == {
+    assert rows[0]["load_strategy_parameters_json"] == {
         "effective_column": "effective_at",
         "key_columns": ["id"],
         "watermark_column": "updated_at",

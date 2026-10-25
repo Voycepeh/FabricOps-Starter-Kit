@@ -132,7 +132,7 @@ jobs:
           PYSPARK_PYTHON: "${{ github.workspace }}/.venv-delta/bin/python"
           PYSPARK_SUBMIT_ARGS: "--jars /tmp/fabricops-delta-jars/delta-spark.jar,/tmp/fabricops-delta-jars/delta-storage.jar --conf spark.databricks.delta.snapshotPartitions=2 --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog pyspark-shell"
         run: |
-          .venv-delta/bin/python -m pytest -q tests/integration/test_publication_batches.py tests/integration/test_activation_state_delta.py tests/integration/test_pipeline_registry_delta.py tests/integration/test_pipeline_run_delta.py --junitxml=/tmp/publication-regressions.xml
+          .venv-delta/bin/python -m pytest -q tests/integration/test_catalogue_upgrade_delta.py tests/integration/test_publication_batches.py tests/integration/test_activation_state_delta.py tests/integration/test_pipeline_registry_delta.py tests/integration/test_pipeline_run_delta.py --junitxml=/tmp/publication-regressions.xml
           .venv-delta/bin/python - <<'PY'
           import xml.etree.ElementTree as ET
           suites = ET.parse("/tmp/publication-regressions.xml").getroot().findall("testsuite")

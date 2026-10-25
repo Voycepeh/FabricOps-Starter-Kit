@@ -195,8 +195,8 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         setattr(state, "source_id" if name == "orders" else "schema_source_id" if name == "products" else "target_id", table_id)
         table = {"table_id": table_id, "table_name": name, "environment_name": "dev", "metadata_level": "table",
                  "column_id": None, "store_type": "lakehouse", "layer": layer, "schema_name": "dbo",
-                 "is_active": True, "load_strategy": "overwrite", "load_strategy_parameters_json": "{}",
-                 "scheduled_refresh_json": '{"status":"not_configured","schedules":[]}', **audit}
+                 "is_active": True, "load_strategy": "overwrite", "load_strategy_parameters_json": {},
+                 "scheduled_refresh_json": {'status': 'not_configured', 'schedules': []}, **audit}
         state.metadata["METADATA_DATA_CATALOGUE"].append(table)
         for column, dtype in (("id", "bigint"), ("email", "string"), ("modified_at", "timestamp"), ("day", "string")):
             state.metadata["METADATA_DATA_CATALOGUE"].append({**table, "metadata_level": "column", "column_id": f"{table_id}/{column}", "column_name": column, "data_type": dtype})

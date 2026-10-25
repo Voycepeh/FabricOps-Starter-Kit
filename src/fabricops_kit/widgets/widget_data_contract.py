@@ -761,11 +761,7 @@ def widget_data_contract(
         table_row = next(
             (item for item in table_rows if str(item.get("table_id") or "") == selected_table), {}
         )
-        raw_value = str(table_row.get("scheduled_refresh_json") or "").strip()
-        try:
-            captured = json.loads(raw_value) if raw_value else {"status": "uncaptured", "schedules": []}
-        except json.JSONDecodeError as exc:
-            raise ValueError("Catalogue scheduled_refresh_json is invalid.") from exc
+        captured = table_row.get("scheduled_refresh_json") or {"status": "uncaptured", "schedules": []}
         if not isinstance(captured, Mapping):
             raise ValueError("Catalogue scheduled_refresh_json must contain an object.")
         status_value = str(captured.get("status") or "").strip().lower()
@@ -1372,14 +1368,8 @@ def widget_data_contract(
         ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
         ai_mode = state["_ai_mode"].get(suggestion_scope)
         column_names = [str(column.get("column_name") or "") for column in columns]
-        raw_profile_key_candidates = table.get("profile_key_candidates_json") or "[]"
-        if isinstance(raw_profile_key_candidates, str):
-            try:
-                raw_profile_key_candidates = json.loads(raw_profile_key_candidates or "[]")
-            except json.JSONDecodeError:
-                raw_profile_key_candidates = []
-        if isinstance(raw_profile_key_candidates, Mapping):
-            raw_profile_key_candidates = raw_profile_key_candidates.get("candidates", [])
+        discovery = table.get("profile_key_candidates_json") or {}
+        raw_profile_key_candidates = discovery.get("candidates") or []
         profile_key_candidates = [
             dict(candidate)
             for candidate in raw_profile_key_candidates

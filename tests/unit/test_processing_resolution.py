@@ -40,7 +40,7 @@ def catalogue(strategy="overwrite"):
     return Frame([{
         "metadata_level": "table", "table_id": "students", "environment_name": "dev",
         "is_active": True, "load_strategy": strategy,
-        "load_strategy_parameters_json": "{}",
+        "load_strategy_parameters_json": {},
     }])
 
 

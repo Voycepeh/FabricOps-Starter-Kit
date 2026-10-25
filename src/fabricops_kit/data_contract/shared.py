@@ -132,13 +132,8 @@ def create_contract_draft(
 
     strategy = str(table.get("load_strategy") or "").strip()
     if strategy:
-        parameters = _json_value(
-            table.get("load_strategy_parameters_json"),
-            field="load_strategy_parameters_json",
-            default={},
-        )
-        if not isinstance(parameters, dict):
-            raise ValueError("Catalogue load_strategy_parameters_json must contain a JSON object.")
+        parameters = {name: value for name, value in (table.get("load_strategy_parameters_json") or {}).items()
+                      if value is not None}
         processing = validated_processing({**parameters, "load_strategy": strategy})
         processing_source = "catalogue"
     elif isinstance(previous_payload, dict):
