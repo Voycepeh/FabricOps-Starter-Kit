@@ -5715,18 +5715,148 @@ def pipeline_candidate(plan):
     return candidate, _candidate_hash(candidate) if valid else None, bindings
 
 
+def pipeline_run_row(row):
+    """Encode one run with native typed operations, preserving flexible run details."""
+    candidate = json.loads(row["candidate_json"])
+    summary = json.loads(row["operation_summary_json"])
+    operations, boundary = summary.pop("operations"), summary.pop("boundary_completed")
+    participants = {}
+    for item in candidate["participants"]:
+        for role in item["roles"]:
+            key = f"{role}:{item['participant']}"
+            if key in participants or role not in {"source", "target"} or not item.get("table_id"):
+                raise ValueError("Ambiguous Pipeline Run participant identity; reconcile history offline.")
+            participants[key] = item["table_id"]
+    if not isinstance(operations, dict) or set(operations) != set(participants):
+        raise ValueError("Pipeline Run operation membership is incomplete; reconcile history offline.")
+    frozen = {item["participant"]: item.get("contract") for item in summary["frozen_contracts"]}
+    typed = []
+    allowed = {"status", "configuration_sha256", "configuration", "stages", "started_at", "completed_at"}
+    for key, item in sorted(operations.items()):
+        if set(item) - allowed or any(set(stage) - {"stage", "status", "evaluation_status"} for stage in item["stages"]):
+            raise ValueError("Unknown Pipeline Run operation fields; reconcile history offline.")
+        contract = frozen.get(key.split(":", 1)[1]) or {}
+        typed.append({"operation_key": key, "table_id": participants[key], "status": item["status"],
+            "started_at": item.get("started_at"), "completed_at": item.get("completed_at"),
+            "configuration_sha256": item.get("configuration_sha256"),
+            "configuration_json": canonical_candidate_json(item["configuration"]) if "configuration" in item else None,
+            "contract_id": contract.get("contract_id"), "contract_version": contract.get("contract_version"),
+            "contract_payload_sha256": contract.get("payload_sha256"), "stages": item["stages"]})
+    physical = {key: value for key, value in row.items() if key != "operation_summary_json"
+                and (key in {"run_id", "pipeline_id", "execution_mode", "environment_name", "activated_pipeline_id",
+                             "started_at", "completed_at", "status", "candidate_fingerprint", "candidate_json"} or key.startswith("_"))}
+    physical.update(boundary_completed=boundary, operations=typed, run_details_json=canonical_candidate_json(summary))
+    return coerce_metadata_row_types("METADATA_PIPELINE_RUN", physical)
+
+
+def pipeline_run_result(row):
+    """Validate one atomic typed row and reconstruct the supported notebook result."""
+    if "operations" not in row or "record_type" in row or "operation_summary_json" in row:
+        raise ValueError("Unsupported Pipeline Run physical shape; offline conversion is required.")
+    summary = json.loads(row["run_details_json"])
+    if "operations" in summary or "boundary_completed" in summary or not isinstance(row["boundary_completed"], bool):
+        raise ValueError("Pipeline Run details cannot override typed authority.")
+    operations = {}
+    for item in row["operations"]:
+        key = item["operation_key"]
+        if key in operations:
+            raise ValueError("Duplicate Pipeline Run logical operation.")
+        operation = {"status": item["status"], "configuration_sha256": item.get("configuration_sha256"),
+            "stages": [{key: value for key, value in stage.items() if value is not None} for stage in item["stages"]]}
+        if item.get("configuration_json") is not None:
+            operation["configuration"] = json.loads(item["configuration_json"])
+        for field in ("started_at", "completed_at"):
+            timestamp = item.get(field)
+            if timestamp is not None:
+                if isinstance(timestamp, str):
+                    timestamp = datetime.fromisoformat(timestamp)
+                operation[field] = timestamp.astimezone(UTC).isoformat()
+        operations[key] = operation
+    summary.update(operations=operations, boundary_completed=row["boundary_completed"])
+    logical = {key: value for key, value in row.items() if key not in {"operations", "boundary_completed", "run_details_json"}}
+    logical["operation_summary_json"] = canonical_candidate_json(summary)
+    expected = {item["operation_key"]: item for item in pipeline_run_row(logical)["operations"]}
+    for item in row["operations"]:
+        if any(item.get(field) != expected[item["operation_key"]].get(field)
+               for field in ("table_id", "contract_id", "contract_version", "contract_payload_sha256")):
+            raise ValueError("Pipeline Run operation identity differs from its candidate or frozen contract.")
+    candidate = json.loads(row["candidate_json"])
+    if row.get("candidate_fingerprint") and _candidate_hash(candidate) != row["candidate_fingerprint"]:
+        raise ValueError("Pipeline Run candidate fingerprint mismatch.")
+    configured = {item["operation"]: item for item in candidate["operations"]}
+    if set(configured) != set(operations) or any(
+        configured[key].get("configuration_sha256") != item.get("configuration_sha256")
+        or configured[key].get("configuration") != item.get("configuration") for key, item in operations.items()
+    ):
+        raise ValueError("Pipeline Run operation configuration differs from its candidate.")
+    if row["status"] == "succeeded" and (not row.get("completed_at") or not row["boundary_completed"]
+            or summary.get("failures") or not operations or any(item["status"] != "succeeded" or not item["stages"]
+            or not item.get("configuration_sha256") or not isinstance(item.get("configuration"), dict)
+            or len({stage["stage"] for stage in item["stages"]}) != len(item["stages"])
+            or any(stage.get("status") not in {"passed", "warning", "skipped"} or stage.get("evaluation_status") == "not_fully_evaluated"
+                   for stage in item["stages"]) for item in operations.values())):
+        raise ValueError("Pipeline Run successful authority lacks complete operation evidence.")
+    return logical
+
+
+def _read_pipeline_run_rows(plan, *, spark_session=None):
+    frame = read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
+        schema=metadata_table_physical_schema(plan.runtime_context["config"], "METADATA_PIPELINE_RUN"),
+        spark_session=spark_session, context=plan.runtime_context)
+    return [_row_to_dict(row) for row in frame.filter(
+        "`run_id` = '" + plan.plan_id.replace("'", "''") + "'").limit(2).collect()]
+
+
 def _merge_pipeline_run_row(plan, row, *, spark_session=None):
     from delta.tables import DeltaTable
+    from delta.exceptions import ConcurrentAppendException, ConcurrentWriteException, ConcurrentDeleteReadException, ConcurrentDeleteDeleteException
+    from pyspark.sql.types import StructField, StructType
 
     spark = get_spark_session(spark_session)
     table = "METADATA_PIPELINE_RUN"
-    frame = spark.createDataFrame([coerce_metadata_row_types(table, row)], schema=metadata_table_schema_registry()[table])
+    schema = metadata_table_schema_registry()[table]
+    physical = pipeline_run_row(row)
+    pipeline_run_result(physical)
+    expected = plan.evidence.get("persisted_run_row")
+    frame = spark.createDataFrame([{**physical, "_expected": expected}], StructType([
+        *schema.fields, StructField("_expected", schema, True)]))
     _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        "Metadata", table, metadata_table_physical_schema(plan.runtime_context["config"], table),
-        context=plan.runtime_context)
-    (DeltaTable.forPath(spark, path).alias("target")
-     .merge(frame.alias("source"), "target.run_id = source.run_id")
-     .whenMatchedUpdateAll().whenNotMatchedInsertAll().execute())
+        "Metadata", table, metadata_table_physical_schema(plan.runtime_context["config"], table), context=plan.runtime_context)
+    if expected is None:
+        if _read_pipeline_run_rows(plan, spark_session=spark_session):
+            raise RuntimeError("Pipeline Run identity already exists; create a new plan.")
+        properties = DeltaTable.forPath(spark, path).detail().select("properties").first()["properties"]
+        if "delta.setTransactionRetentionDuration" in properties:
+            raise RuntimeError("Pipeline Run requires unbounded Delta transaction identity retention.")
+        (frame.drop("_expected").write.format("delta").mode("append")
+         .option("txnAppId", "fabricops-pipeline-run:" + plan.plan_id).option("txnVersion", 0).save(path))
+    else:
+        # Compare the complete previous row inside the transaction. No physical
+        # token column or per-update table metadata mutation is needed.
+        previous = "struct(" + ",".join("target.`" + name + "`" for name in schema.fieldNames()) + ")"
+        changes = {name: "source.`" + name + "`" for name in schema.fieldNames()}
+        changes["run_id"] = ("CASE WHEN target.completed_at IS NULL AND "
+            "(target.status <> 'failed' OR source.status = 'failed') AND (" + previous + " <=> source._expected) "
+            "THEN source.run_id ELSE CAST(raise_error('Stale or terminal Pipeline Run') AS STRING) END")
+        for attempt in range(4):
+            try:
+                (DeltaTable.forPath(spark, path).alias("target")
+                 .merge(frame.alias("source"), "target.run_id = source.run_id").whenMatchedUpdate(set=changes).execute())
+                break
+            except (ConcurrentAppendException, ConcurrentWriteException, ConcurrentDeleteReadException, ConcurrentDeleteDeleteException):
+                if attempt == 3:
+                    raise
+                # Delta aborted this transaction. Retry metadata only; the same
+                # expected row still fences a stale writer on this run ID.
+    stored = _read_pipeline_run_rows(plan, spark_session=spark_session)
+    observed = pipeline_run_result(stored[0]) if len(stored) == 1 else {}
+    wanted = pipeline_run_result(physical)
+    if not observed or not all(
+        metadata_timestamp_sort_key(observed.get(key)) == metadata_timestamp_sort_key(value)
+        if isinstance(value, datetime) else observed.get(key) == value for key, value in wanted.items()
+    ):
+        raise RuntimeError("Pipeline Run publication was not confirmed.")
+    plan.evidence["persisted_run_row"] = stored[0]
 
 
 def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", completed_at=None, persist_testing=False):
@@ -5766,19 +5896,13 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
     except Exception as exc:
         if row is not None:
             try:
-                frame = read_lakehouse_table(
-                    "METADATA_PIPELINE_RUN", store="Metadata",
-                    schema=metadata_table_physical_schema(plan.runtime_context["config"], "METADATA_PIPELINE_RUN"),
-                    spark_session=spark_session, context=plan.runtime_context,
-                )
-                matches = frame.filter("`run_id` = '" + plan.plan_id.replace("'", "''") + "'").limit(2).collect()
+                matches = _read_pipeline_run_rows(plan, spark_session=spark_session)
                 if len(matches) == 1:
-                    stored = _row_to_dict(matches[0])
-                    expected = coerce_metadata_row_types("METADATA_PIPELINE_RUN", row)
-                    # Spark TimestampType collects local naive datetimes; compare instants.
+                    stored = pipeline_run_result(matches[0])
                     if all((metadata_timestamp_sort_key(stored.get(key)) == metadata_timestamp_sort_key(value)
                             if isinstance(value, datetime) else stored.get(key) == value)
-                           for key, value in expected.items()):
+                           for key, value in row.items()):
+                        plan.evidence["persisted_run_row"] = matches[0]
                         return row
             except Exception:
                 plan.evidence["persistence_failed"] = True
@@ -5860,7 +5984,8 @@ class PipelineOperation:
             key = f"{self.role}:{logical}"
             if plan.evidence["operations"][key]["status"] != "not_started":
                 raise ValueError("Duplicate operation: retries require a new pipeline execution plan.")
-            self.record = {"status": "incomplete", "configuration_sha256": None, "stages": []}
+            self.record = {"status": "incomplete", "configuration_sha256": None, "stages": [],
+                           "started_at": datetime.now(UTC).isoformat()}
             plan.evidence["operations"][key] = self.record
             excluded = {"execution_plan", "spark_session", "verbose", "dataframe", "existing_mapping", "sources", "session"}
             configuration = {name: value for name, value in args.items() if name not in excluded}
@@ -5934,6 +6059,7 @@ class PipelineOperation:
                     plan.evidence["failures"].append({"code": "operation_start_failed", "exception_type": type(exc).__name__})
                     if self.record is not None:
                         self.record["status"] = "failed"
+                        self.record["completed_at"] = datetime.now(UTC).isoformat()
                     persist_pipeline_run(plan, spark_session=args.get("spark_session"), status="failed")
             finally:
                 plan.lock.release()
@@ -5944,6 +6070,7 @@ class PipelineOperation:
 
     def complete(self, stages):
         """Keep safe stage outcomes; blocking or unevaluated checks prevent success."""
+        self.record["completed_at"] = datetime.now(UTC).isoformat()
         self.record["stages"] = [{key: stage[key] for key in ("stage", "status", "evaluation_status") if key in stage}
                                  for stage in stages]
         self.record["status"] = "failed" if any(
@@ -5956,6 +6083,7 @@ class PipelineOperation:
         try:
             if exc is not None:
                 self.record["status"] = "failed"
+                self.record["completed_at"] = datetime.now(UTC).isoformat()
                 plan.evidence["failures"].append({"code": "operation_failed", "exception_type": exc_type.__name__})
             try:
                 persist_pipeline_run(plan, spark_session=self.arguments.get("spark_session"))
@@ -6541,7 +6669,7 @@ def profiling_completion_history(table_id, *, context, spark_session=None, activ
             spark_session=spark_session).filter(F.col("environment_name") == env)
     event_schema = "array<struct<context_key:string,activity:string,status:string,results_persisted:boolean,empty_result:boolean,profile_snapshot_id:string,completed_at:string>>"
     events = (frame("METADATA_PIPELINE_RUN")
-        .select(F.explode(F.from_json(F.get_json_object("operation_summary_json", "$.profiling"), event_schema)).alias("event"))
+        .select(F.explode(F.from_json(F.get_json_object("run_details_json", "$.profiling"), event_schema)).alias("event"))
         .select("event.*")
         .filter((F.col("context_key") == key) & (F.col("status") == "passed")
                 & F.col("results_persisted") & F.col("completed_at").isNotNull()))

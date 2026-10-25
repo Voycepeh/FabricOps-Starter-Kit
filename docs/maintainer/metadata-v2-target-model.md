@@ -1,6 +1,6 @@
 # Metadata v2: target model and migration boundaries
 
-**Status:** Processing State implemented; Pipeline Run and Activation State directions remain proposals.
+**Status (2026-10-25):** Processing State implemented by [#1698](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1698). A typed Pipeline Run operations array is implemented in open [#1700](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1700), with review outstanding. Activation State physical redesign remains a proposal. Merged [#1697](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1697) persists explicitly finalized Test execution and Guardrail results for activation; D preserves this contract.
 
 ## Goal and constraints
 
@@ -11,7 +11,7 @@ Treat FabricOps metadata as an operational application database, not a reporting
 - Preview contracts may change without deprecated aliases, dual writes, or transitional API wrappers. Operational checkpoints, frozen contracts, and approval history still need a deliberate migration or safe cutover.
 - Do not introduce Azure SQL, extra metadata schemas, or a separate control-plane database.
 - Do not require the physical table count to decrease. A `record_type` discriminator is appropriate only when row types have compatible identity, lifecycle, and transaction semantics.
-- Preserve public notebook workflows and the distinction between in-memory Test results and persisted Live results.
+- Preserve public notebook workflows: Test operations stay in memory; explicit finalization persists only the allowed Test run and Guardrail diagnostics for activation, as implemented by #1697.
 
 ## Release classification versus current canonical registry
 
@@ -29,7 +29,7 @@ The published `docs/releases/manifests/0.2.5.yml` classifies six tables as Live 
 | `METADATA_DATA_LINEAGE` | engineering | Live | Keep source/target *participation* grain; do not mislabel as source-to-target edges |
 | `METADATA_DATA_ACCESS` | engineering | Preview | Keep observed-grant grain; distinguish observed access from computed effective access |
 | `METADATA_PIPELINE_REGISTRY` | engineering | Not listed | Keep stable pipeline/environment notebook binding and its serialization control |
-| `METADATA_PIPELINE_RUN` | engineering | Not listed | Evaluate typed `run` and `operation` rows instead of opaque operation summaries |
+| `METADATA_PIPELINE_RUN` | engineering | Not listed | One run row with a typed operations array in open #1700; preserve whole-run authority and exact Test results |
 | `METADATA_GUARDRAIL_RESULTS` | engineering | Preview | Keep per-rule aggregate result grain; normalize only useful stable metrics |
 | `METADATA_PROCESSING_STATE` | engineering | Preview | Rename Preview METADATA_SOURCE_OBSERVATION to this typed Processing State table |
 
@@ -92,9 +92,100 @@ No automatic conversion is supplied because old rows can lack watermark types, c
 
 ### Pipeline execution (engineering)
 
-Investigate typed `run` and `operation` records within `METADATA_PIPELINE_RUN`. The parent `run` row is the sole authoritative final outcome; operation rows carry stable operation identity, type, participating table, status, and timing. Keep variable diagnostics in JSON only where justified.
+`engineering.METADATA_PIPELINE_RUN` retains **one authoritative row per run**. Open [#1700](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1700) replaces broad operational JSON with a native typed `operations` array and typed nested stages, using merged #1697 and #1698 as its baseline. The earlier multirow proposal is superseded: no operation table, record discriminator, duplicate IDs, snapshot token, operation count or content digest is needed.
 
-**Required invariants:** interrupted notebooks cannot be finalized as successful; Test does not unexpectedly persist Live run evidence; retries and repeated finalization are idempotent; a successful operation does not imply a successful run. Prove whether a shared table actually simplifies persistence before committing to this shape.
+#### Storage decision and inventory
+
+The complete operation set is part of the run row and publishes in the same Delta transaction. Operators query stable table/contract identities, statuses, timestamps and stages through `explode(operations)`, without JSON parsing. Role and operation type derive from the role-qualified operation key rather than duplicate columns. `(run_id, operation_key)` identifies an operation. Flexible processing configuration stays in each operation's configuration_json. Exact candidate content remains in candidate_json for fingerprint verification; run_details_json retains frozen references, profiling events, bindings, warnings, activation revision and sanitized failures.
+
+| Reader / writer | Previous assumption → implementation |
+| --- | --- |
+| Plan setup, `PipelineOperation`, profiling journal, `finalize_pipeline_run` | One logical journal → one physical run row with a native operation/stage array; actual operation timing retained |
+| `persist_pipeline_run`, `_merge_pipeline_run_row`, exception read-back | Unconditional run_id upsert → run_id key retained, complete-previous-row CAS, terminal immutability and exact read-back |
+| `finalize_pipeline`, `publish_pipeline_testing_results` | Stable Test diagnostics before final run → same order; the operation array commits with the authoritative run outcome |
+| `metadata_records`, `tested_pipeline_manifest`, activation widget | Candidate and summary operation/contract/binding/stage data → validated typed fields reconstruct the supported notebook result; exact contract, candidate, binding, stage, provenance and rule checks remain |
+| `profiling_completion_history` | summary.profiling → run_details_json.profiling; physical profile/frequency snapshot joins unchanged |
+| Guardrail writer / activation reader | Stable result IDs and per-rule run/contract grain unchanged; exact environment, notebook, workspace and activity provenance required |
+| Setup and offline converter | Old summary layout → reject incompatible layouts and require verified conversion; no runtime fallback or additive reinterpretation |
+| Metadata/reference/ERD generators | Source-owned fields → run_id remains the physical key; nested Spark types and directly affected references are generated |
+
+The supported notebook return shape still includes operation_summary_json, reconstructed from typed storage. It is not a persisted legacy reader. Historical approval manifests retain their embedded Test results without rewriting Activation State. Public callable signatures and the six Live schemas remain unchanged.
+
+#### Physical fields and historical mapping
+
+The old table had 19 columns: run_id, activated_pipeline_id, pipeline_id, execution_mode, environment_name, started_at, completed_at, status, candidate_fingerprint, candidate_json, operation_summary_json and the eight audit fields. The new table has **21 top-level columns**: remove operation_summary_json and add boundary_completed, operations and run_details_json. All retained scalar columns keep their types and nullability.
+
+| Top-level fields | Spark type / nullability | Historical mapping |
+| --- | --- | --- |
+| run_id, pipeline_id, execution_mode, environment_name, status | Required string | Preserve original run identity, context and whole-run outcome |
+| activated_pipeline_id, candidate_fingerprint | Nullable string | Preserve exact Live release and candidate identity |
+| started_at | Required timestamp | Preserve original run start |
+| completed_at | Nullable timestamp | Preserve finalization time; a completed row is immutable |
+| candidate_json | Required string | Preserve exact candidate serialization and fingerprint contract |
+| boundary_completed | Required boolean | Extract summary.boundary_completed |
+| operations | Required array of non-null structs | Transform every summary.operations entry using exact candidate/frozen-contract participant mappings |
+| run_details_json | Required string | Preserve all other summary fields, excluding operations and boundary_completed |
+| _committed_by, _workspace_id, _workspace_name, _notebook_id, _notebook_name, _metadata_lakehouse_name, _activity_id | Required string | Preserve the seven existing audit identities on the single run row |
+| _committed_at | Required timestamp | Preserve original audit instant |
+
+Each `operations` element contains:
+
+| Nested field | Spark type / nullability | Mapping / purpose |
+| --- | --- | --- |
+| operation_key | Required string | Original `source:<logical-participant>` or `target:<logical-participant>` key; stable within a run |
+| table_id | Required string | Exact global table identity from the candidate; ambiguous mappings stop conversion |
+| status | Required string | Preserve operation status |
+| started_at, completed_at | Nullable timestamp | Actual operation timing when recorded; unknown historical times stay null |
+| configuration_sha256 | Nullable string | Preserve exact processing configuration identity |
+| configuration_json | Nullable string | Losslessly serialize that operation's flexible configuration |
+| contract_id | Nullable string | Exact frozen contract ID; null for No Contract |
+| contract_version | Nullable integer | Exact frozen contract version; null for No Contract |
+| contract_payload_sha256 | Nullable string | Exact frozen payload hash; null for No Contract |
+| stages | Required array of non-null structs | Preserve stages as native typed fields: required stage/status strings and nullable evaluation_status string |
+
+The schema in `metadata_schemas.py` is authoritative, including nested field nullability. Spark may report looser physical nullability; readers enforce membership, unique keys, exact table/contract/configuration identity and successful-boundary constraints. Registry joins use pipeline_id + environment_name, release joins use exact activated_pipeline_id, and Guardrail joins use run_id + environment_name + operation.table_id + exact contract/version. Explode once before operation/rule joins to avoid multiplying counts.
+
+#### Atomicity, concurrency and recovery
+
+1. First publication appends **one complete row** with Delta txnAppId=fabricops-pipeline-run:<run_id> and txnVersion=0. Existing run IDs are rejected. Concurrent identical first-publication acknowledgements may confirm the same row, but cannot duplicate it. Transaction identity expiration must remain unconfigured; the default unbounded retention is required.
+2. Later publications merge on run_id and compare the **entire previous row** inside the transaction. The expected struct exists only in the source DataFrame and in the plan's memory, not in the persisted schema. Stale rows raise inside MERGE. Failed outcomes cannot regress to success; completed rows cannot be replaced. Repeated finalization returns the sealed result without another mutation.
+3. Delta's normal optimistic write conflict detection protects same-row mutation. A bounded retry handles only Delta exceptions that establish an aborted data-write transaction, covering unrelated runs sharing a data file. The exact previous-row guard remains on every retry. Business publication is never replayed by this retry. Runtime performs **no ALTER TABLE or table-property mutation**; removing the per-update DDL fixes the reproduced independent-run MetadataChangedException.
+4. Parent outcome and all operations/stages become visible at one row-commit boundary. A successful operation never sets parent success. Readers reject missing/duplicate operation keys, foreign table/contract/configuration mappings, failed/blocked/unresolved/duplicate stages and a missing whole-run boundary. Activation additionally verifies exact frozen payloads, required stages, current notebook/workspace/environment bindings and complete required rule results.
+5. Test Read/Write remains in memory. Only explicit Test finalization commits allowed run and Guardrail diagnostics, without business data, checkpoints, Catalogue or Lineage publication. Guardrail Results commit first; the run and its full operation array commit afterward. There is no cross-table atomicity claim: diagnostics without run authority, or a run without required matching diagnostics, cannot authorize activation.
+6. After lost acknowledgement, read-back validates the single row and compares the complete logical result, normalizing timestamp instants. An exact committed result confirms completion. Unknown outcomes poison the plan and require inspection; do not replay business publication. An interrupted Live run remains incomplete and unfinished Test has no approving persisted run.
+
+#### Offline conversion and rollout
+
+**This is a Preview physical-layout change.** Setup rejects old summary rows, the superseded multirow layout and incomplete typed schemas rather than adding columns to reinterpret history. No compatibility reader, dual writer or silent reset is supplied.
+
+1. Stop/drain readers and Test/Live writers. Back up the old run Delta table and matching package; pin its version. Retain Guardrail Results, frozen contracts, Registry bindings, approval history and Processing State. No run history is deliberately discarded.
+2. In an isolated configured Spark/Delta session, convert the old summary layout to a new, separate location using the matching package:
+
+   ```bash
+   python scripts/migrate_pipeline_runs.py \
+     --source-path <configured-old-run-delta-path> \
+     --source-version <backed-up-version> \
+     --destination-path <new-staging-delta-path>
+   ```
+
+   The converter reads source only, rejects duplicate run IDs, validates every transformation before destination publication and refuses an existing destination. It reconstructs and compares each logical run with its original. Missing/ambiguous operation mappings, unknown historical fields or unprovable success stop conversion for explicit reconciliation. Preserve unknown timing as null; never infer successful operation facts from run status or isolated rule results. The superseded multirow design was not merged or deployed by this PR and is not supported by this converter; any independently deployed copy requires explicit reconciliation first.
+3. Verify one destination row per source run; exact candidate/status/provenance retention; complete operation/stage arrays; Registry/release links; profiling history; and required Guardrail coverage. Current bindings still govern Test eligibility. In-flight historical runs remain incomplete/failed and continue only as new attempts.
+4. While stopped, replace the Delta contents at the canonical configured Metadata Lakehouse table path with the verified typed table, retaining a rollback backup and correct registration. Readers derive the physical path from the configured Lakehouse/schema/table name; **changing only a catalogue registration's location is insufficient**. Use the actual Fabric path/cutover procedure and retain the canonical engineering ownership/name. Run setup and Test/Live smoke checks before resuming.
+5. Before new executions, rollback restores the backed-up table and matching package. After new runs or approvals, stop and reconcile those new records/references before rollback; restoring an old metadata copy alone would erase history. Preserve Activation State and Processing State throughout, and keep backups through deployment validation and agreed retention.
+
+#### Queries and verification
+
+```sql
+SELECT r.run_id, op.operation_key, op.table_id, op.status,
+       op.contract_id, op.contract_version, op.started_at, op.completed_at
+FROM engineering.METADATA_PIPELINE_RUN r
+LATERAL VIEW explode(r.operations) expanded AS op
+WHERE r.environment_name = 'DEV';
+```
+
+Persisted tests cover finalized Test → activation with exact contracts/rules/bindings, missing/duplicate/foreign operations and stages, lost acknowledgements immediately after physical commit, immutable final rows, stale and simultaneous same-run writers, **independent concurrent runs sharing a data file**, direct native operation/stage queries and the executable offline converter. Retain Test dry-run, Live pinned-version, profiling and failure regressions. Compare all other 12 canonical schemas with baseline; do not change Processing State recovery or Activation State CAS.
+
+Run Ruff, targeted pytest, compile/import checks, strict MkDocs and affected generators with two clean repeated passes. Fabric Lakehouse cutover, Warehouse transport, notebook deployment permissions and actual Fabric concurrency remain separate deployment checks; local persisted Delta tests do not claim cloud validation. Maintainer review and CI remain required; do not merge automatically.
 
 ### Activation authority (governance)
 
@@ -119,17 +210,17 @@ Before a structural implementation PR, document for **every changed table**: old
 
 ## Implementation workstreams and sequencing
 
-| Workstream | Executor | Dependencies | Merge boundary |
-| --- | --- | --- | --- |
-| A. Architecture and lifecycle audit (this document) | ChatGPT | latest main | Documentation only |
-| B. Focused metadata reference fixes | ChatGPT | A | Small generator/source or docs PR; no schema change |
-| C. Processing State redesign | Codex | A; writer/reader inventory | Self-contained backend PR, targeted Delta recovery tests |
-| D. Pipeline Run normalization | Codex | A; run/finalization inventory | Separate backend PR, targeted persistence tests |
-| E. Activation authority redesign | Codex | A; concurrency design proof | Isolated PR with persisted Delta CAS/conflict tests |
-| F. Contract/Guardrail/Access cleanup | ChatGPT for bounded fixes, otherwise Codex | A; demonstrated benefit | Skip if no justified change |
-| G. Final integration/reference generation | Appropriate owner of affected source | C–F | Only directly affected artifacts |
+| Workstream | Status at 2026-10-25 | Executor | PR / implementation | Dependencies and merge boundary |
+| --- | --- | --- | --- | --- |
+| A. Architecture and lifecycle audit | Merged | ChatGPT | [#1695](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1695) | Documentation baseline; no runtime changes |
+| B. Focused metadata reference fixes | Merged (initial fixes) | ChatGPT | [#1696](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1696); metadata explorer [#1692](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1692) | Additional fixes only when a concrete discrepancy is found |
+| C. Processing State redesign | Merged | Codex | [#1698](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1698) | Implemented `METADATA_PROCESSING_STATE`; keep its recovery protocol isolated |
+| D. Pipeline Run normalization | Implemented in open PR; review outstanding | Codex | [#1700](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1700); [implementation and migration](#pipeline-execution-engineering) | Includes merged #1697 and #1698; preserve finalized Test results; verified offline cutover required |
+| E. Activation authority redesign | Pending separate design proof | Codex | Related foundation [#1693](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1693); evidence change [#1697](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1697) merged | Keep authority CAS, approvals and reservations isolated from D; no unsafe split of the atomic authority snapshot |
+| F. Contract/Guardrail/Access cleanup | Conditional / targeted prior work | ChatGPT for bounded fixes; otherwise Codex | Contract cleanup [#1649](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1649) and Guardrail integration [#1645](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1645) merged | Skip additional physical normalization without a demonstrated benefit |
+| G. Final integration/reference generation | Pending final review | Owner of affected source | After relevant backend work | Regenerate only artifacts directly affected by C–F; verify clean second generation |
 
-C and D may be developed in parallel on separate branches **only** if shared `metadata_schemas.py`, setup logic, and reference generation are coordinated. Prefer a tiny shared foundation PR or a sequential merge/rebase to competing edits. Keep E isolated.
+**Coordination:** C has merged, so D uses the latest canonical metadata schema, including the #1698 Processing State redesign. #1697 has merged and changes D's Test-evidence readers/writers. D preserves this durable finalized Test evidence for activation. D and E remain separate implementation PRs; do not split the atomic Activation State authority while working on Pipeline Run. A merged PR denotes merged scope, **not** a claim that live Microsoft Fabric deployment validation has completed.
 
 ## Acceptance tests
 
@@ -143,4 +234,4 @@ C and D may be developed in parallel on separate branches **only** if shared `me
 
 ## Decisions intentionally deferred to implementation audit
 
-The proposed new names, columns, and record types are **candidates**, not approved physical contracts. Before implementation, Codex must produce the exact field-by-field schema and prove that each change reduces complexity without compromising correctness. In particular, do not assume that a single Delta table of typed activation rows is atomic across multiple independent commits.
+Processing State is implemented on main; Pipeline Run implementation is documented above and remains under review in #1700. Remaining Activation State names, columns and record types are candidates, not approved physical contracts. Any further structural change requires a field-by-field schema and proof of benefit without weakening correctness. Multiple independent commits to one Delta table do not provide atomic publication of typed activation records.

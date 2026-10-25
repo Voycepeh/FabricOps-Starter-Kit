@@ -141,9 +141,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:196`
+`fabricops_kit/config/setup_metadata_tables.py:204`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L196-L595">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L204-L607">View on GitHub</a>
 </div>
 
 
@@ -242,6 +242,10 @@ The Preview Processing State table is named ``METADATA_PROCESSING_STATE``.
 Setup rejects the legacy ``METADATA_SOURCE_OBSERVATION`` physical name,
 including when the new table also exists. Reconcile and explicitly migrate
 or reset the old table before setup; no alias or empty replacement is created.
+
+``METADATA_PIPELINE_RUN`` requires one run row with a typed operations array.
+Old summary rows, multirow layouts and incomplete typed layouts require verified offline
+conversion; setup never adds columns to reinterpret existing run history.
 
 Existing tables are validated by canonical column name and compatible
 Spark data type. Physical Spark/Delta nullability is intentionally not

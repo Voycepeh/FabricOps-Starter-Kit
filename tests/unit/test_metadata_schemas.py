@@ -315,3 +315,36 @@ def test_processing_state_table_has_no_legacy_alias():
     registry = metadata_table_schema_registry()
     assert "METADATA_PROCESSING_STATE" in registry
     assert "METADATA_SOURCE_OBSERVATION" not in registry
+
+
+def test_pipeline_run_old_schema_requires_offline_conversion():
+    """Old run rows cannot be additive-evolved into falsely complete typed history."""
+    import importlib
+    import pytest
+    from pyspark.sql.types import StructType, StructField, StringType
+    setup = importlib.import_module('fabricops_kit.config.setup_metadata_tables')
+    schema = metadata_table_schema_registry()['METADATA_PIPELINE_RUN']
+    legacy = StructType([StructField('run_id', StringType()), StructField('operation_summary_json', StringType())])
+    for allow_missing in (True, False):
+        with pytest.raises(ValueError, match='offline conversion'):
+            setup._validate_existing_metadata_schema('METADATA_PIPELINE_RUN', legacy, schema, allow_missing=allow_missing)
+    assert setup._validate_existing_metadata_schema('METADATA_PIPELINE_RUN', schema, schema) == []
+
+
+def test_nested_pipeline_run_schema_documentation_matches_without_pyspark():
+    """Nested type descriptions stay deterministic in docs-only environments."""
+    import builtins
+    from pathlib import Path
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_rows
+    expected = {name: metadata_table_schema_rows(schema) for name, schema in metadata_table_schema_registry().items()}
+    real_import = builtins.__import__
+    def without_spark(name, *args, **kwargs):
+        if name.startswith('pyspark'):
+            raise ImportError('docs-only environment')
+        return real_import(name, *args, **kwargs)
+    namespace = {'__builtins__': {**vars(builtins), '__import__': without_spark}}
+    source = Path('src/fabricops_kit/config/metadata_schemas.py').read_text()
+    exec(compile(source, 'metadata_schemas_without_spark.py', 'exec'), namespace)
+    actual = {name: namespace['metadata_table_schema_rows'](schema)
+              for name, schema in namespace['metadata_table_schema_registry']().items()}
+    assert actual == expected

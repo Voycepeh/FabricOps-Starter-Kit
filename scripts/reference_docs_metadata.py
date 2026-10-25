@@ -134,8 +134,8 @@ METADATA_TABLE_MODELS = {
     },
     "METADATA_PIPELINE_RUN": {
         "purpose": "Records explicitly finalized Test runs and Live execution outcomes, including their tables, operations, profiling results and warnings.",
-        "grain": "One explicitly finalized Test run or Live execution attempt.",
-        "implementation_notes": "One complete logical run, exact table mappings, operation results, per-table profiling activity outcomes, warnings and pinned activation revision. Profiling completion joins persisted result snapshots; Grain Discovery and empty Frequency Profiling use minimal success markers in operation_summary_json.", "primary_key": ["run_id"],
+        "grain": "One row per execution attempt, with a native typed operations array for all declared Reads and Writes.",
+        "implementation_notes": "One authoritative run row atomically contains typed Read/Write operations and typed stages. Operation keys identify source/target roles and logical participants; nested fields expose exact table/contract identity, configuration hash, status and timing without JSON parsing. Readers verify complete operation membership against the candidate. Profiling markers remain in run_details_json and join persisted result snapshots.", "primary_key": ["run_id"],
         "foreign_keys": [{"local_field": "pipeline_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "pipeline_id", "cardinality": "N:1", "statement": "Each run references one registered logical Pipeline UUID in its environment."}],
         "relationships": [{"cardinality": "N:1", "statement": "Each Live run references an approved Activated Pipeline release inside METADATA_ACTIVATION_STATE."}],
     },
@@ -529,7 +529,7 @@ METADATA_COLUMN_OWNERS = {
         "result_payload_json": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
     },
     "METADATA_PIPELINE_RUN": {
-        "__default__": ["fabricops_kit.pipeline.shared.persist_pipeline_run"],
+        "__default__": ["fabricops_kit.pipeline.shared.pipeline_run_row", "fabricops_kit.pipeline.shared.persist_pipeline_run"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
     "METADATA_PROCESSING_STATE": {

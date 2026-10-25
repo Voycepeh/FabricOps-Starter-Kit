@@ -22,34 +22,21 @@ def runtime(monkeypatch):
     saved, writes = {}, []
     failure = {"enabled": False, "after_commit": False, "read_unavailable": False}
 
-    class Merge:
-        def alias(self, name):
-            return self
-
-        def merge(self, frame, condition):
-            assert condition == "target.run_id = source.run_id"
-            self.row = frame.row
-            return self
-
-        def whenMatchedUpdateAll(self):
-            return self
-
-        def whenNotMatchedInsertAll(self):
-            return self
-
-        def execute(self):
-            if failure["enabled"]:
-                raise OSError("credential=never persist this message")
-            row = copy.deepcopy(self.row)
-            writes.append(row)
-            saved[row["run_id"]] = row
-            if failure["after_commit"] and row["status"] == "succeeded":
-                raise OSError("final commit acknowledgement lost")
-
-    delta = SimpleNamespace(forPath=lambda spark, path: Merge())
-    monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=delta))
+    physical = {}
+    def merge(plan, row, **kwargs):
+        if failure["enabled"]:
+            raise OSError("credential=never persist this message")
+        record = shared.pipeline_run_row(row)
+        shared.pipeline_run_result(record)
+        physical[row["run_id"]] = copy.deepcopy(record)
+        saved[row["run_id"]] = copy.deepcopy(row)
+        writes.append(copy.deepcopy(row))
+        if failure["after_commit"] and row["status"] == "succeeded":
+            raise OSError("final commit acknowledgement lost")
+        plan.evidence["persisted_run_row"] = copy.deepcopy(record)
+    monkeypatch.setattr(shared, "_merge_pipeline_run_row", merge)
     monkeypatch.setattr(shared, "get_spark_session", lambda supplied=None: SimpleNamespace(conf=SimpleNamespace(get=lambda name: "test-setting"),
-        createDataFrame=lambda rows, schema=None: SimpleNamespace(row=rows[0], alias=lambda name: SimpleNamespace(row=rows[0]))))
+        createDataFrame=lambda rows, schema=None: SimpleNamespace(row=rows[0])))
     monkeypatch.setattr(shared, "resolve_configured_lakehouse_table", lambda store, table, schema, **kw:
                         (store, table, schema, f"configured/{schema}/{table}"))
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kw: {})
@@ -70,7 +57,7 @@ def runtime(monkeypatch):
             def limit(self, count):
                 return self
             def collect(self):
-                return [copy.deepcopy(saved[self.run_id])] if self.run_id in saved else []
+                return [copy.deepcopy(physical[self.run_id])] if self.run_id in physical else []
         return Rows()
     monkeypatch.setattr(shared, "read_lakehouse_table", read_run)
 
@@ -281,10 +268,11 @@ def test_run_schema_has_only_independent_lifecycle_fields():
     """Keep standard audit fields and avoid redundant activation/failure columns."""
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
     fields = metadata_table_schema_registry()["METADATA_PIPELINE_RUN"].fieldNames()
-    assert fields == ["run_id", "activated_pipeline_id", "pipeline_id", "execution_mode", "environment_name", "started_at", "completed_at",
-                      "status", "candidate_fingerprint", "candidate_json", "operation_summary_json",
-                      *[name for name, *_ in AUDIT_SCHEMA_FIELDS]]
-    assert len(fields) == 19
+    assert len(fields) == 21
+    assert fields[0] == "run_id"
+    assert {"record_id", "record_type", "snapshot_token", "operation_count", "operations_digest", "operation_summary_json"}.isdisjoint(fields)
+    assert {"operations", "run_details_json", "boundary_completed"} <= set(fields)
+    assert fields[-8:] == [name for name, *_ in AUDIT_SCHEMA_FIELDS]
 
 
 def test_distinct_attempts_keep_activity_identity_and_survive_notebook_rename(runtime, monkeypatch):

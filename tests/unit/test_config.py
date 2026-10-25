@@ -1188,41 +1188,40 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
     )
     from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
 
+    def sample_value(data_type):
+        if hasattr(data_type, "elementType"):
+            return [sample_value(data_type.elementType)]
+        if hasattr(data_type, "fields"):
+            return {field.name: sample_value(field.dataType) for field in data_type.fields}
+        return {"TimestampType": "2026-06-29T12:34:56+08:00", "DateType": "2026-06-29",
+                "BooleanType": "true", "LongType": "7", "IntegerType": 7, "DoubleType": "7.5"}.get(
+                    type(data_type).__name__, "value")
+
+    def assert_runtime_type(value, data_type, path):
+        if hasattr(data_type, "elementType"):
+            assert isinstance(value, list) and value, path
+            for item in value:
+                assert_runtime_type(item, data_type.elementType, path + "[]")
+        elif hasattr(data_type, "fields"):
+            assert isinstance(value, dict), path
+            for field in data_type.fields:
+                assert_runtime_type(value[field.name], field.dataType, path + "." + field.name)
+        else:
+            expected = {"TimestampType": datetime, "DateType": date, "BooleanType": bool,
+                        "LongType": int, "IntegerType": int, "DoubleType": float, "StringType": str}
+            assert isinstance(value, expected[type(data_type).__name__]), path
+            if type(data_type).__name__ == "DateType":
+                assert not isinstance(value, datetime), path
+
     audit_columns = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
     registry = metadata_table_schema_registry()
-
     assert list(registry) == CANONICAL_METADATA_TABLES
     for table_name, schema in registry.items():
-        fields = {field.name: type(field.dataType).__name__ for field in schema.fields}
-        assert audit_columns.issubset(fields)
-        sample = {}
-        for field_name, type_name in fields.items():
-            if type_name == "TimestampType":
-                sample[field_name] = "2026-06-29T12:34:56+08:00"
-            elif type_name == "DateType":
-                sample[field_name] = "2026-06-29"
-            elif type_name == "BooleanType":
-                sample[field_name] = "true"
-            elif type_name == "LongType":
-                sample[field_name] = "7"
-            elif type_name == "DoubleType":
-                sample[field_name] = "7.5"
-            else:
-                sample[field_name] = "value"
+        assert audit_columns.issubset({field.name for field in schema.fields})
+        sample = {field.name: sample_value(field.dataType) for field in schema.fields}
         row = coerce_metadata_row_types(table_name, sample)
-        for field_name, type_name in fields.items():
-            if type_name == "TimestampType":
-                assert isinstance(row[field_name], datetime), f"{table_name}.{field_name} must be datetime"
-            elif type_name == "DateType":
-                assert isinstance(row[field_name], date) and not isinstance(row[field_name], datetime), (
-                    f"{table_name}.{field_name} must be date"
-                )
-            elif type_name == "BooleanType":
-                assert isinstance(row[field_name], bool), f"{table_name}.{field_name} must be bool"
-            elif type_name == "LongType":
-                assert isinstance(row[field_name], int), f"{table_name}.{field_name} must be int"
-            elif type_name == "DoubleType":
-                assert isinstance(row[field_name], float), f"{table_name}.{field_name} must be float"
+        for field in schema.fields:
+            assert_runtime_type(row[field.name], field.dataType, table_name + "." + field.name)
 
 
 def test_runtime_writers_use_shared_metadata_schema_contract_not_public_owner():

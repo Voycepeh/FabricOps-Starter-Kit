@@ -222,6 +222,15 @@ PIPELINE_REGISTRY_FIELD_DESCRIPTIONS = {
 }
 
 
+PIPELINE_RUN_FIELD_DESCRIPTIONS = {
+    "run_id": "Unique execution attempt and physical merge key; one authoritative row contains every Read/Write.",
+    "status": "Whole-run outcome: incomplete, failed, succeeded or ungoverned_completed; operation success alone never completes a run.",
+    "candidate_json": "Exact candidate identity, configuration and physical bindings retained for fingerprint verification.",
+    "run_details_json": "Frozen contract references, profiling events, warnings, sanitized failures and activation provenance; operations and completion authority are typed fields.",
+    "boundary_completed": "Whether the explicit whole-run completion boundary finished; independent of operation success.",
+    "operations": "Native array of typed Read/Write structs: operation_key, table_id, status, timing, exact frozen contract, configuration identity/JSON and typed stages. Query with explode(operations); no operational JSON parsing is required.",
+}
+
 PROCESSING_STATE_FIELD_DESCRIPTIONS = {
     "record_id": "Stable SHA-256 primary key for one typed record; acceptance updates the same staged record.",
     "record_type": "source_observation, incremental_checkpoint, drift_baseline, or publication_receipt.",
@@ -4310,6 +4319,8 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_PIPELINE_REGISTRY" and column_name in PIPELINE_REGISTRY_FIELD_DESCRIPTIONS:
         return PIPELINE_REGISTRY_FIELD_DESCRIPTIONS[column_name]
+    if table_name == "METADATA_PIPELINE_RUN" and column_name in PIPELINE_RUN_FIELD_DESCRIPTIONS:
+        return PIPELINE_RUN_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_PROCESSING_STATE" and column_name in PROCESSING_STATE_FIELD_DESCRIPTIONS:
         return PROCESSING_STATE_FIELD_DESCRIPTIONS[column_name]
     if column_name in METADATA_FIELD_DESCRIPTIONS:

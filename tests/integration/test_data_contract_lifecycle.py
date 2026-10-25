@@ -173,6 +173,12 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
     monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=SimpleNamespace(
         forPath=lambda spark, name: _DeltaTransport(state, name),
         isDeltaTable=lambda spark, name: name in state.business)))
+    def persist_run(plan, row, **kwargs):
+        record = runtime.pipeline_run_row(row)
+        runtime.pipeline_run_result(record)
+        state.metadata['METADATA_PIPELINE_RUN'] = [item for item in state.metadata['METADATA_PIPELINE_RUN']
+            if item['run_id'] != plan.plan_id] + [record]
+    monkeypatch.setattr(runtime, '_merge_pipeline_run_row', persist_run)
     schedule = importlib.import_module("fabricops_kit.data_contract.scheduled_refresh")
     monkeypatch.setattr(schedule, "discover_scheduled_refresh", lambda **kwargs: {"status": "not_configured", "schedules": []})
     for name in ("_CURRENT_SOURCE_OBSERVATIONS", "_CURRENT_FRESHNESS_EVIDENCE", "_PENDING_SOURCE_OBSERVATIONS",

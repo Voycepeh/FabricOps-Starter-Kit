@@ -343,7 +343,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-run">
 <summary><strong>pipeline run</strong> — One logical pipeline execution across every declared Read and Write.</summary>
-<p>METADATA_PIPELINE_RUN records one logical attempt across all declared Reads and Writes, stable pipeline_id, candidate identity, operations and status. Notebook cell events detect failure but do not establish whole-run success. finalize_pipeline records whole-run completion; unfinalized runs remain incomplete. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.</p>
+<p>METADATA_PIPELINE_RUN stores one authoritative row per run with a native typed operations array for every declared Read and Write. Typed operation and stage fields expose exact table/contract identity, configuration hash, status and timing within the same atomic row. Notebook cell events detect failure but do not establish whole-run success. finalize_pipeline records whole-run completion; unfinalized runs remain incomplete. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.</p>
 </details>
 
 <details id="pyspark">
