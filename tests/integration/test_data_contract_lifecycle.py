@@ -111,14 +111,15 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
     state = SimpleNamespace(config=config, context=context, metadata={name: [] for name in registry}, business={}, reads=[], commits={})
 
     from fabricops_kit.activated_pipeline import shared as activation
-    state.metadata["METADATA_ACTIVATION_STATE"] = [{"authority_id": "central", "token": "initial", "snapshot_json": activation.empty_activation_state()}]
+    state.metadata["METADATA_ACTIVATION_STATE"] = activation.activation_state_records(json.loads(activation.empty_activation_state()), token="initial", audit=audit)
     def commit_authority(snapshot, *, expected_token, **kwargs):
-        row = state.metadata["METADATA_ACTIVATION_STATE"][0]
-        if row["token"] != expected_token:
+        token, _ = activation.activation_state_from_records(state.metadata["METADATA_ACTIVATION_STATE"])
+        if token != expected_token:
             raise ValueError("Concurrent approval")
         from uuid import uuid4
-        row.update(token=str(uuid4()), snapshot_json=runtime.canonical_candidate_json(snapshot))
-        return row["token"]
+        token = str(uuid4())
+        state.metadata["METADATA_ACTIVATION_STATE"] = activation.activation_state_records(snapshot, token=token, audit=audit_fields())
+        return token
     monkeypatch.setattr(activation, "commit_activation_state", commit_authority)
     activity_times = {}
     def audit_fields(**kwargs):

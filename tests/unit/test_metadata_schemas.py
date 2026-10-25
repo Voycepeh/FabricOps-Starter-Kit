@@ -348,3 +348,19 @@ def test_nested_pipeline_run_schema_documentation_matches_without_pyspark():
     actual = {name: namespace['metadata_table_schema_rows'](schema)
               for name, schema in namespace['metadata_table_schema_registry']().items()}
     assert actual == expected
+
+
+def test_activation_state_requires_complete_typed_layout_without_evolution():
+    """Setup rejects old, partial and mixed authority layouts without adding columns."""
+    import importlib
+    from pyspark.sql.types import StructType, StructField, StringType
+    setup = importlib.import_module('fabricops_kit.config.setup_metadata_tables')
+    schema = metadata_table_schema_registry()['METADATA_ACTIVATION_STATE']
+    old = StructType([StructField(name, StringType()) for name in ('authority_id', 'token', 'snapshot_json')])
+    partial = StructType([field for field in schema if field.name != 'participant'])
+    mixed = StructType([*schema.fields, StructField('snapshot_json', StringType())])
+    for incompatible in (old, partial, mixed):
+        for allow_missing in (True, False):
+            with pytest.raises(ValueError, match='Stop and drain.*reapprove'):
+                setup._validate_existing_metadata_schema('METADATA_ACTIVATION_STATE', incompatible, schema, allow_missing=allow_missing)
+    assert setup._validate_existing_metadata_schema('METADATA_ACTIVATION_STATE', schema, schema) == []

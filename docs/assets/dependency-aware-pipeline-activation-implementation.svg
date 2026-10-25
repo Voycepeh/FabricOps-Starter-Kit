@@ -69,12 +69,12 @@
 <text x="400" y="368" class="tag">5 · FABRICOPS / COMMIT</text>
 <text x="400" y="396" class="name">Publish atomically</text>
 <text x="400" y="420" class="mono">commit_activation_state()</text>
-<text x="400" y="448" class="body">One serializable Delta transaction</text>
+<text x="400" y="448" class="body">One guarded Delta transaction</text>
 </g></a>
 <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L209" target="_blank" rel="noopener"><g>
 <rect x="48" y="344" width="284" height="124" rx="6" class="focal"/>
 <text x="68" y="368" class="tag">CENTRAL AUTHORITY</text>
-<text x="68" y="392" class="name">One authority snapshot</text>
+<text x="68" y="392" class="name">One authority publication</text>
 <text x="68" y="416" class="mono">METADATA_ACTIVATION_STATE</text>
 <text x="68" y="440" class="body">Pipeline + table mappings together</text>
 <text x="68" y="460" class="body">Environment revision + reservations</text>

@@ -113,7 +113,7 @@
 <path d="M819 78H1111Q1115 78 1115 82V115H815V82Q815 78 819 78Z" fill="#7144AE"/>
 <text x="965.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">ACTIVATION_STATE</text>
 <text x="828" y="135" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="866" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">authority_id</text>
+<text x="866" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">record_id</text>
 <title>Open metadata documentation: ACTIVATION_STATE</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract/" target="_blank">

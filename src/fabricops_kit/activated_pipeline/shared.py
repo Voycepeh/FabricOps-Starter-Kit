@@ -237,16 +237,261 @@ ACTIVATION_STATE_TABLE = "METADATA_ACTIVATION_STATE"
 
 def empty_activation_state():
     """Return the initial central authority; only metadata setup creates this row."""
-    return canonical_candidate_json({"format": "fabricops.activation-state.v1", "environments": {}})
+    return canonical_candidate_json({"format": "fabricops.activation-state.v1", "environments": {}, "profiling_claims": {}})
+
+
+def _record_id(kind, environment=None, key=None):
+    return "central" if kind == "authority" else kind + ":" + manifest_digest([environment, key])
+
+
+def _instant(value):
+    from datetime import UTC, datetime
+    if not isinstance(value, datetime):
+        value = datetime.fromisoformat(value)
+    # Spark collects native timestamps as naive datetimes in the host timezone.
+    return value.astimezone(UTC)
+
+
+def _record_content(rows):
+    return [{key: value for key, value in sorted(row.items()) if not key.startswith("_") and key != "token"}
+            for row in sorted(rows, key=lambda row: row["record_id"]) if row["record_type"] != "authority"]
+
+
+def activation_state_records(state, *, token, audit):
+    """Encode the complete authority as typed domain records for one transaction.
+
+    Approval manifests reconstruct from exact typed participants plus authored
+    configuration and diagnostic JSON. No operational authority is stored in JSON.
+    """
+    if set(state) - {"format", "environments", "profiling_claims"} or state.get("format") != "fabricops.activation-state.v1":
+        raise ValueError("Unsupported activation authority format or fields.")
+    schema = metadata_table_schema_registry()[ACTIVATION_STATE_TABLE]
+    records = []
+
+    def add(kind, env, key, data, parent="central", record_audit=None):
+        row = {field.name: None for field in schema.fields}
+        row.update(record_id=_record_id(kind, env, key), record_type=kind, token=token,
+                   environment_name=env, parent_id=parent)
+        row[kind] = data
+        row.update(audit if record_audit is None else record_audit)
+        records.append(coerce_metadata_row_types(ACTIVATION_STATE_TABLE, row))
+        return row["record_id"]
+
+    for env, current in sorted(state["environments"].items()):
+        if set(current) != {"revision", "pipelines", "history", "tables", "runs"}:
+            raise ValueError("Unsupported environment activation fields.")
+        parent = add("environment", env, None, {"revision": current["revision"]})
+        versions = set()
+        for approval_id, approval in sorted(current["history"].items()):
+            version = (approval["pipeline_id"], approval["pipeline_version"])
+            if version in versions:
+                raise ValueError("Duplicate immutable pipeline version in approval history.")
+            versions.add(version)
+            manifest = validate_manifest(approval)
+            manifest_table_mappings(manifest)
+            if approval_id != approval["activated_pipeline_id"] or approval["environment_name"] != env:
+                raise ValueError("Approval parent or environment mismatch.")
+            candidate = manifest["candidate"]
+            data = {key: approval[key] for key in ("pipeline_id", "activated_pipeline_id", "pipeline_name", "pipeline_version",
+                    "testing_run_id", "agreement_id", "agreement_version", "candidate_fingerprint")}
+            data.update(portable_fingerprint=candidate["portable_fingerprint"],
+                        project_configuration_json=canonical_candidate_json(candidate["project_configuration"]),
+                        operations=[{**item, "configuration_json": canonical_candidate_json(item["configuration"])}
+                                    for item in candidate["operations"]])
+            for item in data["operations"]:
+                del item["configuration"]
+            for key in ("agreement", "testing_evidence", "warnings"):
+                data[key + "_json"] = canonical_candidate_json(manifest[key])
+            approval_parent = add("approval", env, approval_id, data, parent,
+                                  {key: value for key, value in approval.items() if key.startswith("_")})
+            contracts = {item["participant"]: item["definition"] for item in manifest["contracts"]}
+            for item in candidate["participants"]:
+                definition = contracts[item["participant"]]
+                add("participant", env, [approval_id, item["participant"]], {
+                    "participant": item["participant"], "table_id": item["table_id"],
+                    "is_source": "source" in item["roles"], "is_target": "target" in item["roles"],
+                    "contract_id": definition["contract_id"], "contract_version": definition["contract_version"],
+                    "payload_sha256": hashlib.sha256(definition["contract_payload_json"].encode()).hexdigest(),
+                    "contract_environment": definition["environment_name"], "contract_status": definition["status"],
+                    "contract_payload_json": definition["contract_payload_json"],
+                    "candidate_contract_json": canonical_candidate_json(item["contract"]),
+                    "destination": manifest["physical_bindings"][item["table_id"]],
+                }, approval_parent)
+        for pipeline_id, approval in sorted(current["pipelines"].items()):
+            approval_id = approval["activated_pipeline_id"]
+            if current["history"].get(approval_id) != approval or approval["pipeline_id"] != pipeline_id:
+                raise ValueError("Active approval is absent from immutable history.")
+            add("activation", env, pipeline_id, {"pipeline_id": pipeline_id, "activated_pipeline_id": approval_id},
+                _record_id("approval", env, approval_id))
+        integrity = activation_impact(current, {})
+        if integrity["tables"] != current["tables"] or integrity["blocking_conflicts"]:
+            raise ValueError("Activation authority has inconsistent table mappings or ownership.")
+        for table_id, table in sorted(current["tables"].items()):
+            add("ownership", env, table_id, {**table, "table_id": table_id,
+                "readers": [{"pipeline_id": key} for key in table["readers"]]}, parent)
+        for run_id, run in sorted(current["runs"].items()):
+            mode = run["mode"]
+            if mode not in {"live", "rebind"} or set(run) != ({"pipeline_id", "tables", "mode", "revision", "destinations"} if mode == "live" else {"pipeline_id", "tables", "mode"}):
+                raise ValueError("Unsupported execution reservation.")
+            if mode == "live" and (run["pipeline_id"] not in current["pipelines"] or not run["revision"]):
+                raise ValueError("Live reservation has no approved pipeline or pinned revision.")
+            approved = current["pipelines"].get(run["pipeline_id"]) if mode == "live" else None
+            if approved:
+                mappings = manifest_table_mappings(validate_manifest(approved))
+                if set(run["tables"]) != set(mappings) or len(run["tables"]) != len(mappings) or sorted(
+                    canonical_candidate_json(item) for item in run["destinations"]
+                ) != sorted(canonical_candidate_json(item["destination"]) for item in mappings.values()):
+                    raise ValueError("Live reservation participants differ from exact approval.")
+            add("reservation", env, run_id, {**run, "reservation_id": run_id,
+                "activated_pipeline_id": approved["activated_pipeline_id"] if approved else None,
+                "tables": [{"table_id": key} for key in run["tables"]]},
+                _record_id("approval", env, approved["activated_pipeline_id"]) if approved else parent)
+    for claim_key, claim in sorted(state.get("profiling_claims", {}).items()):
+        if claim_key != claim["claim_key"]:
+            raise ValueError("Profiling claim identity mismatch.")
+        add("profiling_claim", claim["environment"], claim_key,
+            {key: value for key, value in claim.items() if key != "environment"})
+    # Schema coercion must not silently discard any logical content.
+    add("authority", None, None, {"record_count": len(records), "content_sha256": manifest_digest(_json_instants(_record_content(records)))}, None)
+    return records
+
+
+def _json_instants(value):
+    from datetime import datetime
+    if isinstance(value, datetime):
+        return _instant(value).isoformat()
+    if isinstance(value, dict):
+        return {key: _json_instants(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_instants(item) for item in value]
+    return value
+
+
+def _state_content(state):
+    value = json.loads(canonical_candidate_json(_json_instants(state)))
+    for current in value["environments"].values():
+        for key in ("history", "pipelines"):
+            for approval in current[key].values():
+                if approval.get("_committed_at"):
+                    approval["_committed_at"] = _instant(approval["_committed_at"]).isoformat()
+    for claim in value.get("profiling_claims", {}).values():
+        claim["expires_at"] = _instant(claim["expires_at"]).isoformat()
+        if claim.get("completed_at"):
+            claim["completed_at"] = _instant(claim["completed_at"]).isoformat()
+    return canonical_candidate_json(value)
+
+
+def _validate_record_fields(value, schema):
+    if hasattr(schema, "fields"):
+        if not isinstance(value, dict) or set(value) - {field.name for field in schema.fields}:
+            raise ValueError("Invalid activation record fields.")
+        for field in schema.fields:
+            item = value.get(field.name)
+            if item is None:
+                if not field.nullable:
+                    raise ValueError("Missing required activation field: " + field.name)
+            else:
+                _validate_record_fields(item, field.dataType)
+    elif hasattr(schema, "elementType"):
+        if not isinstance(value, list) or any(item is None for item in value):
+            raise ValueError("Invalid activation record collection.")
+        for item in value:
+            _validate_record_fields(item, schema.elementType)
+
+
+def activation_state_from_records(rows):
+    """Validate one complete publication and reconstruct the domain authority.
+
+    Every consumer uses this reader; orphaned, duplicate, stale, incomplete or
+    corrupt records fail closed before they can authorize execution.
+    """
+    schema = metadata_table_schema_registry()[ACTIVATION_STATE_TABLE]
+    kinds = {"authority", "environment", "approval", "activation", "participant", "ownership", "reservation", "profiling_claim"}
+    for row in rows:
+        _validate_record_fields(row, schema)
+        if row["record_type"] not in kinds or {kind for kind in kinds if row.get(kind) is not None} != {row["record_type"]}:
+            raise ValueError("Invalid activation record type or payload.")
+    if sum(row["record_type"] == "authority" for row in rows) != 1:
+        raise ValueError("Missing or duplicate central activation authority.")
+    authority = exact_record(rows, record_id="central", record_type="authority")
+    token = authority["token"]
+    identities = {row["record_id"] for row in rows}
+    if len(identities) != len(rows) or any(row["token"] != token for row in rows):
+        raise ValueError("Duplicate or mixed activation publication records.")
+    expected = authority["authority"]
+    if expected["record_count"] != len(rows) - 1 or expected["content_sha256"] != manifest_digest(_json_instants(_record_content(rows))):
+        raise ValueError("Incomplete or corrupt activation authority publication.")
+    state = json.loads(empty_activation_state())
+    for row in rows:
+        if row["record_type"] == "environment":
+            environment_activation(state, row["environment_name"])["revision"] = row["environment"]["revision"]
+    for row in rows:
+        kind, env = row["record_type"], row["environment_name"]
+        if kind == "approval":
+            data = dict(row[kind])
+            participant_rows = sorted([item["participant"] for item in rows if item["record_type"] == "participant" and item["parent_id"] == row["record_id"]], key=lambda item: item["participant"])
+            participants, contracts, exact, bindings = [], [], [], {}
+            for item in participant_rows:
+                roles = [role for role, flag in (("source", item["is_source"]), ("target", item["is_target"])) if flag]
+                if not roles:
+                    raise ValueError("Approved participant has no role.")
+                participants.append({"participant": item["participant"], "table_id": item["table_id"], "roles": roles,
+                    "contract_version": item["contract_version"], "contract": json.loads(item["candidate_contract_json"])})
+                contracts.append({"participant": item["participant"], "definition": {
+                    "contract_id": item["contract_id"], "contract_version": item["contract_version"], "table_id": item["table_id"],
+                    "environment_name": item["contract_environment"], "status": item["contract_status"], "contract_payload_json": item["contract_payload_json"]}})
+                exact.append({"participant": item["participant"], "contract": {key: item[key] for key in ("contract_id", "contract_version", "payload_sha256")}})
+                bindings[item["table_id"]] = item["destination"]
+            candidate = {"format": "fabricops.pipeline-candidate.v1", "pipeline_id": data["pipeline_id"],
+                "project_configuration": json.loads(data.pop("project_configuration_json")), "participants": participants,
+                "operations": [{"operation": item["operation"], "configuration_sha256": item["configuration_sha256"],
+                                "configuration": json.loads(item["configuration_json"])} for item in data.pop("operations")],
+                "portable_fingerprint": data.pop("portable_fingerprint"), "physical_bindings": bindings, "exact_contract_payloads": exact}
+            manifest = {"format": "fabricops.activated-pipeline.v1", **{key: data[key] for key in ("pipeline_id", "pipeline_name", "pipeline_version", "testing_run_id")},
+                "environment_name": env, "candidate": candidate, "physical_bindings": bindings, "contracts": contracts}
+            for key in ("agreement", "testing_evidence", "warnings"):
+                manifest[key] = json.loads(data.pop(key + "_json"))
+            data.update(environment_name=env, is_active=True, manifest_json=canonical_candidate_json(manifest),
+                        **{key: _json_instants(value) for key, value in row.items() if key.startswith("_") and value is not None})
+            validate_manifest(data)
+            state["environments"][env]["history"][data["activated_pipeline_id"]] = data
+    for row in rows:
+        kind, env = row["record_type"], row["environment_name"]
+        data = row.get(kind)
+        if kind == "activation":
+            state["environments"][env]["pipelines"][data["pipeline_id"]] = state["environments"][env]["history"][data["activated_pipeline_id"]]
+        elif kind == "ownership":
+            table = dict(data)
+            table_id = table.pop("table_id")
+            table["readers"] = [item["pipeline_id"] for item in table["readers"]]
+            state["environments"][env]["tables"][table_id] = table
+        elif kind == "reservation":
+            run = dict(data)
+            run_id = run.pop("reservation_id")
+            run.pop("activated_pipeline_id")
+            run["tables"] = [item["table_id"] for item in run["tables"]]
+            if run["mode"] == "rebind":
+                run.pop("revision"); run.pop("destinations")
+            state["environments"][env]["runs"][run_id] = run
+        elif kind == "profiling_claim":
+            claim = {**_json_instants(data), "environment": env, "expires_at": _instant(data["expires_at"]).isoformat()}
+            if claim["completed_at"] is None:
+                del claim["completed_at"]
+            state.setdefault("profiling_claims", {})[claim["claim_key"]] = claim
+    # Re-encoding validates keys, parent links, allowed types, nulls, and exact
+    # participant sets through immutable manifest fingerprints and ownership.
+    encoded = activation_state_records(state, token=token, audit={})
+    if _json_instants(_record_content(encoded)) != _json_instants(_record_content(rows)) or authority["parent_id"] is not None or authority["environment_name"] is not None:
+        raise ValueError("Invalid activation record keys, parent links or content.")
+    return token, state
 
 
 def read_activation_state(*, context, spark_session=None):
-    """Read one atomic authority snapshot; missing or duplicate authority fails closed."""
-    row = exact_record(metadata_records(ACTIVATION_STATE_TABLE, context=context, spark_session=spark_session), authority_id="central")
-    state = json.loads(row["snapshot_json"])
-    if state.get("format") != "fabricops.activation-state.v1":
-        raise ValueError("Unsupported activation authority format.")
-    return row["token"], state
+    """Read and validate all records from one Delta snapshot of the authority."""
+    try:
+        return activation_state_from_records(metadata_records(ACTIVATION_STATE_TABLE, context=context, spark_session=spark_session))
+    except (KeyError, TypeError, AttributeError) as exc:
+        raise ValueError("Incomplete or corrupt activation authority records; inspect the canonical table.") from exc
 
 
 def environment_activation(state, environment):
@@ -255,12 +500,13 @@ def environment_activation(state, environment):
 
 
 def commit_activation_state(state, *, expected_token, context, spark_session=None):
-    """Compare-and-swap the existing singleton using one serializable Delta MERGE.
+    """Publish all typed records using one guarded Delta MERGE.
 
-    Setup creates the singleton with the table, never by racing first insertions.
-    Both activations and run reservations update this row. An overlapping update
+    Setup creates the central record with the table, never by racing first insertions.
+    Every transaction updates the central record as well as all domain records. An overlapping update
     conflicts in Delta or raises inside the MERGE. No automatic activation retry.
-    A lost acknowledgement is accepted only after exact token read-back.
+    A stale central token raises inside MERGE, rolling back unmatched inserts too.
+    A lost acknowledgement requires validated token and complete content read-back.
     """
     from delta.tables import DeltaTable
     from uuid import uuid4
@@ -268,25 +514,34 @@ def commit_activation_state(state, *, expected_token, context, spark_session=Non
     spark = get_spark_session(spark_session)
     _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", ACTIVATION_STATE_TABLE,
         metadata_table_physical_schema(config, ACTIVATION_STATE_TABLE), context=context)
-    spark.sql("ALTER TABLE delta.`" + path.replace("`", "``") + "` SET TBLPROPERTIES ('delta.isolationLevel' = 'Serializable')")
     token = str(uuid4())
-    row = {"authority_id": "central", "token": token, "snapshot_json": canonical_candidate_json(state),
-           **build_runtime_audit_fields(config=config, env=env, runtime_context=runtime)}
-    frame = spark.createDataFrame([coerce_metadata_row_types(ACTIVATION_STATE_TABLE, row)],
-                                  schema=metadata_table_schema_registry()[ACTIVATION_STATE_TABLE])
+    previous_token, previous = read_activation_state(context=context, spark_session=spark_session)
+    if previous_token != expected_token:
+        raise ValueError("Stale activation revision; refresh")
+    for environment, current in previous["environments"].items():
+        history = state["environments"].get(environment, {}).get("history", {})
+        if any(history.get(key) != value for key, value in current["history"].items()):
+            raise ValueError("Immutable approval history cannot be changed or removed.")
+    rows = activation_state_records(state, token=token,
+        audit=build_runtime_audit_fields(config=config, env=env, runtime_context=runtime))
+    # Validate lossless reconstruction before touching Delta.
+    _, reconstructed = activation_state_from_records(rows)
+    if _state_content(reconstructed) != _state_content(state):
+        raise ValueError("Activation records cannot losslessly represent the proposed authority.")
+    frame = spark.createDataFrame(rows, schema=metadata_table_schema_registry()[ACTIVATION_STATE_TABLE])
     expected = "'" + expected_token.replace("'", "''") + "'"
-    changes = {key: "source." + key for key in row if key != "authority_id"}
-    changes["token"] = f"CASE WHEN target.token = {expected} THEN source.token ELSE CAST(raise_error('Stale activation revision; refresh') AS STRING) END"
+    changes = {field.name: "source." + field.name for field in metadata_table_schema_registry()[ACTIVATION_STATE_TABLE].fields if field.name != "record_id"}
+    changes["token"] = f"CASE WHEN target.record_type != 'authority' OR target.token = {expected} THEN source.token ELSE CAST(raise_error('Stale activation revision; refresh') AS STRING) END"
     try:
         (DeltaTable.forPath(spark, path).alias("target")
-         .merge(frame.alias("source"), "target.authority_id = source.authority_id")
-         .whenMatchedUpdate(set=changes).execute())
+         .merge(frame.alias("source"), "target.record_id = source.record_id")
+         .whenMatchedUpdate(set=changes).whenNotMatchedInsertAll().whenNotMatchedBySourceDelete().execute())
     except Exception:
         observed, _state = read_activation_state(context=context, spark_session=spark_session)
-        if observed != token:
+        if observed != token or _state_content(_state) != _state_content(state):
             raise
     observed, _state = read_activation_state(context=context, spark_session=spark_session)
-    if observed != token:
+    if observed != token or _state_content(_state) != _state_content(state):
         raise RuntimeError("Activation state commit was not confirmed; refresh before retrying.")
     return token
 
@@ -319,7 +574,7 @@ def activation_impact(current, proposed):
     resulting = {**active, **proposed}
     mappings = {key: manifest_table_mappings(validate_manifest(row)) for key, row in resulting.items()}
     tables, blockers = {}, []
-    for pipeline_id, refs in mappings.items():
+    for pipeline_id, refs in sorted(mappings.items()):
         for table_id, ref in refs.items():
             identity = {key: ref[key] for key in ("contract_id", "contract_version", "payload_sha256")}
             table = tables.setdefault(table_id, {**identity, "destination": ref["destination"], "writer": None, "readers": []})
@@ -343,6 +598,11 @@ def activation_impact(current, proposed):
     changed = {key for key in set(old) | set(tables) if
                {field: old.get(key, {}).get(field) for field in ("contract_id", "contract_version", "payload_sha256", "writer", "destination")} !=
                {field: tables.get(key, {}).get(field) for field in ("contract_id", "contract_version", "payload_sha256", "writer", "destination")}}
+    # Conflicting consumers must not hide a changed producer mapping just because
+    # a different pipeline happened to be encountered first during reconstruction.
+    changed.update(table_id for refs in mappings.values() for table_id, ref in refs.items()
+                   if any(old.get(table_id, {}).get(field) != ref[field]
+                          for field in ("contract_id", "contract_version", "payload_sha256", "destination")))
     affected = {pipeline_id for pipeline_id, row in active.items()
                 if changed.intersection(manifest_table_mappings(validate_manifest(row)))}
     missing = affected - set(proposed)
@@ -379,7 +639,9 @@ def review_pipeline_release(requests, *, context, spark_session=None):
         for previous in current["history"].values():
             if previous["pipeline_id"] == pipeline_id and previous["pipeline_version"] == row["pipeline_version"] and previous["activated_pipeline_id"] != row["activated_pipeline_id"]:
                 raise ValueError("Pipeline version contents are immutable; choose a new version.")
-        proposed[pipeline_id] = row
+        # Reapproving the identical manifest reuses its original approval audit.
+        # A later review must never rewrite an immutable approved version.
+        proposed[pipeline_id] = current["history"].get(row["activated_pipeline_id"], row)
     if not proposed:
         raise ValueError("Select at least one successful Testing candidate.")
     report = activation_impact(current, proposed)

@@ -141,9 +141,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:229`
+`fabricops_kit/config/setup_metadata_tables.py:236`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L229-L640">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L236-L653">View on GitHub</a>
 </div>
 
 
@@ -266,6 +266,12 @@ because their schema differs. Processing continues for remaining metadata
 tables, and ``raise_on_failure=True`` raises only after all tables have
 been processed when failures exist.
 
+``METADATA_ACTIVATION_STATE`` requires typed domain records published by one
+central guarded transaction. Incompatible layouts require explicit stopped
+Preview recreation/reapproval or retained-history reconciliation; see
+``docs/maintainer/activation-state-records.md``. Obsolete differently named
+Activation State tables remain unused and do not block setup.
+
 Activation State and Pipeline Registry are seeded with their control row
 using error-if-exists creation; repeat initialization validates existing rows
 without replacing identity or approval history. A missing ordinary table is
@@ -286,7 +292,7 @@ their respective FabricOps workflows.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 34 |
+| Live-critical dependencies | 46 |
 
 ### Release history
 
@@ -299,14 +305,26 @@ their respective FabricOps workflows.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.activated_pipeline.shared._instant</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared._json_instants</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared._record_content</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared._record_id</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.activation_impact</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.activation_state_records</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.empty_activation_state</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.manifest_table_mappings</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_manifest</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
 <li><code>fabricops_kit.config.audit._context_get</code></li>
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
 <li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
 <li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_field</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_field_names</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>

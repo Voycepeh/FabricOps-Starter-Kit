@@ -112,6 +112,13 @@ AUDIT_SCHEMA_FIELDS = [
 ]
 
 
+# Shared physical binding shape; native fields remain queryable without JSON parsing.
+ACTIVATION_DESTINATION_FIELDS = [
+    ("workspace_id", "string", False), ("item_id", "string", False), ("kind", "string", False),
+    ("schema", "string"), ("table_name", "string", False),
+]
+
+
 def build_metadata_schema(table_name: str, fields: list[tuple[str, Any] | tuple[str, Any, bool]]) -> Any:
     """Build a typed Spark StructType for a metadata table."""
     try:
@@ -197,7 +204,12 @@ def build_metadata_schema(table_name: str, fields: list[tuple[str, Any] | tuple[
     for field in fields:
         name, kind = field[0], field[1]
         nullable = bool(field[2]) if len(field) >= 3 else True
-        data_type = ArrayType(build_metadata_schema(table_name + "." + name, kind), False) if isinstance(kind, list) else types[kind]
+        if isinstance(kind, dict):
+            data_type = build_metadata_schema(table_name + "." + name, kind["fields"])
+        elif isinstance(kind, list):
+            data_type = ArrayType(build_metadata_schema(table_name + "." + name, kind), False)
+        else:
+            data_type = types[kind]
         struct_fields.append(StructField(name, data_type, nullable))
     return StructType(struct_fields)
 
@@ -234,8 +246,53 @@ def metadata_table_schema_registry() -> dict[str, Any]:
         ),
         "METADATA_ACTIVATION_STATE": build_metadata_schema(
             "METADATA_ACTIVATION_STATE",
-            [("authority_id", "string", False), ("token", "string", False),
-             ("snapshot_json", "string", False), *audit],
+            [
+                ("record_id", "string", False), ("record_type", "string", False),
+                ("token", "string", False), ("environment_name", "string"), ("parent_id", "string"),
+                ("authority", {"fields": [("record_count", "long", False), ("content_sha256", "string", False)]}),
+                ("environment", {"fields": [("revision", "string", False)]}),
+                ("approval", {"fields": [
+                    ("pipeline_id", "string", False), ("activated_pipeline_id", "string", False),
+                    ("pipeline_name", "string", False), ("pipeline_version", "string", False),
+                    ("testing_run_id", "string", False), ("agreement_id", "string", False),
+                    ("agreement_version", "string", False), ("candidate_fingerprint", "string", False),
+                    ("portable_fingerprint", "string", False),
+                    ("project_configuration_json", "string", False),
+                    ("operations", [("operation", "string", False), ("configuration_sha256", "string", False),
+                                    ("configuration_json", "string", False)], False),
+                    ("agreement_json", "string", False), ("testing_evidence_json", "string", False),
+                    ("warnings_json", "string", False),
+                ]}),
+                ("activation", {"fields": [("pipeline_id", "string", False), ("activated_pipeline_id", "string", False)]}),
+                ("participant", {"fields": [
+                    ("participant", "string", False), ("table_id", "string", False),
+                    ("is_source", "boolean", False), ("is_target", "boolean", False),
+                    ("contract_id", "string", False), ("contract_version", "integer", False),
+                    ("payload_sha256", "string", False), ("contract_environment", "string", False),
+                    ("contract_status", "string", False),
+                    ("contract_payload_json", "string", False), ("candidate_contract_json", "string", False),
+                    ("destination", {"fields": ACTIVATION_DESTINATION_FIELDS}, False),
+                ]}),
+                ("ownership", {"fields": [
+                    ("table_id", "string", False), ("contract_id", "string", False),
+                    ("contract_version", "integer", False), ("payload_sha256", "string", False),
+                    ("writer", "string"), ("readers", [("pipeline_id", "string", False)], False),
+                    ("destination", {"fields": ACTIVATION_DESTINATION_FIELDS}, False),
+                ]}),
+                ("reservation", {"fields": [
+                    ("reservation_id", "string", False), ("pipeline_id", "string", False),
+                    ("mode", "string", False), ("revision", "string"), ("activated_pipeline_id", "string"),
+                    ("tables", [("table_id", "string", False)], False),
+                    ("destinations", ACTIVATION_DESTINATION_FIELDS),
+                ]}),
+                ("profiling_claim", {"fields": [
+                    ("claim_key", "string", False), ("token", "string", False), ("key", "string", False),
+                    ("table_id", "string", False), ("activity", "string", False), ("trigger", "string", False),
+                    ("execution_id", "string", False), ("expires_at", "timestamp", False),
+                    ("completed_at", "timestamp"),
+                    ("physical", {"fields": ACTIVATION_DESTINATION_FIELDS}, False),
+                ]}), *audit,
+            ],
         ),
         "METADATA_DATA_CATALOGUE": build_metadata_schema(
             "METADATA_DATA_CATALOGUE",

@@ -91,6 +91,13 @@ def _validate_existing_metadata_schema(
         existing = {name: None for name in getattr(existing_schema, "fieldNames", lambda: [])()}
     if table_name == "METADATA_DATA_PROFILED" and "frequency_json" in existing:
         raise ValueError("METADATA_DATA_PROFILED has unexpected legacy column: frequency_json.")
+    if table_name == "METADATA_ACTIVATION_STATE" and set(existing) != set(expected):
+        raise ValueError(
+            "Unsupported METADATA_ACTIVATION_STATE physical schema. Stop and drain executions, back up "
+            "approvals and reservations, then explicitly recreate and reapprove disposable Preview state "
+            "or reconcile retained authority; see docs/maintainer/activation-state-records.md. "
+            "Automatic additive evolution is unsafe."
+        )
     if table_name == "METADATA_PIPELINE_RUN" and (
         "operation_summary_json" in existing or "record_type" in existing or set(expected) - set(existing)
     ):
@@ -422,6 +429,12 @@ def setup_metadata_tables(
     tables, and ``raise_on_failure=True`` raises only after all tables have
     been processed when failures exist.
 
+    ``METADATA_ACTIVATION_STATE`` requires typed domain records published by one
+    central guarded transaction. Incompatible layouts require explicit stopped
+    Preview recreation/reapproval or retained-history reconciliation; see
+    ``docs/maintainer/activation-state-records.md``. Obsolete differently named
+    Activation State tables remain unused and do not block setup.
+
     Activation State and Pipeline Registry are seeded with their control row
     using error-if-exists creation; repeat initialization validates existing rows
     without replacing identity or approval history. A missing ordinary table is
@@ -470,10 +483,10 @@ def setup_metadata_tables(
                 initial_rows = []
                 if table_name == "METADATA_ACTIVATION_STATE":
                     from fabricops_kit.config.audit import build_runtime_audit_fields
-                    from fabricops_kit.activated_pipeline.shared import empty_activation_state
-                    initial_rows = [{"authority_id": "central", "token": "initial",
-                                     "snapshot_json": empty_activation_state(),
-                                     **build_runtime_audit_fields(config=normalized, env=env, runtime_context=context)}]
+                    from fabricops_kit.activated_pipeline.shared import empty_activation_state, activation_state_records
+                    import json
+                    initial_rows = activation_state_records(json.loads(empty_activation_state()), token="initial",
+                        audit=build_runtime_audit_fields(config=normalized, env=env, runtime_context=context))
                 if table_name == "METADATA_PIPELINE_REGISTRY":
                     from fabricops_kit.config.audit import build_runtime_audit_fields
                     initial_rows = [{"pipeline_id": "central", "environment_name": "*",

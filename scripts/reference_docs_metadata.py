@@ -141,10 +141,10 @@ METADATA_TABLE_MODELS = {
     },
     "METADATA_ACTIVATION_STATE": {
         "purpose": "Records which pipeline releases are approved to run Live in each environment, together with the agreements and approvals behind them.",
-        "grain": "One central record containing the approval and execution state for all environments.",
-        "implementation_notes": "Single atomic central authority for environment activation revisions, immutable approval history, table contracts, writer ownership, running execution reservations, transient notebook-rebind barriers and renewable profiling claims.",
-        "primary_key": ["authority_id"], "foreign_keys": [],
-        "relationships": [{"logical_entity": "Activated Pipeline", "cardinality": "1:N", "statement": "Each registered Pipeline UUID can have many immutable Activated Pipeline releases in the environment history. Activated Pipeline is a logical entity in snapshot_json, not a separate Delta table."},
+        "grain": "One typed approval, participant, ownership, revision or reservation record, published with central authority.",
+        "implementation_notes": "Single atomic central authority publishes authority, environment, approval, activation, participant, ownership, reservation and profiling_claim records with a central CAS token in one Delta MERGE. Native structs expose exact approval/participant/contract/binding identities, revisions, ownership and reservations; JSON retains authored configuration and frozen diagnostics only. Readers reject incomplete or corrupt publications. See the Activation State records maintainer guide for keys, nullability and Preview replacement instructions.",
+        "primary_key": ["record_id"], "foreign_keys": [],
+        "relationships": [{"logical_entity": "Activated Pipeline", "cardinality": "1:N", "statement": "Each registered Pipeline UUID can have many immutable Activated Pipeline releases in the environment history. Activated Pipeline approvals and their exact participants are typed records in the canonical authority table."},
                           {"logical_entity": "Live Pipeline Run", "cardinality": "1:N", "statement": "Each approved Activated Pipeline release authorizes many Live Pipeline Runs; registration alone never authorizes execution."}],
     },
     "METADATA_DATA_STEWARD": {

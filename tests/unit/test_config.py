@@ -423,10 +423,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
             self.pending_schema = None
 
         def createDataFrame(self, rows, schema=None):  # noqa: N802
-            assert rows == [] or rows[0].get("pipeline_id") == "central" or rows[0].get("authority_id") == "central" or (
-                rows[0].get("state_id") == "central" and json.loads(rows[0]["snapshot_json"]) == {
-                    "format": "fabricops.table-profiling.v1", "policies": {}, "history": {}}
-            )
+            assert rows == [] or rows[0].get("pipeline_id") == "central" or rows[0].get("record_id") == "central"
             self.pending_schema = schema
             self.pending_columns = schema.fieldNames()
             return DataFrame(self, self.pending_columns)
@@ -899,10 +896,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
 
     class Spark:
         def createDataFrame(self, rows, schema=None):  # noqa: N802
-            assert rows == [] or rows[0].get("pipeline_id") == "central" or rows[0].get("authority_id") == "central" or (
-                rows[0].get("state_id") == "central" and json.loads(rows[0]["snapshot_json"]) == {
-                    "format": "fabricops.table-profiling.v1", "policies": {}, "history": {}}
-            )
+            assert rows == [] or rows[0].get("pipeline_id") == "central" or rows[0].get("record_id") == "central"
             return Frame(schema)
 
     def read_table(table_name, **_kwargs):

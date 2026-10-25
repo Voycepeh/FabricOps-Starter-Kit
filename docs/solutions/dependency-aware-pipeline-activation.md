@@ -74,7 +74,7 @@ Testing evaluates without business publication by default. Explicit `testing_wri
     | [`tested_pipeline_manifest()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L85) | Revalidate a completed governed Testing run, exact frozen payloads, processing configuration, operation results, rule diagnostics and effective Data Agreement. |
     | [`review_pipeline_release()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L328) and [`activation_impact()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L277) | Compare the proposed release with active mappings. Discover affected readers/writers, missing replacement tests, contract and destination conflicts, and executions that must drain. Propagate requirements when replacement outputs change downstream expectations. |
     | [`approve_pipeline_release()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L362) | Require explicit Governance approval, revalidate every candidate and reject a stale review or any blocking conflict. |
-    | [`commit_activation_state()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L223) | Publish the complete authority snapshot with one serializable Delta compare-and-swap. Overlapping changes fail safely rather than partially updating pipeline and table approvals. |
+    | [`commit_activation_state()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py) | Publish all typed authority records with one guarded Delta MERGE. Overlapping changes fail safely rather than partially updating pipeline and table approvals. |
     | [`build_live_pipeline_plan()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L450) and [`verify_live_plan()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L492) | Resolve and reserve a pinned Live configuration, then enforce its Agreement, exact Data Contracts, table mappings and physical destinations during execution. |
 
     | Central metadata | What it supplies |
@@ -83,7 +83,7 @@ Testing evaluates without business publication by default. Explicit `testing_wri
     | [`METADATA_PIPELINE_RUN`](../reference/metadata/metadata_pipeline_run.md) | Whole-run completion, participants, exact contract mappings, Data Contract and processing configuration identity, operation outcomes and environment. |
     | [`METADATA_GUARDRAIL_RESULTS`](../reference/metadata/metadata_guardrail_results.md) | Rule-level diagnostics linked to the Testing run. |
     | [`METADATA_DATA_AGREEMENT`](../reference/metadata/metadata_data_agreement.md) | The exact effective Agreement selected for approval. |
-    | [`METADATA_ACTIVATION_STATE`](../reference/metadata/metadata_activation_state.md) | One authority snapshot containing environment revisions, active pipelines, contract/writer mappings, immutable approval history and running reservations. |
+    | [`METADATA_ACTIVATION_STATE`](../reference/metadata/metadata_activation_state.md) | Typed records for environment revisions, active pipelines, exact participants/contracts, writer mappings, immutable approval history and execution/profiling reservations, published atomically. |
 
 ??? info "Shared-table rules and safe cutover"
 

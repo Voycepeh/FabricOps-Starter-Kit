@@ -189,9 +189,9 @@ Run Ruff, targeted pytest, compile/import checks, strict MkDocs and affected gen
 
 ### Activation authority (governance)
 
-Investigate queryable `authority`, `approval`, `activation`, `participant`, and `reservation` records. The existing central `snapshot_json` and `token` are currently committed using Serializable Delta compare-and-swap, protecting approvals, writer ownership, activation revisions, and running/rebind reservations.
+Workstream E replaces `snapshot_json` with native `authority`, `environment`, `approval`, `activation`, `participant`, `ownership`, `reservation` and `profiling_claim` records in the same governance table. One guarded Delta MERGE publishes the entire set atomically, including unmatched child inserts and removals. Readers validate publication count/hash, tokens, keys, parents, exact frozen participants and ownership before reconstructing notebook results.
 
-**Required invariants:** approval publication is atomic; incomplete or stale revisions never become executable; Live runs pin the correct approved revision; writer ownership and rebind barriers are enforced; stale CAS conflicts fail closed; lost acknowledgement is recoverable. Multiple independent Delta writes are **not** an atomic replacement for the existing singleton. If the proposed typed-row layout cannot prove equivalent guarantees, retain the authority snapshot and improve only safe read/query projections.
+See [Activation State records](activation-state-records.md) for the exact physical model, reader/writer inventory, transaction proof, retained configuration/diagnostic JSON, Preview reset/reconciliation procedure and operational limits. Processing State and Pipeline Run schemas and recovery remain unchanged. No compatibility reader, dual write or automatic migration is introduced.
 
 ### Contract, Guardrail, and Access (governance / engineering)
 
@@ -215,8 +215,8 @@ Before a structural implementation PR, document for **every changed table**: old
 | A. Architecture and lifecycle audit | Merged | ChatGPT | [#1695](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1695) | Documentation baseline; no runtime changes |
 | B. Focused metadata reference fixes | Merged (initial fixes) | ChatGPT | [#1696](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1696); metadata explorer [#1692](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1692) | Additional fixes only when a concrete discrepancy is found |
 | C. Processing State redesign | Merged | Codex | [#1698](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1698) | Implemented `METADATA_PROCESSING_STATE`; keep its recovery protocol isolated |
-| D. Pipeline Run normalization | Implemented in open PR; review outstanding | Codex | [#1700](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1700); [implementation and migration](#pipeline-execution-engineering) | Includes merged #1697 and #1698; preserve finalized Test results; verified offline cutover required |
-| E. Activation authority redesign | Pending separate design proof | Codex | Related foundation [#1693](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1693); evidence change [#1697](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1697) merged | Keep authority CAS, approvals and reservations isolated from D; no unsafe split of the atomic authority snapshot |
+| D. Pipeline Run normalization | Merged | Codex | [#1700](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1700); [implementation and migration](#pipeline-execution-engineering) | Includes merged #1697 and #1698; preserve finalized Test results; verified offline cutover required |
+| E. Activation authority redesign | Implemented; review pending | Codex | Related foundation [#1693](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1693); evidence change [#1697](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1697) merged | See [typed records and transaction proof](activation-state-records.md); one central guarded publication, no independent child writes |
 | F. Contract/Guardrail/Access cleanup | Conditional / targeted prior work | ChatGPT for bounded fixes; otherwise Codex | Contract cleanup [#1649](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1649) and Guardrail integration [#1645](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1645) merged | Skip additional physical normalization without a demonstrated benefit |
 | G. Final integration/reference generation | Pending final review | Owner of affected source | After relevant backend work | Regenerate only artifacts directly affected by C–F; verify clean second generation |
 
@@ -234,7 +234,7 @@ Before a structural implementation PR, document for **every changed table**: old
 
 ## Decisions intentionally deferred to implementation audit
 
-Processing State is implemented on main; Pipeline Run implementation is documented above and remains under review in #1700. Remaining Activation State names, columns and record types are candidates, not approved physical contracts. Any further structural change requires a field-by-field schema and proof of benefit without weakening correctness. Multiple independent commits to one Delta table do not provide atomic publication of typed activation records.
+Processing State is implemented on main; Pipeline Run #1700 has merged. Activation State implementation and its reviewed deployment boundary are documented in [Activation State records](activation-state-records.md). Any further structural change requires a field-by-field schema and proof of benefit without weakening correctness. Multiple independent commits to one Delta table do not provide atomic publication of typed activation records.
 
 ## Retirement declarations and Live upgrade policy
 

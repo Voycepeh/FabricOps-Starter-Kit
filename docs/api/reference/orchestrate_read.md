@@ -140,7 +140,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 204 |
+| Live-critical dependencies | 215 |
 
 ### Release history
 
@@ -151,11 +151,22 @@ No related guides documented.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.activated_pipeline.shared._instant</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared._json_instants</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared._record_content</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared._record_id</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared._state_content</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared._validate_record_fields</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.activation_impact</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.activation_state_from_records</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.activation_state_records</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.commit_activation_state</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.empty_activation_state</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.environment_activation</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.manifest_table_mappings</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_activation_state</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
