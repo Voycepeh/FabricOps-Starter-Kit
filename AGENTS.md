@@ -25,7 +25,7 @@ Canonical operating guide for Codex and agent contributions in this repository. 
   - `METADATA_PIPELINE_RUN` stores one logical pipeline execution across all declared operations, candidate identity, status and safe failures, and the activated version for Live.
   - `METADATA_GUARDRAIL_RESULTS` stores Guardrail evaluation results and continuation decisions.
   - Guardrail results persist aggregate rule outcomes, not full failed business rows; `METADATA_GUARDRAIL_ROW_RESULTS` is not a canonical metadata table.
-  - `METADATA_SOURCE_OBSERVATION` stores source-state evidence and history used by incremental execution; successful watermark progress is stored on governed targets.
+  - `METADATA_PROCESSING_STATE` stores typed Processing State: source observations, accepted incremental checkpoints, accepted Source Drift baselines and target-specific publication receipts. Target markers verify publication before metadata progress is accepted.
 
 ## Canonical terminology and glossary
 

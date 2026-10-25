@@ -184,18 +184,20 @@ METADATA_TABLE_MODELS = {
         "primary_key": ["environment_name", "table_id", "column_id"],
         "foreign_keys": [],
         "relationships": [
-            {"cardinality": "1:N", "statement": "A Catalogue table identity can be referenced by many Profile, Lineage, Source Observation, Enrichment, Access and Guardrail rows over time."},
+            {"cardinality": "1:N", "statement": "A Catalogue table identity can be referenced by many Profile, Lineage, Processing State, Enrichment, Access and Guardrail rows over time."},
         ],
     },
-    "METADATA_SOURCE_OBSERVATION": {
-        "purpose": "Records what a pipeline observed about its sources and published targets, so it can track changes and resume incremental processing safely.",
-        "grain": "One recorded source or target state for a pipeline operation and its affected target.",
-        "implementation_notes": "Store source evidence observed by one logical pipeline for one governed target, including source_table_name and target_table_name captured for that observation. run_id joins METADATA_PIPELINE_RUN.run_id for planned executions; _activity_id retains the actual Fabric activity shared by different attempts. Legacy and standalone observations may have no run_id. observation_status=observed means the run captured the evidence but has not accepted it; observation_status=committed records accepted incremental progress, and drift_committed records the Source Drift baseline. Warehouse publication_observed and publication_committed rows store target-only retry receipts with empty source identity and no watermark; they also cover Full Read and source-free writes.",
-        "primary_key": ["observation_id", "partition_value", "observation_status"],
+    "METADATA_PROCESSING_STATE": {
+        "purpose": "Stores source observations, accepted checkpoints, Source Drift baselines and publication receipts so pipelines can resume and recover processing safely.",
+        "grain": "One source snapshot partition/header, source-to-target progress member, or exact target publication receipt.",
+        "implementation_notes": "record_type distinguishes source_observation, incremental_checkpoint, drift_baseline and publication_receipt. Only committed checkpoints and baselines are accepted progress. Each exact target publication has one typed receipt; source members reference it through publication_id and are acknowledged together in one Delta merge. Empty-source headers remain distinct from absent NULL/empty-string partitions. The metadata v2 maintainer guide documents the Preview cutover and recovery protocol.",
+        "primary_key": ["record_id"],
+
         "foreign_keys": [
-            {"local_field": "run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Planned source observations belong to the same logical pipeline attempt as run evidence; legacy and standalone observations may have no run record."},
-            {"local_field": "source_table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "The source identity consumed by the successful write; empty for target-only Warehouse publication receipts."},
-            {"local_field": "target_table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "The governed target whose successful write accepted the source state."},
+            {"local_field": "run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Planned records retain the originating logical run; standalone records may have no run record."},
+            {"local_field": "source_table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Observed source identity; null on target-only publication receipts. Physical sources can be observed before Catalogue registration."},
+            {"local_field": "target_table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Target whose verified publication accepts progress; null on unbound source observations."},
+            {"local_field": "publication_id", "referenced_table": "METADATA_PROCESSING_STATE", "referenced_field": "record_id", "cardinality": "N:1", "statement": "Target-specific publication_receipt referenced by checkpoints and baselines; the receipt uses its own record_id."},
         ],
         "relationships": [],
     },
@@ -272,7 +274,7 @@ METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
     "METADATA_DATA_PROFILED": ["orchestrate_read", "orchestrate_write", "profile_table"],
     "METADATA_DATA_PROFILED_FREQUENCY": ["orchestrate_read", "orchestrate_write", "profile_table"],
     "METADATA_DATA_LINEAGE": ["orchestrate_read", "orchestrate_write", "pipeline_read"],
-    "METADATA_SOURCE_OBSERVATION": ["orchestrate_read", "orchestrate_write"],
+    "METADATA_PROCESSING_STATE": ["orchestrate_read", "orchestrate_write", "pipeline_read"],
     "METADATA_GUARDRAIL_RESULTS": ["orchestrate_read", "orchestrate_write"],
     "METADATA_DATA_ACCESS": ["scan_workspace_access", "scan_onelake_access", "scan_sql_access"],
 }
@@ -285,7 +287,7 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_CONTRACT",
     "METADATA_ACTIVATION_STATE",
     "METADATA_DATA_CATALOGUE",
-    "METADATA_SOURCE_OBSERVATION",
+    "METADATA_PROCESSING_STATE",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
     "METADATA_DATA_LINEAGE",
@@ -530,7 +532,7 @@ METADATA_COLUMN_OWNERS = {
         "__default__": ["fabricops_kit.pipeline.shared.persist_pipeline_run"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
-    "METADATA_SOURCE_OBSERVATION": {
+    "METADATA_PROCESSING_STATE": {
         "__default__": [
             "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
             "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
@@ -544,8 +546,11 @@ METADATA_COLUMN_OWNERS = {
         "target_table_id": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
         "source_table_name": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
         "target_table_name": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
-        "observation_status": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
-        "publication_payload_json": ["fabricops_kit.pipeline.shared.stage_pipeline_write_observations", "fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
+        "record_id": ["fabricops_kit.pipeline.shared.capture_source_observation", "fabricops_kit.pipeline.shared._pipeline_write_state_records"],
+        "record_type": ["fabricops_kit.pipeline.shared.capture_source_observation", "fabricops_kit.pipeline.shared._pipeline_write_state_records"],
+        "status": ["fabricops_kit.pipeline.shared.capture_source_observation", "fabricops_kit.pipeline.shared._pipeline_write_state_records", "fabricops_kit.pipeline.shared._recover_completed_source_observations"],
+        "publication_id": ["fabricops_kit.pipeline.shared._pipeline_write_state_records"],
+        "publication_at": ["fabricops_kit.pipeline.shared._pipeline_write_state_records"],
     },
 }
 

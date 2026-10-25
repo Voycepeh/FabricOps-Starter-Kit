@@ -262,6 +262,7 @@ class BatchDouble:
     def __init__(self, dataframe, **kwargs):
         """Retain routing arguments without reading a physical target."""
         self.finalization_recovery = False
+        self.publication_snapshot = []
         self.input_rows = None
         self.dataframe = dataframe
         self.audit = kwargs["audit"]

@@ -36,15 +36,24 @@ def _row(*, target: str, maximum: str, committed_at: int = 1):
         "max_change_value": maximum,
         "content_fingerprint": f"hash-{maximum}",
         "is_present": True,
-        "observation_status": "committed",
+        "record_id": f"checkpoint-{target}-{maximum}",
+        "record_type": "incremental_checkpoint", "status": "committed",
         "_committed_at": datetime(2026, 1, committed_at, tzinfo=UTC),
     }
+
+
+def _receipt(target):
+    return {"record_id": f"publication-{target}", "record_type": "publication_receipt", "status": "staged",
+            "publication_id": f"publication-{target}", "publication_batch_id": "batch-a",
+            "publication_activity_id": "run-a", "publication_at": datetime(2026, 1, 1, tzinfo=UTC),
+            "publication_input_rows": 1, "publication_strategy": "append", "environment_name": "dev",
+            "target_table_id": target}
 
 
 def _current(maximum: str):
     return Frame([{
         **_row(target="", maximum=maximum),
-        "observation_status": "observed",
+        "record_type": "source_observation", "status": "observed",
         "partition_column": "watermark",
         "change_column": "watermark",
     }])
@@ -234,7 +243,7 @@ def test_timestamp_observation_uses_utc_instant_for_scope_and_metadata_round_tri
         "watermark_type": "timestamp",
         "partition_column": "modified_datetime",
         "change_column": "modified_datetime",
-        "observation_status": "observed",
+        "record_type": "source_observation", "status": "observed",
     }])
     result = shared.resolve_incremental_source_scope(
         source_table_id="source-orders", target_table_id="target-a", observation=current
@@ -256,9 +265,9 @@ def test_legacy_naive_timestamp_watermark_is_rejected_for_explicit_recovery(monk
         **_row(target="", maximum="2026-10-07T02:30:00.000000Z"),
         "partition_column": "modified_datetime",
         "change_column": "modified_datetime",
-        "observation_status": "observed",
+        "record_type": "source_observation", "status": "observed",
     }])
-    with pytest.raises(ValueError, match="no timezone.*explicitly migrate"):
+    with pytest.raises(ValueError, match="explicit type.*migrate"):
         shared.resolve_incremental_source_scope(
             source_table_id="source-orders", target_table_id="target-a", observation=current
         )
@@ -413,17 +422,17 @@ def test_next_activity_recovers_staged_progress_from_materialized_target(monkeyp
     """A new scheduled activity accepts durable prior evidence before scoping."""
     staged_a = {
         **_row(target="target-a", maximum="120"),
-        "observation_status": "observed",
         "_activity_id": "run-a",
-        "publication_payload_json": '{"batch_id":"batch-a","activity_id":"run-a","committed_at":"2026-01-01T00:00:00+00:00"}',
+        "record_type": "incremental_checkpoint", "status": "staged",
+        "publication_id": "publication-target-a",
     }
     staged_b = {
         **_row(target="target-b", maximum="90"),
-        "observation_status": "observed",
         "_activity_id": "run-a",
-        "publication_payload_json": '{"batch_id":"batch-a","activity_id":"run-a","committed_at":"2026-01-01T00:00:00+00:00"}',
+        "record_type": "incremental_checkpoint", "status": "staged",
+        "publication_id": "publication-target-b",
     }
-    history = [staged_a, staged_b]
+    history = [staged_a, staged_b, _receipt("target-a"), _receipt("target-b")]
     _configure_scope(monkeypatch, history)
     monkeypatch.setattr(
         shared, "build_runtime_audit_fields", lambda **kwargs: {"_activity_id": "run-b"}
@@ -458,7 +467,7 @@ def test_next_activity_recovers_staged_progress_from_materialized_target(monkeyp
     assert scope_a["after"] == "120"
     assert scope_a["through"] == "130"
     assert scope_b["first_run"] is True
-    assert {(row["target_table_id"], row["observation_status"]) for row in merged} == {
+    assert {(row["target_table_id"], row["status"]) for row in merged} == {
         ("target-a", "committed")
     }
 
@@ -492,7 +501,7 @@ def test_multiple_incremental_sources_are_staged_independently(monkeypatch):
         {
             **_row(target="", maximum="55"),
             "source_table_id": "source-payments",
-            "observation_status": "observed",
+            "record_type": "source_observation", "status": "observed",
             "partition_column": "watermark",
             "change_column": "watermark",
         }
@@ -570,10 +579,11 @@ def test_recovery_uses_validated_physical_target_without_catalogue(monkeypatch):
     """A staged successful target publication can recover without a contract."""
     history = [{
         **_row(target="target-a", maximum="120"),
-        "observation_status": "observed",
         "_activity_id": "run-a",
-        "publication_payload_json": '{"batch_id":"batch-a","activity_id":"run-a","committed_at":"2026-01-01T00:00:00+00:00"}',
+        "record_type": "incremental_checkpoint", "status": "staged",
+        "publication_id": "publication-target-a",
     }]
+    history.append(_receipt("target-a"))
     _configure_scope(monkeypatch, history)
     identity = {
         "table_id": "target-a", "store": "Silver", "schema": "demo",
@@ -601,7 +611,7 @@ def test_recovery_uses_validated_physical_target_without_catalogue(monkeypatch):
     )
     assert scope["after"] == "120"
     assert scope["first_run"] is False
-    assert [row["observation_status"] for row in merged] == ["committed"]
+    assert [row["status"] for row in merged] == ["committed", "committed"]
 
 
 def test_legacy_activity_only_staging_is_never_automatically_recovered(monkeypatch):
@@ -612,9 +622,8 @@ def test_legacy_activity_only_staging_is_never_automatically_recovered(monkeypat
     monkeypatch.setattr(shared, 'resolve_catalogue_table_identity', lambda *a, **kw: {'table_id': 'target-a'})
     monkeypatch.setattr(shared, '_physical_target_has_publication', lambda *a, **kw: pytest.fail('legacy evidence has no batch proof'))
     monkeypatch.setattr(shared, '_merge_source_observation_records', lambda records, **kw: None)
-    scope = shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('130'))
-    assert scope['first_run'] is True
-    assert 'after' not in scope
+    with pytest.raises(RuntimeError, match="Unsupported legacy"):
+        shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('130'))
 
 
 def test_newer_pending_read_is_rejected_without_replacing_checkpoint(monkeypatch):
@@ -655,7 +664,18 @@ def test_recovered_pending_state_does_not_block_new_data(monkeypatch):
     _configure_scope(monkeypatch, history)
     shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('12'))
     # Recovery or finalization accepted this pending state before the next Read.
-    history.append(_row(target='target-a', maximum='12'))
+    history.append({**_row(target='target-a', maximum='12'), 'partition_column': 'watermark', 'change_column': 'watermark'})
     scope = shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('16'))
     assert scope['after'] == '12'
     assert scope['through'] == '16'
+
+
+@pytest.mark.parametrize("field,value", [("change_column", "different_column"), ("watermark_type", "timestamp_ntz")])
+def test_pending_read_cannot_change_watermark_meaning_at_same_bounds(monkeypatch, field, value):
+    _configure_scope(monkeypatch, [])
+    key = ("dev", "run-1", "source-orders", "target-a")
+    pending = shared.observation_rows(_current("12"))
+    shared._PENDING_SOURCE_OBSERVATIONS[key] = pending
+    with pytest.raises(RuntimeError, match="already awaiting publication"):
+        shared._ensure_unambiguous_source_observation(key, [{**pending[0], field: value}])
+    assert shared._PENDING_SOURCE_OBSERVATIONS[key] == pending

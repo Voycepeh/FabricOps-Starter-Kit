@@ -665,15 +665,29 @@
     ]
   },
   {
+    "id": "processing-state",
+    "term": "processing state",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "Typed source observations, accepted checkpoints, Source Drift baselines and publication receipts.",
+    "long_definition": "METADATA_PROCESSING_STATE stores Processing State using record_type. Source capture is separate from accepted incremental progress and Source Drift baselines. Target publication receipts link the source records accepted atomically after physical verification.",
+    "preferred_usage": "Use Processing State for the four typed record responsibilities in METADATA_PROCESSING_STATE.",
+    "avoid_usage": "pipeline run or activation state when Processing State is meant",
+    "tooltip_labels": [
+      "Processing State",
+      "processing state"
+    ]
+  },
+  {
     "id": "source-observation",
     "term": "source observation",
     "aliases": [
       "source observations"
     ],
     "category": "FabricOps concepts",
-    "short_definition": "A recorded view of source state used as the baseline for Source Drift checks.",
-    "long_definition": "FabricOps compares the current source state with the latest committed observation for the same source, target, and environment. A new observation is committed only after the target write succeeds.",
-    "preferred_usage": "Use source observation for the persisted Source Drift baseline.",
+    "short_definition": "Captured source state used to evaluate incremental execution and Source Drift.",
+    "long_definition": "METADATA_PROCESSING_STATE distinguishes source_observation records from incremental_checkpoint, drift_baseline and publication_receipt records. Capturing an observation does not accept progress. Checkpoints and baselines become committed only after the corresponding target publication is verified.",
+    "preferred_usage": "Use source observation for captured source state; use drift_baseline for an accepted Source Drift baseline.",
     "avoid_usage": "profile when the drift baseline is specifically meant",
     "tooltip_labels": [
       "Source Observation",

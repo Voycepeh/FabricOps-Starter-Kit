@@ -32,7 +32,7 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_GUARDRAIL_RESULTS": "engineering",
         "METADATA_PIPELINE_RUN": "engineering",
         "METADATA_PIPELINE_REGISTRY": "engineering",
-        "METADATA_SOURCE_OBSERVATION": "engineering",
+        "METADATA_PROCESSING_STATE": "engineering",
     }
     assert set(GOVERNANCE_METADATA_TABLES).isdisjoint(ENGINEERING_METADATA_TABLES)
     assert set(GOVERNANCE_METADATA_TABLES) | set(ENGINEERING_METADATA_TABLES) == set(CANONICAL_METADATA_TABLES)
@@ -46,7 +46,7 @@ def test_physical_schema_resolution_uses_framework_ownership_config():
         engineering_metadata_schema = "observed"
 
     assert metadata_table_physical_schema(Config(), "METADATA_DATA_CONTRACT") == "approved"
-    assert metadata_table_physical_schema(Config(), "METADATA_SOURCE_OBSERVATION") == "observed"
+    assert metadata_table_physical_schema(Config(), "METADATA_PROCESSING_STATE") == "observed"
 
 
 def test_data_contract_uses_versioned_one_table_schema():
@@ -184,32 +184,39 @@ def test_stage2_lineage_schema_uses_pipeline_language():
 
 def test_stage2_source_observation_schema_is_guardrail_independent():
     """Persist reusable source evidence with the standard commit timestamp only."""
-    fields = metadata_table_schema_registry()["METADATA_SOURCE_OBSERVATION"].fieldNames()
+    fields = metadata_table_schema_registry()["METADATA_PROCESSING_STATE"].fieldNames()
     assert fields == [
+        "record_id",
+        "record_type",
+        "status",
         "observation_id",
         "run_id",
+        "pipeline_id",
         "source_table_id",
         "source_table_name",
         "target_table_id",
         "target_table_name",
         "environment_name",
+        "observed_at",
+        "accepted_at",
+        "partition_column",
+        "change_column",
+        "watermark_type",
         "partition_value",
         "row_count",
         "min_change_value",
         "max_change_value",
         "content_fingerprint",
         "is_present",
-        "observation_status",
-        "publication_payload_json",
+        "publication_id",
+        "publication_batch_id",
+        "publication_activity_id",
+        "publication_at",
+        "publication_input_rows",
+        "publication_strategy",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
-    assert {
-        "observed_at",
-        "metadata_table_key",
-        "guardrail_rule_version_id",
-        "partition_column",
-        "change_column",
-    }.isdisjoint(fields)
+    assert {"metadata_table_key", "guardrail_rule_version_id", "publication_payload_json", "observation_status"}.isdisjoint(fields)
 
 
 def test_source_consumption_is_not_a_separate_metadata_table():
@@ -287,3 +294,24 @@ def test_definition_tables_are_retired_but_results_remain():
     results = registry["METADATA_GUARDRAIL_RESULTS"].fieldNames()
     assert results[:3] == ["guardrail_result_id", "guardrail_rule_id", "guardrail_version"]
     assert {"contract_id", "contract_version", "result_payload_json"} <= set(results)
+
+
+def test_processing_state_legacy_schema_requires_deliberate_cutover():
+    """Even an empty old table must not be evolved into accepted v2 progress."""
+    import importlib
+    import pytest
+    from pyspark.sql.types import StructType, StructField, StringType
+    setup = importlib.import_module("fabricops_kit.config.setup_metadata_tables")
+    schema = metadata_table_schema_registry()["METADATA_PROCESSING_STATE"]
+    legacy = StructType([StructField("observation_id", StringType()), StructField("observation_status", StringType())])
+    for allow_missing in (True, False):
+        with pytest.raises(ValueError, match="Unsupported legacy.*reconcile"):
+            setup._validate_existing_metadata_schema("METADATA_PROCESSING_STATE", legacy, schema, allow_missing=allow_missing)
+    assert setup._validate_existing_metadata_schema("METADATA_PROCESSING_STATE", schema, schema) == []
+
+
+def test_processing_state_table_has_no_legacy_alias():
+    """Only the renamed table is canonical; release history does not grant an alias."""
+    registry = metadata_table_schema_registry()
+    assert "METADATA_PROCESSING_STATE" in registry
+    assert "METADATA_SOURCE_OBSERVATION" not in registry

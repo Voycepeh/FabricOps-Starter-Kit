@@ -147,6 +147,7 @@ def test_empty_source_capture_and_scope_preserve_accepted_progress(monkeypatch, 
     monkeypatch.setattr(shared, "resolve_lakehouse_table_location", lambda *a: ("orders", "dbo", "path"))
     monkeypatch.setattr(shared, "load_table_guardrail_rules", lambda *a, **k: [])
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **k: _audit())
+    monkeypatch.setattr(shared, "_merge_source_observation_records", lambda *a, **k: None)
     evidence = shared.capture_source_observation(
         table_id="source-orders", dataframe=spark_session.range(0).withColumnRenamed("id", "sequence"),
         incremental_columns=("sequence", "sequence"), source_identity=identity,

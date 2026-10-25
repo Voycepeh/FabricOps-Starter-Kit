@@ -158,7 +158,7 @@ The following records are committed by successful runs with approved **Live** pu
 | `METADATA_DATA_PROFILED` | Profile snapshots for each Full Read source snapshot and each published SCD target. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to those profile snapshots where applicable. |
 | `METADATA_DATA_LINEAGE` | The source and both target roles for this notebook pipeline. |
-| `METADATA_SOURCE_OBSERVATION` | Source-state observations associated with successful target publication where applicable. |
+| `METADATA_PROCESSING_STATE` | Typed source observations, checkpoints, Source Drift baselines and target publication receipts. |
 | `METADATA_GUARDRAIL_RESULTS` | Guardrail evaluation results when a selected Data Contract supplies executable Guardrails. |
 
 

@@ -40,11 +40,11 @@
 <text x="575.0" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_RUN</text>
 <title>Open metadata documentation: PIPELINE_RUN</title>
 </a>
-<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_source_observation/" target="_blank">
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_processing_state/" target="_blank">
 <rect x="815" y="423" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
 <path d="M819 423H1111Q1115 423 1115 427V460H815V427Q815 423 819 423Z" fill="#1168B6"/>
-<text x="965.0" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">SOURCE_OBSERVATION</text>
-<title>Open metadata documentation: SOURCE_OBSERVATION</title>
+<text x="965.0" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PROCESSING_STATE</text>
+<title>Open metadata documentation: PROCESSING_STATE</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_catalogue/" target="_blank">
 <rect x="1205" y="423" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>

@@ -35,6 +35,23 @@ def _table_column_names(table: Any) -> list[str]:
     return list(getattr(table, "columns", []) or [])
 
 
+def _reject_legacy_processing_state_table(*, schema, spark, context):
+    """Require an explicit cutover before the renamed Preview table is initialized."""
+    try:
+        read_lakehouse_table("METADATA_SOURCE_OBSERVATION", store="Metadata", schema=schema,
+                             spark_session=spark, context=context)
+    except Exception as exc:
+        if not is_table_not_found_error(exc):
+            raise RuntimeError(f"Unable to check the legacy Processing State table: {exc}") from exc
+    else:
+        raise ValueError(
+            "Legacy METADATA_SOURCE_OBSERVATION exists. Stop writers, archive and reconcile its progress, "
+            "then explicitly migrate/rename or reset it as METADATA_PROCESSING_STATE before setup. "
+            "No compatibility alias or automatic empty replacement is created. "
+            "See docs/maintainer/metadata-v2-target-model.md#processing-state-upgrade."
+        )
+
+
 def _validate_existing_metadata_schema(
     table_name: str,
     existing_schema: Any,
@@ -49,6 +66,16 @@ def _validate_existing_metadata_schema(
         existing = {name: None for name in getattr(existing_schema, "fieldNames", lambda: [])()}
     if table_name == "METADATA_DATA_PROFILED" and "frequency_json" in existing:
         raise ValueError("METADATA_DATA_PROFILED has unexpected legacy column: frequency_json.")
+    if table_name == "METADATA_PROCESSING_STATE" and (
+        "observation_status" in existing or "publication_payload_json" in existing
+        or set(expected) - set(existing)
+    ):
+        raise ValueError(
+            "Unsupported legacy METADATA_PROCESSING_STATE schema. Stop writers, archive and reconcile "
+            "publication progress, then explicitly migrate or reset this Preview table; "
+            "see docs/maintainer/metadata-v2-target-model.md#processing-state-upgrade. "
+            "Automatic additive evolution is unsafe."
+        )
     missing = [name for name in expected if name not in existing]
     mismatches: list[str] = []
     for name, expected_field in expected.items():
@@ -279,7 +306,7 @@ def setup_metadata_tables(
     ``METADATA_ACTIVATION_STATE``, ``METADATA_PIPELINE_REGISTRY``, ``METADATA_PIPELINE_RUN``,
     ``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
     ``METADATA_DATA_PROFILED_FREQUENCY``, ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
-    ``METADATA_GUARDRAIL_RESULTS``, and ``METADATA_SOURCE_OBSERVATION``.
+    ``METADATA_GUARDRAIL_RESULTS``, and ``METADATA_PROCESSING_STATE``.
 
     Of that inventory, ``METADATA_DATA_CATALOGUE``,
     ``METADATA_DATA_PROFILED``, ``METADATA_DATA_PROFILED_FREQUENCY``, and
@@ -334,6 +361,11 @@ def setup_metadata_tables(
     ``_workspace_id``, ``_workspace_name``, ``_notebook_id``,
     ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
+    The Preview Processing State table is named ``METADATA_PROCESSING_STATE``.
+    Setup rejects the legacy ``METADATA_SOURCE_OBSERVATION`` physical name,
+    including when the new table also exists. Reconcile and explicitly migrate
+    or reset the old table before setup; no alias or empty replacement is created.
+
     Existing tables are validated by canonical column name and compatible
     Spark data type. Physical Spark/Delta nullability is intentionally not
     compared or migrated. Missing canonical columns are added automatically
@@ -381,6 +413,8 @@ def setup_metadata_tables(
         resolved_metadata_schema = metadata_table_physical_schema(normalized, table_name)
         try:
             created = False
+            if table_name == "METADATA_PROCESSING_STATE":
+                _reject_legacy_processing_state_table(schema=resolved_metadata_schema, spark=spark, context=context)
             try:
                 table = read_lakehouse_table(
                     table_name, store="Metadata", schema=resolved_metadata_schema, spark_session=spark, context=context

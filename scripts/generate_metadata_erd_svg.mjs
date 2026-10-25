@@ -13,8 +13,8 @@ function renderMetadataSvg(layout, models) {
     ["ACTIVATION_STATE","PIPELINE_RUN","","logical","M900 253V356H575V423",[900,253],[575,423],"Approved Activated Pipeline releases authorize Live runs"],
     ["DATA_CATALOGUE","DATA_CONTRACT","1:N","physical","M1355 423V253",[1355,423],[1355,253],"Catalogue table to contract versions"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1:N","physical","M425 515H335",[425,515],[335,515],"Pipeline run to recorded guardrail outcomes"],
-    ["PIPELINE_RUN","SOURCE_OBSERVATION","1:N","physical","M725 504H815",[725,504],[815,504],"Pipeline run to source and publication observations"],
-    ["DATA_CATALOGUE","SOURCE_OBSERVATION","1:N","physical","M1205 545H1115",[1205,545],[1115,545],"Catalogue table to source and target observations"],
+    ["PIPELINE_RUN","PROCESSING_STATE","1:N","physical","M725 504H815",[725,504],[815,504],"Pipeline run to typed processing state"],
+    ["DATA_CATALOGUE","PROCESSING_STATE","1:N","physical","M1205 545H1115",[1205,545],[1115,545],"Catalogue table to source and target processing state"],
     ["PIPELINE_REGISTRY","PIPELINE_RUN","1:N","physical","M575 675V598",[575,675],[575,598],"Registered pipeline to its execution history"],
     ["DATA_CATALOGUE","DATA_PROFILED","1:N","physical","M1250 598V902H575V995",[1250,598],[575,995],"Catalogue table to column statistics"],
     ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","","logical","M1290 598V877H185V995",[1290,598],[185,995],"Catalogue column to frequency observations"],
@@ -58,12 +58,17 @@ function renderMetadataSvg(layout, models) {
   const named=Object.keys(models);
   if(named.length!==13||found.size!==named.length)throw Error("Canonical model / visual layout changed. Review placements for "+named.filter(n=>!found.has(n)).join(", "));
   for(const row of routes){if(!found.has(row[0])||!found.has(row[1]))throw Error("Unknown relationship table");if(row[0]===row[1])throw Error("Self-referential 1:N connector would be misleading: "+row[0]);}
-  // Every canonical physical FK requires a visible connector; logical links
+  // Every canonical cross-table physical FK requires a visible connector; logical links
   // are also deliberate and carry explanatory SVG <title> tooltips.
   const edgeSet=new Set(routes.map(r=>[r[0],r[1]].sort().join("|")));
   for(const [name,model] of Object.entries(models)){
     for(const fk of model.foreign_keys||[]){
       const target=fk.referenced_table.replace(/^METADATA_/,"");
+      // Same-table record references appear in the box's FK fields, not as cross-table connectors.
+      if(target===name){
+        if(!(model.primary_key||[]).includes(fk.referenced_field))throw Error("Invalid same-table record reference: "+name);
+        continue;
+      }
       if(!edgeSet.has([name,target].sort().join("|")))throw Error("Missing FK connector: "+name+" -> "+target);
     }
   }

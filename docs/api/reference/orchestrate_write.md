@@ -144,7 +144,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 222 |
+| Live-critical dependencies | 229 |
 
 ### Release history
 
@@ -280,12 +280,18 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._parse_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared._parse_rule_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared._persist_grain_candidates</code></li>
+<li><code>fabricops_kit.pipeline.shared._physical_target_has_publication</code></li>
+<li><code>fabricops_kit.pipeline.shared._pipeline_write_state_records</code></li>
 <li><code>fabricops_kit.pipeline.shared._portable_candidate_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._portable_contract_payload</code></li>
 <li><code>fabricops_kit.pipeline.shared._previous_source_target_observation</code></li>
+<li><code>fabricops_kit.pipeline.shared._processing_state_id</code></li>
+<li><code>fabricops_kit.pipeline.shared._processing_state_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_snapshot_id</code></li>
+<li><code>fabricops_kit.pipeline.shared._publication_receipt</code></li>
+<li><code>fabricops_kit.pipeline.shared._recover_completed_source_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared._replace_frequency_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._replace_snapshot_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
@@ -305,15 +311,16 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._upsert_catalogue_identities</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_token_mapping</code></li>
+<li><code>fabricops_kit.pipeline.shared._validated_observation_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_frequency_query</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_percentile_query</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_profile_dataframes</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_profile_key_candidates</code></li>
-<li><code>fabricops_kit.pipeline.shared._warehouse_publication_record</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_statistical_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_statistical_query</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_type_name</code></li>
+<li><code>fabricops_kit.pipeline.shared._watermark_timestamp</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_pipeline_audit_fields</code></li>

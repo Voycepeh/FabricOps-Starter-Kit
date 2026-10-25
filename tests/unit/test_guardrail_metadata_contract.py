@@ -68,22 +68,35 @@ _ROW_RESULT_COLUMNS = [
     *_AUDIT_COLUMNS,
 ]
 
-_SOURCE_OBSERVATION_COLUMNS = [
+_PROCESSING_STATE_COLUMNS = [
+    "record_id",
+    "record_type",
+    "status",
     "observation_id",
     "run_id",
+    "pipeline_id",
     "source_table_id",
     "source_table_name",
     "target_table_id",
     "target_table_name",
     "environment_name",
+    "observed_at",
+    "accepted_at",
+    "partition_column",
+    "change_column",
+    "watermark_type",
     "partition_value",
     "row_count",
     "min_change_value",
     "max_change_value",
     "content_fingerprint",
     "is_present",
-    "observation_status",
-    "publication_payload_json",
+    "publication_id",
+    "publication_batch_id",
+    "publication_activity_id",
+    "publication_at",
+    "publication_input_rows",
+    "publication_strategy",
     *_AUDIT_COLUMNS,
 ]
 
@@ -303,7 +316,7 @@ def test_guardrail_result_writer_rejects_per_rule_execution_overrides(
 
 
 def test_source_observation_uses_standard_audit_timestamp_only() -> None:
-    """Source Observation no longer duplicates _committed_at as observed_at."""
-    assert _field_names("METADATA_SOURCE_OBSERVATION") == _SOURCE_OBSERVATION_COLUMNS
-    assert "observed_at" not in _SOURCE_OBSERVATION_COLUMNS
-    assert "_committed_at" in _SOURCE_OBSERVATION_COLUMNS
+    """Capture and acceptance retain distinct lifecycle timestamps."""
+    assert _field_names("METADATA_PROCESSING_STATE") == _PROCESSING_STATE_COLUMNS
+    assert "observed_at" in _PROCESSING_STATE_COLUMNS
+    assert "_committed_at" in _PROCESSING_STATE_COLUMNS
