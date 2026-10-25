@@ -1,6 +1,6 @@
 # Metadata v2: target model and migration boundaries
 
-**Status:** Processing State implemented; Pipeline Run and Activation State directions remain proposals.
+**Status (2026-10-25):** Processing State implemented by [#1698](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1698); Pipeline Run normalization and Activation State physical redesign remain proposals. The separately tracked [#1697](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1697) changes how finalized Test evidence is committed for activation, and must be reconciled before Workstream D changes the Pipeline Run storage contract.
 
 ## Goal and constraints
 
@@ -119,17 +119,17 @@ Before a structural implementation PR, document for **every changed table**: old
 
 ## Implementation workstreams and sequencing
 
-| Workstream | Executor | Dependencies | Merge boundary |
-| --- | --- | --- | --- |
-| A. Architecture and lifecycle audit (this document) | ChatGPT | latest main | Documentation only |
-| B. Focused metadata reference fixes | ChatGPT | A | Small generator/source or docs PR; no schema change |
-| C. Processing State redesign | Codex | A; writer/reader inventory | Self-contained backend PR, targeted Delta recovery tests |
-| D. Pipeline Run normalization | Codex | A; run/finalization inventory | Separate backend PR, targeted persistence tests |
-| E. Activation authority redesign | Codex | A; concurrency design proof | Isolated PR with persisted Delta CAS/conflict tests |
-| F. Contract/Guardrail/Access cleanup | ChatGPT for bounded fixes, otherwise Codex | A; demonstrated benefit | Skip if no justified change |
-| G. Final integration/reference generation | Appropriate owner of affected source | C–F | Only directly affected artifacts |
+| Workstream | Status at 2026-10-25 | Executor | PR / handoff | Dependencies and merge boundary |
+| --- | --- | --- | --- | --- |
+| A. Architecture and lifecycle audit | Merged | ChatGPT | [#1695](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1695) | Documentation baseline; no runtime changes |
+| B. Focused metadata reference fixes | Merged (initial fixes) | ChatGPT | [#1696](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1696); metadata explorer [#1692](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1692) | Additional fixes only when a concrete discrepancy is found |
+| C. Processing State redesign | Merged | Codex | [#1698](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1698) | Implemented `METADATA_PROCESSING_STATE`; keep its recovery protocol isolated |
+| D. Pipeline Run normalization | Pending implementation | Codex | [Workstream D handoff](pipeline-run-normalization-handoff.md) | Branch from latest `main` after reconciling [#1697](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1697); separate backend PR with persisted-Delta tests |
+| E. Activation authority redesign | Pending separate design proof | Codex | Related foundation [#1693](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1693); evidence change [#1697](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1697) open | Keep authority CAS, approvals and reservations isolated from D; no unsafe split of the atomic authority snapshot |
+| F. Contract/Guardrail/Access cleanup | Conditional / targeted prior work | ChatGPT for bounded fixes; otherwise Codex | Contract cleanup [#1649](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1649) and Guardrail integration [#1645](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1645) merged | Skip additional physical normalization without a demonstrated benefit |
+| G. Final integration/reference generation | Pending final review | Owner of affected source | After relevant backend work | Regenerate only artifacts directly affected by C–F; verify clean second generation |
 
-C and D may be developed in parallel on separate branches **only** if shared `metadata_schemas.py`, setup logic, and reference generation are coordinated. Prefer a tiny shared foundation PR or a sequential merge/rebase to competing edits. Keep E isolated.
+**Coordination:** C has merged, so D should use the latest canonical metadata schema rather than develop against pre-#1698 assumptions. #1697 is open and currently overlaps D's Test-evidence readers/writers; merge/rebase and reconcile it first. D must preserve durable finalized Test evidence for activation. D and E remain separate implementation PRs; do not split the atomic Activation State authority while working on Pipeline Run. A merged PR denotes merged scope, **not** a claim that live Microsoft Fabric deployment validation has completed.
 
 ## Acceptance tests
 
