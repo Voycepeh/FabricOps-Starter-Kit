@@ -101,6 +101,10 @@ Discontinued callables do not imply current support. Preserve historical behavio
 
 When breaking cleanup is authorized, do not add compatibility layers unless requested. Clearly identify every changed public contract in the PR summary.
 
+## Supported Live metadata upgrades
+
+Preserve supported Live metadata tables and their existing rows. Compatible additive columns may be applied automatically without replacing data. An approved Live column removal, rename or type change must ship with an explicit, tested automatic migration that preserves required data, validates results, supports safe repeated execution and defines a rollback boundary. Do not require users to drop/rebuild supported Live tables or guess conversions. No hypothetical conversions should be implemented ahead of an approved change.
+
 ## Function architecture
 
 - Public functions use non-underscore names and are notebook-facing or user-facing entrypoints.

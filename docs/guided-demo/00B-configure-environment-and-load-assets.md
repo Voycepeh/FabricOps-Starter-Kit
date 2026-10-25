@@ -126,7 +126,13 @@ In the Governance workspace, set `INITIALIZE_METADATA = True` and run `00_env_co
 
 ![Setup Metadata Tables](../assets/00B/00_config_metadata_tables_setup_code.png)
 
-This prepares the metadata Lakehouse before `01_governance` starts creating Data Stewards, Data Agreements, and later Data Contracts. Authored Enrichment and Guardrails live in `METADATA_DATA_CONTRACT.contract_payload_json`; separate definition tables are no longer setup requirements. Existing installations should follow the [report-first migration instructions](03-author-and-freeze-data-contract.md#manifest-freeze) before resuming authoring. Setup never deletes old physical tables.
+This prepares the metadata Lakehouse before `01_governance` starts creating Data Stewards, Data Agreements, and later Data Contracts. Authored Enrichment and Guardrails live in `METADATA_DATA_CONTRACT.contract_payload_json`; separate definition tables are no longer setup requirements. Existing installations should follow the [report-first migration instructions](03-author-and-freeze-data-contract.md#manifest-freeze) before resuming authoring.
+
+Fresh metadata and demo targets can start normally. Retired Preview tables may remain and produce advisory alerts in `setup_metadata_tables()["warnings"]`; only `verbose=True` prints them. Setup does not migrate or delete their data.
+
+??? info "Existing metadata and populated targets"
+
+    Preserve required definitions, progress or history before cleanup; use the [maintainer cutover guidance](../maintainer/metadata-v2-target-model.md#processing-state-upgrade) for explicit mapping/migration or a deliberate target rebuild/replay. Existing populated targets still require valid operational progress; an empty Processing State table does not make incremental continuation safe. Supported Live tables and rows are preserved, with compatible additive evolution; structural changes require supported migrations when introduced.
 
 ![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
 

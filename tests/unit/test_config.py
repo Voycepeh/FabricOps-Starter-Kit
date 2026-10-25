@@ -1732,37 +1732,3 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
     assert "blacklist" in business_prompt
     assert "regular expression" in business_prompt
     assert "only when none of those structured patterns" in business_prompt
-
-
-@pytest.mark.parametrize("canonical_exists", [False, True])
-def test_processing_state_rename_never_discards_legacy_progress(monkeypatch, canonical_exists):
-    """An old physical table blocks setup, including when the new table already exists."""
-    from importlib import import_module
-    from types import SimpleNamespace
-    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-    setup_module = import_module("fabricops_kit.config.setup_metadata_tables")
-    registry = metadata_table_schema_registry()
-    routes, writes = [], []
-
-    class Frame:
-        def __init__(self, schema):
-            self.schema = schema
-        def where(self, _expr): return self
-        def limit(self, _value): return self
-        def take(self, _value): return []
-
-    def read(name, **kwargs):
-        routes.append((name, kwargs["store"], kwargs["schema"]))
-        if name == "METADATA_SOURCE_OBSERVATION":
-            return SimpleNamespace(columns=["observation_status"], collect=lambda: [{"observation_status": "committed"}])
-        if name == "METADATA_PROCESSING_STATE" and not canonical_exists:
-            raise RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")
-        return Frame(registry[name])
-
-    monkeypatch.setattr(setup_module, "read_lakehouse_table", read)
-    monkeypatch.setattr(setup_module, "write_lakehouse_table", lambda *args, **kw: writes.append((args, kw)))
-    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
-    assert result["failed_tables"] == ["METADATA_PROCESSING_STATE"]
-    assert "explicitly migrate/rename or reset" in result["table_results"]["METADATA_PROCESSING_STATE"]["message"]
-    assert ("METADATA_SOURCE_OBSERVATION", "Metadata", "engineering") in routes
-    assert writes == []
