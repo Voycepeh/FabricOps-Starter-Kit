@@ -29,14 +29,14 @@ via `pipeline_id` + `environment_name`
 
 **Activated Pipeline (logical entity; 1 → N):** One registered Pipeline UUID has many immutable releases inside governance.METADATA_ACTIVATION_STATE; Activated Pipeline is a logical entity, not a separate Delta table.
 
-**Implementation details:** Permanent UUIDv4 identity and environment-specific notebook bindings; registration never authorizes Live. A seeded Authority control row serializes binding transactions in this same table.
+**Implementation details:** Permanent UUIDv4 identity and environment-specific notebook bindings; registration never authorizes Live. A seeded Authority control row serializes binding transactions in this same table. registered_at and registered_by retain the original registration; _committed_at and _committed_by record the latest binding mutation.
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 18 |
-| Business columns | 10 |
+| Total columns | 17 |
+| Business columns | 9 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -50,7 +50,6 @@ via `pipeline_id` + `environment_name`
 | `notebook_name` | `string` | Informational notebook display name; never used for identity matching or execution eligibility. |
 | `registered_at` | `timestamp` | Timestamp when this environment binding was first registered; preserved by rebinding. |
 | `registered_by` | `string` | Principal that first registered this environment binding; preserved by rebinding. |
-| `updated_at` | `timestamp` | Timestamp of the most recent notebook binding or informational name update. |
 | `registration_status` | `string` | Active or Retired for pipeline bindings; Authority identifies the single serialization control row. |
 | `registry_token` | `string` | Compare-and-swap token updated with each binding mutation in the same Serializable Delta transaction. |
 | `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |

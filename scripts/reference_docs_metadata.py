@@ -125,7 +125,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_PIPELINE_REGISTRY": {
         "purpose": "Keeps a permanent ID for each pipeline and records which notebook represents it in each environment. Renaming or promoting a notebook does not change the pipeline's identity.",
         "grain": "One pipeline registration per environment, plus one technical control row used to coordinate registration.",
-        "implementation_notes": "Permanent UUIDv4 identity and environment-specific notebook bindings; registration never authorizes Live. A seeded Authority control row serializes binding transactions in this same table.",
+        "implementation_notes": "Permanent UUIDv4 identity and environment-specific notebook bindings; registration never authorizes Live. A seeded Authority control row serializes binding transactions in this same table. registered_at and registered_by retain the original registration; _committed_at and _committed_by record the latest binding mutation.",
         "primary_key": ["pipeline_id", "environment_name"], "foreign_keys": [],
         "relationships": [
             {"related_table": "METADATA_PIPELINE_RUN", "fields": ["pipeline_id", "environment_name"], "cardinality": "1:N", "statement": "One environment registration has many Pipeline Runs."},
@@ -2120,7 +2120,7 @@ def related_guides(symbol_name: str) -> list[dict[str, str]]:
 METADATA_TABLE_PURPOSES["METADATA_PIPELINE_REGISTRY"] = METADATA_TABLE_MODELS["METADATA_PIPELINE_REGISTRY"]["purpose"]
 METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"] = {
     name: ["fabricops_kit.pipeline.shared.commit_pipeline_registration", "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"]
-    for name in ("pipeline_id", "environment_name", "workspace_id", "notebook_id", "notebook_name", "registered_at", "registered_by", "updated_at", "registration_status", "registry_token")
+    for name in ("pipeline_id", "environment_name", "workspace_id", "notebook_id", "notebook_name", "registered_at", "registered_by", "registration_status", "registry_token")
 }
 METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"]["__audit__"] = ["fabricops_kit.config.audit.build_runtime_audit_fields"]
 

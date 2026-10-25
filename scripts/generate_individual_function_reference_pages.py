@@ -216,7 +216,7 @@ PIPELINE_REGISTRY_FIELD_DESCRIPTIONS = {
     "notebook_name": "Informational notebook display name; never used for identity matching or execution eligibility.",
     "registered_at": "Timestamp when this environment binding was first registered; preserved by rebinding.",
     "registered_by": "Principal that first registered this environment binding; preserved by rebinding.",
-    "updated_at": "Timestamp of the most recent notebook binding or informational name update.",
+    # Latest update time is supplied by the shared _committed_at audit description.
     "registration_status": "Active or Retired for pipeline bindings; Authority identifies the single serialization control row.",
     "registry_token": "Compare-and-swap token updated with each binding mutation in the same Serializable Delta transaction.",
 }

@@ -51,9 +51,12 @@ def test_new_uuid_recovers_even_when_execution_stops_before_saving(registry):
 def test_supplied_uuid_and_rename_preserve_identity(registry):
     context, rows, *_ = registry
     identity = str(uuid4())
-    shared.resolve_pipeline_registration(identity, context=context)
+    original = shared.resolve_pipeline_registration(identity, context=context)
     row = shared.resolve_pipeline_registration(identity, context={**context, 'notebook_name': 'Any new name'})
     assert row['pipeline_id'] == identity and rows[0]['notebook_name'] == 'Any new name'
+    assert rows[0]['registered_at'] == original['registered_at']
+    assert rows[0]['registered_by'] == original['registered_by']
+    assert 'updated_at' not in rows[0]
 
 
 @pytest.mark.parametrize('identity', ['orders', '', None, 'not-a-uuid', '00000000-0000-1000-8000-000000000000'])
