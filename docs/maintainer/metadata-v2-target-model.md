@@ -97,7 +97,7 @@ Preserve the behavioral guarantees while changing where configuration lives:
 
 `scripts/migrate_pipeline_runs.py`, already on main, converts only the older `operation_summary_json` layout into the current #1700 schema. It requires a stopped deployment, pinned source Delta version, matching package and a separate unused destination. It validates complete logical reconstruction and refuses ambiguous identities or invented successful outcomes. It does not convert #1704 or the proposed joint model.
 
-For an operator deliberately upgrading only to the #1700 baseline, the [version-pinned conversion and rollout procedure](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/5c80587930ea127e22b0dc739406c9c74a393c23/docs/maintainer/metadata-v2-target-model.md#offline-conversion-and-rollout) retains the exact command, validation and rollback steps. For the replacement model, use the [joint rollout policy](#joint-redesign-rollout-and-reset-policy); do not extend that converter merely to preserve disposable Preview history.
+For an operator deliberately upgrading only to the #1700 baseline, [PR #1700](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1700) retains the reviewed conversion, validation and rollback history. For the replacement model, use the [joint rollout policy](#joint-redesign-rollout-and-reset-policy); do not extend that converter merely to preserve disposable Preview history.
 
 ### Activation authority (governance)
 
