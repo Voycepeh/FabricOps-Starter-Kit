@@ -71,7 +71,7 @@ def _validate_existing_metadata_schema(
     ):
         raise ValueError(
             "Unsupported METADATA_PIPELINE_RUN physical schema. Stop writers, back up run history, "
-            "and perform the verified offline conversion in docs/maintainer/pipeline-run-normalization.md. "
+            "and perform the verified offline conversion in docs/maintainer/metadata-v2-target-model.md#pipeline-execution-engineering. "
             "Automatic additive evolution is unsafe."
         )
     if table_name == "METADATA_PROCESSING_STATE" and (
