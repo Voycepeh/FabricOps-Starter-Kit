@@ -48,7 +48,7 @@
       This is where the engineering implementation is built and validated. Its `00_env_config` resolves its workspace ID to Development Lakehouses, Warehouses, schemas, and other Fabric object paths. `02_pipeline` reads and profiles data, applies transformations and audit columns, validates Guardrails, writes outputs, and records engineering metadata.
 
     - **Engineering Production Workspace**
-      Runs the same validated `02_pipeline` using Production configuration. Its `00_env_config` resolves its workspace ID to the equivalent Production Lakehouses, Warehouses, schemas, and Fabric object paths, while the pipeline resolves the exact Activated Pipeline manifest and produces governed Production outputs.
+      Runs the same validated `02_pipeline` using Production configuration. Its `00_env_config` resolves its workspace ID to the equivalent Production Lakehouses, Warehouses, schemas, and Fabric object paths, while the pipeline resolves the approved Test Run and table contracts and produces governed Production outputs.
 
       One reusable `00_env_config` template is deployed in each execution workspace by default. Advanced deployments can share a central copy by passing `config_workspace_id` to setup. Setup passes the caller workspace ID across the notebook boundary and receives the resolved environment and existing resource mappings as JSON. Unknown workspaces fail setup before pipeline execution.
 

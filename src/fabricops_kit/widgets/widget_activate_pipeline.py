@@ -7,7 +7,7 @@ from typing import Any
 
 from fabricops_kit.activated_pipeline.shared import (
     metadata_records, manifest_digest, read_pipeline_authority, environment_activation,
-    manifest_table_mappings, validate_manifest, review_pipeline_release, approve_pipeline_release,
+    pipeline_table_mappings, review_pipeline_release, approve_pipeline_release,
 )
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.widgets import shared
@@ -16,35 +16,23 @@ from fabricops_kit.widgets import shared
 def _eligible_candidate(row, pipeline_id=None):
     """Exclude incomplete, corrupt and ungoverned runs before independent backend review."""
     try:
-        candidate = json.loads(row["candidate_json"])
-        summary = json.loads(row["operation_summary_json"])
-        expected = {f"{role}:{item['participant']}" for item in candidate["participants"] for role in item["roles"]}
-        return bool(row.get("execution_mode") == "testing" and row.get("status") == "succeeded"
-                    and row.get("completed_at") and (pipeline_id is None or row["pipeline_id"] == pipeline_id)
-                    and expected and set(summary["operations"]) == expected and not summary.get("failures")
-                    and summary.get("boundary_completed") is True
-                    and isinstance(summary.get("physical_bindings"), dict)
-                    and summary["physical_bindings"] == candidate.get("physical_bindings")
-                    and all(item.get("table_id") for item in summary["frozen_contracts"])
-                    and all(item.get("table_id") for item in candidate["participants"])
-                    and len(summary["frozen_contracts"]) == len(candidate["participants"])
-                    and all(item["contract"] for item in summary["frozen_contracts"])
-                    and all(item.get("status") == "succeeded" for item in summary["operations"].values())
-                    and row["candidate_fingerprint"] and manifest_digest(candidate) == row["candidate_fingerprint"])
+        from fabricops_kit.pipeline.shared import validate_pipeline_run
+        validate_pipeline_run(row)
+        return bool(row["execution_mode"] == "testing" and row["status"] == "succeeded"
+                    and (pipeline_id is None or row["pipeline_id"] == pipeline_id)
+                    and all(item.get("contract_id") for item in row["operations"]))
     except (ValueError, KeyError, TypeError):
         return False
 
 
 def _missing_contracts(row):
-    """Describe missing coverage without admitting the run to activation review."""
+    """List completed Test tables lacking a frozen contract selection."""
     if row.get("execution_mode") != "testing" or row.get("status") not in {"succeeded", "ungoverned_completed"} or not row.get("completed_at"):
         return []
     try:
-        candidate = json.loads(row["candidate_json"])
-        summary = json.loads(row["operation_summary_json"])
-        return sorted({item["table_id"] for item in [*candidate["participants"], *summary["frozen_contracts"]]
-                       if isinstance(item, dict) and isinstance(item.get("table_id"), str) and item["table_id"] and not item.get("contract")})
-    except (ValueError, KeyError, TypeError):
+        return sorted({item["table_id"] for item in row["operations"] if isinstance(item.get("table_id"), str)
+                       and item["table_id"] and not item.get("contract_id")})
+    except (KeyError, TypeError, AttributeError):
         return []
 
 
@@ -52,7 +40,7 @@ def _release_view(report, candidates):
     """Render the contract and writer decisions with expandable Testing details."""
     visible = set(report.get("changed_tables", []))
     for candidate in candidates:
-        visible.update(item["table_id"] for item in json.loads(candidate["operation_summary_json"])["frozen_contracts"])
+        visible.update(item["table_id"] for item in candidate["operations"])
     rows = []
     def text(value):
         return html.escape(str(value if value is not None else "None"))
@@ -69,8 +57,7 @@ def _release_view(report, candidates):
     result += "<p>Affected pipelines: " + text(", ".join(report.get("affected_pipelines", [])) or "None") + "</p>"
     for candidate in candidates:
         detail = {"run_id": candidate["run_id"], "status": candidate["status"],
-                  "configuration": json.loads(candidate["candidate_json"]),
-                  "execution_results": json.loads(candidate["operation_summary_json"])}
+                  "operations": candidate["operations"]}
         result += "<details><summary>" + text(candidate["pipeline_id"]) + " · Successful Testing</summary><pre>" + html.escape(json.dumps(detail, indent=2, default=str)) + "</pre></details>"
     return result
 
@@ -84,7 +71,7 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
     from review. Extra candidate controls appear for shared-table dependencies.
     Supply an immutable release version for
     every selected pipeline. The backend revalidates complete Testing, exact
-    contracts, Agreement and processing configuration at review and again at approval.
+    contracts, Agreement, locations and operation modes at review and again at approval.
 
     One explicit approval publishes the entire environment revision atomically.
     Stale review, missing tests, competing writers, contract conflicts or affected
@@ -142,7 +129,7 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
         for run_id in dict.fromkeys([run_select.value, *additions.value]):
             row = next(row for row in runs if row["run_id"] == run_id)
             controls = state["candidate_controls"][run_id]
-            result.append({"testing_run_id": run_id, "candidate_fingerprint": row["candidate_fingerprint"],
+            result.append({"testing_run_id": run_id,
                 "pipeline_name": row["pipeline_id"], "pipeline_version": controls["version"].value.strip(),
                 "agreement_id": agreement.value[0], "agreement_version": agreement.value[1]})
         return result
@@ -163,30 +150,26 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
                     control.observe(invalidate, names="value")
                 state["candidate_controls"][row["run_id"]] = controls
             children.append(shared.form_section(widgets, title=row["pipeline_id"] + " · " + row["run_id"], children=list(controls.values())))
-            candidate = json.loads(row["candidate_json"])
-            summary = json.loads(row["operation_summary_json"])
-            roles = {item["participant"]: item["roles"] for item in candidate["participants"]}
-            for item in summary["frozen_contracts"]:
-                table_id = item["table_id"]
+            mappings = pipeline_table_mappings(row)
+            for table_id, item in mappings.items():
                 previous = current["tables"].get(table_id, {})
-                if any(previous.get(key) != value for key, value in item["contract"].items()) or (
-                    "target" in roles[item["participant"]] and previous.get("writer") != row["pipeline_id"]
-                ) or previous.get("destination") != summary["physical_bindings"].get(table_id):
+                if any(previous.get(key) != item[key] for key in ("contract_id", "contract_version", "payload_sha256", "destination")) or (
+                    "target" in item["roles"] and previous.get("writer") != row["pipeline_id"]):
                     changed_tables.add(table_id)
             previous_pipeline = current["pipelines"].get(row["pipeline_id"])
             if previous_pipeline:
-                old_refs = manifest_table_mappings(validate_manifest(previous_pipeline))
-                new_writes = {item["table_id"] for item in candidate["participants"] if "target" in item["roles"]}
+                old_refs = pipeline_table_mappings(previous_pipeline)
+                new_writes = {key for key, item in mappings.items() if "target" in item["roles"]}
                 changed_tables.update(table_id for table_id, ref in old_refs.items()
                                       if "target" in ref["roles"] and table_id not in new_writes)
         fields.children = children
-        dependencies = {key: sorted(changed_tables.intersection(manifest_table_mappings(validate_manifest(row))))
+        dependencies = {key: sorted(changed_tables.intersection(pipeline_table_mappings(row)))
                         for key, row in current["pipelines"].items()
-                        if changed_tables.intersection(manifest_table_mappings(validate_manifest(row)))}
+                        if changed_tables.intersection(pipeline_table_mappings(row))}
         additions.layout.display = "" if set(dependencies) - {r["pipeline_id"] for r in selected} or additions.value else "none"
         summary = {"environment": env, "current_revision": current["revision"], "current_contracts_and_writers": current["tables"],
                    "selected_testing_candidates": [{"pipeline_id": r["pipeline_id"], "run_id": r["run_id"],
-                       "proposed_contracts": json.loads(r["operation_summary_json"])["frozen_contracts"]} for r in selected],
+                       "proposed_contracts": r["operations"]} for r in selected],
                    "dependencies": dependencies,
                    "testing_status": {key: [{"run_id": r["run_id"], "status": r["status"]} for r in all_runs if r["pipeline_id"] == key] for key in dependencies}}
         details.value = "<pre>" + html.escape(json.dumps(summary, indent=2, default=str)) + "</pre>"
@@ -200,13 +183,14 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
         details.value = _release_view(report, selected)
         if report["ready"]:
             state["review_token"] = token
+            state["review_digest"] = report["review_digest"]
             state["reviewed_requests"] = json.loads(json.dumps(requests()))
         return report
 
     def perform_activation(_=None):
         if not confirm.value or not state.get("review_token") or requests() != state["reviewed_requests"]:
             raise ValueError("Review and explicitly approve the complete current release first.")
-        result = approve_pipeline_release(requests(), expected_token=state["review_token"], governance_confirmed=True,
+        result = approve_pipeline_release(requests(), expected_token=state["review_token"], expected_review_digest=state["review_digest"], governance_confirmed=True,
                                           context=context, spark_session=spark_session)
         state["activation_result"] = result
         invalidate()

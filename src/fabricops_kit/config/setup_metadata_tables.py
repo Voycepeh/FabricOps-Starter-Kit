@@ -91,7 +91,7 @@ def _validate_existing_metadata_schema(
         existing = {name: None for name in getattr(existing_schema, "fieldNames", lambda: [])()}
     if table_name == "METADATA_DATA_PROFILED" and "frequency_json" in existing:
         raise ValueError("METADATA_DATA_PROFILED has unexpected legacy column: frequency_json.")
-    if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_DEFINITION"} and set(expected) != set(existing):
+    if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY"} and set(expected) != set(existing):
         raise ValueError(
             f"Unsupported {table_name} physical schema. Stop writers, back up and reconcile retained history; "
             "follow docs/maintainer/metadata-v2-target-model.md#joint-redesign-rollout-and-reset-policy. "
@@ -334,7 +334,7 @@ def setup_metadata_tables(
     The current metadata tables created or validated from
     ``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
     ``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,
-    ``METADATA_PIPELINE_REGISTRY``, ``METADATA_PIPELINE_DEFINITION``, ``METADATA_PIPELINE_RUN``,
+    ``METADATA_PIPELINE_REGISTRY``, ``METADATA_PIPELINE_RUN``,
     ``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
     ``METADATA_DATA_PROFILED_FREQUENCY``, ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
     ``METADATA_GUARDRAIL_RESULTS``, and ``METADATA_PROCESSING_STATE``.
@@ -404,8 +404,7 @@ def setup_metadata_tables(
     deliberately rebuild/replay targets before resuming incremental work.
 
     ``METADATA_PIPELINE_REGISTRY`` requires one native authority row.
-    ``METADATA_PIPELINE_DEFINITION`` seals reusable immutable configuration.
-    ``METADATA_PIPELINE_RUN`` requires native execution facts and an exact definition reference.
+    ``METADATA_PIPELINE_RUN`` requires native execution facts with exact table/contract references, bindings and operation modes.
     Old Registry/Run layouts and incomplete native layouts require explicit
     stopped-deployment reconciliation or a deliberate disposable Preview reset; setup never adds columns to reinterpret existing run history.
 
@@ -479,7 +478,7 @@ def setup_metadata_tables(
                     table_name,
                     store="Metadata",
                     schema=resolved_metadata_schema,
-                    mode="errorifexists" if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_DEFINITION", "METADATA_PIPELINE_RUN"} else "overwrite",
+                    mode="errorifexists" if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_RUN"} else "overwrite",
                     verbose=False,
                     context=context,
                 )

@@ -8,21 +8,18 @@ function renderMetadataSvg(layout, models) {
   const routes = [
     ["DATA_STEWARD","DATA_AGREEMENT","1:N","physical","M335 170H425",[335,170],[425,170],"One steward may participate in many agreements"],
     ["DATA_AGREEMENT","PIPELINE_REGISTRY","","logical","M725 170H775V725H815",[725,170],[815,725],"Agreement to Activated Pipeline releases stored in the Registry"],
-    ["PIPELINE_DEFINITION","DATA_CONTRACT","","logical","M725 770H765V885H1175V218H1205",[725,770],[1205,218],"Activated releases reference frozen Data Contract versions"],
-    ["PIPELINE_DEFINITION","PIPELINE_REGISTRY","","logical","M725 725H815",[725,725],[815,725],"Registered pipeline to approved releases stored inside the Registry"],
+    ["PIPELINE_RUN","DATA_CONTRACT","","logical","M725 464H765V388H1165V218H1205",[725,464],[1205,218],"Run operations reference exact table contract versions"],
     ["PIPELINE_REGISTRY","PIPELINE_RUN","","logical","M900 675V635H575V598",[900,675],[575,598],"Approved Activated Pipeline releases authorize Live runs"],
     ["DATA_CATALOGUE","DATA_CONTRACT","1:N","physical","M1355 423V253",[1355,423],[1355,253],"Catalogue table to contract versions"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1:N","physical","M425 515H335",[425,515],[335,515],"Pipeline run to recorded guardrail outcomes"],
     ["PIPELINE_RUN","PROCESSING_STATE","1:N","physical","M725 504H815",[725,504],[815,504],"Pipeline run to typed processing state"],
     ["DATA_CATALOGUE","PROCESSING_STATE","1:N","physical","M1205 545H1115",[1205,545],[1115,545],"Catalogue table to source and target processing state"],
-    ["PIPELINE_DEFINITION","PIPELINE_RUN","1:N","physical","M575 675V598",[575,675],[575,598],"Registered pipeline to its execution history"],
     ["DATA_CATALOGUE","DATA_PROFILED","1:N","physical","M1250 598V902H575V995",[1250,598],[575,995],"Catalogue table to column statistics"],
     ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","","logical","M1290 598V877H185V995",[1290,598],[185,995],"Catalogue column to frequency observations"],
     ["DATA_CATALOGUE","DATA_LINEAGE","1:N","physical","M1355 598V927H965V995",[1355,598],[965,995],"Catalogue table to source and target lineage"],
     ["DATA_CATALOGUE","DATA_ACCESS","1:N","physical","M1430 598V963H1355V995",[1430,598],[1355,995],"Catalogue table to observed permissions"],
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1:N","physical","M425 1081H335",[425,1081],[335,1081],"Optional statistical profile reference on frequency rows"],
     ["DATA_CONTRACT","GUARDRAIL_RESULTS","1:N","physical","M1205 218H1165V388H185V423",[1205,218],[185,423],"Contract versions to their Guardrail results"]
-    ,["DATA_CATALOGUE","PIPELINE_DEFINITION","","logical","M1290 598V877H575V850",[1290,598],[575,850],"Declared definition participants reference global Catalogue table IDs"]
   ];
   const esc = value => String(value).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const source = layout.indexOf("<a ");
@@ -57,7 +54,7 @@ function renderMetadataSvg(layout, models) {
     return block;
   });
   const named=Object.keys(models);
-  if(named.length!==13||found.size!==named.length)throw Error("Canonical model / visual layout changed. Review placements for "+named.filter(n=>!found.has(n)).join(", "));
+  if(named.length!==12||found.size!==named.length)throw Error("Canonical model / visual layout changed. Review placements for "+named.filter(n=>!found.has(n)).join(", "));
   for(const row of routes){if(!found.has(row[0])||!found.has(row[1]))throw Error("Unknown relationship table");if(row[0]===row[1])throw Error("Self-referential 1:N connector would be misleading: "+row[0]);}
   // Every canonical cross-table physical FK requires a visible connector; logical links
   // are also deliberate and carry explanatory SVG <title> tooltips.

@@ -22,22 +22,13 @@ def runtime(monkeypatch):
     saved, writes = {}, []
     failure = {"enabled": False, "after_commit": False, "read_unavailable": False}
 
-    physical, definitions, contracts = {}, {}, []
+    physical, contracts = {}, []
     from fabricops_kit.activated_pipeline import shared as authority
     monkeypatch.setattr(authority, "metadata_records", lambda table, **kw: contracts if table == "METADATA_DATA_CONTRACT" else [])
-    def seal(candidate, *, environment, fingerprint, **kw):
-        row = shared.pipeline_definition_row(candidate, environment=environment, fingerprint=fingerprint)
-        shared.pipeline_definition_candidate(row)
-        definitions[row["definition_id"]] = row
-        return row["definition_id"]
-    monkeypatch.setattr(shared, "seal_pipeline_definition", seal)
-    monkeypatch.setattr(shared, "read_pipeline_definition", lambda key, **kw: copy.deepcopy(definitions[key]))
     def merge(plan, row, **kwargs):
         if failure["enabled"]:
             raise OSError("credential=never persist this message")
-        shared.seal_pipeline_definition(json.loads(row["candidate_json"]), environment=plan.environment, fingerprint=row.get("candidate_fingerprint"))
-        record = shared.pipeline_run_row(row)
-        shared.validate_pipeline_run_result(row)
+        record = copy.deepcopy(shared.validate_pipeline_run(row))
         physical[row["run_id"]] = copy.deepcopy(record)
         saved[row["run_id"]] = copy.deepcopy(row)
         writes.append(copy.deepcopy(row))
@@ -86,12 +77,13 @@ def runtime(monkeypatch):
             preview = replace(plan, execution_mode="testing", evidence={})
             for index in range(len(roles)):
                 operation(preview, index)
-            plan = replace(plan, activated_pipeline_id="approved-release", approved_candidate_json=shared.canonical_candidate_json(shared.pipeline_candidate(preview)[0]))
+            plan = replace(plan, approval_id="approved-release", approved_operations_json=json.dumps(shared.persist_pipeline_run(preview)["operations"], default=str))
         shared.persist_pipeline_run(plan)
         return plan
 
     def operation(plan, index, *, stages=None, **kwargs):
         identity = json.loads(plan.participants_json)[f"table{index}"]
+        kwargs.setdefault("read_mode" if identity["roles"] == ["source"] else "write_mode", "full" if identity["roles"] == ["source"] else "overwrite")
         args = {"store": identity["store"], "schema": identity["schema"], "table_name": identity["table_name"], **kwargs}
         if identity["roles"] == ["target"]:
             args.setdefault("sources", [{"table_id": key} for key, item in json.loads(plan.participants_json).items()
@@ -147,7 +139,7 @@ def test_operation_exception_is_safe_and_unfinalized_success_is_incomplete(runti
         with shared.PipelineOperation(plan, "source", {"store": "Bronze", "schema": "physical", "table_name": "table0"}):
             raise OSError("password=hidden")
     assert saved[plan.plan_id]["status"] == "failed"
-    assert "hidden" not in saved[plan.plan_id]["operation_summary_json"]
+    assert "hidden" not in json.dumps(saved[plan.plan_id], default=str)
     assert finalize_pipeline_run(plan)["status"] == "failed"
     plan = make(roles=("source",))
     operation(plan, 0)
@@ -191,50 +183,35 @@ def test_testing_completion_requires_no_executable_identity(runtime, mode, statu
     assert result["status"] == status
 
 
-def test_candidate_determinism_changes_and_physical_binding_exclusion(runtime):
-    """Code, behavior and dependency changes alter identity; routing does not."""
+def test_run_retains_only_enforced_settings_and_exact_contract_references(runtime):
+    """Unused parameters and raw SQL never become a second configuration store."""
     make, operation, _, _, _ = runtime
     plan = make(mode="testing", roles=("source",))
-    operation(plan, 0, read_mode="full", read_parameters={"b": 2, "a": 1})
-    baseline = shared.pipeline_candidate(plan)[1]
-    assert shared.canonical_candidate_json({"b": 2, "a": 1}) == '{"a":1,"b":2}'
-    identities = json.loads(plan.participants_json)
-    identities["table0"].update(schema="other", store="elsewhere", table_name="renamed")
-    assert shared.pipeline_candidate(replace(plan, environment="other", participants_json=json.dumps(identities)))[1] == baseline
-    other = make(mode="testing", roles=("source",))
-    operation(other, 0, read_mode="incremental", read_parameters={"a": 1, "b": 2})
-    assert shared.pipeline_candidate(other)[1] != baseline
-    with pytest.raises(ValueError):
-        shared.canonical_candidate_json({"nan": float("nan")})
+    operation(plan, 0, read_mode="full", query="SELECT * FROM orders", read_parameters={"password": "hidden-secret"}, dq_diagnostics="full")
+    row = shared.persist_pipeline_run(plan)
+    item = row["operations"][0]
+    assert item["table_id"] == "table0" and item["contract_id"] == "contract-table0" and item["contract_version"] == 1
+    assert item["read_mode"] == "full" and item["query_sha256"]
+    assert "hidden-secret" not in json.dumps(row, default=str) and "SELECT" not in json.dumps(row, default=str)
+    assert {"configuration", "configuration_json", "configuration_sha256", "read_parameters", "dq_diagnostics"}.isdisjoint(item)
+    assert {"candidate_json", "candidate_fingerprint", "definition_id"}.isdisjoint(row)
 
 
-def test_contract_payload_and_exact_hash_are_retained(runtime):
-    """Frozen revisions and semantic payload edits change candidates and exact hashes."""
+@pytest.mark.parametrize("parameter,value", [("read_mode", "incremental"), ("query", "SELECT id FROM orders"), ("target_table_id", "table0")])
+def test_live_rejects_changed_material_settings_before_operation(runtime, parameter, value):
+    """A changed mode, SQL read or incremental target cannot enter a Live operation."""
     make, operation, _, _, _ = runtime
     plan = make(roles=("source",))
-    operation(plan, 0)
-    payload = '{"table":{"columns":[{"name":"id","data_type":"int"}]}}'
-    contract = {"contract_id": "frozen", "contract_version": 1, "contract_payload_json": payload}
-    first = replace(plan, contracts_json=json.dumps({"table0": contract}))
-    before = shared.pipeline_candidate(first)
-    contract["contract_payload_json"] = payload.replace('"int"', '"long"')
-    after = shared.pipeline_candidate(replace(plan, contracts_json=json.dumps({"table0": contract})))
-    assert before[1] != after[1] and before[2][0]["contract"]["payload_sha256"] != after[2][0]["contract"]["payload_sha256"]
+    with pytest.raises(ValueError, match="approved Test"):
+        operation(plan, 0, **{parameter: value})
 
 
-@pytest.mark.parametrize("secret_key", ["password", "api_key", "authorization"])
-def test_secret_inputs_and_unidentified_dependencies_cannot_qualify(runtime, secret_key):
-    """Secrets never enter run payloads; mappings and SQL need future identity support."""
-    make, operation, saved, _, _ = runtime
+def test_live_allows_diagnostic_settings_without_persisting_them(runtime):
+    """Diagnostics are not a pipeline approval policy."""
+    make, operation, _, _, _ = runtime
     plan = make(roles=("source",))
-    with pytest.raises(ValueError, match="secrets"):
-        operation(plan, 0, read_parameters={secret_key: "hidden-secret"})
-    assert "hidden-secret" not in json.dumps(saved[plan.plan_id], default=str)
-    assert finalize_pipeline_run(plan)["status"] == "failed"
-    plan = make(roles=("source",))
-    plan = replace(plan, execution_mode="testing")
-    operation(plan, 0, query="SELECT * FROM externally_bound_table")
-    assert finalize_pipeline_run(plan)["status"] == "incomplete"
+    operation(plan, 0, read_mode=" FULL ", dq_diagnostics="full", verbose=True)
+    assert "dq_diagnostics" not in json.dumps(shared.persist_pipeline_run(plan), default=str)
 
 
 def test_failed_guardrail_persistence_links_diagnostics_but_cannot_qualify(runtime, monkeypatch):
@@ -279,10 +256,10 @@ def test_run_schema_has_only_independent_lifecycle_fields():
     """Keep standard audit fields and avoid redundant activation/failure columns."""
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
     fields = metadata_table_schema_registry()["METADATA_PIPELINE_RUN"].fieldNames()
-    assert len(fields) == 23
+    assert len(fields) == 22
     assert fields[0] == "run_id"
     assert {"record_id", "record_type", "snapshot_token", "operation_count", "operations_digest", "operation_summary_json"}.isdisjoint(fields)
-    assert {"operations", "definition_id", "approval_id", "profiling", "boundary_completed"} <= set(fields)
+    assert {"operations", "approval_id", "profiling", "boundary_completed"} <= set(fields)
     assert fields[-8:] == [name for name, *_ in AUDIT_SCHEMA_FIELDS]
 
 
@@ -340,13 +317,13 @@ def test_concurrent_duplicate_operations_cannot_both_complete(runtime, monkeypat
     make, operation, saved, _, _ = runtime
     plan = make(roles=("source",))
     entered, release, attempted = Event(), Event(), Event()
-    real_spark = shared.get_spark_session
-    def wait_in_first_operation(supplied=None):
+    real_persist = shared.persist_pipeline_run
+    def wait_in_first_operation(plan, **kwargs):
         if not entered.is_set():
             entered.set()
             assert release.wait(5)
-        return real_spark(supplied)
-    monkeypatch.setattr(shared, "get_spark_session", wait_in_first_operation)
+        return real_persist(plan, **kwargs)
+    monkeypatch.setattr(shared, "persist_pipeline_run", wait_in_first_operation)
     def duplicate():
         attempted.set()
         operation(plan, 0)
@@ -370,13 +347,13 @@ def test_finalization_waits_for_an_in_flight_operation(runtime, monkeypatch):
     make, operation, _, _, _ = runtime
     plan = make(roles=("source",))
     entered, release = Event(), Event()
-    real_spark = shared.get_spark_session
-    def wait_in_operation(supplied=None):
+    real_persist = shared.persist_pipeline_run
+    def wait_in_operation(plan, **kwargs):
         if not entered.is_set():
             entered.set()
             assert release.wait(5)
-        return real_spark(supplied)
-    monkeypatch.setattr(shared, "get_spark_session", wait_in_operation)
+        return real_persist(plan, **kwargs)
+    monkeypatch.setattr(shared, "persist_pipeline_run", wait_in_operation)
     with ThreadPoolExecutor(max_workers=2) as pool:
         active = pool.submit(operation, plan, 0)
         assert entered.wait(5)
@@ -415,17 +392,6 @@ def test_unreachable_readback_reports_unknown_client_outcome(runtime):
         finalize_pipeline_run(plan)
 
 
-def test_exact_contract_identity_changes_exact_but_not_portable_fingerprint(runtime):
-    """Keep exact frozen identity separate from portable payload identity."""
-    make, operation, _, _, _ = runtime
-    plan = make(roles=("source",))
-    operation(plan, 0)
-    contract = {"contract_id": "first", "contract_version": 1, "contract_payload_json": '{"table":{"columns":[]}}'}
-    before = shared.pipeline_candidate(replace(plan, contracts_json=json.dumps({"table0": contract})))
-    contract["contract_id"] = "second"
-    after = shared.pipeline_candidate(replace(plan, contracts_json=json.dumps({"table0": contract})))
-    assert before[1] != after[1]
-    assert before[0]["portable_fingerprint"] == after[0]["portable_fingerprint"]
 
 
 def test_secondary_metadata_failure_preserves_original_publication_details(runtime):
@@ -457,32 +423,8 @@ def test_post_publication_evidence_failure_retains_published_flag(runtime):
     assert raised.value.published is True and raised.value.failed_stage == "Run evidence"
 
 
-@pytest.mark.parametrize("key", ["schema", "store", "table_name", "environment_name", "notebook_id"])
-def test_project_configuration_keys_never_disappear_as_physical_bindings(runtime, key):
-    """Arbitrary project values remain exact even when named like routing fields."""
-    make, operation, _, _, _ = runtime
-    plan = make(roles=("source",))
-    operation(plan, 0)
-    before = shared.pipeline_candidate(replace(plan, configuration_json=json.dumps({"transform": [{key: "before"}]})))
-    after = shared.pipeline_candidate(replace(plan, configuration_json=json.dumps({"transform": [{key: "after"}]})))
-    assert before[1] and before[1] != after[1]
-    assert before[0]["project_configuration"] == {"transform": [{key: "before"}]}
 
 
-@pytest.mark.parametrize("role,parameter", [("source", "read_parameters"), ("target", "write_parameters")])
-def test_nested_operation_parameters_remain_exact_while_routing_is_portable(runtime, role, parameter):
-    """Only top-level routing arguments are excluded from operation identity."""
-    make, operation, _, _, _ = runtime
-    fingerprints = []
-    for value in ("before", "after"):
-        plan = make(mode="testing", roles=(role,))
-        operation(plan, 0, **{parameter: {"schema": value, "nested": {"table_name": value}}})
-        candidate, fingerprint, _ = shared.pipeline_candidate(plan)
-        configuration = candidate["operations"][0]["configuration"]
-        assert "schema" not in configuration and "store" not in configuration and "table_name" not in configuration
-        assert configuration[parameter] == {"schema": value, "nested": {"table_name": value}}
-        fingerprints.append(fingerprint)
-    assert fingerprints[0] and fingerprints[0] != fingerprints[1]
 
 
 @pytest.mark.parametrize("role", ["source", "target"])
@@ -506,7 +448,7 @@ def test_operation_cannot_switch_to_case_alias_store_in_another_physical_item(ru
     original = make(roles=(role,))
     contracts = {declared["table_id"]: json.loads(original.contracts_json)["table0"]}
     plan = replace(original, execution_mode=mode, environment="dev", participants_json=json.dumps(identities),
-                   contracts_json=json.dumps({key: None for key in contracts}), evidence={}, approved_candidate_json="",
+                   contracts_json=json.dumps({key: None for key in contracts}), evidence={}, approved_operations_json="[]",
                    runtime_context={"config": config, "env": "dev", "_pipeline_bindings": bindings})
     monkeypatch.setattr(shared, "resolve_physical_table_identity", resolve_physical_table_identity)
     monkeypatch.setattr(shared, "pipeline_physical_bindings", pipeline_physical_bindings)
@@ -529,7 +471,7 @@ def test_public_finalize_reuses_context_and_is_idempotent(runtime, roles):
     plan.evidence["boundary_completed"] = True
     result = finalize_pipeline(plan)
     assert result['status'] == 'succeeded'
-    assert json.loads(result['operation_summary_json'])['boundary_completed']
+    assert result['boundary_completed']
     count = len(writes)
     assert finalize_pipeline(plan) == result and len(writes) == count
 
@@ -562,7 +504,7 @@ def test_profiling_outcomes_preserve_run_grain_and_completion_status(runtime):
     result = shared.finalize_pipeline_run(plan)
     assert result['status'] == 'succeeded'
     assert len(saved) == 1
-    assert json.loads(result['operation_summary_json'])['profiling'] == events
+    assert result['profiling'][0]['activity'] == events[0]['activity']
 
 
 def test_operation_exit_does_not_publish_unconfirmed_profiling_success(runtime, monkeypatch):
@@ -577,7 +519,7 @@ def test_operation_exit_does_not_publish_unconfirmed_profiling_success(runtime, 
     merge = shared._merge_pipeline_run_row
     failed = []
     def fail_once(plan, row, **kwargs):
-        events = json.loads(row['operation_summary_json'])['profiling']
+        events = row['profiling']
         if not failed and any(event['status'] == 'passed' for event in events):
             failed.append(True)
             raise OSError('transient failure before committing success')
@@ -588,4 +530,4 @@ def test_operation_exit_does_not_publish_unconfirmed_profiling_success(runtime, 
             shared.schedule_table_profiling('table0', 'read', context=context)
     row = saved[plan.plan_id]
     assert row['status'] == 'failed'
-    assert not any(event['status'] == 'passed' for event in json.loads(row['operation_summary_json'])['profiling'])
+    assert not any(event['status'] == 'passed' for event in row['profiling'])

@@ -71,7 +71,7 @@ Testing evaluates without business publication by default. Explicit `testing_wri
 
     | Internal service | Implemented responsibility |
     | --- | --- |
-    | [`tested_pipeline_manifest()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L85) | Revalidate a completed governed Testing run, exact frozen payloads, processing configuration, operation results, rule diagnostics and effective Data Agreement. |
+    | [`tested_pipeline_run()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L85) | Revalidate a completed governed Testing run, exact table contract references, bindings, operation modes and results, rule diagnostics and effective Data Agreement. |
     | [`review_pipeline_release()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L328) and [`activation_impact()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L277) | Compare the proposed release with active mappings. Discover affected readers/writers, missing replacement tests, contract and destination conflicts, and executions that must drain. Propagate requirements when replacement outputs change downstream expectations. |
     | [`approve_pipeline_release()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L362) | Require explicit Governance approval, revalidate every candidate and reject a stale review or any blocking conflict. |
     | [`commit_activation_state()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/shared.py#L223) | Publish the complete authority snapshot with one serializable Delta compare-and-swap. Overlapping changes fail safely rather than partially updating pipeline and table approvals. |
@@ -80,7 +80,7 @@ Testing evaluates without business publication by default. Explicit `testing_wri
     | Central metadata | What it supplies |
     | --- | --- |
     | [`METADATA_DATA_CONTRACT`](../reference/metadata/metadata_data_contract.md) | Global frozen table contract versions and immutable payloads. |
-    | [`METADATA_PIPELINE_RUN`](../reference/metadata/metadata_pipeline_run.md) | Whole-run completion, participants, exact contract mappings, Data Contract and processing configuration identity, operation outcomes and environment. |
+    | [`METADATA_PIPELINE_RUN`](../reference/metadata/metadata_pipeline_run.md) | Whole-run completion, participants, exact contract mappings, physical bindings and operation modes, operation outcomes and environment. |
     | [`METADATA_GUARDRAIL_RESULTS`](../reference/metadata/metadata_guardrail_results.md) | Rule-level diagnostics linked to the Testing run. |
     | [`METADATA_DATA_AGREEMENT`](../reference/metadata/metadata_data_agreement.md) | The exact effective Agreement selected for approval. |
     | [`METADATA_PIPELINE_REGISTRY`](../reference/metadata/metadata_pipeline_registry.md) | One native authority row containing environment revisions, active pipelines, contract/writer mappings, immutable approval history and running reservations. |

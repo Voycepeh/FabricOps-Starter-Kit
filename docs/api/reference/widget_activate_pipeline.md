@@ -70,7 +70,7 @@ Completed Testing runs missing contracts are listed by table ID and excluded
 from review. Extra candidate controls appear for shared-table dependencies.
 Supply an immutable release version for
 every selected pipeline. The backend revalidates complete Testing, exact
-contracts, Agreement and processing configuration at review and again at approval.
+contracts, Agreement, locations and operation modes at review and again at approval.
 
 One explicit approval publishes the entire environment revision atomically.
 Stale review, missing tests, competing writers, contract conflicts or affected
@@ -88,9 +88,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_activate_pipeline.py:78`
+`fabricops_kit/widgets/widget_activate_pipeline.py:65`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L78-L239">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L65-L223">View on GitHub</a>
 </div>
 
 

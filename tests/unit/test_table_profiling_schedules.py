@@ -59,7 +59,7 @@ def metadata(monkeypatch):
         for run in rows['METADATA_PIPELINE_RUN'].values():
             if run['environment_name'] != context['env']:
                 continue
-            for event in json.loads(run['operation_summary_json']).get('profiling', []):
+            for event in run.get('profiling', []):
                 kind = event['activity']
                 if event.get('context_key') != key or event['status'] != 'passed' or not event.get('results_persisted'):
                     continue
@@ -74,7 +74,7 @@ def metadata(monkeypatch):
     def persist(plan, **kwargs):
         if plan.permits_persistence:
             rows['METADATA_PIPELINE_RUN'][plan.plan_id] = {
-                'run_id': plan.plan_id, 'environment_name': next((outcome['environment'] for outcome in plan.evidence.get('profiling', [])), 'dev'), 'operation_summary_json': json.dumps({'profiling': plan.evidence.get('profiling', [])})}
+                'run_id': plan.plan_id, 'environment_name': next((outcome['environment'] for outcome in plan.evidence.get('profiling', [])), 'dev'), 'profiling': copy.deepcopy(plan.evidence.get('profiling', []))}
     monkeypatch.setattr(shared, 'persist_pipeline_run', persist)
     def execute(*, table_id, context, activities, **kwargs):
         activity = next(iter(activities))
@@ -237,7 +237,7 @@ def test_multiple_tables_keep_independent_outcomes_in_one_run(metadata):
     shared.schedule_table_profiling('orders', 'read', context=metadata.context)
     shared.schedule_table_profiling('customers', 'write', context=metadata.context)
     assert len(metadata.rows['METADATA_PIPELINE_RUN']) == 1
-    saved = json.loads(metadata.rows['METADATA_PIPELINE_RUN']['A']['operation_summary_json'])['profiling']
+    saved = metadata.rows['METADATA_PIPELINE_RUN']['A']['profiling']
     passed = [outcome for outcome in saved if outcome['status'] == 'passed']
     assert len(passed) == 6 and {outcome['table_id'] for outcome in passed} == {'orders', 'customers'}
     assert all(outcome['physical']['table_name'] == outcome['table_id'] for outcome in passed)
@@ -300,7 +300,7 @@ def test_run_commit_failure_does_not_leave_in_memory_success_as_durable_history(
             plan.evidence['persistence_failed'] = True
             raise RuntimeError('run commit failed')
         metadata.rows['METADATA_PIPELINE_RUN'][plan.plan_id] = {
-            'environment_name': 'dev', 'operation_summary_json': json.dumps({'profiling': plan.evidence.get('profiling', [])})}
+            'environment_name': 'dev', 'profiling': copy.deepcopy(plan.evidence.get('profiling', []))}
     monkeypatch.setattr(shared, 'persist_pipeline_run', persist)
     with pytest.raises(RuntimeError, match='run commit failed'):
         shared.schedule_table_profiling('orders', 'read', context=metadata.context)
@@ -407,15 +407,15 @@ def test_history_filters_and_aggregates_in_spark(metadata, spark_session, monkey
     shared.schedule_table_profiling('orders', 'read', context=metadata.context)
     completed = shared.profiling_completion_history('orders', context=metadata.context)
     metadata.rows['METADATA_PIPELINE_RUN']['unrelated'] = {
-        'run_id': 'unrelated', 'environment_name': 'dev', 'operation_summary_json': json.dumps({'profiling': [
+        'run_id': 'unrelated', 'environment_name': 'dev', 'profiling': [
             {'context_key': 'other-destination', 'activity': 'standard', 'status': 'passed',
              'results_persisted': True, 'profile_snapshot_id': 'other-snapshot', 'completed_at': '2099-01-01T00:00:00+00:00'},
             {'context_key': shared.profiling_context_key('orders', context=metadata.context)[0],
              'activity': 'standard', 'status': 'passed', 'results_persisted': True,
-             'profile_snapshot_id': 'missing-snapshot', 'completed_at': '2099-01-01T00:00:00+00:00'}]})}
+             'profile_snapshot_id': 'missing-snapshot', 'completed_at': '2099-01-01T00:00:00+00:00'}]}
     metadata.rows['METADATA_DATA_PROFILED'].append({'table_id': 'orders', 'environment_name': 'dev', 'profile_snapshot_id': 'other-snapshot'})
     tables = {table: spark_session.createDataFrame(
-        [{**row, 'profiling': json.loads(row['operation_summary_json'])['profiling']} for row in rows.values()] if isinstance(rows, dict) else rows,
+        list(rows.values()) if isinstance(rows, dict) else rows,
         'run_id string, environment_name string, profiling array<struct<context_key:string,activity:string,status:string,results_persisted:boolean,empty_result:boolean,profile_snapshot_id:string,completed_at:string>>' if table == 'METADATA_PIPELINE_RUN'
         else 'table_id string, environment_name string, profile_snapshot_id string')
         for table, rows in metadata.rows.items()}

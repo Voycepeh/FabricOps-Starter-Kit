@@ -87,7 +87,7 @@ PR #1693 introduces permanent pipeline UUID registration. Its Test mode evaluate
 The follow-up must make these requirements concrete before it is ready to merge:
 
 1. `finalize_pipeline()` owns the successful whole-run commit to `METADATA_PIPELINE_RUN`. Individual operations, successful notebook cells, interpreter shutdown and caller-supplied result dictionaries cannot independently authorize activation.
-2. A qualifying run identifies the permanent `pipeline_id`, registered Fabric workspace and notebook binding, execution activity, configured environment, physical source/target bindings, exact processing configuration and candidate fingerprint. A run from another workspace, another environment or an earlier notebook binding cannot authorize the current candidate.
+2. A qualifying run identifies the permanent `pipeline_id`, registered Fabric workspace and notebook binding, execution activity, configured environment, physical source/target bindings, read/write modes, SQL hash and source associations. A run from another workspace, another environment or an earlier notebook binding cannot authorize the current candidate.
 3. Every participating source and target `table_id` has its exact frozen `METADATA_DATA_CONTRACT` version and payload hash recorded. Missing contracts, changed contracts, missing operations or changed configuration require a new complete run.
 4. Every required Read, transformation, applicable Guardrail, actual target Write and required post-write finalization completes. A simulated Write cannot qualify. Read-only pipelines may qualify when they have no declared target operations; incremental runs with no work must record their no-op outcome explicitly and must not imply that an unexercised publication path was verified.
 5. Warning Guardrails may allow continuation and remain visible in the committed results and approval review. A blocking Guardrail stops the run and prevents activation. Read, transformation, Write, profiling, checkpoint or required metadata failures prevent a successful activation result, including when the business write already committed.
@@ -113,7 +113,7 @@ Real validation writes require documented destination selection, execution reser
 | One missing table contract, missing operation or unfinalized run | Activation rejects the candidate and identifies missing coverage. |
 | Dry-run target publication or unevaluated required stage | Activation rejects the candidate as insufficient execution verification. |
 | Fabricated result dictionary, unknown run ID or reviewer attestation without a committed run | Activation rejects it. |
-| Correct environment name but different workspace, notebook binding, physical target or candidate fingerprint | Activation rejects it and requires a new run. |
+| Correct environment name but different workspace, notebook binding, physical target or operation mode | Activation rejects it and requires a new run. |
 | Diagnostics or final run commit fails; commit acknowledgement is lost | No unconfirmed success is accepted. Verify exact durable state before retrying. |
 | Review becomes stale, affected Live execution is running, or destinations are reserved | Existing atomic approval and execution reservation checks continue to block conflicting actions. |
 

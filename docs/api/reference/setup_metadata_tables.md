@@ -143,7 +143,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:227`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L227-L634">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L227-L633">View on GitHub</a>
 </div>
 
 
@@ -180,7 +180,7 @@ count.
 The current metadata tables created or validated from
 ``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
 ``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,
-``METADATA_PIPELINE_REGISTRY``, ``METADATA_PIPELINE_DEFINITION``, ``METADATA_PIPELINE_RUN``,
+``METADATA_PIPELINE_REGISTRY``, ``METADATA_PIPELINE_RUN``,
 ``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
 ``METADATA_DATA_PROFILED_FREQUENCY``, ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
 ``METADATA_GUARDRAIL_RESULTS``, and ``METADATA_PROCESSING_STATE``.
@@ -250,8 +250,7 @@ establish progress for populated targets; reconcile retained progress or
 deliberately rebuild/replay targets before resuming incremental work.
 
 ``METADATA_PIPELINE_REGISTRY`` requires one native authority row.
-``METADATA_PIPELINE_DEFINITION`` seals reusable immutable configuration.
-``METADATA_PIPELINE_RUN`` requires native execution facts and an exact definition reference.
+``METADATA_PIPELINE_RUN`` requires native execution facts with exact table/contract references, bindings and operation modes.
 Old Registry/Run layouts and incomplete native layouts require explicit
 stopped-deployment reconciliation or a deliberate disposable Preview reset; setup never adds columns to reinterpret existing run history.
 

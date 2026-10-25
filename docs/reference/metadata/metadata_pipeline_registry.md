@@ -25,16 +25,13 @@ No starter template or solution is traced for the public writer functions.
 
 **Relationships:**
 
-`METADATA_PIPELINE_DEFINITION` **(1 → N)**
-via `approvals`
-
 `METADATA_PIPELINE_RUN` **(1 → N)**
 via `approvals` + `reservations`
 
 `METADATA_DATA_AGREEMENT` **(N → M)**
 via `approvals`
 
-**Implementation details:** A matched-only Delta compare-and-swap publishes all typed collections together. Registration, approval, admission, rebind and profiling share one token; no snapshot JSON or child-row insertion is authoritative. Approved definitions, finalized Tests and exact Agreements resolve by immutable content-checked references.
+**Implementation details:** A matched-only Delta compare-and-swap publishes all typed collections together. Registration, approval, admission, rebind and profiling share one token; no snapshot JSON or child-row insertion is authoritative. Exact finalized Test runs and Agreements resolve by retained content-checked references. There is no separate configuration table.
 
 ## Column summary
 
@@ -52,7 +49,7 @@ via `approvals`
 | `token` | `string` | Shared compare-and-swap fence for registration, approval, admission, rebind and profiling mutations. |
 | `registrations` | `array<struct<pipeline_id:string,environment_name:string,workspace_id:string,notebook_id:string,notebook_name:string,registered_at:timestamp,registered_by:string,registration_status:string,_committed_by:string,_committed_at:timestamp,_workspace_id:string,_workspace_name:string,_notebook_id:string,_notebook_name:string,_metadata_lakehouse_name:string,_activity_id:string>>` | Native permanent Pipeline UUID and environment notebook bindings; registration never permits Live. |
 | `revisions` | `array<struct<environment_name:string,revision:string>>` | Native environment activation revisions published with selections and ownership. |
-| `approvals` | `array<struct<approval_id:string,definition_id:string,pipeline_id:string,environment_name:string,pipeline_name:string,pipeline_version:string,testing_run_id:string,testing_evidence_sha256:string,agreement_id:string,agreement_version:string,agreement_sha256:string,warnings:array<string>,_committed_by:string,_committed_at:timestamp,_workspace_id:string,_workspace_name:string,_notebook_id:string,_notebook_name:string,_metadata_lakehouse_name:string,_activity_id:string>>` | Append-only decisions referencing sealed definitions, complete finalized Tests and exact Agreement versions/hashes. |
+| `approvals` | `array<struct<approval_id:string,pipeline_id:string,environment_name:string,pipeline_name:string,pipeline_version:string,testing_run_id:string,testing_evidence_sha256:string,agreement_id:string,agreement_version:string,agreement_sha256:string,warnings:array<string>,_committed_by:string,_committed_at:timestamp,_workspace_id:string,_workspace_name:string,_notebook_id:string,_notebook_name:string,_metadata_lakehouse_name:string,_activity_id:string>>` | Append-only decisions referencing complete finalized Test Runs and exact Agreement versions/hashes. |
 | `selections` | `array<struct<environment_name:string,pipeline_id:string,approval_id:string>>` | Current approved decision per pipeline and environment, published atomically with ownership. |
 | `table_ownership` | `array<struct<environment_name:string,table_id:string,contract_id:string,contract_version:int,payload_sha256:string,writer:string,readers:array<string>,destination:struct<workspace_id:string,item_id:string,kind:string,schema:string,table_name:string>>>` | Native exact contract, physical destination, writer and readers per environment/table. |
 | `reservations` | `array<struct<environment_name:string,reservation_id:string,pipeline_id:string,mode:string,tables:array<string>,revision:string,destinations:array<struct<workspace_id:string,item_id:string,kind:string,schema:string,table_name:string>>>>` | Native Live reservations and transient rebind barriers protected by the shared authority token. |

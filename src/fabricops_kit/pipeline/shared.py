@@ -28,9 +28,8 @@ class PipelineExecutionPlan:
     contracts_json: str
     runtime_context: Any = dataclass_field(repr=False, compare=False)
     pipeline_id: str = ""
-    configuration_json: str = "{}"
-    activated_pipeline_id: str = ""
-    approved_candidate_json: str = ""
+    approval_id: str = ""
+    approved_operations_json: str = "[]"
     activation_revision: str = ""
     lock: Any = dataclass_field(default_factory=RLock, repr=False, compare=False)
     evidence: dict = dataclass_field(default_factory=dict, repr=False, compare=False)
@@ -41,7 +40,7 @@ class PipelineExecutionPlan:
         """Reject unsupported execution authority at construction."""
         if not self.evidence:
             operations = {f"{role}:{identity.get('logical_id') or identity['store'] + '/' + identity['table_name']}":
-                          {"status": "not_started", "configuration_sha256": None, "stages": []}
+                          {"status": "not_started", "stages": []}
                           for identity in json.loads(self.participants_json).values() for role in identity["roles"]}
             self.evidence.update(started_at=datetime.now(UTC), operations=operations, failures=[], sealed=False, persistence_failed=False)
         if self.execution_mode not in {"testing", "live"}:
@@ -5557,7 +5556,7 @@ def pipeline_physical_bindings(identities, *, config, environment):
     return bindings
 
 
-def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections=None, context=None, spark_session=None, pipeline_id=None, configuration=None):
+def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections=None, context=None, spark_session=None, pipeline_id=None):
     """Freeze Test participants and exact contracts under a permanent UUIDv4."""
     if execution_mode == "live":
         raise ValueError("Live requires an Activated Pipeline; use setup_pipeline to resolve approved environment authority.")
@@ -5601,7 +5600,7 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
         json.dumps(identities, default=str, sort_keys=True),
         json.dumps(selections, sort_keys=True), json.dumps(contracts, default=str, sort_keys=True),
         MappingProxyType(run_context),
-        pipeline_id=pipeline_id, configuration_json=canonical_candidate_json(configuration or {}),
+        pipeline_id=pipeline_id,
     )
     persist_pipeline_run(plan, spark_session=spark_session)
     return plan
@@ -5636,83 +5635,13 @@ def resolve_pipeline_participants(config, env, *, sources, targets, context=None
     return identities
 
 
-def canonical_candidate_json(value):
-    """Serialize v1 candidate values strictly: sorted UTF-8 JSON, no NaN or coercion."""
+def canonical_pipeline_json(value):
+    """Serialize pipeline metadata strictly: sorted UTF-8 JSON, no NaN or coercion."""
     return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
 
 
-def _candidate_hash(value):
-    return hashlib.sha256(canonical_candidate_json(value).encode("utf-8")).hexdigest()
-
-
-def _portable_candidate_value(value, *, exclude_bindings=False):
-    # Only contract definitions opt into recursive physical-binding normalization.
-    # Project configuration and nested operation parameters retain every key.
-    bindings = {"environment_name", "workspace_id", "workspace_name", "lakehouse_id", "lakehouse_name",
-                "warehouse_id", "warehouse_name", "schema_name", "table_id", "contract_id",
-                "schema", "store", "table_name", "target_table_id", "notebook_id", "notebook_name", "guardrail_rule_id"}
-    if isinstance(value, dict):
-        if any(re.search(r"secret|password|credential|access_token|api[_-]?key|authorization|bearer|connection_string", key, re.I) for key in value):
-            raise ValueError("Candidate configuration must not contain secrets.")
-        return {key: _portable_candidate_value(item, exclude_bindings=exclude_bindings)
-                for key, item in value.items() if not exclude_bindings or key not in bindings}
-    if isinstance(value, (list, tuple)):
-        return [_portable_candidate_value(item, exclude_bindings=exclude_bindings) for item in value]
-    return value
-
-
-def _portable_contract_payload(payload, table_names):
-    names = {**table_names, **{column["column_id"]: column["column_name"]
-                             for column in payload.get("table", {}).get("columns", [])
-                             if column.get("column_id") and column.get("column_name")}}
-
-    def normalize(value):
-        if isinstance(value, dict):
-            return {key: normalize(item) for key, item in value.items()}
-        if isinstance(value, list):
-            return [normalize(item) for item in value]
-        return names.get(value, value) if isinstance(value, str) else value
-
-    return _portable_candidate_value(normalize(payload), exclude_bindings=True)
-
-
-def pipeline_candidate(plan):
-    """Build portable candidate identity and retain exact frozen hashes separately."""
-    identities = json.loads(plan.participants_json)
-    contracts = json.loads(plan.contracts_json)
-    participants, bindings = [], []
-    table_names = {table_id: identity.get("logical_id") or f"{identity['store']}/{identity['table_name']}"
-                   for table_id, identity in identities.items()}
-    table_names.update({contract["table_id"]: table_names[table_id] for table_id, contract in contracts.items()
-                        if contract is not None and contract.get("table_id")})
-    for table_id, identity in identities.items():
-        logical = identity.get("logical_id") or f"{identity['store']}/{identity['table_name']}"
-        contract = contracts.get(table_id)
-        exact = None if contract is None else {
-            "contract_id": contract["contract_id"], "contract_version": contract["contract_version"],
-            "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode("utf-8")).hexdigest(),
-        }
-        bindings.append({"participant": logical, "table_id": table_id, "contract": exact})
-        participants.append({"participant": logical, "table_id": table_id, "roles": sorted(identity["roles"]),
-                             "contract_version": contract["contract_version"] if contract else None,
-                             "contract": _portable_contract_payload(json.loads(contract["contract_payload_json"]), table_names) if contract else None})
-    candidate = {"format": "fabricops.pipeline-candidate.v1", "pipeline_id": plan.pipeline_id,
-                 "project_configuration": _portable_candidate_value(json.loads(plan.configuration_json)),
-                 "participants": sorted(participants, key=lambda item: item["participant"]),
-                 "operations": sorted([{"operation": key, "configuration_sha256": value.get("configuration_sha256"),
-                                         "configuration": value.get("configuration")}
-                                       for key, value in plan.evidence["operations"].items()], key=lambda item: item["operation"])}
-    valid = bool(plan.pipeline_id) and isinstance(candidate["project_configuration"], dict)
-    valid = valid and len({item["participant"] for item in participants}) == len(participants)
-    valid = valid and all(item["configuration_sha256"] for item in candidate["operations"])
-    portable_fingerprint = _candidate_hash(candidate) if valid else None
-    candidate["portable_fingerprint"] = portable_fingerprint
-    candidate["physical_bindings"] = plan.runtime_context.get("_pipeline_bindings")
-    candidate["exact_contract_payloads"] = sorted(
-        [{"participant": item["participant"], "contract": ({"contract_id": item["contract"]["contract_id"],
-          "contract_version": item["contract"]["contract_version"], "payload_sha256": item["contract"]["payload_sha256"]} if item["contract"] else None)} for item in bindings],
-        key=lambda item: item["participant"])
-    return candidate, _candidate_hash(candidate) if valid else None, bindings
+def _metadata_hash(value):
+    return hashlib.sha256(canonical_pipeline_json(value).encode("utf-8")).hexdigest()
 
 
 def pipeline_record_content(value):
@@ -5726,212 +5655,64 @@ def pipeline_record_content(value):
     return value
 
 
-def pipeline_definition_row(candidate, *, environment, fingerprint, audit=None):
-    """Encode one complete immutable configuration without duplicating authored contracts."""
-    exact = {item["participant"]: item["contract"] for item in candidate["exact_contract_payloads"]}
-    participants = []
-    for item in candidate["participants"]:
-        ref = exact[item["participant"]] or {}
-        participants.append({key: item[key] for key in ("participant", "table_id", "roles")} | {
-            "contract_id": ref.get("contract_id"), "contract_version": ref.get("contract_version"),
-            "payload_sha256": ref.get("payload_sha256")})
-    return {"definition_id": _candidate_hash({"environment_name": environment, "candidate": candidate}),
-        "pipeline_id": candidate["pipeline_id"], "environment_name": environment,
-        "candidate_fingerprint": fingerprint or None,
-        "project_configuration_json": canonical_candidate_json(candidate["project_configuration"]),
-        "participants": participants,
-        "operation_configurations": [{"operation_key": item["operation"],
-            "configuration_sha256": item.get("configuration_sha256"),
-            "configuration_json": canonical_candidate_json(item.get("configuration"))}
-            for item in candidate["operations"]],
-        "physical_bindings": None if candidate.get("physical_bindings") is None else [
-            {"table_id": key, **value} for key, value in sorted(candidate["physical_bindings"].items())],
-        **(audit or {})}
-
-
-def pipeline_definition_candidate(row, *, context=None, spark_session=None, contracts=None):
-    """Resolve exact frozen references and verify the complete sealed definition hash."""
-    if contracts is None:
-        from fabricops_kit.activated_pipeline.shared import metadata_records
-        contracts = metadata_records("METADATA_DATA_CONTRACT", context=context, spark_session=spark_session) if any(
-            item.get("contract_id") for item in row["participants"]) else []
-    from fabricops_kit.activated_pipeline.shared import exact_record
-    participants, exact = [], []
-    names = {item["table_id"]: item["participant"] for item in row["participants"]}
-    if len(names) != len(row["participants"]) or len(set(names.values())) != len(names):
-        raise ValueError("Duplicate immutable definition participant identity; reconcile metadata.")
-    for item in row["participants"]:
-        payload, ref = None, None
-        if item.get("contract_id"):
-            contract = exact_record(contracts, contract_id=item["contract_id"], contract_version=item["contract_version"])
-            if (contract.get("status") != "frozen" or contract.get("table_id") != item["table_id"]
-                    or hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() != item["payload_sha256"]):
-                raise ValueError("Referenced frozen contract is altered; restore exact retained content before execution.")
-            payload = _portable_contract_payload(json.loads(contract["contract_payload_json"]), names)
-            ref = {key: item[key] for key in ("contract_id", "contract_version", "payload_sha256")}
-        elif item.get("contract_version") is not None or item.get("payload_sha256") is not None:
-            raise ValueError("Incomplete immutable definition contract reference.")
-        if not item["roles"] or len(set(item["roles"])) != len(item["roles"]) or set(item["roles"]) - {"source", "target"}:
-            raise ValueError("Invalid immutable definition roles.")
-        participants.append({key: item[key] for key in ("participant", "table_id", "roles")} | {
-            "contract_version": item.get("contract_version"), "contract": payload})
-        exact.append({"participant": item["participant"], "contract": ref})
-    operations = [{"operation": item["operation_key"], "configuration_sha256": item.get("configuration_sha256"),
-                   "configuration": json.loads(item["configuration_json"])} for item in row["operation_configurations"]]
-    expected = {f"{role}:{item['participant']}" for item in participants for role in item["roles"]}
-    if {item["operation"] for item in operations} != expected or len(operations) != len(expected):
-        raise ValueError("Incomplete immutable definition operations.")
-    candidate = {"format": "fabricops.pipeline-candidate.v1", "pipeline_id": row["pipeline_id"],
-        "project_configuration": json.loads(row["project_configuration_json"]),
-        "participants": participants, "operations": operations}
-    valid = bool(row["pipeline_id"]) and isinstance(candidate["project_configuration"], dict) and all(
-        item["configuration_sha256"] for item in operations)
-    candidate["portable_fingerprint"] = _candidate_hash(candidate) if valid else None
-    bindings = row["physical_bindings"]
-    if bindings is not None and len({item["table_id"] for item in bindings}) != len(bindings):
-        raise ValueError("Duplicate immutable definition physical binding.")
-    candidate["physical_bindings"] = None if bindings is None else {
-        item["table_id"]: {key: value for key, value in item.items() if key != "table_id"} for item in bindings}
-    candidate["exact_contract_payloads"] = exact
-    if (row["definition_id"] != _candidate_hash({"environment_name": row["environment_name"], "candidate": candidate})
-            or (row.get("candidate_fingerprint") or None) != (_candidate_hash(candidate) if valid else None)):
-        raise ValueError("Immutable pipeline definition integrity mismatch; reconcile retained metadata.")
-    return candidate
-
-
-def read_pipeline_definition(definition_id, *, context, spark_session=None):
-    """Read exactly one retained definition; never substitute the latest configuration."""
-    config, _env, _runtime = resolve_fabric_context(context=context)
-    frame = read_lakehouse_table("METADATA_PIPELINE_DEFINITION", store="Metadata",
-        schema=metadata_table_physical_schema(config, "METADATA_PIPELINE_DEFINITION"),
-        context=context, spark_session=spark_session)
-    rows = [_row_to_dict(row) for row in frame.filter(
-        "definition_id = '" + definition_id.replace("'", "''") + "'").limit(2).collect()]
-    if len(rows) != 1:
-        raise ValueError("Immutable pipeline definition is missing or duplicated; restore retained metadata.")
-    pipeline_definition_candidate(rows[0], context=context, spark_session=spark_session)
-    return rows[0]
-
-
-def seal_pipeline_definition(candidate, *, environment, fingerprint, context, spark_session=None):
-    """Idempotently append one content-addressed definition before publishing any reference."""
-    from delta.tables import DeltaTable
-    config, env, runtime = resolve_fabric_context(context=context)
-    table = "METADATA_PIPELINE_DEFINITION"
-    row = pipeline_definition_row(candidate, environment=environment, fingerprint=fingerprint,
-        audit=build_runtime_audit_fields(config=config, env=env, runtime_context=runtime))
-    pipeline_definition_candidate(row, context=context, spark_session=spark_session)
-    spark = get_spark_session(spark_session)
-    _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", table,
-        metadata_table_physical_schema(config, table), context=context)
-    properties = DeltaTable.forPath(spark, path).detail().select("properties").first()["properties"]
-    if "delta.setTransactionRetentionDuration" in properties:
-        raise RuntimeError("Immutable definitions require unbounded Delta transaction identity retention.")
-    try:
-        (spark.createDataFrame([coerce_metadata_row_types(table, row)], metadata_table_schema_registry()[table])
-         .write.format("delta").mode("append").option("txnAppId", "fabricops-definition:" + row["definition_id"])
-         .option("txnVersion", 0).save(path))
-    except Exception:
-        # Exact content read-back handles a committed append with a lost acknowledgement.
-        read_pipeline_definition(row["definition_id"], context=context, spark_session=spark_session)
-    observed = read_pipeline_definition(row["definition_id"], context=context, spark_session=spark_session)
-    if any(observed.get(key) != value for key, value in row.items() if not key.startswith("_")):
-        raise RuntimeError("Immutable definition publication was not confirmed.")
-    return row["definition_id"]
-
-
-def validate_pipeline_run_result(row):
-    """Require exact definition membership and a successful whole-run boundary."""
-    candidate = json.loads(row["candidate_json"])
-    summary = json.loads(row["operation_summary_json"])
-    operations = summary["operations"]
-    configured = {item["operation"]: item for item in candidate["operations"]}
-    expected = {f"{role}:{item['participant']}" for item in candidate["participants"] for role in item["roles"]}
-    if (set(configured) != expected or len(configured) != len(candidate["operations"])
-            or set(operations) != expected or any(
-        configured[key].get("configuration_sha256") != item.get("configuration_sha256")
-        or configured[key].get("configuration") != item.get("configuration") for key, item in operations.items())):
-        raise ValueError("Pipeline Run operation configuration or membership differs from its definition.")
-    if row.get("candidate_fingerprint") and _candidate_hash(candidate) != row["candidate_fingerprint"]:
-        raise ValueError("Pipeline Run candidate fingerprint mismatch.")
-    if row["status"] == "succeeded" and (not row.get("completed_at") or summary.get("boundary_completed") is not True
-            or summary.get("failures") or not operations or any(item["status"] != "succeeded" or not item["stages"]
-            or not item.get("configuration_sha256") or not isinstance(item.get("configuration"), dict)
+def validate_pipeline_run(row):
+    """Validate native operation facts without a configuration snapshot or definition join."""
+    operations = row["operations"]
+    keys = [(item["table_id"], item["pipeline_role"]) for item in operations]
+    if len(keys) != len(set(keys)) or len({item["operation_key"] for item in operations}) != len(keys):
+        raise ValueError("Duplicate Pipeline Run operation membership.")
+    for item in operations:
+        if item["pipeline_role"] not in {"source", "target"} or not item["table_id"] or not item["destination"]:
+            raise ValueError("Pipeline Run requires exact table roles and destinations.")
+        refs = [item.get(key) for key in ("contract_id", "contract_version", "payload_sha256")]
+        if any(value is not None for value in refs) and not all(value is not None for value in refs):
+            raise ValueError("Incomplete Pipeline Run contract reference.")
+        if len(set(item["source_table_ids"])) != len(item["source_table_ids"]):
+            raise ValueError("Duplicate Pipeline Run source association.")
+        if item["status"] == "succeeded":
+            mode = item["read_mode"] if item["pipeline_role"] == "source" else item["write_mode"]
+            allowed = {"full", "incremental"} if item["pipeline_role"] == "source" else {"overwrite", "append", "scd1", "scd2"}
+            if mode not in allowed:
+                raise ValueError("Successful Pipeline Run operation requires its execution mode.")
+    if row["status"] == "succeeded" and (not row.get("completed_at") or row["boundary_completed"] is not True
+            or row["failures"] or not operations or any(item["status"] != "succeeded" or not item["stages"]
             or len({stage["stage"] for stage in item["stages"]}) != len(item["stages"])
-            or any(stage.get("status") not in {"passed", "warning", "skipped"} or stage.get("evaluation_status") == "not_fully_evaluated"
-                   for stage in item["stages"]) for item in operations.values())):
-        raise ValueError("Pipeline Run successful authority lacks complete operation evidence.")
+            or any(stage.get("status") not in {"passed", "warning", "skipped"}
+                   or stage.get("evaluation_status") == "not_fully_evaluated" for stage in item["stages"])
+            for item in operations)):
+        raise ValueError("Pipeline Run success requires complete whole-run operation results.")
+    return row
 
 
-def pipeline_run_row(row):
-    """Encode execution facts and an exact sealed definition reference in one run row."""
-    validate_pipeline_run_result(row)
-    candidate = json.loads(row["candidate_json"])
-    summary = json.loads(row["operation_summary_json"])
-    definition = pipeline_definition_row(candidate, environment=row["environment_name"], fingerprint=row.get("candidate_fingerprint"))
-    from fabricops_kit.config.metadata_schemas import PROFILE_EVENT_FIELDS
-    if set(summary) - {"operations", "boundary_completed", "frozen_contracts", "physical_bindings", "activation_revision", "warnings", "failures", "profiling"}:
-        raise ValueError("Unknown Pipeline Run summary fields; reconcile metadata.")
-    if any(set(item) - {field[0] for field in PROFILE_EVENT_FIELDS} for item in summary.get("profiling", [])):
-        raise ValueError("Unknown Pipeline Run profiling fields; reconcile metadata.")
-    if any(set(item) - {"code", "exception_type"} for item in summary.get("failures", [])):
-        raise ValueError("Unknown Pipeline Run failure fields; reconcile metadata.")
-    allowed = {"status", "configuration_sha256", "configuration", "stages", "started_at", "completed_at"}
-    typed = []
-    for key, item in sorted(summary["operations"].items()):
-        if set(item) - allowed or any(set(stage) - {"stage", "status", "evaluation_status"} for stage in item["stages"]):
-            raise ValueError("Unknown Pipeline Run operation fields; reconcile history offline.")
-        typed.append({"operation_key": key, **{name: item.get(name) for name in ("status", "started_at", "completed_at", "stages")}})
-    physical = {key: value for key, value in row.items() if key in {
-        "run_id", "pipeline_id", "execution_mode", "environment_name", "started_at", "completed_at", "status"} or key.startswith("_")}
-    physical.update(approval_id=row.get("activated_pipeline_id"), definition_id=definition["definition_id"],
-        activation_revision=summary.get("activation_revision"), boundary_completed=summary["boundary_completed"],
-        operations=typed, profiling=summary.get("profiling", []), failures=summary.get("failures", []),
-        warnings_json=canonical_candidate_json(summary.get("warnings", [])))
-    return coerce_metadata_row_types("METADATA_PIPELINE_RUN", physical)
-
-
-def pipeline_run_result(row, *, context=None, spark_session=None, definition=None):
-    """Resolve immutable configuration and reconstruct the supported notebook result."""
-    if "definition_id" not in row or "candidate_json" in row or "run_details_json" in row:
-        raise ValueError("Unsupported Pipeline Run physical shape; joint redesign reconciliation is required.")
-    definition = definition or read_pipeline_definition(row["definition_id"], context=context, spark_session=spark_session)
-    candidate = pipeline_definition_candidate(definition, context=context, spark_session=spark_session)
-    if (definition["definition_id"] != row["definition_id"] or definition["pipeline_id"] != row["pipeline_id"]
-            or definition["environment_name"] != row["environment_name"]):
-        raise ValueError("Pipeline Run references a foreign immutable definition.")
-    configs = {item["operation"]: item for item in candidate["operations"]}
-    operations = {}
-    for item in row["operations"]:
-        key = item["operation_key"]
-        if key in operations or key not in configs:
-            raise ValueError("Duplicate or foreign Pipeline Run logical operation.")
-        operation = {"status": item["status"], "configuration_sha256": configs[key].get("configuration_sha256"),
-            "stages": [{key: value for key, value in stage.items() if value is not None} for stage in item["stages"]]}
-        if configs[key].get("configuration") is not None:
-            operation["configuration"] = configs[key]["configuration"]
-        for field in ("started_at", "completed_at"):
-            timestamp = item.get(field)
-            if timestamp is not None:
-                if isinstance(timestamp, str):
-                    timestamp = datetime.fromisoformat(timestamp)
-                if timestamp.tzinfo is None:
-                    timestamp = timestamp.replace(tzinfo=UTC)
-                operation[field] = timestamp.astimezone(UTC).isoformat()
-        operations[key] = operation
-    bindings = [{"participant": item["participant"], "table_id": item["table_id"], "contract": ref["contract"]}
-        for item, ref in zip(candidate["participants"], candidate["exact_contract_payloads"])]
-    summary = {"operations": operations, "boundary_completed": row["boundary_completed"],
-        "frozen_contracts": bindings, "physical_bindings": candidate["physical_bindings"],
-        "activation_revision": row.get("activation_revision"), "warnings": json.loads(row["warnings_json"]),
-        "failures": [{key: value for key, value in item.items() if value is not None} for item in row["failures"]],
-        "profiling": [{key: value for key, value in item.items() if value is not None} for item in row["profiling"]]}
-    logical = {key: value for key, value in row.items() if key in {
-        "run_id", "pipeline_id", "execution_mode", "environment_name", "started_at", "completed_at", "status"} or key.startswith("_")}
-    logical.update(activated_pipeline_id=row.get("approval_id"), candidate_fingerprint=definition.get("candidate_fingerprint") or "",
-        candidate_json=canonical_candidate_json(candidate), operation_summary_json=canonical_candidate_json(summary))
-    validate_pipeline_run_result(logical)
-    return logical
+def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
+    """Capture actual table/contract participation and only settings enforced by Live."""
+    identities, contracts = json.loads(plan.participants_json), json.loads(plan.contracts_json)
+    operations = []
+    for table_id, identity in identities.items():
+        contract = contracts.get(table_id)
+        for role in identity["roles"]:
+            key = f"{role}:{identity.get('logical_id') or identity['store'] + '/' + identity['table_name']}"
+            actual = plan.evidence["operations"][key]
+            operations.append({"operation_key": key, "table_id": table_id, "pipeline_role": role,
+                "contract_id": contract["contract_id"] if contract else None,
+                "contract_version": contract["contract_version"] if contract else None,
+                "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() if contract else None,
+                "destination": plan.runtime_context["_pipeline_bindings"][table_id],
+                **{name: actual.get(name) for name in ("read_mode", "write_mode", "query_sha256", "incremental_target_table_id",
+                    "started_at", "completed_at")}, "source_table_ids": actual.get("source_table_ids", []),
+                "status": actual["status"], "stages": actual["stages"]})
+    config = plan.runtime_context["config"]
+    row = {"run_id": plan.plan_id, "pipeline_id": plan.pipeline_id, "approval_id": plan.approval_id or None,
+        "execution_mode": plan.execution_mode, "environment_name": plan.environment,
+        "started_at": plan.evidence["started_at"], "completed_at": completed_at, "status": status,
+        "activation_revision": plan.activation_revision or None,
+        "boundary_completed": plan.evidence.get("boundary_completed", False),
+        "operations": sorted(operations, key=lambda item: item["operation_key"]),
+        "profiling": plan.evidence.get("profiling", []), "failures": plan.evidence["failures"],
+        "warnings_json": canonical_pipeline_json(plan.evidence.get("warnings", [])),
+        **(build_runtime_audit_fields(config=config, env=plan.environment, runtime_context=plan.runtime_context) if durable else {})}
+    validate_pipeline_run(row)
+    return coerce_metadata_row_types("METADATA_PIPELINE_RUN", row)
 
 
 def _read_pipeline_run_rows(plan, *, spark_session=None):
@@ -5950,10 +5731,7 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
     spark = get_spark_session(spark_session)
     table = "METADATA_PIPELINE_RUN"
     schema = metadata_table_schema_registry()[table]
-    seal_pipeline_definition(json.loads(row["candidate_json"]), environment=plan.environment,
-        fingerprint=row.get("candidate_fingerprint"), context=plan.runtime_context, spark_session=spark_session)
-    physical = pipeline_run_row(row)
-    validate_pipeline_run_result(row)
+    physical = validate_pipeline_run(row)
     expected = plan.evidence.get("persisted_run_row")
     frame = spark.createDataFrame([{**physical, "_expected": expected}], StructType([
         *schema.fields, StructField("_expected", schema, True)]))
@@ -5986,12 +5764,9 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
                 # Delta aborted this transaction. Retry metadata only; the same
                 # expected row still fences a stale writer on this run ID.
     stored = _read_pipeline_run_rows(plan, spark_session=spark_session)
-    observed = pipeline_run_result(stored[0], context=plan.runtime_context, spark_session=spark_session) if len(stored) == 1 else {}
-    wanted = pipeline_run_result(physical, context=plan.runtime_context, spark_session=spark_session)
-    if not observed or not all(
-        metadata_timestamp_sort_key(observed.get(key)) == metadata_timestamp_sort_key(value)
-        if isinstance(value, datetime) else observed.get(key) == value for key, value in wanted.items()
-    ):
+    observed = validate_pipeline_run(stored[0]) if len(stored) == 1 else {}
+    wanted = validate_pipeline_run(physical)
+    if not observed or pipeline_record_content(observed) != pipeline_record_content(wanted):
         raise RuntimeError("Pipeline Run publication was not confirmed.")
     plan.evidence["persisted_run_row"] = stored[0]
 
@@ -6003,40 +5778,10 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
     durable = plan.permits_persistence or persist_testing
     row = None
     try:
-        candidate, fingerprint, bindings = pipeline_candidate(plan)
-        journal = {key: dict(value) for key, value in plan.evidence["operations"].items()}
-        if plan.execution_mode == "live" and plan.approved_candidate_json:
-            candidate = json.loads(plan.approved_candidate_json)
-            fingerprint = _candidate_hash(candidate)
-            refs = {item["participant"]: item["contract"] for item in candidate["exact_contract_payloads"]}
-            bindings = [{"participant": item["participant"], "table_id": item["table_id"], "contract": refs[item["participant"]]}
-                        for item in candidate["participants"]]
-            for configured in candidate["operations"]:
-                operation = journal[configured["operation"]]
-                operation.update(configuration=configured["configuration"], configuration_sha256=configured["configuration_sha256"])
-        base = _candidate_hash({key: value for key, value in candidate.items()
-                                if key not in {"operations", "portable_fingerprint"}})
-        previous = plan.evidence.setdefault("candidate_base", base)
-        if previous != base and not plan.evidence.get("dynamic_participants"):
-            plan.evidence["failures"].append({"code": "candidate_changed_during_run"})
         if plan.evidence["failures"] or any(item["status"] == "failed" for item in plan.evidence["operations"].values()) or any(
             result.get("can_continue") is False for result in plan.results):
             status = "failed"
-        if status == "succeeded" and plan.execution_mode == "testing" and not fingerprint:
-            status = "incomplete"
-        row = {"run_id": plan.plan_id, "activated_pipeline_id": plan.activated_pipeline_id or None, "pipeline_id": plan.pipeline_id,
-               "execution_mode": plan.execution_mode, "environment_name": plan.environment,
-               "started_at": plan.evidence["started_at"], "completed_at": completed_at,
-               "status": status, "candidate_fingerprint": fingerprint or "",
-               "candidate_json": canonical_candidate_json(candidate),
-               "operation_summary_json": canonical_candidate_json({"operations": journal,
-                    "frozen_contracts": bindings, "failures": plan.evidence["failures"],
-                    "profiling": plan.evidence.get("profiling", []),
-                    "activation_revision": plan.activation_revision, "warnings": plan.evidence.get("warnings", []),
-                    "boundary_completed": plan.evidence.get("boundary_completed", False),
-                    "physical_bindings": plan.runtime_context.get("_pipeline_bindings")}),
-               **(build_runtime_audit_fields(config=plan.runtime_context["config"], env=plan.environment,
-                                            runtime_context=plan.runtime_context) if durable else {})}
+        row = pipeline_run_row(plan, status=status, completed_at=completed_at, durable=durable)
         if durable:
             _merge_pipeline_run_row(plan, row, spark_session=spark_session)
         return row
@@ -6045,8 +5790,8 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
             try:
                 matches = _read_pipeline_run_rows(plan, spark_session=spark_session)
                 if len(matches) == 1:
-                    pipeline_run_result(matches[0], context=plan.runtime_context, spark_session=spark_session)
-                    if pipeline_record_content(matches[0]) == pipeline_record_content(pipeline_run_row(row)):
+                    validate_pipeline_run(matches[0])
+                    if pipeline_record_content(matches[0]) == pipeline_record_content(row):
                         plan.evidence["persisted_run_row"] = matches[0]
                         return row
             except Exception:
@@ -6129,73 +5874,24 @@ class PipelineOperation:
             key = f"{self.role}:{logical}"
             if plan.evidence["operations"][key]["status"] != "not_started":
                 raise ValueError("Duplicate operation: retries require a new pipeline execution plan.")
-            self.record = {"status": "incomplete", "configuration_sha256": None, "stages": [],
+            self.record = {"status": "incomplete", "stages": [],
                            "started_at": datetime.now(UTC).isoformat()}
             plan.evidence["operations"][key] = self.record
-            excluded = {"execution_plan", "spark_session", "verbose", "dataframe", "existing_mapping", "sources", "session"}
-            configuration = {name: value for name, value in args.items() if name not in excluded}
+            # These are the only notebook settings retained and compared in Live.
+            # Processing parameters and profiling policy belong to the table contract.
+            self.record.update(read_mode=str(args.get("read_mode", "full") or "").strip().lower() if self.role == "source" else None,
+                write_mode=str(args.get("write_mode", "overwrite") or "").strip().lower() if self.role == "target" else None,
+                query_sha256=hashlib.sha256(args["query"].encode()).hexdigest() if args.get("query") else None,
+                incremental_target_table_id=args.get("target_table_id"), source_table_ids=[])
             if self.role == "target":
                 args["sources"] = tuple(args["sources"])
-                configuration["sources"] = sorted(identities[source["table_id"]].get("logical_id") or
-                                                  f"{identities[source['table_id']]['store']}/{identities[source['table_id']]['table_name']}"
-                                                  for source in args["sources"])
-            if args.get("target_table_id") is not None:
-                target = identities[args["target_table_id"]]
-                configuration["incremental_target"] = target.get("logical_id") or f"{target['store']}/{target['table_name']}"
-            config = plan.runtime_context["config"]
-            configuration["audit_timezone"] = config.get("audit_timezone", "UTC") if isinstance(config, dict) else getattr(config, "audit_timezone", "UTC")
-            mapping_configured = bool(getattr(getattr(config, "governance_config", None), "sensitive_data_token_mapping", {}))
-            spark = get_spark_session(args.get("spark_session"))
-            sql_configuration = {}
-            if hasattr(spark, "conf"):
-                for name in ("spark.sql.session.timeZone", "spark.sql.caseSensitive", "spark.sql.ansi.enabled",
-                             "spark.sql.legacy.timeParserPolicy", "spark.sql.timestampType"):
-                    sql_configuration[name] = spark.conf.get(name)
-            configuration["spark_sql"] = sql_configuration
-            query_available = True
-            if args.get("query"):
-                import sqlglot
-                from sqlglot import exp
-                query = sqlglot.parse_one(args["query"], read="tsql")
-                for table in query.find_all(exp.Table):
-                    matches = [item for item in identities.values() if item["table_name"].casefold() == table.name.casefold()
-                               and (not table.db or str(item.get("schema") or "").casefold() == table.db.casefold())]
-                    if table.catalog or len(matches) != 1:
-                        query_available = False
-                        continue
-                    logical = matches[0].get("logical_id") or f"{matches[0]['store']}/{matches[0]['table_name']}"
-                    table.set("this", exp.Identifier(this=logical, quoted=True))
-                    table.set("db", None)
-                configuration["query"] = {"sha256": hashlib.sha256(query.sql(dialect="tsql").encode()).hexdigest()}
-            # Routing is already captured as explicit participant bindings. Only
-            # these top-level API arguments are physical; identically named keys
-            # inside read/write parameters remain part of processing configuration identity.
-            configuration = _portable_candidate_value({key: value for key, value in configuration.items()
-                if key not in {"store", "schema", "table_name", "target_table_id"}})
-            # SQL and mapping content require dependency identity support beyond this API.
-            self.record["configuration_sha256"] = _candidate_hash(configuration) if (
-                args.get("existing_mapping") is None and not mapping_configured and query_available and sql_configuration
-            ) else None
-            self.record["configuration"] = configuration
+                self.record["source_table_ids"] = sorted(source["table_id"] for source in args["sources"])
             if plan.execution_mode == "live":
-                if not plan.activated_pipeline_id or not plan.approved_candidate_json:
-                    raise ValueError("Live requires an approved Activated Pipeline manifest.")
-                approved = {item["operation"]: item for item in json.loads(plan.approved_candidate_json)["operations"]}
-                if key not in approved:
-                    raise ValueError("Live operation is absent from the approved configuration.")
-                permitted = {"repartition_by", "grain_discovery_enabled", "grain_discovery_max_columns",
-                             "grain_discovery_max_candidates", "frequency_enabled", "frequency_top_n", "dq_diagnostics"}
-                tested = approved[key]["configuration"]
-                differences = {name for name in set(configuration) | set(tested) if configuration.get(name) != tested.get(name)}
-                if differences - permitted or not self.record["configuration_sha256"]:
-                    raise ValueError("Live operation configuration differs from the exact tested approved configuration.")
-                if differences:
-                    import warnings
-                    warning = {"operation": key, "operational_parameters": sorted(differences),
-                               "tested": {name: tested.get(name) for name in differences},
-                               "actual": {name: configuration.get(name) for name in differences}}
-                    plan.evidence.setdefault("warnings", []).append(warning)
-                    warnings.warn("Live operational parameters differ from Testing: " + ", ".join(sorted(differences)), stacklevel=2)
+                approved = {(item["table_id"], item["pipeline_role"]): item for item in json.loads(plan.approved_operations_json)}
+                tested = approved.get((table_id, self.role))
+                enforced = ("read_mode", "write_mode", "query_sha256", "incremental_target_table_id", "source_table_ids")
+                if not plan.approval_id or tested is None or any(self.record.get(name) != tested.get(name) for name in enforced):
+                    raise ValueError("Live table or execution mode differs from the approved Test run.")
             persist_pipeline_run(plan, spark_session=args.get("spark_session"))
             return self
         except BaseException as exc:
@@ -6401,12 +6097,12 @@ class PipelineSession:
                             contract_guardrail_rows(selected, environment_name=self.plan.environment, table_id=table_id)
                             contracts[table_id] = selected
                         self.plan.evidence["operations"][f"{participant_role}:{logical}"] = {
-                            "status": "not_started", "configuration_sha256": None, "stages": []}
+                            "status": "not_started", "stages": []}
                 context = {**self.plan.runtime_context, "_pipeline_bindings": pipeline_physical_bindings(
                     identities, config=self.plan.runtime_context["config"], environment=self.plan.environment)}
                 from types import MappingProxyType
-                self.plan = replace(self.plan, participants_json=canonical_candidate_json(identities),
-                    selections_json=canonical_candidate_json(selections), contracts_json=canonical_candidate_json(contracts),
+                self.plan = replace(self.plan, participants_json=canonical_pipeline_json(identities),
+                    selections_json=canonical_pipeline_json(selections), contracts_json=canonical_pipeline_json(contracts),
                     runtime_context=MappingProxyType(context))
             return self.plan
 
@@ -6762,7 +6458,7 @@ def profiling_context_key(table_id, *, context, spark_session=None):
         config, env, table_id, context=runtime, spark_session=spark_session)
     physical = pipeline_physical_bindings({table_id: identity}, config=config, environment=env)[table_id]
     descriptor = {"table_id": table_id, "environment": env, "physical": physical}
-    return _candidate_hash(descriptor), descriptor
+    return _metadata_hash(descriptor), descriptor
 
 
 def contract_profiling_policy(table_id, *, context):

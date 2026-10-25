@@ -29,3 +29,7 @@ See the [complete lifecycle, failure policy and limits](https://github.com/Voyce
 Run `setup_metadata_tables()` under controlled administration to initialize the consolidated Pipeline Registry and immutable Definition/Run tables. Carry the saved Pipeline UUID into Production, run Test there, and approve that environment explicitly. Registration never activates a pipeline.
 
 **Expected result:** one consistent approved environment revision with one table contract, at most one writer per table, and all affected pipelines tested together.
+
+??? info "What activation checks"
+
+    Registry selects an exact successful finalized Test Run for each pipeline and environment. Run operations record the tables, frozen contract versions, physical destinations and read/write modes. Live validates those facts before each orchestrator operation; contracts continue to control table rules, processing and profiling policies. No separate Definition/Configuration table or full argument snapshot is used. Approval does not scan future notebook cells or verify arbitrary transformation code.

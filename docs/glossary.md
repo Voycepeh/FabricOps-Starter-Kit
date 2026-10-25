@@ -31,18 +31,13 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="activated-pipeline">
 <summary><strong>activated pipeline</strong> — An immutable approved version of a completely and successfully tested whole pipeline.</summary>
-<p>METADATA_PIPELINE_REGISTRY contains typed immutable approval references and the active selections for each environment and pipeline_id. Each decision binds a successful finalized Test, an exact Agreement version/hash and a sealed METADATA_PIPELINE_DEFINITION with global frozen contracts, transformation settings and physical destinations. Governance approves affected pipelines together; new Live runs resolve the coordinated revision automatically. Activation neither deploys notebooks nor writes business data.</p>
+<p>METADATA_PIPELINE_REGISTRY contains typed immutable approval references and the active selections for each environment and pipeline_id. Each decision binds a successful finalized Test, an exact Agreement version/hash and the table contracts, destinations and operation modes recorded by that Test. Governance approves affected pipelines together; new Live runs resolve the coordinated revision automatically. Activation neither deploys notebooks nor writes business data. Approval covers the recorded table contracts and operation modes; it does not verify arbitrary notebook transformation code.</p>
 <p><strong>Also known as:</strong> activated pipelines</p>
 </details>
 
 <details id="pipeline-registry">
 <summary><strong>Pipeline Registry</strong> — Atomic authority for pipeline registrations, immutable approval references, Live selections and reservations.</summary>
 <p>METADATA_PIPELINE_REGISTRY stores one native central authority row in Engineering. Typed collections separate Engineering notebook bindings, Governance decisions, Live selections, table ownership and execution/profiling reservations. All share one CAS token. Registration recovers a permanent UUIDv4 using exact workspace and notebook IDs and never grants Live authorization.</p>
-</details>
-
-<details id="pipeline-definition">
-<summary><strong>Pipeline Definition</strong> — A complete immutable configuration for one pipeline and environment.</summary>
-<p>METADATA_PIPELINE_DEFINITION seals content-addressed configurations with declared Read/Write participants, global table IDs, exact frozen contract references, physical destinations and project/operation settings. Finalized Test and Live Run rows reference exact definitions; Governance decisions select tested definitions through METADATA_PIPELINE_REGISTRY. A definition alone never authorizes Live, and referenced content must remain retained and hash-verifiable.</p>
 </details>
 
 <details id="pipeline-execution-plan">
@@ -348,7 +343,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-run">
 <summary><strong>pipeline run</strong> — One logical pipeline execution across every declared Read and Write.</summary>
-<p>METADATA_PIPELINE_RUN stores one authoritative row per run with a native typed operations array for every declared Read and Write. Typed operation and stage fields expose exact table/contract identity, configuration hash, status and timing within the same atomic row. Notebook cell events detect failure but do not establish whole-run success. finalize_pipeline records whole-run completion; unfinalized runs remain incomplete. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.</p>
+<p>METADATA_PIPELINE_RUN stores one authoritative row per execution with native Read/Write operations: table ID, role, exact contract version/hash, physical destination, read/write mode, SQL hash, source associations, status and timing. Explicit finalize_pipeline records whole-run completion; cell success does not establish completion. Registry approvals reference exact successful finalized Test Runs. Live pins approval_id and checks table bindings and operation modes before execution. No full argument snapshot, configuration fingerprint or notebook code snapshot is captured.</p>
 </details>
 
 <details id="pyspark">

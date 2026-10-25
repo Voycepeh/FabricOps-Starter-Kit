@@ -148,8 +148,8 @@ def test_metadata_explorer_keeps_keys_readable_and_loads_canonical_details() -> 
     svg_source = diagram.read_text(encoding="utf-8")
     svg = ET.fromstring(svg_source)
     links = svg.findall(".//{http://www.w3.org/2000/svg}a")
-    assert len(links) == 13
-    assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 13
+    assert len(links) == 12
+    assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 12
     assert "metadata-explorer-approved-svg" in js
     assert "fabricops-metadata-approved.svg" in js
     assert ".metadata-explorer-approved-svg a.selected > rect" in css
@@ -336,7 +336,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         node.text
         for node in svg_tree.findall(f".//{namespace}a/{namespace}title")
     ]
-    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 13
+    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 12
     assert set(titles) == {
         f"Open metadata documentation: {name.removeprefix('METADATA_')}"
         for name in CANONICAL_METADATA_TABLES
@@ -345,7 +345,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     connectors = svg_tree.findall(
         f".//{namespace}g[@id='metadata-er-relationships']/{namespace}g"
     )
-    assert len(connectors) >= 16
+    assert len(connectors) >= 14
     actual = {
         (edge.get("data-from"), edge.get("data-to")): edge
         for edge in connectors
@@ -354,10 +354,9 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     assert all(source != target for source, target in actual)
     assert all(edge.get("data-cardinality") in {"1:N", ""} for edge in connectors)
     assert all(edge.find(f"{namespace}path") is not None for edge in connectors)
-    assert ("PIPELINE_DEFINITION", "PIPELINE_REGISTRY") in actual
     assert ("PIPELINE_REGISTRY", "PIPELINE_RUN") in actual
-    assert ("PIPELINE_DEFINITION", "DATA_CONTRACT") in actual
-    assert actual[("PIPELINE_DEFINITION", "PIPELINE_REGISTRY")].get("data-kind") == "logical"
+    assert ("PIPELINE_RUN", "DATA_CONTRACT") in actual
+    assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-kind") == "logical"
     assert all(edge.get("data-cardinality") == "" for edge in connectors if edge.get("data-kind") == "logical")
     assert all(edge.get("data-cardinality") == "1:N" for edge in connectors if edge.get("data-kind") == "physical")
     assert all("arrow" not in (edge.find(f"{namespace}title").text or "").lower() for edge in connectors)

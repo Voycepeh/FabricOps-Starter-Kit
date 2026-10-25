@@ -25,7 +25,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
     pytest.importorskip('delta.tables')
     if 'DeltaSparkSessionExtension' not in spark_session.conf.get('spark.sql.extensions', ''):
         pytest.skip('requires Delta Spark extensions')
-    tables = ('METADATA_PIPELINE_RUN', 'METADATA_GUARDRAIL_RESULTS', 'METADATA_DATA_CONTRACT', 'METADATA_DATA_AGREEMENT', 'METADATA_PIPELINE_DEFINITION', 'METADATA_PIPELINE_REGISTRY')
+    tables = ('METADATA_PIPELINE_RUN', 'METADATA_GUARDRAIL_RESULTS', 'METADATA_DATA_CONTRACT', 'METADATA_DATA_AGREEMENT', 'METADATA_PIPELINE_REGISTRY')
     paths = {table: str(tmp_path / table) for table in tables}
     registry = metadata_table_schema_registry()
     for table in tables:
@@ -63,7 +63,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
                             'guardrail_type': 'schema', 'rule_type': 'required_columns',
                             'rule_parameters': {'required_columns': ['id-col']}, 'action': 'Block', 'is_active': True}]}
             contracts[table] = {'contract_id': 'contract-' + table, 'contract_version': 1, 'table_id': table,
-                'status': 'frozen', 'environment_name': 'DEV', 'contract_payload_json': shared.canonical_candidate_json(payload)}
+                'status': 'frozen', 'environment_name': 'DEV', 'contract_payload_json': shared.canonical_pipeline_json(payload)}
             bindings[table] = {'workspace_id': 'workspace', 'item_id': 'lakehouse', 'kind': 'lakehouse', 'schema': 'demo', 'table_name': table}
         for contract in contracts.values():
             key = (contract['contract_id'], contract['contract_version'])
@@ -71,15 +71,17 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
                 append('METADATA_DATA_CONTRACT', [contract])
                 retained.add(key)
         plan = shared.PipelineExecutionPlan(mode, 'DEV', 'notebook', run_id or str(uuid4()),
-            shared.canonical_candidate_json(participants), '{}', shared.canonical_candidate_json(contracts),
+            shared.canonical_pipeline_json(participants), '{}', shared.canonical_pipeline_json(contracts),
             {**context, '_pipeline_bindings': bindings}, pipeline_id=pipeline_id,
-            activated_pipeline_id='release' if mode == 'live' else '')
+            approval_id='release' if mode == 'live' else '')
         return plan
     def complete(plan):
         for key, operation in plan.evidence['operations'].items():
-            operation.update(status='succeeded', configuration={}, configuration_sha256=shared._candidate_hash({}),
+            operation.update(status='succeeded', read_mode='full' if key.startswith('source:') else None,
+                write_mode='overwrite' if key.startswith('target:') else None, source_table_ids=sorted(
+                    table for table, item in json.loads(plan.participants_json).items() if 'source' in item['roles']) if key.startswith('target:') else [],
                 stages=[{'stage': 'Read' if key.startswith('source:') else 'Processing', 'status': 'passed'},
-                        {'stage': 'Schema', 'status': 'passed'}])
+                        {'stage': 'Schema', 'status': 'passed'}, {'stage': 'Profile', 'status': 'passed'}])
         plan.evidence['guardrail_history'] = [
             {'guardrail_result_id': str(uuid4()), 'guardrail_rule_id': 'schema-' + table, 'guardrail_version': 1,
              'table_id': table, 'table_name': table, 'contract_id': 'contract-' + table, 'contract_version': 1,
@@ -101,13 +103,13 @@ def test_finalized_test_is_atomic_and_activation_reads_all_typed_operations(runs
     shared.persist_pipeline_run(plan, spark_session=r.spark)
     assert r.rows() == []  # Unfinalized Test has no persisted run evidence.
     r.complete(plan)
-    result = finalize_pipeline(shared.PipelineSession(plan, r.spark))
+    finalize_pipeline(shared.PipelineSession(plan, r.spark))
     records = r.rows()
     assert len(records) == 1
     assert len(records[0]['operations']) == len(roles)
-    assert shared.pipeline_run_result(records[0], context=r.context, spark_session=r.spark)['status'] == 'succeeded'
-    manifest = activation.tested_pipeline_manifest(testing_run_id=plan.plan_id,
-        candidate_fingerprint=result['candidate_fingerprint'], pipeline_name='Orders', pipeline_version='1',
+    assert shared.validate_pipeline_run(records[0])['status'] == 'succeeded'
+    manifest = activation.tested_pipeline_run(testing_run_id=plan.plan_id,
+        pipeline_name='Orders', pipeline_version='1',
         agreement_id='agreement', agreement_version='1', context=r.context, spark_session=r.spark)
     assert manifest['testing_run_id'] == plan.plan_id
     from delta.tables import DeltaTable
@@ -115,15 +117,15 @@ def test_finalized_test_is_atomic_and_activation_reads_all_typed_operations(runs
     DeltaTable.forPath(r.spark, r.paths['METADATA_GUARDRAIL_RESULTS']).delete(
         "guardrail_result_id = '" + removed['guardrail_result_id'] + "'")
     with pytest.raises(ValueError, match='Guardrail evidence is missing'):
-        activation.tested_pipeline_manifest(testing_run_id=plan.plan_id,
-            candidate_fingerprint=result['candidate_fingerprint'], pipeline_name='Orders', pipeline_version='1',
+        activation.tested_pipeline_run(testing_run_id=plan.plan_id,
+            pipeline_name='Orders', pipeline_version='1',
             agreement_id='agreement', agreement_version='1', context=r.context, spark_session=r.spark)
     r.append('METADATA_GUARDRAIL_RESULTS', [removed])
     DeltaTable.forPath(r.spark, r.paths['METADATA_PIPELINE_RUN']).update(
         set={'operations': "filter(operations, item -> item.operation_key <> 'source:table0')"})
-    with pytest.raises(ValueError, match='membership'):
-        activation.tested_pipeline_manifest(testing_run_id=plan.plan_id,
-            candidate_fingerprint=result['candidate_fingerprint'], pipeline_name='Orders', pipeline_version='1',
+    with pytest.raises(ValueError, match='whole-run|source outside|Guardrail evidence'):
+        activation.tested_pipeline_run(testing_run_id=plan.plan_id,
+            pipeline_name='Orders', pipeline_version='1',
             agreement_id='agreement', agreement_version='1', context=r.context, spark_session=r.spark)
 
 
@@ -165,7 +167,7 @@ def test_lost_acknowledgement_recovers_complete_snapshot_and_final_is_immutable(
     monkeypatch.setattr(DeltaMergeBuilder, 'execute', execute)
     with pytest.raises(RuntimeError, match='persistence failed'):
         shared.persist_pipeline_run(plan, spark_session=r.spark)
-    assert shared.pipeline_run_result(r.rows()[0], context=r.context, spark_session=r.spark)['status'] == 'succeeded'
+    assert shared.validate_pipeline_run(r.rows()[0])['status'] == 'succeeded'
 
 
 def test_competing_first_publications_cannot_duplicate_a_run(runs_delta):
@@ -185,7 +187,7 @@ def test_competing_first_publications_cannot_duplicate_a_run(runs_delta):
         outcomes = list(pool.map(write, (plan, other)))
     assert any(outcomes)
     assert len(r.rows()) == 1
-    assert shared.pipeline_run_result(r.rows()[0], context=r.context, spark_session=r.spark)['status'] == 'incomplete'
+    assert shared.validate_pipeline_run(r.rows()[0])['status'] == 'incomplete'
 
 
 
@@ -209,7 +211,7 @@ def test_simultaneous_updates_accept_one_complete_run(runs_delta):
         outcomes = list(pool.map(update, (plan, other)))
     assert sum(outcomes) == 1
     assert len(r.rows()) == 1
-    assert shared.pipeline_run_result(r.rows()[0], context=r.context, spark_session=r.spark)['run_id'] == plan.plan_id
+    assert shared.validate_pipeline_run(r.rows()[0])['run_id'] == plan.plan_id
 
 
 def test_foreign_guardrail_provenance_cannot_approve(runs_delta):
@@ -217,12 +219,12 @@ def test_foreign_guardrail_provenance_cannot_approve(runs_delta):
     r = runs_delta
     plan = r.make(roles=('source',))
     r.complete(plan)
-    result = finalize_pipeline(shared.PipelineSession(plan, r.spark))
+    finalize_pipeline(shared.PipelineSession(plan, r.spark))
     from delta.tables import DeltaTable
     DeltaTable.forPath(r.spark, r.paths['METADATA_GUARDRAIL_RESULTS']).update(set={'environment_name': "'FOREIGN'"})
     with pytest.raises(ValueError, match='provenance'):
-        activation.tested_pipeline_manifest(testing_run_id=plan.plan_id,
-            candidate_fingerprint=result['candidate_fingerprint'], pipeline_name='Orders', pipeline_version='1',
+        activation.tested_pipeline_run(testing_run_id=plan.plan_id,
+            pipeline_name='Orders', pipeline_version='1',
             agreement_id='agreement', agreement_version='1', context=r.context, spark_session=r.spark)
 
 
@@ -239,8 +241,8 @@ def test_guardrail_commit_without_run_authority_cannot_approve(runs_delta, monke
     assert r.rows() == []
     assert r.spark.read.format('delta').load(r.paths['METADATA_GUARDRAIL_RESULTS']).count() == 1
     with pytest.raises(ValueError, match='missing or duplicated'):
-        activation.tested_pipeline_manifest(testing_run_id=plan.plan_id,
-            candidate_fingerprint=shared.pipeline_candidate(plan)[1], pipeline_name='Orders', pipeline_version='1',
+        activation.tested_pipeline_run(testing_run_id=plan.plan_id,
+            pipeline_name='Orders', pipeline_version='1',
             agreement_id='agreement', agreement_version='1', context=r.context, spark_session=r.spark)
 
 
@@ -277,10 +279,9 @@ def test_sql_explodes_native_operation_and_stage_fields(runs_delta):
     r.complete(plan)
     finalize_pipeline(shared.PipelineSession(plan, r.spark))
     from pyspark.sql import functions as F
-    definitions = r.spark.read.format('delta').load(r.paths['METADATA_PIPELINE_DEFINITION']).select('definition_id', F.explode('participants').alias('participant'))
     runs = r.spark.read.format('delta').load(r.paths['METADATA_PIPELINE_RUN'])
-    operations = runs.select('definition_id', F.explode('operations').alias('op'))
-    assert {row.table_id for row in runs.join(definitions, 'definition_id').select('participant.table_id').collect()} == {'table0', 'table1'}
-    assert definitions.filter(F.col('participant.contract_version') == 1).count() == 2
+    operations = runs.select(F.explode('operations').alias('op'))
+    assert {row.table_id for row in operations.select('op.table_id').collect()} == {'table0', 'table1'}
+    assert operations.filter(F.col('op.contract_version') == 1).count() == 2
     stages = operations.select(F.explode('op.stages').alias('stage'))
-    assert stages.filter(F.col('stage.status') == 'passed').count() == 4
+    assert stages.filter(F.col('stage.status') == 'passed').count() == 6

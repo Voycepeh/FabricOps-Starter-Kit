@@ -110,7 +110,7 @@ METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metad
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
     "A Data Agreement is the overarching governance agreement between the accountable data producer and consumer parties, represented by their data stewards. It defines why the data may be shared, who is accountable, the permitted purpose and scope, usage conditions, and the agreement’s review period.\n\n"
-    "A Data Contract is the immutable, versioned governed definition of one table. Authoring freezes its table identity, catalogue structure, processing definition, Enrichment, and active Guardrail expectations without an Agreement linkage. An Activated Pipeline links a complete successful Testing candidate to one exact Data Agreement version. Its manifest embeds reusable exact frozen contracts.\n\n"
+    "A Data Contract is the immutable, versioned governed definition of one table. Authoring freezes its table identity, catalogue structure, processing definition, Enrichment, and active Guardrail expectations without an Agreement linkage. An Activated Pipeline selects one successful finalized Test Run and exact Data Agreement version. Native Run operations reference the exact table contracts checked; authored payloads remain in Data Contract.\n\n"
     "One Data Agreement can govern multiple Activated Pipelines, each reusing frozen contracts.\n\n"
     "The agreement answers: Why and under what governance arrangement may this data be shared?\n\n"
     "The contract answers: Exactly what data will be delivered, in what structure, at what quality, and how reliably?"
@@ -125,27 +125,20 @@ METADATA_TABLE_MODELS = {
     "METADATA_PIPELINE_REGISTRY": {
         "purpose": "Coordinates Engineering registrations and Governance decisions through one atomic native authority.",
         "grain": "One central row: native registrations, approvals, selections, ownership and execution/profiling reservations.",
-        "implementation_notes": "A matched-only Delta compare-and-swap publishes all typed collections together. Registration, approval, admission, rebind and profiling share one token; no snapshot JSON or child-row insertion is authoritative. Approved definitions, finalized Tests and exact Agreements resolve by immutable content-checked references.",
+        "implementation_notes": "A matched-only Delta compare-and-swap publishes all typed collections together. Registration, approval, admission, rebind and profiling share one token; no snapshot JSON or child-row insertion is authoritative. Exact finalized Test runs and Agreements resolve by retained content-checked references. There is no separate configuration table.",
         "primary_key": ["authority_id"], "foreign_keys": [],
-        "relationships": [{"related_table": "METADATA_PIPELINE_DEFINITION", "fields": ["approvals"], "cardinality": "1:N", "statement": "Native approvals reference sealed definition IDs. Registrations alone never authorize execution."},
+        "relationships": [
                           {"related_table": "METADATA_DATA_AGREEMENT", "fields": ["approvals"], "cardinality": "N:M", "statement": "Native approvals retain exact Agreement version and content hash references."},
                           {"related_table": "METADATA_PIPELINE_RUN", "fields": ["approvals", "reservations"], "cardinality": "1:N", "statement": "Approvals retain exact finalized Test identities; selected approvals authorize reserved Live runs."}],
     },
-    "METADATA_PIPELINE_DEFINITION": {
-        "purpose": "Stores complete immutable pipeline configuration once, shared by Test, approval and Live runs.",
-        "grain": "One immutable pipeline/environment definition with native participants, contract references, destinations and settings.",
-        "implementation_notes": "One complete append seals the definition; stable Delta transaction identity prevents concurrent duplicate insertion. Exact retained contract payloads reconstruct candidate identity and are hash-verified. Only project and operation settings remain variable configuration JSON. Orphaned definitions grant no authority.",
-        "primary_key": ["definition_id"], "foreign_keys": [],
-        "relationships": [{"related_table": "METADATA_DATA_CONTRACT", "fields": ["participants"], "cardinality": "N:M", "statement": "Typed participants reference exact contract_id, contract_version and payload_sha256; authored payloads remain in Data Contract."},
-                          {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["participants"], "cardinality": "N:M", "statement": "Typed declared participants retain global table_id; observed participation remains in Live Lineage."}],
-    },
     "METADATA_PIPELINE_RUN": {
-        "purpose": "Records explicitly finalized Test and Live execution outcomes against exact immutable definitions.",
+        "purpose": "Records Test and Live operation participation, exact table contracts and execution outcomes.",
         "grain": "One row per execution with native observed operation/stage status, timing, finalization, profiling and safe failures.",
-        "implementation_notes": "Whole-row CAS atomically publishes the parent and all operations/stages. Expected configuration and exact participant contracts resolve through definition_id; Live pins approval_id. Profiling completion joins physical result snapshots. warnings_json contains variable sanitized operational-parameter diagnostics only.",
+        "implementation_notes": "Whole-row CAS atomically publishes the parent and all operations/stages. Native operations retain table_id, source/target role, exact contract version/hash, destination, read/write mode, SQL hash and source associations. Live pins approval_id and compares these fields before operations. Profiling completion joins physical result snapshots. warnings_json contains variable sanitized diagnostics only. No project settings, full argument snapshots or configuration fingerprints are stored.",
         "primary_key": ["run_id"],
-        "foreign_keys": [{"local_field": "definition_id", "referenced_table": "METADATA_PIPELINE_DEFINITION", "referenced_field": "definition_id", "cardinality": "N:1", "statement": "Each run resolves one exact immutable definition."}],
-        "relationships": [{"related_table": "METADATA_PIPELINE_REGISTRY", "cardinality": "N:1", "statement": "Live runs pin an exact native approval and environment revision in the Registry authority."}],
+        "foreign_keys": [],
+        "relationships": [{"related_table": "METADATA_PIPELINE_REGISTRY", "cardinality": "N:1", "statement": "Live runs pin an exact native approval and environment revision in the Registry authority."},
+                          {"related_table": "METADATA_DATA_CONTRACT", "fields": ["operations"], "cardinality": "N:M", "statement": "Actual operations record exact table contract IDs, versions and hashes; authored payloads remain in Data Contract."}],
     },
     "METADATA_DATA_STEWARD": {
         "purpose": "Identifies the people responsible for governing data.",
@@ -268,7 +261,6 @@ METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
     "METADATA_DATA_CONTRACT": ["widget_data_contract"],
     "METADATA_PIPELINE_REGISTRY": ["widget_activate_pipeline", "setup_pipeline", "finalize_pipeline", "profile_table"],
-    "METADATA_PIPELINE_DEFINITION": ["finalize_pipeline", "setup_pipeline"],
     "METADATA_PIPELINE_RUN": ["finalize_pipeline"],
     "METADATA_DATA_CATALOGUE": ["orchestrate_read", "orchestrate_write", "profile_table"],
     "METADATA_DATA_PROFILED": ["orchestrate_read", "orchestrate_write", "profile_table"],
@@ -285,7 +277,6 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
-    "METADATA_PIPELINE_DEFINITION",
     "METADATA_DATA_CATALOGUE",
     "METADATA_PROCESSING_STATE",
     "METADATA_DATA_PROFILED",
@@ -364,10 +355,6 @@ METADATA_COLUMN_OWNERS = {
     },
     "METADATA_DATA_CONTRACT": {
         "__default__": ["fabricops_kit.widgets.widget_data_contract.widget_data_contract", "fabricops_kit.data_contract.shared.create_contract_draft", "fabricops_kit.data_contract.shared.save_contract_draft", "fabricops_kit.data_contract.shared.freeze_contract"],
-        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-    },
-    "METADATA_PIPELINE_DEFINITION": {
-        "__default__": ["fabricops_kit.pipeline.shared.seal_pipeline_definition"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
     "METADATA_DATA_CATALOGUE": {

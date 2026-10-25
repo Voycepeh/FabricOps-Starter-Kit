@@ -283,7 +283,7 @@ def test_finalization_commits_test_result_once(runtime, monkeypatch):
     assert not committed
     result = finalize_pipeline(session)
     assert result['status'] == 'ungoverned_completed'
-    assert json.loads(result['operation_summary_json'])['boundary_completed'] is True
+    assert result['boundary_completed'] is True
     assert session.closed and not session.sources
     assert len(committed) == 1
     assert finalize_pipeline(session) == result and len(committed) == 1
@@ -302,7 +302,7 @@ def test_finalization_records_caught_failure_and_releases_live_reservation(runti
     monkeypatch.setattr(activation, 'release_pipeline_lease', release)
     result = finalize_pipeline(session, failed=True)
     assert result['status'] == 'failed'
-    assert json.loads(result['operation_summary_json'])['boundary_completed'] is False
+    assert result['boundary_completed'] is False
     release.assert_called_once()
 
 
@@ -324,7 +324,7 @@ def test_active_finalization_cannot_be_claimed_from_another_task(runtime):
     asyncio.run(scenario())
 
 
-def test_finalized_governed_test_can_build_new_activation_manifest(runtime, monkeypatch):
+def test_finalized_governed_test_can_be_reviewed_directly(runtime, monkeypatch):
     from fabricops_kit import finalize_pipeline
     from datetime import date, timedelta
     activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
@@ -352,11 +352,12 @@ def test_finalized_governed_test_can_build_new_activation_manifest(runtime, monk
     monkeypatch.setattr(activation, 'metadata_records', lambda table, **kwargs: records[table])
     monkeypatch.setattr(activation, 'resolve_fabric_context', shared.resolve_fabric_context)
     monkeypatch.setattr(shared, 'read_pipeline_registry', lambda **kwargs: ('token', [{'pipeline_id': result['pipeline_id'], 'environment_name': 'dev', 'registration_status': 'Active', 'workspace_id': 'workspace', 'notebook_id': 'notebook'}]))
-    manifest = activation.tested_pipeline_manifest(testing_run_id=result['run_id'],
-        candidate_fingerprint=result['candidate_fingerprint'], pipeline_name='Orders', pipeline_version='1',
+    monkeypatch.setattr(activation, 'build_runtime_audit_fields', shared.build_runtime_audit_fields)
+    manifest = activation.tested_pipeline_run(testing_run_id=result['run_id'],
+        pipeline_name='Orders', pipeline_version='1',
         agreement_id='agreement', agreement_version='1.0.0', context={'config': {}, 'env': 'dev', 'workspace_id': 'workspace'})
     assert manifest['testing_run_id'] == result['run_id']
-    assert manifest['candidate']['pipeline_id'] == '8f32a471-6c91-4b7e-9d13-2f0c947eab52'
+    assert manifest['pipeline_id'] == '8f32a471-6c91-4b7e-9d13-2f0c947eab52'
 
 
 

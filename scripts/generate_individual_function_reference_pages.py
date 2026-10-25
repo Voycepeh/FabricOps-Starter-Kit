@@ -216,24 +216,19 @@ PIPELINE_REGISTRY_FIELD_DESCRIPTIONS = {
 PIPELINE_METADATA_FIELD_DESCRIPTIONS = {
     "run_id": "Unique execution attempt and physical merge key; one authoritative row contains every Read/Write.",
     "status": "Whole-run outcome: incomplete, failed, succeeded or ungoverned_completed; operation success alone never completes a run.",
-    "definition_id": "Exact immutable content-addressed pipeline/environment definition; missing or altered references fail closed.",
     "approval_id": "Exact Governance decision retained in the Registry authority; Live runs pin this decision.",
     "registrations": "Native permanent Pipeline UUID and environment notebook bindings; registration never permits Live.",
     "revisions": "Native environment activation revisions published with selections and ownership.",
-    "approvals": "Append-only decisions referencing sealed definitions, complete finalized Tests and exact Agreement versions/hashes.",
+    "approvals": "Append-only decisions referencing complete finalized Test Runs and exact Agreement versions/hashes.",
     "selections": "Current approved decision per pipeline and environment, published atomically with ownership.",
     "table_ownership": "Native exact contract, physical destination, writer and readers per environment/table.",
     "reservations": "Native Live reservations and transient rebind barriers protected by the shared authority token.",
     "profiling_claims": "Renewable native claims with exact owner tokens, physical context and expiry.",
-    "participants": "Complete declared logical participants, global table IDs, roles and exact frozen contract references.",
-    "operation_configurations": "Expected operation keys and variable settings sealed in the immutable definition.",
-    "physical_bindings": "Typed exact destinations: workspace, item, kind, schema and table, keyed by global table ID.",
-    "project_configuration_json": "Variable sanitized project settings and authored transformation dependencies; no authority or lifecycle state.",
     "profiling": "Typed per-table activity outcomes and physical result snapshot completion markers.",
-    "warnings_json": "Variable sanitized operational-parameter diagnostics, including tested and actual values; no activation authority.",
+    "warnings_json": "Variable sanitized diagnostics; no configuration snapshots or activation authority.",
     "failures": "Native safe failure codes and exception class names; never raw exception messages.",
     "boundary_completed": "Whether the explicit whole-run completion boundary finished; independent of operation success.",
-    "operations": "Native observed Read/Write operations: operation key, status, timing and typed stages. Resolve declared table, contract and configuration through the exact definition; query with explode(operations).",
+    "operations": "Native Read/Write operation facts: table ID, role, exact contract version/hash, destination, modes, source associations, status, timing and stages. Query directly with explode(operations); no configuration join is required.",
 }
 
 PROCESSING_STATE_FIELD_DESCRIPTIONS = {
@@ -4324,7 +4319,7 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_PIPELINE_REGISTRY" and column_name in PIPELINE_REGISTRY_FIELD_DESCRIPTIONS:
         return PIPELINE_REGISTRY_FIELD_DESCRIPTIONS[column_name]
-    if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_DEFINITION"} and column_name in PIPELINE_METADATA_FIELD_DESCRIPTIONS:
+    if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY"} and column_name in PIPELINE_METADATA_FIELD_DESCRIPTIONS:
         return PIPELINE_METADATA_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_PROCESSING_STATE" and column_name in PROCESSING_STATE_FIELD_DESCRIPTIONS:
         return PROCESSING_STATE_FIELD_DESCRIPTIONS[column_name]

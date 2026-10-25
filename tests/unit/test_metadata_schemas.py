@@ -23,7 +23,6 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_DATA_STEWARD": "governance",
         "METADATA_DATA_AGREEMENT": "governance",
         "METADATA_DATA_CONTRACT": "governance",
-        "METADATA_PIPELINE_DEFINITION": "engineering",
         "METADATA_DATA_CATALOGUE": "engineering",
         "METADATA_DATA_PROFILED": "engineering",
         "METADATA_DATA_PROFILED_FREQUENCY": "engineering",
@@ -350,7 +349,7 @@ def test_nested_pipeline_run_schema_documentation_matches_without_pyspark():
     assert actual == expected
 
 
-@pytest.mark.parametrize('table', ['METADATA_PIPELINE_REGISTRY', 'METADATA_PIPELINE_DEFINITION', 'METADATA_PIPELINE_RUN'])
+@pytest.mark.parametrize('table', ['METADATA_PIPELINE_REGISTRY', 'METADATA_PIPELINE_RUN'])
 def test_joint_pipeline_partial_schema_never_additive_evolves(table):
     """An empty or partial pipeline layout still needs explicit stopped cutover."""
     from importlib import import_module

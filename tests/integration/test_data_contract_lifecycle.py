@@ -166,13 +166,7 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         forPath=lambda spark, name: _DeltaTransport(state, name),
         isDeltaTable=lambda spark, name: name in state.business)))
     def persist_run(plan, row, **kwargs):
-        candidate = json.loads(row['candidate_json'])
-        definition = runtime.pipeline_definition_row(candidate, environment=plan.environment,
-            fingerprint=row.get('candidate_fingerprint'), audit={key: value for key, value in row.items() if key.startswith('_')})
-        if not any(item['definition_id'] == definition['definition_id'] for item in state.metadata['METADATA_PIPELINE_DEFINITION']):
-            state.metadata['METADATA_PIPELINE_DEFINITION'].append(definition)
-        record = runtime.pipeline_run_row(row)
-        runtime.pipeline_run_result(record, context=plan.runtime_context, spark_session=spark_session)
+        record = runtime.validate_pipeline_run(row)
         state.metadata['METADATA_PIPELINE_RUN'] = [item for item in state.metadata['METADATA_PIPELINE_RUN']
             if item['run_id'] != plan.plan_id] + [record]
     monkeypatch.setattr(runtime, '_merge_pipeline_run_row', persist_run)
@@ -265,7 +259,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     before = _activation(state)
     assert not before["eligible_runs"] and before["activate"].disabled
     assert not state.metadata["METADATA_DATA_LINEAGE"]
-    coordinates = {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "configuration": {}, "sources": [
+    coordinates = {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "sources": [
         {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
         {"store": "Bronze", "schema": "dbo", "table_name": "products"}],
         "targets": [{"store": "Silver", "schema": "dbo", "table_name": "curated_orders"}]}

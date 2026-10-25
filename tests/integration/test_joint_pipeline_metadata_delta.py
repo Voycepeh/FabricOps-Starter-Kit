@@ -1,4 +1,4 @@
-"""Joint definition, approval, admission, rebind and profiling publication proofs."""
+"""Joint Run, approval, admission, rebind and profiling publication proofs."""
 # ruff: noqa: D103, F811
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
@@ -21,41 +21,41 @@ pytestmark = pytest.mark.spark
 def approved_runtime(r, monkeypatch):
     plan = r.make()
     r.complete(plan)
-    result = finalize_pipeline(pipeline.PipelineSession(plan, r.spark))
-    request = {"testing_run_id": plan.plan_id, "candidate_fingerprint": result["candidate_fingerprint"],
+    finalize_pipeline(pipeline.PipelineSession(plan, r.spark))
+    request = {"testing_run_id": plan.plan_id,
         "pipeline_name": "Orders", "pipeline_version": "1", "agreement_id": "agreement", "agreement_version": "1"}
     token, _state = authority.read_pipeline_authority(context=r.context, spark_session=r.spark)
-    approval = authority.approve_pipeline_release([request], expected_token=token, governance_confirmed=True,
+    report = authority.review_pipeline_release([request], context=r.context, spark_session=r.spark)[3]
+    approval = authority.approve_pipeline_release([request], expected_token=token, expected_review_digest=report["review_digest"], governance_confirmed=True,
         context=r.context, spark_session=r.spark)
     monkeypatch.setattr(authority, "resolve_pipeline_participants", lambda *a, **kw: json.loads(plan.participants_json))
     monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda *a, **kw: plan.runtime_context["_pipeline_bindings"])
     return plan, request, approval
 
 
-def test_finalized_test_approval_and_live_resolve_one_retained_definition(runs_delta, monkeypatch):
+def test_finalized_test_approval_and_live_reference_the_retained_test_run(runs_delta, monkeypatch):
     r = runs_delta
     test, request, approved = approved_runtime(r, monkeypatch)
-    before = r.spark.read.format("delta").load(r.paths["METADATA_PIPELINE_DEFINITION"]).count()
     live = authority.build_live_pipeline_plan(pipeline_id=test.pipeline_id, context=r.context, spark_session=r.spark)
-    assert live.activated_pipeline_id == approved["pipelines"][test.pipeline_id]["activated_pipeline_id"]
-    assert before == r.spark.read.format("delta").load(r.paths["METADATA_PIPELINE_DEFINITION"]).count() == 1
+    assert live.approval_id == approved["pipelines"][test.pipeline_id]["approval_id"]
     rows = r.rows()
-    assert len({row["definition_id"] for row in rows}) == 1
+    assert len(rows) == 2 and all("definition_id" not in row for row in rows)
     assert all("candidate_json" not in row for row in rows)
     r.complete(live)
     pipeline.finalize_pipeline_run(live, spark_session=r.spark)
     _token, state = authority.read_pipeline_authority(context=r.context, spark_session=r.spark)
     current = authority.environment_activation(state, "DEV")
     assert not current["runs"] and len(current["history"]) == 1
-    # Reapproval is independent decision history over the same immutable definition.
+    # Reapproval is independent decision history over the same retained Test Run.
     request["pipeline_version"] = "2"
-    authority.approve_pipeline_release([request], expected_token=_token, governance_confirmed=True,
+    report = authority.review_pipeline_release([request], context=r.context, spark_session=r.spark)[3]
+    authority.approve_pipeline_release([request], expected_token=_token, expected_review_digest=report["review_digest"], governance_confirmed=True,
         context=r.context, spark_session=r.spark)
     native = authority.authority_records(context=r.context, spark_session=r.spark)
-    assert len(native["approvals"]) == 2 and len({item["definition_id"] for item in native["approvals"]}) == 1
+    assert len(native["approvals"]) == 2 and len({item["testing_run_id"] for item in native["approvals"]}) == 1
     token, state = authority.read_pipeline_authority(context=r.context, spark_session=r.spark)
     current = authority.environment_activation(state, "DEV")
-    current["history"].pop(next(key for key in current["history"] if key != current["pipelines"][test.pipeline_id]["activated_pipeline_id"]))
+    current["history"].pop(next(key for key in current["history"] if key != current["pipelines"][test.pipeline_id]["approval_id"]))
     with pytest.raises(ValueError, match="immutable and retained"):
         authority.commit_pipeline_authority(state, expected_token=token, context=r.context, spark_session=r.spark)
 
@@ -65,13 +65,13 @@ def test_missing_duplicate_or_altered_references_block_live(runs_delta, monkeypa
     from delta.tables import DeltaTable
     r = runs_delta
     test, _request, _approved = approved_runtime(r, monkeypatch)
-    definition = DeltaTable.forPath(r.spark, r.paths["METADATA_PIPELINE_DEFINITION"])
+    retained_run = DeltaTable.forPath(r.spark, r.paths["METADATA_PIPELINE_RUN"])
     if defect == "missing":
-        definition.delete()
+        retained_run.delete()
     elif defect == "duplicate":
-        r.spark.read.format("delta").load(r.paths["METADATA_PIPELINE_DEFINITION"]).write.format("delta").mode("append").save(r.paths["METADATA_PIPELINE_DEFINITION"])
+        r.spark.read.format("delta").load(r.paths["METADATA_PIPELINE_RUN"]).write.format("delta").mode("append").save(r.paths["METADATA_PIPELINE_RUN"])
     elif defect == "altered":
-        definition.update(set={"project_configuration_json": "'{\"changed\":true}'"})
+        retained_run.update(set={"warnings_json": "'[{\"changed\":true}]'"})
     elif defect == "contract":
         DeltaTable.forPath(r.spark, r.paths["METADATA_DATA_CONTRACT"]).update(set={"contract_payload_json": "'{}'"})
     elif defect == "agreement":
@@ -84,18 +84,6 @@ def test_missing_duplicate_or_altered_references_block_live(runs_delta, monkeypa
     assert native["reservations"] == []
 
 
-def test_orphaned_sealed_definition_cannot_authorize_execution(runs_delta):
-    r = runs_delta
-    test = r.make()
-    r.complete(test)
-    candidate, fingerprint, _bindings = pipeline.pipeline_candidate(test)
-    identity = pipeline.seal_pipeline_definition(candidate, environment="DEV", fingerprint=fingerprint,
-        context=r.context, spark_session=r.spark)
-    assert pipeline.seal_pipeline_definition(candidate, environment="DEV", fingerprint=fingerprint,
-        context=r.context, spark_session=r.spark) == identity
-    assert r.rows() == []
-    with pytest.raises(ValueError, match="No approved pipeline"):
-        authority.build_live_pipeline_plan(pipeline_id=test.pipeline_id, context=r.context, spark_session=r.spark)
 
 
 @pytest.mark.parametrize("competitor", ["approval", "rebind", "profiling"])
@@ -120,6 +108,7 @@ def test_live_admission_races_share_the_registry_cas(runs_delta, monkeypatch, co
         if competitor == "approval":
             token, _state = authority.read_pipeline_authority(context=r.context, spark_session=r.spark)
             return authority.approve_pipeline_release([{**request, "pipeline_version": "2"}], expected_token=token,
+                expected_review_digest=authority.review_pipeline_release([{**request, "pipeline_version": "2"}], context=r.context, spark_session=r.spark)[3]["review_digest"],
                 governance_confirmed=True, context=r.context, spark_session=r.spark)
         if competitor == "rebind":
             return pipeline.resolve_pipeline_registration(test.pipeline_id,
@@ -167,20 +156,6 @@ def test_exact_content_readback_after_lost_authority_acknowledgement(authority_d
     assert authority.read_pipeline_authority(context=r.context, spark_session=r.spark) == (committed, state)
 
 
-def test_concurrent_definition_sealing_is_unique_and_idempotent(runs_delta):
-    r = runs_delta
-    test = r.make()
-    r.complete(test)
-    candidate, fingerprint, _bindings = pipeline.pipeline_candidate(test)
-    ready = Barrier(2)
-    def seal(_):
-        ready.wait(timeout=30)
-        return pipeline.seal_pipeline_definition(candidate, environment="DEV", fingerprint=fingerprint,
-            context=r.context, spark_session=r.spark)
-    with ThreadPoolExecutor(2) as pool:
-        results = list(pool.map(seal, range(2)))
-    assert results[0] == results[1]
-    assert r.spark.read.format("delta").load(r.paths["METADATA_PIPELINE_DEFINITION"]).count() == 1
 
 
 def test_persisted_profile_renewal_completion_and_owner_fencing(authority_delta, monkeypatch):
