@@ -1,6 +1,6 @@
 # Metadata v2: target model and migration boundaries
 
-**Status (2026-10-25):** Processing State implemented by [#1698](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1698). A typed Pipeline Run operations array is implemented in open [#1700](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1700), with review outstanding. Activation State physical redesign remains a proposal. Merged [#1697](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1697) persists explicitly finalized Test execution and Guardrail results for activation; D preserves this contract.
+**Status (2026-10-25):** Processing State [#1698](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1698) and Pipeline Run [#1700](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1700) are merged. Activation-only [#1704](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1704) is closed without merging and superseded by the [joint pipeline metadata redesign](#joint-pipeline-metadata-redesign). Plan Registry, Activation State, Pipeline Run and participation together before starting one fresh implementation PR. This document proposes the replacement; it does not describe an implemented replacement schema or prove its transaction design.
 
 ## Goal and constraints
 
@@ -11,7 +11,7 @@ Treat FabricOps metadata as an operational application database, not a reporting
 - Preview contracts may change without deprecated aliases, dual writes, or transitional API wrappers. Operational checkpoints, frozen contracts, and approval history still need a deliberate migration or safe cutover.
 - Do not introduce Azure SQL, extra metadata schemas, or a separate control-plane database.
 - Do not require the physical table count to decrease. A `record_type` discriminator is appropriate only when row types have compatible identity, lifecycle, and transaction semantics.
-- Preserve public notebook workflows: Test operations stay in memory; explicit finalization persists only the allowed Test run and Guardrail diagnostics for activation, as implemented by #1697.
+- Preserve public notebook workflows: Test operations stay in memory; explicit finalization persists the allowed Test run and Guardrail diagnostics for activation, as implemented by #1697. The proposed joint design may additionally seal its immutable tested definition at finalization; it must not enable business, checkpoint, Catalogue or Lineage commits from Test.
 
 ## Release classification versus current canonical registry
 
@@ -22,14 +22,14 @@ The published `docs/releases/manifests/0.2.5.yml` classifies six tables as Live 
 | `METADATA_DATA_STEWARD` | governance | Live | Keep schema and steward grain |
 | `METADATA_DATA_AGREEMENT` | governance | Live | Keep schema and versioned agreement grain |
 | `METADATA_DATA_CONTRACT` | governance | Preview | Keep version identity and immutable Frozen contracts; retain flexible rule payload unless independently queryable records are justified |
-| `METADATA_ACTIVATION_STATE` | governance | Not listed | Redesign nested authority cautiously; prove atomic publication before removing snapshot state |
+| `METADATA_ACTIVATION_STATE` | governance | Not listed | Existing atomic authority; propose absorbing its responsibilities into versioned Pipeline Registry only after transaction proof |
 | `METADATA_DATA_CATALOGUE` | engineering | Live | Keep existing `metadata_level` table/column discriminator |
 | `METADATA_DATA_PROFILED` | engineering | Live | Keep one observed column per profile snapshot |
 | `METADATA_DATA_PROFILED_FREQUENCY` | engineering | Live | Keep one frequency value per column snapshot; profile-to-frequency is one-to-many |
-| `METADATA_DATA_LINEAGE` | engineering | Live | Keep source/target *participation* grain; do not mislabel as source-to-target edges |
+| `METADATA_DATA_LINEAGE` | engineering | Live | Audit overlap with declared and observed participation; preserve existing rows and consumers unless a tested supported Live migration is approved |
 | `METADATA_DATA_ACCESS` | engineering | Preview | Keep observed-grant grain; distinguish observed access from computed effective access |
-| `METADATA_PIPELINE_REGISTRY` | engineering | Not listed | Keep stable pipeline/environment notebook binding and its serialization control |
-| `METADATA_PIPELINE_RUN` | engineering | Not listed | One run row with a typed operations array in open #1700; preserve whole-run authority and exact Test results |
+| `METADATA_PIPELINE_REGISTRY` | engineering | Not listed | Proposed versioned pipeline hub with field-level Engineering/Governance responsibility; physical ownership remains a design decision |
+| `METADATA_PIPELINE_RUN` | engineering | Not listed | Merged #1700 is the baseline; jointly redesign configuration references and execution facts while preserving whole-run finalization |
 | `METADATA_GUARDRAIL_RESULTS` | engineering | Preview | Keep per-rule aggregate result grain; normalize only useful stable metrics |
 | `METADATA_PROCESSING_STATE` | engineering | Preview | Rename Preview METADATA_SOURCE_OBSERVATION to this typed Processing State table |
 
@@ -92,7 +92,7 @@ No automatic conversion is supplied because old rows can lack watermark types, c
 
 ### Pipeline execution (engineering)
 
-`engineering.METADATA_PIPELINE_RUN` retains **one authoritative row per run**. Open [#1700](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1700) replaces broad operational JSON with a native typed `operations` array and typed nested stages, using merged #1697 and #1698 as its baseline. The earlier multirow proposal is superseded: no operation table, record discriminator, duplicate IDs, snapshot token, operation count or content digest is needed.
+`engineering.METADATA_PIPELINE_RUN` currently retains **one authoritative row per run**. Merged [#1700](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1700) replaced broad operational JSON with a native typed `operations` array and typed nested stages, using merged #1697 and #1698 as its baseline. The following sections document that implemented baseline and its existing converter, not the future joint redesign. The earlier multirow proposal was superseded.
 
 #### Storage decision and inventory
 
@@ -189,9 +189,78 @@ Run Ruff, targeted pytest, compile/import checks, strict MkDocs and affected gen
 
 ### Activation authority (governance)
 
-Investigate queryable `authority`, `approval`, `activation`, `participant`, and `reservation` records. The existing central `snapshot_json` and `token` are currently committed using Serializable Delta compare-and-swap, protecting approvals, writer ownership, activation revisions, and running/rebind reservations.
+On main, the central `snapshot_json` and `token` are committed using Serializable Delta compare-and-swap, protecting immutable approvals, complete participants, writer ownership, activation revisions, Live reservations, notebook/workspace rebind barriers and profiling claims. The eight-record physical normalization in closed #1704 is withdrawn as the target. Its successful local tests are prior design evidence, not validation of a replacement.
 
-**Required invariants:** approval publication is atomic; incomplete or stale revisions never become executable; Live runs pin the correct approved revision; writer ownership and rebind barriers are enforced; stale CAS conflicts fail closed; lost acknowledgement is recoverable. Multiple independent Delta writes are **not** an atomic replacement for the existing singleton. If the proposed typed-row layout cannot prove equivalent guarantees, retain the authority snapshot and improve only safe read/query projections.
+**Required invariants remain:** approval publication is atomic; incomplete or stale revisions never become executable; Live runs pin the correct approved revision; writer ownership and rebind barriers are enforced; stale CAS conflicts fail closed; lost acknowledgement is recoverable. Multiple independent Delta writes are not an atomic replacement for the existing singleton. Do not remove this authority until the joint model has passed the publication proof below.
+
+### Joint pipeline metadata redesign
+
+**Proposed outcome:** make `METADATA_PIPELINE_REGISTRY` the versioned connector for available pipelines, declared Read/Write participants, orchestration configuration and exact contract/Agreement approval references. Absorb Activation State responsibilities into that authority if the transaction proof succeeds. Keep `METADATA_PIPELINE_RUN` as execution history referencing the exact definition it ran. Decide the physical layout after the lifecycle and ownership audit; do not start by assigning one column to every old nested field.
+
+#### Logical grains and responsibility
+
+These are logical facts, not a commitment to one physical table per row in this matrix. Proposed version-reference names below are illustrative, not new public terms or approved schema columns.
+
+| Fact | Grain / identity | Responsible writer and lifecycle |
+| --- | --- | --- |
+| Pipeline registration | Stable `pipeline_id`, with binding per environment | Engineering registers, retires and rebinds; registration alone never permits Live |
+| Immutable pipeline definition | Pipeline + exact definition version, bound to the tested environment configuration | Engineering captures project/operation configuration, logical participants, roles, physical bindings and exact frozen contract references; sealed content cannot change |
+| Declared participant | Definition version + logical participant + role | Engineering declares `table_id` and source/target role; contract identity resolves through Data Contract, not a second contract lifecycle in Registry |
+| Governance decision | Exact definition version + successful finalized Test + exact Agreement version | Governance approves; preserve independent decision history if repeated decisions are meaningful rather than inventing another pipeline identity |
+| Current Live selection | Pipeline + environment | Governance selects an approved version in a coordinated environment revision; affected pipelines and table ownership change together |
+| Reservation / barrier / profiling claim | Exact owner and existing domain scope | Execution or maintenance acquires, renews where supported, completes and releases; recovery cannot silently remove another owner's claim |
+| Execution | `run_id`, referencing stable pipeline and exact definition/approval | Runtime records actual operation/stage outcomes, timing, finalization and safe failure/profiling diagnostics |
+| Observed participation | Actual publication/activity + table + role, with existing environment scope | Successful physical publication records what participated; a later run failure does not erase publication history |
+
+Engineering and Governance ownership describe who may change a fact. A consolidated Registry has one configured physical schema home in the existing two-schema model, one canonical writer path per mutation and explicit Governance confirmation for approval. Select and document the physical home and permissions before implementation; do not create duplicate authorities under both schemas.
+
+`METADATA_DATA_CONTRACT` remains the owner of `table_id` → `contract_id + contract_version` and immutable authored content. Its lifecycle is global per table, with environment provenance. The joint authority must enforce **one active frozen contract version and physical binding per table in each environment across all active pipelines**, while retaining draft and historical versions. Each target still has at most one owning writer. `METADATA_DATA_AGREEMENT` remains the owner of Agreement versions; Registry references them rather than copying their authored document by default. Processing State retains its checkpoint, baseline and physical publication-recovery responsibilities unchanged.
+
+#### Definition, Test, approval and Live lifecycle
+
+1. `setup_pipeline` resolves permanent identity and binding. Test continues discovering configuration and participants through the existing notebook calls; do not require a new authoring UI or a predeclared immutable definition before those calls exist.
+2. Read, Transform and Write execute under one in-memory Test plan. No durable approvable definition or successful run is inferred from an isolated operation or notebook cell event.
+3. Explicit `finalize_pipeline` validates complete participant/operation/stage coverage and seals the exact tested definition. Persist the immutable definition and required Guardrail results before marking its Test run successfully finalized. Separate-table intermediate records are non-authorizing; orphaned definitions/results cannot grant approval. Specify failure and lost-acknowledgement handling for each step before coding.
+4. Governance revalidates the finalized run, current notebook/workspace binding, exact frozen contracts, required Guardrail results and currently effective Agreement. Publish the decision, complete references, current selections, ownership and affected environment revision in one guarded authority transaction. Preserve the current combined approval/activation workflow and widget behavior.
+5. Live atomically checks that authority and acquires its reservation against the exact selected version and revision. Runtime resolves immutable configuration/contracts by reference and rejects changed notebook arguments or bindings. Later approvals cannot alter an already pinned execution.
+6. Completion, interruption, reservation release, rebind and profiling recovery retain their existing fail-closed semantics. A run row alone does not prove that a reservation may be released or a business publication may be replayed.
+
+Before replacing embedded documents with references, prove that referenced versions are unique, immutable, retained and hash-verifiable for the entire approval/run lifetime. Audit every writer, including foundational metadata writes. Missing or altered references must block execution with actionable reconciliation guidance; never fall back to the current/latest version. If an existing reference cannot provide historical content, document the minimum retained representation and its reason instead of claiming that IDs alone preserve history.
+
+#### Current field disposition to verify
+
+| Current field / content | Proposed disposition and reason |
+| --- | --- |
+| Run `pipeline_id` | Retain the stable logical pipeline reference; document whether any repeated parent identity is necessary for querying or integrity |
+| Run `activated_pipeline_id` | Replace the ambiguous internal name with an exact approved-version reference in the joint design; it is not a second pipeline identity. Preserve supported notebook result shapes through the domain reader |
+| Run `candidate_json` | Move canonical reusable configuration into the immutable definition; Run references it rather than copying a full candidate |
+| Run `candidate_fingerprint` | Place content-integrity hashing with the immutable definition; retain a run-side copy only if a concrete integrity requirement justifies it |
+| Run `operations` | Keep actual operation/stage status and timing as typed execution facts; move expected configuration and participant/contract declarations to the definition and validate actual membership against it |
+| Run `boundary_completed` | Preserve its whole-notebook finalization guarantee. Choose either the explicit marker or an equally strict typed finalization lifecycle; operation success alone is insufficient |
+| Run `run_details_json` | Extract stable revisions, references, bindings and profiling state into their owning facts; retain only variable sanitized diagnostics justified field by field |
+| Activation `snapshot_json` | Replace only after all approvals, participants, selections, ownership, reservations, barriers and profiling claims have an identified owner and proven transaction protocol |
+| Registry `registry_token` and Activation `token` | Replace competing serialization domains with the minimum authority/CAS scheme that protects registration, rebind, cutover and admission together; a business identifier is not a concurrency token |
+| Authored contract / Agreement payloads | Keep in their existing owner tables with exact version/hash references; do not duplicate into every approval and run |
+| Project and operation configuration | Store once per immutable definition. JSON is acceptable for variable settings/expressions; stable IDs, roles, status, versions and relationships remain typed |
+| Warnings and errors | Use native arrays/fields for stable shapes; JSON only for variable diagnostics, with no hidden approval or reservation authority |
+
+Every proposed column must identify its owning fact, reader/writer, query or enforcement purpose, nullability and derivation. Every remaining JSON field must list allowed content and explain why it is variable. Do not persist the same operational document under a new name.
+
+#### Lineage decision
+
+Declared participants belong to the definition and can supply planned participation queries. Actual `METADATA_DATA_LINEAGE` rows currently record source/target participation after successful Live target publication; they are keyed by Fabric activity/table/role with environment matching, not by framework `run_id`. They do not prove individual source-to-target transformation edges. Publication can succeed before profiling or final run completion fails, so deriving observed history only from successful runs would lose facts.
+
+Audit all package readers, widgets, references and externally consumed queries. Prefer deriving new declared participation from the Registry and preserving the existing Live observed-participation table unless a complete absorption provides a demonstrated benefit. If absorption is selected, include a concrete automatic migration preserving all existing rows and identities, repeat-safe validation, consumer updates and a rollback boundary in the same implementation. Do not infer run mappings that old activity-level history cannot establish. Keeping the Live table is an explicit supported decision, not a second source of pipeline configuration.
+
+#### Transaction design and proof before persistence changes
+
+The starting candidate is **one Registry authority publication** for approval/admission/rebind decisions with exact immutable definition references. A shared serialization point protects cross-pipeline contract and writer constraints. Run updates have their own per-run concurrency control; they do not republish the whole Registry. Select the smallest native-row/struct layout that supports these grains without a universal metadata table or the eight-payload layout from #1704 by default.
+
+Before changing persistence, record the exact Delta statements, transaction boundaries, CAS predicate, insert/delete behavior, retention constraints and reader validation. Prove approval and its complete participant set become authoritative in one transaction: either store them together in that publication, or reference a previously sealed immutable complete definition whose publication/retention protocol cannot expose a partial version. If children insert in the authority MERGE, a stale guard must roll back unmatched inserts as well as updates/deletes. Prechecking a token outside MERGE is insufficient.
+
+Use persisted Delta tests for simultaneous publishers, stale tokens, transaction rollback, unmatched inserts, missing/duplicate/altered references, complete participants, immutable approvals, exact content read-back after lost acknowledgement and idempotent retry. Race activation against Live acquisition, writer changes, rebind and profiling claims. Prove unrelated mutations preserve existing history/reservations and environments/pipelines remain isolated. Do not claim cross-table transactions for definitions, Run, Guardrail Results, Lineage or business data; document which partially published states are harmless and why readers fail closed.
+
+If a simple consolidated physical design cannot prove these properties, keep the current authority in service and revise this plan before implementation. Do not ship a second writable authority or query projections as a completed consolidation.
 
 ### Contract, Guardrail, and Access (governance / engineering)
 
@@ -208,6 +277,21 @@ Before a structural implementation PR, document for **every changed table**: old
 - A PR must not merge if it leaves `main` with incompatible metadata readers/writers.
 - Retain existing two-schema routing; no new metadata schema or storage service.
 
+### Joint redesign rollout and reset policy
+
+The Pipeline Run converter documented above belongs to merged #1700. It converts the older summary layout into main's current run schema; **it does not migrate to the proposed joint model**. Do not reuse it for a different layout or add a standalone Preview converter just to preserve disposable history. The replacement PR must clearly distinguish its new upgrade guidance from this baseline procedure.
+
+1. **Inventory the deployed layout.** Record package versions and physical schemas for Registry, Activation State, Run and any affected participation table. Include exact reference counts, immutable approvals and finalized Tests, active/interrupted reservations, rebind barriers and profiling claims. Closed #1704 was not merged; an independently deployed copy requires separate reconciliation rather than assumed support.
+2. **Stop and drain.** Disable schedulers and new Test/Live starts, registration/rebind and profiling acquisition. Let existing work finish and reconcile interrupted work against actual publication evidence. Never clear a reservation merely to make replacement possible. Back up all affected Delta tables at pinned versions, their referenced contracts/Agreements/results, and the matching reader package. Preserve Processing State and business-target recovery evidence.
+3. **Fresh setup.** Create only the final canonical model with strict schema validation; then register, finalize a complete Test, explicitly approve and select Live. Registration, an empty Registry or an orphaned definition cannot authorize execution.
+4. **Disposable Preview state.** If operators explicitly choose to discard state and establish that no approval history, run history or outstanding claims must be retained, archive it and deliberately recreate only the affected Preview tables. Re-register pipelines with a documented identity choice, rerun Test and reapprove. Do not erase Live metadata or reset Processing State/checkpoints/publication receipts. Setup never drops tables, deletes approvals, releases reservations or recreates incompatible canonical tables automatically.
+5. **Retained Preview state.** Where approvals/history/claims matter, preserve the old stopped deployment until an explicit reviewed reconciliation maps every retained identity and content hash into the complete new model. Validate counts, exact contract/Agreement/Test links, whole-run outcomes, decision history, participants, ownership and claim ownership before cutover. Do not invent missing historical content, infer success or automatically transfer unverified active work. If correctness cannot be established, retain the old deployment/archive and resolve it before enabling Live; a disposable reset is not a substitute for preservation.
+6. **Supported Live participation.** If the implementation changes or absorbs `METADATA_DATA_LINEAGE`, its migration must preserve existing rows automatically, validate repeat execution without duplicates or loss, and define cutover and rollback explicitly. No drop/rebuild instruction is acceptable for this Live table. If it stays unchanged, assert its schema and rows remain unchanged and document its observed-participation role.
+7. **Physical cutover and validation.** Replace only validated affected layouts at their actual configured Lakehouse paths while stopped; catalogue registration alone is insufficient for path-based readers. Switch all affected readers/writers together. Setup rejects incompatible canonical schemas with a clear repair action. Differently named retired Preview tables may remain unused without blocking setup; use the retirement registry for actionable archival/cleanup notices. Never automatically delete them.
+8. **Rollback.** Before new writes, restore the backed-up affected metadata and matching package as a unit. After new runs, approvals, claims or business publications, stop and reconcile the new records and recovery boundaries before rollback. An old metadata snapshot alone can erase history or authorize unsafe replay. Keep backups until deployment validation and the agreed retention boundary complete.
+
+For every changed physical table, the replacement must include a reviewed field-by-field mapping with Spark types/nullability, deterministic keys, lifecycle/uniqueness, retained JSON, discard/preservation policy, exact cutover steps and failure recovery. This plan deliberately supplies no hypothetical conversion code before that physical model is selected.
+
 ## Implementation workstreams and sequencing
 
 | Workstream | Status at 2026-10-25 | Executor | PR / implementation | Dependencies and merge boundary |
@@ -215,12 +299,12 @@ Before a structural implementation PR, document for **every changed table**: old
 | A. Architecture and lifecycle audit | Merged | ChatGPT | [#1695](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1695) | Documentation baseline; no runtime changes |
 | B. Focused metadata reference fixes | Merged (initial fixes) | ChatGPT | [#1696](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1696); metadata explorer [#1692](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1692) | Additional fixes only when a concrete discrepancy is found |
 | C. Processing State redesign | Merged | Codex | [#1698](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1698) | Implemented `METADATA_PROCESSING_STATE`; keep its recovery protocol isolated |
-| D. Pipeline Run normalization | Implemented in open PR; review outstanding | Codex | [#1700](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1700); [implementation and migration](#pipeline-execution-engineering) | Includes merged #1697 and #1698; preserve finalized Test results; verified offline cutover required |
-| E. Activation authority redesign | Pending separate design proof | Codex | Related foundation [#1693](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1693); evidence change [#1697](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1697) merged | Keep authority CAS, approvals and reservations isolated from D; no unsafe split of the atomic authority snapshot |
+| D. Pipeline Run normalization | Merged baseline | Codex | [#1700](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1700); [implemented model and migration](#pipeline-execution-engineering) | Preserve its finalized Test, immutable outcome and concurrency guarantees during the joint replacement |
+| E. Joint pipeline metadata redesign | Plan first; replacement implementation not started | Codex in a fresh session | Activation-only [#1704](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1704) closed unmerged; [joint plan](#joint-pipeline-metadata-redesign) | Registry + Activation State + Run + participation audit in one coherent design and one focused replacement implementation PR; transaction proof before persistence changes |
 | F. Contract/Guardrail/Access cleanup | Conditional / targeted prior work | ChatGPT for bounded fixes; otherwise Codex | Contract cleanup [#1649](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1649) and Guardrail integration [#1645](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1645) merged | Skip additional physical normalization without a demonstrated benefit |
 | G. Final integration/reference generation | Pending final review | Owner of affected source | After relevant backend work | Regenerate only artifacts directly affected by C–F; verify clean second generation |
 
-**Coordination:** C has merged, so D uses the latest canonical metadata schema, including the #1698 Processing State redesign. #1697 has merged and changes D's Test-evidence readers/writers. D preserves this durable finalized Test evidence for activation. D and E remain separate implementation PRs; do not split the atomic Activation State authority while working on Pipeline Run. A merged PR denotes merged scope, **not** a claim that live Microsoft Fabric deployment validation has completed.
+**Coordination:** C and D are merged baselines, including #1697 durable finalized Test results. The replacement E intentionally revisits Registry, Activation State and Run together; the earlier instruction to keep D/E as separate redesigns is superseded. Keep Processing State recovery isolated. Closed #1704 is not a schema dependency and must not be cherry-picked as the starting implementation. A merged PR denotes merged scope, not a claim that Microsoft Fabric deployment validation has completed.
 
 ## Acceptance tests
 
@@ -228,13 +312,26 @@ Before a structural implementation PR, document for **every changed table**: old
 - Day 1/Day 2 incremental reads, no-change reruns, drift, failed write, lost acknowledgement, and idempotent publication recovery.
 - Live versus Test persistence, interrupted run, failed operation, repeated finalization, and authoritative run status.
 - Concurrent activation, stale revision, approval immutability, reservation release, rebind barriers, and lost CAS acknowledgement using persisted Delta where transaction semantics matter.
+- Definition sealing, orphaned intermediate records, complete finalized Test → approval → Live, exact immutable reference resolution, conflicting active contracts per table/environment, and unchanged supported notebook signatures/result shapes.
+- Reservation acquisition, supported renewal, owner-specific release and interrupted execution; profiling claims/completion recovery; activation/admission/rebind races without losing unrelated history.
+- Declared versus observed participation, including successful target publication followed by run failure. If Live Lineage changes, automatic migration preserves rows and passes repeat-safety/rollback validation.
 - Live table schema fingerprints unchanged unless separately approved.
 - No extra metadata schemas, compatibility wrappers, or unrelated generated refreshes.
 - All relevant generators run from their authoritative source; generated reference pages are not manually edited, and a second generation run is clean.
 
-## Decisions intentionally deferred to implementation audit
+## Fresh-session implementation sequence
 
-Processing State is implemented on main; Pipeline Run implementation is documented above and remains under review in #1700. Remaining Activation State names, columns and record types are candidates, not approved physical contracts. Any further structural change requires a field-by-field schema and proof of benefit without weakening correctness. Multiple independent commits to one Delta table do not provide atomic publication of typed activation records.
+The current change is planning/documentation only. Start replacement implementation in a fresh Codex session after plan review; this planning branch is the handoff, not an implementation PR.
+
+1. Fetch latest `main` into a new branch/check-out. Read `AGENTS.md`, relevant skills, this plan, canonical schemas, glossary and the affected public call-flow slices. Confirm #1700 remains merged and #1704 remains closed. Bring forward this documentation change if it has not merged; do not bring forward #1704's implementation.
+2. Produce the complete reader/writer and field inventory across Registry, Activation State, Run, Guardrail Results, Data Contract, Data Agreement, Lineage, profiling claims and Processing State integration. Include widget and notebook result consumers, CAS and lost-acknowledgement paths.
+3. Settle immutable-definition sealing, approval identity, physical Registry home, typed participant storage and observed Lineage retention/absorption. Compare the simplest viable physical layouts and justify every identifier, column and remaining JSON field. Document exact schemas and the single-transaction authority protocol before replacing persistence.
+4. Prove that protocol with persisted Delta tests, then update every affected consumer together. Preserve setup → Read → Transform → Write → finalize, Test/Live behavior, activation widget, exact contract/binding checks, finalized whole-run proof, Processing State and public result shapes. Remove displaced private implementations; do not keep parallel legacy readers or dual writers.
+5. Complete the table-specific upgrade/reconciliation instructions above and any approved supported Live migration. Update `AGENTS.md` responsibilities and directly affected glossary/docs from their authoritative owners to match the final implementation.
+6. Run relevant lint, focused lifecycle/public-contract tests, persisted Delta concurrency/recovery tests, compile/import checks and strict MkDocs. Generate only directly affected references, call-flow JSON and metadata diagrams from source; run affected generators twice and confirm a clean second pass. Exclude timestamp-only, dashboard, release, notebook and unrelated static output changes. Compare all six Live schemas and Processing State with latest main; any approved Lineage exception must have its preservation tests.
+7. Review the complete diff for unnecessary abstractions, duplicated authority/configuration, migration machinery and unrelated changes. Open **one fresh implementation PR** targeting latest main, recording the final physical schema/JSON, transaction evidence, breaking Preview instructions, validation results and remaining runtime limits. Do not merge.
+
+Local persisted Spark/Delta validation is required and does not prove actual Microsoft Fabric behavior. Record separate deployment checks for Fabric Lakehouse concurrency/cutover, notebook permissions and Warehouse transport. Prior #1704 test results must not be presented as successful validation of a new implementation.
 
 ## Retirement declarations and Live upgrade policy
 
