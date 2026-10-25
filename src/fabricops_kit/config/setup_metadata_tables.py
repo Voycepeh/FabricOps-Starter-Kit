@@ -67,7 +67,7 @@ def _validate_existing_metadata_schema(
     if table_name == "METADATA_DATA_PROFILED" and "frequency_json" in existing:
         raise ValueError("METADATA_DATA_PROFILED has unexpected legacy column: frequency_json.")
     if table_name == "METADATA_PIPELINE_RUN" and (
-        "operation_summary_json" in existing or set(expected) - set(existing)
+        "operation_summary_json" in existing or "record_type" in existing or set(expected) - set(existing)
     ):
         raise ValueError(
             "Unsupported METADATA_PIPELINE_RUN physical schema. Stop writers, back up run history, "
@@ -374,8 +374,8 @@ def setup_metadata_tables(
     including when the new table also exists. Reconcile and explicitly migrate
     or reset the old table before setup; no alias or empty replacement is created.
 
-    ``METADATA_PIPELINE_RUN`` requires typed run and operation records.
-    Old summary rows and incomplete typed layouts require verified offline
+    ``METADATA_PIPELINE_RUN`` requires one run row with a typed operations array.
+    Old summary rows, multirow layouts and incomplete typed layouts require verified offline
     conversion; setup never adds columns to reinterpret existing run history.
 
     Existing tables are validated by canonical column name and compatible

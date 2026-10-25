@@ -32,8 +32,8 @@ def metadata_records(table, *, context, spark_session=None, run_id=None):
             frame = frame.filter(F.col("run_id") == run_id)
     rows = [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in frame.collect()]
     if table == "METADATA_PIPELINE_RUN":
-        from fabricops_kit.pipeline.shared import pipeline_run_snapshots
-        return pipeline_run_snapshots(rows)
+        from fabricops_kit.pipeline.shared import pipeline_run_result
+        return [pipeline_run_result(row) for row in rows]
     return rows
 
 

@@ -415,8 +415,8 @@ def test_history_filters_and_aggregates_in_spark(metadata, spark_session, monkey
              'profile_snapshot_id': 'missing-snapshot', 'completed_at': '2099-01-01T00:00:00+00:00'}]})}
     metadata.rows['METADATA_DATA_PROFILED'].append({'table_id': 'orders', 'environment_name': 'dev', 'profile_snapshot_id': 'other-snapshot'})
     tables = {table: spark_session.createDataFrame(
-        [{**row, 'record_type': 'run', 'run_details_json': row['operation_summary_json']} for row in rows.values()] if isinstance(rows, dict) else rows,
-        'run_id string, environment_name string, record_type string, run_details_json string' if table == 'METADATA_PIPELINE_RUN'
+        [{**row, 'run_details_json': row['operation_summary_json']} for row in rows.values()] if isinstance(rows, dict) else rows,
+        'run_id string, environment_name string, run_details_json string' if table == 'METADATA_PIPELINE_RUN'
         else 'table_id string, environment_name string, profile_snapshot_id string')
         for table, rows in metadata.rows.items()}
     reads = []

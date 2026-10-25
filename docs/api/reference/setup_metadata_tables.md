@@ -243,8 +243,8 @@ Setup rejects the legacy ``METADATA_SOURCE_OBSERVATION`` physical name,
 including when the new table also exists. Reconcile and explicitly migrate
 or reset the old table before setup; no alias or empty replacement is created.
 
-``METADATA_PIPELINE_RUN`` requires typed run and operation records.
-Old summary rows and incomplete typed layouts require verified offline
+``METADATA_PIPELINE_RUN`` requires one run row with a typed operations array.
+Old summary rows, multirow layouts and incomplete typed layouts require verified offline
 conversion; setup never adds columns to reinterpret existing run history.
 
 Existing tables are validated by canonical column name and compatible

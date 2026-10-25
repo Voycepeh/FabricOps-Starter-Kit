@@ -99,8 +99,9 @@ def test_finalized_test_is_atomic_and_activation_reads_all_typed_operations(runs
     r.complete(plan)
     result = finalize_pipeline(shared.PipelineSession(plan, r.spark))
     records = r.rows()
-    assert len(records) == 1 + len(roles)
-    assert shared.pipeline_run_snapshots(records)[0]['status'] == 'succeeded'
+    assert len(records) == 1
+    assert len(records[0]['operations']) == len(roles)
+    assert shared.pipeline_run_result(records[0])['status'] == 'succeeded'
     r.append('METADATA_DATA_CONTRACT', list(json.loads(plan.contracts_json).values()))
     manifest = activation.tested_pipeline_manifest(testing_run_id=plan.plan_id,
         candidate_fingerprint=result['candidate_fingerprint'], pipeline_name='Orders', pipeline_version='1',
@@ -115,36 +116,27 @@ def test_finalized_test_is_atomic_and_activation_reads_all_typed_operations(runs
             candidate_fingerprint=result['candidate_fingerprint'], pipeline_name='Orders', pipeline_version='1',
             agreement_id='agreement', agreement_version='1', context=r.context, spark_session=r.spark)
     r.append('METADATA_GUARDRAIL_RESULTS', [removed])
-    DeltaTable.forPath(r.spark, r.paths['METADATA_PIPELINE_RUN']).delete("record_type = 'operation' AND table_id = 'table0'")
-    with pytest.raises(ValueError, match='operation set'):
+    DeltaTable.forPath(r.spark, r.paths['METADATA_PIPELINE_RUN']).update(
+        set={'operations': "filter(operations, item -> item.table_id <> 'table0')"})
+    with pytest.raises(ValueError, match='membership'):
         activation.tested_pipeline_manifest(testing_run_id=plan.plan_id,
             candidate_fingerprint=result['candidate_fingerprint'], pipeline_name='Orders', pipeline_version='1',
             agreement_id='agreement', agreement_version='1', context=r.context, spark_session=r.spark)
 
 
-def test_stale_writer_rolls_back_parent_children_and_new_insert(runs_delta):
-    """A stale parent CAS aborts changed children and unmatched operation inserts."""
+def test_stale_writer_cannot_replace_a_newer_run_or_operation_array(runs_delta):
+    """Whole-row CAS rejects stale configuration, stages and parent outcomes together."""
     r = runs_delta
     plan = r.make(mode='live')
     shared.persist_pipeline_run(plan, spark_session=r.spark)
     stale = replace(plan, evidence=deepcopy(plan.evidence))
+    r.complete(plan)
     shared.persist_pipeline_run(plan, spark_session=r.spark)
     before = r.rows()
-    row = shared.persist_pipeline_run(replace(stale, execution_mode='testing'), spark_session=r.spark)
-    # Stale snapshots may not introduce a child while replacing authority.
-    records = shared.pipeline_run_records({**row, **r.audit}, snapshot_token='stale')
-    extra = {**records[-1], 'record_id': 'unmatched-operation', 'operation_id': 'unmatched-operation'}
-    from delta.tables import DeltaTable
-    frame = r.spark.createDataFrame([*records, extra], metadata_table_schema_registry()['METADATA_PIPELINE_RUN'])
-    quoted = stale.evidence['persisted_snapshot_token']
-    with pytest.raises(Exception, match='Stale'):
-        (DeltaTable.forPath(r.spark, r.paths['METADATA_PIPELINE_RUN']).alias('target')
-         .merge(frame.alias('source'), 'target.record_id = source.record_id')
-         .whenMatchedUpdate(set={'snapshot_token': f"CASE WHEN target.snapshot_token = '{quoted}' THEN source.snapshot_token ELSE CAST(raise_error('Stale') AS STRING) END"})
-         .whenNotMatchedInsertAll().execute())
-    assert sorted(r.rows(), key=lambda x: x['record_id']) == sorted(before, key=lambda x: x['record_id'])
+    stale.evidence['failures'].append({'code': 'stale_writer_failure'})
     with pytest.raises(RuntimeError, match='persistence failed'):
         shared.persist_pipeline_run(stale, spark_session=r.spark)
+    assert r.rows() == before
 
 
 def test_lost_acknowledgement_recovers_complete_snapshot_and_final_is_immutable(runs_delta, monkeypatch):
@@ -153,18 +145,19 @@ def test_lost_acknowledgement_recovers_complete_snapshot_and_final_is_immutable(
     plan = r.make(mode='live')
     shared.persist_pipeline_run(plan, spark_session=r.spark)
     r.complete(plan)
-    merge = shared._merge_pipeline_run_row
-    def lost_ack(*args, **kwargs):
-        merge(*args, **kwargs)
-        raise OSError('acknowledgement lost after physical commit')
-    monkeypatch.setattr(shared, '_merge_pipeline_run_row', lost_ack)
+    from delta.tables import DeltaMergeBuilder
+    execute = DeltaMergeBuilder.execute
+    def lost_ack(builder):
+        execute(builder)
+        raise OSError('acknowledgement lost after physical Delta commit')
+    monkeypatch.setattr(DeltaMergeBuilder, 'execute', lost_ack)
     result = shared.finalize_pipeline_run(plan, spark_session=r.spark)
     assert result['status'] == 'succeeded'
     assert shared.finalize_pipeline_run(plan, spark_session=r.spark) == result
-    monkeypatch.setattr(shared, '_merge_pipeline_run_row', merge)
+    monkeypatch.setattr(DeltaMergeBuilder, 'execute', execute)
     with pytest.raises(RuntimeError, match='persistence failed'):
         shared.persist_pipeline_run(plan, spark_session=r.spark)
-    assert shared.pipeline_run_snapshots(r.rows())[0]['status'] == 'succeeded'
+    assert shared.pipeline_run_result(r.rows()[0])['status'] == 'succeeded'
 
 
 def test_competing_first_publications_cannot_duplicate_a_run(runs_delta):
@@ -182,9 +175,9 @@ def test_competing_first_publications_cannot_duplicate_a_run(runs_delta):
             return False
     with ThreadPoolExecutor(2) as pool:
         outcomes = list(pool.map(write, (plan, other)))
-    assert sum(outcomes) == 1
-    assert len(r.rows()) == 3
-    assert shared.pipeline_run_snapshots(r.rows())[0]['status'] == 'incomplete'
+    assert any(outcomes)
+    assert len(r.rows()) == 1
+    assert shared.pipeline_run_result(r.rows()[0])['status'] == 'incomplete'
 
 
 def test_offline_conversion_preserves_persisted_history_and_rejects_ambiguity(runs_delta, tmp_path, monkeypatch):
@@ -206,7 +199,7 @@ def test_offline_conversion_preserves_persisted_history_and_rejects_ambiguity(ru
         '--source-version', '0', '--destination-path', path])
     main()
     stored = [row.asDict(recursive=True) for row in r.spark.read.format('delta').load(path).collect()]
-    assert shared.pipeline_run_snapshots(stored)[0]['candidate_fingerprint'] == logical['candidate_fingerprint']
+    assert shared.pipeline_run_result(stored[0])['candidate_fingerprint'] == logical['candidate_fingerprint']
     import json
     summary = json.loads(logical['operation_summary_json'])
     summary['operations'].pop(next(iter(summary['operations'])))
@@ -215,12 +208,13 @@ def test_offline_conversion_preserves_persisted_history_and_rejects_ambiguity(ru
         convert_run(logical)
 
 
-def test_simultaneous_updates_accept_one_parent_and_matching_operations(runs_delta):
-    """Serializable production CAS rejects one of two writers using the same token."""
+def test_simultaneous_updates_accept_one_complete_run(runs_delta):
+    """Whole-row CAS rejects a stale writer when two attempts change the same run."""
     r = runs_delta
     plan = r.make(mode='live')
     shared.persist_pipeline_run(plan, spark_session=r.spark)
     other = replace(plan, evidence=deepcopy(plan.evidence))
+    plan.evidence.setdefault('warnings', []).append({'code': 'first_writer'})
     other.evidence['failures'].append({'code': 'competing_writer_failure'})
     ready = Barrier(2)
     def update(item):
@@ -233,8 +227,8 @@ def test_simultaneous_updates_accept_one_parent_and_matching_operations(runs_del
     with ThreadPoolExecutor(2) as pool:
         outcomes = list(pool.map(update, (plan, other)))
     assert sum(outcomes) == 1
-    assert len(r.rows()) == 3
-    assert len(shared.pipeline_run_snapshots(r.rows())) == 1
+    assert len(r.rows()) == 1
+    assert shared.pipeline_run_result(r.rows()[0])['run_id'] == plan.plan_id
 
 
 def test_foreign_guardrail_provenance_cannot_approve(runs_delta):
@@ -268,3 +262,43 @@ def test_guardrail_commit_without_run_authority_cannot_approve(runs_delta, monke
         activation.tested_pipeline_manifest(testing_run_id=plan.plan_id,
             candidate_fingerprint=shared.pipeline_candidate(plan)[1], pipeline_name='Orders', pipeline_version='1',
             agreement_id='agreement', agreement_version='1', context=r.context, spark_session=r.spark)
+
+
+def test_independent_runs_update_concurrently_without_metadata_conflicts(runs_delta):
+    """Unrelated runs sharing a data file both progress, without per-update DDL."""
+    r = runs_delta
+    plans = [r.make(mode='live') for _ in range(2)]
+    for plan in plans:
+        shared.persist_pipeline_run(plan, spark_session=r.spark)
+    # Force normal file-level contention so the bounded OCC retry is exercised.
+    r.spark.createDataFrame(r.rows(), metadata_table_schema_registry()['METADATA_PIPELINE_RUN']).coalesce(1).write.format('delta').mode('overwrite').save(r.paths['METADATA_PIPELINE_RUN'])
+    for iteration in range(3):
+        ready = Barrier(2)
+        for plan in plans:
+            plan.evidence.setdefault('warnings', []).append({'iteration': iteration})
+        def update(plan):
+            ready.wait(timeout=30)
+            return shared.persist_pipeline_run(plan, spark_session=r.spark)
+        with ThreadPoolExecutor(2) as pool:
+            outcomes = list(pool.map(update, plans))
+        assert len(outcomes) == 2
+        assert all(not plan.evidence['persistence_failed'] for plan in plans)
+    rows = r.rows()
+    assert {row['run_id'] for row in rows} == {plan.plan_id for plan in plans}
+    from delta.tables import DeltaTable
+    assert all(row['operation'] != 'SET TBLPROPERTIES' for row in
+        DeltaTable.forPath(r.spark, r.paths['METADATA_PIPELINE_RUN']).history().select('operation').collect())
+
+
+def test_sql_explodes_native_operation_and_stage_fields(runs_delta):
+    """Read statuses and exact contracts through typed fields without JSON parsing."""
+    r = runs_delta
+    plan = r.make()
+    r.complete(plan)
+    finalize_pipeline(shared.PipelineSession(plan, r.spark))
+    from pyspark.sql import functions as F
+    operations = r.spark.read.format('delta').load(r.paths['METADATA_PIPELINE_RUN']).select(F.explode('operations').alias('op'))
+    assert {row.table_id for row in operations.select('op.table_id').collect()} == {'table0', 'table1'}
+    assert operations.filter(F.col('op.contract_version') == 1).count() == 2
+    stages = operations.select(F.explode('op.stages').alias('stage'))
+    assert stages.filter(F.col('stage.status') == 'passed').count() == 4

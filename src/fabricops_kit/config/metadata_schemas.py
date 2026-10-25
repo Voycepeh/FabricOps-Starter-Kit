@@ -71,10 +71,11 @@ AUDIT_SCHEMA_FIELDS = [
 ]
 
 
-def build_metadata_schema(table_name: str, fields: list[tuple[str, str] | tuple[str, str, bool]]) -> Any:
+def build_metadata_schema(table_name: str, fields: list[tuple[str, Any] | tuple[str, Any, bool]]) -> Any:
     """Build a typed Spark StructType for a metadata table."""
     try:
         from pyspark.sql.types import (
+            ArrayType,
             BooleanType,
             DateType,
             DoubleType,
@@ -87,7 +88,15 @@ def build_metadata_schema(table_name: str, fields: list[tuple[str, str] | tuple[
         )
     except Exception:  # pragma: no cover - local docs/tests may run without PySpark
         class _Type:
-            pass
+            def simpleString(self):  # noqa: N802
+                return {"LongType": "bigint", "IntegerType": "int"}.get(type(self).__name__, type(self).__name__.removesuffix("Type").lower())
+
+        class ArrayType(_Type):
+            def __init__(self, elementType, containsNull=True):  # noqa: N803
+                self.elementType, self.containsNull = elementType, containsNull
+
+            def simpleString(self):  # noqa: N802
+                return "array<" + self.elementType.simpleString() + ">"
 
         class StringType(_Type):
             pass
@@ -123,6 +132,9 @@ def build_metadata_schema(table_name: str, fields: list[tuple[str, str] | tuple[
             def fieldNames(self) -> list[str]:  # noqa: N802
                 return [field.name for field in self.fields]
 
+            def simpleString(self):  # noqa: N802
+                return "struct<" + ",".join(field.name + ":" + field.dataType.simpleString() for field in self.fields) + ">"
+
     logical: dict[str, list[str]] = {}
     for field in fields:
         name = field[0]
@@ -144,7 +156,8 @@ def build_metadata_schema(table_name: str, fields: list[tuple[str, str] | tuple[
     for field in fields:
         name, kind = field[0], field[1]
         nullable = bool(field[2]) if len(field) >= 3 else True
-        struct_fields.append(StructField(name, types[kind], nullable))
+        data_type = ArrayType(build_metadata_schema(table_name + "." + name, kind), False) if isinstance(kind, list) else types[kind]
+        struct_fields.append(StructField(name, data_type, nullable))
     return StructType(struct_fields)
 
 
@@ -300,9 +313,6 @@ def metadata_table_schema_registry() -> dict[str, Any]:
         "METADATA_PIPELINE_RUN": build_metadata_schema(
             "METADATA_PIPELINE_RUN",
             [
-                ("record_id", "string", False),
-                ("record_type", "string", False),
-                ("snapshot_token", "string", False),
                 ("run_id", "string", False),
                 ("activated_pipeline_id", "string"),
                 ("pipeline_id", "string", False),
@@ -312,25 +322,23 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("completed_at", "timestamp"),
                 ("status", "string", False),
                 ("candidate_fingerprint", "string"),
-                ("candidate_json", "string"),
-                ("run_details_json", "string"),
-                ("boundary_completed", "boolean"),
-                ("operation_count", "long"),
-                ("operations_digest", "string"),
-                ("operation_id", "string"),
-                ("operation_key", "string"),
-                ("role", "string"),
-                ("table_id", "string"),
-                ("operation_type", "string"),
-                ("contract_id", "string"),
-                ("contract_version", "integer"),
-                ("contract_payload_sha256", "string"),
-                ("operation_started_at", "timestamp"),
-                ("operation_completed_at", "timestamp"),
-                ("configuration_sha256", "string"),
-                ("configuration_json", "string"),
-                ("stages_json", "string"),
-                ("failure_code", "string"),
+                ("candidate_json", "string", False),
+                ("boundary_completed", "boolean", False),
+                ("operations", [
+                    ("operation_key", "string", False),
+                    ("table_id", "string", False),
+                    ("status", "string", False),
+                    ("started_at", "timestamp"),
+                    ("completed_at", "timestamp"),
+                    ("configuration_sha256", "string"),
+                    ("configuration_json", "string"),
+                    ("contract_id", "string"),
+                    ("contract_version", "integer"),
+                    ("contract_payload_sha256", "string"),
+                    ("stages", [("stage", "string", False), ("status", "string", False),
+                                ("evaluation_status", "string")], False),
+                ], False),
+                ("run_details_json", "string", False),
                 *audit,
             ],
         ),
@@ -424,6 +432,17 @@ def _coerce_metadata_value(value: Any, type_name: str) -> Any:
     return value
 
 
+def _coerce_metadata_field(value, data_type):
+    if value is None:
+        return None
+    if hasattr(data_type, "elementType"):
+        return [_coerce_metadata_field(item, data_type.elementType) for item in value]
+    if hasattr(data_type, "fields"):
+        value = value.asDict(recursive=True) if hasattr(value, "asDict") else value
+        return {field.name: _coerce_metadata_field(value.get(field.name), field.dataType) for field in data_type.fields}
+    return _coerce_metadata_value(value, type(data_type).__name__)
+
+
 def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
     """Return a metadata row with values aligned to the bootstrap schema types."""
     try:
@@ -438,7 +457,10 @@ def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str,
             if coerced[field.name] is None and field.nullable:
                 coerced[field.name] = None
             else:
-                coerced[field.name] = _coerce_metadata_value(coerced[field.name], type(field.dataType).__name__)
+                if hasattr(field.dataType, "elementType") or hasattr(field.dataType, "fields"):
+                    coerced[field.name] = _coerce_metadata_field(coerced[field.name], field.dataType)
+                else:
+                    coerced[field.name] = _coerce_metadata_value(coerced[field.name], type(field.dataType).__name__)
     return coerced
 
 

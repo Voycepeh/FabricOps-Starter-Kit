@@ -8,20 +8,20 @@ from __future__ import annotations
 import argparse
 
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
-from fabricops_kit.pipeline.shared import pipeline_run_records, pipeline_run_snapshots
+from fabricops_kit.pipeline.shared import pipeline_run_row, pipeline_run_result
 
 
 def convert_run(row):
     """Validate and transform one historical run without inventing missing facts."""
     logical = row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
-    records = pipeline_run_records(logical, snapshot_token="offline:" + logical["run_id"])
-    restored = pipeline_run_snapshots(records)[0]
+    physical = pipeline_run_row(logical)
+    restored = pipeline_run_result(physical)
     if any(restored.get(key) != value for key, value in logical.items() if key != "operation_summary_json"):
         raise ValueError("Historical Pipeline Run has unsupported fields; reconcile before conversion.")
     import json
     if json.loads(restored["operation_summary_json"]) != json.loads(logical["operation_summary_json"]):
         raise ValueError("Historical operation evidence cannot be reconstructed losslessly.")
-    return [coerce_metadata_row_types("METADATA_PIPELINE_RUN", item) for item in records]
+    return physical
 
 
 def main():
@@ -41,7 +41,7 @@ def main():
         raise ValueError("Expected the pre-Workstream D Pipeline Run schema.")
     if source.groupBy("run_id").count().filter(F.col("count") != 1).limit(1).count():
         raise ValueError("Historical run IDs are duplicated; reconcile before conversion.")
-    converted = spark.createDataFrame(source.rdd.flatMap(convert_run),
+    converted = spark.createDataFrame(source.rdd.map(convert_run),
         metadata_table_schema_registry()["METADATA_PIPELINE_RUN"]).persist()
     try:
         converted.count()  # Fail every ambiguous row before attempting destination publication.

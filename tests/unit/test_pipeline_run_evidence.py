@@ -26,16 +26,14 @@ def runtime(monkeypatch):
     def merge(plan, row, **kwargs):
         if failure["enabled"]:
             raise OSError("credential=never persist this message")
-        token = str(len(writes))
-        plan.evidence["pending_snapshot_token"] = token
-        records = shared.pipeline_run_records(row, snapshot_token=token)
-        shared.pipeline_run_snapshots(records)
-        physical[row["run_id"]] = copy.deepcopy(records)
+        record = shared.pipeline_run_row(row)
+        shared.pipeline_run_result(record)
+        physical[row["run_id"]] = copy.deepcopy(record)
         saved[row["run_id"]] = copy.deepcopy(row)
         writes.append(copy.deepcopy(row))
         if failure["after_commit"] and row["status"] == "succeeded":
             raise OSError("final commit acknowledgement lost")
-        plan.evidence["persisted_snapshot_token"] = token
+        plan.evidence["persisted_run_row"] = copy.deepcopy(record)
     monkeypatch.setattr(shared, "_merge_pipeline_run_row", merge)
     monkeypatch.setattr(shared, "get_spark_session", lambda supplied=None: SimpleNamespace(conf=SimpleNamespace(get=lambda name: "test-setting"),
         createDataFrame=lambda rows, schema=None: SimpleNamespace(row=rows[0])))
@@ -59,7 +57,7 @@ def runtime(monkeypatch):
             def limit(self, count):
                 return self
             def collect(self):
-                return copy.deepcopy(physical.get(self.run_id, []))
+                return [copy.deepcopy(physical[self.run_id])] if self.run_id in physical else []
         return Rows()
     monkeypatch.setattr(shared, "read_lakehouse_table", read_run)
 
@@ -270,10 +268,10 @@ def test_run_schema_has_only_independent_lifecycle_fields():
     """Keep standard audit fields and avoid redundant activation/failure columns."""
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
     fields = metadata_table_schema_registry()["METADATA_PIPELINE_RUN"].fieldNames()
-    assert fields[:4] == ["record_id", "record_type", "snapshot_token", "run_id"]
-    assert "operation_summary_json" not in fields
-    assert {"operation_id", "operation_key", "table_id", "role", "operation_type", "stages_json",
-            "configuration_sha256", "operation_count", "operations_digest", "boundary_completed"} <= set(fields)
+    assert len(fields) == 21
+    assert fields[0] == "run_id"
+    assert {"record_id", "record_type", "snapshot_token", "operation_count", "operations_digest", "operation_summary_json"}.isdisjoint(fields)
+    assert {"operations", "run_details_json", "boundary_completed"} <= set(fields)
     assert fields[-8:] == [name for name, *_ in AUDIT_SCHEMA_FIELDS]
 
 

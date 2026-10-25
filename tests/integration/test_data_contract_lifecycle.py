@@ -174,11 +174,10 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         forPath=lambda spark, name: _DeltaTransport(state, name),
         isDeltaTable=lambda spark, name: name in state.business)))
     def persist_run(plan, row, **kwargs):
-        records = runtime.pipeline_run_records(row, snapshot_token=str(len(state.metadata['METADATA_PIPELINE_RUN'])))
-        records = [coerce_metadata_row_types('METADATA_PIPELINE_RUN', record) for record in records]
-        runtime.pipeline_run_snapshots(records)
+        record = runtime.pipeline_run_row(row)
+        runtime.pipeline_run_result(record)
         state.metadata['METADATA_PIPELINE_RUN'] = [item for item in state.metadata['METADATA_PIPELINE_RUN']
-            if item['run_id'] != plan.plan_id] + records
+            if item['run_id'] != plan.plan_id] + [record]
     monkeypatch.setattr(runtime, '_merge_pipeline_run_row', persist_run)
     schedule = importlib.import_module("fabricops_kit.data_contract.scheduled_refresh")
     monkeypatch.setattr(schedule, "discover_scheduled_refresh", lambda **kwargs: {"status": "not_configured", "schedules": []})
@@ -312,7 +311,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     runtime.publish_pipeline_testing_results(plan, spark_session=state.spark)
     widget = _activation(state)
     assert len(widget["eligible_runs"]) == 1 and widget["activate"].disabled
-    assert sum(row["record_type"] == "run" for row in state.metadata["METADATA_PIPELINE_RUN"]) == 1
+    assert len(state.metadata["METADATA_PIPELINE_RUN"]) == 1
     assert state.metadata["METADATA_GUARDRAIL_RESULTS"]
     assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]]
                for row in state.metadata["METADATA_DATA_CONTRACT"])
