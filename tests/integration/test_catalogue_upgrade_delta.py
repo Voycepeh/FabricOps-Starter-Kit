@@ -428,3 +428,77 @@ def test_delta_column_mapping_identity_is_retained(catalogue_delta):
     assert rt.read().first()['extension'] == 'preserve'
     version = rt.version()
     assert rt.upgrade()[1] is None and rt.version() == version
+
+
+def test_post_migration_reader_draft_and_all_catalogue_insert_paths(catalogue_delta, monkeypatch, tmp_path):
+    """Exercise real identity/draft readers and both producer insert paths after upgrade."""
+    from fabricops_kit.pipeline import shared
+    from fabricops_kit.data_contract import shared as contracts
+    writer = importlib.import_module('fabricops_kit.pipeline.pipeline_write')
+    rt = catalogue_delta
+    original = rt.row(store_type='lakehouse', layer='Silver', schema_name='sales',
+                      load_strategy_parameters_json='{}', extension='keep')
+    rt.seed([original])
+    rt.upgrade()
+    config = replace(framework_config(), engineering_metadata_schema='custom_engineering')
+    context = {'config': config, 'env': 'dev'}
+    audit = {name: value for name, value in original.items() if name.startswith('_')}
+    def resolve(*args, **kwargs):
+        return None, TABLE, 'custom_engineering', rt.path
+    monkeypatch.setattr(writer, 'resolve_configured_lakehouse_table', resolve)
+    monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', resolve)
+    monkeypatch.setattr(writer, 'build_runtime_audit_fields', lambda **kw: audit)
+    monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kw: audit)
+    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda *a, **kw: rt.read())
+    identity = shared.resolve_catalogue_table_identity(config, 'dev', 'table', spark_session=rt.spark, context=context)
+    assert shared.catalogue_authored_processing(identity) == {'load_strategy': 'overwrite'}
+    # Insert a new target identity using the actual target-processing merge.
+    inserted = {**identity, 'table_id': 'inserted', 'table_name': 'new_orders'}
+    writer._persist_target_processing(identity=inserted, processing={'load_strategy': 'scd1', 'key_columns': ['id']},
+        scheduled_refresh=SCHEDULE, audit=audit, config=config, env='dev', dataframe=rt.read(),
+        context=context, spark_session=rt.spark)
+    resolved = shared.resolve_catalogue_table_identity(config, 'dev', 'inserted', spark_session=rt.spark, context=context)
+    assert shared.catalogue_authored_processing(resolved) == {'load_strategy': 'scd1', 'key_columns': ['id']}
+    assert resolved['scheduled_refresh_json'] == SCHEDULE and resolved['extension'] is None
+    # Persist an empty discovery result using the grain-only update's typed literal.
+    shared._persist_grain_candidates(identity, [], max_columns=2, config=config, env='dev',
+                                     context=context, spark_session=rt.spark)
+    assert rt.read().where("table_id='table'").first()['profile_key_candidates_json'].asDict(recursive=True) == {
+        'status': 'unresolved', 'max_combination_width': 2, 'candidates': []}
+    # Build and insert real profile table/column identities, retaining processing.
+    business = rt.spark.createDataFrame([(1, 'a')], ['id', 'name'])
+    source = rt.read().where("table_id='inserted'")
+    profile_frame = shared._catalogue_dataframe_from_profiled(source, source_df=business,
+        store_type='lakehouse', layer='Silver', schema_name='sales', table_name='new_orders',
+        profile_key_candidates_json={'status': 'resolved', 'max_combination_width': 2,
+                                     'candidates': [{**CANDIDATE, 'columns': ['id'], 'column_count': 1}]})
+    shared._upsert_catalogue_identities(catalogue_df=profile_frame, config=config, env='dev', spark_session=rt.spark)
+    inserted_rows = [row.asDict(recursive=True) for row in rt.read().where("table_id='inserted'").collect()]
+    assert len(inserted_rows) == 3
+    assert {row['column_name'] for row in inserted_rows if row['column_id']} == {'id', 'name'}
+    resolved = shared.resolve_catalogue_table_identity(config, 'dev', 'inserted', spark_session=rt.spark, context=context)
+    assert resolved['scheduled_refresh_json'] == SCHEDULE
+    assert resolved['profile_key_candidates_json']['candidates'][0]['columns'] == ['id']
+    assert shared.catalogue_authored_processing(resolved) == {'load_strategy': 'scd1', 'key_columns': ['id']}
+    # Draft creation must read nullable optional struct fields without treating
+    # absent parameters as authored settings, and keep transport payloads JSON.
+    contract_path = str(tmp_path / 'contracts')
+    contract_schema = metadata_table_schema_registry()['METADATA_DATA_CONTRACT']
+    rt.spark.createDataFrame([], contract_schema).write.format('delta').save(contract_path)
+    def read(name, **kwargs):
+        return rt.read() if name == TABLE else rt.spark.read.format('delta').load(contract_path)
+    def write(frame, name, **kwargs):
+        assert name == 'METADATA_DATA_CONTRACT' and kwargs['mode'] == 'append'
+        frame.write.format('delta').mode('append').save(contract_path)
+    monkeypatch.setattr(contracts, 'read_lakehouse_table', read)
+    monkeypatch.setattr(contracts, 'write_lakehouse_table', write)
+    monkeypatch.setattr(contracts, 'build_runtime_audit_fields', lambda **kw: audit)
+    draft = contracts.create_contract_draft(table_id='inserted', config=config, env='dev',
+        spark_session=rt.spark, context=context, schema='governance')
+    payload = json.loads(draft['contract_payload_json'])
+    assert payload['table']['processing'] == {'load_strategy': 'scd1', 'key_columns': ['id']}
+    assert {column['column_name'] for column in payload['table']['columns']} == {'id', 'name'}
+    reopened = contracts.create_contract_draft(table_id='inserted', config=config, env='dev',
+        spark_session=rt.spark, context=context, schema='governance')
+    assert reopened['contract_payload_json'] == draft['contract_payload_json']
+    assert rt.spark.read.format('delta').load(contract_path).count() == 1

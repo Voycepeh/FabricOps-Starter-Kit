@@ -629,8 +629,9 @@ def _scheduled_refresh_html(discovery: Mapping[str, Any]) -> str:
         for schedule in schedules:
             frequency = str(schedule.get("frequency") or "Scheduled").replace("_", " ").title()
             times = ", ".join(str(value) for value in schedule.get("times") or []) or "Time not provided"
-            timezone = str(schedule.get("timezone") or "UTC")
-            enabled = "" if schedule.get("enabled", True) else " · Disabled"
+            timezone = str(schedule.get("timezone") or "Timezone not provided")
+            enabled = (" · Enabled state unknown" if schedule.get("enabled") is None
+                       else "" if schedule["enabled"] else " · Disabled")
             rows.append(
                 "<li>{} · {} · {}{}</li>".format(
                     html.escape(frequency), html.escape(times), html.escape(timezone), enabled,
@@ -1466,9 +1467,13 @@ def widget_data_contract(
         def render_grain_profile_evidence() -> None:
             if profile_key_candidates:
                 rows = "".join(
-                    "<li><code>{}</code> · <b>{}%</b> unique · no missing key values</li>".format(
+                    "<li><code>{}</code> · <b>{}</b> · {}</li>".format(
                         html.escape(" + ".join(str(name) for name in candidate.get("columns", []))),
-                        html.escape(str(candidate.get("uniqueness_percent") or 100)),
+                        (html.escape(str(candidate["uniqueness_percent"])) + "% unique"
+                         if candidate.get("uniqueness_percent") is not None else "Uniqueness not recorded"),
+                        ("no missing key values" if candidate.get("null_count") == 0
+                         else "Missing-key count not recorded" if candidate.get("null_count") is None
+                         else html.escape(str(candidate["null_count"])) + " missing key values"),
                     )
                     for candidate in profile_key_candidates[:8]
                 )
@@ -2186,8 +2191,9 @@ def widget_data_contract(
             for schedule in scheduled_refresh["schedules"]:
                 frequency = str(schedule.get("frequency") or "Scheduled").replace("_", " ").title()
                 times = ", ".join(str(value) for value in schedule.get("times") or [])
-                timezone = str(schedule.get("timezone") or "UTC")
-                schedule_state = "" if schedule.get("enabled", True) else " · Disabled"
+                timezone = str(schedule.get("timezone") or "Timezone not provided")
+                schedule_state = (" · Enabled state unknown" if schedule.get("enabled") is None
+                                  else "" if schedule["enabled"] else " · Disabled")
                 parts = [frequency]
                 if times:
                     parts.append(times)

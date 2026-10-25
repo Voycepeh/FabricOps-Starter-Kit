@@ -3443,3 +3443,45 @@ def test_frozen_profiling_controls_cannot_edit_policy(widget_runtime):
     section = state['_profiling_editor']
     assert all(control.disabled for values in section.profiling_controls.values() for control in values.values())
     assert not hasattr(section, 'profiling_save')
+
+
+@pytest.mark.parametrize('uniqueness', [None, 0.0, 100.0])
+def test_native_candidate_metrics_do_not_invent_missing_or_zero_values(widget_runtime, uniqueness):
+    """Migrated list-only candidates can have unknown metrics; zero remains zero."""
+    widget_runtime['catalogue'][0]['profile_key_candidates_json'] = {
+        'status': None, 'max_combination_width': None,
+        'candidates': [{'columns': ['column_0'], 'column_count': None, 'row_count': None,
+                        'distinct_count': None, 'uniqueness_percent': uniqueness, 'null_count': None}],
+    }
+    state = widget_runtime['open']()
+    evidence = state['_controls']['grain_profile_evidence'].value
+    assert ('Uniqueness not recorded' if uniqueness is None else f'{uniqueness}% unique') in evidence
+    assert 'Missing-key count not recorded' in evidence
+    assert 'no missing key values' not in evidence
+    assert tuple(state['_controls']['row_key_columns'].value) == ('column_0',)
+
+
+def test_native_schedule_unknown_fields_remain_unknown_in_both_views(widget_runtime):
+    """Missing historical flags/timezone must not become disabled or UTC."""
+    captured = {'status': 'configured', 'schedules': [
+        {'enabled': None, 'frequency': 'daily', 'times': [], 'timezone': None},
+    ]}
+    widget_runtime['catalogue'][0]['scheduled_refresh_json'] = captured
+    state = widget_runtime['open']()
+    for rendered in (state['_controls']['left_pane'].children[0].value,
+                     module._scheduled_refresh_html(captured)):
+        assert 'Enabled state unknown' in rendered
+        assert 'Timezone not provided' in rendered
+        assert 'Disabled' not in rendered and 'UTC' not in rendered
+    assert state['scheduled_refresh'] == captured
+
+
+@pytest.mark.parametrize(('null_count', 'expected'), [(0, 'no missing key values'), (2, '2 missing key values')])
+def test_native_candidate_missing_key_counts_are_displayed_exactly(widget_runtime, null_count, expected):
+    """The native metric, rather than a presumed proven-key outcome, owns the label."""
+    widget_runtime['catalogue'][0]['profile_key_candidates_json'] = {
+        'status': None, 'max_combination_width': None,
+        'candidates': [{'columns': ['column_0'], 'uniqueness_percent': 100.0, 'null_count': null_count}],
+    }
+    state = widget_runtime['open']()
+    assert expected in state['_controls']['grain_profile_evidence'].value
