@@ -629,8 +629,9 @@ def _scheduled_refresh_html(discovery: Mapping[str, Any]) -> str:
         for schedule in schedules:
             frequency = str(schedule.get("frequency") or "Scheduled").replace("_", " ").title()
             times = ", ".join(str(value) for value in schedule.get("times") or []) or "Time not provided"
-            timezone = str(schedule.get("timezone") or "UTC")
-            enabled = "" if schedule.get("enabled", True) else " · Disabled"
+            timezone = str(schedule.get("timezone") or "Timezone not provided")
+            enabled = (" · Enabled state unknown" if schedule.get("enabled") is None
+                       else "" if schedule["enabled"] else " · Disabled")
             rows.append(
                 "<li>{} · {} · {}{}</li>".format(
                     html.escape(frequency), html.escape(times), html.escape(timezone), enabled,
@@ -761,11 +762,7 @@ def widget_data_contract(
         table_row = next(
             (item for item in table_rows if str(item.get("table_id") or "") == selected_table), {}
         )
-        raw_value = str(table_row.get("scheduled_refresh_json") or "").strip()
-        try:
-            captured = json.loads(raw_value) if raw_value else {"status": "uncaptured", "schedules": []}
-        except json.JSONDecodeError as exc:
-            raise ValueError("Catalogue scheduled_refresh_json is invalid.") from exc
+        captured = table_row.get("scheduled_refresh_json") or {"status": "uncaptured", "schedules": []}
         if not isinstance(captured, Mapping):
             raise ValueError("Catalogue scheduled_refresh_json must contain an object.")
         status_value = str(captured.get("status") or "").strip().lower()
@@ -1372,14 +1369,8 @@ def widget_data_contract(
         ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
         ai_mode = state["_ai_mode"].get(suggestion_scope)
         column_names = [str(column.get("column_name") or "") for column in columns]
-        raw_profile_key_candidates = table.get("profile_key_candidates_json") or "[]"
-        if isinstance(raw_profile_key_candidates, str):
-            try:
-                raw_profile_key_candidates = json.loads(raw_profile_key_candidates or "[]")
-            except json.JSONDecodeError:
-                raw_profile_key_candidates = []
-        if isinstance(raw_profile_key_candidates, Mapping):
-            raw_profile_key_candidates = raw_profile_key_candidates.get("candidates", [])
+        discovery = table.get("profile_key_candidates_json") or {}
+        raw_profile_key_candidates = discovery.get("candidates") or []
         profile_key_candidates = [
             dict(candidate)
             for candidate in raw_profile_key_candidates
@@ -1476,9 +1467,13 @@ def widget_data_contract(
         def render_grain_profile_evidence() -> None:
             if profile_key_candidates:
                 rows = "".join(
-                    "<li><code>{}</code> · <b>{}%</b> unique · no missing key values</li>".format(
+                    "<li><code>{}</code> · <b>{}</b> · {}</li>".format(
                         html.escape(" + ".join(str(name) for name in candidate.get("columns", []))),
-                        html.escape(str(candidate.get("uniqueness_percent") or 100)),
+                        (html.escape(str(candidate["uniqueness_percent"])) + "% unique"
+                         if candidate.get("uniqueness_percent") is not None else "Uniqueness not recorded"),
+                        ("no missing key values" if candidate.get("null_count") == 0
+                         else "Missing-key count not recorded" if candidate.get("null_count") is None
+                         else html.escape(str(candidate["null_count"])) + " missing key values"),
                     )
                     for candidate in profile_key_candidates[:8]
                 )
@@ -2196,8 +2191,9 @@ def widget_data_contract(
             for schedule in scheduled_refresh["schedules"]:
                 frequency = str(schedule.get("frequency") or "Scheduled").replace("_", " ").title()
                 times = ", ".join(str(value) for value in schedule.get("times") or [])
-                timezone = str(schedule.get("timezone") or "UTC")
-                schedule_state = "" if schedule.get("enabled", True) else " · Disabled"
+                timezone = str(schedule.get("timezone") or "Timezone not provided")
+                schedule_state = (" · Enabled state unknown" if schedule.get("enabled") is None
+                                  else "" if schedule["enabled"] else " · Disabled")
                 parts = [frequency]
                 if times:
                     parts.append(times)

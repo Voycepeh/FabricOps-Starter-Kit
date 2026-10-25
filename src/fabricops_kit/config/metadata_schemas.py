@@ -112,6 +112,29 @@ AUDIT_SCHEMA_FIELDS = [
 ]
 
 
+# Dicts denote structs; tuples denote native arrays. Lists retain the existing
+# array-of-struct contract used by other metadata tables.
+CATALOGUE_NESTED_FIELDS = {
+    "load_strategy_parameters_json": {
+        "watermark_column": "string", "key_columns": ("array", "string"),
+        "effective_column": "string", "tracked_columns": ("array", "string"),
+    },
+    "scheduled_refresh_json": {
+        "status": "string", "schedules": ("array", [
+            ("enabled", "boolean"), ("frequency", "string"),
+            ("times", ("array", "string")), ("timezone", "string"),
+        ]),
+    },
+    "profile_key_candidates_json": {
+        "status": "string", "max_combination_width": "integer", "candidates": ("array", [
+            ("columns", ("array", "string")), ("column_count", "integer"),
+            ("row_count", "long"), ("distinct_count", "long"),
+            ("uniqueness_percent", "double"), ("null_count", "long"),
+        ]),
+    },
+}
+
+
 def build_metadata_schema(table_name: str, fields: list[tuple[str, Any] | tuple[str, Any, bool]]) -> Any:
     """Build a typed Spark StructType for a metadata table."""
     try:
@@ -197,7 +220,15 @@ def build_metadata_schema(table_name: str, fields: list[tuple[str, Any] | tuple[
     for field in fields:
         name, kind = field[0], field[1]
         nullable = bool(field[2]) if len(field) >= 3 else True
-        data_type = ArrayType(build_metadata_schema(table_name + "." + name, kind), False) if isinstance(kind, list) else types[kind]
+        if isinstance(kind, dict):
+            data_type = build_metadata_schema(table_name + "." + name, list(kind.items()))
+        elif isinstance(kind, list):
+            data_type = ArrayType(build_metadata_schema(table_name + "." + name, kind), False)
+        elif isinstance(kind, tuple) and kind[0] == "array":
+            element = build_metadata_schema(table_name + "." + name, kind[1]) if isinstance(kind[1], list) else types[kind[1]]
+            data_type = ArrayType(element, True)
+        else:
+            data_type = types[kind]
         struct_fields.append(StructField(name, data_type, nullable))
     return StructType(struct_fields)
 
@@ -251,12 +282,12 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("column_name", "string"),
                 ("data_type", "string"),
                 ("load_strategy", "string"),
-                ("load_strategy_parameters_json", "string"),
+                ("load_strategy_parameters_json", CATALOGUE_NESTED_FIELDS["load_strategy_parameters_json"]),
                 ("writer_workspace_id", "string"),
                 ("writer_notebook_id", "string"),
                 ("writer_notebook_name", "string"),
-                ("scheduled_refresh_json", "string"),
-                ("profile_key_candidates_json", "string"),
+                ("scheduled_refresh_json", CATALOGUE_NESTED_FIELDS["scheduled_refresh_json"]),
+                ("profile_key_candidates_json", CATALOGUE_NESTED_FIELDS["profile_key_candidates_json"]),
                 ("first_profiled_at", "timestamp"),
                 ("last_profiled_at", "timestamp"),
                 ("is_active", "boolean"),
@@ -484,6 +515,49 @@ def _coerce_metadata_field(value, data_type):
     return _coerce_metadata_value(value, type(data_type).__name__)
 
 
+def validate_catalogue_value(value: Any, data_type: Any, *, field: str) -> Any:
+    """Validate a native Catalogue value without lossy Spark/JSON coercion.
+
+    Missing nullable struct fields become null; unknown fields, null array
+    elements, numeric overflow and scalar coercions fail closed.
+    """
+    import math
+
+    if value is None:
+        return None
+    if hasattr(value, "asDict"):
+        value = value.asDict(recursive=True)
+    if hasattr(data_type, "fields"):
+        if not isinstance(value, dict):
+            raise ValueError(f"{field} must be an object.")
+        unknown = set(value) - {item.name for item in data_type.fields}
+        if unknown:
+            raise ValueError(f"{field} contains unknown fields: {', '.join(sorted(unknown))}.")
+        return {item.name: validate_catalogue_value(value.get(item.name), item.dataType,
+                field=f"{field}.{item.name}") for item in data_type.fields}
+    if hasattr(data_type, "elementType"):
+        if not isinstance(value, list) or any(item is None for item in value):
+            raise ValueError(f"{field} must be an array of non-null elements.")
+        return [validate_catalogue_value(item, data_type.elementType, field=f"{field}[{index}]")
+                for index, item in enumerate(value)]
+    kind = type(data_type).__name__
+    valid = False
+    if kind == "StringType":
+        valid = isinstance(value, str)
+    elif kind == "BooleanType":
+        valid = type(value) is bool
+    elif kind in {"IntegerType", "LongType"}:
+        bits = 32 if kind == "IntegerType" else 64
+        valid = type(value) is int and -(2 ** (bits - 1)) <= value < 2 ** (bits - 1)
+    elif kind == "DoubleType":
+        valid = type(value) in {int, float} and math.isfinite(value)
+        if valid:
+            return float(value)
+    if not valid:
+        raise ValueError(f"{field} must have type {metadata_schema_type_name(data_type)}.")
+    return value
+
+
 def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
     """Return a metadata row with values aligned to the bootstrap schema types."""
     try:
@@ -495,7 +569,9 @@ def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str,
     coerced = dict(row)
     for field in getattr(schema, "fields", []):
         if field.name in coerced:
-            if coerced[field.name] is None and field.nullable:
+            if table_name == "METADATA_DATA_CATALOGUE" and field.name in CATALOGUE_NESTED_FIELDS:
+                coerced[field.name] = validate_catalogue_value(coerced[field.name], field.dataType, field=field.name)
+            elif coerced[field.name] is None and field.nullable:
                 coerced[field.name] = None
             else:
                 if hasattr(field.dataType, "elementType") or hasattr(field.dataType, "fields"):

@@ -491,7 +491,7 @@ def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
             updates.append(set)
             return self
 
-        def whenNotMatchedInsertAll(self):
+        def whenNotMatchedInsert(self, *, values):
             return self
 
         def whenNotMatchedBySourceUpdate(self, **_kwargs):
@@ -790,9 +790,9 @@ def test_grain_discovery_can_be_disabled_and_reenabled_independently(
         assert discovery.call_count == int(enabled)
         evidence = catalogue.call_args.kwargs["profile_key_candidates_json"]
         if enabled:
-            assert json.loads(evidence)["candidates"] == candidates
-            assert json.loads(evidence)["status"] == "resolved"
-            assert json.loads(evidence)["max_combination_width"] == 2
+            assert evidence["candidates"] == candidates
+            assert evidence["status"] == "resolved"
+            assert evidence["max_combination_width"] == 2
             assert discovery.call_args.kwargs["max_columns"] == 2
             assert discovery.call_args.kwargs["max_candidates"] == 1
         else:

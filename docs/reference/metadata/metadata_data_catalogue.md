@@ -51,12 +51,12 @@ No immediate table relationship is defined in the current implementation.
 | `column_name` | `string` | Column name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
 | `data_type` | `string` | Stable data type label recorded for the column. |
 | `load_strategy` | `string` | Metadata Data Catalogue field `load_strategy`. |
-| `load_strategy_parameters_json` | `string` | JSON payload stored for `load_strategy_parameters_json`. |
+| `load_strategy_parameters_json` | `struct<watermark_column:string,key_columns:array<string>,effective_column:string,tracked_columns:array<string>>` | Native Spark struct containing optional watermark, key, effective and tracked columns. The retained `_json` suffix is historical; this value is not JSON text. |
 | `writer_workspace_id` | `string` | Identifier stored for `writer_workspace_id`. |
 | `writer_notebook_id` | `string` | Identifier stored for `writer_notebook_id`. |
 | `writer_notebook_name` | `string` | Human-readable name stored for `writer_notebook_name`. |
-| `scheduled_refresh_json` | `string` | JSON payload stored for `scheduled_refresh_json`. |
-| `profile_key_candidates_json` | `string` | JSON payload stored for `profile_key_candidates_json`. |
+| `scheduled_refresh_json` | `struct<status:string,schedules:array<struct<enabled:boolean,frequency:string,times:array<string>,timezone:string>>>` | Native Spark struct containing captured status and ordered schedules (enabled, frequency, times and timezone). The retained `_json` suffix is historical; this value is not JSON text. |
+| `profile_key_candidates_json` | `struct<status:string,max_combination_width:int,candidates:array<struct<columns:array<string>,column_count:int,row_count:bigint,distinct_count:bigint,uniqueness_percent:double,null_count:bigint>>>` | Native Spark struct containing discovery status, maximum combination width and ordered candidate metrics. Historical list-only candidates have null status and null maximum width. The retained `_json` suffix is historical; this value is not JSON text. |
 | `first_profiled_at` | `timestamp` | Timestamp stored for `first_profiled_at`. |
 | `last_profiled_at` | `timestamp` | Timestamp stored for `last_profiled_at`. |
 | `is_active` | `boolean` | Whether the row is currently active. |

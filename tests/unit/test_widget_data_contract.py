@@ -17,7 +17,7 @@ def _catalogue_rows(count: int = 2) -> list[dict]:
         "table_id": "orders", "environment_name": "dev", "metadata_level": "table",
         "schema_name": "sales", "table_name": "orders", "store_type": "Lakehouse",
         "layer": "Silver", "load_strategy": "append",
-        "load_strategy_parameters_json": "{}", "is_active": True,
+        "load_strategy_parameters_json": {}, "is_active": True,
         "_workspace_id": "workspace-id", "_notebook_id": "writer-notebook-id",
     }]
     for index in range(count):
@@ -155,13 +155,13 @@ def widget_runtime(monkeypatch):
         Button=Button, VBox=Box, HBox=Box, GridBox=Box, Tab=Tab,
     )
     catalogue = _catalogue_rows()
-    catalogue[0]["scheduled_refresh_json"] = json.dumps({
+    catalogue[0]["scheduled_refresh_json"] = {
         "status": "configured",
         "schedules": [{
             "enabled": True, "frequency": "daily", "times": ["08:00"],
             "timezone": "Asia/Singapore",
         }],
-    })
+    }
     contract_payload = {
         "contract": {
             "contract_id": "contract-orders", "contract_version": 1, "status": "draft",
@@ -206,9 +206,9 @@ def widget_runtime(monkeypatch):
     class ScheduleState(dict):
         def update(self, *args, **kwargs):
             super().update(*args, **kwargs)
-            catalogue[0]["scheduled_refresh_json"] = json.dumps(self)
+            catalogue[0]["scheduled_refresh_json"] = dict(self)
 
-    schedule = ScheduleState(json.loads(catalogue[0]["scheduled_refresh_json"]))
+    schedule = ScheduleState(catalogue[0]["scheduled_refresh_json"])
     ai_enrichment = {
         "enabled": False,
         "table_description_prompt": "configured table description prompt",
@@ -539,7 +539,7 @@ def test_selector_refresh_is_atomic_after_observers_are_registered(
         "store_type": "Lakehouse",
         "layer": "Bronze",
         "load_strategy": "overwrite",
-        "load_strategy_parameters_json": "{}",
+        "load_strategy_parameters_json": {},
         "is_active": True,
     }
     monkeypatch.setattr(
@@ -910,13 +910,13 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
 
 def test_scheduled_refresh_renders_captured_frequency_in_table_summary(widget_runtime):
     """Operational context shows the writer-captured schedule in the table summary."""
-    widget_runtime["catalogue"][0]["scheduled_refresh_json"] = json.dumps({
+    widget_runtime["catalogue"][0]["scheduled_refresh_json"] = {
         "status": "configured",
         "schedules": [
             {"enabled": True, "frequency": "daily", "times": ["08:00"], "timezone": "Asia/Singapore"},
             {"enabled": False, "frequency": "weekly", "times": ["09:30"], "timezone": "UTC"},
         ],
-    })
+    }
 
     state = widget_runtime["open"]()
     rendered = state["_controls"]["left_pane"].children[0].value
@@ -930,9 +930,7 @@ def test_scheduled_refresh_renders_captured_frequency_in_table_summary(widget_ru
 
 def test_no_scheduled_refresh_is_calm_and_does_not_affect_persistence(widget_runtime):
     """No Fabric schedule remains non-fatal and canonical save records stay unchanged."""
-    widget_runtime["catalogue"][0]["scheduled_refresh_json"] = json.dumps(
-        {"status": "not_configured", "schedules": []}
-    )
+    widget_runtime["catalogue"][0]["scheduled_refresh_json"] = {"status": "not_configured", "schedules": []}
     state = widget_runtime["open"]()
     rendered = state["_controls"]["left_pane"].children[0].value
     assert "Scheduled refresh" in rendered
@@ -1275,7 +1273,7 @@ def test_missing_profiled_key_candidate_shows_no_suggestion_without_profile_fall
 
 def test_profiled_key_candidate_preselects_row_key_and_feeds_grain_ai(widget_runtime, monkeypatch):
     """Consume Engineering key evidence without asking AI to choose the key."""
-    widget_runtime["catalogue"][0]["profile_key_candidates_json"] = json.dumps({
+    widget_runtime["catalogue"][0]["profile_key_candidates_json"] = {
         "status": "resolved",
         "max_combination_width": 3,
         "candidates": [{
@@ -1286,7 +1284,7 @@ def test_profiled_key_candidate_preselects_row_key_and_feeds_grain_ai(widget_run
             "uniqueness_percent": 100.0,
             "null_count": 0,
         }],
-    })
+    }
     state, captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
@@ -2820,9 +2818,9 @@ def test_review_shows_changes_since_last_save(widget_runtime):
 def test_stale_persisted_dropdown_values_do_not_block_widget_open(widget_runtime):
     """Stale metadata must not trigger ipywidgets 'Invalid selection: value not found'."""
     widget_runtime["catalogue"][0]["load_strategy"] = "append"
-    widget_runtime["catalogue"][0]["load_strategy_parameters_json"] = json.dumps({
+    widget_runtime["catalogue"][0]["load_strategy_parameters_json"] = {
         "watermark_column": "removed_watermark",
-    })
+    }
     state = widget_runtime["open"]()
 
     controls = state["_controls"]
@@ -3445,3 +3443,45 @@ def test_frozen_profiling_controls_cannot_edit_policy(widget_runtime):
     section = state['_profiling_editor']
     assert all(control.disabled for values in section.profiling_controls.values() for control in values.values())
     assert not hasattr(section, 'profiling_save')
+
+
+@pytest.mark.parametrize('uniqueness', [None, 0.0, 100.0])
+def test_native_candidate_metrics_do_not_invent_missing_or_zero_values(widget_runtime, uniqueness):
+    """Migrated list-only candidates can have unknown metrics; zero remains zero."""
+    widget_runtime['catalogue'][0]['profile_key_candidates_json'] = {
+        'status': None, 'max_combination_width': None,
+        'candidates': [{'columns': ['column_0'], 'column_count': None, 'row_count': None,
+                        'distinct_count': None, 'uniqueness_percent': uniqueness, 'null_count': None}],
+    }
+    state = widget_runtime['open']()
+    evidence = state['_controls']['grain_profile_evidence'].value
+    assert ('Uniqueness not recorded' if uniqueness is None else f'{uniqueness}% unique') in evidence
+    assert 'Missing-key count not recorded' in evidence
+    assert 'no missing key values' not in evidence
+    assert tuple(state['_controls']['row_key_columns'].value) == ('column_0',)
+
+
+def test_native_schedule_unknown_fields_remain_unknown_in_both_views(widget_runtime):
+    """Missing historical flags/timezone must not become disabled or UTC."""
+    captured = {'status': 'configured', 'schedules': [
+        {'enabled': None, 'frequency': 'daily', 'times': [], 'timezone': None},
+    ]}
+    widget_runtime['catalogue'][0]['scheduled_refresh_json'] = captured
+    state = widget_runtime['open']()
+    for rendered in (state['_controls']['left_pane'].children[0].value,
+                     module._scheduled_refresh_html(captured)):
+        assert 'Enabled state unknown' in rendered
+        assert 'Timezone not provided' in rendered
+        assert 'Disabled' not in rendered and 'UTC' not in rendered
+    assert state['scheduled_refresh'] == captured
+
+
+@pytest.mark.parametrize(('null_count', 'expected'), [(0, 'no missing key values'), (2, '2 missing key values')])
+def test_native_candidate_missing_key_counts_are_displayed_exactly(widget_runtime, null_count, expected):
+    """The native metric, rather than a presumed proven-key outcome, owns the label."""
+    widget_runtime['catalogue'][0]['profile_key_candidates_json'] = {
+        'status': None, 'max_combination_width': None,
+        'candidates': [{'columns': ['column_0'], 'uniqueness_percent': 100.0, 'null_count': null_count}],
+    }
+    state = widget_runtime['open']()
+    assert expected in state['_controls']['grain_profile_evidence'].value

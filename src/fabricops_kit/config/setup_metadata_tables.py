@@ -8,6 +8,8 @@ from typing import Any
 
 from .metadata_schemas import (
     CANONICAL_METADATA_TABLES,
+    CATALOGUE_NESTED_FIELDS,
+    validate_catalogue_value,
     RETIRED_PREVIEW_METADATA_TABLES,
     GOVERNANCE_METADATA_TABLES,
     ENGINEERING_METADATA_TABLES,
@@ -155,6 +157,156 @@ def _add_missing_metadata_columns(
     )
 
 
+def _parse_catalogue_value(value, data_type, *, field, historical):
+    """Parse historical JSON strictly; native runtime values never use this path."""
+    import json
+
+    def unique_object(pairs):
+        result = {}
+        for name, item in pairs:
+            if name in result:
+                raise ValueError(f"{field} contains duplicate JSON field {name}.")
+            result[name] = item
+        return result
+
+    if historical and value is not None:
+        if not value.strip():
+            value = None  # Historical empty/whitespace strings mean uncaptured.
+        else:
+            try:
+                value = json.loads(value, object_pairs_hook=unique_object,
+                                   parse_constant=lambda token: (_ for _ in ()).throw(ValueError(token)))
+            except (ValueError, TypeError) as exc:
+                raise ValueError(f"{field} contains invalid JSON: {exc}") from exc
+        if field == "profile_key_candidates_json" and isinstance(value, list):
+            value = {"status": None, "max_combination_width": None, "candidates": value}
+    return validate_catalogue_value(value, data_type, field=field)
+
+
+def _upgrade_catalogue(*, spark, table, expected_schema, metadata_schema, context):
+    """Validate and atomically replace only the supported Catalogue string types.
+
+    Delta's optimistic transaction pins the source snapshot, tracks a whole-table
+    read and changes metadata in the same commit as all file removals/additions.
+    Metadata-changing transactions conflict with blind appends as well as normal
+    writers under Delta's default WriteSerializable isolation. No external lock
+    or check-then-overwrite window is used.
+    """
+    import json
+    from uuid import uuid4
+
+    from fabricops_kit.io.shared import resolve_configured_lakehouse_table
+
+    # Keep lightweight setup fakes usable; real Spark tables always have schema.
+    if not hasattr(table, "schema"):
+        return table, None
+    expected = _schema_fields_by_name(expected_schema)
+    actual = _schema_fields_by_name(table.schema)
+    historical = set()
+    for name in CATALOGUE_NESTED_FIELDS:
+        if name not in actual:
+            continue
+        kind = metadata_schema_type_name(actual[name].dataType)
+        if kind == "string":
+            historical.add(name)
+        elif kind != metadata_schema_type_name(expected[name].dataType):
+            raise ValueError(f"Unsupported Catalogue physical type for {name}: {kind}.")
+    # Validate all other physical fields before starting any mutation, including
+    # additive evolution. Extra physical columns are retained in their order.
+    compatible = table.schema.__class__([expected[f.name] if f.name in historical else f for f in table.schema.fields])
+    _validate_existing_metadata_schema("METADATA_DATA_CATALOGUE", compatible, expected_schema, allow_missing=True)
+    if not historical:
+        for row in table.select(*[name for name in CATALOGUE_NESTED_FIELDS if name in actual]).toLocalIterator():
+            for name, value in row.asDict(recursive=True).items():
+                _parse_catalogue_value(value, expected[name].dataType, field=name, historical=False)
+        return table, None
+
+    from pyspark.sql import functions as F
+    from pyspark.sql.types import StructField, StructType
+
+    _, _, _, path = resolve_configured_lakehouse_table(
+        "Metadata", "METADATA_DATA_CATALOGUE", metadata_schema, context=context)
+    jvm = spark._jvm
+    delta = jvm.org.apache.spark.sql.delta
+    log = delta.DeltaLog.forTable(spark._jsparkSession, path)
+    txn = log.startTransaction()
+    version = int(txn.readVersion())
+    txn.readWholeTable()
+    files = txn.filterFiles()
+    source = spark.read.format("delta").option("versionAsOf", version).load(path)
+    # Resolve again from the pinned snapshot: concurrent setup may already have
+    # committed between the initial schema probe and transaction acquisition.
+    actual = _schema_fields_by_name(source.schema)
+    historical = {name for name in CATALOGUE_NESTED_FIELDS if name in actual
+                  and metadata_schema_type_name(actual[name].dataType) == "string"}
+    compatible = StructType([expected[f.name] if f.name in historical else f for f in source.schema.fields])
+    _validate_existing_metadata_schema("METADATA_DATA_CATALOGUE", compatible, expected_schema, allow_missing=True)
+    if not historical:
+        return _upgrade_catalogue(spark=spark, table=source, expected_schema=expected_schema,
+                                  metadata_schema=metadata_schema, context=context)
+    target_schema = StructType([
+        StructField(f.name, expected[f.name].dataType, f.nullable, f.metadata)
+        if f.name in historical else f for f in source.schema.fields
+    ] + [StructField(f.name, f.dataType, True, f.metadata) for f in expected_schema.fields if f.name not in actual])
+
+    def convert(row):
+        values = row.asDict(recursive=True)
+        for name in CATALOGUE_NESTED_FIELDS:
+            values[name] = _parse_catalogue_value(values.get(name), expected[name].dataType,
+                                                field=name, historical=name in historical)
+        return values
+
+    # The separate durable staging path severs the read lineage before any
+    # Catalogue mutation. A process interruption leaves only disposable staging
+    # files; Delta's log remains the sole authority on whether conversion ran.
+    stage = path.rstrip("/") + "_catalogue_upgrade_staging/" + str(uuid4())
+    fs_path = jvm.org.apache.hadoop.fs.Path(stage)
+    fs = fs_path.getFileSystem(spark._jsc.hadoopConfiguration())
+    try:
+        replacement = spark.createDataFrame(source.rdd.map(convert), target_schema)
+        replacement.write.mode("errorifexists").parquet(stage)
+        replacement = spark.read.schema(target_schema).parquet(stage)
+        metadata = json.loads(txn.metadata().json())
+        # Spark's read schema hides Delta column-mapping IDs/physical names.
+        # Retain those from the transaction metadata, including unchanged nested
+        # extension columns. Delta assigns IDs only to the new struct members.
+        physical_schema = StructType.fromJson(json.loads(metadata["metaData"]["schemaString"]))
+        replacement_metadata_schema = StructType([
+            StructField(f.name, expected[f.name].dataType, f.nullable, f.metadata)
+            if f.name in historical else f for f in physical_schema.fields
+        ] + [f for f in target_schema.fields if f.name not in actual])
+        metadata["metaData"]["schemaString"] = replacement_metadata_schema.json()
+        txn.updateMetadata(delta.actions.Action.fromJson(json.dumps(metadata)), False)
+        added = txn.writeFiles(replacement._jdf)
+        actions = jvm.java.util.ArrayList()
+        for index in range(files.size()):
+            actions.add(files.apply(index).remove())
+        for index in range(added.size()):
+            actions.add(added.apply(index))
+        seq = jvm.scala.collection.JavaConverters.asScalaBufferConverter(actions).asScala().toSeq()
+        recovery = json.dumps({"fabricops_catalogue_upgrade": 1, "pre_upgrade_version": version})
+        option = jvm.scala.Option
+        operation = delta.DeltaOperations.Write(jvm.org.apache.spark.sql.SaveMode.Overwrite,
+                                               option.empty(), option.empty(), option.apply(recovery))
+        committed_version = int(txn.commit(seq, operation))
+        committed = spark.read.format("delta").option("versionAsOf", committed_version).load(path)
+        if committed.schema != replacement.schema:
+            raise RuntimeError("Catalogue upgrade committed but schema verification failed; inspect Delta history.")
+        def serialized(frame):
+            return frame.select(F.to_json(F.struct(*[F.col('`' + name.replace('`', '``') + '`')
+                for name in frame.columns]), options={"ignoreNullFields": "false", "timestampFormat": "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX",
+                                                    "timestampNTZFormat": "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"}).alias("row"))
+        before, after = serialized(replacement), serialized(committed)
+        if before.exceptAll(after).limit(1).count() or after.exceptAll(before).limit(1).count():
+            raise RuntimeError("Catalogue upgrade committed but data verification failed; inspect Delta history.")
+        return spark.read.format("delta").load(path), {
+            "pre_upgrade_version": version, "upgrade_version": committed_version,
+            "converted_columns": sorted(historical),
+        }
+    finally:
+        fs.delete(fs_path, True)
+
+
 def _result(table_name: str, status: str, message: str, *, error_type: str | None = None) -> dict[str, Any]:
     """Return one per-table setup result."""
     item = {"table": table_name, "status": status, "message": message}
@@ -241,7 +393,18 @@ def setup_metadata_tables(
     tables with missing canonical columns, and validates canonical column
     types against the registry for the installed FabricOps version. Existing
     data and extra physical columns are preserved; incompatible canonical
-    types and known legacy schemas are reported as failures.
+    types and known legacy schemas are reported as failures. Catalogue's
+    ``load_strategy_parameters_json``, ``scheduled_refresh_json`` and
+    ``profile_key_candidates_json`` retain their names but store native Spark
+    structs. Supported historical strings are strictly validated and converted
+    automatically in one conflict-checked Delta commit at the configured location.
+    Rows, unrelated columns, audit values and table properties are preserved.
+    The per-table evolved result records the pre-upgrade and committed versions.
+    Blank strings become null; historical list-only candidates retain their order
+    with null status and null maximum width. Repeated setup validates native
+    values without rewriting them. Interrupted or unacknowledged commits can be
+    recovered by rerunning setup. Recovery never automatically restores an older
+    version over subsequent writes; see the Catalogue upgrade guidance.
 
     This function prepares the metadata table structures only. It does not
     create business metadata records such as stewards, agreements, catalogue
@@ -485,7 +648,7 @@ def setup_metadata_tables(
                     table_name,
                     store="Metadata",
                     schema=resolved_metadata_schema,
-                    mode="errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_PIPELINE_REGISTRY"} else "overwrite",
+                    mode="errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CATALOGUE"} else "overwrite",
                     verbose=False,
                     context=context,
                 )
@@ -493,6 +656,11 @@ def setup_metadata_tables(
                 table = read_lakehouse_table(
                     table_name, store="Metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
                 )
+            upgrade = None
+            if table_name == "METADATA_DATA_CATALOGUE":
+                table, upgrade = _upgrade_catalogue(
+                    spark=spark, table=table, expected_schema=schema,
+                    metadata_schema=resolved_metadata_schema, context=context)
             evolved_columns: list[str] = []
             if not created:
                 columns = _table_column_names(table)
@@ -535,6 +703,14 @@ def setup_metadata_tables(
                 table_results[table_name] = _result(table_name, "created", "Metadata table was created and validated.")
                 if verbose:
                     print(f"[{index}/{total_tables}] Created {table_name}\n")
+            elif upgrade:
+                evolved_tables.append(table_name)
+                table_results[table_name] = {
+                    **_result(table_name, "evolved", "Catalogue automatically upgraded to native nested types and verified."),
+                    **upgrade,
+                }
+                if verbose:
+                    print(f"[{index}/{total_tables}] Automatically upgraded {table_name} to native nested types\n")
             elif evolved_columns:
                 evolved_tables.append(table_name)
                 table_results[table_name] = {

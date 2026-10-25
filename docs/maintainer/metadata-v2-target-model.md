@@ -2,6 +2,92 @@
 
 **Status (2026-10-26):** Processing State [#1698](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1698) and Pipeline Run [#1700](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1700) are merged. Activation-only [#1704](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1704) is closed without merging and superseded by the [joint pipeline metadata redesign](#joint-pipeline-metadata-redesign). Plan Registry, Activation State, Pipeline Run and participation together before starting one fresh implementation PR. This document proposes the replacement; it does not describe an implemented replacement schema or prove its transaction design.
 
+## Automatic Catalogue nested-type upgrade
+
+Install the new package and run the normal `setup_metadata_tables()` call before
+resuming Catalogue writers. Fresh tables immediately use the canonical native
+Spark schema. Existing `METADATA_DATA_CATALOGUE` tables are upgraded at their
+configured Metadata Lakehouse and engineering schema location; no table rebuild,
+column rename, parallel replacement column or manual conversion is required.
+
+The exact names `load_strategy_parameters_json`, `scheduled_refresh_json` and
+`profile_key_candidates_json` are retained. **Their `_json` suffix is historical:
+all three contain native structs after setup.** Runtime code reads dictionaries
+and ordered arrays and writes structured values. Contract documents and external
+transport still use JSON. See the [current Catalogue schema](../reference/metadata/metadata_data_catalogue.md)
+for every field and nested type.
+
+### Conversion rules
+
+The target fields match the current producers and the `v0.2.5` tag's
+`pipeline_write.py`, `profile_table.py` and `scheduled_refresh.py`. Processing
+retains all four optional parameter fields. Scheduled Refresh retains status,
+all schedules, enabled flags, frequency, ordered times and timezone. Discovery
+retains its status (including `resolved`, `unresolved` and `not_evaluated`),
+maximum combination width and all six metrics for every ordered candidate.
+No status or optional setting is inferred from the presence of candidates.
+
+| Historical value | Native value |
+| --- | --- |
+| SQL null, JSON `null`, empty or whitespace-only string | SQL null (uncaptured) |
+| `{}` | Non-null struct with null members |
+| Explicit null member | Null member |
+| Empty string member | Empty string member |
+| Empty array member | Empty array, preserving its distinction from null |
+| List-only key-candidate JSON, including `[]` | Struct with `status=null`, `max_combination_width=null`, and the original ordered `candidates` array |
+| Discovery object | Original status, width and ordered candidates; absent members become null |
+
+List-only candidates must be objects with the documented candidate fields, not
+bare column names. Missing metrics stay null. Setup rejects unknown fields at
+any depth, duplicate JSON keys, malformed JSON, invalid scalar/element types,
+null array elements, non-finite numbers and integer overflow. Unsupported
+physical types fail setup rather than being coerced. A mixture of string and
+canonical struct columns is supported; native values are validated too.
+
+### Atomicity, retries and recovery
+
+Setup pins a Delta transaction snapshot and registers a whole-table read. It
+strictly validates all three values and unrelated canonical types, then writes
+the complete replacement to a separate durable staging path. All rows and
+physical columns are retained, including inactive table/column rows, unexpected
+extension columns and existing audit values. Setup never recreates row audit
+timestamps. Table identity, existing properties, field metadata and configured
+location are preserved. Mapped Delta tables retain existing physical column IDs
+and names; Delta advances its internal ID allocator for the new struct members.
+
+The transaction changes schema and replaces data files together in one atomic
+Delta commit. Delta's metadata-changing whole-table transaction rejects
+concurrent appends, updates and competing setup commits, including writers that
+do not participate in a FabricOps lock. A stale replacement cannot overwrite a
+newer row. Retry normal setup after a reported conflict.
+
+The `evolved` Catalogue result clearly reports the automatic upgrade and includes
+`pre_upgrade_version`, `upgrade_version` and `converted_columns`. Delta history
+also records `fabricops_catalogue_upgrade` and `pre_upgrade_version` in commit
+`userMetadata`. Setup reads the exact committed version back and verifies schema
+and every replacement row, including duplicates and unaffected values.
+
+An interruption before commit leaves the original Catalogue intact. An
+interruption after commit, including lost acknowledgement, leaves the native
+Catalogue authoritative: rerun setup to validate it without conversion or another
+commit. Temporary staging files from a terminated process may be removed once no
+upgrade attempt is using them. Failed transactions can leave unreferenced Delta
+data files; use the normal retention-aware Delta maintenance process.
+
+**Rollback boundary:** automatic rollback is never performed. Retain Delta
+history and files until the upgrade has been accepted. If recovery requires the
+pre-upgrade version, stop all Catalogue writers, confirm that the current head
+is exactly the recorded upgrade commit, and restore the pre-upgrade version with
+the matching older package. If any later valid write exists, restoring the old
+version would discard it: reconcile those writes into a separately reviewed
+recovery instead. Do not restore over subsequent writes or run an old package
+against the native schema.
+
+This upgrade changes only Catalogue's three structured fields. Steward and
+Agreement `custom_fields_json`, other Agreement fields, profile calculations,
+statistical/frequency tables, Pipeline Run, Activation State and Processing State
+are unchanged.
+
 ## Goal and constraints
 
 Treat FabricOps metadata as an operational application database, not a reporting star schema. Prefer queryable typed records and explicit relationships over large nested state documents, but do not normalize flexible configuration for its own sake.
