@@ -1814,6 +1814,7 @@ def test_retired_preview_alerts_use_configured_schemas_and_preserve_readiness(mo
 
     def read(name, **kwargs):
         assert kwargs["store"] == "Metadata"
+        assert kwargs["context"]["_fabricops_suppress_io_log"] is True
         assert kwargs["schema"] in {"approved", "observed"}
         if name in registry:
             return Frame(registry[name])
