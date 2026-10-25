@@ -2,7 +2,7 @@
 
 **Status:** Implementation requested; this file is a handoff, not an implemented schema.
 **Source of truth:** [Metadata v2 target model](metadata-v2-target-model.md), Workstream D.
-**Target:** One focused implementation PR against latest `main` after resolving/merging [#1697](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1697). Do not merge automatically.
+**Target:** One focused implementation PR against latest `main` including merged [#1697](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1697). Do not merge automatically.
 
 ## Objective
 
@@ -14,14 +14,14 @@ If an audit shows typed records increase operational complexity or compromise co
 
 1. Read `AGENTS.md` and `docs/maintainer/metadata-v2-target-model.md`; use the task-specific repository skills for any affected API or notebook changes.
 2. Inspect current `main`, the existing run/finalization writers and readers, metadata registry and schema setup, profiling consumers, release contracts, and associated tests.
-3. **Reconcile #1697 first.** It changes finalized Test execution evidence: explicit `finalize_pipeline()` persists exact successful Test run and Guardrail results to be verified by Activation. The old docs on `main` saying Test results stay only in memory are superseded by that in-flight PR, not design instructions for D. Do not base D on the stale one-row Live-only assumption.
-4. Do not alter #1697's governance semantics, reuse a stale branch, or silently revert its new Test persistence. If #1697 remains open, limit this task to a design/audit PR or report the blocked dependency; do not merge a conflicting runtime PR.
+3. **Use the merged #1697 behavior as the baseline.** It changes finalized Test execution evidence: explicit `finalize_pipeline()` persists exact successful Test run and Guardrail results to be verified by Activation. Any older docs saying Test results stay only in memory are stale and must not drive Workstream D. Do not base D on the stale one-row Live-only assumption.
+4. Do not alter #1697's governance semantics, reuse a stale branch, or silently revert its new Test persistence.
 
 Related context:
 - [#1693](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1693) — permanent UUID Pipeline Registry, merged.
 - [#1695](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1695) — Metadata v2 architecture, merged.
 - [#1698](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1698) — Processing State redesign, merged.
-- [#1697](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1697) — durable Test evidence for Activation, currently open when this handoff was prepared.
+- [#1697](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1697) — durable Test evidence for Activation, merged on 2026-10-25.
 
 ## Inventory before implementation
 
