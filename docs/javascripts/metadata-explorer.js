@@ -258,12 +258,12 @@
         }).join("") + '</div>';
     }
 
-        // Exact schema is the only large reference section; it stays visible.
-    function sectionDetails(section) {
+    // Reuse both the generated counts and the exact schema in the detail view.
+    function sectionDetails(section, className) {
       const wrapper = document.createElement("section");
-      wrapper.className = "metadata-explorer-implemented-schema";
+      wrapper.className = className;
       const heading = document.createElement("h4");
-      heading.textContent = "Implemented schema";
+      heading.textContent = section.heading;
       wrapper.appendChild(heading);
       const content = document.createElement("div");
       content.className = "metadata-explorer-section-body";
@@ -328,9 +328,11 @@
         const sections = await loadReference(url);
         if (activeSelection !== selectionId) return;
         content.innerHTML = "";
+        const summary = sections.find(section => section.heading === "Column summary");
         const implemented = sections.find(section => section.heading === "Implemented schema");
         if (implemented) {
-          content.appendChild(sectionDetails(implemented));
+          if (summary) content.appendChild(sectionDetails(summary, "metadata-explorer-column-summary"));
+          content.appendChild(sectionDetails(implemented, "metadata-explorer-implemented-schema"));
         } else {
           content.innerHTML = '<p>Schema details are available on the ' +
             '<a href="' + escapeHtml(url) + '">full table reference page</a>.</p>';
