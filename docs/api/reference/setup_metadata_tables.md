@@ -154,7 +154,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:392`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L392-L825">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L392-L822">View on GitHub</a>
 </div>
 
 
