@@ -58,6 +58,9 @@ AUDIT_FIELD_DESCRIPTIONS = {
 }
 
 METADATA_FIELD_DESCRIPTIONS = {
+    "load_strategy_parameters_json": "Native Spark struct containing optional watermark, key, effective and tracked columns. The retained `_json` suffix is historical; this value is not JSON text.",
+    "scheduled_refresh_json": "Native Spark struct containing captured status and ordered schedules (enabled, frequency, times and timezone). The retained `_json` suffix is historical; this value is not JSON text.",
+    "profile_key_candidates_json": "Native Spark struct containing discovery status, maximum combination width and ordered candidate metrics. Historical list-only candidates have null status and null maximum width. The retained `_json` suffix is historical; this value is not JSON text.",
     "agreement_version": "Canonical agreement version associated with the row.",
     "agreement_id": "Stable identifier for the agreement lifecycle.",
     "agreement_name": "Human-readable name for the agreement.",

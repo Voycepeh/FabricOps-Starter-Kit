@@ -35,7 +35,7 @@ def test_source_drift_resolves_source_processing(monkeypatch) -> None:
         lambda _config, _env, table_id, **kwargs: {
             "table_id": f"canonical-{table_id}",
             "load_strategy": "append" if table_id == "source-a" else None,
-            "load_strategy_parameters_json": "{}",
+            "load_strategy_parameters_json": {},
         },
     )
     monkeypatch.setattr(
@@ -77,7 +77,7 @@ def test_source_drift_uses_contract_strategy_for_unmanaged_source(monkeypatch) -
         lambda _config, _env, table_id, **kwargs: {
             "table_id": f"canonical-{table_id}",
             "load_strategy": None,
-            "load_strategy_parameters_json": "{}",
+            "load_strategy_parameters_json": {},
         },
     )
     monkeypatch.setattr(
@@ -127,7 +127,7 @@ def test_source_drift_requires_contract_strategy_for_unmanaged_source(monkeypatc
         lambda _config, _env, table_id, **kwargs: {
             "table_id": f"canonical-{table_id}",
             "load_strategy": None,
-            "load_strategy_parameters_json": "{}",
+            "load_strategy_parameters_json": {},
         },
     )
     monkeypatch.setattr(

@@ -376,7 +376,7 @@ def test_02b_inventory_snapshots_through_incremental_read(publication_runtime, m
     run.spark.conf.set('spark.sql.session.timeZone', 'Asia/Singapore')
     identity = {'table_id': 'source', 'table_name': 'source', 'store': 'Bronze',
                 'store_type': 'lakehouse', 'schema': None, 'load_strategy': 'append',
-                'load_strategy_parameters_json': '{"watermark_column":"modified_datetime"}'}
+                'load_strategy_parameters_json': {'watermark_column': 'modified_datetime'}}
     monkeypatch.setattr(reader, 'resolve_fabric_context', lambda: (run.context['config'], 'dev', run.context))
     monkeypatch.setattr(reader, 'resolve_catalogue_table_identity', lambda *a, **kw: identity)
     monkeypatch.setattr(reader, 'resolve_pipeline_data_contract', lambda *a, **kw: None)

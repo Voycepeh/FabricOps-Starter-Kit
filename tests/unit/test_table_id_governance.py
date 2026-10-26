@@ -34,7 +34,7 @@ def catalogue_row(table_id: str, table_name: str, *, active=True, level="table")
         "schema_name": "sales",
         "table_name": table_name,
         "load_strategy": "append" if table_id == "table-a" else "overwrite",
-        "load_strategy_parameters_json": "{}",
+        "load_strategy_parameters_json": {},
         "is_active": active,
     }
 

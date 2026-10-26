@@ -124,7 +124,18 @@ Creates missing metadata tables, additively evolves existing metadata
 tables with missing canonical columns, and validates canonical column
 types against the registry for the installed FabricOps version. Existing
 data and extra physical columns are preserved; incompatible canonical
-types and known legacy schemas are reported as failures.
+types and known legacy schemas are reported as failures. Catalogue's
+``load_strategy_parameters_json``, ``scheduled_refresh_json`` and
+``profile_key_candidates_json`` retain their names but store native Spark
+structs. Supported historical strings are strictly validated and converted
+automatically in one conflict-checked Delta commit at the configured location.
+Rows, unrelated columns, audit values and table properties are preserved.
+The per-table evolved result records the pre-upgrade and committed versions.
+Blank strings become null; historical list-only candidates retain their order
+with null status and null maximum width. Repeated setup validates native
+values without rewriting them. Interrupted or unacknowledged commits can be
+recovered by rerunning setup. Recovery never automatically restores an older
+version over subsequent writes; see the Catalogue upgrade guidance.
 
 This function prepares the metadata table structures only. It does not
 create business metadata records such as stewards, agreements, catalogue
@@ -141,9 +152,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:227`
+`fabricops_kit/config/setup_metadata_tables.py:379`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L227-L633">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L379-L809">View on GitHub</a>
 </div>
 
 
@@ -287,7 +298,7 @@ their respective FabricOps workflows.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 33 |
+| Live-critical dependencies | 47 |
 
 ### Release history
 
@@ -313,14 +324,17 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.validate_catalogue_value</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._active_steward_presence</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._add_missing_metadata_columns</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._parse_catalogue_value</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._print_setup_summary</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._result</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._retired_preview_warnings</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._retired_table_is_missing</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._schema_fields_by_name</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._table_column_names</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._upgrade_catalogue</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._validate_existing_metadata_schema</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
@@ -331,8 +345,19 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.is_table_not_found_error</code></li>
 <li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared.validate_framework_config</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
+<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
 </ul>
 
 

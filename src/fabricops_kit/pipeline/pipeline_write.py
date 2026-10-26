@@ -103,15 +103,11 @@ def _persist_target_processing(
             "column_name": None,
             "data_type": None,
             "load_strategy": str(processing["load_strategy"]),
-            "load_strategy_parameters_json": json.dumps(
-                parameters, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-            ),
+            "load_strategy_parameters_json": parameters,
             "writer_workspace_id": audit["_workspace_id"],
             "writer_notebook_id": audit["_notebook_id"],
             "writer_notebook_name": audit["_notebook_name"],
-            "scheduled_refresh_json": json.dumps(
-                scheduled_refresh, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-            ),
+            "scheduled_refresh_json": scheduled_refresh,
             "profile_key_candidates_json": None,
             "first_profiled_at": None,
             "last_profiled_at": None,
@@ -160,7 +156,7 @@ def _persist_target_processing(
                 "_activity_id": "source._activity_id",
             }
         )
-        .whenNotMatchedInsertAll()
+        .whenNotMatchedInsert(values={name: f"source.{name}" for name in row})
         .execute()
     )
 

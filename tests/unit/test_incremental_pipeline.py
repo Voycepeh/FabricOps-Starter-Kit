@@ -109,7 +109,7 @@ def test_incremental_pipeline_read_uses_processing_without_source_drift(monkeypa
         "schema": "demo",
         "table_name": "orders",
         "load_strategy": "append",
-        "load_strategy_parameters_json": '{"watermark_column":"processed_at"}',
+        "load_strategy_parameters_json": {'watermark_column': 'processed_at'},
     }
     captured = []
     monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: (object(), "dev", {}))
@@ -155,7 +155,7 @@ def test_first_incremental_run_bootstraps_with_complete_scope(monkeypatch):
 def test_incremental_columns_come_from_processing_without_source_drift():
     identity = {
         "load_strategy": "append",
-        "load_strategy_parameters_json": '{"watermark_column":"processed_at"}',
+        "load_strategy_parameters_json": {'watermark_column': 'processed_at'},
     }
 
     assert shared.resolve_incremental_observation_columns(identity, None) == (
@@ -198,7 +198,7 @@ def test_partition_only_incremental_processing_is_rejected():
 def test_incremental_observation_requires_governed_watermark():
     identity = {
         "load_strategy": "append",
-        "load_strategy_parameters_json": '{"partition_column":"business_date"}',
+        "load_strategy_parameters_json": {'partition_column': 'business_date'},
     }
 
     with pytest.raises(ValueError, match="requires a watermark_column or effective_column"):
@@ -527,7 +527,7 @@ def test_incremental_read_parameters_override_missing_catalogue_watermark(monkey
         "schema": "demo",
         "table_name": "orders",
         "load_strategy": "append",
-        "load_strategy_parameters_json": "{}",
+        "load_strategy_parameters_json": {},
     }
     captured = []
     monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: (object(), "dev", {}))

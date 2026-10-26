@@ -2969,14 +2969,8 @@ def resolve_catalogue_table_identity(
 def catalogue_authored_processing(identity: Mapping[str, Any]) -> dict[str, Any]:
     """Return current processing authoring from a Catalogue table identity."""
     strategy = str(identity.get("load_strategy") or "").strip()
-    raw = identity.get("load_strategy_parameters_json") or "{}"
-    try:
-        parameters = json.loads(raw) if isinstance(raw, str) else dict(raw)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("Catalogue load_strategy_parameters_json must be a JSON object.") from exc
-    if not isinstance(parameters, dict):
-        raise ValueError("Catalogue load_strategy_parameters_json must be a JSON object.")
-    return {"load_strategy": strategy, **parameters}
+    parameters = identity.get("load_strategy_parameters_json") or {}
+    return {"load_strategy": strategy, **{name: value for name, value in parameters.items() if value is not None}}
 
 
 def validate_grain_parameters(parameters, *, active=True):
@@ -7621,12 +7615,12 @@ def _catalogue_dataframe_from_profiled(
     schema_name: str | None,
     table_name: str,
     load_strategy: str | None = None,
-    load_strategy_parameters_json: str | None = None,
+    load_strategy_parameters_json: dict[str, Any] | None = None,
     writer_workspace_id: str | None = None,
     writer_notebook_id: str | None = None,
     writer_notebook_name: str | None = None,
-    scheduled_refresh_json: str | None = None,
-    profile_key_candidates_json: str | None = None,
+    scheduled_refresh_json: dict[str, Any] | None = None,
+    profile_key_candidates_json: dict[str, Any] | None = None,
     source_fields: Sequence[tuple[str, str]] | None = None,
 ):
     """Return one table row and one row for each observed column asset."""
@@ -7771,7 +7765,10 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
                 "_activity_id": "source._activity_id",
             }
         )
-        .whenNotMatchedInsertAll()
+        .whenNotMatchedInsert(values={
+            field.name: f"source.{field.name}"
+            for field in metadata_table_schema_registry()[CATALOGUE_TABLE].fields
+        })
         .whenNotMatchedBySourceUpdate(
             condition=(
                 f"target.environment_name = '{environment_name}' AND target.table_id = '{table_id}' "
@@ -8014,11 +8011,8 @@ def execute_table_profile(
                 writer_notebook_id=None,
                 writer_notebook_name=None,
                 scheduled_refresh_json=None,
-                profile_key_candidates_json=json.dumps(
-                    _key_candidate_evidence(profile_key_candidates, max_columns=grain_discovery_max_columns),
-                    sort_keys=True,
-                    separators=(",", ":"),
-                    ensure_ascii=False,
+                profile_key_candidates_json=_key_candidate_evidence(
+                    profile_key_candidates, max_columns=grain_discovery_max_columns
                 ) if grain_discovery_enabled else None,
                 source_fields=warehouse_fields,
             )
@@ -8063,6 +8057,14 @@ def _persist_grain_candidates(identity, candidates, *, max_columns, config, env,
     if table.toDF().where(condition).limit(2).count() != 1:
         raise RuntimeError("Grain Discovery requires one registered Catalogue table in this environment.")
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
-    table.update(condition=condition, set={"profile_key_candidates_json": F.lit(json.dumps(
-        _key_candidate_evidence(candidates, max_columns=max_columns), sort_keys=True, separators=(",", ":"))),
+    def literal(value):
+        if isinstance(value, dict):
+            return F.struct(*[literal(item).alias(name) for name, item in value.items()])
+        if isinstance(value, list):
+            return F.array(*[literal(item) for item in value])
+        return F.lit(value)
+
+    candidate_schema = metadata_table_schema_registry()[CATALOGUE_TABLE]["profile_key_candidates_json"].dataType
+    candidate_value = literal(_key_candidate_evidence(candidates, max_columns=max_columns)).cast(candidate_schema)
+    table.update(condition=condition, set={"profile_key_candidates_json": candidate_value,
         **{name: F.lit(value) for name, value in audit.items()}})

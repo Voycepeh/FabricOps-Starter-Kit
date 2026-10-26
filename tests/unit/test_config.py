@@ -448,7 +448,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     ):
         assert store == "Metadata"
         assert schema in {"governance", "engineering"}
-        assert mode == ("errorifexists" if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_DEFINITION", "METADATA_PIPELINE_RUN"} else "overwrite")
+        assert mode == ("errorifexists" if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_RUN", "METADATA_DATA_CATALOGUE"} else "overwrite")
         assert options is None
         assert verbose is False
         spark.created_tables.append(table_name)
@@ -686,6 +686,12 @@ def test_setup_metadata_tables_accepts_existing_tables_with_nullable_physical_au
         def count(self):
             raise AssertionError("active steward readiness must not use count")
 
+        def select(self, *_columns):
+            return self
+
+        def toLocalIterator(self):  # noqa: N802
+            return iter(())
+
     def spark_nullable_schema(schema):
         field_type = type(schema.fields[0])
         schema_type = type(schema)
@@ -740,6 +746,12 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type
 
         def count(self):
             raise AssertionError("active steward readiness must not use count")
+
+        def select(self, *_columns):
+            return self
+
+        def toLocalIterator(self):  # noqa: N802
+            return iter(())
 
     def wrong_type(schema):
         field_type = type(schema.fields[0])
@@ -831,6 +843,12 @@ def test_setup_evolves_existing_tables_with_new_readable_identity_columns(monkey
         def limit(self, _n): return self
         def take(self, _n): return [object()]
 
+        def select(self, *_columns):
+            return self
+
+        def toLocalIterator(self):  # noqa: N802
+            return iter(())
+
     class Spark:
         def createDataFrame(self, rows, schema=None):
             assert rows == []
@@ -897,6 +915,12 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
         def count(self):
             raise AssertionError("active steward readiness must not use count")
 
+        def select(self, *_columns):
+            return self
+
+        def toLocalIterator(self):  # noqa: N802
+            return iter(())
+
     class Spark:
         def createDataFrame(self, rows, schema=None):  # noqa: N802
             assert rows == [] or rows[0].get("pipeline_id") == "central" or rows[0].get("authority_id") == "central" or (
@@ -911,7 +935,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
         return existing[table_name]
 
     def write_table(frame, table_name, **kwargs):
-        assert kwargs.get("mode") == ("errorifexists" if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_DEFINITION", "METADATA_PIPELINE_RUN"} else "overwrite")
+        assert kwargs.get("mode") == ("errorifexists" if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_RUN", "METADATA_DATA_CATALOGUE"} else "overwrite")
         created[table_name] = frame.schema
         existing[table_name] = frame
 
@@ -1188,11 +1212,13 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
     )
     from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
 
-    def sample_value(data_type):
+    def sample_value(data_type, *, native=False):
         if hasattr(data_type, "elementType"):
-            return [sample_value(data_type.elementType)]
+            return [sample_value(data_type.elementType, native=native)]
         if hasattr(data_type, "fields"):
-            return {field.name: sample_value(field.dataType) for field in data_type.fields}
+            return {field.name: sample_value(field.dataType, native=native) for field in data_type.fields}
+        if native and type(data_type).__name__ in {"BooleanType", "LongType", "DoubleType"}:
+            return {"BooleanType": True, "LongType": 7, "DoubleType": 7.5}[type(data_type).__name__]
         return {"TimestampType": "2026-06-29T12:34:56+08:00", "DateType": "2026-06-29",
                 "BooleanType": "true", "LongType": "7", "IntegerType": 7, "DoubleType": "7.5"}.get(
                     type(data_type).__name__, "value")
@@ -1218,7 +1244,8 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
     assert list(registry) == CANONICAL_METADATA_TABLES
     for table_name, schema in registry.items():
         assert audit_columns.issubset({field.name for field in schema.fields})
-        sample = {field.name: sample_value(field.dataType) for field in schema.fields}
+        sample = {field.name: sample_value(field.dataType, native=(table_name == "METADATA_DATA_CATALOGUE"
+            and field.name.endswith("_json"))) for field in schema.fields}
         row = coerce_metadata_row_types(table_name, sample)
         for field in schema.fields:
             assert_runtime_type(row[field.name], field.dataType, table_name + "." + field.name)

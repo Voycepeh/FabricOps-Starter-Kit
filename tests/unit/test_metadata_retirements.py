@@ -61,6 +61,8 @@ def test_retirement_alerts_are_presence_only_and_nonblocking(monkeypatch, capsys
         def where(self, _expr): return self
         def limit(self, _value): return self
         def take(self, _value): return []
+        def select(self, *_columns): return self
+        def toLocalIterator(self): return iter(())  # noqa: N802
 
     class HistoricalFrame:
         def __getattr__(self, name):
