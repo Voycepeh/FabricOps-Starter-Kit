@@ -4372,7 +4372,7 @@ def _metadata_split_type_fields(value: str) -> list[str]:
 def _metadata_nested_struct(type_name: str) -> tuple[str, str] | None:
     """Return the label and fields of a struct or array of structs."""
     if type_name.startswith("array<struct<") and type_name.endswith(">>"):
-        return "Array of structs", type_name[len("array<struct<"):-2]
+        return "Array", type_name[len("array<struct<"):-2]
     if type_name.startswith("struct<") and type_name.endswith(">"):
         return "Struct", type_name[len("struct<"):-1]
     return None
@@ -4416,11 +4416,11 @@ def _metadata_type_cell(type_name: str, *, column: str) -> str:
 
     append_fields(nested[1])
     return (
-        '<div class="metadata-structured-type">'
-        f'<span class="metadata-structured-type__label">{nested[0]}</span>'
+        '<details class="metadata-structured-type">'
+        f'<summary>{nested[0]}</summary>'
         f'<table class="metadata-nested-type" aria-label="Fields in {html_escape(column)}">'
         '<thead><tr><th scope="col">Field</th><th scope="col">Type</th></tr></thead>'
-        f'<tbody>{"".join(field_rows)}</tbody></table></div>'
+        f'<tbody>{"".join(field_rows)}</tbody></table></details>'
     )
 
 
