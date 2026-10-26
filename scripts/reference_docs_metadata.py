@@ -1637,11 +1637,11 @@ PUBLIC_SYMBOL_DOCS = [
  'summary_override': 'Prepare Testing or resolve an approved environment configuration for Live.',
  'symbol_name': 'setup_pipeline', 'template_notebook': '02_pipeline',
  'template_segment': 'Configure the pipeline and whole-run boundary',
- 'use_when': 'Use once before Read, Transform and Write with pipeline_id and pipeline_mode.',
- 'related_functions': ['finalize_pipeline', 'widget_data_contract', 'orchestrate_read', 'orchestrate_write'],
- 'return_interpretation': 'Returns a context-local execution session with contract selection and automatic reporting; finalize_pipeline records completion and commits Test results; interrupted runs remain incomplete.',
- 'expanded_purpose': 'Select a frozen contract or No Contract independently for each Testing participant. Live resolves and pins one approved revision from the central authority.',
- 'common_failure_causes': ['Missing explicit table choices or invalid frozen contract selections.', 'Unsafe Testing write destination.', 'Missing complete governed Testing for activation or approved Live configuration.']},
+ 'use_when': 'Call after setup_notebook() and before Read, Transform and Write. Test registers or recovers the Pipeline ID automatically.',
+ 'related_functions': ['setup_notebook', 'finalize_pipeline', 'widget_data_contract', 'orchestrate_read', 'orchestrate_write'],
+ 'return_interpretation': 'Returns a context-local execution session exposing pipeline_id, contract selection and automatic reporting; finalize_pipeline records completion and commits Test results; interrupted runs remain incomplete.',
+ 'expanded_purpose': 'Reuse initialized notebook configuration without rerunning 00_env_config. Select a frozen contract or No Contract independently for each Testing participant. Live resolves and pins one approved revision from the central authority.',
+ 'common_failure_causes': ['Missing, failed or outdated setup_notebook() initialization.', 'Invalid frozen contract selections.', 'Missing notebook registration or approved Live configuration.']},
 
 
 

@@ -163,20 +163,33 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
     token = shared._ACTIVE_PIPELINE.set(None)
     session = None
     try:
-        session = setup_pipeline(pipeline_mode=mode, config_workspace_id=config_workspace)
+        notebook = setup_notebook(config_workspace_id=config_workspace)
+        notebook_output = capsys.readouterr().out
+        session = setup_pipeline(pipeline_mode=mode)
         assert session.plan.environment == 'dev'
         assert session.plan.pipeline_id == '8f32a471-6c91-4b7e-9d13-2f0c947eab52'
         assert session.plan.runtime_context['config'].path_config.paths['dev']['Metadata'].workspace_id == 'metadata-ws'
         configuration_runtime.notebook.run.assert_called_once_with(
             '00_env_config', 120, {'caller_workspace_id': 'dev-ws'}, workspace=config_workspace or 'dev-ws')
         assert session.plan.runtime_context['runtime_metadata']['workspace_id'] == 'dev-ws'
+        if mode == 'Test':
+            first = session
+            session = setup_pipeline(pipeline_mode=mode)
+            assert first.closed
+            assert session.plan.plan_id != first.plan.plan_id
+            assert session.plan.runtime_context['config'] is first.plan.runtime_context['config']
+            assert configuration_runtime.notebook.run.call_count == 1
         from fabricops_kit import __version__
         output = capsys.readouterr().out
-        assert output.count(f'FabricOps v{__version__}') == 1
+        assert notebook_output.count(f'FabricOps v{__version__}') == 1
+        assert f'FabricOps v{__version__}' not in output
+        assert session.plan.runtime_context['_notebook_setup']['result'] is notebook
         location = 'cross-workspace' if config_workspace else 'same-workspace'
-        assert f'Configuration: 00_env_config ({location}; workspace: {config_workspace or "dev-ws"})' in output
-        assert 'Environment: dev' in output
-        assert 'Readiness: ready' in output
+        assert f'Configuration: 00_env_config ({location}; workspace: {config_workspace or "dev-ws"})' in notebook_output
+        assert 'Environment: dev' in notebook_output
+        assert 'Readiness: ready' in notebook_output
+        assert 'Configuration:' not in output
+        assert 'Readiness:' not in output
     finally:
         if session is not None:
             import atexit
@@ -449,3 +462,89 @@ def test_engineering_workspace_mapping_precedes_governance_choice(configuration_
     """The Governance selector never redirects an Engineering caller."""
     configuration_runtime.settings.governance_environment = 'prod'
     assert setup_notebook(config_workspace_id='central-ws').environment == 'dev'
+
+
+def test_pipeline_requires_setup_notebook_even_with_manual_config(configuration_runtime, monkeypatch):
+    """A raw shared context is not proof that notebook validation completed."""
+    import builtins
+    shared = importlib.import_module('fabricops_kit.pipeline.shared')
+    registration = Mock()
+    monkeypatch.setattr(shared, 'resolve_pipeline_registration', registration)
+    monkeypatch.setattr(builtins, 'FABRIC_CONTEXT', {'config': _config(), 'env': 'dev'})
+    with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
+        setup_pipeline()
+    configuration_runtime.notebook.run.assert_not_called()
+    registration.assert_not_called()
+
+
+@pytest.mark.parametrize('field', ['currentWorkspaceId', 'currentNotebookId', 'currentRunId'])
+def test_pipeline_rejects_context_from_a_previous_execution(configuration_runtime, monkeypatch, field):
+    """Changing the caller identity cannot reuse its old workspace configuration."""
+    setup_notebook()
+    configuration_runtime.runtime.context[field] = 'another-execution'
+    shared = importlib.import_module('fabricops_kit.pipeline.shared')
+    registration = Mock()
+    monkeypatch.setattr(shared, 'resolve_pipeline_registration', registration)
+    with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\) again'):
+        setup_pipeline()
+    assert configuration_runtime.notebook.run.call_count == 1
+    registration.assert_not_called()
+
+
+@pytest.mark.parametrize('change', ['env', 'config', 'readiness'])
+def test_pipeline_rejects_invalid_initialized_configuration(configuration_runtime, change):
+    """A replaced environment, configuration or failed readiness requires fresh setup."""
+    result = setup_notebook()
+    from fabricops_kit.config.shared import get_default_fabric_context
+    context = get_default_fabric_context()
+    if change == 'readiness':
+        from dataclasses import replace
+        context['_notebook_setup']['result'] = replace(result, readiness_status='not_ready')
+    else:
+        context[change] = 'different'
+    with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\) successfully'):
+        setup_pipeline()
+    assert configuration_runtime.notebook.run.call_count == 1
+
+
+def test_failed_notebook_reload_invalidates_previous_setup(configuration_runtime):
+    """A failed config load cannot leave the last successful configuration eligible."""
+    setup_notebook()
+    configuration_runtime.notebook.run.side_effect = RuntimeError('config unavailable')
+    with pytest.raises(RuntimeError, match='00_env_config execution failed'):
+        setup_notebook()
+    with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
+        setup_pipeline()
+    assert configuration_runtime.notebook.run.call_count == 2
+
+
+def test_explicit_setup_publishes_configuration_without_loading_notebook(configuration_runtime):
+    """Local and advanced explicit configuration publishes the same initialized state."""
+    from fabricops_kit.config.shared import get_default_fabric_context
+    supplied = _config()
+    result = setup_notebook(supplied, env='dev', config_workspace_id='ignored')
+    active = get_default_fabric_context(require_notebook_setup=True)
+    assert active['config'] is supplied
+    assert active['env'] == 'dev'
+    assert active['_notebook_setup']['result'] is result
+    configuration_runtime.notebook.run.assert_not_called()
+
+
+def test_setup_pipeline_rejects_configuration_workspace_parameter(configuration_runtime):
+    """Configuration workspace selection belongs only to the notebook stage."""
+    with pytest.raises(TypeError, match='config_workspace_id'):
+        setup_pipeline(config_workspace_id='central-ws')
+    configuration_runtime.notebook.run.assert_not_called()
+
+
+
+def test_failed_setup_output_does_not_publish_a_ready_context(configuration_runtime, monkeypatch):
+    """A failed setup stage cannot publish state that pipeline setup treats as ready."""
+    setup_notebook()
+    config = importlib.import_module('fabricops_kit.config.shared')
+    monkeypatch.setattr(config, '_print_notebook_setup_summary', Mock(side_effect=RuntimeError('display failed')))
+    with pytest.raises(RuntimeError, match='display failed'):
+        setup_notebook(_config(), env='dev')
+    with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
+        setup_pipeline()
+    assert configuration_runtime.notebook.run.call_count == 1

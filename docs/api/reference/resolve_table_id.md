@@ -110,7 +110,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 16 |
+| Live-critical dependencies | 18 |
 
 ### Release history
 
@@ -122,6 +122,8 @@ No related guides documented.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
+<li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared.build_table_id</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>

@@ -43,13 +43,17 @@ Profiling schedules and Read/Write triggers are saved per table in Data Contract
 Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparation cell. That setup can change Bronze before pipeline selection. The default pipeline setup is:
 
 ```python
-PIPELINE_ID = None  # First run: save the displayed UUID here before promotion.
-PIPELINE_MODE = "Test"  # Test or Live
-CONTRACTS = setup_pipeline(
-    pipeline_id=PIPELINE_ID,
-    pipeline_mode=PIPELINE_MODE,
+context = setup_notebook(
     # Optional shared config: config_workspace_id="<configuration-workspace-id>",
 )
+
+PIPELINE_ID = None  # Test registers or recovers this notebook automatically.
+PIPELINE_MODE = "Test"  # Test or Live
+pipeline = setup_pipeline(
+    pipeline_id=PIPELINE_ID,
+    pipeline_mode=PIPELINE_MODE,
+)
+PIPELINE_ID = pipeline.pipeline_id
 ```
 
 
@@ -150,7 +154,7 @@ Day 1 creates eight current records in each target, Day 2 creates the first hist
 
 ### Metadata saved by FabricOps
 
-The following records are committed by successful runs with approved **Live** publication and routed to the Metadata Lakehouse configured by `00_env_config`. Test retains diagnostics in memory during Read and Write; `finalize_pipeline(CONTRACTS)` publishes only run and Guardrail results for activation review.
+The following records are committed by successful runs with approved **Live** publication and routed to the Metadata Lakehouse configured by `00_env_config`. Test retains diagnostics in memory during Read and Write; `finalize_pipeline(pipeline)` publishes only run and Guardrail results for activation review.
 
 | Metadata table | What this demo records |
 | --- | --- |

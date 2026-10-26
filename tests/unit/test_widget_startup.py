@@ -85,10 +85,10 @@ def test_pipeline_loading_precedes_initialization_and_collect(monkeypatch, outpu
     monkeypatch.setattr(IPython, "get_ipython", lambda: shell)
     calls = []
 
-    def initialize(**kwargs):
+    def reuse(**kwargs):
         assert outputs and "Pipeline execution" in outputs[0][1].data
-        calls.append("initialize")
-        return SimpleNamespace(notebook_name="02_pipeline")
+        calls.append("reuse")
+        return {"config": config, "env": "dev"}
 
     def collect():
         assert "Loading frozen" in outputs[-1][1].data
@@ -96,7 +96,7 @@ def test_pipeline_loading_precedes_initialization_and_collect(monkeypatch, outpu
         return []
 
     monkeypatch.setattr(shared, "resolve_pipeline_registration", lambda identity, **kwargs: {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "resolution": "Recovered"})
-    monkeypatch.setattr(shared, "initialize_notebook", initialize)
+    monkeypatch.setattr(shared, "get_default_fabric_context", reuse)
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda **kw: (config, "dev", {}))
     monkeypatch.setattr(shared, "get_spark_session", lambda *_args, **_kwargs: object())
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *a, **kw: SimpleNamespace(collect=collect))
@@ -104,7 +104,7 @@ def test_pipeline_loading_precedes_initialization_and_collect(monkeypatch, outpu
     session = None
     try:
         session = shared.start_pipeline_session("generic", "Test")
-        assert calls == ["initialize", "collect"]
+        assert calls == ["reuse", "collect"]
         assert "spark_loading" in session.startup_timings
         assert session.controls == []
     finally:

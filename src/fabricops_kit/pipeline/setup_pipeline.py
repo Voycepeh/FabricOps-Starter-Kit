@@ -128,7 +128,7 @@ def _inspector(row, roles, results=()):
 
 
 def setup_pipeline(
-    *, pipeline_id: str | None = None, pipeline_mode: str = "Test", config_workspace_id: str | None = None,
+    *, pipeline_id: str | None = None, pipeline_mode: str = "Test",
     new_pipeline: bool = False, previous_workspace_id: str | None = None,
     previous_notebook_id: str | None = None,
 ):
@@ -146,13 +146,11 @@ def setup_pipeline(
     ----------
     pipeline_id : str | None, optional
         Permanent UUIDv4. Omit to recover the exact notebook binding or register
-        a new UUID. Save the displayed UUID in the notebook for promotion.
+        a new UUID in Test. The session exposes pipeline.pipeline_id; retain it in
+        source only for cross-workspace promotion. Live never allocates a new UUID.
         A changed same-environment binding requires both previous notebook IDs.
     pipeline_mode : {"Test", "Live"}, default="Test"
         Evaluation-only operations or execution under an approved manifest.
-    config_workspace_id : str | None, optional
-        Workspace hosting 00_env_config. Defaults to the current workspace.
-        Supply an ID only when using a shared cross-workspace configuration.
     new_pipeline : bool, default=False
         Explicitly create a new identity for an independent notebook copy. Omit
         pipeline_id when set. An already registered notebook is rejected.
@@ -169,12 +167,14 @@ def setup_pipeline(
 
     Notes
     -----
-    Workspace configuration is loaded through the same initialization as
-    setup_notebook. Load the current workspace configuration by default, or
-    supply config_workspace_id for a shared deployment. The caller workspace
-    determines the environment in both cases. Initialization prints the FabricOps
-    version, resolved configuration and targets, and startup readiness in the
-    calling notebook.
+    Call setup_notebook() first to initialize configuration and display notebook
+    readiness. This function reuses that configuration without rerunning
+    00_env_config or displaying the environment summary. Cross-workspace
+    configuration is selected only through setup_notebook(config_workspace_id=...).
+    Repeated pipeline setup closes the preceding execution owned by this task.
+    Repeated notebook setup closes its pipeline and invalidates prior configuration,
+    including when the new setup fails. Changed runtime identity requires fresh
+    notebook setup.
 
     Fabric cell events identify failures, not successful notebook completion.
     Call finalize_pipeline after all Reads, transformations and Writes.
@@ -187,11 +187,13 @@ def setup_pipeline(
         For an invalid UUIDv4, conflicting notebook binding, unsupported mode or
         missing Live approval.
     RuntimeError
-        For missing environment configuration or an unavailable Spark session.
+        If setup_notebook() has not completed successfully for the current
+        execution, or a Spark session is unavailable.
 
     Examples
     --------
-    >>> contracts = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
+    >>> context = setup_notebook()
+    >>> pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
     >>> orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
     >>> independent_copy = setup_pipeline(pipeline_mode="Test", new_pipeline=True)
     >>> reuploaded = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Test",
@@ -213,7 +215,7 @@ def setup_pipeline(
         raise ValueError("Rebinding requires a saved pipeline_id and pipeline_mode='Test'.")
     return start_pipeline_session(
         pipeline_id, pipeline_mode,
-        inspector=_inspector, config_workspace_id=config_workspace_id,
+        inspector=_inspector,
         new_pipeline=new_pipeline,
         previous_binding=(previous_workspace_id, previous_notebook_id) if previous_workspace_id is not None else None,
     )

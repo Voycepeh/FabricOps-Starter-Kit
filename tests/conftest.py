@@ -11,6 +11,14 @@ from typing import Any
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def isolated_fabric_context(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep published notebook configuration local to each test execution."""
+    import builtins
+
+    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", None, raising=False)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def generated_reference_artifacts_for_tests() -> None:
     """Create generated reference artifacts required by tests when absent."""

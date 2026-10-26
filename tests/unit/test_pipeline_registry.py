@@ -153,3 +153,34 @@ def test_duplicate_bindings_fail_closed(monkeypatch, conflict):
     monkeypatch.setattr(authority, 'authority_records', lambda **kw: {'token': 'one', 'registrations': rows[1:]})
     with pytest.raises(ValueError, match='Ambiguous'):
         shared.read_pipeline_registry(context={})
+
+
+def test_live_cannot_allocate_an_unbound_identity(registry, monkeypatch):
+    context, rows, *_ = registry
+    create_uuid = Mock(side_effect=AssertionError('Live must not generate a UUID'))
+    monkeypatch.setattr(shared, 'uuid4', create_uuid)
+    with pytest.raises(ValueError, match='Live requires an existing'):
+        shared.resolve_pipeline_registration(context=context, allow_new_identity=False)
+    assert rows == []
+    create_uuid.assert_not_called()
+
+
+def test_live_recovers_registered_identity_without_mutation(registry, monkeypatch):
+    context, rows, *_ = registry
+    identity = shared.resolve_pipeline_registration(context=context)['pipeline_id']
+    before = deepcopy(rows)
+    monkeypatch.setattr(shared, 'uuid4', Mock(side_effect=AssertionError('unexpected UUID')))
+    recovered = shared.resolve_pipeline_registration(context=context, allow_new_identity=False)
+    assert recovered['pipeline_id'] == identity and recovered['resolution'] == 'Recovered'
+    assert rows == before
+
+
+
+def test_explicit_promotion_preserves_registration_semantics_without_new_identity(registry, monkeypatch):
+    context, rows, *_ = registry
+    identity = shared.resolve_pipeline_registration(context=context)['pipeline_id']
+    prod = {**context, 'env': 'Production', 'workspace_id': 'workspace-prod', 'notebook_id': 'promoted'}
+    monkeypatch.setattr(shared, 'uuid4', Mock(side_effect=AssertionError('unexpected UUID')))
+    promoted = shared.resolve_pipeline_registration(identity, context=prod, allow_new_identity=False)
+    assert promoted['pipeline_id'] == identity and promoted['resolution'] == 'Promoted'
+    assert len(rows) == 2 and {row['pipeline_id'] for row in rows} == {identity}

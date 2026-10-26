@@ -11,15 +11,16 @@ import pytest
 
 from fabricops_kit import setup_pipeline, orchestrate_read, orchestrate_write
 from fabricops_kit.pipeline import shared
+from fabricops_kit.pipeline.shared import resolve_pipeline_registration as REAL_REGISTRATION
 
 
 @pytest.fixture
 def runtime(monkeypatch):
     """Keep session, journal and orchestrators real; replace physical runtime boundaries."""
     monkeypatch.setattr(shared, "resolve_pipeline_registration", lambda identity, **kwargs: {"pipeline_id": identity or "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "resolution": "Recovered"})
-    monkeypatch.setattr(shared, "initialize_notebook",
-                        lambda **kwargs: SimpleNamespace(notebook_name="02_pipeline"))
     config = {}
+    context = {'config': config, 'env': 'dev'}
+    monkeypatch.setattr(shared, 'get_default_fabric_context', lambda **kwargs: context)
     spark = SimpleNamespace(conf=SimpleNamespace(get=lambda key: 'test'))
     monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: (config, 'dev', context or {'config': config, 'env': 'dev'}))
     monkeypatch.setattr(shared, 'get_spark_session', lambda *args, **_kwargs: spark)
@@ -59,7 +60,7 @@ def test_exact_mode_validation(runtime, mode):
 def test_setup_arguments_cover_explicit_copy_and_rebind_without_write_flags(runtime):
     import inspect
     assert list(inspect.signature(setup_pipeline).parameters) == [
-        'pipeline_id', 'pipeline_mode', 'config_workspace_id', 'new_pipeline',
+        'pipeline_id', 'pipeline_mode', 'new_pipeline',
         'previous_workspace_id', 'previous_notebook_id']
     with pytest.raises(TypeError):
         setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test', testing_writes=True)
@@ -362,16 +363,16 @@ def test_finalized_governed_test_can_be_reviewed_directly(runtime, monkeypatch):
 
 
 
-def test_failed_configuration_reload_closes_previous_execution(runtime, monkeypatch):
+def test_missing_configuration_closes_previous_execution(runtime, monkeypatch):
     previous = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     previous.sources.append({'table_id': 'previous-source'})
 
     def unavailable(**kwargs):
-        raise RuntimeError('Configuration notebook unavailable')
+        raise RuntimeError('Call setup_notebook() first')
 
-    monkeypatch.setattr(shared, 'initialize_notebook', unavailable)
-    with pytest.raises(RuntimeError, match='Configuration notebook unavailable'):
-        setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test', config_workspace_id='remote-workspace')
+    monkeypatch.setattr(shared, 'get_default_fabric_context', unavailable)
+    with pytest.raises(RuntimeError, match='Call setup_notebook'):
+        setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Test')
     assert previous.closed
     assert previous.sources == []
     with pytest.raises(RuntimeError, match='Run setup_pipeline'):
@@ -385,9 +386,96 @@ def test_setup_and_finalization_display_the_registered_uuid(runtime, capsys, mon
     assert session.pipeline_id == session.plan.pipeline_id
     output = capsys.readouterr().out
     assert f'Pipeline ID: {session.pipeline_id}' in output
-    assert f'PIPELINE_ID = "{session.pipeline_id}"' in output
-    assert 'Environment: dev' in output
+    assert 'Save this Pipeline ID' not in output
+    assert 'cross-workspace promotion' in output
+    assert 'Mode: Test' in output
+    assert 'Environment:' not in output
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda *args, **kwargs: None)
     finalize_pipeline(session)
     assert f'Pipeline ID: {session.pipeline_id}' in capsys.readouterr().out
     runtime.writes.assert_not_called()
+
+
+def test_automatic_registration_read_write_finalize_recovery_and_promotion(runtime, monkeypatch, fake_notebookutils):
+    """One Test setup is immediately usable and preserves its UUID across deployments."""
+    from copy import deepcopy
+    from uuid import UUID
+    from fabricops_kit import setup_notebook, finalize_pipeline
+    from fabricops_kit.config.shared import get_default_fabric_context, resolve_fabric_context
+    from fabricops_kit.io import shared as io
+    from tests.unit.test_setup_notebook_store_keys import _config
+
+    monkeypatch.setattr(shared, 'get_default_fabric_context', get_default_fabric_context)
+    monkeypatch.setattr(shared, 'resolve_fabric_context', resolve_fabric_context)
+    monkeypatch.setattr(shared, 'resolve_pipeline_registration', REAL_REGISTRATION)
+    monkeypatch.setattr(runtime.spark.conf, 'set', Mock(), raising=False)
+    monkeypatch.setattr(io, 'get_spark_session', lambda: runtime.spark)
+    registry, runs = [], []
+    monkeypatch.setattr(shared, 'read_pipeline_registry', lambda **kwargs: ('token', deepcopy(registry)))
+    monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kwargs: {'_committed_by': 'engineer'})
+    def commit(row, **kwargs):
+        registry[:] = [old for old in registry if (old['pipeline_id'], old['environment_name']) !=
+                      (row['pipeline_id'], row['environment_name'])] + [deepcopy(row)]
+    monkeypatch.setattr(shared, 'commit_pipeline_registration', commit)
+    monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kwargs: runs.append(dict(row)))
+    setup_notebook(_config(), env='dev')
+    pipeline = setup_pipeline(pipeline_id=None, pipeline_mode='Test')
+    identity = pipeline.pipeline_id
+    assert UUID(identity).version == 4 and pipeline.registration['resolution'] == 'New'
+    source = orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    orchestrate_write(source['dataframe'], store='Gold', schema='demo', table_name='summary', write_mode='overwrite')
+    assert [key.split(':', 1)[0] for key in pipeline.plan.evidence['operations']] == ['source', 'target']
+    assert finalize_pipeline()['status'] == 'ungoverned_completed'
+    assert len(runs) == 1 and runs[0]['pipeline_id'] == identity
+    fake_notebookutils.context['currentNotebookName'] = 'renamed pipeline'
+    setup_notebook(_config(), env='dev')
+    recovered = setup_pipeline(pipeline_id=None)
+    assert recovered.pipeline_id == identity
+    assert recovered.registration['resolution'] == 'Recovered'
+    assert len(registry) == 1
+    # A fresh notebook execution in another workspace supplies the original identity.
+    fake_notebookutils.context.update(currentWorkspaceId='workspace-prod', currentNotebookId='notebook-prod')
+    promoted_config = _config()
+    promoted_config.path_config.paths['prod'] = promoted_config.path_config.paths.pop('dev')
+    setup_notebook(promoted_config, env='prod')
+    assert recovered.closed and not recovered.sources
+    promoted = setup_pipeline(pipeline_id=identity, pipeline_mode='Test')
+    assert promoted.pipeline_id == identity and promoted.registration['resolution'] == 'Promoted'
+    assert len(registry) == 2 and {row['pipeline_id'] for row in registry} == {identity}
+
+
+def test_notebook_reload_closes_pipeline_and_uses_fresh_configuration(runtime, monkeypatch, fake_notebookutils):
+    """Repeated explicit setup closes its pipeline even when the next setup fails."""
+    from fabricops_kit import setup_notebook
+    from fabricops_kit.config.shared import get_default_fabric_context
+    from tests.unit.test_setup_notebook_store_keys import _config
+    monkeypatch.setattr(shared, 'get_default_fabric_context', get_default_fabric_context)
+    original = _config()
+    setup_notebook(original, env='dev')
+    first = setup_pipeline()
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    fresh = _config()
+    setup_notebook(fresh, env='dev')
+    assert first.closed and not first.sources
+    second = setup_pipeline()
+    assert second.plan.runtime_context['config'] is fresh
+    assert second.plan.plan_id != first.plan.plan_id
+    with pytest.raises(ValueError):
+        setup_notebook(fresh, env='dev', required_targets=['missing'])
+    assert second.closed
+    with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
+        setup_pipeline()
+
+
+def test_active_session_rejects_changed_runtime_before_read(runtime, monkeypatch, fake_notebookutils):
+    """An already active pipeline cannot operate with another notebook's context."""
+    from fabricops_kit import setup_notebook
+    from fabricops_kit.config.shared import get_default_fabric_context
+    from tests.unit.test_setup_notebook_store_keys import _config
+    monkeypatch.setattr(shared, 'get_default_fabric_context', get_default_fabric_context)
+    setup_notebook(_config(), env='dev')
+    session = setup_pipeline()
+    fake_notebookutils.context['currentWorkspaceId'] = 'different-workspace'
+    with pytest.raises(RuntimeError, match='Notebook execution changed'):
+        orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    assert session.closed and not session.plan.evidence['operations']

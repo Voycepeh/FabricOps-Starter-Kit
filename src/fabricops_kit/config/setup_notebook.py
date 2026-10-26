@@ -33,7 +33,7 @@ def setup_notebook(
     context. It validates and resolves the same configuration and Fabric
     targets used by downstream FabricOps functions, then returns that
     information in a reusable ``NotebookSetupContext``. It
-    initializes the shared context when configuration is loaded automatically.
+    initializes the shared context for automatic and explicit configuration.
 
     Parameters
     ----------
@@ -42,8 +42,8 @@ def setup_notebook(
         00_env_config in config_workspace_id (or the caller workspace
         when omitted), passing Fabric currentWorkspaceId. The notebook rejects
         unregistered workspaces and returns the environment and FrameworkConfig
-        as JSON. This automatic path initializes the shared Fabric context and
-        applies the configured Spark audit timezone.
+        as JSON. Both configuration paths initialize the shared Fabric context
+        and apply the configured Spark audit timezone.
     env : str, default="Sandbox"
         Environment section for explicit config only; automatic setup resolves it from the workspace.
     required_targets : list[str] | None, optional
@@ -106,7 +106,10 @@ def setup_notebook(
     requested targets, readiness status, and any warning, skipped, or failed
     checks. This output is visible even when Fabric keeps the configuration
     notebook output in a separate execution snapshot. Explicit configuration
-    also prints the summary.
+    also prints the summary. Both paths publish configuration for setup_pipeline()
+    and downstream IO. Rerunning notebook setup closes the current pipeline and
+    invalidates the previous setup before loading configuration, including when
+    initialization fails. Call setup_pipeline() again after successful setup.
 
     Startup flow:
 
@@ -158,7 +161,7 @@ def setup_notebook(
     available. Local or non-Fabric execution may produce warnings or skipped
     checks rather than failing automatically.
 
-    Validation and smoke checks are local to notebook startup. This helper does
+    Validation and smoke checks are local to notebook startup. Startup validation does
     not read business data, write business data, persist metadata, provision
     workspaces, lakehouses, or warehouses, create missing Fabric resources,
     mutate the supplied configuration, or automatically stop notebook execution on failed

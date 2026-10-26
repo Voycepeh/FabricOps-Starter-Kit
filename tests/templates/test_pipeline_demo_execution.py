@@ -3,6 +3,7 @@ import ast
 import inspect
 from pathlib import Path
 from unittest.mock import MagicMock, Mock
+from types import SimpleNamespace
 
 import nbformat
 import pytest
@@ -16,7 +17,8 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     """Independent demo notebooks retain their ETL and avoid lifecycle plumbing."""
     frame = MagicMock()
     reads, writes = [], []
-    setup = Mock(return_value=object())
+    notebook_setup = Mock()
+    setup = Mock(return_value=SimpleNamespace(pipeline_id="registered-uuid"))
     def read(**kwargs):
         assert not {'execution_plan', 'spark_session', 'verbose'}.intersection(kwargs)
         reads.append(kwargs['table_name'])
@@ -25,15 +27,20 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
         assert not {'execution_plan', 'sources', 'spark_session'}.intersection(kwargs)
         writes.append((kwargs['table_name'], kwargs['write_mode']))
         return {'dataframe': dataframe, 'published': False}
-    namespace = {'F': MagicMock(), 'spark': object(), 'setup_pipeline': setup,
+    namespace = {'F': MagicMock(), 'spark': object(), 'setup_pipeline': setup, 'setup_notebook': notebook_setup,
                  'orchestrate_read': read, 'orchestrate_write': write, 'finalize_pipeline': Mock(),
                  'resolve_table_id': Mock(return_value='incremental-target'), 'display': Mock()}
     notebook = nbformat.read(path, as_version=4)
     for cell in notebook.cells:
-        if cell.cell_type == 'code' and cell.id not in {'environment','imports'}:
-            exec(compile(cell.source, f'{path.name}:{cell.id}', 'exec'), namespace)
+        if cell.cell_type != 'code':
+            continue
+        tree = ast.parse(cell.source)
+        tree.body = [node for node in tree.body if not isinstance(node, (ast.Import, ast.ImportFrom))]
+        exec(compile(tree, f'{path.name}:{cell.id}', 'exec'), namespace)
     namespace['finalize_pipeline'].assert_called_once_with(setup.return_value)
+    notebook_setup.assert_called_once_with()
     setup.assert_called_once_with(pipeline_id=None, pipeline_mode='Test')
+    assert namespace['PIPELINE_ID'] == setup.return_value.pipeline_id
     expected = {
         '02_pipeline': (1, ['overwrite']),
         '02A_full_refresh_demo': (3, ['overwrite','overwrite']),
@@ -59,6 +66,7 @@ def test_notebooks_keep_user_owned_transform_surface(path):
         for node in ast.walk(ast.parse(cell.source)):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
                 calls.setdefault(node.func.id, []).append(node)
+    assert len(calls['setup_notebook']) == 1
     assert len(calls['setup_pipeline']) == 1
     assert len(calls['finalize_pipeline']) == 1
     assert ids.index('finalize-run') > ids.index('write-heading')

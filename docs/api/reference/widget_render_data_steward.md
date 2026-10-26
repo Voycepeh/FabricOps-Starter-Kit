@@ -115,7 +115,7 @@ No session is created; Spark-dependent work raises
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 53 |
+| Live-critical dependencies | 54 |
 
 ### Release history
 
@@ -144,6 +144,7 @@ No session is created; Spark-dependent work raises
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.validate_catalogue_value</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
+<li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>

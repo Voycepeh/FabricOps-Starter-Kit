@@ -6,7 +6,7 @@ Complete [Step 5](05-activate-data-contract-and-promote.md) and use the promoted
 
 ### Load the Production configuration
 
-The promoted pipeline calls `setup_pipeline()`, which loads the Production workspace's `00_env_config` automatically. To use a shared deployment, pass its workspace ID as `config_workspace_id` in the Setup Pipeline block.
+The promoted pipeline calls `setup_notebook()`, which loads the Production workspace's `00_env_config` automatically. To use a shared deployment, pass its workspace ID as `config_workspace_id` in the Setup Notebook block. The following `setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Live")` reuses this configuration and resolves the approved pipeline.
 
 The same logical store names now resolve to the Production Lakehouses, Warehouses, schemas, paths, and SQL endpoints.
 

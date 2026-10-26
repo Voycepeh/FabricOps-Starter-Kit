@@ -19,7 +19,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 DEFAULT_AUDIT_TIMEZONE = "UTC"
 
 
-_DEFAULT_CONTEXT_ERROR = "No active Fabric context found. Call setup_notebook() or setup_pipeline() before continuing."
+_DEFAULT_CONTEXT_ERROR = "No active Fabric context found. Call setup_notebook() before continuing."
 
 
 # ---------------------------------------------------------------------------
@@ -27,8 +27,14 @@ _DEFAULT_CONTEXT_ERROR = "No active Fabric context found. Call setup_notebook() 
 # ---------------------------------------------------------------------------
 
 
-def get_default_fabric_context() -> dict[str, Any]:
-    """Return the active Fabric context initialized by notebook or pipeline setup.
+def get_default_fabric_context(*, require_notebook_setup: bool = False) -> dict[str, Any]:
+    """Return the active Fabric context, optionally requiring completed notebook setup.
+
+    Parameters
+    ----------
+    require_notebook_setup : bool, default=False
+        Require ready setup from the current notebook execution. Reject stale or
+        manually assembled configuration before starting a pipeline.
 
     Returns
     -------
@@ -84,6 +90,16 @@ def get_default_fabric_context() -> dict[str, Any]:
     has_environment = isinstance(context, dict) and context.get("env")
     if not isinstance(context, dict) or not context.get("config") or not has_environment:
         raise RuntimeError(_DEFAULT_CONTEXT_ERROR)
+    if require_notebook_setup:
+        setup = context.get("_notebook_setup")
+        result = setup.get("result") if isinstance(setup, dict) else None
+        if (not isinstance(result, NotebookSetupContext) or setup.get("config") is not context["config"]
+                or setup.get("env") != context["env"] or result.readiness_status != "ready"):
+            raise RuntimeError("Call setup_notebook() successfully before setup_pipeline(); notebook configuration is missing or invalid.")
+        live = _get_fabric_runtime_metadata(notebook_name=None, local_fallback_name=None)
+        recorded = result.runtime_metadata
+        if any(live.get(key) != recorded.get(key) for key in ("workspace_id", "notebook_id", "current_run_id")):
+            raise RuntimeError("Notebook execution changed. Call setup_notebook() again before setup_pipeline().")
     return context
 
 
@@ -897,6 +913,15 @@ def initialize_notebook(
     run_id_prefix="run", local_fallback_name=None, *, config_workspace_id=None,
 ) -> NotebookSetupContext:
     """Load workspace configuration and reuse notebook startup validation."""
+    from fabricops_kit.pipeline.shared import close_current_pipeline_session
+
+    try:
+        previous_context = get_default_fabric_context()
+    except RuntimeError:
+        pass
+    else:
+        previous_context.pop("_notebook_setup", None)
+    close_current_pipeline_session()
     runtime_meta = _get_fabric_runtime_metadata(notebook_name=notebook_name, local_fallback_name=local_fallback_name)
     automatic = config is None
     if automatic:
@@ -999,19 +1024,19 @@ def initialize_notebook(
         runtime_metadata=runtime_meta,
         readiness_status=readiness_status,
     )
-    if automatic:
-        import builtins
-        active_context = {"config": normalized, "env": env, "runtime_metadata": runtime_meta}
-        builtins.FABRIC_CONTEXT = active_context
-        try:
-            from IPython import get_ipython
-        except ModuleNotFoundError:
-            shell = None
-        else:
-            shell = get_ipython()
-        if shell is not None:
-            shell.user_ns["FABRIC_CONTEXT"] = active_context
     _print_notebook_setup_summary(result, config=normalized, config_workspace_id=config_workspace_id if automatic else None)
+    import builtins
+    active_context = {"config": normalized, "env": env, "runtime_metadata": runtime_meta,
+                      "_notebook_setup": {"config": normalized, "env": env, "result": result}}
+    builtins.FABRIC_CONTEXT = active_context
+    try:
+        from IPython import get_ipython
+    except ModuleNotFoundError:
+        shell = None
+    else:
+        shell = get_ipython()
+    if shell is not None:
+        shell.user_ns["FABRIC_CONTEXT"] = active_context
     return result
 
 

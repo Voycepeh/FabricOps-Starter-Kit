@@ -73,9 +73,9 @@ Use the same FabricOps wheel version across the workspace-specific Environments 
 
 In each deployment of `00_env_config`, replace the Fabric ID placeholders with the IDs for the items created in 0A. Set `ENVIRONMENT_WORKSPACES` to one unique workspace ID per environment and register the caller workspace. Keep all Metadata stores pointed at the same Governance Lakehouse.
 
-By default, `setup_notebook()` and `setup_pipeline()` load `00_env_config` from the current workspace. Advanced callers can pass `config_workspace_id="<configuration-workspace-id>"` to either function to load a shared deployment. The remote config must register the caller workspace, and cross-workspace execution and store permissions are required. See [Workspace configuration](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#workspace-configuration).
+By default, `setup_notebook()` loads `00_env_config` from the current workspace. Advanced callers can pass `config_workspace_id="<configuration-workspace-id>"` to `setup_notebook()` to load a shared deployment. The remote config must register the caller workspace, and cross-workspace execution and store permissions are required. See [Workspace configuration](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#workspace-configuration).
 
-`01_governance` calls `setup_notebook()`; `02_pipeline` calls `setup_pipeline()`. Neither uses `%run` or manual environment selection. No process environment variable or separate JSON file is needed.
+`01_governance` calls `setup_notebook()`; `02_pipeline` calls `setup_notebook()` followed by `setup_pipeline()`, which reuses the initialized configuration. Neither uses `%run` or manual environment selection. No process environment variable or separate JSON file is needed.
 
 </div>
 </div>
