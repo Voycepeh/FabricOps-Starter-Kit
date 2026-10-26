@@ -806,35 +806,31 @@ def get_contract_authoring_state(
     return state
 
 def list_contract_governance_state(
-    *, config: Any, env: str, spark_session: Any, include_contracts: bool = True,
+    *, config: Any, env: str, spark_session: Any
 ) -> dict[str, list[dict[str, Any]]]:
-    """Return scoped authoring data, or all Engineering tables for central Governance."""
+    """Return governed tables and Data Contract versions for the authoring selector."""
     context = _metadata_io_context(config, env)
-    central = env == "governance"
-    allowed = set(config.path_config.paths) - {"governance"} if central else {env}
     catalogue = _scoped_rows(
         read_lakehouse_table(
             "METADATA_DATA_CATALOGUE", store="Metadata",
             schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
             context={**(context or {}), "_spark_session": spark_session},
         ),
-        None if central else f"environment_name = {_sql_literal(env)}",
+        f"environment_name = {_sql_literal(env)}",
     )
-    # Include the environment in row identity: the same table can be observed in
-    # multiple Engineering deployments while its governed contract is global.
-    tables = _latest([
-        row for row in catalogue
-        if str(row.get("environment_name") or "") in allowed
-        and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
-        and row.get("is_active") is not False
-    ], ("environment_name", "table_id"))
     contracts = _scoped_rows(
         read_lakehouse_table(
             DATA_CONTRACT_TABLE, store="Metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
             context={**(context or {}), "_spark_session": spark_session},
         ),
-    ) if include_contracts else []
+    )
+    tables = _latest([
+        row for row in catalogue
+        if str(row.get("environment_name") or "") == env
+        and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
+        and row.get("is_active") is not False
+    ], ("table_id",))
     versions = sorted(
         contracts,
         key=lambda row: (str(row.get("table_id") or ""), -int(row.get("contract_version") or 0)),
