@@ -731,10 +731,25 @@ def widget_data_contract(
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
         config, env, resolved = resolve_fabric_context(context=context)
     if env == "governance":
-        return shared.select_engineering_environment(
-            startup=startup, title="Data Contract", config=config, runtime_context=resolved,
-            launch=lambda scoped: widget_data_contract(
-                table_id=table_id, contract_version=contract_version, context=scoped,
+        with startup.phase("spark_loading", "Resolving the Spark session…"):
+            governance_spark = get_spark_session(context=context)
+        with startup.phase("metadata_loading", "Loading governed tables across environments…"):
+            central_catalogue = contracts.list_contract_governance_state(
+                config=config, env=env, spark_session=governance_spark, include_contracts=False,
+            )
+        records = [
+            row for row in central_catalogue["tables"]
+            if table_id is None or str(row.get("table_id")) == str(table_id)
+        ]
+        def label_table(row):
+            location = ".".join(str(row.get(key) or "").strip() for key in ("layer", "schema_name", "table_name")
+                                if row.get(key))
+            return f"{row['environment_name']} · {location or row['table_id']} · {row['table_id']}"
+        return shared.select_governance_record(
+            startup=startup, title="Data Contract", records=records, record_label=label_table,
+            config=config, runtime_context=resolved, record_name="governed table",
+            launch=lambda row, scoped: widget_data_contract(
+                table_id=str(row["table_id"]), contract_version=contract_version, context=scoped,
             ),
         )
     governance_config = getattr(config, "governance_config", None)
