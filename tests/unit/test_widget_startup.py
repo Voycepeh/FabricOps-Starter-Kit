@@ -76,30 +76,76 @@ def test_public_widget_displays_before_services_without_duplicate_reads(name, mo
     root.close()
 
 
-def test_governance_environment_scope_is_selected_at_workflow_time(outputs):
-    """Governance remains unscoped until a specific Engineering-facing workflow."""
-    from fabricops_kit.widgets.shared import select_engineering_environment
+def test_governance_record_selector_derives_environment_from_record(outputs):
+    """The selector lists all records without a Governance-level environment setting."""
+    from fabricops_kit.widgets.shared import select_governance_record
 
     config = framework_config()
     config.path_config.paths["test"] = dict(config.path_config.paths["dev"])
     config.path_config.paths["governance"] = {"Metadata": config.path_config.paths["dev"]["Metadata"]}
     received = []
     startup = WidgetStartup("Data Contract")
-    state = select_engineering_environment(
+    state = select_governance_record(
         startup=startup, title="Data Contract", config=config,
-        runtime_context={"config": config, "env": "governance"},
-        launch=lambda scoped: received.append(scoped) or {"loaded": True},
+        runtime_context={"config": config, "env": "governance"}, record_name="governed table",
+        records=[{"environment_name": "dev", "table_id": "orders"},
+                 {"environment_name": "test", "table_id": "accounts"}],
+        record_label=lambda row: f"{row['environment_name']} · {row['table_id']}",
+        launch=lambda record, scoped: received.append((record, scoped)) or {"loaded": True},
     )
-    assert state["environment"].value == ""
-    assert state["launch"].disabled
-    assert received == []
-    state["environment"].value = "test"
-    assert not state["launch"].disabled
-    state["launch"].click()
+    assert state["record"].value is None
+    assert state["open"].disabled
+    assert len(state["record"].options) == 3
+    assert "dev" in state["record"].options[1][0]
+    assert "test" in state["record"].options[2][0]
+    state["record"].value = 1
+    state["open"].click()
     assert len(received) == 1
-    assert received[0]["env"] == "test"
+    assert received[0][0]["table_id"] == "accounts"
+    assert received[0][1]["env"] == "test"
     assert state["active"] == {"loaded": True}
     state["widget"].close()
+
+
+def test_central_governance_widgets_show_records_from_all_engineering_environments(monkeypatch, outputs):
+    """Contract and activation widgets must list records, not ask for an environment."""
+    from importlib import import_module
+    config = framework_config()
+    config.path_config.paths["prod"] = dict(config.path_config.paths["dev"])
+    config.path_config.paths["governance"] = {"Metadata": config.path_config.paths["dev"]["Metadata"]}
+    contracts_widget = import_module("fabricops_kit.widgets.widget_data_contract")
+    activation_widget = import_module("fabricops_kit.widgets.widget_activate_pipeline")
+    for module in (contracts_widget, activation_widget):
+        monkeypatch.setattr(module, "resolve_fabric_context", lambda **kw: (config, "governance", {}))
+        monkeypatch.setattr(module, "get_spark_session", lambda **kw: object())
+
+    calls = []
+    def contract_rows(**kw):
+        calls.append(("contracts", kw))
+        return {"tables": [{"environment_name": "dev", "table_id": "a", "table_name": "sales"},
+                           {"environment_name": "prod", "table_id": "b", "table_name": "stock"}],
+                "contracts": []}
+    monkeypatch.setattr(contracts_widget.contracts, "list_contract_governance_state", contract_rows)
+    contract_state = contracts_widget.widget_data_contract()
+    assert "environment" not in contract_state
+    assert len(contract_state["records"]) == 2
+    assert calls[0][1]["env"] == "governance"
+    assert calls[0][1]["include_contracts"] is False
+
+    def run_rows(table, **kw):
+        calls.append(("runs", kw))
+        return [{"environment_name": "dev", "pipeline_id": "first", "run_id": "dev-run"},
+                {"environment_name": "prod", "pipeline_id": "second", "run_id": "prod-run"}]
+    monkeypatch.setattr(activation_widget, "metadata_records", run_rows)
+    monkeypatch.setattr(activation_widget, "_eligible_candidate", lambda row, pipeline_id=None:
+                        pipeline_id is None or row["pipeline_id"] == pipeline_id)
+    activation_state = activation_widget.widget_activate_pipeline()
+    assert "environment" not in activation_state
+    assert len(activation_state["records"]) == 2
+    assert calls[-1][1]["all_environments"] is True
+    assert calls[-1][1]["context"]["env"] == "governance"
+    contract_state["widget"].close()
+    activation_state["widget"].close()
 
 
 def test_pipeline_loading_precedes_initialization_and_collect(monkeypatch, outputs):
