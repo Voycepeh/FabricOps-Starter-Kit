@@ -131,7 +131,9 @@ notebook output in a separate execution snapshot. Explicit configuration
 also prints the summary. Both paths publish configuration for setup_pipeline()
 and downstream IO. Rerunning notebook setup closes the current pipeline and
 invalidates the previous setup before loading configuration, including when
-initialization fails. Call setup_pipeline() again after successful setup.
+initialization fails. Default I/O also rejects the invalidated configuration;
+explicit per-call configuration remains supported. Call setup_pipeline()
+again after successful setup.
 
 Startup flow:
 
@@ -223,7 +225,7 @@ initializes the shared context for automatic and explicit configuration.
 
 `fabricops_kit/config/setup_notebook.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L10-L175">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L10-L177">View on GitHub</a>
 </div>
 
 
@@ -239,7 +241,7 @@ initializes the shared context for automatic and explicit configuration.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 13 |
+| Live-critical dependencies | 12 |
 
 ### Release history
 
@@ -259,7 +261,6 @@ initializes the shared context for automatic and explicit configuration.
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
-<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.initialize_notebook</code></li>
 <li><code>fabricops_kit.config.shared.validate_framework_config</code></li>

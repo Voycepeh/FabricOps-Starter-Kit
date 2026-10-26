@@ -479,3 +479,55 @@ def test_active_session_rejects_changed_runtime_before_read(runtime, monkeypatch
     with pytest.raises(RuntimeError, match='Notebook execution changed'):
         orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     assert session.closed and not session.plan.evidence['operations']
+
+
+@pytest.mark.parametrize('field', ['currentWorkspaceId', 'currentNotebookId', 'currentRunId'])
+@pytest.mark.parametrize('explicit', [False, True])
+@pytest.mark.parametrize('mode', ['Test', 'Live'])
+def test_finalization_checks_runtime_identity_for_explicit_and_active_sessions(
+        runtime, monkeypatch, fake_notebookutils, field, explicit, mode):
+    """Neither finalization form can claim completion for a stale notebook execution."""
+    from fabricops_kit import setup_notebook, finalize_pipeline
+    from fabricops_kit.config.shared import get_default_fabric_context
+    from tests.unit.test_setup_notebook_store_keys import _config
+    monkeypatch.setattr(shared, 'get_default_fabric_context', get_default_fabric_context)
+    committed = []
+    monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kwargs: committed.append(dict(row)))
+    setup_notebook(_config(), env='dev')
+    pipeline = setup_pipeline()
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    release = Mock(side_effect=lambda plan, **kwargs: plan.evidence.pop('lease_token'))
+    if mode == 'Live':
+        pipeline.plan = replace(pipeline.plan, execution_mode='live')
+        pipeline.plan.evidence['lease_token'] = pipeline.plan.plan_id
+        activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
+        monkeypatch.setattr(activation, 'release_pipeline_lease', release)
+    fake_notebookutils.context[field] = 'another-execution'
+    with pytest.raises(RuntimeError, match='Notebook execution changed'):
+        finalize_pipeline(pipeline) if explicit else finalize_pipeline()
+    assert pipeline.closed and pipeline.plan.run_result['boundary_completed'] is False
+    assert all(row['boundary_completed'] is False for row in committed)
+    if mode == 'Test':
+        assert not committed
+    else:
+        release.assert_called_once()
+
+
+def test_closed_finalization_remains_idempotent_after_setup_is_invalidated(runtime, monkeypatch, fake_notebookutils):
+    """Completed results and publication retries remain available through the saved session."""
+    from fabricops_kit import setup_notebook, finalize_pipeline
+    from fabricops_kit.config.shared import get_default_fabric_context
+    from tests.unit.test_setup_notebook_store_keys import _config
+    monkeypatch.setattr(shared, 'get_default_fabric_context', get_default_fabric_context)
+    committed = []
+    monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kwargs: committed.append(dict(row)))
+    setup_notebook(_config(), env='dev')
+    pipeline = setup_pipeline()
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    result = finalize_pipeline(pipeline)
+    assert result['boundary_completed'] is True and len(committed) == 1
+    fake_notebookutils.context['currentRunId'] = 'another-run'
+    with pytest.raises(ValueError):
+        setup_notebook(_config(), env='dev', required_targets=['missing'])
+    assert finalize_pipeline(pipeline) == result
+    assert len(committed) == 1

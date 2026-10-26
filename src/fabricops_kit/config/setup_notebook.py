@@ -109,7 +109,9 @@ def setup_notebook(
     also prints the summary. Both paths publish configuration for setup_pipeline()
     and downstream IO. Rerunning notebook setup closes the current pipeline and
     invalidates the previous setup before loading configuration, including when
-    initialization fails. Call setup_pipeline() again after successful setup.
+    initialization fails. Default I/O also rejects the invalidated configuration;
+    explicit per-call configuration remains supported. Call setup_pipeline()
+    again after successful setup.
 
     Startup flow:
 

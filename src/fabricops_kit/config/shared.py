@@ -915,12 +915,18 @@ def initialize_notebook(
     """Load workspace configuration and reuse notebook startup validation."""
     from fabricops_kit.pipeline.shared import close_current_pipeline_session
 
+    import builtins
     try:
-        previous_context = get_default_fabric_context()
-    except RuntimeError:
-        pass
+        from IPython import get_ipython
+    except ModuleNotFoundError:
+        shell = None
     else:
-        previous_context.pop("_notebook_setup", None)
+        shell = get_ipython()
+    # An empty published context blocks both older bindings and CONFIG/ENV
+    # fallback until every initialization stage has completed successfully.
+    builtins.FABRIC_CONTEXT = {}
+    if shell is not None:
+        shell.user_ns["FABRIC_CONTEXT"] = builtins.FABRIC_CONTEXT
     close_current_pipeline_session()
     runtime_meta = _get_fabric_runtime_metadata(notebook_name=notebook_name, local_fallback_name=local_fallback_name)
     automatic = config is None
@@ -1025,16 +1031,9 @@ def initialize_notebook(
         readiness_status=readiness_status,
     )
     _print_notebook_setup_summary(result, config=normalized, config_workspace_id=config_workspace_id if automatic else None)
-    import builtins
     active_context = {"config": normalized, "env": env, "runtime_metadata": runtime_meta,
                       "_notebook_setup": {"config": normalized, "env": env, "result": result}}
     builtins.FABRIC_CONTEXT = active_context
-    try:
-        from IPython import get_ipython
-    except ModuleNotFoundError:
-        shell = None
-    else:
-        shell = get_ipython()
     if shell is not None:
         shell.user_ns["FABRIC_CONTEXT"] = active_context
     return result

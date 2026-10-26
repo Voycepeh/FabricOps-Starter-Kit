@@ -548,3 +548,42 @@ def test_failed_setup_output_does_not_publish_a_ready_context(configuration_runt
     with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
         setup_pipeline()
     assert configuration_runtime.notebook.run.call_count == 1
+
+
+@pytest.mark.parametrize('notebook_namespace', [False, True])
+@pytest.mark.parametrize('failure', ['validation', 'display', 'session_close'])
+def test_failed_setup_blocks_all_default_io_without_blocking_explicit_context(
+        configuration_runtime, monkeypatch, notebook_namespace, failure):
+    """A failed setup cannot recover old config through either published binding or CONFIG/ENV."""
+    import builtins
+    import IPython
+    from fabricops_kit.config import shared as config_shared
+    from fabricops_kit.pipeline import shared as pipeline_shared
+    from fabricops_kit.io.shared import resolve_configured_lakehouse_table
+
+    supplied = _config()
+    shell = SimpleNamespace(user_ns={'CONFIG': supplied, 'ENV': 'dev'}) if notebook_namespace else None
+    monkeypatch.setattr(IPython, 'get_ipython', lambda: shell)
+    monkeypatch.setattr(config_shared, '_print_notebook_setup_summary', Mock())
+    setup_notebook(supplied, env='dev')
+    # Keep distinct copies to ensure both publication locations are invalidated.
+    builtins.FABRIC_CONTEXT = dict(builtins.FABRIC_CONTEXT)
+    if failure == 'display':
+        monkeypatch.setattr(config_shared, '_print_notebook_setup_summary', Mock(side_effect=RuntimeError('display failed')))
+    if failure == 'session_close':
+        monkeypatch.setattr(pipeline_shared, 'close_current_pipeline_session', Mock(side_effect=RuntimeError('close failed')))
+    with pytest.raises((ValueError, RuntimeError)):
+        setup_notebook(supplied, env='dev', required_targets=['missing'] if failure == 'validation' else None)
+    with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
+        config_shared.get_default_fabric_context()
+    with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
+        resolve_fabric_context()
+    with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
+        resolve_configured_lakehouse_table('Bronze', 'orders', None)
+    # Advanced callers can still deliberately supply config and environment.
+    config, env, _ = resolve_fabric_context(config=supplied, env='dev')
+    assert config is supplied and env == 'dev'
+    store, _, _, _ = resolve_configured_lakehouse_table('Bronze', 'orders', None,
+        context={'config': supplied, 'env': 'dev'})
+    assert store.workspace_id == 'workspace'
+    configuration_runtime.notebook.run.assert_not_called()

@@ -6026,6 +6026,16 @@ class PipelineSession:
             return True
         return False
 
+    def validate_current_context(self):
+        """Reject changed notebook setup before operating or completing an open run."""
+        try:
+            runtime = get_default_fabric_context(require_notebook_setup=True)
+            if runtime.get("_notebook_setup") is not self.plan.runtime_context.get("_notebook_setup"):
+                raise RuntimeError("Notebook configuration changed. Call setup_pipeline() again after setup_notebook().")
+        except RuntimeError:
+            self.close()
+            raise
+
     def select_contract(self, table_id, contract_id=None, contract_version=None, *, no_contract=False):
         """Freeze explicit exact contract choices before data operations start."""
         if self.closed or self.plan.evidence["operations"] or self.plan.execution_mode == "live":
@@ -6175,13 +6185,7 @@ def current_pipeline_session():
         raise RuntimeError("Run setup_pipeline(pipeline_id=..., pipeline_mode=...) before Read or Write.")
     if not session.owns_current_execution():
         raise RuntimeError("This execution belongs to another task or thread; run setup_pipeline in this context.")
-    try:
-        runtime = get_default_fabric_context(require_notebook_setup=True)
-        if runtime.get("_notebook_setup") is not session.plan.runtime_context.get("_notebook_setup"):
-            raise RuntimeError("Notebook configuration changed. Call setup_pipeline() again after setup_notebook().")
-    except RuntimeError:
-        session.close()
-        raise
+    session.validate_current_context()
     return session
 
 
