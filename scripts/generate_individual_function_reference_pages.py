@@ -4850,12 +4850,19 @@ def generate_metadata_reference_pages() -> None:
             ),
             "## Column summary",
             "",
-            "| Column category | Count |",
-            "| --- | ---: |",
-            f"| Total columns | {column_counts['total']} |",
-            f"| Engineering columns | {column_counts['engineering']} |",
-            f"| Governance columns | {column_counts['governance']} |",
-            f"| Standard audit columns | {column_counts['audit']} |",
+            '<div class="metadata-column-kpis" aria-label="Column counts by responsibility">',
+            *(
+                f'<div class="metadata-column-kpi metadata-column-kpi--{category}">'
+                f'<span class="metadata-column-kpi__label">{label}</span>'
+                f'<strong class="metadata-column-kpi__value">{column_counts[category]}</strong></div>'
+                for category, label in (
+                    ("total", "Total columns"),
+                    ("engineering", "Engineering columns"),
+                    ("governance", "Governance columns"),
+                    ("audit", "Standard audit columns"),
+                )
+            ),
+            "</div>",
             "",
             "## Implemented schema",
             "",

@@ -30,12 +30,12 @@ No immediate table relationship is defined in the current implementation.
 
 ## Column summary
 
-| Column category | Count |
-| --- | ---: |
-| Total columns | 28 |
-| Engineering columns | 20 |
-| Governance columns | 0 |
-| Standard audit columns | 8 |
+<div class="metadata-column-kpis" aria-label="Column counts by responsibility">
+<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">28</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">20</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">0</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--audit"><span class="metadata-column-kpi__label">Standard audit columns</span><strong class="metadata-column-kpi__value">8</strong></div>
+</div>
 
 ## Implemented schema
 
