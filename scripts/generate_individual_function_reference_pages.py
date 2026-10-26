@@ -4382,7 +4382,7 @@ def _metadata_type_cell(type_name: str, *, column: str) -> str:
     """Render native nested Spark fields as an accessible, compact subtable."""
     nested = _metadata_nested_struct(type_name)
     if nested is None:
-        return f"" + chr(96) + f"{type_name}" + chr(96)
+        return f"`{type_name}`"
 
     field_rows: list[str] = []
 
