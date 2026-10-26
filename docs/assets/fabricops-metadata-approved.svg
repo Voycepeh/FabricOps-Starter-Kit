@@ -118,7 +118,7 @@
 <text x="866" y="195" fill="#243550" font-size="12" font-family="Arial, sans-serif">approvals[].agreement_id/version</text>
 <text x="828" y="215" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
 <text x="866" y="215" fill="#243550" font-size="11" font-family="Arial, sans-serif">table_ownership[].contract_id/version</text>
-<text x="828" y="240" fill="#1168B6" font-size="12" font-family="Arial, sans-serif">Engineering home · shared authority</text>
+<text x="828" y="240" fill="#1168B6" font-size="12" font-family="Arial, sans-serif">Written by Engineering and Governance</text>
 <title>Open metadata documentation: PIPELINE_REGISTRY</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract/" target="_blank">
