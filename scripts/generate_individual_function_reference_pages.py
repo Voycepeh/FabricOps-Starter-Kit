@@ -4343,6 +4343,75 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
     return f"{_metadata_table_title(table_name)} field `{column_name}`."
 
 
+def _metadata_split_type_fields(value: str) -> list[str]:
+    """Split Spark struct fields without splitting nested structs or decimal types."""
+    fields: list[str] = []
+    angle_depth = 0
+    paren_depth = 0
+    start = 0
+    for index, char in enumerate(value):
+        if char == "<":
+            angle_depth += 1
+        elif char == ">":
+            angle_depth -= 1
+        elif char == "(":
+            paren_depth += 1
+        elif char == ")":
+            paren_depth -= 1
+        elif char == "," and angle_depth == 0 and paren_depth == 0:
+            fields.append(value[start:index].strip())
+            start = index + 1
+        if angle_depth < 0 or paren_depth < 0:
+            raise ValueError(f"Malformed metadata type: {value}")
+    if angle_depth or paren_depth:
+        raise ValueError(f"Unbalanced metadata type: {value}")
+    fields.append(value[start:].strip())
+    return fields
+
+
+def _metadata_nested_struct(type_name: str) -> tuple[str, str] | None:
+    """Return the label and fields of a struct or array of structs."""
+    if type_name.startswith("array<struct<") and type_name.endswith(">>"):
+        return "Array of structs", type_name[len("array<struct<"):-2]
+    if type_name.startswith("struct<") and type_name.endswith(">"):
+        return "Struct", type_name[len("struct<"):-1]
+    return None
+
+
+def _metadata_type_cell(type_name: str, *, column: str) -> str:
+    """Render native nested Spark fields as an accessible, compact subtable."""
+    nested = _metadata_nested_struct(type_name)
+    if nested is None:
+        return f"`{type_name}`"
+
+    field_rows: list[str] = []
+
+    def append_fields(fields: str, prefix: str = "", depth: int = 0) -> None:
+        for part in _metadata_split_type_fields(fields):
+            name, separator, member_type = part.partition(":")
+            if not separator or not name.strip() or not member_type.strip():
+                raise ValueError(f"Malformed metadata struct member: {part}")
+            path = f"{prefix}.{name.strip()}" if prefix else name.strip()
+            member_type = member_type.strip()
+            member_nested = _metadata_nested_struct(member_type)
+            display_type = member_nested[0] if member_nested else member_type
+            field_rows.append(
+                f'<tr><td class="metadata-nested-field metadata-nested-field--depth-{min(depth, 3)}">'
+                f'<code>{html_escape(path)}</code></td><td><code>{html_escape(display_type)}</code></td></tr>'
+            )
+            if member_nested:
+                append_fields(member_nested[1], path, depth + 1)
+
+    append_fields(nested[1])
+    return (
+        '<div class="metadata-structured-type">'
+        f'<span class="metadata-structured-type__label">{nested[0]}</span>'
+        f'<table class="metadata-nested-type" aria-label="Fields in {html_escape(column)}">'
+        '<thead><tr><th scope="col">Field</th><th scope="col">Type</th></tr></thead>'
+        f'<tbody>{"".join(field_rows)}</tbody></table></div>'
+    )
+
+
 def _metadata_table_purpose(table_name: str, table_purposes: dict[str, str]) -> str:
     """Return generated metadata table purpose text."""
     return table_purposes.get(table_name, f"{_metadata_table_title(table_name)} metadata table.")
@@ -4753,9 +4822,11 @@ def generate_metadata_reference_pages() -> None:
         for row in rows:
             column = str(row["name"])
             lines.append(
-                f"| `{column}` | `{row['type']}` | "
+                f"| `{column}` | {_metadata_type_cell(str(row['type']), column=column)} | "
                 f"{_metadata_field_description(table_name, column)} |"
             )
+        if any(_metadata_nested_struct(str(row["type"])) for row in rows):
+            lines.append("{: .metadata-schema-table }")
         (METADATA_REFERENCE_DIR / f"{slug}.md").write_text(
             "\n".join(lines).rstrip() + "\n", encoding="utf-8"
         )
