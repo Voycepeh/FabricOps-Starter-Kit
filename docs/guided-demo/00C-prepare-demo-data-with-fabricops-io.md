@@ -23,7 +23,7 @@ Import the setup notebook and connect it to the configured Fabric Environment.
 
 ![File upload](../assets/00C/File%20Upload.png)
 
-4. Run the first two steps in the notebook.
+### Load the shared 00_env_config notebook that is in the same workspace via our helper function (Or if you did want to point to a notebook in another workpace just pass the workpace id into the helper funciton)
 
 ![Demo setup](../assets/00C/Demo%20Set%20Up.png)
 

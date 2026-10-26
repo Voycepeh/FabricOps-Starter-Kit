@@ -1,11 +1,5 @@
 # Step 2. Build a Pipeline
 
-### Build explicit pipeline authority before Read
-
-
-
-Complete **Author → Test → Activate → Live**. [Step 5](05-activate-data-contract-and-promote.md) reviews the complete affected release and publishes a coordinated environment revision. Headless Live resolves that revision automatically. Deployment stays separate. Start a new plan after changing configuration or contract selections.
-
 ### Before you begin
 
 1. Complete [Step 00B. Configure the Environment and load assets](00B-configure-environment-and-load-assets.md).

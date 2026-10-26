@@ -4,25 +4,9 @@
 
 Complete [Step 0C](00C-prepare-demo-data-with-fabricops-io.md) and open `01_governance`.
 
-### Load the shared environment
+### Load the shared 00_env_config notebook that is in the same workspace via our helper function
 
-```python
-from fabricops_kit import setup_notebook
-context = setup_notebook()
-```
-`00_env_config` loads the configured Bronze, Silver, Gold, and Metadata stores, the environment and notebook identity, the Spark session, and metadata routing. You should see the shared FabricOps configuration load without an error.
-
-### Import required widget functions
-
-- We created widgets with ipywidgets to provide users with a simple UI to record and capture the required data.
-- Feel free to swap this out for an actual frontend, or capture the data directly into the underlying metadata tables if you prefer.
-
-```python
-from fabricops_kit import (
-    widget_render_data_agreement,
-    widget_render_data_steward,
-)
-```
+![Load the shared 00_env_config notebook](../assets/01/SetupNotebook.png)
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
