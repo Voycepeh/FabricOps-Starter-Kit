@@ -5,22 +5,24 @@ import fs from "node:fs";
 import path from "node:path";
 const root = path.resolve(import.meta.dirname, "..");
 function renderMetadataSvg(layout, models) {
+  // Fan-out ports follow destination order: the farthest target takes the outer
+  // corridor, keeping nearer routes nested instead of crossing their stems.
   const routes = [
     ["DATA_STEWARD","DATA_AGREEMENT","1:N","physical","M335 170H425",[335,170],[425,170],"One steward may participate in many agreements"],
-    ["DATA_AGREEMENT","PIPELINE_REGISTRY","","nested","M725 170H815",[725,170],[815,170],"Registry approvals reference Agreement ID plus version and content hash"],
-    ["PIPELINE_REGISTRY","DATA_CONTRACT","","nested","M1115 170H1205",[1115,170],[1205,170],"Registry table ownership retains exact Contract ID plus version and payload hash"],
-    ["PIPELINE_RUN","DATA_CONTRACT","","nested","M725 464H765V363H1145V194H1205",[725,464],[1205,194],"Run operations reference exact table contract versions"],
-    ["PIPELINE_REGISTRY","PIPELINE_RUN","","nested","M900 253V328H575V423",[900,253],[575,423],"Registry approvals retain Test run_id; Live runs pin Registry approvals[].approval_id. Cardinality applies to nested records, not the singleton authority row"],
+    ["DATA_AGREEMENT","PIPELINE_REGISTRY","1:N","nested","M725 170H815",[725,170],[815,170],"One exact Agreement version governs many pipeline approvals, each retaining its ID, version and content hash"],
+    ["PIPELINE_REGISTRY","DATA_CONTRACT","N:M","nested","M1115 170H1205",[1115,170],[1205,170],"Pipeline approvals may share multiple exact Contract versions; Registry ownership retains their IDs, versions and payload hashes"],
+    ["PIPELINE_RUN","DATA_CONTRACT","N:M","nested","M725 464H755V388H1175V218H1205",[725,464],[1205,218],"Run operations reference exact table contract versions"],
+    ["PIPELINE_REGISTRY","PIPELINE_RUN","1:N","nested","M900 253V328H575V423",[900,253],[575,423],"One Registry approval authorizes many Live runs through approval_id. Each approval also retains one Test run_id. Cardinality describes approvals, not the singleton authority row"],
     ["DATA_CATALOGUE","DATA_CONTRACT","1:N","physical","M1355 423V253",[1355,423],[1355,253],"Catalogue table to contract versions"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1:N","physical","M425 515H335",[425,515],[335,515],"Pipeline run to recorded guardrail outcomes"],
     ["PIPELINE_RUN","PROCESSING_STATE","1:N","physical","M725 504H815",[725,504],[815,504],"Pipeline run to typed processing state"],
     ["DATA_CATALOGUE","PROCESSING_STATE","1:N","physical","M1205 545H1115",[1205,545],[1115,545],"Catalogue table to source and target processing state"],
-    ["DATA_CATALOGUE","DATA_PROFILED","1:N","physical","M1250 598V642H575V735",[1250,598],[575,735],"Catalogue table to column statistics"],
-    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","","logical","M1290 598V617H185V735",[1290,598],[185,735],"Catalogue column to frequency observations"],
-    ["DATA_CATALOGUE","DATA_LINEAGE","1:N","physical","M1355 598V667H965V735",[1355,598],[965,735],"Catalogue table to source and target lineage"],
-    ["DATA_CATALOGUE","DATA_ACCESS","1:N","physical","M1430 598V703H1355V735",[1430,598],[1355,735],"Catalogue table to observed permissions"],
+    ["DATA_CATALOGUE","DATA_PROFILED","1:N","physical","M1280 598V655H575V735",[1280,598],[575,735],"Catalogue table to column statistics"],
+    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1:N","logical","M1230 598V630H185V735",[1230,598],[185,735],"Catalogue column to frequency observations"],
+    ["DATA_CATALOGUE","DATA_LINEAGE","1:N","physical","M1355 598V680H965V735",[1355,598],[965,735],"Catalogue table to source and target lineage"],
+    ["DATA_CATALOGUE","DATA_ACCESS","1:N","physical","M1430 598V705H1355V735",[1430,598],[1355,735],"Catalogue table to observed permissions"],
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1:N","physical","M425 821H335",[425,821],[335,821],"Optional statistical profile reference on frequency rows"],
-    ["DATA_CONTRACT","GUARDRAIL_RESULTS","1:N","physical","M1205 218H1165V388H185V423",[1205,218],[185,423],"Contract versions to their Guardrail results"]
+    ["DATA_CONTRACT","GUARDRAIL_RESULTS","1:N","physical","M1205 194H1145V363H185V423",[1205,194],[185,423],"Contract versions to their Guardrail results"]
   ];
   const esc = value => String(value).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const source = layout.indexOf("<a ");

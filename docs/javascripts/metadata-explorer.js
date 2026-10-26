@@ -20,19 +20,19 @@
 
   // Direction is parent -> child; the inverse cardinality is shown when
   // inspecting the child. Test-evidence and Live-release links are distinct.
-  // Nested references have member-level keys rather than scalar table-row cardinality.
+  // Registry cardinalities describe approvals; the physical authority is one row.
   const links = [
     ["DATA_STEWARD", "DATA_AGREEMENT", "1:N", "Provider or recipient"],
-    ["DATA_AGREEMENT", "PIPELINE_REGISTRY", "", "Exact approved Agreement versions"],
-    ["PIPELINE_REGISTRY", "DATA_CONTRACT", "", "Exact table ownership contracts"],
-    ["PIPELINE_RUN", "DATA_CONTRACT", "", "Exact operation contracts"],
+    ["DATA_AGREEMENT", "PIPELINE_REGISTRY", "1:N", "Exact approved Agreement versions"],
+    ["PIPELINE_REGISTRY", "DATA_CONTRACT", "N:M", "Exact table ownership contracts"],
+    ["PIPELINE_RUN", "DATA_CONTRACT", "N:M", "Exact operation contracts"],
     ["DATA_CATALOGUE", "DATA_CONTRACT", "1:N", "Contracts for a table"],
-    ["PIPELINE_REGISTRY", "PIPELINE_RUN", "", "Retained Tests and approved Live runs"],
+    ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1:N", "Live runs per approved pipeline release"],
     ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1:N", "Run evaluations"],
     ["PIPELINE_RUN", "PROCESSING_STATE", "1:N", "Run processing state"],
     ["DATA_CATALOGUE", "PROCESSING_STATE", "1:N", "Source and target processing state"],
     ["DATA_CATALOGUE", "DATA_PROFILED", "1:N", "Profile snapshots"],
-    ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "", "Frequency snapshots"],
+    ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "1:N", "Frequency snapshots"],
     ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "1:N", "Optional statistical profile"],
     ["DATA_CATALOGUE", "DATA_LINEAGE", "1:N", "Lineage records"],
     ["DATA_CATALOGUE", "DATA_ACCESS", "1:N", "Access observations"],
@@ -161,7 +161,7 @@
     const approvedDiagram = new URL("../../assets/fabricops-metadata-approved.svg", document.baseURI);
     graph.style.width = "100%";
     graph.style.minWidth = "860px";
-    graph.style.aspectRatio = "1540 / 960";
+    graph.style.aspectRatio = "1540 / 980";
     fetch(approvedDiagram).then(response => {
       if (!response.ok) throw new Error("Approved diagram returned " + response.status);
       return response.text();

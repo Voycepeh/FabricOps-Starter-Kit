@@ -1,9 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1540" height="960" viewBox="0 0 1540 960" role="img" aria-label="FabricOps metadata relationship diagram">
-<rect width="1540" height="960" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1540" height="980" viewBox="0 0 1540 980" role="img" aria-label="FabricOps metadata relationship diagram">
+<rect width="1540" height="980" fill="#FFFFFF"/>
 <rect x="17" y="16" width="1506" height="270" rx="9" fill="#F8F3FE" stroke="#B69CE2" stroke-width="1.5"/>
 <rect x="17" y="303" width="1506" height="638" rx="9" fill="#EEF7FF" stroke="#83B8EA" stroke-width="1.5"/>
 <text x="36" y="52" font-size="23" font-family="Arial, sans-serif" font-weight="700" fill="#7144AE">Governance and pipeline authority</text>
 <text x="36" y="346" font-size="23" font-family="Arial, sans-serif" font-weight="700" fill="#1168B6">Engineering Schema</text>
+<rect x="795" y="62" width="340" height="210" rx="7" fill="#EEF7FF" stroke="#83B8EA"/>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_steward/" target="_blank">
 <rect x="35" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
 <path d="M39 78H331Q335 78 335 82V115H35V82Q35 78 39 78Z" fill="#7144AE"/>
@@ -16,7 +17,6 @@
 <text x="575.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_AGREEMENT</text>
 <title>Open metadata documentation: DATA_AGREEMENT</title>
 </a>
-<rect x="795" y="62" width="340" height="210" rx="7" fill="#EEF7FF" stroke="#83B8EA"/>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_registry/" target="_blank">
 <rect x="815" y="78" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>
 <path d="M819 78H1111Q1115 78 1115 82V115H815V82Q815 78 819 78Z" fill="#1168B6"/>
@@ -79,4 +79,5 @@
 </a>
 
 <text x="36" y="950" font-size="13" font-family="Arial, sans-serif" fill="#52647A">Solid lines: implemented references, enforced by application logic. PK: row key · UK: nested unique key · FK: scalar or nested reference · Composite keys must be joined together.</text>
+<text x="36" y="969" font-size="13" font-family="Arial, sans-serif" fill="#52647A">Registry cardinalities describe pipeline approvals, not its singleton authority row. N:M denotes shared Contract versions across approvals or runs.</text>
 </svg>
