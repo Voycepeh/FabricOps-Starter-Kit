@@ -430,6 +430,31 @@
   background-color: var(--md-code-bg-color);
   background-color: color-mix(in srgb, var(--md-default-fg-color) 4%, var(--md-default-bg-color));
 }
+/* A subtle row tint makes top-level column responsibility scannable. */
+.md-typeset .metadata-schema-table > table > tbody > tr.metadata-column--engineering > td {
+  background-color: color-mix(in srgb, #1168b6 8%, var(--md-default-bg-color));
+}
+.md-typeset .metadata-schema-table > table > tbody > tr.metadata-column--governance > td {
+  background-color: color-mix(in srgb, #7952b3 9%, var(--md-default-bg-color));
+}
+.md-typeset .metadata-schema-table > table > tbody > tr.metadata-column--audit > td {
+  background-color: color-mix(in srgb, var(--md-default-fg-color) 3%, var(--md-default-bg-color));
+}
+.md-typeset .metadata-schema-table > table > tbody > tr.metadata-column--engineering:nth-child(even) > td {
+  background-color: color-mix(in srgb, #1168b6 12%, var(--md-default-bg-color));
+}
+.md-typeset .metadata-schema-table > table > tbody > tr.metadata-column--governance:nth-child(even) > td {
+  background-color: color-mix(in srgb, #7952b3 13%, var(--md-default-bg-color));
+}
+.md-typeset .metadata-schema-table > table > tbody > tr.metadata-column--audit:nth-child(even) > td {
+  background-color: color-mix(in srgb, var(--md-default-fg-color) 6%, var(--md-default-bg-color));
+}
+.md-typeset .metadata-schema-table > table > tbody > tr.metadata-column--engineering > td:first-child {
+  border-left: 3px solid #1168b6;
+}
+.md-typeset .metadata-schema-table > table > tbody > tr.metadata-column--governance > td:first-child {
+  border-left: 3px solid #7952b3;
+}
 .md-typeset .metadata-schema-table > table > thead > tr > th:first-child,
 .md-typeset .metadata-schema-table > table > tbody > tr > td:first-child { width: 30%; }
 .md-typeset .metadata-schema-table > table > thead > tr > th:nth-child(2),

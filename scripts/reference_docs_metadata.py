@@ -2124,3 +2124,15 @@ METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"] = {
     "reservations": ["fabricops_kit.activated_pipeline.shared.build_live_pipeline_plan", "fabricops_kit.activated_pipeline.shared.release_pipeline_lease"],
     "profiling_claims": ["fabricops_kit.pipeline.shared.claim_table_profile", "fabricops_kit.pipeline.shared.maintain_table_profile_claim"],
 }
+
+# Column responsibility for the generated schema view. The Registry is stored
+# in Engineering, but its approval and published selection fields are governed
+# by Governance decisions. Shared authority keys belong to Engineering.
+METADATA_COLUMN_CATEGORIES = {
+    "METADATA_PIPELINE_REGISTRY": {
+        "revisions": "governance",
+        "approvals": "governance",
+        "selections": "governance",
+        "table_ownership": "governance",
+    },
+}

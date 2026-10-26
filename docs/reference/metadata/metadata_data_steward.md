@@ -29,26 +29,29 @@ No immediate table relationship is defined in the current implementation.
 | Column category | Count |
 | --- | ---: |
 | Total columns | 14 |
-| Business columns | 6 |
-| Audit columns | 8 |
+| Engineering columns | 0 |
+| Governance columns | 6 |
+| Standard audit columns | 8 |
 
 ## Implemented schema
 
+Blue rows are Engineering columns; purple rows are Governance columns. Neutral rows are standard audit columns.
+
 <div class="metadata-schema-table">
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
-<tr><td><code>steward_id</code></td><td><code>string</code></td><td>Stable identifier for the steward row.</td></tr>
-<tr><td><code>steward_name</code></td><td><code>string</code></td><td>Human-readable steward name.</td></tr>
-<tr><td><code>steward_role</code></td><td><code>string</code></td><td>Configured steward role captured for the row.</td></tr>
-<tr><td><code>contact</code></td><td><code>string</code></td><td>Contact detail captured for the steward record.</td></tr>
-<tr><td><code>is_active</code></td><td><code>boolean</code></td><td>Whether the row is currently active.</td></tr>
-<tr><td><code>custom_fields_json</code></td><td><code>string</code></td><td>JSON payload stored for <code>custom_fields_json</code>.</td></tr>
-<tr><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
-<tr><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
-<tr><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
-<tr><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
-<tr><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
-<tr><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
-<tr><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>
-<tr><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
+<tr class="metadata-column--governance"><td><code>steward_id</code></td><td><code>string</code></td><td>Stable identifier for the steward row.</td></tr>
+<tr class="metadata-column--governance"><td><code>steward_name</code></td><td><code>string</code></td><td>Human-readable steward name.</td></tr>
+<tr class="metadata-column--governance"><td><code>steward_role</code></td><td><code>string</code></td><td>Configured steward role captured for the row.</td></tr>
+<tr class="metadata-column--governance"><td><code>contact</code></td><td><code>string</code></td><td>Contact detail captured for the steward record.</td></tr>
+<tr class="metadata-column--governance"><td><code>is_active</code></td><td><code>boolean</code></td><td>Whether the row is currently active.</td></tr>
+<tr class="metadata-column--governance"><td><code>custom_fields_json</code></td><td><code>string</code></td><td>JSON payload stored for <code>custom_fields_json</code>.</td></tr>
+<tr class="metadata-column--audit"><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
+<tr class="metadata-column--audit"><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
+<tr class="metadata-column--audit"><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
+<tr class="metadata-column--audit"><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
+<tr class="metadata-column--audit"><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>
+<tr class="metadata-column--audit"><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
 </tbody></table>
 </div>

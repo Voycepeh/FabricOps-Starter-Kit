@@ -4563,15 +4563,40 @@ def render_metadata_reference_index(
 def _metadata_column_counts(
     rows: list[dict[str, Any]],
     *,
-    audit_column_names: set[str],
+    categories: dict[str, str],
 ) -> dict[str, int]:
-    """Return reconciled business, audit, and total counts for schema rows."""
-    total = len(rows)
-    audit = sum(str(row["name"]) in audit_column_names for row in rows)
-    business = total - audit
-    if business + audit != total:
+    """Count the documented responsibility of each top-level schema column."""
+    counts = {"engineering": 0, "governance": 0, "audit": 0}
+    for row in rows:
+        counts[categories[str(row["name"])]] += 1
+    counts["total"] = len(rows)
+    if sum(counts[key] for key in ("engineering", "governance", "audit")) != counts["total"]:
         raise RuntimeError("Metadata column counts do not reconcile to the schema total.")
-    return {"total": total, "business": business, "audit": audit}
+    return counts
+
+
+def _metadata_column_categories(
+    table_name: str,
+    rows: list[dict[str, Any]],
+    *,
+    overrides: dict[str, dict[str, str]],
+    audit_column_names: set[str],
+) -> dict[str, str]:
+    """Classify top-level fields by responsible group, with explicit mixed-table fields."""
+    names = {str(row["name"]) for row in rows}
+    table_overrides = overrides.get(table_name, {})
+    if unknown := set(table_overrides) - names:
+        raise RuntimeError(f"Unknown column categories for {table_name}: {sorted(unknown)}")
+    owner = metadata_table_owner(table_name)
+    categories = {
+        name: ("audit" if name in audit_column_names else table_overrides.get(name, owner))
+        for name in names
+    }
+    if invalid := {name: kind for name, kind in categories.items() if kind not in {"audit", "engineering", "governance"}}:
+        raise RuntimeError(f"Invalid column categories for {table_name}: {invalid}")
+    if overlaps := set(table_overrides) & audit_column_names:
+        raise RuntimeError(f"Audit columns cannot override category for {table_name}: {sorted(overlaps)}")
+    return categories
 
 
 def _metadata_writer_functions(
@@ -4749,6 +4774,7 @@ def generate_metadata_reference_pages() -> None:
     docs_metadata = parse_docs_metadata()
     public_callable_set = public_callable_names()
     audit_column_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
+    category_overrides = namespace["METADATA_COLUMN_CATEGORIES"]
     for generated_page in METADATA_REFERENCE_DIR.glob("*.md"):
         generated_page.unlink(missing_ok=True)
 
@@ -4757,7 +4783,11 @@ def generate_metadata_reference_pages() -> None:
         model = table_models[table_name]
         purpose = _metadata_table_purpose(table_name, table_purposes)
         rows = metadata_table_schema_rows(registry[table_name])
-        column_counts = _metadata_column_counts(rows, audit_column_names=audit_column_names)
+        categories = _metadata_column_categories(
+            table_name, rows, overrides=category_overrides,
+            audit_column_names=audit_column_names,
+        )
+        column_counts = _metadata_column_counts(rows, categories=categories)
         writer_functions = _metadata_writer_functions(
             table_name,
             rows,
@@ -4823,10 +4853,13 @@ def generate_metadata_reference_pages() -> None:
             "| Column category | Count |",
             "| --- | ---: |",
             f"| Total columns | {column_counts['total']} |",
-            f"| Business columns | {column_counts['business']} |",
-            f"| Audit columns | {column_counts['audit']} |",
+            f"| Engineering columns | {column_counts['engineering']} |",
+            f"| Governance columns | {column_counts['governance']} |",
+            f"| Standard audit columns | {column_counts['audit']} |",
             "",
             "## Implemented schema",
+            "",
+            "Blue rows are Engineering columns; purple rows are Governance columns. Neutral rows are standard audit columns.",
             "",
             '<div class="metadata-schema-table">',
             '<table class="metadata-schema-table"><thead><tr>'
@@ -4836,7 +4869,7 @@ def generate_metadata_reference_pages() -> None:
         for row in rows:
             column = str(row["name"])
             lines.append(
-                f'<tr><td><code>{html_escape(column)}</code></td>'
+                f'<tr class="metadata-column--{categories[column]}"><td><code>{html_escape(column)}</code></td>'
                 f'<td>{_metadata_type_cell(str(row["type"]), column=column)}</td>'
                 f'<td>{_metadata_inline_html(_metadata_field_description(table_name, column))}</td></tr>'
             )

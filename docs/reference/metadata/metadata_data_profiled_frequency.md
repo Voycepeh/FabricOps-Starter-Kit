@@ -34,35 +34,38 @@ via `profile_id`
 | Column category | Count |
 | --- | ---: |
 | Total columns | 23 |
-| Business columns | 15 |
-| Audit columns | 8 |
+| Engineering columns | 15 |
+| Governance columns | 0 |
+| Standard audit columns | 8 |
 
 ## Implemented schema
 
+Blue rows are Engineering columns; purple rows are Governance columns. Neutral rows are standard audit columns.
+
 <div class="metadata-schema-table">
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
-<tr><td><code>frequency_id</code></td><td><code>string</code></td><td>Identifier stored for <code>frequency_id</code>.</td></tr>
-<tr><td><code>profile_id</code></td><td><code>string</code></td><td>Identifier stored for <code>profile_id</code>.</td></tr>
-<tr><td><code>profile_snapshot_id</code></td><td><code>string</code></td><td>Identifier stored for <code>profile_snapshot_id</code>.</td></tr>
-<tr><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across environment, dataset, and table context.</td></tr>
-<tr><td><code>column_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a column across environment, dataset, table, and column context.</td></tr>
-<tr><td><code>table_name</code></td><td><code>string</code></td><td>Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
-<tr><td><code>column_name</code></td><td><code>string</code></td><td>Column name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
-<tr><td><code>data_type</code></td><td><code>string</code></td><td>Stable data type label recorded for the column.</td></tr>
-<tr><td><code>environment_name</code></td><td><code>string</code></td><td>Environment name recorded for the metadata row.</td></tr>
-<tr><td><code>value</code></td><td><code>string</code></td><td>Metadata Data Profiled Frequency field <code>value</code>.</td></tr>
-<tr><td><code>frequency_count</code></td><td><code>long</code></td><td>Metadata Data Profiled Frequency field <code>frequency_count</code>.</td></tr>
-<tr><td><code>frequency_percent</code></td><td><code>double</code></td><td>Metadata Data Profiled Frequency field <code>frequency_percent</code>.</td></tr>
-<tr><td><code>frequency_rank</code></td><td><code>integer</code></td><td>Metadata Data Profiled Frequency field <code>frequency_rank</code>.</td></tr>
-<tr><td><code>profiled_row_count</code></td><td><code>long</code></td><td>Metadata Data Profiled Frequency field <code>profiled_row_count</code>.</td></tr>
-<tr><td><code>profiled_non_null_count</code></td><td><code>long</code></td><td>Metadata Data Profiled Frequency field <code>profiled_non_null_count</code>.</td></tr>
-<tr><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
-<tr><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
-<tr><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
-<tr><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
-<tr><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
-<tr><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
-<tr><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>
-<tr><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
+<tr class="metadata-column--engineering"><td><code>frequency_id</code></td><td><code>string</code></td><td>Identifier stored for <code>frequency_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>profile_id</code></td><td><code>string</code></td><td>Identifier stored for <code>profile_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>profile_snapshot_id</code></td><td><code>string</code></td><td>Identifier stored for <code>profile_snapshot_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across environment, dataset, and table context.</td></tr>
+<tr class="metadata-column--engineering"><td><code>column_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a column across environment, dataset, table, and column context.</td></tr>
+<tr class="metadata-column--engineering"><td><code>table_name</code></td><td><code>string</code></td><td>Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
+<tr class="metadata-column--engineering"><td><code>column_name</code></td><td><code>string</code></td><td>Column name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
+<tr class="metadata-column--engineering"><td><code>data_type</code></td><td><code>string</code></td><td>Stable data type label recorded for the column.</td></tr>
+<tr class="metadata-column--engineering"><td><code>environment_name</code></td><td><code>string</code></td><td>Environment name recorded for the metadata row.</td></tr>
+<tr class="metadata-column--engineering"><td><code>value</code></td><td><code>string</code></td><td>Metadata Data Profiled Frequency field <code>value</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>frequency_count</code></td><td><code>long</code></td><td>Metadata Data Profiled Frequency field <code>frequency_count</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>frequency_percent</code></td><td><code>double</code></td><td>Metadata Data Profiled Frequency field <code>frequency_percent</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>frequency_rank</code></td><td><code>integer</code></td><td>Metadata Data Profiled Frequency field <code>frequency_rank</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>profiled_row_count</code></td><td><code>long</code></td><td>Metadata Data Profiled Frequency field <code>profiled_row_count</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>profiled_non_null_count</code></td><td><code>long</code></td><td>Metadata Data Profiled Frequency field <code>profiled_non_null_count</code>.</td></tr>
+<tr class="metadata-column--audit"><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
+<tr class="metadata-column--audit"><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
+<tr class="metadata-column--audit"><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
+<tr class="metadata-column--audit"><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
+<tr class="metadata-column--audit"><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>
+<tr class="metadata-column--audit"><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
 </tbody></table>
 </div>
