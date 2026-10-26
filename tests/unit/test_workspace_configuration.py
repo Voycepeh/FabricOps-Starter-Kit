@@ -47,7 +47,7 @@ def configuration_runtime(monkeypatch, request):
     monkeypatch.setattr(importlib.import_module('fabricops_kit.io.shared'), 'get_spark_session', lambda *_args, **_kwargs: spark)
     cells = json.loads(Path('templates/notebooks/00_env_config.ipynb').read_text())['cells']
 
-    settings = SimpleNamespace(environments=None, governance_environment='')
+    settings = SimpleNamespace(environments=None, conflicting_governance_workspace=False)
 
     def run(name, timeout, arguments, *, workspace):
         assert name == '00_env_config'
@@ -62,22 +62,20 @@ def configuration_runtime(monkeypatch, request):
                     continue
                 source = ''.join(cell['source'])
                 for placeholder, value in {
-                    '<DEV_WORKSPACE_ID>': 'dev-ws', '<TEST_WORKSPACE_ID>': 'test-ws',
+                    '<DEV_WORKSPACE_ID>': 'metadata-ws' if settings.conflicting_governance_workspace else 'dev-ws', '<TEST_WORKSPACE_ID>': 'test-ws',
                     '<PROD_WORKSPACE_ID>': 'prod-ws', '<GOVERNANCE_WORKSPACE_ID>': 'metadata-ws',
-                    '<METADATA_ITEM_ID>': 'metadata-item', '<BRONZE_ITEM_ID>': 'bronze-item',
+                    '<GOVERNANCE_METADATA_LAKEHOUSE_ID>': 'metadata-item', '<BRONZE_ITEM_ID>': 'bronze-item',
                     '<SILVER_ITEM_ID>': 'silver-item', '<GOLD_ITEM_ID>': 'gold-item',
                     '<BRONZE_NAME>': 'lh_Bronze', '<SILVER_NAME>': 'lh_Silver', '<GOLD_NAME>': 'wh_Gold',
                 }.items():
                     source = source.replace(placeholder, value)
                 # This fixture exercises configuration loading, not metadata deployment.
                 source = source.replace('INITIALIZE_METADATA = True', 'INITIALIZE_METADATA = False')
-                source = source.replace('GOVERNANCE_ENVIRONMENT = ""',
-                                        f'GOVERNANCE_ENVIRONMENT = {settings.governance_environment!r}')
                 if settings.environments is not None:
-                    source = source.replace('ENVIRONMENT_WORKSPACES = ENGINEERING_WORKSPACES',
-                        f'ENGINEERING_WORKSPACES = {{k: v for k, v in ENGINEERING_WORKSPACES.items() if k in {settings.environments!r}}}\n'
-                        'ENV_ITEMS = {k: v for k, v in ENV_ITEMS.items() if k in ENGINEERING_WORKSPACES}\n'
-                        'ENVIRONMENT_WORKSPACES = ENGINEERING_WORKSPACES')
+                    source = source.replace('def _required_config_value(value, label):',
+                        f'ENGINEERING_WORKSPACE_IDS = {{k: v for k, v in ENGINEERING_WORKSPACE_IDS.items() if k in {settings.environments!r}}}\n'
+                        'ENGINEERING_ENVIRONMENT_ITEMS = {k: v for k, v in ENGINEERING_ENVIRONMENT_ITEMS.items() if k in ENGINEERING_WORKSPACE_IDS}\n\n'
+                        'def _required_config_value(value, label):')
                 # Fabric keeps child output in its execution snapshot.
                 with redirect_stdout(StringIO()):
                     exec(compile(source, '<00_env_config>', 'exec'), namespace)
@@ -112,8 +110,7 @@ def test_engineering_loads_central_config_for_caller_workspace(configuration_run
 def test_governance_loads_its_separate_local_deployment(configuration_runtime):
     fabric = configuration_runtime
     fabric.runtime.context.update(currentWorkspaceId='metadata-ws', currentNotebookName='01_governance')
-    fabric.settings.environments = ['dev']
-    assert setup_notebook().environment == 'dev'
+    assert setup_notebook().environment == 'governance'
     fabric.notebook.run.assert_called_once_with(
         '00_env_config', 120, {'caller_workspace_id': 'metadata-ws'}, workspace='metadata-ws')
 
@@ -404,19 +401,20 @@ def test_failed_config_load_does_not_print_success_summary(configuration_runtime
     assert capsys.readouterr().out == ''
 
 
-@pytest.mark.parametrize("selected", ["", "test", "missing"])
-def test_governance_multiple_environments_require_configured_choice(configuration_runtime, selected):
+@pytest.mark.parametrize("environments", [None, ["dev"]])
+def test_governance_is_metadata_only_with_one_or_multiple_engineering_environments(configuration_runtime, environments):
     fabric = configuration_runtime
     fabric.runtime.context['currentWorkspaceId'] = 'metadata-ws'
-    fabric.settings.governance_environment = selected
-    if selected == 'test':
-        result = setup_notebook(required_targets=['Metadata'])
-        assert result.environment == 'test'
-        assert set(result.paths) == {'Metadata'}
-        assert resolve_fabric_context()[0].path_config.paths['test']['Silver'].workspace_id == 'test-ws'
-    else:
-        with pytest.raises(ValueError, match='GOVERNANCE_ENVIRONMENT'):
-            setup_notebook(required_targets=['Metadata'])
+    fabric.settings.environments = environments
+    result = setup_notebook()
+    assert result.environment == 'governance'
+    assert set(result.paths) == {'Metadata'}
+    assert result.paths['Metadata'].workspace_id == 'metadata-ws'
+    assert result.paths['Metadata'].env == 'governance'
+    config, env, _context = resolve_fabric_context()
+    assert env == 'governance'
+    assert set(config.path_config.paths['governance']) == {'Metadata'}
+    assert config.path_config.paths['dev']['Silver'].workspace_id == 'dev-ws'
 
 
 def test_governance_summary_filters_targets_without_restricting_config(configuration_runtime, capsys):
@@ -426,6 +424,8 @@ def test_governance_summary_filters_targets_without_restricting_config(configura
     result = setup_notebook(required_targets=['Metadata'])
     output = capsys.readouterr().out
     assert set(result.paths) == {'Metadata'}
+    assert result.environment == 'governance'
+    assert 'Environment: governance' in output
     assert '- Metadata:' in output
     assert all(f'- {name}:' not in output for name in ['Bronze', 'Silver', 'Gold'])
     assert set(resolve_fabric_context()[0].path_config.paths['dev']) == {'Bronze', 'Silver', 'Gold', 'Metadata'}
@@ -454,14 +454,21 @@ def test_governance_config_runs_directly_without_caller_parameter(configuration_
     fabric.settings.environments = ['dev']
     payload = json.loads(fabric.notebook.run('00_env_config', 120, {'caller_workspace_id': ''}, workspace='metadata-ws'))
     assert payload['workspace_id'] == 'metadata-ws'
-    assert payload['env'] == 'dev'
-    assert payload['config']['path_config']['paths']['dev']['Metadata']['workspace_id'] == 'metadata-ws'
+    assert payload['env'] == 'governance'
+    assert list(payload['config']['path_config']['paths']['governance']) == ['Metadata']
+    assert payload['config']['path_config']['paths']['governance']['Metadata']['workspace_id'] == 'metadata-ws'
 
 
-def test_engineering_workspace_mapping_precedes_governance_choice(configuration_runtime):
-    """The Governance selector never redirects an Engineering caller."""
-    configuration_runtime.settings.governance_environment = 'prod'
+def test_engineering_workspace_mapping_is_unchanged(configuration_runtime):
+    """Engineering resolves from its workspace ID, not the central Governance scope."""
     assert setup_notebook(config_workspace_id='central-ws').environment == 'dev'
+
+
+def test_governance_workspace_must_not_alias_an_engineering_workspace(configuration_runtime):
+    """Ambiguous workspace ownership must fail configuration loading."""
+    configuration_runtime.settings.conflicting_governance_workspace = True
+    with pytest.raises(ValueError, match='must not also be an Engineering workspace'):
+        setup_notebook()
 
 
 def test_pipeline_requires_setup_notebook_even_with_manual_config(configuration_runtime, monkeypatch):
