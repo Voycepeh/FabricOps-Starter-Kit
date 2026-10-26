@@ -1,115 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 680" role="img" aria-labelledby="pipeline-boundaries-implementation-title pipeline-boundaries-implementation-desc" id="pipeline-boundaries-implementation-root">
-<title id="pipeline-boundaries-implementation-title">FabricOps: Setup → Orchestrate → Finalize</title>
-<desc id="pipeline-boundaries-implementation-desc">Setup resolves environment and Data Contracts and starts run tracking. Governed Read checks surround project-owned PySpark and governed Write checks. Finalize consolidates exact contract versions and recorded outcomes and releases execution reservations without counting business DataFrames.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 710" role="img" aria-labelledby="pipeline-boundaries-implementation-title pipeline-boundaries-implementation-desc" id="pipeline-boundaries-implementation-root">
+<title id="pipeline-boundaries-implementation-title">FabricOps: Setup to Read to Transform to Write to Finalize</title>
+<desc id="pipeline-boundaries-implementation-desc">Five notebook steps, with optional Write for read-only pipelines. Setup resolves permanent pipeline identity and Test or approved Live contracts. Read and Write apply configured Guardrails around project-owned PySpark. Finalize commits the completed run. A separate lower band groups metadata outputs and is not an additional notebook stage.</desc>
 <defs><style>
 #pipeline-boundaries-implementation-root .title{font:600 28px Arial,sans-serif;fill:#101828}
-#pipeline-boundaries-implementation-root .tag{font:600 11px Arial,sans-serif;fill:#667085;letter-spacing:.5px}
+#pipeline-boundaries-implementation-root .tag{font:600 11px Arial,sans-serif;fill:#667085;letter-spacing:.45px}
 #pipeline-boundaries-implementation-root .name{font:600 15px Arial,sans-serif;fill:#101828}
 #pipeline-boundaries-implementation-root .body{font:13px Arial,sans-serif;fill:#344054}
 #pipeline-boundaries-implementation-root .mono{font:11.5px Consolas,monospace;fill:#344054}
 #pipeline-boundaries-implementation-root .node{fill:#fff;stroke:#d0d5dd;stroke-width:1.4}
-#pipeline-boundaries-implementation-root .state{fill:#f9fafb;stroke:#98a2b3;stroke-width:1.4}
+#pipeline-boundaries-implementation-root .state{fill:#f9fafb;stroke:#d0d5dd;stroke-width:1.4}
 #pipeline-boundaries-implementation-root .focal{fill:#effaf8;stroke:#0f8f83;stroke-width:1.8}
 #pipeline-boundaries-implementation-root .edge{fill:none;stroke:#667085;stroke-width:1.6;marker-end:url(#pipeline-arrow)}
-#pipeline-boundaries-implementation-root .dash{fill:none;stroke:#98a2b3;stroke-width:1.4;stroke-dasharray:5 4;marker-end:url(#pipeline-arrow)}
+#pipeline-boundaries-implementation-root .rule{stroke:#eaecf0;stroke-width:1.4}
 </style><marker id="pipeline-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#667085"/></marker></defs>
-<rect width="1280" height="680" fill="#fff"/>
-<text x="48" y="48" class="title">Setup → Orchestrate → Finalize</text>
-<text x="48" y="76" class="body">One shared plan across every Read, project transformation and Write. Select a node to open its implementation.</text>
-<text x="48" y="108" class="tag">AFTER 00 ENV CONFIG · DATA CONTRACT CONFIGURATION FOLLOWS SETUP</text>
-<!-- Connectors precede nodes; metadata paths use separate orthogonal routes. -->
-<path class="edge" d="M264 260 H292"/>
-<path class="edge" d="M508 260 H536"/>
-<path class="edge" d="M752 260 H780"/>
-<path class="edge" d="M996 260 H1024"/>
-<path class="dash" d="M400 396 V424 Q400 432 392 432 H236 Q228 432 228 440 V460"/>
-<path class="dash" d="M888 396 V420 Q888 428 880 428 H644 Q636 428 636 436 V460"/>
-<path class="dash" d="M1132 396 V460"/>
+<rect width="1280" height="710" fill="#fff"/>
+<text x="42" y="47" class="title">Setup &#8594; Read &#8594; Transform &#8594; Write &#8594; Finalize</text>
+<text x="42" y="77" class="body">One notebook execution; repeat Read and Write as needed. Write is optional for read-only pipelines.</text>
+<text x="42" y="107" class="tag">FABRICOPS ENFORCES THE SELECTED CONTRACT; YOUR PYSPARK REMAINS PROJECT-OWNED</text>
+<path class="edge" d="M268 278 H284"/>
+<path class="edge" d="M512 278 H528"/>
+<path class="edge" d="M756 278 H772"/>
+<path class="edge" d="M1000 278 H1016"/>
 <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py" target="_blank" rel="noopener">
-<g><rect x="48" y="152" width="216" height="244" rx="6" class="node"/>
-<text x="68" y="176" class="tag">1 · SETUP</text>
-<text x="68" y="204" class="name">setup_pipeline()</text>
-<text x="68" y="236" class="body">Resolve environment</text>
-<text x="68" y="258" class="body">and central Governance</text>
-<text x="68" y="292" class="mono">METADATA_ACTIVATION_STATE</text>
-<text x="68" y="316" class="body">Select frozen contracts</text>
-<text x="68" y="338" class="body">or explore in DEV</text>
-<text x="68" y="374" class="body">Initialize run tracking</text>
-</g>
+<rect x="42" y="148" width="226" height="258" rx="7" class="node"/>
+<text x="61" y="173" class="tag">1  /  SETUP</text>
+<text x="61" y="204" class="name">setup_pipeline()</text>
+<text x="61" y="242" class="body">Resolve workspace and UUID</text>
+<text x="61" y="266" class="body">Bind notebook to pipeline</text>
+<text x="61" y="302" class="body">Test: select frozen contract</text>
+<text x="61" y="324" class="body">or explore with No Contract</text>
+<text x="61" y="367" class="body">Live: resolve approved Test</text>
 </a>
 <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py" target="_blank" rel="noopener">
-<g><rect x="292" y="152" width="216" height="244" rx="6" class="node"/>
-<text x="312" y="176" class="tag">2 · READ · 4 CHECKS</text>
-<text x="312" y="204" class="name">orchestrate_read()</text>
-<text x="312" y="236" class="body">Freshness</text>
-<text x="312" y="258" class="body">Schema</text>
-<text x="312" y="280" class="body">Grain</text>
-<text x="312" y="302" class="body">Data Quality</text>
-<text x="312" y="338" class="body">Return source DataFrame</text>
-<text x="312" y="374" class="body">Full Read: Profile</text>
-</g>
+<rect x="286" y="148" width="226" height="258" rx="7" class="node"/>
+<text x="305" y="173" class="tag">2  /  READ</text>
+<text x="305" y="204" class="name">orchestrate_read()</text>
+<text x="305" y="242" class="body">Read source data</text>
+<text x="305" y="266" class="body">Apply configured Guardrails</text>
+<text x="305" y="302" class="body">Freshness, Schema, Grain</text>
+<text x="305" y="324" class="body">Data Quality (as applicable)</text>
+<text x="305" y="367" class="body">Profile by contract schedule</text>
 </a>
 <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb" target="_blank" rel="noopener">
-<g><rect x="536" y="152" width="216" height="244" rx="6" class="focal"/>
-<text x="556" y="176" class="tag">3 · PROJECT OWNED</text>
-<text x="556" y="204" class="name">Your PySpark</text>
-<text x="556" y="242" class="body">Visible transformation</text>
-<text x="556" y="264" class="body">logic stays in its cell</text>
-<text x="556" y="308" class="body">Joins · filters · columns</text>
-<text x="556" y="330" class="body">and aggregations</text>
-<text x="556" y="374" class="body">Reuse complete Read results</text>
-</g>
+<rect x="530" y="148" width="226" height="258" rx="7" class="focal"/>
+<text x="549" y="173" class="tag">3  /  PROJECT OWNED</text>
+<text x="549" y="204" class="name">Your PySpark</text>
+<text x="549" y="242" class="body">Joins, filters, derivations</text>
+<text x="549" y="266" class="body">and aggregations</text>
+<text x="549" y="302" class="body">Transformations stay visible</text>
+<text x="549" y="324" class="body">in your notebook cells</text>
+<text x="549" y="367" class="body">Reuse governed Read results</text>
 </a>
 <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py" target="_blank" rel="noopener">
-<g><rect x="780" y="152" width="216" height="244" rx="6" class="node"/>
-<text x="800" y="176" class="tag">4 · WRITE · 5 CHECKS</text>
-<text x="800" y="204" class="name">orchestrate_write()</text>
-<text x="800" y="236" class="body">Schema</text>
-<text x="800" y="258" class="body">Sensitive Data</text>
-<text x="800" y="280" class="body">Source Drift</text>
-<text x="800" y="302" class="body">Grain</text>
-<text x="800" y="324" class="body">Data Quality</text>
-<text x="800" y="374" class="body">Publish when permitted</text>
-</g>
+<rect x="774" y="148" width="226" height="258" rx="7" class="node"/>
+<text x="793" y="173" class="tag">4  /  OPTIONAL WRITE</text>
+<text x="793" y="204" class="name">orchestrate_write()</text>
+<text x="793" y="242" class="body">Apply configured Guardrails</text>
+<text x="793" y="266" class="body">Schema, Sensitive Data</text>
+<text x="793" y="288" class="body">Source Drift, Grain, DQ</text>
+<text x="793" y="324" class="body">Test: evaluate, no publish</text>
+<text x="793" y="367" class="body">Live: publish when allowed</text>
 </a>
 <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py" target="_blank" rel="noopener">
-<g><rect x="1024" y="152" width="216" height="244" rx="6" class="node"/>
-<text x="1044" y="176" class="tag">5 · FINALIZE</text>
-<text x="1044" y="204" class="name">finalize_pipeline()</text>
-<text x="1044" y="236" class="body">Consolidate recorded</text>
-<text x="1044" y="258" class="body">outcomes + exact versions</text>
-<text x="1044" y="302" class="body">Complete run tracking</text>
-<text x="1044" y="324" class="body">Release reservations</text>
-<text x="1044" y="352" class="body">No DataFrame counts</text>
-<text x="1044" y="374" class="body">Then optionally inspect</text>
-</g>
+<rect x="1018" y="148" width="226" height="258" rx="7" class="node"/>
+<text x="1037" y="173" class="tag">5  /  FINALIZE</text>
+<text x="1037" y="204" class="name">finalize_pipeline()</text>
+<text x="1037" y="242" class="body">Complete whole-run outcome</text>
+<text x="1037" y="280" class="body">Test: commit review results</text>
+<text x="1037" y="302" class="body">and Guardrail diagnostics</text>
+<text x="1037" y="345" class="body">Live: record result and</text>
+<text x="1037" y="367" class="body">release own reservation</text>
 </a>
+<path class="rule" d="M42 440 H1244"/>
+<text x="42" y="463" class="tag">PERSISTED METADATA  /  RELATED OUTPUTS, NOT EXTRA NOTEBOOK STEPS</text>
 <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py" target="_blank" rel="noopener">
-<g><rect x="48" y="460" width="360" height="144" rx="6" class="state"/>
-<text x="68" y="484" class="tag">FULL READ · WHEN PERSISTENCE IS PERMITTED</text>
-<text x="68" y="512" class="name">Source profiles</text>
-<text x="68" y="540" class="mono">METADATA_DATA_PROFILED</text>
-<text x="68" y="562" class="mono">METADATA_DATA_PROFILED_FREQUENCY</text>
-</g>
+<rect x="42" y="479" width="382" height="166" rx="7" class="state"/>
+<text x="60" y="504" class="name">Read observations</text>
+<text x="60" y="525" class="body">Live: persisted according to profiling policy</text>
+<text x="60" y="549" class="mono">METADATA_DATA_PROFILED</text>
+<text x="60" y="573" class="mono">METADATA_DATA_PROFILED_FREQUENCY</text>
 </a>
 <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py" target="_blank" rel="noopener">
-<g><rect x="456" y="460" width="360" height="144" rx="6" class="state"/>
-<text x="476" y="484" class="tag">WRITE · WHEN PERSISTENCE IS PERMITTED</text>
-<text x="476" y="512" class="name">Lineage + published target profiles</text>
-<text x="476" y="540" class="mono">METADATA_DATA_LINEAGE</text>
-<text x="476" y="562" class="mono">METADATA_DATA_PROFILED</text>
-<text x="476" y="584" class="mono">METADATA_DATA_PROFILED_FREQUENCY</text>
-</g>
+<rect x="449" y="479" width="382" height="166" rx="7" class="state"/>
+<text x="467" y="504" class="name">Live publication</text>
+<text x="467" y="525" class="body">Lineage, target profiles and processing state</text>
+<text x="467" y="549" class="mono">METADATA_DATA_LINEAGE</text>
+<text x="467" y="573" class="mono">METADATA_DATA_PROFILED</text>
+<text x="467" y="597" class="mono">METADATA_DATA_PROFILED_FREQUENCY</text>
+<text x="467" y="621" class="mono">METADATA_PROCESSING_STATE</text>
 </a>
 <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py" target="_blank" rel="noopener">
-<g><rect x="864" y="460" width="368" height="144" rx="6" class="state"/>
-<text x="884" y="484" class="tag">CENTRAL TRACKING · TESTING AND LIVE</text>
-<text x="884" y="512" class="name">Recorded execution and Guardrail results</text>
-<text x="884" y="540" class="mono">METADATA_PIPELINE_RUN</text>
-<text x="884" y="562" class="mono">METADATA_GUARDRAIL_RESULTS</text>
-</g>
+<rect x="856" y="479" width="382" height="166" rx="7" class="state"/>
+<text x="874" y="504" class="name">Registry and run outcomes</text>
+<text x="874" y="525" class="body">Authority at setup; results on finalization</text>
+<text x="874" y="549" class="mono">METADATA_PIPELINE_REGISTRY</text>
+<text x="874" y="573" class="mono">METADATA_PIPELINE_RUN</text>
+<text x="874" y="597" class="mono">METADATA_GUARDRAIL_RESULTS</text>
 </a>
-<text x="48" y="632" class="body">A stopped run remains incomplete. Evaluation-only Testing does not publish; real Testing writes require explicit authorization.</text>
-<text x="48" y="656" class="body">FabricOps governs Data Contracts. Engineering and Microsoft Fabric own code integrity, CI/CD and deployment.</text>
+<text x="42" y="674" class="body">Test does not publish business data. Finalize commits the completed Test run and Guardrail results for review.</text>
+<text x="42" y="696" class="body">Live requires approved pipeline authority. Guardrails and profiling follow the selected Data Contracts.</text>
 </svg>
