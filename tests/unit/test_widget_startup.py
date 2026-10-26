@@ -58,6 +58,15 @@ def test_public_widget_displays_before_services_without_duplicate_reads(name, mo
         root = state["widget"]
         assert reads == ["METADATA_PIPELINE_RUN", "METADATA_DATA_AGREEMENT", "activation"]
     assert outputs[-1][1] is root
+    banner_updates = [
+        value.data
+        for kind, value, options in outputs
+        if kind == "update" and str(options.get("display_id", "")).endswith("-banner")
+    ]
+    assert banner_updates
+    assert root.fabricops_page_title in banner_updates[-1]
+    assert root.fabricops_page_description in banner_updates[-1]
+    assert ".fabricops-form.fabricops-started .fabricops-page-header { display:none; }" in root.children[0].value
     assert root.startup_timings["metadata_loading"] >= 0
     assert "interactive_ready" not in root.startup_timings
     root._view_count = 1
