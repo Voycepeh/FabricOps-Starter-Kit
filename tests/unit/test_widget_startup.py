@@ -41,11 +41,12 @@ def test_public_widget_displays_before_services_without_duplicate_reads(name, mo
         monkeypatch.setattr(module, "list_data_stewards", read("stewards", [steward_row()]))
         if "agreement" in name:
             monkeypatch.setattr(module, "list_data_agreements", read("agreements", []))
-        state = getattr(module, name)(spark=object())
+        monkeypatch.setattr(module, "get_spark_session", lambda *_args, **kwargs: object())
+        state = getattr(module, name)()
         root = state["container"]
         assert reads == (["agreements", "stewards"] if "agreement" in name else ["stewards"])
     elif name == "widget_data_contract":
-        monkeypatch.setattr(module, "get_spark_session", lambda *_: object())
+        monkeypatch.setattr(module, "get_spark_session", lambda *_, **_kwargs: object())
         monkeypatch.setattr(module.contracts, "list_contract_governance_state", read("catalogue", {"tables": [], "contracts": []}))
         state = module.widget_data_contract()
         root = state["_controls"]["page"]
@@ -54,6 +55,7 @@ def test_public_widget_displays_before_services_without_duplicate_reads(name, mo
         monkeypatch.setattr(module, "metadata_records", lambda table, **kw: read(table, [])())
         monkeypatch.setattr(module, "read_pipeline_authority", read("activation", (None, {})))
         monkeypatch.setattr(module, "environment_activation", lambda *_: {"pipelines": {}, "tables": {}, "revision": 0})
+        monkeypatch.setattr(module, "get_spark_session", lambda *_args, **kwargs: object())
         state = module.widget_activate_pipeline()
         root = state["widget"]
         assert reads == ["METADATA_PIPELINE_RUN", "METADATA_DATA_AGREEMENT", "activation"]
@@ -87,7 +89,7 @@ def test_pipeline_loading_precedes_initialization_and_collect(monkeypatch, outpu
     monkeypatch.setattr(shared, "resolve_pipeline_registration", lambda identity, **kwargs: {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "resolution": "Recovered"})
     monkeypatch.setattr(shared, "initialize_notebook", initialize)
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda **kw: (config, "dev", {}))
-    monkeypatch.setattr(shared, "get_spark_session", lambda: object())
+    monkeypatch.setattr(shared, "get_spark_session", lambda *_args, **_kwargs: object())
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *a, **kw: SimpleNamespace(collect=collect))
     token = shared._ACTIVE_PIPELINE.set(None)
     session = None

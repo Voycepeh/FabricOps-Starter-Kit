@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fabricops_kit.io.shared import get_spark_session
+
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
@@ -116,11 +118,14 @@ def pipeline_read(
     read_mode: str = "full",
     read_parameters: dict[str, Any] | None = None,
     target_table_id: str | None = None,
-    spark_session=None,
     verbose: bool = True,
     context=None,
 ) -> dict[str, Any]:
     """Read one governed pipeline source through the appropriate Fabric store.
+
+    Spark is resolved automatically from the existing execution session.
+    No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     ``pipeline_read`` is the governed pipeline-orchestration equivalent of the
     foundational :func:`read_lakehouse_table`, :func:`read_warehouse_table`,
@@ -168,8 +173,6 @@ def pipeline_read(
         Canonical governed target being prepared. It is accepted for both read
         modes so target flows can use one consistent call shape, and is required
         when ``read_mode="incremental"``.
-    spark_session : object, optional
-        Spark session forwarded to the selected foundational reader instead of relying on notebook-global ``spark``.
     context : dict, optional
         Call-scoped resolved contracts, rules, and Catalogue identities.
     verbose : bool, default=True
@@ -329,6 +332,8 @@ def pipeline_read(
         raise ValueError("Provide table_id or both store and table_name.")
 
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+    spark_session = get_spark_session(context=context)
+    context = {**context, "_pipeline_spark": spark_session}
     if table_id:
         identity = resolve_catalogue_table_identity(config, env, table_id, context=context)
     else:
@@ -385,7 +390,7 @@ def pipeline_read(
     observation = None
     scope: dict[str, Any] = {"type": "full", "first_run": False}
     if store_kind == "lakehouse":
-        complete_dataframe = read_lakehouse_table(str(identity["table_name"]), store=str(identity["store"]), schema=identity.get("schema"), spark_session=spark_session, context=io_context)
+        complete_dataframe = read_lakehouse_table(str(identity["table_name"]), store=str(identity["store"]), schema=identity.get("schema"), context={**(io_context or {}), "_spark_session": spark_session})
         if read_mode == "incremental":
             observation = capture_source_observation(
                 table_id=str(identity["table_id"]),
@@ -402,7 +407,7 @@ def pipeline_read(
         else:
             dataframe = complete_dataframe
     elif query is not None:
-        dataframe = read_warehouse_query(query, store=str(identity["store"]), spark_session=spark_session, context=io_context)
+        dataframe = read_warehouse_query(query, store=str(identity["store"]), context={**(io_context or {}), "_spark_session": spark_session})
     elif read_mode == "incremental":
         observation = capture_source_observation(
             table_id=str(identity["table_id"]),
@@ -417,16 +422,14 @@ def pipeline_read(
         dataframe = read_warehouse_query(
             _warehouse_incremental_query(identity, scope),
             store=str(identity["store"]),
-            spark_session=spark_session,
-            context=io_context,
+            context={**(io_context or {}), "_spark_session": spark_session},
         )
     else:
         dataframe = read_warehouse_table(
             str(identity["schema"]),
             str(identity["table_name"]),
             store=str(identity["store"]),
-            spark_session=spark_session,
-            context=io_context,
+            context={**(io_context or {}), "_spark_session": spark_session},
         )
 
     if has_contract and observation is None:

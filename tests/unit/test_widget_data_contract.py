@@ -303,7 +303,7 @@ def widget_runtime(monkeypatch):
         ),
     )
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (config, "dev", {}))
-    monkeypatch.setattr(module, "get_spark_session", lambda _session: object())
+    monkeypatch.setattr(module, "get_spark_session", lambda _session=None, *_args, **_kwargs: object())
     monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: ipywidgets)
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kwargs: {"tables": [catalogue[0]], "contracts": [contract]})
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)

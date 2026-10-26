@@ -145,6 +145,8 @@ def test_create_data_agent_is_the_only_public_data_agent_function():
 
 
 def test_create_data_agent_builds_context_and_instructions_internally(governed, monkeypatch):
+    from importlib import import_module
+    monkeypatch.setattr(import_module("fabricops_kit.data_agent.create_data_agent"), "get_spark_session", lambda *_args, **kwargs: object())
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda **_kwargs: (_config(), "prod", {"spark": None}))
     transport, calls = _responses(
         shared.FabricResponse(201, {}, {"id": "agent-1"}),

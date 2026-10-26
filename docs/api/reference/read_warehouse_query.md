@@ -23,7 +23,7 @@ Apply selective filters, projections, joins, and aggregations in the SQL query w
 <div class="reference-example-usage" markdown="1">
 
 ```python
-active_students_df = read_warehouse_query("SELECT student_id, programme_code, enrolment_status FROM dbo.student_enrolment WHERE enrolment_status = 'Active'", store="warehouse", spark_session=spark)
+active_students_df = read_warehouse_query("SELECT student_id, programme_code, enrolment_status FROM dbo.student_enrolment WHERE enrolment_status = 'Active'", store="warehouse")
 ```
 
 </div>
@@ -40,7 +40,6 @@ def read_warehouse_query(
     query: str,
     *,
     store: str='warehouse',
-    spark_session=None,
     context: dict[str, Any] | None=None,
     **options,
 ):
@@ -60,7 +59,6 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `query` | `str` | Yes | `—` | Read-only SQL ``SELECT`` statement, or a CTE beginning with ``WITH`` and ending in a ``SELECT``, to execute through the Fabric Warehouse SQL serving engine. |
 | `store` | `str` | No | `'warehouse'` | Logical Warehouse store key from ``00_env_config``. |
-| `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
 | `**options` | `—` | No | `—` | Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
 
@@ -114,6 +112,10 @@ Warehouse engine, and transfers only the resulting dataset to Spark.
 
 <div class="reference-docstring-intro" markdown="1">
 
+Spark is resolved automatically from the existing execution session.
+No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
 Use this instead of ``read_warehouse_table`` when filtering, projection,
 aggregation, joins, or row limits should be performed before data reaches
 Spark. The supplied SQL is pushed down to the Warehouse SQL serving engine,
@@ -148,7 +150,7 @@ Lakehouse Delta before Spark transformations.
 
 `fabricops_kit/io/read_warehouse_query.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L15-L107">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L15-L109">View on GitHub</a>
 </div>
 
 

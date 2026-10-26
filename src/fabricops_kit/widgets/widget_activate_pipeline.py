@@ -1,6 +1,8 @@
 """One Governance review for dependency-aware coordinated pipeline activation."""
 from __future__ import annotations
 
+from fabricops_kit.io.shared import get_spark_session
+
 import html
 import json
 from typing import Any
@@ -62,8 +64,12 @@ def _release_view(report, candidates):
     return result
 
 
-def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=None) -> dict[str, Any]:
+def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict[str, Any]:
     """Review one successful Testing run and coordinate all affected pipeline candidates.
+
+    Spark is resolved automatically from the existing execution session.
+    No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     Displays environment, current/proposed table contracts, writer ownership,
     affected pipelines, missing tests, conflicts and complete release readiness.
@@ -80,6 +86,7 @@ def widget_activate_pipeline(*, pipeline_id=None, spark_session=None, context=No
     refresh, review_release and perform_activation. Metadata errors raise or are
     displayed by button actions; opening the widget changes no approval.
     """
+    spark_session = get_spark_session(context=context)
     import ipywidgets as widgets
 
     startup = shared.WidgetStartup("Pipeline Activation")

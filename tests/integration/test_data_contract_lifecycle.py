@@ -5,6 +5,8 @@ are real. Only Fabric storage/Delta transport, schedule discovery, and profiling
 are replaced with local boundaries. These tests do not access a live Lakehouse.
 """
 
+from tests.helpers import call_with_spark
+
 from copy import deepcopy
 from datetime import datetime, timedelta
 import importlib
@@ -223,7 +225,7 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
         "column_id": f"{table_id}/email", "enrichment_type": "Description", "value": "Contact email"}]
     contracts.save_contract_draft(draft=draft, payload=payload, config=state.config, env="dev", spark_session=state.spark)
     widget_module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
-    widget = widget_module.widget_data_contract(table_id=table_id, contract_version=1, spark_session=state.spark, context=state.context)
+    widget = call_with_spark(state.spark, widget_module.widget_data_contract, table_id=table_id, contract_version=1,  context=state.context)
     widget["_controls"]["open"].click()
     assert widget["current"] is not None, widget.get("message")
     assert widget["_controls"]["grain_enabled"].value is (not schema_only)
@@ -232,7 +234,7 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
     assert len(widget["current"]["guardrails"]) == (1 if schema_only else 5 if source else 4)
     widget["_controls"]["table_description"].value = "Authored and hydrated"
     widget["save_data_contract"](return_to_selector_after=False)
-    widget = widget_module.widget_data_contract(table_id=table_id, contract_version=1, spark_session=state.spark, context=state.context)
+    widget = call_with_spark(state.spark, widget_module.widget_data_contract, table_id=table_id, contract_version=1,  context=state.context)
     widget["_controls"]["open"].click()
     assert widget["current"] is not None, widget.get("message")
     assert widget["_controls"]["table_description"].value == "Authored and hydrated"
@@ -245,8 +247,8 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
 def _activation(state, testing_results=()):
     """Open whole-pipeline Governance review with the real headless service."""
     module = importlib.import_module("fabricops_kit.widgets.widget_activate_pipeline")
-    return module.widget_activate_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52",
-        spark_session=state.spark, context=state.context)
+    return call_with_spark(state.spark, module.widget_activate_pipeline, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52",
+         context=state.context)
 
 
 def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):

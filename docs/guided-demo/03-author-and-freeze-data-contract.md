@@ -219,7 +219,7 @@ The frozen version is an immutable data contract and becomes the exact candidate
     ```python
     from fabricops_kit.data_contract.migrate_contract_definitions import migrate_contract_definitions
 
-    report = migrate_contract_definitions(config=CONFIG, env=ENV, spark_session=spark)
+    report = migrate_contract_definitions(config=CONFIG, env=ENV)
     report["conflicts"], report["drafts"]
     ```
 
@@ -230,7 +230,7 @@ The frozen version is an immutable data contract and becomes the exact candidate
 
     ```python
     result = migrate_contract_definitions(
-        config=CONFIG, env=ENV, spark_session=spark, dry_run=False,
+        config=CONFIG, env=ENV, dry_run=False,
         reviewed_snapshot=report["snapshot_fingerprint"], authoring_paused=True,
     )
     ```

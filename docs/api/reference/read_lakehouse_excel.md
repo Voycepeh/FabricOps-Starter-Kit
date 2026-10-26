@@ -23,7 +23,7 @@ Use when reading .xlsx files from a configured Fabric-resolved path, especially 
 <div class="reference-example-usage" markdown="1">
 
 ```python
-mapping_df = read_lakehouse_excel(relative_path="reference/faculty_mapping.xlsx", sheet_name=0, spark_session=spark)
+mapping_df = read_lakehouse_excel(relative_path="reference/faculty_mapping.xlsx", sheet_name=0, )
 ```
 
 </div>
@@ -41,7 +41,6 @@ def read_lakehouse_excel(
     *,
     store: str='Bronze',
     sheet_name=0,
-    spark_session=None,
     context: dict[str, Any] | None=None,
     **read_excel_kwargs,
 ):
@@ -62,7 +61,6 @@ Required describes the Python signature. An optional parameter may still be need
 | `relative_path` | `str` | Yes | `—` | Excel file path resolved by the Fabric resolver. |
 | `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from ``00_env_config``. |
 | `sheet_name` | `str or int` | No | `0` | Worksheet name or index to read. |
-| `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
 | `**read_excel_kwargs` | `—` | No | `—` | Additional keyword arguments passed to ``pandas.read_excel``. |
 
@@ -100,6 +98,16 @@ when parsing raises an error.
 
 </div>
 
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+Spark is resolved automatically from the existing execution session.
+No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
+</div>
+
 ## See also
 
 - [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
@@ -109,7 +117,7 @@ when parsing raises an error.
 
 `fabricops_kit/io/read_lakehouse_excel.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L56">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L58">View on GitHub</a>
 </div>
 
 

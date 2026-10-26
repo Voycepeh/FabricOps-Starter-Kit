@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tests.helpers import call_with_spark
+
 from types import SimpleNamespace
 import ast
 import inspect
@@ -380,8 +382,8 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row(), steward_row(steward_id="22222222-2222-4222-8222-222222222222")])
     monkeypatch.setattr(steward_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row(custom_fields_json='{"group":"Shared Services"}')])
 
-    agreement_controls = agreement_widget.widget_render_data_agreement(spark=spark)
-    steward_controls = steward_widget.widget_render_data_steward(spark=spark)
+    agreement_controls = call_with_spark(spark, agreement_widget.widget_render_data_agreement, )
+    steward_controls = call_with_spark(spark, steward_widget.widget_render_data_steward, )
 
     assert "identity_context" not in agreement_controls
     assert agreement_controls["provider_steward_selector"].options
@@ -451,7 +453,7 @@ def test_steward_widget_blocks_missing_required_fields_before_persistence(monkey
         lambda **kwargs: pytest.fail("missing required fields must not reach persistence"),
     )
 
-    controls = steward_widget.widget_render_data_steward(spark=object())
+    controls = call_with_spark(object(), steward_widget.widget_render_data_steward, )
     assert controls["save_button"].disabled is True
     controls["fields"]["steward_name"].value = "  "
     controls["fields"]["contact"].value = None
@@ -504,7 +506,7 @@ def test_agreement_widget_always_renders_mandatory_stewards(monkeypatch):
     monkeypatch.setattr(agreement_widget, "list_all_data_agreement_rows", lambda *args, **kwargs: [])
     monkeypatch.setattr(agreement_widget, "write_widget_metadata_row", lambda **kwargs: pytest.fail("must not write"))
 
-    controls = agreement_widget.widget_render_data_agreement(spark=object())
+    controls = call_with_spark(object(), agreement_widget.widget_render_data_agreement, )
 
     assert controls["provider_steward_selector"].options
     assert controls["recipient_steward_selector"].options
@@ -536,7 +538,7 @@ def test_agreement_widget_disables_save_until_two_active_stewards_exist(monkeypa
     monkeypatch.setattr(agreement_widget, "list_data_agreements", lambda *args, **kwargs: [])
     monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: stewards)
 
-    controls = agreement_widget.widget_render_data_agreement(spark=object())
+    controls = call_with_spark(object(), agreement_widget.widget_render_data_agreement, )
 
     assert controls["container"] is not None
     assert controls["save_button"].disabled is save_disabled
@@ -555,7 +557,7 @@ def test_agreement_widget_refresh_updates_steward_prerequisite(monkeypatch):
     monkeypatch.setattr(agreement_widget, "list_data_agreements", lambda *args, **kwargs: [])
     monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: list(active_rows))
 
-    controls = agreement_widget.widget_render_data_agreement(spark=object())
+    controls = call_with_spark(object(), agreement_widget.widget_render_data_agreement, )
     active_rows.append(second)
     controls["provider_steward_selector"].value = steward_row()["steward_id"]
     controls["recipient_steward_selector"].value = second["steward_id"]

@@ -17,17 +17,13 @@ def check_dq(
     dataset_name: str = "",
     run_id: str = "",
     row_identity_columns: list[str] | None = None,
-    spark_session=None,
     verbose: bool = True,
     context=None,
     diagnostics="sample",
 ) -> dict:
     """Evaluate the resolved contract stage and return its continuation decision."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
-    if spark_session is None:
-        spark_session = getattr(dataframe, "sparkSession", None)
-    if spark_session is None:
-        spark_session = get_spark_session()
+    spark_session = get_spark_session(dataframe=dataframe, context=context)
     contract = resolve_pipeline_data_contract(
         config,
         env,

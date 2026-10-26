@@ -65,7 +65,7 @@ def create_contract_draft(
     catalogue_rows = row_dicts(read_lakehouse_table(
         "METADATA_DATA_CATALOGUE", store=store,
         schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
-        spark_session=spark_session, context=runtime_context,
+        context={**(runtime_context or {}), "_spark_session": spark_session},
     ))
     active_catalogue = [
         row for row in catalogue_rows
@@ -88,7 +88,7 @@ def create_contract_draft(
 
     rows = row_dicts(read_lakehouse_table(
         DATA_CONTRACT_TABLE, store=store, schema=schema,
-        spark_session=spark_session, context=runtime_context,
+        context={**(runtime_context or {}), "_spark_session": spark_session},
     ))
     owned = [
         row for row in rows
@@ -417,7 +417,7 @@ def _confirm_contract_mutation(
         _scoped_rows(
             read_lakehouse_table(
                 DATA_CONTRACT_TABLE, store=store, schema=schema,
-                spark_session=spark_session, context=context,
+                context={**(context or {}), "_spark_session": spark_session},
             ),
             f"contract_id = {_sql_literal(expected['contract_id'])}",
             f"contract_version = {int(expected['contract_version'])}",
@@ -734,7 +734,7 @@ def get_contract_authoring_state(
         contract_frame = read_lakehouse_table(
             DATA_CONTRACT_TABLE, store="Metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-            context=context, spark_session=spark_session,
+            context={**(context or {}), "_spark_session": spark_session},
         )
         matches = contract_version_records(
             _scoped_rows(
@@ -764,7 +764,7 @@ def get_contract_authoring_state(
     catalogue_frame = read_lakehouse_table(
         "METADATA_DATA_CATALOGUE", store="Metadata",
         schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
-        context=context, spark_session=spark_session,
+        context={**(context or {}), "_spark_session": spark_session},
     )
     catalogue_rows = _scoped_rows(
         catalogue_frame,
@@ -814,7 +814,7 @@ def list_contract_governance_state(
         read_lakehouse_table(
             "METADATA_DATA_CATALOGUE", store="Metadata",
             schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
-            context=context, spark_session=spark_session,
+            context={**(context or {}), "_spark_session": spark_session},
         ),
         f"environment_name = {_sql_literal(env)}",
     )
@@ -822,7 +822,7 @@ def list_contract_governance_state(
         read_lakehouse_table(
             DATA_CONTRACT_TABLE, store="Metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-            context=context, spark_session=spark_session,
+            context={**(context or {}), "_spark_session": spark_session},
         ),
     )
     tables = _latest([
@@ -847,7 +847,7 @@ def get_contract_review_state(
         read_lakehouse_table(
             DATA_CONTRACT_TABLE, store="Metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-            context=_metadata_io_context(config, env), spark_session=spark_session,
+            context={**(_metadata_io_context(config, env) or {}), "_spark_session": spark_session},
         ),
         f"contract_id = {_sql_literal(identity)}",
         f"contract_version = {version}",
@@ -892,7 +892,7 @@ def get_table_runtime_context(
             frame = read_lakehouse_table(
                 table_name, store="Metadata",
                 schema=metadata_table_physical_schema(config, table_name),
-                context=context, spark_session=spark_session,
+                context={**(context or {}), "_spark_session": spark_session},
             )
         except Exception as exc:
             if any(
@@ -970,7 +970,7 @@ def get_table_runtime_context(
             frequency_frame = read_lakehouse_table(
                 "METADATA_DATA_PROFILED_FREQUENCY", store="Metadata",
                 schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED_FREQUENCY"),
-                context=context, spark_session=spark_session,
+                context={**(context or {}), "_spark_session": spark_session},
             )
             frequency_rows = row_dicts(_scoped_rows(
                 frequency_frame,
@@ -1066,7 +1066,7 @@ def get_column_profile_context(
         read_lakehouse_table(
             "METADATA_DATA_PROFILED", store="Metadata",
             schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED"),
-            context=context, spark_session=spark_session,
+            context={**(context or {}), "_spark_session": spark_session},
         ),
         f"table_id = {_sql_literal(table_id)}",
         f"column_id = {_sql_literal(column_id)}",
@@ -1095,7 +1095,7 @@ def get_column_profile_context(
             read_lakehouse_table(
                 "METADATA_DATA_PROFILED_FREQUENCY", store="Metadata",
                 schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED_FREQUENCY"),
-                context=context, spark_session=spark_session,
+                context={**(context or {}), "_spark_session": spark_session},
             ),
             *frequency_filters,
         )

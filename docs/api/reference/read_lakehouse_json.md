@@ -23,7 +23,7 @@ Use when reading JSON files or folders from a configured Lakehouse Files path.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-df = read_lakehouse_json(relative_path="incoming/events.json", store="Bronze", multiLine=True, spark_session=spark)
+df = read_lakehouse_json(relative_path="incoming/events.json", store="Bronze", multiLine=True)
 ```
 
 </div>
@@ -41,7 +41,6 @@ def read_lakehouse_json(
     relative_path: str,
     *,
     store: str='Bronze',
-    spark_session=None,
     context: dict[str, Any] | None=None,
     **options,
 ):
@@ -61,7 +60,6 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `relative_path` | `str` | Yes | `—` | JSON file or folder path underneath the configured Lakehouse ``Files`` area. Root-level and nested paths are supported. |
 | `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key configured by ``00_env_config``. |
-| `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
 | `**options` | `—` | No | `—` | Options forwarded unchanged to Spark's JSON reader, such as ``multiLine``, ``mode``, ``columnNameOfCorruptRecord``, ``dateFormat``, ``timestampFormat``, ``encoding``, ``recursiveFileLookup``, ``pathGlobFilter``, ``primitivesAsString``, ``allowComments``, ``allowSingleQuotes``, and ``allowUnquotedFieldNames``. |
 
@@ -117,6 +115,10 @@ does not iterate through files or eagerly validate or collect the data.
 
 <div class="reference-docstring-intro" markdown="1">
 
+Spark is resolved automatically from the existing execution session.
+No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
 FabricOps resolves ``store`` and ``relative_path`` to the configured
 Lakehouse ``Files`` area, then delegates JSON parsing to Spark's native
 JSON reader. Use ``read_lakehouse_table`` instead for managed Delta tables
@@ -133,7 +135,7 @@ in the Lakehouse ``Tables`` area.
 
 `fabricops_kit/io/read_lakehouse_json.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_json.py#L10-L71">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_json.py#L10-L73">View on GitHub</a>
 </div>
 
 

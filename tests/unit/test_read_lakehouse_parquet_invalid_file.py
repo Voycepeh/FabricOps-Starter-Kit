@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tests.helpers import call_with_spark
+
 import pytest
 
 from fabricops_kit.config import FabricStore, PathConfig
@@ -48,10 +50,9 @@ def test_invalid_parquet_footer_skips_tsus_fallback():
     spark = Spark()
 
     with pytest.raises(RuntimeError, match="CANNOT_READ_FILE_FOOTER"):
-        read_lakehouse_parquet(
+        call_with_spark(spark, read_lakehouse_parquet,
             "Demo/orders.parquet",
             store="Bronze",
-            spark_session=spark,
             verbose=False,
             context=_context(),
         )

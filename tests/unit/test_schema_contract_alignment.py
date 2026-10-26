@@ -163,7 +163,8 @@ def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, differ
         "additional": [("id", "bigint"), ("extra", "string")],
     }[difference])
     blocking = difference in {"missing", "datatype"}
-    arguments = dict(dataframe=dataframe, table_id="orders", spark_session=spark, verbose=False)
+    arguments = dict(dataframe=dataframe, table_id="orders", verbose=False)
+    monkeypatch.setattr(module, "get_spark_session", lambda **kwargs: spark)
     result = module.check_schema(**arguments)
     assert len(writes) == 1
     frame, table, routing = writes[0]

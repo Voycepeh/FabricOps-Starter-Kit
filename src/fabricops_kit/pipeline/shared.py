@@ -479,7 +479,7 @@ def persist_lineage_participation(
         from delta.tables import DeltaTable
     except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
         raise RuntimeError("Delta Lake merge support is required for idempotent METADATA_DATA_LINEAGE writes.") from exc
-    spark = get_spark_session()
+    spark = get_spark_session(context=resolved_context)
     frame = spark.createDataFrame([record], schema=metadata_table_schema_registry()[_LINEAGE_TABLE])
     _store, _table, _schema, path = resolve_configured_lakehouse_table(
         "Metadata",
@@ -1259,7 +1259,7 @@ def _physical_target_has_publication(
             _store, _table, _schema, path = resolve_configured_lakehouse_table(
                 identity["store"], identity["table_name"], identity.get("schema"), context=context,
             )
-            spark = get_spark_session()
+            spark = get_spark_session(context=context)
             if not DeltaTable.isDeltaTable(spark, path):
                 return False
             attested = DeltaTable.forPath(spark, path).history().where(
@@ -1315,7 +1315,7 @@ def _merge_source_observation_records(
         raise RuntimeError(
             "Delta Lake merge support is required for idempotent Source Observation commits."
         ) from exc
-    spark = get_spark_session()
+    spark = get_spark_session(context=context)
     frame = spark.createDataFrame(records, schema=metadata_table_schema_registry()[_PROCESSING_STATE_TABLE])
     _store, _table, _schema, path = resolve_configured_lakehouse_table(
         "Metadata", _PROCESSING_STATE_TABLE,
@@ -1589,8 +1589,7 @@ def check_source_drift_for_target(
             _PROCESSING_STATE_TABLE,
             store="Metadata",
             schema=metadata_table_physical_schema(config, _PROCESSING_STATE_TABLE),
-            spark_session=spark_session,
-            context=context,
+            context={**(context or {}), "_spark_session": spark_session},
         )
         history = _recover_completed_source_observations(
             history, config=config, env=env, context=context,
@@ -1864,7 +1863,7 @@ def _build_token_mapping(dataframe, *, column_name, column_id, table_id, existin
             raise ValueError("Provision the restricted Sensitive Data token mapping Delta table before running this pipeline.")
         vault = DeltaTable.forPath(dataframe.sparkSession, path)
         saved = read_lakehouse_table(target["table_name"], store=target["store"], schema=target.get("schema"),
-                                    spark_session=dataframe.sparkSession, context=io_context)
+                                    context={**(io_context or {}), "_spark_session": dataframe.sparkSession})
         if not set(required + ["original_data_type"]) <= set(saved.columns):
             raise ValueError("Token mapping store requires table_id, column_id, original_value, token_value and original_data_type.")
         if any(saved.schema[name].dataType.simpleString() != "string" for name in required + ["original_data_type"]):
@@ -1895,7 +1894,7 @@ def _build_token_mapping(dataframe, *, column_name, column_id, table_id, existin
                     values={name: f"source.`{name}`" for name in required + ["original_data_type"]}
                 ).execute()
                 saved = read_lakehouse_table(target["table_name"], store=target["store"], schema=target.get("schema"),
-                                            spark_session=dataframe.sparkSession, context=io_context).where(
+                                            context={**(io_context or {}), "_spark_session": dataframe.sparkSession}).where(
                     (F.col("table_id") == table_id) & (F.col("column_id") == column_id)
                 ).select(*required)
                 canonical = originals.join(saved, "original_value", "left").withColumn("original_data_type", F.lit(original_type)).cache()
@@ -2692,8 +2691,7 @@ def resolve_data_contract_version(
             DATA_CONTRACT_TABLE,
             store="Metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-            spark_session=spark_session,
-            context=context or {"config": config, "env": env},
+            context={**(context or {"config": config, "env": env}), "_spark_session": spark_session},
         )
     except Exception as exc:
         if is_table_not_found_error(exc):
@@ -2865,7 +2863,7 @@ def resolve_catalogue_table_id(
     frame = read_lakehouse_table(
         CATALOGUE_TABLE, store="Metadata",
         schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        spark_session=spark_session, context={"config": config, "env": env},
+        context={"config": config, "env": env, "_spark_session": spark_session},
     )
     expected = tuple(str(value or "").strip().lower() for value in (store_type, layer, schema_name, table_name))
     matches = []
@@ -2909,10 +2907,10 @@ def resolve_catalogue_table_identity(
         CATALOGUE_TABLE,
         store="Metadata",
         schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        spark_session=spark_session,
         context={
             **(dict(context) if context is not None else {"config": config, "env": env}),
             "_fabricops_suppress_io_log": True,
+            "_spark_session": spark_session,
         },
     )
     matches = []
@@ -5252,8 +5250,7 @@ def _observe_lakehouse(
         table_name,
         store=store,
         schema=schema,
-        spark_session=spark_session,
-        context=context,
+        context={**(context or {}), "_spark_session": spark_session},
     )
     return _observe_dataframe(frame, partition_column, change_column, watermark_only=watermark_only)
 
@@ -5342,7 +5339,7 @@ def capture_source_observation(
 ) -> Any:
     """Capture independently configured current-run source Guardrail evidence."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
-    spark = spark_session if spark_session is not None else get_spark_session()
+    spark = get_spark_session(spark_session, dataframe=dataframe, context=context)
     # An explicit physical source identity does not require Catalogue activation.
     # Revalidate it against this environment rather than trusting global cache state.
     governed_source = (
@@ -5417,7 +5414,7 @@ def capture_source_observation(
             )
             latest_value = _max_column_value(
                 read_warehouse_query(
-                    query, store=store_key, spark_session=spark, context=context
+                    query, store=store_key, context={**(context or {}), "_spark_session": spark}
                 ),
                 "latest_value",
             )
@@ -5427,8 +5424,7 @@ def capture_source_observation(
                     table_value,
                     store=store_key,
                     schema=schema_value,
-                    spark_session=spark,
-                    context=context,
+                    context={**(context or {}), "_spark_session": spark},
                 )
             latest_value = _max_column_value(freshness_frame, freshness_column)
         _CURRENT_FRESHNESS_EVIDENCE[
@@ -5454,8 +5450,7 @@ def capture_source_observation(
                         schema_value, table_value, partition_column, change_column, watermark_only=watermark_only
                     ),
                     store=store_key,
-                    spark_session=spark,
-                    context=context,
+                    context={**(context or {}), "_spark_session": spark},
                 )
             )
         else:
@@ -5712,7 +5707,7 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
 def _read_pipeline_run_rows(plan, *, spark_session=None):
     frame = read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
         schema=metadata_table_physical_schema(plan.runtime_context["config"], "METADATA_PIPELINE_RUN"),
-        spark_session=spark_session, context=plan.runtime_context)
+        context={**(plan.runtime_context or {}), "_spark_session": spark_session})
     return [_row_to_dict(row) for row in frame.filter(
         "`run_id` = '" + plan.plan_id.replace("'", "''") + "'").limit(2).collect()]
 
@@ -5722,7 +5717,7 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
     from delta.exceptions import ConcurrentAppendException, ConcurrentWriteException, ConcurrentDeleteReadException, ConcurrentDeleteDeleteException
     from pyspark.sql.types import StructField, StructType
 
-    spark = get_spark_session(spark_session)
+    spark = get_spark_session(spark_session, context=plan.runtime_context)
     table = "METADATA_PIPELINE_RUN"
     schema = metadata_table_schema_registry()[table]
     physical = validate_pipeline_run(row)
@@ -5815,7 +5810,7 @@ def publish_pipeline_testing_results(plan, *, spark_session=None):
     if rows:
         from delta.tables import DeltaTable
         table = "METADATA_GUARDRAIL_RESULTS"
-        spark = get_spark_session(spark_session)
+        spark = get_spark_session(spark_session, context=plan.runtime_context)
         frame = spark.createDataFrame([coerce_metadata_row_types(table, {**row, **audit}) for row in rows],
             schema=metadata_table_schema_registry()[table])
         _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", table,
@@ -6345,7 +6340,7 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None, config
                 with startup.phase("metadata_loading", "Loading frozen Data Contracts…"):
                     rows = read_lakehouse_table("METADATA_DATA_CONTRACT", store="Metadata",
                         schema=metadata_table_physical_schema(config, "METADATA_DATA_CONTRACT"),
-                        spark_session=spark, context=runtime).collect()
+                        context={**(runtime or {}), "_spark_session": spark}).collect()
                     session.frozen_rows = [_row_to_dict(row) for row in rows if str(_row_to_dict(row).get("status", "")).lower() == "frozen"]
                 for table_id in sorted({row["table_id"] for row in session.frozen_rows}):
                     versions = [row for row in session.frozen_rows if row["table_id"] == table_id]
@@ -6472,8 +6467,8 @@ def profiling_completion_history(table_id, *, context, spark_session=None, activ
     key, _descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
     def frame(table):
         return read_lakehouse_table(table, store="Metadata",
-            schema=metadata_table_physical_schema(config, table), context=context,
-            spark_session=spark_session).filter(F.col("environment_name") == env)
+            schema=metadata_table_physical_schema(config, table),
+            context={**(context or {}), "_spark_session": spark_session}).filter(F.col("environment_name") == env)
     events = (frame("METADATA_PIPELINE_RUN")
         .select(F.explode("profiling").alias("event"))
         .select("event.*")
@@ -6800,7 +6795,7 @@ def _warehouse_columns(identity: Mapping[str, Any], *, spark_session: Any, conte
     )
     rows = []
     for row in read_warehouse_query(
-        query, store=str(identity["store"]), spark_session=spark_session, context=context
+        query, store=str(identity["store"]), context={**(context or {}), "_spark_session": spark_session}
     ).collect():
         value = row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
         normalized = {str(key).upper(): item for key, item in value.items()}
@@ -6943,7 +6938,7 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
         raise ValueError("No eligible non-technical columns found for metadata profiling.")
     wide_profile = read_warehouse_query(
         _warehouse_statistical_query(identity, profile_columns),
-        store=str(identity["store"]), spark_session=spark_session, context=io_context,
+        store=str(identity["store"]), context={**(io_context or {}), "_spark_session": spark_session},
     )
     percentile_values = {}
     for index, (name, _canonical_type, sql_type) in enumerate(profile_columns):
@@ -6951,7 +6946,7 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
             continue
         percentile_rows = read_warehouse_query(
             _warehouse_percentile_query(identity, column_name=name, prefix=f"C{index}"),
-            store=str(identity["store"]), spark_session=spark_session, context=io_context,
+            store=str(identity["store"]), context={**(io_context or {}), "_spark_session": spark_session},
         ).collect()
         if percentile_rows:
             row = percentile_rows[0]
@@ -6981,7 +6976,7 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
         selected_metadata = [column for column in all_columns if column[0] in selected_set]
         frequency = read_warehouse_query(
             _warehouse_frequency_query(identity, selected_metadata, top_n=top_n),
-            store=str(identity["store"]), spark_session=spark_session, context=io_context,
+            store=str(identity["store"]), context={**(io_context or {}), "_spark_session": spark_session},
         ).select(*FREQUENCY_PROFILE_COLUMNS)
     return profile, frequency, all_columns
 
@@ -7123,8 +7118,7 @@ def _warehouse_profile_key_candidates(
     values = read_warehouse_query(
         evidence_query,
         store=str(identity["store"]),
-        spark_session=spark_session,
-        context=io_context,
+        context={**(io_context or {}), "_spark_session": spark_session},
     ).collect()
     if not values:
         return []
@@ -7173,8 +7167,7 @@ def _warehouse_profile_key_candidates(
             values = read_warehouse_query(
                 query,
                 store=str(identity["store"]),
-                spark_session=spark_session,
-                context=io_context,
+                context={**(io_context or {}), "_spark_session": spark_session},
             ).collect()
             if values:
                 value = values[0]
@@ -7829,6 +7822,7 @@ def execute_table_profile(
     selected_frequency_columns = [] if not frequency_enabled else (None if frequency_columns is None else list(frequency_columns))
     if frequency_top_n is not None and frequency_top_n <= 0:
         raise ValueError("frequency_top_n must be greater than zero when supplied.")
+    spark_session = get_spark_session(spark_session, dataframe=dataframe, context=context)
     identity = None
     config = env = None
     warehouse_fields = None
@@ -7855,7 +7849,7 @@ def execute_table_profile(
         )
         if dataframe is None:
             if store_kind == "lakehouse":
-                dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), spark_session=spark_session, context=context)
+                dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context={**(context or {}), "_spark_session": spark_session})
                 profile_input_label = "complete persisted Lakehouse table"
             else:
                 warehouse_physical = True
@@ -7873,10 +7867,6 @@ def execute_table_profile(
         emit("1. Identity → DataFrame only; no governed table_id")
         emit("2. Profiling backend → PySpark")
 
-    if spark_session is None and dataframe is not None:
-        spark_session = dataframe.sparkSession
-    if spark_session is None:
-        spark_session = get_spark_session()
     profile_metrics = {"row_count": None}
     profile_key_candidates: list[dict[str, Any]] = []
     if warehouse_physical:

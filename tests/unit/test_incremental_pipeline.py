@@ -14,6 +14,13 @@ from fabricops_kit.pipeline import shared
 read_module = import_module("fabricops_kit.pipeline.pipeline_read")
 
 
+@pytest.fixture(autouse=True)
+def resolved_reader_session(monkeypatch):
+    """Provide a private session for tests with mocked physical readers."""
+    session = object()
+    monkeypatch.setattr(read_module, "get_spark_session", lambda *_args, **kwargs: session)
+
+
 class Frame:
     """Small collectable test frame."""
 

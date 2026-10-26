@@ -159,8 +159,8 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     assert 'mode="explore"' not in source
     assert 'store="Metadata"' not in source
     assert 'TABLE_ID = table_selection["table_id"]' not in source
-    assert source.count("widget_data_contract(spark_session=spark)") == 1
-    assert source.count("widget_activate_pipeline(spark_session=spark)") == 1
+    assert source.count("widget_data_contract()") == 1
+    assert source.count("widget_activate_pipeline()") == 1
     assert "Data Steward" in source
     assert "Data Agreement" in source
     assert "**Table**, **Columns**, and **Review**" in source
@@ -513,3 +513,17 @@ def test_living_templates_and_demos_use_setup_instead_of_run_magic():
     for path in paths:
         source = path.read_text(encoding='utf-8')
         assert '%run 00_env_config' not in source, path.name
+
+
+
+def test_current_notebook_examples_omit_explicit_spark_arguments():
+    """Keep living templates and demo inspection cells on the automatic API."""
+    import json
+    import re
+    from pathlib import Path
+    paths = list(Path("templates/notebooks").glob("*.ipynb"))
+    paths += list(Path("templates/DemoData").glob("02*.ipynb"))
+    for path in paths:
+        notebook = json.loads(path.read_text())
+        for cell in notebook["cells"]:
+            assert not re.search(r"\b(?:spark|spark_session)\s*=\s*spark\b", "".join(cell["source"])), path

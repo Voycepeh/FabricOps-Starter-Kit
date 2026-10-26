@@ -22,7 +22,7 @@ Use as the primary UX for preparing and freezing one governed table’s next Dat
 <div class="reference-example-usage" markdown="1">
 
 ```python
-state = widget_data_contract(table_id="table-orders", spark_session=spark)
+state = widget_data_contract(table_id="table-orders")
 state["refresh_manifest"]()
 ```
 
@@ -40,7 +40,6 @@ def widget_data_contract(
     *,
     table_id: str | None=None,
     contract_version: int | None=None,
-    spark_session: Any=None,
     context: Any=None,
 ) -> dict[str, Any]:
 ```
@@ -59,7 +58,6 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `table_id` | `str \| None` | No | `None` | Initial canonical governed table identity. If omitted, select it in the widget. |
 | `contract_version` | `int \| None` | No | `None` | Initial exact lifecycle version. If omitted, the newest version is selected. |
-| `spark_session` | `Any` | No | `None` | Active Microsoft Fabric Spark session. The configured session is used when omitted. |
 | `context` | `Any` | No | `None` | FabricOps runtime context normally established by ``00_env_config``. |
 
 </div>
@@ -132,6 +130,16 @@ Treatment failures always block.
 
 </div>
 
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+Spark is resolved automatically from the existing execution session.
+No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
+</div>
+
 ## See also
 
 No related guides documented.
@@ -141,7 +149,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:647`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L647-L5980">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L647-L5982">View on GitHub</a>
 </div>
 
 

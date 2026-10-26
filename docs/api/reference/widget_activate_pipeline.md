@@ -26,12 +26,7 @@ Example usage not documented yet.
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_activate_pipeline(
-    *,
-    pipeline_id=None,
-    spark_session=None,
-    context=None,
-) -> dict[str, Any]:
+def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict[str, Any]
 ```
 
 </div>
@@ -47,7 +42,6 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `pipeline_id` | `—` | No | `None` | Not documented yet |
-| `spark_session` | `—` | No | `None` | Not documented yet |
 | `context` | `—` | No | `None` | Not documented yet |
 
 </div>
@@ -63,6 +57,10 @@ Not documented yet
 ## Behavior and scope
 
 <div class="reference-docstring-intro" markdown="1">
+
+Spark is resolved automatically from the existing execution session.
+No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
 
 Displays environment, current/proposed table contracts, writer ownership,
 affected pipelines, missing tests, conflicts and complete release readiness.
@@ -88,9 +86,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_activate_pipeline.py:65`
+`fabricops_kit/widgets/widget_activate_pipeline.py:67`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L65-L223">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L67-L230">View on GitHub</a>
 </div>
 
 

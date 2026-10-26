@@ -36,8 +36,7 @@ def runtime(monkeypatch):
             raise OSError("final commit acknowledgement lost")
         plan.evidence["persisted_run_row"] = copy.deepcopy(record)
     monkeypatch.setattr(shared, "_merge_pipeline_run_row", merge)
-    monkeypatch.setattr(shared, "get_spark_session", lambda supplied=None: SimpleNamespace(conf=SimpleNamespace(get=lambda name: "test-setting"),
-        createDataFrame=lambda rows, schema=None: SimpleNamespace(row=rows[0])))
+    monkeypatch.setattr(shared, "get_spark_session", lambda supplied=None, *_args, **_kwargs: SimpleNamespace(conf=SimpleNamespace(get=lambda name: 'test-setting'), createDataFrame=lambda rows, schema=None: SimpleNamespace(row=rows[0])))
     monkeypatch.setattr(shared, "resolve_configured_lakehouse_table", lambda store, table, schema, **kw:
                         (store, table, schema, f"configured/{schema}/{table}"))
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kw: {})

@@ -3,6 +3,8 @@
 # ruff: noqa: D103
 from __future__ import annotations
 
+from tests.helpers import call_with_spark
+
 import importlib
 import inspect
 from datetime import UTC, datetime
@@ -52,8 +54,8 @@ def test_source_drift_resolves_source_processing(monkeypatch) -> None:
         "check_source_drift_for_target",
         lambda **kwargs: calls.append(kwargs) or {"can_continue": True},
     )
-    result = check_source_drift(
-        "source-a", target_table_id="target-a", spark_session="spark", verbose=False
+    result = call_with_spark("spark", check_source_drift,
+        "source-a", target_table_id="target-a",  verbose=False
     )
     assert result["can_continue"] is True
     assert calls == [
@@ -107,8 +109,8 @@ def test_source_drift_uses_contract_strategy_for_unmanaged_source(monkeypatch) -
         lambda **kwargs: calls.append(kwargs) or {"can_continue": True},
     )
 
-    result = check_source_drift(
-        "source-a", target_table_id="target-a", spark_session="spark", verbose=False
+    result = call_with_spark("spark", check_source_drift,
+        "source-a", target_table_id="target-a",  verbose=False
     )
 
     assert result["can_continue"] is True
@@ -140,8 +142,8 @@ def test_source_drift_requires_contract_strategy_for_unmanaged_source(monkeypatc
     )
 
     with pytest.raises(ValueError, match="selected Data Contract has no valid processing definition"):
-        check_source_drift(
-            "source-a", target_table_id="target-a", spark_session="spark", verbose=False
+        call_with_spark("spark", check_source_drift,
+            "source-a", target_table_id="target-a",  verbose=False
         )
 
 
@@ -193,7 +195,7 @@ def _run_freshness(monkeypatch, *, freshness_column: str, drift_column: str | No
     monkeypatch.setattr(freshness, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(freshness, "resolve_pipeline_data_contract", lambda *a, **k: {"contract_id": "c"})
     monkeypatch.setattr(freshness, "build_runtime_audit_fields", lambda **k: {"_activity_id": "run-1"})
-    monkeypatch.setattr(freshness, "get_spark_session", lambda: object())
+    monkeypatch.setattr(freshness, "get_spark_session", lambda *_args, **_kwargs: object())
     monkeypatch.setattr(
         freshness,
         "resolve_catalogue_table_identity",
@@ -253,7 +255,7 @@ def _configure_observation_capture(monkeypatch, rules):
     shared._CURRENT_FRESHNESS_EVIDENCE.clear()
     shared._CURRENT_SOURCE_OBSERVATIONS.clear()
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda: (object(), "dev", {}))
-    monkeypatch.setattr(shared, "get_spark_session", lambda: object())
+    monkeypatch.setattr(shared, "get_spark_session", lambda *_args, **_kwargs: object())
     monkeypatch.setattr(
         shared,
         "resolve_catalogue_table_identity",

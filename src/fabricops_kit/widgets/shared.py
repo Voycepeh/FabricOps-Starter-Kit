@@ -873,7 +873,7 @@ def list_data_stewards(config: Any, env: str, *, spark_session: Any = None, acti
     """List latest append-only steward rows from the metadata lakehouse."""
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), store="Metadata", schema=metadata_schema, spark_session=spark_session, context={"config": config, "env": env})
+        rows = read_lakehouse_table(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), store="Metadata", schema=metadata_schema, context={"config": config, "env": env, "_spark_session": spark_session})
     except Exception as exc:
         if missing_ok and _is_table_not_found_error(exc):
             return []
@@ -935,7 +935,7 @@ def list_all_data_agreement_rows(config: Any, env: str, *, spark_session: Any = 
     """List all append-only agreement rows from the metadata lakehouse."""
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), store="Metadata", schema=metadata_table_physical_schema(config, DATA_AGREEMENT_TABLE), context={"config": config, "env": env}, spark_session=spark_session)
+        rows = read_lakehouse_table(str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), store="Metadata", schema=metadata_table_physical_schema(config, DATA_AGREEMENT_TABLE), context={"config": config, "env": env, "_spark_session": spark_session})
     except Exception as exc:
         if missing_ok and _is_table_not_found_error(exc):
             return []

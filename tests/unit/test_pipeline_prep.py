@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from tests.helpers import call_with_spark
+
 from importlib import import_module
 from inspect import signature
 
@@ -70,11 +72,11 @@ def test_pipeline_read_dispatches_source(monkeypatch, capsys, store_type, query,
     for name in ("read_lakehouse_table", "read_warehouse_table", "read_warehouse_query"):
         monkeypatch.setattr(read_module, name, lambda *a, _name=name, **k: calls.append((_name, k)) or "frame")
 
-    result = read_module.pipeline_read(table_id=identity["table_id"], query=query, spark_session=spark)
+    result = call_with_spark(spark, read_module.pipeline_read, table_id=identity["table_id"], query=query)
 
     assert result["table_id"] == identity["table_id"]
     assert [name for name, _kwargs in calls] == [reader_name]
-    assert calls[0][1]["spark_session"] is spark
+    assert calls[0][1]["context"]["_spark_session"] is spark
     assert "_fabricops_active_profile_registration" not in context
     output = capsys.readouterr().out
     assert "FabricOps Read" in output
@@ -115,11 +117,10 @@ def test_pipeline_read_physical_lakehouse_bootstraps_before_catalogue(monkeypatc
         lambda *a, **k: calls.append((a, k)) or "frame",
     )
 
-    result = read_module.pipeline_read(
+    result = call_with_spark(spark, read_module.pipeline_read,
         store="Bronze",
         schema="demo",
         table_name="orders",
-        spark_session=spark,
         verbose=False,
     )
 
@@ -127,8 +128,7 @@ def test_pipeline_read_physical_lakehouse_bootstraps_before_catalogue(monkeypatc
     assert calls == [(("orders",), {
         "store": "Bronze",
         "schema": "demo",
-        "spark_session": spark,
-        "context": {**context, "_fabricops_suppress_io_log": True},
+        "context": {**context, "_pipeline_spark": spark, "_fabricops_suppress_io_log": True, "_spark_session": spark},
     })]
 
 
@@ -161,9 +161,9 @@ def test_source_drift_baseline_skips_before_catalogue(monkeypatch):
         lambda *_a, **_k: pytest.fail("baseline Source Drift must not require Catalogue"),
     )
 
-    result = source_drift_module.check_source_drift(
+    result = call_with_spark(object(), source_drift_module.check_source_drift,
         "source-id",
-        target_table_id="target-id", spark_session=object(),
+        target_table_id="target-id",
         verbose=False,
     )
 
@@ -191,7 +191,7 @@ def test_pipeline_read_captures_transient_observation_for_governed_source(monkey
     monkeypatch.setattr(read_module, "capture_source_observation", lambda **kwargs: captured.append(kwargs))
     read_module.pipeline_read(table_id=identity["table_id"], verbose=False)
     assert captured == [{"table_id": identity["table_id"], "dataframe": "frame",
-                         "source_identity": identity, "context": {}, "spark_session": None}]
+                         "source_identity": identity, "context": {"_pipeline_spark": captured[0]["spark_session"]}, "spark_session": captured[0]["spark_session"]}]
 
 
 @pytest.mark.parametrize("guardrail_type", ["schema", "freshness", "data_quality"])
@@ -342,8 +342,8 @@ def test_lakehouse_incremental_bootstrap_probe_uses_quiet_io_context(monkeypatch
         {
             "store": "Silver",
             "schema": "demo",
-            "spark_session": "spark",
             "context": {
+                "_spark_session": "spark",
                 "environment_name": "Development",
                 "_fabricops_suppress_io_log": True,
             },
@@ -379,7 +379,7 @@ def test_warehouse_first_write_treats_missing_target_as_not_applied(monkeypatch)
     assert "demo" in queries[0][0]
     assert "customer_summary" in queries[0][0]
     assert queries[0][1]["store"] == "Gold"
-    assert queries[0][1]["spark_session"] == "spark"
+    assert queries[0][1]["context"]["_spark_session"] == "spark"
 
 
 @pytest.mark.parametrize(
@@ -404,13 +404,13 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
     monkeypatch.setattr(
         shared_module, "commit_pipeline_write_success", lambda value: events.append(("metadata", value))
     )
-    result = write_module.pipeline_write(
+    result = call_with_spark(spark, write_module.pipeline_write,
         object(),
         store="Silver",
         schema="dbo",
         table_name="students",
         source_table_ids=["source-a", "source-b"],
-        spark_session=spark,
+
     )
 
     assert result["table_id"] == identity["table_id"]

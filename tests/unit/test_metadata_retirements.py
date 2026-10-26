@@ -1,5 +1,7 @@
 """Retired Preview inventory and advisory setup behavior."""
 
+from tests.helpers import call_with_spark
+
 from dataclasses import replace
 from importlib import import_module
 from pathlib import Path
@@ -92,8 +94,7 @@ def test_retirement_alerts_are_presence_only_and_nonblocking(monkeypatch, capsys
 
     monkeypatch.setattr(setup, 'read_lakehouse_table', read)
     monkeypatch.setattr(setup, 'write_lakehouse_table', write)
-    result = setup.setup_metadata_tables(
-        spark=SimpleNamespace(createDataFrame=lambda rows, schema: Frame(schema)),
+    result = call_with_spark(SimpleNamespace(createDataFrame=lambda rows, schema: Frame(schema)), setup.setup_metadata_tables,
         config=cfg, env='dev', verbose=verbose, raise_on_failure=True,
     )
     assert result['status'] == 'ready'

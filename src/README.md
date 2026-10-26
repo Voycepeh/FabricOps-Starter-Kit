@@ -8,6 +8,23 @@ This package keeps runtime logic in `src/fabricops_kit/` and publishes user-faci
 - **Generated docs outputs:**
   - Step-first reference: `docs/reference/index.md`
 
+## Spark session discovery
+
+Notebook-facing APIs resolve Spark automatically. Remove the former `spark` and
+`spark_session` arguments from metadata setup, readers, Governance widgets,
+profiling, access scanning, and Data Agent calls. This is a breaking API cleanup;
+there are no compatibility aliases.
+
+FabricOps prefers an existing DataFrame's session, then an internally supplied
+operation session, then PySpark's active session. If PySpark does not expose the
+Fabric session, FabricOps checks `spark` in the IPython notebook namespace. It
+never creates a session. Spark-dependent operations raise a clear error when
+none is available. `setup_notebook()` still validates explicit local configuration
+without Spark and reports that Spark-dependent operations are unavailable. Setup
+uses the same detected session for readiness and the configured audit timezone.
+Tests inject sessions at internal discovery boundaries or through private runtime
+context; notebook code does not need session plumbing.
+
 ## Regenerate the function reference
 
 ```bash

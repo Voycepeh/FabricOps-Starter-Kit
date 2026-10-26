@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tests.helpers import call_with_spark
+
 from types import SimpleNamespace
 import sys
 
@@ -28,7 +30,7 @@ def _render(monkeypatch):
         "list_data_stewards",
         lambda *args, **kwargs: [steward_row(), steward_row(steward_id="22222222-2222-4222-8222-222222222222")],
     )
-    return agreement_widget.widget_render_data_agreement(spark=object())
+    return call_with_spark(object(), agreement_widget.widget_render_data_agreement, )
 
 
 def _visible_text(widget):
@@ -47,7 +49,7 @@ def _render_steward(monkeypatch, *, custom_fields=None, stewards=None):
     monkeypatch.setattr(steward_widget, "require_ipywidgets", lambda: _FakeWidgets)
     monkeypatch.setattr(shared, "require_ipywidgets", lambda: _FakeWidgets)
     monkeypatch.setattr(steward_widget, "list_data_stewards", lambda *args, **kwargs: steward_rows)
-    return steward_widget.widget_render_data_steward(spark=object())
+    return call_with_spark(object(), steward_widget.widget_render_data_steward, )
 
 
 def test_shared_form_viewport_is_bounded_while_sections_expand_naturally():

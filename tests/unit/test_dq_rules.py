@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tests.helpers import call_with_spark
+
 import json
 import importlib
 
@@ -30,7 +32,7 @@ def test_check_dq_passes_development_contract_context_to_runtime(monkeypatch):
         module, "check_dq_runtime",
         lambda *args, **kwargs: captured.update(kwargs) or {"status": "passed"},
     )
-    assert module.check_dq(object(), table_id="orders", spark_session=object())["status"] == "passed"
+    assert call_with_spark(object(), module.check_dq, object(), table_id="orders")["status"] == "passed"
     assert captured["context"] is context
 
 
@@ -44,7 +46,7 @@ def test_internal_dq_returns_blocking_decision_to_orchestration(monkeypatch):
         "schema": "sales", "table_name": "orders",
     })
     monkeypatch.setattr(module, "check_dq_runtime", lambda *_args, **_kwargs: {"can_continue": False})
-    result = module.check_dq(object(), table_id="orders", spark_session=object())
+    result = call_with_spark(object(), module.check_dq, object(), table_id="orders")
     assert result["can_continue"] is False
 
 
@@ -58,7 +60,7 @@ def test_check_dq_skips_when_development_has_no_selected_contract(monkeypatch):
         module, "check_dq_runtime",
         lambda *args, **kwargs: pytest.fail("DQ must not run without a selected Development contract"),
     )
-    result = module.check_dq(object(), table_id="orders", spark_session=object())
+    result = call_with_spark(object(), module.check_dq, object(), table_id="orders")
     assert result["status"] == "skipped"
     assert result["can_continue"] is True
     assert result["environment_name"] == "dev"

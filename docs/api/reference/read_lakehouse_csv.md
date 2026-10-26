@@ -40,7 +40,6 @@ def read_lakehouse_csv(
     relative_path: str,
     *,
     store: str='Bronze',
-    spark_session=None,
     header: bool=True,
     context: dict[str, Any] | None=None,
     **options,
@@ -61,7 +60,6 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `relative_path` | `str` | Yes | `—` | Relative CSV file or folder path resolved underneath the configured Lakehouse ``Files`` area. |
 | `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from ``00_env_config``. It is not necessarily the literal physical Lakehouse name. |
-| `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
 | `header` | `bool` | No | `True` | Whether Spark should treat the first row as column names. When ``header=True``, the first row is used as column names. When ``header=False``, the first row is treated as data and Spark typically creates generic column names such as ``_c0``, ``_c1``, and ``_c2``. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
 | `**options` | `—` | No | `—` | Additional Spark CSV reader options passed directly to Spark's CSV reader, such as ``inferSchema``, ``sep``, ``quote``, ``escape``, ``encoding``, ``multiLine``, ``dateFormat``, ``timestampFormat``, ``nullValue``, ``mode``, and ``recursiveFileLookup``. FabricOps does not interpret or transform these options beyond forwarding them. |
@@ -106,6 +104,10 @@ record handling follow Spark CSV options.
 
 <div class="reference-docstring-intro" markdown="1">
 
+Spark is resolved automatically from the existing execution session.
+No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
 Use for a file, folder, or wildcard path. Columns remain strings unless
 Spark schema inference or another schema strategy is requested.
 
@@ -120,7 +122,7 @@ Spark schema inference or another schema strategy is requested.
 
 `fabricops_kit/io/read_lakehouse_csv.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L71">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L73">View on GitHub</a>
 </div>
 
 

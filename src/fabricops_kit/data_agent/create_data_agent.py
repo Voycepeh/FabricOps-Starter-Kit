@@ -1,5 +1,7 @@
 """Create a native Microsoft Fabric Data Agent for one governed table."""
 
+from fabricops_kit.io.shared import get_spark_session
+
 from typing import Any, Callable, Mapping
 
 from .shared import FabricResponse, configured_context, consumer_context, default_token_provider, http_request, provision_data_agent
@@ -8,11 +10,14 @@ from .shared import FabricResponse, configured_context, consumer_context, defaul
 def create_data_agent(
     table_id: str, target_workspace_id: str, display_name: str, *,
     description: str = "FabricOps governed single-table Data Agent",
-    config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None,
-    token_provider: Callable[[], str] = default_token_provider,
+    config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider,
     transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request,
 ) -> dict[str, Any]:
     """Create and configure a native Data Agent from governed Production metadata.
+
+    Spark is resolved automatically from the existing execution session.
+    No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     Parameters
     ----------
@@ -28,8 +33,6 @@ def create_data_agent(
         FabricOps configuration. The configured notebook value is used when omitted.
     context : mapping, optional
         FabricOps runtime context used to resolve configuration and Spark.
-    spark_session : Any, optional
-        Explicit Spark session used to read metadata.
     token_provider : callable, optional
         Token provider integration boundary. Defaults to Fabric ``notebookutils``.
     transport : callable, optional
@@ -71,8 +74,9 @@ def create_data_agent(
     """
     if not str(target_workspace_id or "").strip() or not str(display_name or "").strip():
         raise ValueError("target_workspace_id and display_name must be non-empty strings.")
-    resolved_config, resolved_spark = configured_context(config, context)
-    governed = consumer_context(resolved_config, table_id, spark_session=spark_session or resolved_spark)
+    resolved_config = configured_context(config, context)
+    spark_session = get_spark_session(context=context)
+    governed = consumer_context(resolved_config, table_id, spark_session=spark_session)
     return provision_data_agent(
         governed, target_workspace_id=target_workspace_id.strip(), display_name=display_name.strip(),
         description=str(description or "").strip(), token_provider=token_provider, transport=transport,

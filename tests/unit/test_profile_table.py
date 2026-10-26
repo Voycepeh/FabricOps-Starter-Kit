@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tests.helpers import call_with_spark
+
 import importlib
 import inspect
 import json
@@ -25,7 +27,7 @@ def test_profile_table_public_signature_and_removed_symbols():
         "(*, dataframe=None, store: 'str | None' = None, schema: 'str | None' = None, "
         "table_name: 'str | None' = None, table_id: 'str | None' = None, grain_discovery_enabled: 'bool' = True, grain_discovery_max_columns: 'int' = 3, grain_discovery_max_candidates: 'int' = 8, frequency_columns=None, "
         "frequency_enabled: 'bool' = True, frequency_top_n: 'int | None' = 5, frequency_max_distinct_percent: 'float | None' = 80.0, "
-        "context=None, spark_session=None, verbose: 'bool' = True)"
+        "context=None, verbose: 'bool' = True)"
     )
     for name in ("profile_dataframe", "profile_frequency_distribution", "profile_and_register_table"):
         assert not hasattr(fabricops_kit, name)
@@ -153,7 +155,7 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
 
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: ({}, "dev", {}))
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *a, **k: dict(identity))
-    monkeypatch.setattr(module, "get_spark_session", lambda: spark_session)
+    monkeypatch.setattr(module, "get_spark_session", lambda *_args, **_kwargs: spark_session)
     monkeypatch.setattr(module, "read_warehouse_query", execute)
     monkeypatch.setattr(module, "read_lakehouse_table", lambda *a, **k: pytest.fail("must not use Spark table reader"))
     monkeypatch.setattr(module, "_canonical_profiled_dataframe", lambda profile, **k: profile)
@@ -783,7 +785,7 @@ def test_grain_discovery_can_be_disabled_and_reenabled_independently(
     kwargs = {} if backend == "warehouse" else {"dataframe": frame}
     for enabled in (True, False, True):
         discovery.reset_mock()
-        result = profile_table(table_id="table-id", spark_session=object(),
+        result = call_with_spark(object(), profile_table, table_id="table-id",
                                grain_discovery_enabled=enabled, grain_discovery_max_columns=2,
                                grain_discovery_max_candidates=1, frequency_enabled=frequency_enabled, **kwargs)
         assert result["profile"] is profile

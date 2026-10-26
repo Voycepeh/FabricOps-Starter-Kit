@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fabricops_kit.io.shared import get_spark_session
+
 import json
 from typing import Any
 
@@ -180,8 +182,7 @@ def _warehouse_target_exists(
         f"WHERE TABLE_SCHEMA = N'{schema}' AND TABLE_NAME = N'{table}' AND TABLE_TYPE = 'BASE TABLE'"
         ") THEN 1 ELSE 0 END AS fabricops_target_exists",
         store=str(identity["store"]),
-        spark_session=spark_session,
-        context=context,
+        context={**(context or {}), "_spark_session": spark_session},
     )
     rows = frame.collect()
     if not rows:
@@ -205,8 +206,7 @@ def _target_has_rows(
                 str(identity["table_name"]),
                 store=str(identity["store"]),
                 schema=identity.get("schema"),
-                spark_session=spark_session,
-                context=io_context,
+                context={**(io_context or {}), "_spark_session": spark_session},
             )
         elif store_kind == "warehouse":
             if not _warehouse_target_exists(
@@ -220,8 +220,7 @@ def _target_has_rows(
             frame = read_warehouse_query(
                 f"SELECT TOP (1) 1 AS fabricops_target_row FROM [{schema}].[{table}]",
                 store=str(identity["store"]),
-                spark_session=spark_session,
-                context=context,
+                context={**(context or {}), "_spark_session": spark_session},
             )
         else:
             raise ValueError(f"Configured target has unsupported store kind {store_kind or '<blank>'!r}.")
@@ -305,11 +304,14 @@ def pipeline_write(
     source_table_ids: list[str] | tuple[str, ...] | None = None,
     repartition_by=None,
     options: dict[str, Any] | None = None,
-    spark_session=None,
     verbose: bool = True,
     context=None,
 ) -> dict[str, Any]:
     """Publish one governed pipeline table target through its configured Fabric store.
+
+    Spark is resolved automatically from the existing execution session (or the
+    supplied DataFrame). No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     ``pipeline_write`` is the governed pipeline-orchestration equivalent of
     :func:`write_lakehouse_table` and :func:`write_warehouse_table`. Describe
@@ -351,8 +353,6 @@ def pipeline_write(
         Optional Spark repartitioning passed to simple physical writes.
     options : dict, optional
         Additional physical writer options for append or overwrite publication.
-    spark_session : object, optional
-        Spark session used for write-side metadata persistence. Supply the active Fabric notebook session explicitly when available.
     context : dict, optional
         Call-scoped resolved contracts, rules, and Catalogue identities.
     verbose : bool, default=True
@@ -503,6 +503,8 @@ def pipeline_write(
     )
 
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+    spark_session = get_spark_session(dataframe=df, context=context)
+    context = {**context, "_pipeline_spark": spark_session}
     coordinates = (store, schema, table_name)
     if table_id and any(value is not None for value in coordinates):
         raise ValueError("table_id cannot be combined with store, schema, or table_name.")
