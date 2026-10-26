@@ -222,62 +222,6 @@ def form_page(widgets: Any, *, title: str, description: str, children: Iterable[
     return page
 
 
-def select_governance_record(*, startup, title: str, records, record_label, config, runtime_context, launch, record_name: str):
-    """Show cross-environment records from central Governance; derive scope from a record.
-
-    Governance remains metadata-only. Engineering environment is provenance of the
-    selected table or Testing run, not a Governance workspace configuration field.
-    """
-    widgets = require_ipywidgets()
-    records = list(records)
-    choices = [(f"Select a {record_name}", None)]
-    choices.extend((str(record_label(record)), index) for index, record in enumerate(records))
-    selector = widgets.Dropdown(
-        options=choices, value=None, description=record_name.capitalize(),
-        layout=widgets.Layout(width="100%", min_width="0"),
-    )
-    open_button = widgets.Button(description=f"Open {title}", disabled=True, button_style="primary")
-    output = widgets.Output(layout=widgets.Layout(width="100%"))
-    status = status_message(widgets)
-    state = {"records": records, "record": selector, "open": open_button,
-             "output": output, "active": None}
-
-    def selection_changed(change):
-        open_button.disabled = change["new"] is None
-
-    def open_selected(_):
-        if selector.value is None:
-            return
-        record = records[selector.value]
-        environment = str(record.get("environment_name") or "").strip()
-        if environment == "governance" or environment not in config.path_config.paths:
-            status.value = "<p>Selected record has no configured Engineering environment.</p>"
-            return
-        scoped_context = {**dict(runtime_context or {}), "config": config, "env": environment}
-        try:
-            with output:
-                output.clear_output(wait=True)
-                state["active"] = launch(record, scoped_context)
-        except Exception as exc:
-            status.value = f"<p>{_html_escape(str(exc))}</p>"
-            raise
-
-    selector.observe(selection_changed, names="value")
-    open_button.on_click(open_selected)
-    empty_message = widgets.HTML(
-        value=f"<p>No {record_name} records were found in the central Metadata Lakehouse.</p>"
-        if not records else "",
-    )
-    page = form_page(
-        widgets, title=title,
-        description="Central Governance view of records from all Engineering environments. Select a record to review it.",
-        children=[selector, open_button, empty_message, output, status],
-        tone="governance",
-    )
-    state["widget"] = page
-    startup.display(page)
-    return state
-
 class WidgetStartup:
     """Publish plain HTML before blocking I/O, independently of widget comms.
 
