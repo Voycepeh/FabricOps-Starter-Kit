@@ -17,11 +17,14 @@ def read_lakehouse_parquet(
     *,
     store: str = "Bronze",
     verbose: bool = True,
-    spark_session=None,
     context: dict[str, Any] | None = None,
     **options,
 ):
     """Read Parquet data from the configured Lakehouse ``Files`` area through Spark.
+
+    Spark is resolved automatically from the existing execution session.
+    No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     Use ``read_lakehouse_parquet`` for Parquet files stored under the
     Lakehouse ``Files`` area. Use ``read_lakehouse_table`` for managed Delta
@@ -50,8 +53,6 @@ def read_lakehouse_parquet(
         original read success or failure, ``_tsus`` path attempts, conversion
         attempts, and fallback success or failure. It does not change the
         resulting data.
-    spark_session : object, optional
-        Spark session to use instead of the notebook global ``spark``.
     context : dict[str, Any], optional
         Active Fabric context override.
     **options
@@ -146,11 +147,12 @@ def read_lakehouse_parquet(
     DataFrame, or automatically cache or persist the returned DataFrame.
 
     """
+    spark_session = get_spark_session(context=context)
     store_name = str(store)
     store, normalized_relative_path, orig_spark_path = resolve_configured_file_path(
         store, relative_path, context=context
     )
-    spark_obj = get_spark_session(spark_session)
+    spark_obj = spark_session
     parts = normalized_relative_path.split("/")
     if len(parts) == 1:
         stem, dot, suffix = parts[0].rpartition(".")

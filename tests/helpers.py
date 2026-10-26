@@ -178,3 +178,20 @@ def run_pipeline_operation(function, *args, plan, sources=(), spark_session=None
         return function(*args, **kwargs)
     finally:
         _ACTIVE_PIPELINE.reset(token)
+
+
+def call_with_spark(session, function, *args, **kwargs):
+    """Inject an active session at the private discovery boundary for one call."""
+    from types import SimpleNamespace
+    from unittest.mock import patch
+    from fabricops_kit.io import shared
+
+    original_import = shared.import_module
+
+    def import_module(name):
+        if name == "pyspark.sql":
+            return SimpleNamespace(SparkSession=SimpleNamespace(getActiveSession=lambda: session))
+        return original_import(name)
+
+    with patch.object(shared, "import_module", import_module):
+        return function(*args, **kwargs)

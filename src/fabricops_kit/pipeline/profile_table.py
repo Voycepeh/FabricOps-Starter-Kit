@@ -19,10 +19,13 @@ def profile_table(
     frequency_enabled: bool = True, frequency_top_n: int | None = 5,
     frequency_max_distinct_percent: float | None = 80.0,
     context=None,
-    spark_session=None,
     verbose: bool = True,
 ):
     """Profile a Spark DataFrame or a complete governed physical table.
+
+    Spark is resolved automatically from the existing execution session (or the
+    supplied DataFrame). No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     FabricOps calculates the canonical statistical profile and applicable
     frequency distribution close to the data. Supplied DataFrames and physical
@@ -81,9 +84,6 @@ def profile_table(
         Explicit pipeline context; Testing returns profiles without persistence.
     verbose : bool, optional
         Display profiling progress when True; orchestration uses the automatic report.
-    spark_session : object, optional
-        Spark session to use. When omitted, FabricOps uses the supplied
-        DataFrame session or resolves the active session.
 
     Returns
     -------
@@ -187,6 +187,5 @@ def profile_table(
         frequency_top_n=frequency_top_n,
         frequency_max_distinct_percent=frequency_max_distinct_percent,
         context=context,
-        spark_session=spark_session,
         verbose=verbose,
     )

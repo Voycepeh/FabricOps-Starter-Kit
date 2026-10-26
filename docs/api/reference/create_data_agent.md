@@ -41,7 +41,6 @@ def create_data_agent(
     description: str='FabricOps governed single-table Data Agent',
     config: Any=None,
     context: Mapping[str, Any] | None=None,
-    spark_session: Any=None,
     token_provider: Callable[[], str]=default_token_provider,
     transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse]=http_request,
 ) -> dict[str, Any]:
@@ -65,7 +64,6 @@ Required describes the Python signature. An optional parameter may still be need
 | `description` | `str` | No | `'FabricOps governed single-table Data Agent'` | Data Agent item description. |
 | `config` | `Any` | No | `None` | FabricOps configuration. The configured notebook value is used when omitted. |
 | `context` | `Mapping[str, Any] \| None` | No | `None` | FabricOps runtime context used to resolve configuration and Spark. |
-| `spark_session` | `Any` | No | `None` | Explicit Spark session used to read metadata. |
 | `token_provider` | `Callable[[], str]` | No | `default_token_provider` | Token provider integration boundary. Defaults to Fabric ``notebookutils``. |
 | `transport` | `Callable[[str, str, Mapping[str, Any] \| None, str], FabricResponse]` | No | `http_request` | HTTP integration boundary, primarily for isolated testing. |
 
@@ -117,6 +115,16 @@ It does not publish the agent.
 
 </div>
 
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+Spark is resolved automatically from the existing execution session.
+No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
+</div>
+
 ## See also
 
 No related guides documented.
@@ -124,9 +132,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/data_agent/create_data_agent.py:8`
+`fabricops_kit/data_agent/create_data_agent.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agent/create_data_agent.py#L8-L79">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agent/create_data_agent.py#L10-L83">View on GitHub</a>
 </div>
 
 

@@ -45,7 +45,7 @@ def delta_authority(monkeypatch):
     spark = SimpleNamespace(sql=lambda statement: pytest.fail("runtime DDL is forbidden"),
                             createDataFrame=lambda rows, schema: Frame(rows))
     monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=SimpleNamespace(forPath=lambda *_: Merge())))
-    monkeypatch.setattr(service, "get_spark_session", lambda supplied=None: spark)
+    monkeypatch.setattr(service, "get_spark_session", lambda supplied=None, *_args, **_kwargs: spark)
     return context, central, calls
 
 

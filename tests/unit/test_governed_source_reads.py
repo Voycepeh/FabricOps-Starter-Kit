@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from tests.helpers import call_with_spark
+
 import importlib
 
 import pytest
@@ -18,12 +20,11 @@ def test_lakehouse_reader_uses_resolved_delta_path(monkeypatch):
         "resolve_configured_lakehouse_table",
         lambda *args, **kwargs: (object(), "orders", None, "resolved://orders"),
     )
-    monkeypatch.setattr(owner, "get_spark_session", lambda spark: spark)
     monkeypatch.setattr(
         owner, "read_delta_path", lambda spark, path, *, options=None: calls.append((path, options)) or "frame"
     )
 
-    assert owner.read_lakehouse_table("orders", spark_session=object(), versionAsOf=3) == "frame"
+    assert call_with_spark(object(), owner.read_lakehouse_table, "orders",  versionAsOf=3) == "frame"
     assert calls == [("resolved://orders", {"versionAsOf": 3})]
 
 
@@ -36,14 +37,13 @@ def test_warehouse_reader_uses_resolved_object_name(monkeypatch):
         "resolve_configured_warehouse_table",
         lambda *args, **kwargs: (store, "dbo", "Bookings", "warehouse.dbo.Bookings"),
     )
-    monkeypatch.setattr(owner, "get_spark_session", lambda spark: spark)
     monkeypatch.setattr(
         owner,
         "read_warehouse_synapsesql",
         lambda spark, resolved_store, target, *, database_name, options=None: calls.append((resolved_store, target, options)) or "frame",
     )
 
-    assert owner.read_warehouse_table("dbo", "Bookings", spark_session=object(), timeout=30) == "frame"
+    assert call_with_spark(object(), owner.read_warehouse_table, "dbo", "Bookings",  timeout=30) == "frame"
     assert calls == [(store, "warehouse.dbo.Bookings", {"timeout": 30})]
 
 
@@ -65,10 +65,9 @@ def test_lakehouse_table_id_read_tags_dataframe_for_profile_safety(monkeypatch):
         owner, "resolve_configured_lakehouse_table",
         lambda *args, **kwargs: (object(), "orders", None, "resolved://orders"),
     )
-    monkeypatch.setattr(owner, "get_spark_session", lambda spark: spark)
     monkeypatch.setattr(owner, "read_delta_path", lambda *_args, **_kwargs: frame)
 
-    result = owner.read_lakehouse_table(table_id="source-id", spark_session=object())
+    result = call_with_spark(object(), owner.read_lakehouse_table, table_id="source-id")
 
     assert result._fabricops_table_id == "source-id"
 

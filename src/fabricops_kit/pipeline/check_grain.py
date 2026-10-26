@@ -13,12 +13,11 @@ from fabricops_kit.pipeline.shared import (
 )
 
 
-def check_grain(dataframe, *, table_id, scope, spark_session=None, verbose=True, context=None):
+def check_grain(dataframe, *, table_id, scope, verbose=True, context=None):
     """Record the selected Grain result before orchestration decides continuation."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
-    spark = spark_session if spark_session is not None else getattr(dataframe, "sparkSession", None)
-    if spark is None:
-        spark = get_spark_session()
+    spark_session = get_spark_session(dataframe=dataframe, context=context)
+    spark = spark_session
     contract = resolve_pipeline_data_contract(config, env, table_id, spark_session=spark, context=context)
     rules = observation_rows(load_table_guardrail_rules(config, env, table_id=table_id, spark_session=spark, context=context)) if contract else []
     grains = [rule for rule in rules if rule.get("guardrail_type") == "grain" and rule.get("is_active", True)]

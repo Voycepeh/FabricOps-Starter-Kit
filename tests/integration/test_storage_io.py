@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tests.helpers import call_with_spark
+
 from types import SimpleNamespace
 
 import pytest
@@ -108,7 +110,7 @@ def test_lakehouse_read_and_write_helpers_route_to_configured_paths():
     spark = _Spark()
     frame = _Frame()
 
-    io.read_lakehouse_csv("Files/raw/orders.csv", store="Bronze", spark_session=spark, context=context)
+    call_with_spark(spark, io.read_lakehouse_csv, "Files/raw/orders.csv", store="Bronze",  context=context)
     io.write_lakehouse_table(frame, "orders_clean", store="Silver", schema=None, mode="overwrite", partition_by=["status"], options={"overwriteSchema": "true"}, verbose=False, context=context)
 
     csv_call = next(call for call in spark.read.calls if call[0] == "csv")
@@ -126,7 +128,7 @@ def test_metadata_lakehouse_table_helpers_use_abfss_paths_without_registered_tab
     spark = _Spark()
     frame = _Frame()
 
-    read_result = io.read_lakehouse_table("METADATA_DATA_CONTRACT", store="Metadata", schema=None, spark_session=spark, context=context)
+    read_result = call_with_spark(spark, io.read_lakehouse_table, "METADATA_DATA_CONTRACT", store="Metadata", schema=None,  context=context)
     io.write_lakehouse_table(frame, "METADATA_DATA_CONTRACT", store="Metadata", schema=None, mode="ignore", verbose=False, context=context)
 
     expected_path = "abfss://dev-workspace@onelake.dfs.fabric.microsoft.com/dev-lakehouse-item/Tables/governance/METADATA_DATA_CONTRACT"
@@ -162,11 +164,11 @@ def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeyp
     )
 
     with pytest.raises(ValueError, match="relative_path"):
-        io.read_lakehouse_csv("", store="Bronze", spark_session=spark, context={"config": config, "env": "dev"})
-    io.read_lakehouse_parquet("customers.parquet", store="Bronze", spark_session=spark, verbose=False, context={"config": config, "env": "dev"})
+        call_with_spark(spark, io.read_lakehouse_csv, "", store="Bronze",  context={"config": config, "env": "dev"})
+    call_with_spark(spark, io.read_lakehouse_parquet, "customers.parquet", store="Bronze",  verbose=False, context={"config": config, "env": "dev"})
     assert any(call[0] == "parquet" and call[1].endswith("/Files/customers.parquet") for call in spark.read.calls)
 
-    io.read_lakehouse_excel("Files/reference/map.xlsx", store="Bronze", sheet_name="Sheet1", spark_session=spark, context={"config": config, "env": "dev"}, skiprows=1)
+    call_with_spark(spark, io.read_lakehouse_excel, "Files/reference/map.xlsx", store="Bronze", sheet_name="Sheet1",  context={"config": config, "env": "dev"}, skiprows=1)
     assert captured["kwargs"] == {"skiprows": 1}
 
 
@@ -175,6 +177,6 @@ def test_warehouse_helpers_fail_clearly_outside_fabric_runtime():
     config = framework_config()
 
     with pytest.raises(RuntimeError, match="Microsoft Fabric Spark"):
-        io.read_warehouse_table("dbo", "orders", store="Gold", spark_session=_Spark(), context={"config": config, "env": "dev"})
+        call_with_spark(_Spark(), io.read_warehouse_table, "dbo", "orders", store="Gold",  context={"config": config, "env": "dev"})
     with pytest.raises(RuntimeError, match="Microsoft Fabric Spark"):
         io.write_warehouse_table(_Frame(), "dbo", "orders", store="Gold", context={"config": config, "env": "dev"})

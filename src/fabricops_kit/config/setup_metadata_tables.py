@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fabricops_kit.io.shared import get_spark_session
+
 from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
 
 from typing import Any
@@ -60,7 +62,7 @@ def _retired_preview_warnings(*, config, spark, context):
             try:
                 # Delta loading resolves presence/schema only; never run a row action.
                 read_lakehouse_table(table_name, store="Metadata", schema=schema,
-                                     spark_session=spark, context=context)
+                                     context={**(context or {}), "_spark_session": spark})
             except Exception as exc:
                 if not _retired_table_is_missing(exc):
                     warnings.append(
@@ -391,7 +393,6 @@ def _print_setup_summary(
 
 def setup_metadata_tables(
     *,
-    spark: Any,
     config: FrameworkConfig | dict[str, Any],
     env: str,
     require_active_steward: bool = False,
@@ -399,6 +400,10 @@ def setup_metadata_tables(
     raise_on_failure: bool = False,
 ) -> dict[str, Any]:
     """Create or check the FabricOps metadata tables for one environment.
+
+    Spark is resolved automatically from the existing execution session.
+    No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     Creates missing metadata tables, additively evolves existing metadata
     tables with missing canonical columns, and validates canonical column
@@ -424,9 +429,6 @@ def setup_metadata_tables(
 
     Parameters
     ----------
-    spark : Any
-        Spark session used to create empty schema DataFrames and read or write
-        the metadata lakehouse tables.
     config : FrameworkConfig | dict[str, Any]
         FabricOps configuration used to find the selected environment and its
         metadata lakehouse.
@@ -609,6 +611,7 @@ def setup_metadata_tables(
     their respective FabricOps workflows.
 
     """
+    spark = get_spark_session()
     normalized = validate_framework_config(config)
     metadata_store = get_store(config=normalized, env=env, store="Metadata")
     if getattr(metadata_store, "kind", None) != "lakehouse":
@@ -635,7 +638,7 @@ def setup_metadata_tables(
             created = False
             try:
                 table = read_lakehouse_table(
-                    table_name, store="Metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
+                    table_name, store="Metadata", schema=resolved_metadata_schema, context={**(context or {}), "_spark_session": spark}
                 )
             except Exception as exc:
                 if not is_table_not_found_error(exc):
@@ -660,7 +663,7 @@ def setup_metadata_tables(
                 )
                 created = True
                 table = read_lakehouse_table(
-                    table_name, store="Metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
+                    table_name, store="Metadata", schema=resolved_metadata_schema, context={**(context or {}), "_spark_session": spark}
                 )
             upgrade = None
             if table_name == "METADATA_DATA_CATALOGUE":
@@ -692,8 +695,7 @@ def setup_metadata_tables(
                         table_name,
                         store="Metadata",
                         schema=resolved_metadata_schema,
-                        spark_session=spark,
-                        context=context,
+                        context={**(context or {}), "_spark_session": spark},
                     )
             if table is not None and hasattr(table, "schema"):
                 _validate_existing_metadata_schema(table_name, table.schema, schema)

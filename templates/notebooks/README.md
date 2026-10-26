@@ -74,6 +74,21 @@ and Bronze / Silver / Gold are examples, and custom aliases such as `Source`,
 `00_env_config` before running it; the template validates them before deployment IO.
 See the [Microsoft Fabric Spark Warehouse connector documentation](https://learn.microsoft.com/en-us/fabric/data-engineering/spark-data-warehouse-connector) for query and three-part target semantics.
 
+## Governance configuration
+
+Engineering environments resolve from the caller's registered workspace ID.
+The Governance workspace can run `00_env_config` directly without being registered
+as an Engineering workspace. With one Engineering environment, that environment
+is selected. With multiple environments, set `GOVERNANCE_ENVIRONMENT` in
+`00_env_config` to a registered environment key. Unknown caller workspaces remain
+rejected, including when the configuration notebook runs in another workspace.
+The central Metadata Lakehouse stays the same for every environment.
+
+`01_governance` uses `setup_notebook(required_targets=["Metadata"])` and opens its
+widgets without Spark arguments. The target selection controls startup validation
+and display; the complete shared configuration remains available to downstream
+workflows and the filter grants no permissions.
+
 ## Pipeline execution mode
 
 The pipeline flow is **Setup Pipeline → Read → Transform → Write**. Environment routing is resolved automatically from the caller workspace by the selected `00_env_config`. A stable `pipeline_id` identifies the logical pipeline independently of notebook names and paths.

@@ -11,12 +11,15 @@ def read_lakehouse_csv(
     relative_path: str,
     *,
     store: str = "Bronze",
-    spark_session=None,
     header: bool = True,
     context: dict[str, Any] | None = None,
     **options,
 ):
     """Read CSV files from a configured Lakehouse Files location.
+
+    Spark is resolved automatically from the existing execution session.
+    No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     Use for a file, folder, or wildcard path. Columns remain strings unless
     Spark schema inference or another schema strategy is requested.
@@ -29,8 +32,6 @@ def read_lakehouse_csv(
     store : str, default="Bronze"
         Logical Lakehouse store key from ``00_env_config``. It is not necessarily
         the literal physical Lakehouse name.
-    spark_session : object, optional
-        Spark session to use instead of the notebook global ``spark``.
     header : bool, default=True
         Whether Spark should treat the first row as column names. When
         ``header=True``, the first row is used as column names. When
@@ -64,8 +65,9 @@ def read_lakehouse_csv(
     >>> orders_df = read_lakehouse_csv("incoming/orders.csv", inferSchema=True)
 
     """
+    spark_session = get_spark_session(context=context)
     _store, _relative_path, path = resolve_configured_file_path(store, relative_path, context=context)
-    dataframe = read_csv_path(get_spark_session(spark_session), path, header=header, options=options)
+    dataframe = read_csv_path(spark_session, path, header=header, options=options)
     if not (context or {}).get("_fabricops_suppress_io_log"):
         print(f"Read from → Object: Lakehouse | Store: {store} | Area: Files | Path: {_relative_path}")
     return dataframe

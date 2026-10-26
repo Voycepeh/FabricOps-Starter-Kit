@@ -23,7 +23,7 @@ Use in 01_governance when collecting or updating data steward details before cre
 <div class="reference-example-usage" markdown="1">
 
 ```python
-state = widget_render_data_steward(spark=spark)
+state = widget_render_data_steward()
 ```
 
 </div>
@@ -36,11 +36,7 @@ state = widget_render_data_steward(spark=spark)
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_render_data_steward(
-    *,
-    spark: Any,
-    context: dict[str, Any] | None=None,
-) -> dict[str, Any]:
+def widget_render_data_steward(*, context: dict[str, Any] | None=None) -> dict[str, Any]
 ```
 
 </div>
@@ -55,7 +51,6 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `spark` | `Any` | Yes | `—` | Fabric Spark session used for metadata reads and append-only writes. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
 
 </div>
@@ -85,6 +80,16 @@ RuntimeError
 - Widget state is cleared by rerunning cells out of order.
 - Metadata routing is unavailable when the widget tries to persist records.
 
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+Spark is resolved automatically from the existing execution session.
+No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
+</div>
+
 ## See also
 
 - [Templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks)
@@ -92,9 +97,9 @@ RuntimeError
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_render_data_steward.py:37`
+`fabricops_kit/widgets/widget_render_data_steward.py:39`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_steward.py#L37-L264">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_steward.py#L39-L269">View on GitHub</a>
 </div>
 
 
@@ -110,7 +115,7 @@ RuntimeError
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 52 |
+| Live-critical dependencies | 53 |
 
 ### Release history
 
@@ -149,6 +154,7 @@ RuntimeError
 <li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
+<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.widgets.shared._coerce_row_dicts</code></li>
 <li><code>fabricops_kit.widgets.shared._html_escape</code></li>
 <li><code>fabricops_kit.widgets.shared._is_table_not_found_error</code></li>

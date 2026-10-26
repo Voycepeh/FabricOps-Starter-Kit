@@ -83,7 +83,7 @@ def runtime(monkeypatch, spark_session):
     monkeypatch.setattr(plan_module, "resolve_fabric_context", lambda context=None: (config, "dev", context or runtime_context))
     runtime_context = context
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: (config, "dev", context or runtime_context))
-    monkeypatch.setattr(shared, "get_spark_session", lambda *a: spark_session)
+    monkeypatch.setattr(shared, "get_spark_session", lambda *a, **_kwargs: spark_session)
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda name, **kw: RecordingFrame(rows) if name == "METADATA_DATA_CONTRACT" else RecordingFrame([]) if name == "METADATA_ACTIVATED_PIPELINE" else (_ for _ in ()).throw(RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")))
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: source)
     monkeypatch.setattr(shared, "PublicationBatch", lambda dataframe, **kw: nullcontext(SimpleNamespace(

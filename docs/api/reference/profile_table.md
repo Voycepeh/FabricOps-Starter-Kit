@@ -50,7 +50,6 @@ def profile_table(
     frequency_top_n: int | None=5,
     frequency_max_distinct_percent: float | None=80.0,
     context=None,
-    spark_session=None,
     verbose: bool=True,
 ):
 ```
@@ -80,7 +79,6 @@ Required describes the Python signature. An optional parameter may still be need
 | `frequency_top_n` | `int \| None` | No | `5` | Ranked values to retain per frequency column. ``None`` retains all. |
 | `frequency_max_distinct_percent` | `float \| None` | No | `80.0` | Maximum distinct-per-non-null percentage for automatically selected columns. ``None`` disables the cardinality filter. |
 | `context` | `dict` | No | `None` | Explicit pipeline context; Testing returns profiles without persistence. |
-| `spark_session` | `object` | No | `None` | Spark session to use. When omitted, FabricOps uses the supplied DataFrame session or resolves the active session. |
 | `verbose` | `bool` | No | `True` | Display profiling progress when True; orchestration uses the automatic report. |
 
 </div>
@@ -171,6 +169,10 @@ metric. It describes the profiled dataset, not rows committed by a writer.
 
 <div class="reference-docstring-intro" markdown="1">
 
+Spark is resolved automatically from the existing execution session (or the
+supplied DataFrame). No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
 FabricOps calculates the canonical statistical profile and applicable
 frequency distribution close to the data. Supplied DataFrames and physical
 Lakehouse tables use PySpark; physical Warehouse tables use SQL pushdown for
@@ -194,7 +196,7 @@ profiled without creating an identity or writing metadata.
 
 `fabricops_kit/pipeline/profile_table.py:8`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L8-L192">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L8-L191">View on GitHub</a>
 </div>
 
 

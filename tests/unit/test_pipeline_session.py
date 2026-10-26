@@ -22,7 +22,7 @@ def runtime(monkeypatch):
     config = {}
     spark = SimpleNamespace(conf=SimpleNamespace(get=lambda key: 'test'))
     monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: (config, 'dev', context or {'config': config, 'env': 'dev'}))
-    monkeypatch.setattr(shared, 'get_spark_session', lambda *args: spark)
+    monkeypatch.setattr(shared, 'get_spark_session', lambda *args, **_kwargs: spark)
     monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kwargs: {'_workspace_id': 'workspace', '_notebook_id': 'notebook'})
     monkeypatch.setattr(shared, 'resolve_physical_table_identity', lambda config, env, **kwargs: {**kwargs, 'table_id': kwargs['table_name']})
     monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, **kwargs: {key: {'store': value['store'], 'table_name': value['table_name']} for key, value in identities.items()})

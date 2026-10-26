@@ -23,7 +23,7 @@ Use in 01_governance after steward context exists to establish the parent govern
 <div class="reference-example-usage" markdown="1">
 
 ```python
-state = widget_render_data_agreement(spark=spark)
+state = widget_render_data_agreement()
 ```
 
 </div>
@@ -38,7 +38,6 @@ state = widget_render_data_agreement(spark=spark)
 ```python
 def widget_render_data_agreement(
     *,
-    spark: Any,
     context: dict[str, Any] | None=None,
 ) -> dict[str, Any]:
 ```
@@ -55,7 +54,6 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `spark` | `Any` | Yes | `—` | Fabric Spark session used for initial metadata reads, explicit steward refreshes, and the final append-only write. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
 
 </div>
@@ -89,6 +87,10 @@ RuntimeError
 
 <div class="reference-docstring-intro" markdown="1">
 
+Spark is resolved automatically from the existing execution session.
+No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
 The editor caches active data stewards, keeps one in-memory draft, and
 appends one complete agreement row only after final validation.
 
@@ -101,9 +103,9 @@ appends one complete agreement row only after final validation.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_render_data_agreement.py:45`
+`fabricops_kit/widgets/widget_render_data_agreement.py:47`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L45-L493">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L47-L497">View on GitHub</a>
 </div>
 
 
@@ -119,7 +121,7 @@ appends one complete agreement row only after final validation.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 66 |
+| Live-critical dependencies | 67 |
 
 ### Release history
 
@@ -158,6 +160,7 @@ appends one complete agreement row only after final validation.
 <li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
+<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.widgets.shared._audit_date</code></li>
 <li><code>fabricops_kit.widgets.shared._coerce_row_dicts</code></li>
 <li><code>fabricops_kit.widgets.shared._html_escape</code></li>

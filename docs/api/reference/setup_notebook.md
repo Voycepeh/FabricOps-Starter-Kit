@@ -103,7 +103,7 @@ ValueError
 ### Common failure causes
 
 - Missing required configuration sections or target names.
-- No active Spark session, which is reported as a warning for local fallback mode.
+- No active Spark session, which is reported as a warning when validating local configuration.
 - Fabric notebook runtime utilities are unavailable outside Fabric.
 - Workspace, lakehouse, warehouse, or notebook context cannot be resolved.
 - Invalid target names or required store identity fields.

@@ -949,12 +949,19 @@ def initialize_notebook(
     )
 
     checks: list[ConfigSmokeCheckResult] = []
-    spark_obj = globals().get("spark")
+    from fabricops_kit.io.shared import get_spark_session
+
+    try:
+        spark_obj = get_spark_session()
+    except RuntimeError:
+        spark_obj = None
+    if spark_obj is not None:
+        spark_obj.conf.set("spark.sql.session.timeZone", normalized.audit_timezone)
     checks.append(
         ConfigSmokeCheckResult(
             "spark_session",
             "pass" if spark_obj is not None else "warn",
-            "Spark session is available." if spark_obj is not None else "Spark session not found; local fallback mode.",
+            "Spark session is available." if spark_obj is not None else "No active Spark session; Spark-dependent operations are unavailable.",
         )
     )
     checks.append(
@@ -994,14 +1001,6 @@ def initialize_notebook(
     )
     if automatic:
         import builtins
-        from fabricops_kit.io.shared import get_spark_session
-
-        try:
-            spark_session = get_spark_session()
-        except RuntimeError:
-            spark_session = None
-        if spark_session is not None:
-            spark_session.conf.set("spark.sql.session.timeZone", normalized.audit_timezone)
         active_context = {"config": normalized, "env": env, "runtime_metadata": runtime_meta}
         builtins.FABRIC_CONTEXT = active_context
         try:

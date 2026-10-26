@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tests.helpers import call_with_spark
+
 from datetime import datetime, timezone
 import importlib
 from types import SimpleNamespace
@@ -193,11 +195,10 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: dict(AUDIT_FIELDS))
     monkeypatch.setattr(module, "target_store_kinds", lambda *args: {"warehouse": "warehouse"})
 
-    result = module.scan_sql_access(
+    result = call_with_spark(spark_session, module.scan_sql_access,
         _catalogue(spark_session),
         targets="warehouse",
         access_snapshot_id="snapshot-1",
-        spark_session=spark_session,
         context={"env": "dev"},
         persist=False,
     )
@@ -269,11 +270,10 @@ def test_scan_sql_access_scans_each_unique_target(monkeypatch, spark_session):
         lambda *args: {"warehouse": "warehouse", "curated_lakehouse": "lakehouse"},
     )
 
-    result = module.scan_sql_access(
+    result = call_with_spark(spark_session, module.scan_sql_access,
         _catalogue(spark_session),
         targets=["warehouse", "warehouse", "curated_lakehouse"],
         access_snapshot_id="snapshot-2",
-        spark_session=spark_session,
         persist=False,
     )
 
@@ -475,7 +475,7 @@ def test_sql_endpoint_reader_supports_access_scan_targets(monkeypatch, capsys, k
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **kwargs: (object(), "dev", {}))
     monkeypatch.setattr(module, "get_store", lambda config, env, target: store)
     monkeypatch.setattr(module, "validate_select_query", lambda query: query)
-    monkeypatch.setattr(module, "get_spark_session", lambda spark_session: "spark")
+    monkeypatch.setattr(module, "get_spark_session", lambda spark_session=None, *_args, **_kwargs: 'spark')
     monkeypatch.setattr(
         module,
         "read_warehouse_synapsesql",

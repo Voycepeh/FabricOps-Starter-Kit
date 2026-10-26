@@ -1,5 +1,7 @@
 """Payload-only definitions and conservative migration of retired side tables."""
 
+from tests.helpers import call_with_spark
+
 from copy import deepcopy
 import json
 from types import SimpleNamespace
@@ -149,7 +151,8 @@ def test_apply_requires_reviewed_snapshot_and_writes_only_contract_drafts(monkey
     monkeypatch.setattr(migration, "coerce_metadata_row_types", lambda _name, row: row)
     monkeypatch.setattr(migration, "build_runtime_audit_fields", lambda **_kwargs: {})
     spark = SimpleNamespace(createDataFrame=lambda rows, schema: rows)
-    args = dict(config={"governance_metadata_schema": "approved"}, env="dev", spark_session=spark)
+    args = dict(config={"governance_metadata_schema": "approved"}, env="dev")
+    monkeypatch.setattr(migration, "get_spark_session", lambda *_args: spark)
     report = migration.migrate_contract_definitions(**args)
     assert not writes and not report["applied"]
     assert all(kwargs["store"] == "Metadata" and kwargs["schema"] == "approved" for _, kwargs in reads)
@@ -255,11 +258,11 @@ def test_missing_legacy_tables_are_empty_but_other_read_errors_propagate(monkeyp
         raise RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")
 
     monkeypatch.setattr(migration, "read_lakehouse_table", read)
-    report = migration.migrate_contract_definitions(config={}, env="dev", spark_session=object())
+    report = call_with_spark(object(), migration.migrate_contract_definitions, config={}, env="dev")
     assert report["can_apply"] and not report["drafts"]
     monkeypatch.setattr(migration, "read_lakehouse_table", lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("Access denied")))
     with pytest.raises(RuntimeError, match="Access denied"):
-        migration.migrate_contract_definitions(config={}, env="dev", spark_session=object())
+        call_with_spark(object(), migration.migrate_contract_definitions, config={}, env="dev")
 
 
 def test_malformed_frozen_payload_is_a_migration_blocker():

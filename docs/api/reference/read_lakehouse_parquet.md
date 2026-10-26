@@ -23,7 +23,7 @@ Use when reading a Parquet file or path from a configured Fabric lakehouse Files
 <div class="reference-example-usage" markdown="1">
 
 ```python
-orders_df = read_lakehouse_parquet("curated/orders/", spark_session=spark)
+orders_df = read_lakehouse_parquet("curated/orders/")
 ```
 
 </div>
@@ -41,7 +41,6 @@ def read_lakehouse_parquet(
     *,
     store: str='Bronze',
     verbose: bool=True,
-    spark_session=None,
     context: dict[str, Any] | None=None,
     **options,
 ):
@@ -62,7 +61,6 @@ Required describes the Python signature. An optional parameter may still be need
 | `relative_path` | `str` | Yes | `—` | Parquet file path resolved underneath the configured Lakehouse ``Files`` area. Root-level files such as ``customers.parquet`` and nested paths such as ``incoming/2026/customers.parquet`` are supported. |
 | `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from ``00_env_config``. |
 | `verbose` | `bool` | No | `True` | Whether to print operational progress for original path attempts, original read success or failure, ``_tsus`` path attempts, conversion attempts, and fallback success or failure. It does not change the resulting data. |
-| `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
 | `**options` | `—` | No | `—` | Additional Spark Parquet reader options forwarded to Spark's Parquet reader for the original path read, the existing ``_tsus`` path read, and the read after conversion. Representative options include ``mergeSchema``, ``recursiveFileLookup``, ``pathGlobFilter``, ``modifiedBefore``, and ``modifiedAfter``. FabricOps does not interpret these options. |
 
@@ -171,6 +169,10 @@ DataFrame, or automatically cache or persist the returned DataFrame.
 
 <div class="reference-docstring-intro" markdown="1">
 
+Spark is resolved automatically from the existing execution session.
+No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
 Use ``read_lakehouse_parquet`` for Parquet files stored under the
 Lakehouse ``Files`` area. Use ``read_lakehouse_table`` for managed Delta
 tables stored under the Lakehouse ``Tables`` area.
@@ -195,7 +197,7 @@ backed by either the original path or the fallback path.
 
 `fabricops_kit/io/read_lakehouse_parquet.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_parquet.py#L15-L221">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_parquet.py#L15-L223">View on GitHub</a>
 </div>
 
 
