@@ -20,19 +20,15 @@ def manifest_digest(value):
     return hashlib.sha256(canonical_pipeline_json(pipeline_record_content(value)).encode("utf-8")).hexdigest()
 
 
-def metadata_records(table, *, context, spark_session=None, run_id=None, all_environments=False):
-    """Read domain metadata, allowing explicit cross-environment Governance browsing."""
+def metadata_records(table, *, context, spark_session=None, run_id=None):
+    """Read domain metadata through its configured owner schema."""
     config, _env, _runtime = resolve_fabric_context(context=context)
     frame = read_lakehouse_table(table, store="Metadata", schema=metadata_table_physical_schema(config, table),
                                 context={**(context or {}), "_spark_session": spark_session})
     if table == "METADATA_PIPELINE_RUN":
-        if all_environments and _env != "governance":
-            raise ValueError("Cross-environment Testing run browsing requires the central Governance context.")
-        if not all_environments or _env != "governance":
-            from pyspark.sql import functions as F
-            frame = frame.filter(F.col("environment_name") == _env)
+        from pyspark.sql import functions as F
+        frame = frame.filter(F.col("environment_name") == _env)
         if run_id is not None:
-            from pyspark.sql import functions as F
             frame = frame.filter(F.col("run_id") == run_id)
     rows = [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in frame.collect()]
     if table == "METADATA_PIPELINE_RUN":
