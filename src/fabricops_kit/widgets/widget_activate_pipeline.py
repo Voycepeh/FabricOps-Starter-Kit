@@ -64,7 +64,7 @@ def _release_view(report, candidates):
     return result
 
 
-def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict[str, Any]:
+def widget_activate_pipeline(*, pipeline_id=None, context=None, testing_run_id=None) -> dict[str, Any]:
     """Review one successful Testing run and coordinate all affected pipeline candidates.
 
     Spark is resolved automatically from the existing execution session.
@@ -90,9 +90,28 @@ def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict[str, Any
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
         _config, env, _runtime = resolve_fabric_context(context=context)
     if env == "governance":
-        return shared.select_engineering_environment(
-            startup=startup, title="Pipeline Activation", config=_config, runtime_context=_runtime,
-            launch=lambda scoped: widget_activate_pipeline(pipeline_id=pipeline_id, context=scoped),
+        with startup.phase("spark_loading", "Resolving the Spark session…"):
+            governance_spark = get_spark_session(context=context)
+        with startup.phase("metadata_loading", "Loading Testing runs across environments…"):
+            governance_runs = metadata_records(
+                "METADATA_PIPELINE_RUN", context={**_runtime, "config": _config, "env": env},
+                spark_session=governance_spark, all_environments=True,
+            )
+        records = [
+            row for row in governance_runs
+            if str(row.get("environment_name") or "") in _config.path_config.paths
+            and str(row.get("environment_name") or "") != "governance"
+            and _eligible_candidate(row, pipeline_id=pipeline_id)
+        ]
+        return shared.select_governance_record(
+            startup=startup, title="Pipeline Activation", records=records,
+            record_label=lambda row: (
+                f"{row['environment_name']} · {row['pipeline_id']} · {row['run_id']}"
+            ),
+            config=_config, runtime_context=_runtime, record_name="Testing run",
+            launch=lambda row, scoped: widget_activate_pipeline(
+                pipeline_id=row["pipeline_id"], context=scoped, testing_run_id=row["run_id"],
+            ),
         )
     spark_session = get_spark_session(context=context)
     import ipywidgets as widgets
@@ -114,6 +133,10 @@ def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict[str, Any
         agreements = metadata_records("METADATA_DATA_AGREEMENT", context=context, spark_session=spark_session)
     primary = [row for row in runs if pipeline_id is None or row["pipeline_id"] == pipeline_id]
     run_select = widgets.Dropdown(description="Testing run", options=[(f"{r['pipeline_id']} · {r['run_id']}", r["run_id"]) for r in primary], layout=widgets.Layout(width="100%"))
+    if testing_run_id is not None:
+        if str(testing_run_id) not in {str(row["run_id"]) for row in primary}:
+            raise ValueError("The selected Testing run is no longer eligible in its Engineering environment.")
+        run_select.value = testing_run_id
     additions = widgets.SelectMultiple(description="Include tests", options=[(f"{r['pipeline_id']} · {r['run_id']}", r["run_id"]) for r in runs], layout=widgets.Layout(width="100%"))
     agreement = widgets.Dropdown(description="Agreement", options=[(f"{r.get('agreement_name', r['agreement_id'])} · {r['agreement_version']}", (r['agreement_id'], r['agreement_version'])) for r in agreements], layout=widgets.Layout(width="100%"))
     details = widgets.HTML()
