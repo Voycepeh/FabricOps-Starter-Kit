@@ -78,6 +78,4 @@
 <title>Open metadata documentation: DATA_ACCESS</title>
 </a>
 
-<text x="36" y="950" font-size="13" font-family="Arial, sans-serif" fill="#52647A">Solid lines: implemented references, enforced by application logic. PK: row key · UK: nested unique key · FK: scalar or nested reference · Composite keys must be joined together.</text>
-<text x="36" y="969" font-size="13" font-family="Arial, sans-serif" fill="#52647A">Registry cardinalities describe pipeline approvals, not its singleton authority row. N-N denotes shared Contract versions across approvals or runs.</text>
 </svg>
