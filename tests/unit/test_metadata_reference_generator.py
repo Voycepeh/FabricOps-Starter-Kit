@@ -98,8 +98,9 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         assert "**Relationships:**" in page
         assert "## Column summary" in page
         assert "| Total columns |" in page
-        assert "| Business columns |" in page
-        assert "| Audit columns |" in page
+        assert "| Engineering columns |" in page
+        assert "| Governance columns |" in page
+        assert "| Standard audit columns |" in page
         assert "## Implemented schema" in page
         assert '<table class="metadata-schema-table"><thead><tr><th scope="col">Column</th>' in page
         assert "Managed by" not in page
@@ -111,6 +112,14 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "[`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Data Contract authoring" in contract_page
     assert "`METADATA_DATA_AGREEMENT` **(N → 1)**" not in contract_page
     activated_page = first_pages["metadata_pipeline_registry.md"]
+    assert "| Engineering columns | 5 |" in activated_page
+    assert "| Governance columns | 4 |" in activated_page
+    assert "| Standard audit columns | 8 |" in activated_page
+    for column in ("revisions", "approvals", "selections", "table_ownership"):
+        assert f'<tr class="metadata-column--governance"><td><code>{column}</code>' in activated_page
+    for column in ("authority_id", "token", "registrations", "reservations", "profiling_claims"):
+        assert f'<tr class="metadata-column--engineering"><td><code>{column}</code>' in activated_page
+    assert '<tr class="metadata-column--audit"><td><code>_committed_by</code>' in activated_page
     assert "`approvals`" in activated_page and "`authority_id`" in activated_page
     assert "atomic native authority" in activated_page
     assert '<div class="metadata-schema-table">' in activated_page
