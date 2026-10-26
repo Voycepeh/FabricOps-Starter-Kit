@@ -411,11 +411,11 @@
   table-layout: fixed;
 }
 .md-typeset table.metadata-schema-table > thead > tr > th:first-child,
-.md-typeset table.metadata-schema-table > tbody > tr > td:first-child { width: 24%; }
+.md-typeset table.metadata-schema-table > tbody > tr > td:first-child { width: 30%; }
 .md-typeset table.metadata-schema-table > thead > tr > th:nth-child(2),
-.md-typeset table.metadata-schema-table > tbody > tr > td:nth-child(2) { width: 38%; }
+.md-typeset table.metadata-schema-table > tbody > tr > td:nth-child(2) { width: 35%; }
 .md-typeset table.metadata-schema-table > thead > tr > th:nth-child(3),
-.md-typeset table.metadata-schema-table > tbody > tr > td:nth-child(3) { width: 38%; }
+.md-typeset table.metadata-schema-table > tbody > tr > td:nth-child(3) { width: 35%; }
 .md-typeset table.metadata-schema-table > tbody > tr > td {
   vertical-align: top;
   overflow-wrap: anywhere;
