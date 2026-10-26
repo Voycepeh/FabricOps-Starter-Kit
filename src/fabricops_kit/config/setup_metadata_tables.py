@@ -284,8 +284,21 @@ def _upgrade_catalogue(*, spark, table, expected_schema, metadata_schema, contex
         seq = jvm.scala.collection.JavaConverters.asScalaBufferConverter(actions).asScala().toSeq()
         recovery = json.dumps({"fabricops_catalogue_upgrade": 1, "pre_upgrade_version": version})
         option = jvm.scala.Option
-        operation = delta.DeltaOperations.Write(jvm.org.apache.spark.sql.SaveMode.Overwrite,
-                                               option.empty(), option.empty(), option.apply(recovery))
+        # Delta 4.2 adds three optional Write parameters; the persisted-Delta
+        # regression runtime (3.3) still exposes the four-argument constructor.
+        # Bind to the extended signature first without changing the transaction.
+        from py4j.protocol import Py4JError
+
+        write_args = (jvm.org.apache.spark.sql.SaveMode.Overwrite,
+                      option.empty(), option.empty(), option.apply(recovery))
+        try:
+            operation = delta.DeltaOperations.Write(
+                *write_args, option.empty(), option.empty(), option.empty())
+        except Py4JError as exc:
+            if ("Constructor org.apache.spark.sql.delta.DeltaOperations$Write" not in str(exc)
+                    or "does not exist" not in str(exc)):
+                raise
+            operation = delta.DeltaOperations.Write(*write_args)
         committed_version = int(txn.commit(seq, operation))
         committed = spark.read.format("delta").option("versionAsOf", committed_version).load(path)
         if committed.schema != replacement.schema:
