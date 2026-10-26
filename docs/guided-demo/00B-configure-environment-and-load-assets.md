@@ -71,7 +71,7 @@ Use the same FabricOps wheel version across the workspace-specific Environments 
 
 ## Configure `00_env_config`
 
-In each deployment of `00_env_config`, replace the Fabric ID placeholders with the IDs for the items created in 0A. Set `ENVIRONMENT_WORKSPACES` to one unique workspace ID per environment and register the caller workspace. Keep all Metadata stores pointed at the same Governance Lakehouse.
+In each deployment of `00_env_config`, replace the Fabric ID placeholders with the IDs for the items created in 0A. Set `ENGINEERING_WORKSPACE_IDS` to one unique Engineering workspace ID per environment. The central Governance workspace uses `GOVERNANCE_WORKSPACE_ID` without an Engineering environment. Keep all Metadata stores pointed at the same Governance Lakehouse.
 
 By default, `setup_notebook()` loads `00_env_config` from the current workspace. Advanced callers can pass `config_workspace_id="<configuration-workspace-id>"` to `setup_notebook()` to load a shared deployment. The remote config must register the caller workspace, and cross-workspace execution and store permissions are required. See [Workspace configuration](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#workspace-configuration).
 
