@@ -361,16 +361,16 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     }
     assert len(actual) == len(connectors)
     assert all(source != target for source, target in actual)
-    assert all(edge.get("data-cardinality") in {"1:N", "N:M"} for edge in connectors)
+    assert all(edge.get("data-cardinality") in {"1-N", "N-N"} for edge in connectors)
     assert all(edge.find(f"{namespace}path") is not None for edge in connectors)
     assert ("PIPELINE_REGISTRY", "PIPELINE_RUN") in actual
     assert ("PIPELINE_RUN", "DATA_CONTRACT") in actual
     assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-kind") == "nested"
-    assert actual[("DATA_AGREEMENT", "PIPELINE_REGISTRY")].get("data-cardinality") == "1:N"
-    assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-cardinality") == "1:N"
-    assert actual[("PIPELINE_REGISTRY", "DATA_CONTRACT")].get("data-cardinality") == "N:M"
-    assert actual[("PIPELINE_RUN", "DATA_CONTRACT")].get("data-cardinality") == "N:M"
-    assert all(edge.get("data-cardinality") == "1:N" for edge in connectors if edge.get("data-kind") == "physical")
+    assert actual[("DATA_AGREEMENT", "PIPELINE_REGISTRY")].get("data-cardinality") == "1-N"
+    assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-cardinality") == "1-N"
+    assert actual[("PIPELINE_REGISTRY", "DATA_CONTRACT")].get("data-cardinality") == "N-N"
+    assert actual[("PIPELINE_RUN", "DATA_CONTRACT")].get("data-cardinality") == "N-N"
+    assert all(edge.get("data-cardinality") == "1-N" for edge in connectors if edge.get("data-kind") == "physical")
     assert all("arrow" not in (edge.find(f"{namespace}title").text or "").lower() for edge in connectors)
     assert "stroke-dasharray" not in svg.read_text(encoding="utf-8")
     registry = next(a for a in svg_tree.findall(f".//{namespace}a")
@@ -454,7 +454,7 @@ def test_metadata_explorer_navigation_matches_canonical_svg() -> None:
     assert len(names) == len(set(names)) == len(CANONICAL_METADATA_TABLES)
     assert set(names) == {name.removeprefix("METADATA_") for name in CANONICAL_METADATA_TABLES}
     links = js.split("const links = [", 1)[1].split("\n  ];", 1)[0]
-    relationships = set(re.findall(r'^    \["([A-Z_]+)", "([A-Z_]+)", "([1NM:]+)"', links, re.MULTILINE))
+    relationships = set(re.findall(r'^    \["([A-Z_]+)", "([A-Z_]+)", "([1N-]+)"', links, re.MULTILINE))
     svg = ET.parse(root / "docs/assets/fabricops-metadata-approved.svg")
     edges = svg.findall(".//{http://www.w3.org/2000/svg}g[@class='metadata-er-relationship']")
     assert relationships == {(edge.get("data-from"), edge.get("data-to"), edge.get("data-cardinality")) for edge in edges}

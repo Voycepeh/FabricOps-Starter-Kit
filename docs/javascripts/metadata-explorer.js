@@ -18,36 +18,32 @@
     ["DATA_ACCESS", "engineering", ["access_id"], ["table_id"], "metadata_data_access/"]
   ];
 
-  // Direction is parent -> child; the inverse cardinality is shown when
-  // inspecting the child. Test-evidence and Live-release links are distinct.
+  // Cardinalities always follow the declared parent-to-child direction.
+  // Relationship tooltips identify that direction when inspecting either table.
   // Registry cardinalities describe approvals; the physical authority is one row.
   const links = [
-    ["DATA_STEWARD", "DATA_AGREEMENT", "1:N", "Provider or recipient"],
-    ["DATA_AGREEMENT", "PIPELINE_REGISTRY", "1:N", "Exact approved Agreement versions"],
-    ["PIPELINE_REGISTRY", "DATA_CONTRACT", "N:M", "Exact table ownership contracts"],
-    ["PIPELINE_RUN", "DATA_CONTRACT", "N:M", "Exact operation contracts"],
-    ["DATA_CATALOGUE", "DATA_CONTRACT", "1:N", "Contracts for a table"],
-    ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1:N", "Live runs per approved pipeline release"],
-    ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1:N", "Run evaluations"],
-    ["PIPELINE_RUN", "PROCESSING_STATE", "1:N", "Run processing state"],
-    ["DATA_CATALOGUE", "PROCESSING_STATE", "1:N", "Source and target processing state"],
-    ["DATA_CATALOGUE", "DATA_PROFILED", "1:N", "Profile snapshots"],
-    ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "1:N", "Frequency snapshots"],
-    ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "1:N", "Optional statistical profile"],
-    ["DATA_CATALOGUE", "DATA_LINEAGE", "1:N", "Lineage records"],
-    ["DATA_CATALOGUE", "DATA_ACCESS", "1:N", "Access observations"],
-    ["DATA_CONTRACT", "GUARDRAIL_RESULTS", "1:N", "Contract evaluations"]
+    ["DATA_STEWARD", "DATA_AGREEMENT", "1-N", "Provider or recipient"],
+    ["DATA_AGREEMENT", "PIPELINE_REGISTRY", "1-N", "Exact approved Agreement versions"],
+    ["PIPELINE_REGISTRY", "DATA_CONTRACT", "N-N", "Exact table ownership contracts"],
+    ["PIPELINE_RUN", "DATA_CONTRACT", "N-N", "Exact operation contracts"],
+    ["DATA_CATALOGUE", "DATA_CONTRACT", "1-N", "Contracts for a table"],
+    ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1-N", "Live runs per approved pipeline release"],
+    ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1-N", "Run evaluations"],
+    ["PIPELINE_RUN", "PROCESSING_STATE", "1-N", "Run processing state"],
+    ["DATA_CATALOGUE", "PROCESSING_STATE", "1-N", "Source and target processing state"],
+    ["DATA_CATALOGUE", "DATA_PROFILED", "1-N", "Profile snapshots"],
+    ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "1-N", "Frequency snapshots"],
+    ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "1-N", "Optional statistical profile"],
+    ["DATA_CATALOGUE", "DATA_LINEAGE", "1-N", "Lineage records"],
+    ["DATA_CATALOGUE", "DATA_ACCESS", "1-N", "Access observations"],
+    ["DATA_CONTRACT", "GUARDRAIL_RESULTS", "1-N", "Contract evaluations"]
   ];
 
   const byName = new Map(definitions.map(row => [row[0], row]));
   const escapeHtml = value => String(value).replace(/[&<>"']/g, ch => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   })[ch]);
-  const cardinalityFrom = (edge, name) => {
-    const c = edge[2];
-    if (!c) return "Reference";
-    return edge[0] === name ? c : c === "1:N" ? "N:1" : c === "N:1" ? "1:N" : c;
-  };
+  const cardinalityFrom = edge => edge[2] || "Reference";
 
   const makeSvg = (tag, attributes) => {
     const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
@@ -252,7 +248,7 @@
           return '<div class="metadata-explorer-related-row">' +
             '<span class="metadata-explorer-cardinality-text' +
             (referenceOnly ? ' metadata-explorer-reference-label' : '') +
-            '"' + (referenceOnly ? ' title="Application-enforced identity reference; nested records have their own keys"' : '') + '>' +
+            '" title="' + escapeHtml(edge[0] + ' → ' + edge[1] + ': ' + edge[3] + '; Application-enforced identity reference') + '">' +
             escapeHtml(cardinalityFrom(edge, name)) + '</span>' +
             '<button type="button" class="metadata-explorer-related-link" data-table="' + escapeHtml(other) + '">' +
             escapeHtml(other) + '</button>' +
