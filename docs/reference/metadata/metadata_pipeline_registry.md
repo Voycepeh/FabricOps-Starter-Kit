@@ -5,7 +5,8 @@ Coordinates Engineering registrations and Governance decisions through one atomi
 ## Writer functions
 
 * [`finalize_pipeline`](../../api/reference/finalize_pipeline.md)
-* [`profile_table`](../../api/reference/profile_table.md)
+* [`orchestrate_read`](../../api/reference/orchestrate_read.md)
+* [`orchestrate_write`](../../api/reference/orchestrate_write.md)
 * [`setup_pipeline`](../../api/reference/setup_pipeline.md)
 * [`widget_activate_pipeline`](../../api/reference/widget_activate_pipeline.md)
 
