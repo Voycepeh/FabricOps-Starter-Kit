@@ -86,12 +86,16 @@ def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict[str, Any
     refresh, review_release and perform_activation. Metadata errors raise or are
     displayed by button actions; opening the widget changes no approval.
     """
-    spark_session = get_spark_session(context=context)
-    import ipywidgets as widgets
-
     startup = shared.WidgetStartup("Pipeline Activation")
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
         _config, env, _runtime = resolve_fabric_context(context=context)
+    if env == "governance":
+        return shared.select_engineering_environment(
+            startup=startup, title="Pipeline Activation", config=_config, runtime_context=_runtime,
+            launch=lambda scoped: widget_activate_pipeline(pipeline_id=pipeline_id, context=scoped),
+        )
+    spark_session = get_spark_session(context=context)
+    import ipywidgets as widgets
     with startup.phase("metadata_loading", "Loading configured metadata…"):
         all_runs = json.loads(json.dumps([row for row in metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session)
                     if row.get("environment_name") == env], default=str))
