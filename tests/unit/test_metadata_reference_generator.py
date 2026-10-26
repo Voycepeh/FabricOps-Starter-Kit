@@ -145,7 +145,8 @@ def test_metadata_nested_types_are_rendered_as_field_tables() -> None:
     rendered = generator._metadata_type_cell(schema_type, column="registrations")
     assert 'class="metadata-nested-type"' in rendered
     assert 'aria-label="Fields in registrations"' in rendered
-    assert "Array of structs" in rendered
+    assert "<summary>Array</summary>" in rendered
+    assert '<details class="metadata-structured-type">' in rendered
     assert "<code>amount</code></td><td><code>decimal(18,2)</code>" in rendered
     assert "<code>destination.workspace_id</code>" in rendered
     assert "<code>records.record_id</code>" in rendered
@@ -500,7 +501,7 @@ def test_schema_html_keeps_nested_types_inside_outer_cells() -> None:
     assert '<table class="metadata-schema-table"><thead><tr>' in page
     assert (
         '<td><code>load_strategy_parameters_json</code></td>'
-        '<td><div class="metadata-structured-type">'
+        '<td><details class="metadata-structured-type">'
     ) in page
     assert 'aria-label="Fields in load_strategy_parameters_json"' in page
     assert "| Column | Data type | Description |" not in page
