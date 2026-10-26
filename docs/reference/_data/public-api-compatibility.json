@@ -1698,7 +1698,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -1722,10 +1722,11 @@
           "reasons": [
             "Lifecycle changed: Preview to Live.",
             "Parameter removed: metadata_schema.",
+            "Parameter removed: spark.",
             "Optional parameter added: raise_on_failure.",
             "Optional parameter added: verbose."
           ],
-          "signature_after": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
+          "signature_after": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
           "signature_before": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, metadata_schema: str | None = None, require_active_steward: bool = False) -> dict[str, Any]"
         },
         {
@@ -1752,7 +1753,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
+          "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -1762,10 +1763,11 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
           "reasons": [
+            "Parameter removed: spark_session.",
             "Parameter removed: target.",
             "Optional parameter can consume an existing **kwargs key: store."
           ],
-          "signature_after": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)",
+          "signature_after": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', header: bool = True, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_lakehouse_csv(relative_path: str, *, target: str = 'source', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)"
         },
         {
@@ -1775,10 +1777,11 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
           "reasons": [
+            "Parameter removed: spark_session.",
             "Parameter removed: target.",
             "Optional parameter can consume an existing **kwargs key: store."
           ],
-          "signature_after": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)",
+          "signature_after": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, context: dict[str, Any] | None = None, **read_excel_kwargs)",
           "signature_before": "read_lakehouse_excel(relative_path: str, *, target: str = 'source', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)"
         },
         {
@@ -1790,7 +1793,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_after": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', context: dict[str, Any] | None = None, **options)",
           "signature_before": null
         },
         {
@@ -1800,10 +1803,11 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
           "reasons": [
+            "Parameter removed: spark_session.",
             "Parameter removed: target.",
             "Optional parameter can consume an existing **kwargs key: store."
           ],
-          "signature_after": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_after": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_lakehouse_parquet(relative_path: str, *, target: str = 'source', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)"
         },
         {
@@ -1813,13 +1817,14 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
           "reasons": [
+            "Parameter removed: spark_session.",
             "Parameter removed: target.",
             "Optional parameter can consume an existing **kwargs key: store.",
             "Optional parameter can consume an existing **kwargs key: table_id.",
             "Parameter became optional: table_name.",
             "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_after": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_lakehouse_table(table_name: str, *, target: str = 'source', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)"
         },
         {
@@ -1829,10 +1834,11 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
           "reasons": [
+            "Parameter removed: spark_session.",
             "Parameter removed: target.",
             "Optional parameter can consume an existing **kwargs key: store."
           ],
-          "signature_after": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_after": "read_warehouse_query(query: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_query(query: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
         },
         {
@@ -1842,10 +1848,11 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
           "reasons": [
+            "Parameter removed: spark_session.",
             "Parameter removed: target.",
             "Optional parameter can consume an existing **kwargs key: store."
           ],
-          "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
         },
         {
@@ -1931,7 +1938,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]",
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -1967,7 +1974,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)",
+          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
           "signature_before": null
         },
         {
@@ -2039,7 +2046,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -2087,7 +2094,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -2128,26 +2135,28 @@
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
           "reasons": [
-            "Lifecycle changed: Preview to Live."
+            "Lifecycle changed: Preview to Live.",
+            "Parameter removed: spark."
           ],
-          "signature_after": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
           "reasons": [
-            "Lifecycle changed: Preview to Live."
+            "Lifecycle changed: Preview to Live.",
+            "Parameter removed: spark."
           ],
-          "signature_after": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
@@ -2178,8 +2187,8 @@
       "summary": {
         "added": 15,
         "modified": 12,
-        "nonbreaking": 17,
-        "potentially_breaking": 9,
+        "nonbreaking": 15,
+        "potentially_breaking": 11,
         "removed": 14,
         "review_required": 15,
         "total": 41
@@ -3294,7 +3303,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -3308,6 +3317,18 @@
           ],
           "signature_after": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "reasons": [
+            "Parameter removed: spark."
+          ],
+          "signature_after": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
+          "signature_before": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -3332,8 +3353,92 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
+          "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
           "signature_before": null
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', header: bool = True, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, context: dict[str, Any] | None = None, **read_excel_kwargs)",
+          "signature_before": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_warehouse_query(query: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
         },
         {
           "change_type": "removed",
@@ -3445,15 +3550,16 @@
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "reasons": [
+            "Parameter removed: spark_session.",
             "Optional parameter added: context.",
             "Optional parameter added: read_parameters."
           ],
-          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]",
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]",
           "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -3470,11 +3576,12 @@
         },
         {
           "change_type": "modified",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
           "reasons": [
+            "Parameter removed: spark_session.",
             "Optional parameter added: context.",
             "Optional parameter added: frequency_enabled.",
             "Optional parameter added: grain_discovery_enabled.",
@@ -3483,7 +3590,7 @@
             "Optional parameter added: verbose.",
             "Default changed for frequency_top_n: None to 5."
           ],
-          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)",
+          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_top_n: int | None = None, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)"
         },
         {
@@ -3531,7 +3638,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -3555,8 +3662,32 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]",
           "signature_before": null
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Parameter removed: spark."
+          ],
+          "signature_after": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Parameter removed: spark."
+          ],
+          "signature_after": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -3585,12 +3716,12 @@
       ],
       "summary": {
         "added": 11,
-        "modified": 4,
-        "nonbreaking": 13,
-        "potentially_breaking": 1,
+        "modified": 14,
+        "nonbreaking": 12,
+        "potentially_breaking": 13,
         "removed": 12,
-        "review_required": 13,
-        "total": 27
+        "review_required": 12,
+        "total": 37
       },
       "target": "working-tree"
     },
@@ -4643,6 +4774,30 @@
       "changes": [
         {
           "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "reasons": [
+            "Parameter removed: spark."
+          ],
+          "signature_after": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
+          "signature_before": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
           "classification": "review_required",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
@@ -4654,6 +4809,102 @@
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
+          "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', header: bool = True, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, context: dict[str, Any] | None = None, **read_excel_kwargs)",
+          "signature_before": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_warehouse_query(query: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
         },
         {
           "change_type": "removed",
@@ -4776,14 +5027,15 @@
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "reasons": [
+            "Parameter removed: spark_session.",
             "Optional parameter added: context."
           ],
-          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]",
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]",
           "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -4800,18 +5052,19 @@
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
           "reasons": [
+            "Parameter removed: spark_session.",
             "Optional parameter added: context.",
             "Optional parameter added: grain_discovery_enabled.",
             "Optional parameter added: grain_discovery_max_candidates.",
             "Optional parameter added: grain_discovery_max_columns.",
             "Optional parameter added: verbose."
           ],
-          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)",
+          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)"
         },
         {
@@ -4859,8 +5112,44 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]",
           "signature_before": null
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]",
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Parameter removed: spark."
+          ],
+          "signature_after": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Parameter removed: spark."
+          ],
+          "signature_after": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -4889,12 +5178,12 @@
       ],
       "summary": {
         "added": 3,
-        "modified": 6,
-        "nonbreaking": 6,
-        "potentially_breaking": 3,
+        "modified": 19,
+        "nonbreaking": 4,
+        "potentially_breaking": 18,
         "removed": 10,
         "review_required": 10,
-        "total": 19
+        "total": 32
       },
       "target": "working-tree"
     },
@@ -6038,22 +6327,203 @@
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "reasons": [
+            "Parameter removed: spark."
+          ],
+          "signature_after": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
+          "signature_before": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
+          "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', header: bool = True, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, context: dict[str, Any] | None = None, **read_excel_kwargs)",
+          "signature_before": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_warehouse_query(query: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]",
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
+          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
+            "Parameter removed: spark_session.",
             "Parameter removed: testing_results."
           ],
-          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]",
           "signature_before": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "reasons": [
+            "Parameter removed: spark_session."
+          ],
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]",
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Parameter removed: spark."
+          ],
+          "signature_after": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Parameter removed: spark."
+          ],
+          "signature_after": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
         }
       ],
       "summary": {
         "added": 0,
-        "modified": 1,
+        "modified": 16,
         "nonbreaking": 0,
-        "potentially_breaking": 1,
+        "potentially_breaking": 16,
         "removed": 0,
         "review_required": 0,
-        "total": 1
+        "total": 16
       },
       "target": "working-tree"
     },
@@ -6094,7 +6564,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -6118,10 +6588,11 @@
             "Lifecycle changed: Live to Preview.",
             "Parameter removed: raise_on_failure.",
             "Parameter removed: verbose.",
-            "Optional parameter added: metadata_schema."
+            "Optional parameter added: metadata_schema.",
+            "Required parameter added: spark."
           ],
           "signature_after": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, metadata_schema: str | None = None, require_active_steward: bool = False) -> dict[str, Any]",
-          "signature_before": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
+          "signature_before": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -6148,7 +6619,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
+          "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -6158,10 +6629,11 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
           "reasons": [
             "Parameter removed: store.",
+            "Optional parameter can consume an existing **kwargs key: spark_session.",
             "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_lakehouse_csv(relative_path: str, *, target: str = 'source', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)",
-          "signature_before": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)"
+          "signature_before": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', header: bool = True, context: dict[str, Any] | None = None, **options)"
         },
         {
           "change_type": "modified",
@@ -6171,10 +6643,11 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
           "reasons": [
             "Parameter removed: store.",
+            "Optional parameter can consume an existing **kwargs key: spark_session.",
             "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_lakehouse_excel(relative_path: str, *, target: str = 'source', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)",
-          "signature_before": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)"
+          "signature_before": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, context: dict[str, Any] | None = None, **read_excel_kwargs)"
         },
         {
           "change_type": "removed",
@@ -6186,7 +6659,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', spark_session = None, context: dict[str, Any] | None = None, **options)"
+          "signature_before": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', context: dict[str, Any] | None = None, **options)"
         },
         {
           "change_type": "modified",
@@ -6196,10 +6669,11 @@
           "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
           "reasons": [
             "Parameter removed: store.",
+            "Optional parameter can consume an existing **kwargs key: spark_session.",
             "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_lakehouse_parquet(relative_path: str, *, target: str = 'source', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)",
-          "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)"
+          "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, context: dict[str, Any] | None = None, **options)"
         },
         {
           "change_type": "modified",
@@ -6210,12 +6684,13 @@
           "reasons": [
             "Parameter removed: store.",
             "Parameter removed: table_id.",
+            "Optional parameter can consume an existing **kwargs key: spark_session.",
             "Optional parameter can consume an existing **kwargs key: target.",
             "Parameter became required: table_name.",
             "Annotation changed for table_name: str | None to str."
           ],
           "signature_after": "read_lakehouse_table(table_name: str, *, target: str = 'source', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)",
-          "signature_before": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)"
+          "signature_before": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None, **options)"
         },
         {
           "change_type": "modified",
@@ -6225,10 +6700,11 @@
           "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
           "reasons": [
             "Parameter removed: store.",
+            "Optional parameter can consume an existing **kwargs key: spark_session.",
             "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_warehouse_query(query: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
-          "signature_before": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
+          "signature_before": "read_warehouse_query(query: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)"
         },
         {
           "change_type": "modified",
@@ -6238,10 +6714,11 @@
           "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
           "reasons": [
             "Parameter removed: store.",
+            "Optional parameter can consume an existing **kwargs key: spark_session.",
             "Optional parameter can consume an existing **kwargs key: target."
           ],
           "signature_after": "read_warehouse_table(schema: str, table_name: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
-          "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
+          "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)"
         },
         {
           "change_type": "modified",
@@ -6327,7 +6804,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]"
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6363,7 +6840,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)"
+          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
         },
         {
           "change_type": "removed",
@@ -6435,7 +6912,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6483,7 +6960,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6528,10 +7005,11 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
           "reasons": [
-            "Lifecycle changed: Live to Preview."
+            "Lifecycle changed: Live to Preview.",
+            "Required parameter added: spark."
           ],
           "signature_after": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -6540,10 +7018,11 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
           "reasons": [
-            "Lifecycle changed: Live to Preview."
+            "Lifecycle changed: Live to Preview.",
+            "Required parameter added: spark."
           ],
           "signature_after": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6630,7 +7109,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -6643,6 +7122,18 @@
           ],
           "signature_after": null,
           "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "reasons": [
+            "Required parameter added: spark."
+          ],
+          "signature_after": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
+          "signature_before": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -6668,7 +7159,91 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
+          "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', header: bool = True, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)",
+          "signature_before": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, context: dict[str, Any] | None = None, **read_excel_kwargs)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_query(query: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)"
         },
         {
           "change_type": "added",
@@ -6786,10 +7361,11 @@
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "reasons": [
             "Parameter removed: context.",
-            "Parameter removed: read_parameters."
+            "Parameter removed: read_parameters.",
+            "Optional parameter added: spark_session."
           ],
           "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]"
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6816,10 +7392,11 @@
             "Parameter removed: grain_discovery_max_candidates.",
             "Parameter removed: grain_discovery_max_columns.",
             "Parameter removed: verbose.",
+            "Optional parameter added: spark_session.",
             "Default changed for frequency_top_n: 5 to None."
           ],
           "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_top_n: int | None = None, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)",
-          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)"
+          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
         },
         {
           "change_type": "modified",
@@ -6867,7 +7444,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6891,7 +7468,31 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Required parameter added: spark."
+          ],
+          "signature_after": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Required parameter added: spark."
+          ],
+          "signature_after": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6920,18 +7521,42 @@
       ],
       "summary": {
         "added": 12,
-        "modified": 4,
+        "modified": 14,
         "nonbreaking": 12,
-        "potentially_breaking": 4,
+        "potentially_breaking": 14,
         "removed": 11,
         "review_required": 11,
-        "total": 27
+        "total": 37
       },
       "target": "v0.2.0"
     },
     {
       "baseline": "working-tree",
       "changes": [
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
+          "reasons": [
+            "Optional parameter added: spark_session."
+          ],
+          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "reasons": [
+            "Required parameter added: spark."
+          ],
+          "signature_after": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
+          "signature_before": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
+        },
         {
           "change_type": "modified",
           "classification": "potentially_breaking",
@@ -6945,6 +7570,102 @@
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
+          "reasons": [
+            "Optional parameter added: spark_session."
+          ],
+          "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
+          "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', header: bool = True, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)",
+          "signature_before": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, context: dict[str, Any] | None = None, **read_excel_kwargs)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_query(query: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)"
         },
         {
           "change_type": "added",
@@ -7072,10 +7793,11 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "reasons": [
-            "Parameter removed: context."
+            "Parameter removed: context.",
+            "Optional parameter added: spark_session."
           ],
           "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]"
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -7100,10 +7822,11 @@
             "Parameter removed: grain_discovery_enabled.",
             "Parameter removed: grain_discovery_max_candidates.",
             "Parameter removed: grain_discovery_max_columns.",
-            "Parameter removed: verbose."
+            "Parameter removed: verbose.",
+            "Optional parameter added: spark_session."
           ],
           "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)",
-          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)"
+          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
         },
         {
           "change_type": "modified",
@@ -7151,7 +7874,43 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "reasons": [
+            "Optional parameter added: spark_session."
+          ],
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Required parameter added: spark."
+          ],
+          "signature_after": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Required parameter added: spark."
+          ],
+          "signature_after": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -7180,12 +7939,12 @@
       ],
       "summary": {
         "added": 10,
-        "modified": 6,
-        "nonbreaking": 10,
-        "potentially_breaking": 6,
+        "modified": 19,
+        "nonbreaking": 13,
+        "potentially_breaking": 16,
         "removed": 3,
         "review_required": 3,
-        "total": 19
+        "total": 32
       },
       "target": "v0.2.5"
     },
@@ -7194,25 +7953,206 @@
       "changes": [
         {
           "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
+          "reasons": [
+            "Optional parameter added: spark_session."
+          ],
+          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "reasons": [
+            "Required parameter added: spark."
+          ],
+          "signature_after": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
+          "signature_before": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
+          "reasons": [
+            "Optional parameter added: spark_session."
+          ],
+          "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
+          "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', header: bool = True, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)",
+          "signature_before": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, context: dict[str, Any] | None = None, **read_excel_kwargs)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_query(query: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+          "reasons": [
+            "Optional parameter can consume an existing **kwargs key: spark_session."
+          ],
+          "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Optional parameter added: spark_session."
+          ],
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]",
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
+          "reasons": [
+            "Optional parameter added: spark_session."
+          ],
+          "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)",
+          "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
+        },
+        {
+          "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
+            "Optional parameter added: spark_session.",
             "Required parameter added: testing_results."
           ],
           "signature_after": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
-          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "reasons": [
+            "Optional parameter added: spark_session."
+          ],
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Required parameter added: spark."
+          ],
+          "signature_after": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Required parameter added: spark."
+          ],
+          "signature_after": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
         }
       ],
       "summary": {
         "added": 0,
-        "modified": 1,
-        "nonbreaking": 0,
-        "potentially_breaking": 1,
+        "modified": 16,
+        "nonbreaking": 5,
+        "potentially_breaking": 11,
         "removed": 0,
         "review_required": 0,
-        "total": 1
+        "total": 16
       },
       "target": "main"
     }
@@ -14735,14 +15675,6 @@
               "required": false
             },
             {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
               "annotation": "bool",
               "default": "True",
               "has_default": true,
@@ -14761,7 +15693,7 @@
           ],
           "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
           "return_annotation": "dict[str, Any]",
-          "signature": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/access_scanner/scan_sql_access.py",
           "source_qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access"
         },
@@ -14839,14 +15771,6 @@
           "lifecycle": "Live",
           "parameters": [
             {
-              "annotation": "Any",
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "spark",
-              "required": true
-            },
-            {
               "annotation": "FrameworkConfig | dict[str, Any]",
               "default": null,
               "has_default": false,
@@ -14889,7 +15813,7 @@
           ],
           "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
           "return_annotation": "dict[str, Any]",
-          "signature": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
+          "signature": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
           "source_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
         },
@@ -15015,14 +15939,6 @@
               "required": false
             },
             {
-              "annotation": "Any",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
               "annotation": "Callable[[], str]",
               "default": "default_token_provider",
               "has_default": true,
@@ -15041,7 +15957,7 @@
           ],
           "qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
           "return_annotation": "dict[str, Any]",
-          "signature": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
+          "signature": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/data_agent/create_data_agent.py",
           "source_qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent"
         },
@@ -15064,14 +15980,6 @@
               "has_default": true,
               "kind": "keyword_only",
               "name": "store",
-              "required": false
-            },
-            {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
               "required": false
             },
             {
@@ -15101,7 +16009,7 @@
           ],
           "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
           "return_annotation": null,
-          "signature": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', spark_session = None, header: bool = True, context: dict[str, Any] | None = None, **options)",
+          "signature": "read_lakehouse_csv(relative_path: str, *, store: str = 'Bronze', header: bool = True, context: dict[str, Any] | None = None, **options)",
           "source_path": "src/fabricops_kit/io/read_lakehouse_csv.py",
           "source_qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv"
         },
@@ -15135,14 +16043,6 @@
               "required": false
             },
             {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
               "annotation": "dict[str, Any] | None",
               "default": "None",
               "has_default": true,
@@ -15161,7 +16061,7 @@
           ],
           "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
           "return_annotation": null,
-          "signature": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, spark_session = None, context: dict[str, Any] | None = None, **read_excel_kwargs)",
+          "signature": "read_lakehouse_excel(relative_path: str, *, store: str = 'Bronze', sheet_name = 0, context: dict[str, Any] | None = None, **read_excel_kwargs)",
           "source_path": "src/fabricops_kit/io/read_lakehouse_excel.py",
           "source_qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel"
         },
@@ -15187,14 +16087,6 @@
               "required": false
             },
             {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
               "annotation": "dict[str, Any] | None",
               "default": "None",
               "has_default": true,
@@ -15213,7 +16105,7 @@
           ],
           "qualified_name": "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
           "return_annotation": null,
-          "signature": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature": "read_lakehouse_json(relative_path: str, *, store: str = 'Bronze', context: dict[str, Any] | None = None, **options)",
           "source_path": "src/fabricops_kit/io/read_lakehouse_json.py",
           "source_qualified_name": "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json"
         },
@@ -15247,14 +16139,6 @@
               "required": false
             },
             {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
               "annotation": "dict[str, Any] | None",
               "default": "None",
               "has_default": true,
@@ -15273,7 +16157,7 @@
           ],
           "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
           "return_annotation": null,
-          "signature": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, context: dict[str, Any] | None = None, **options)",
           "source_path": "src/fabricops_kit/io/read_lakehouse_parquet.py",
           "source_qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet"
         },
@@ -15315,14 +16199,6 @@
               "required": false
             },
             {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
               "annotation": "dict[str, Any] | None",
               "default": "None",
               "has_default": true,
@@ -15341,7 +16217,7 @@
           ],
           "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
           "return_annotation": null,
-          "signature": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature": "read_lakehouse_table(table_name: str | None = None, *, table_id: str | None = None, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None, **options)",
           "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
           "source_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table"
         },
@@ -15367,14 +16243,6 @@
               "required": false
             },
             {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
               "annotation": "dict[str, Any] | None",
               "default": "None",
               "has_default": true,
@@ -15393,7 +16261,7 @@
           ],
           "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
           "return_annotation": null,
-          "signature": "read_warehouse_query(query: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature": "read_warehouse_query(query: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)",
           "source_path": "src/fabricops_kit/io/read_warehouse_query.py",
           "source_qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query"
         },
@@ -15427,14 +16295,6 @@
               "required": false
             },
             {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
               "annotation": "dict[str, Any] | None",
               "default": "None",
               "has_default": true,
@@ -15453,7 +16313,7 @@
           ],
           "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
           "return_annotation": null,
-          "signature": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
+          "signature": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)",
           "source_path": "src/fabricops_kit/io/read_warehouse_table.py",
           "source_qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table"
         },
@@ -15899,14 +16759,6 @@
               "required": false
             },
             {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
               "annotation": "bool",
               "default": "True",
               "has_default": true,
@@ -15925,7 +16777,7 @@
           ],
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "return_annotation": "dict[str, Any]",
-          "signature": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True, context = None) -> dict[str, Any]",
+          "signature": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
           "source_qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read"
         },
@@ -16039,14 +16891,6 @@
               "required": false
             },
             {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
               "annotation": "bool",
               "default": "True",
               "has_default": true,
@@ -16057,7 +16901,7 @@
           ],
           "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
           "return_annotation": null,
-          "signature": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, spark_session = None, verbose: bool = True)",
+          "signature": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
           "source_path": "src/fabricops_kit/pipeline/profile_table.py",
           "source_qualified_name": "fabricops_kit.pipeline.profile_table.profile_table"
         },
@@ -16183,21 +17027,13 @@
               "default": "None",
               "has_default": true,
               "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
               "name": "context",
               "required": false
             }
           ],
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "return_annotation": "dict[str, Any]",
-          "signature": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/widgets/widget_activate_pipeline.py",
           "source_qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline"
         },
@@ -16227,21 +17063,13 @@
               "default": "None",
               "has_default": true,
               "kind": "keyword_only",
-              "name": "spark_session",
-              "required": false
-            },
-            {
-              "annotation": "Any",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
               "name": "context",
               "required": false
             }
           ],
           "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
           "return_annotation": "dict[str, Any]",
-          "signature": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
+          "signature": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
           "source_qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract"
         },
@@ -16250,14 +17078,6 @@
           "extraction_error": null,
           "lifecycle": "Live",
           "parameters": [
-            {
-              "annotation": "Any",
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "spark",
-              "required": true
-            },
             {
               "annotation": "dict[str, Any] | None",
               "default": "None",
@@ -16269,7 +17089,7 @@
           ],
           "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
           "return_annotation": "dict[str, Any]",
-          "signature": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
           "source_qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
         },
@@ -16278,14 +17098,6 @@
           "extraction_error": null,
           "lifecycle": "Live",
           "parameters": [
-            {
-              "annotation": "Any",
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "spark",
-              "required": true
-            },
             {
               "annotation": "dict[str, Any] | None",
               "default": "None",
@@ -16297,7 +17109,7 @@
           ],
           "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
           "return_annotation": "dict[str, Any]",
-          "signature": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
           "source_qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"
         }
@@ -16308,7 +17120,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:30874a48172264c05da43480a4b4fbefa71afa7f04f64557cd8c767706b366ab",
+      "source_digest": "sha256:a154d5923110bb8e75a4d61a46dcfebc46e71e56f66fbd62e16510457604ce6f",
       "source_kind": "working_tree",
       "version": "working-tree"
     }
