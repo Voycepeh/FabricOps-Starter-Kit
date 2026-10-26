@@ -2010,7 +2010,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -3614,7 +3614,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -5088,7 +5088,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -6471,6 +6471,18 @@
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
+          "reasons": [
+            "Parameter removed: config_workspace_id."
+          ],
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
             "Parameter removed: spark_session."
@@ -6517,12 +6529,12 @@
       ],
       "summary": {
         "added": 0,
-        "modified": 16,
+        "modified": 17,
         "nonbreaking": 0,
-        "potentially_breaking": 16,
+        "potentially_breaking": 17,
         "removed": 0,
         "review_required": 0,
-        "total": 16
+        "total": 17
       },
       "target": "working-tree"
     },
@@ -6875,7 +6887,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -7419,7 +7431,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -7849,7 +7861,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -8099,6 +8111,18 @@
           "classification": "nonbreaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
+          "reasons": [
+            "Optional parameter added: config_workspace_id."
+          ],
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
             "Optional parameter added: spark_session."
@@ -8145,12 +8169,12 @@
       ],
       "summary": {
         "added": 0,
-        "modified": 16,
-        "nonbreaking": 6,
+        "modified": 17,
+        "nonbreaking": 7,
         "potentially_breaking": 10,
         "removed": 0,
         "review_required": 0,
-        "total": 16
+        "total": 17
       },
       "target": "main"
     }
@@ -16961,14 +16985,6 @@
               "required": false
             },
             {
-              "annotation": "str | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "config_workspace_id",
-              "required": false
-            },
-            {
               "annotation": "bool",
               "default": "False",
               "has_default": true,
@@ -16995,7 +17011,7 @@
           ],
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "return_annotation": null,
-          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', config_workspace_id: str | None = None, new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "source_path": "src/fabricops_kit/pipeline/setup_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline"
         },
@@ -17110,7 +17126,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:6512b6c4a9ccbe0293cc98e4d6eff330e9d47ff28a93e0d908e87ae31f0fa146",
+      "source_digest": "sha256:4efc58ca9934ce34ff3ba566789ef8156b9080842ef7af15460966067c935fe9",
       "source_kind": "working_tree",
       "version": "working-tree"
     }
