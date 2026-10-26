@@ -39,6 +39,8 @@ via `profile_id`
 
 ## Implemented schema
 
+<div class="metadata-schema-table" markdown="1">
+
 | Column | Data type | Description |
 | --- | --- | --- |
 | `frequency_id` | `string` | Identifier stored for `frequency_id`. |
@@ -64,3 +66,5 @@ via `profile_id`
 | `_notebook_name` | `string` | Fabric notebook name captured from runtime audit context. |
 | `_metadata_lakehouse_name` | `string` | Configured metadata lakehouse name used for the write. |
 | `_activity_id` | `string` | Fabric execution activity identifier for the current notebook or pipeline run. |
+
+</div>

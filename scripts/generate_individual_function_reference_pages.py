@@ -4816,6 +4816,8 @@ def generate_metadata_reference_pages() -> None:
             "",
             "## Implemented schema",
             "",
+            '<div class="metadata-schema-table" markdown="1">',
+            "",
             "| Column | Data type | Description |",
             "| --- | --- | --- |",
         ]
@@ -4825,8 +4827,7 @@ def generate_metadata_reference_pages() -> None:
                 f"| `{column}` | {_metadata_type_cell(str(row['type']), column=column)} | "
                 f"{_metadata_field_description(table_name, column)} |"
             )
-        if any(_metadata_nested_struct(str(row["type"])) for row in rows):
-            lines.append("{: .metadata-schema-table }")
+        lines.extend(["", "</div>"])
         (METADATA_REFERENCE_DIR / f"{slug}.md").write_text(
             "\n".join(lines).rstrip() + "\n", encoding="utf-8"
         )
