@@ -101,7 +101,7 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         assert "| Business columns |" in page
         assert "| Audit columns |" in page
         assert "## Implemented schema" in page
-        assert "| Column | Data type | Description |" in page
+        assert '<table class="metadata-schema-table"><thead><tr><th scope="col">Column</th>' in page
         assert "Managed by" not in page
         assert "captured" in page.lower()
 
@@ -113,7 +113,8 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     activated_page = first_pages["metadata_pipeline_registry.md"]
     assert "`approvals`" in activated_page and "`authority_id`" in activated_page
     assert "atomic native authority" in activated_page
-    assert '<div class="metadata-schema-table" markdown="1">' in activated_page
+    assert '<div class="metadata-schema-table">' in activated_page
+    assert "markdown=\"1\"" not in activated_page
     assert "{: .metadata-schema-table }" not in activated_page
     assert '<table class="metadata-nested-type" aria-label="Fields in registrations">' in activated_page
     assert "<code>destination.workspace_id</code>" in activated_page
@@ -150,7 +151,7 @@ def test_metadata_nested_types_are_rendered_as_field_tables() -> None:
     assert "<code>records.record_id</code>" in rendered
     assert "<code>array&lt;string&gt;</code>" in rendered
     assert rendered.count("<tr>") == 9
-    assert generator._metadata_type_cell("timestamp", column="_committed_at") == chr(96) + "timestamp" + chr(96)
+    assert generator._metadata_type_cell("timestamp", column="_committed_at") == "<code>timestamp</code>"
 
 
 
@@ -491,13 +492,15 @@ def test_metadata_explorer_navigation_matches_canonical_svg() -> None:
     assert "ACTIVATION_STATE" not in js
 
 
-def test_schema_layout_wrapper_survives_markdown_rendering() -> None:
-    """Attach layout to the rendered schema rather than an accidental table row."""
-    import pytest
-    markdown = pytest.importorskip("markdown")
+def test_schema_html_keeps_nested_types_inside_outer_cells() -> None:
+    """Nested Spark field tables stay inside valid outer schema table cells."""
     from pathlib import Path
+
     page = Path("docs/reference/metadata/metadata_data_catalogue.md").read_text()
-    rendered = markdown.markdown(page, extensions=["tables", "attr_list", "md_in_html"])
-    assert '<div class="metadata-schema-table">\n<table>' in rendered
-    assert "{: .metadata-schema-table }" not in rendered
-    assert 'aria-label="Fields in load_strategy_parameters_json"' in rendered
+    assert '<table class="metadata-schema-table"><thead><tr>' in page
+    assert (
+        '<td><code>load_strategy_parameters_json</code></td>'
+        '<td><div class="metadata-structured-type">'
+    ) in page
+    assert 'aria-label="Fields in load_strategy_parameters_json"' in page
+    assert "| Column | Data type | Description |" not in page

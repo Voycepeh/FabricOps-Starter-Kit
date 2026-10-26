@@ -42,36 +42,34 @@ via `contract_id` + `contract_version`
 
 ## Implemented schema
 
-<div class="metadata-schema-table" markdown="1">
-
-| Column | Data type | Description |
-| --- | --- | --- |
-| `guardrail_result_id` | `string` | Stable identifier for the aggregate Guardrail result row. |
-| `guardrail_rule_id` | `string` | Stable authored Guardrail identifier, or the synthetic completion-record identifier when rule_type is contract_validation. |
-| `guardrail_version` | `integer` | Metadata Guardrail Results field `guardrail_version`. |
-| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
-| `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
-| `contract_id` | `string` | Stable identifier for the contract row. |
-| `contract_version` | `integer` | Version recorded for the contract row. |
-| `execution_type` | `string` | Whether the runtime record came from Testing or Live contract execution. Testing results remain in memory; Live appends Guardrail Results. Historical validate records remain readable. |
-| `run_id` | `string` | Identifier stored for `run_id`. |
-| `environment_name` | `string` | Environment name recorded for the metadata row. |
-| `status` | `string` | Pipeline run status recorded with the run summary. |
-| `can_continue` | `boolean` | Metadata Guardrail Results field `can_continue`. |
-| `severity` | `string` | Severity recorded for a Guardrail result. |
-| `guardrail_type` | `string` | Guardrail family recorded for the row. |
-| `rule_id` | `string` | Rule identity stored by the authoring workflow. |
-| `rule_type` | `string` | Specific rule type recorded within the guardrail family. |
-| `action` | `string` | Warn or Block action applied when an authored Guardrail fails. |
-| `reason` | `string` | Human-readable reason recorded for the Guardrail outcome. |
-| `result_payload_json` | `string` | Serialized aggregate result payload written for the Guardrail outcome. |
-| `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
-| `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
-| `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |
-| `_workspace_name` | `string` | Fabric workspace name captured from runtime audit context. |
-| `_notebook_id` | `string` | Fabric notebook identifier captured from runtime audit context. |
-| `_notebook_name` | `string` | Fabric notebook name captured from runtime audit context. |
-| `_metadata_lakehouse_name` | `string` | Configured metadata lakehouse name used for the write. |
-| `_activity_id` | `string` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
+<div class="metadata-schema-table">
+<table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
+<tr><td><code>guardrail_result_id</code></td><td><code>string</code></td><td>Stable identifier for the aggregate Guardrail result row.</td></tr>
+<tr><td><code>guardrail_rule_id</code></td><td><code>string</code></td><td>Stable authored Guardrail identifier, or the synthetic completion-record identifier when rule_type is contract_validation.</td></tr>
+<tr><td><code>guardrail_version</code></td><td><code>integer</code></td><td>Metadata Guardrail Results field <code>guardrail_version</code>.</td></tr>
+<tr><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across environment, dataset, and table context.</td></tr>
+<tr><td><code>table_name</code></td><td><code>string</code></td><td>Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
+<tr><td><code>contract_id</code></td><td><code>string</code></td><td>Stable identifier for the contract row.</td></tr>
+<tr><td><code>contract_version</code></td><td><code>integer</code></td><td>Version recorded for the contract row.</td></tr>
+<tr><td><code>execution_type</code></td><td><code>string</code></td><td>Whether the runtime record came from Testing or Live contract execution. Testing results remain in memory; Live appends Guardrail Results. Historical validate records remain readable.</td></tr>
+<tr><td><code>run_id</code></td><td><code>string</code></td><td>Identifier stored for <code>run_id</code>.</td></tr>
+<tr><td><code>environment_name</code></td><td><code>string</code></td><td>Environment name recorded for the metadata row.</td></tr>
+<tr><td><code>status</code></td><td><code>string</code></td><td>Pipeline run status recorded with the run summary.</td></tr>
+<tr><td><code>can_continue</code></td><td><code>boolean</code></td><td>Metadata Guardrail Results field <code>can_continue</code>.</td></tr>
+<tr><td><code>severity</code></td><td><code>string</code></td><td>Severity recorded for a Guardrail result.</td></tr>
+<tr><td><code>guardrail_type</code></td><td><code>string</code></td><td>Guardrail family recorded for the row.</td></tr>
+<tr><td><code>rule_id</code></td><td><code>string</code></td><td>Rule identity stored by the authoring workflow.</td></tr>
+<tr><td><code>rule_type</code></td><td><code>string</code></td><td>Specific rule type recorded within the guardrail family.</td></tr>
+<tr><td><code>action</code></td><td><code>string</code></td><td>Warn or Block action applied when an authored Guardrail fails.</td></tr>
+<tr><td><code>reason</code></td><td><code>string</code></td><td>Human-readable reason recorded for the Guardrail outcome.</td></tr>
+<tr><td><code>result_payload_json</code></td><td><code>string</code></td><td>Serialized aggregate result payload written for the Guardrail outcome.</td></tr>
+<tr><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
+<tr><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
+<tr><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
+<tr><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
+<tr><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
+<tr><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
+<tr><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>
+<tr><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
+</tbody></table>
 </div>

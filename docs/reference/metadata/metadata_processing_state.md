@@ -46,45 +46,43 @@ via `publication_id`
 
 ## Implemented schema
 
-<div class="metadata-schema-table" markdown="1">
-
-| Column | Data type | Description |
-| --- | --- | --- |
-| `record_id` | `string` | Stable SHA-256 primary key for one typed record; acceptance updates the same staged record. |
-| `record_type` | `string` | source_observation, incremental_checkpoint, drift_baseline, or publication_receipt. |
-| `status` | `string` | observed for captured source observations; staged before target publication; committed only after exact physical publication verification. |
-| `observation_id` | `string` | Identifier grouping the partitions of one captured source snapshot. |
-| `run_id` | `string` | Originating logical pipeline attempt, shared with METADATA_PIPELINE_RUN.run_id; null for standalone execution. Recovery retains the original run. |
-| `pipeline_id` | `string` | Stable pipeline identity when execution uses a pipeline plan. |
-| `source_table_id` | `string` | Identifier stored for `source_table_id`. |
-| `source_table_name` | `string` | Physical source table name captured with the observation; null on publication receipts. |
-| `target_table_id` | `string` | Identifier stored for `target_table_id`. |
-| `target_table_name` | `string` | Physical target table name captured at publication; null on unbound observations. |
-| `environment_name` | `string` | Environment name recorded for the metadata row. |
-| `observed_at` | `timestamp` | Original source capture timestamp; distinct from acknowledgement time. |
-| `accepted_at` | `timestamp` | Timestamp of successful metadata acknowledgement, shared by the receipt and all members accepted in one merge; null before acceptance. |
-| `partition_column` | `string` | Column defining observed source partitions, or the incremental watermark column. |
-| `change_column` | `string` | Source column supplying minimum and maximum change values. |
-| `watermark_type` | `string` | Source scalar type for lossless change-value bounds, including distinct timestamp and timestamp_ntz semantics. Numeric and temporal values can be cast explicitly for queries. |
-| `partition_value` | `string` | Canonical source partition text; SQL null remains null and is distinct from an empty string. Null also applies to receipt and empty-source header rows. |
-| `row_count` | `long` | Observed source-partition row count, or zero for an empty source/removal tombstone. |
-| `min_change_value` | `string` | Lossless minimum change value encoded according to watermark_type; null for empty observations/removals. |
-| `max_change_value` | `string` | Lossless maximum change value encoded according to watermark_type; used as progress only on committed incremental_checkpoint records. |
-| `content_fingerprint` | `string` | Source partition content fingerprint for Source Drift comparison; independent of the publication batch fingerprint. |
-| `is_present` | `boolean` | True for a present source partition; false for an absent partition or empty incremental aggregate; null when no source partition applies, including empty-source headers and receipts. |
-| `publication_id` | `string` | Reference to the exact target-specific publication_receipt record_id; a receipt references itself. |
-| `publication_batch_id` | `string` | Prepared business content, schema, source membership and processing fingerprint; stored only on the receipt. |
-| `publication_activity_id` | `string` | Fabric activity whose atomic target write stamped the batch; recovery does not substitute the retry activity. |
-| `publication_at` | `timestamp` | UTC timestamp stamped atomically with target rows; paired with publication_activity_id for verification. |
-| `publication_input_rows` | `long` | Prepared batch row count. Warehouse append/overwrite recovery verifies the complete marker count. |
-| `publication_strategy` | `string` | Physical append, overwrite, scd1 or scd2 strategy of the receipt. |
-| `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
-| `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
-| `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |
-| `_workspace_name` | `string` | Fabric workspace name captured from runtime audit context. |
-| `_notebook_id` | `string` | Fabric notebook identifier captured from runtime audit context. |
-| `_notebook_name` | `string` | Fabric notebook name captured from runtime audit context. |
-| `_metadata_lakehouse_name` | `string` | Configured metadata lakehouse name used for the write. |
-| `_activity_id` | `string` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
+<div class="metadata-schema-table">
+<table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
+<tr><td><code>record_id</code></td><td><code>string</code></td><td>Stable SHA-256 primary key for one typed record; acceptance updates the same staged record.</td></tr>
+<tr><td><code>record_type</code></td><td><code>string</code></td><td>source_observation, incremental_checkpoint, drift_baseline, or publication_receipt.</td></tr>
+<tr><td><code>status</code></td><td><code>string</code></td><td>observed for captured source observations; staged before target publication; committed only after exact physical publication verification.</td></tr>
+<tr><td><code>observation_id</code></td><td><code>string</code></td><td>Identifier grouping the partitions of one captured source snapshot.</td></tr>
+<tr><td><code>run_id</code></td><td><code>string</code></td><td>Originating logical pipeline attempt, shared with METADATA_PIPELINE_RUN.run_id; null for standalone execution. Recovery retains the original run.</td></tr>
+<tr><td><code>pipeline_id</code></td><td><code>string</code></td><td>Stable pipeline identity when execution uses a pipeline plan.</td></tr>
+<tr><td><code>source_table_id</code></td><td><code>string</code></td><td>Identifier stored for <code>source_table_id</code>.</td></tr>
+<tr><td><code>source_table_name</code></td><td><code>string</code></td><td>Physical source table name captured with the observation; null on publication receipts.</td></tr>
+<tr><td><code>target_table_id</code></td><td><code>string</code></td><td>Identifier stored for <code>target_table_id</code>.</td></tr>
+<tr><td><code>target_table_name</code></td><td><code>string</code></td><td>Physical target table name captured at publication; null on unbound observations.</td></tr>
+<tr><td><code>environment_name</code></td><td><code>string</code></td><td>Environment name recorded for the metadata row.</td></tr>
+<tr><td><code>observed_at</code></td><td><code>timestamp</code></td><td>Original source capture timestamp; distinct from acknowledgement time.</td></tr>
+<tr><td><code>accepted_at</code></td><td><code>timestamp</code></td><td>Timestamp of successful metadata acknowledgement, shared by the receipt and all members accepted in one merge; null before acceptance.</td></tr>
+<tr><td><code>partition_column</code></td><td><code>string</code></td><td>Column defining observed source partitions, or the incremental watermark column.</td></tr>
+<tr><td><code>change_column</code></td><td><code>string</code></td><td>Source column supplying minimum and maximum change values.</td></tr>
+<tr><td><code>watermark_type</code></td><td><code>string</code></td><td>Source scalar type for lossless change-value bounds, including distinct timestamp and timestamp_ntz semantics. Numeric and temporal values can be cast explicitly for queries.</td></tr>
+<tr><td><code>partition_value</code></td><td><code>string</code></td><td>Canonical source partition text; SQL null remains null and is distinct from an empty string. Null also applies to receipt and empty-source header rows.</td></tr>
+<tr><td><code>row_count</code></td><td><code>long</code></td><td>Observed source-partition row count, or zero for an empty source/removal tombstone.</td></tr>
+<tr><td><code>min_change_value</code></td><td><code>string</code></td><td>Lossless minimum change value encoded according to watermark_type; null for empty observations/removals.</td></tr>
+<tr><td><code>max_change_value</code></td><td><code>string</code></td><td>Lossless maximum change value encoded according to watermark_type; used as progress only on committed incremental_checkpoint records.</td></tr>
+<tr><td><code>content_fingerprint</code></td><td><code>string</code></td><td>Source partition content fingerprint for Source Drift comparison; independent of the publication batch fingerprint.</td></tr>
+<tr><td><code>is_present</code></td><td><code>boolean</code></td><td>True for a present source partition; false for an absent partition or empty incremental aggregate; null when no source partition applies, including empty-source headers and receipts.</td></tr>
+<tr><td><code>publication_id</code></td><td><code>string</code></td><td>Reference to the exact target-specific publication_receipt record_id; a receipt references itself.</td></tr>
+<tr><td><code>publication_batch_id</code></td><td><code>string</code></td><td>Prepared business content, schema, source membership and processing fingerprint; stored only on the receipt.</td></tr>
+<tr><td><code>publication_activity_id</code></td><td><code>string</code></td><td>Fabric activity whose atomic target write stamped the batch; recovery does not substitute the retry activity.</td></tr>
+<tr><td><code>publication_at</code></td><td><code>timestamp</code></td><td>UTC timestamp stamped atomically with target rows; paired with publication_activity_id for verification.</td></tr>
+<tr><td><code>publication_input_rows</code></td><td><code>long</code></td><td>Prepared batch row count. Warehouse append/overwrite recovery verifies the complete marker count.</td></tr>
+<tr><td><code>publication_strategy</code></td><td><code>string</code></td><td>Physical append, overwrite, scd1 or scd2 strategy of the receipt.</td></tr>
+<tr><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
+<tr><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
+<tr><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
+<tr><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
+<tr><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
+<tr><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
+<tr><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>
+<tr><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
+</tbody></table>
 </div>

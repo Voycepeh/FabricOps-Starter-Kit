@@ -4378,11 +4378,23 @@ def _metadata_nested_struct(type_name: str) -> tuple[str, str] | None:
     return None
 
 
+def _metadata_inline_html(value: str) -> str:
+    """Render plain metadata guidance with safe inline code spans."""
+    parts = re.split(r"(`[^`]+`)", value)
+    return "".join(
+        (
+            f"<code>{html_escape(part[1:-1])}</code>"
+            if part.startswith("`") and part.endswith("`")
+            else html_escape(part)
+        )
+        for part in parts
+    )
+
 def _metadata_type_cell(type_name: str, *, column: str) -> str:
     """Render native nested Spark fields as an accessible, compact subtable."""
     nested = _metadata_nested_struct(type_name)
     if nested is None:
-        return f"`{type_name}`"
+        return f"<code>{html_escape(type_name)}</code>"
 
     field_rows: list[str] = []
 
@@ -4816,18 +4828,19 @@ def generate_metadata_reference_pages() -> None:
             "",
             "## Implemented schema",
             "",
-            '<div class="metadata-schema-table" markdown="1">',
-            "",
-            "| Column | Data type | Description |",
-            "| --- | --- | --- |",
+            '<div class="metadata-schema-table">',
+            '<table class="metadata-schema-table"><thead><tr>'
+            '<th scope="col">Column</th><th scope="col">Data type</th>'
+            '<th scope="col">Description</th></tr></thead><tbody>',
         ]
         for row in rows:
             column = str(row["name"])
             lines.append(
-                f"| `{column}` | {_metadata_type_cell(str(row['type']), column=column)} | "
-                f"{_metadata_field_description(table_name, column)} |"
+                f'<tr><td><code>{html_escape(column)}</code></td>'
+                f'<td>{_metadata_type_cell(str(row["type"]), column=column)}</td>'
+                f'<td>{_metadata_inline_html(_metadata_field_description(table_name, column))}</td></tr>'
             )
-        lines.extend(["", "</div>"])
+        lines.extend(["</tbody></table>", "</div>"])
         (METADATA_REFERENCE_DIR / f"{slug}.md").write_text(
             "\n".join(lines).rstrip() + "\n", encoding="utf-8"
         )

@@ -39,33 +39,31 @@ via `table_id`
 
 ## Implemented schema
 
-<div class="metadata-schema-table" markdown="1">
-
-| Column | Data type | Description |
-| --- | --- | --- |
-| `access_id` | `string` | Stable identifier for one observed SQL permission row. |
-| `user_principal` | `string` | SQL principal name observed for the permission row. |
-| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
-| `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
-| `environment_name` | `string` | Environment name recorded for the metadata row. |
-| `access_level` | `string` | SQL permission class or scope, such as SCHEMA or OBJECT_OR_COLUMN. |
-| `access_value` | `string` | SQL permission name, such as SELECT. |
-| `access_state` | `string` | Observed SQL permission state, such as GRANT or DENY. |
-| `access_snapshot_id` | `string` | Identifier grouping permission rows captured in the same access inventory snapshot. |
-| `user_type` | `string` | SQL principal type observed for the permission row. |
-| `role_name` | `string` | Database role through which the permission is inherited when applicable. |
-| `permission_source` | `string` | Whether the observed permission is direct or inherited through a database role. |
-| `database_name` | `string` | Database containing the observed permission scope. |
-| `schema_name` | `string` | Lakehouse or warehouse schema name recorded for the dataset when available. |
-| `object_name` | `string` | Database object name covered by the observed permission when applicable. |
-| `object_type` | `string` | Database object type covered by the observed permission when applicable. |
-| `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
-| `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
-| `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |
-| `_workspace_name` | `string` | Fabric workspace name captured from runtime audit context. |
-| `_notebook_id` | `string` | Fabric notebook identifier captured from runtime audit context. |
-| `_notebook_name` | `string` | Fabric notebook name captured from runtime audit context. |
-| `_metadata_lakehouse_name` | `string` | Configured metadata lakehouse name used for the write. |
-| `_activity_id` | `string` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
+<div class="metadata-schema-table">
+<table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
+<tr><td><code>access_id</code></td><td><code>string</code></td><td>Stable identifier for one observed SQL permission row.</td></tr>
+<tr><td><code>user_principal</code></td><td><code>string</code></td><td>SQL principal name observed for the permission row.</td></tr>
+<tr><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across environment, dataset, and table context.</td></tr>
+<tr><td><code>table_name</code></td><td><code>string</code></td><td>Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
+<tr><td><code>environment_name</code></td><td><code>string</code></td><td>Environment name recorded for the metadata row.</td></tr>
+<tr><td><code>access_level</code></td><td><code>string</code></td><td>SQL permission class or scope, such as SCHEMA or OBJECT_OR_COLUMN.</td></tr>
+<tr><td><code>access_value</code></td><td><code>string</code></td><td>SQL permission name, such as SELECT.</td></tr>
+<tr><td><code>access_state</code></td><td><code>string</code></td><td>Observed SQL permission state, such as GRANT or DENY.</td></tr>
+<tr><td><code>access_snapshot_id</code></td><td><code>string</code></td><td>Identifier grouping permission rows captured in the same access inventory snapshot.</td></tr>
+<tr><td><code>user_type</code></td><td><code>string</code></td><td>SQL principal type observed for the permission row.</td></tr>
+<tr><td><code>role_name</code></td><td><code>string</code></td><td>Database role through which the permission is inherited when applicable.</td></tr>
+<tr><td><code>permission_source</code></td><td><code>string</code></td><td>Whether the observed permission is direct or inherited through a database role.</td></tr>
+<tr><td><code>database_name</code></td><td><code>string</code></td><td>Database containing the observed permission scope.</td></tr>
+<tr><td><code>schema_name</code></td><td><code>string</code></td><td>Lakehouse or warehouse schema name recorded for the dataset when available.</td></tr>
+<tr><td><code>object_name</code></td><td><code>string</code></td><td>Database object name covered by the observed permission when applicable.</td></tr>
+<tr><td><code>object_type</code></td><td><code>string</code></td><td>Database object type covered by the observed permission when applicable.</td></tr>
+<tr><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
+<tr><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
+<tr><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
+<tr><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
+<tr><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
+<tr><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
+<tr><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>
+<tr><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
+</tbody></table>
 </div>

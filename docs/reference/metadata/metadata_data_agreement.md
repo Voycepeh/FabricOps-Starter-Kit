@@ -35,31 +35,29 @@ via `provider_steward_id` + `recipient_steward_id`
 
 ## Implemented schema
 
-<div class="metadata-schema-table" markdown="1">
-
-| Column | Data type | Description |
-| --- | --- | --- |
-| `agreement_id` | `string` | Stable identifier for the agreement lifecycle. |
-| `agreement_version` | `string` | Canonical agreement version associated with the row. |
-| `agreement_name` | `string` | Human-readable name for the agreement. |
-| `domain` | `string` | Business domain recorded for the metadata row. |
-| `provider_steward_id` | `string` | Steward identifier recorded for the provider side of the agreement. |
-| `provider_steward_name` | `string` | Provider steward name captured when this Data Agreement version was written; later steward renames do not change it. |
-| `recipient_steward_id` | `string` | Steward identifier recorded for the recipient side of the agreement. |
-| `recipient_steward_name` | `string` | Recipient steward name captured when this Data Agreement version was written; later steward renames do not change it. |
-| `start_date` | `date` | Date stored for `start_date`. |
-| `expiry_date` | `date` | Date stored for `expiry_date`. |
-| `business_purpose` | `string` | Business purpose recorded for the agreement or access request. |
-| `supporting_documents_json` | `string` | JSON payload stored for `supporting_documents_json`. |
-| `approved_usage_json` | `string` | JSON payload stored for `approved_usage_json`. |
-| `custom_fields_json` | `string` | JSON payload stored for `custom_fields_json`. |
-| `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
-| `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
-| `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |
-| `_workspace_name` | `string` | Fabric workspace name captured from runtime audit context. |
-| `_notebook_id` | `string` | Fabric notebook identifier captured from runtime audit context. |
-| `_notebook_name` | `string` | Fabric notebook name captured from runtime audit context. |
-| `_metadata_lakehouse_name` | `string` | Configured metadata lakehouse name used for the write. |
-| `_activity_id` | `string` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
+<div class="metadata-schema-table">
+<table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
+<tr><td><code>agreement_id</code></td><td><code>string</code></td><td>Stable identifier for the agreement lifecycle.</td></tr>
+<tr><td><code>agreement_version</code></td><td><code>string</code></td><td>Canonical agreement version associated with the row.</td></tr>
+<tr><td><code>agreement_name</code></td><td><code>string</code></td><td>Human-readable name for the agreement.</td></tr>
+<tr><td><code>domain</code></td><td><code>string</code></td><td>Business domain recorded for the metadata row.</td></tr>
+<tr><td><code>provider_steward_id</code></td><td><code>string</code></td><td>Steward identifier recorded for the provider side of the agreement.</td></tr>
+<tr><td><code>provider_steward_name</code></td><td><code>string</code></td><td>Provider steward name captured when this Data Agreement version was written; later steward renames do not change it.</td></tr>
+<tr><td><code>recipient_steward_id</code></td><td><code>string</code></td><td>Steward identifier recorded for the recipient side of the agreement.</td></tr>
+<tr><td><code>recipient_steward_name</code></td><td><code>string</code></td><td>Recipient steward name captured when this Data Agreement version was written; later steward renames do not change it.</td></tr>
+<tr><td><code>start_date</code></td><td><code>date</code></td><td>Date stored for <code>start_date</code>.</td></tr>
+<tr><td><code>expiry_date</code></td><td><code>date</code></td><td>Date stored for <code>expiry_date</code>.</td></tr>
+<tr><td><code>business_purpose</code></td><td><code>string</code></td><td>Business purpose recorded for the agreement or access request.</td></tr>
+<tr><td><code>supporting_documents_json</code></td><td><code>string</code></td><td>JSON payload stored for <code>supporting_documents_json</code>.</td></tr>
+<tr><td><code>approved_usage_json</code></td><td><code>string</code></td><td>JSON payload stored for <code>approved_usage_json</code>.</td></tr>
+<tr><td><code>custom_fields_json</code></td><td><code>string</code></td><td>JSON payload stored for <code>custom_fields_json</code>.</td></tr>
+<tr><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
+<tr><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
+<tr><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
+<tr><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
+<tr><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
+<tr><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
+<tr><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>
+<tr><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
+</tbody></table>
 </div>

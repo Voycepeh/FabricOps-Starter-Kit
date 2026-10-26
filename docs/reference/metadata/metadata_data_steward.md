@@ -34,23 +34,21 @@ No immediate table relationship is defined in the current implementation.
 
 ## Implemented schema
 
-<div class="metadata-schema-table" markdown="1">
-
-| Column | Data type | Description |
-| --- | --- | --- |
-| `steward_id` | `string` | Stable identifier for the steward row. |
-| `steward_name` | `string` | Human-readable steward name. |
-| `steward_role` | `string` | Configured steward role captured for the row. |
-| `contact` | `string` | Contact detail captured for the steward record. |
-| `is_active` | `boolean` | Whether the row is currently active. |
-| `custom_fields_json` | `string` | JSON payload stored for `custom_fields_json`. |
-| `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
-| `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
-| `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |
-| `_workspace_name` | `string` | Fabric workspace name captured from runtime audit context. |
-| `_notebook_id` | `string` | Fabric notebook identifier captured from runtime audit context. |
-| `_notebook_name` | `string` | Fabric notebook name captured from runtime audit context. |
-| `_metadata_lakehouse_name` | `string` | Configured metadata lakehouse name used for the write. |
-| `_activity_id` | `string` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
+<div class="metadata-schema-table">
+<table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
+<tr><td><code>steward_id</code></td><td><code>string</code></td><td>Stable identifier for the steward row.</td></tr>
+<tr><td><code>steward_name</code></td><td><code>string</code></td><td>Human-readable steward name.</td></tr>
+<tr><td><code>steward_role</code></td><td><code>string</code></td><td>Configured steward role captured for the row.</td></tr>
+<tr><td><code>contact</code></td><td><code>string</code></td><td>Contact detail captured for the steward record.</td></tr>
+<tr><td><code>is_active</code></td><td><code>boolean</code></td><td>Whether the row is currently active.</td></tr>
+<tr><td><code>custom_fields_json</code></td><td><code>string</code></td><td>JSON payload stored for <code>custom_fields_json</code>.</td></tr>
+<tr><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
+<tr><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
+<tr><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
+<tr><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
+<tr><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
+<tr><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
+<tr><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>
+<tr><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
+</tbody></table>
 </div>
