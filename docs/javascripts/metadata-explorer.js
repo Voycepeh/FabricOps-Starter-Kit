@@ -7,9 +7,8 @@
     ["DATA_STEWARD", "governance", ["steward_id"], [], "metadata_data_steward/"],
     ["DATA_AGREEMENT", "governance", ["agreement_id", "agreement_version"], ["provider_steward_id", "recipient_steward_id"], "metadata_data_agreement/"],
     ["DATA_CONTRACT", "governance", ["contract_id", "contract_version"], ["table_id"], "metadata_data_contract/"],
-    ["ACTIVATION_STATE", "governance", ["authority_id"], [], "metadata_activation_state/", "Physical atomic activation authority"],
-    ["PIPELINE_REGISTRY", "engineering", ["pipeline_id", "environment_name"], [], "metadata_pipeline_registry/"],
-    ["PIPELINE_RUN", "engineering", ["run_id"], ["pipeline_id", "activated_pipeline_id"], "metadata_pipeline_run/"],
+    ["PIPELINE_REGISTRY", "engineering", ["authority_id"], ["approvals[].testing_run_id", "approvals[].agreement_id/version", "table_ownership[].contract_id/version"], "metadata_pipeline_registry/"],
+    ["PIPELINE_RUN", "engineering", ["run_id"], ["approval_id", "operations[].contract_id/version"], "metadata_pipeline_run/"],
     ["GUARDRAIL_RESULTS", "engineering", ["guardrail_result_id"], ["run_id", "contract_id", "contract_version"], "metadata_guardrail_results/"],
     ["DATA_CATALOGUE", "engineering", ["environment_name", "table_id", "column_id"], [], "metadata_data_catalogue/"],
     ["DATA_PROFILED", "engineering", ["profile_id"], ["table_id", "column_id"], "metadata_data_profiled/"],
@@ -21,15 +20,14 @@
 
   // Direction is parent -> child; the inverse cardinality is shown when
   // inspecting the child. Test-evidence and Live-release links are distinct.
-  // Dashed conceptual references deliberately have no physical-table cardinality.
+  // Nested references have member-level keys rather than scalar table-row cardinality.
   const links = [
     ["DATA_STEWARD", "DATA_AGREEMENT", "1:N", "Provider or recipient"],
-    ["DATA_AGREEMENT", "ACTIVATION_STATE", "", "Approved releases"],
-    ["PIPELINE_REGISTRY", "ACTIVATION_STATE", "", "Releases of a registered pipeline"],
-    ["ACTIVATION_STATE", "DATA_CONTRACT", "", "Frozen contracts in activated releases"],
-    ["ACTIVATION_STATE", "PIPELINE_RUN", "", "Live runs of approved releases"],
+    ["DATA_AGREEMENT", "PIPELINE_REGISTRY", "", "Exact approved Agreement versions"],
+    ["PIPELINE_REGISTRY", "DATA_CONTRACT", "", "Exact table ownership contracts"],
+    ["PIPELINE_RUN", "DATA_CONTRACT", "", "Exact operation contracts"],
     ["DATA_CATALOGUE", "DATA_CONTRACT", "1:N", "Contracts for a table"],
-    ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1:N", "Execution history"],
+    ["PIPELINE_REGISTRY", "PIPELINE_RUN", "", "Retained Tests and approved Live runs"],
     ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1:N", "Run evaluations"],
     ["PIPELINE_RUN", "PROCESSING_STATE", "1:N", "Run processing state"],
     ["DATA_CATALOGUE", "PROCESSING_STATE", "1:N", "Source and target processing state"],
@@ -163,7 +161,7 @@
     const approvedDiagram = new URL("../../assets/fabricops-metadata-approved.svg", document.baseURI);
     graph.style.width = "100%";
     graph.style.minWidth = "860px";
-    graph.style.aspectRatio = "1540 / 1220";
+    graph.style.aspectRatio = "1540 / 960";
     fetch(approvedDiagram).then(response => {
       if (!response.ok) throw new Error("Approved diagram returned " + response.status);
       return response.text();
@@ -201,7 +199,7 @@
         });
         buttons[name] = link;
       });
-      if (Object.keys(buttons).length !== 13) throw new Error("Unexpected approved diagram table count");
+      if (Object.keys(buttons).length !== definitions.length) throw new Error("Unexpected approved diagram table count");
       graph.replaceChildren(svg);
       select("DATA_AGREEMENT");
     }).catch(() => {
@@ -254,7 +252,7 @@
           return '<div class="metadata-explorer-related-row">' +
             '<span class="metadata-explorer-cardinality-text' +
             (referenceOnly ? ' metadata-explorer-reference-label' : '') +
-            '"' + (referenceOnly ? ' title="Conceptual reference without a physical foreign key"' : '') + '>' +
+            '"' + (referenceOnly ? ' title="Application-enforced identity reference; nested records have their own keys"' : '') + '>' +
             escapeHtml(cardinalityFrom(edge, name)) + '</span>' +
             '<button type="button" class="metadata-explorer-related-link" data-table="' + escapeHtml(other) + '">' +
             escapeHtml(other) + '</button>' +

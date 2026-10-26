@@ -421,7 +421,7 @@ def test_generated_svg_check_ignores_windows_line_endings_but_detects_real_drift
 
 
 def test_metadata_relationship_reference_label_does_not_overlap_table_name() -> None:
-    """Conceptual references are plain labels with enough room at all widths."""
+    """Identity references are plain labels with enough room at all widths."""
     from pathlib import Path
 
     root = Path(__file__).parents[2]
@@ -430,9 +430,30 @@ def test_metadata_relationship_reference_label_does_not_overlap_table_name() -> 
 
     assert "const referenceOnly = !edge[2];" in js
     assert "metadata-explorer-reference-label" in js
-    assert "Conceptual reference without a physical foreign key" in js
+    assert "Application-enforced identity reference" in js
     assert "grid-template-columns: 94px minmax(140px, 195px)" in css
     assert "grid-template-columns: 94px minmax(0,1fr)" in css
     assert ".metadata-explorer-reference-label {" in css
     assert "justify-self: start;" in css
     assert "max-width: 100%;" in css
+
+
+def test_metadata_explorer_navigation_matches_canonical_svg() -> None:
+    """Removed tables and stale relationship counts must not disable the interactive SVG."""
+    import re
+    import xml.etree.ElementTree as ET
+    from pathlib import Path
+
+    root = Path(__file__).parents[2]
+    js = (root / "docs/javascripts/metadata-explorer.js").read_text(encoding="utf-8")
+    definitions = js.split("const definitions = [", 1)[1].split("\n  ];", 1)[0]
+    names = re.findall(r'^    \["([A-Z_]+)"', definitions, re.MULTILINE)
+    assert len(names) == len(set(names)) == len(CANONICAL_METADATA_TABLES)
+    assert set(names) == {name.removeprefix("METADATA_") for name in CANONICAL_METADATA_TABLES}
+    links = js.split("const links = [", 1)[1].split("\n  ];", 1)[0]
+    relationships = set(re.findall(r'^    \["([A-Z_]+)", "([A-Z_]+)"', links, re.MULTILINE))
+    svg = ET.parse(root / "docs/assets/fabricops-metadata-approved.svg")
+    edges = svg.findall(".//{http://www.w3.org/2000/svg}g[@class='metadata-er-relationship']")
+    assert relationships == {(edge.get("data-from"), edge.get("data-to")) for edge in edges}
+    assert "Object.keys(buttons).length !== definitions.length" in js
+    assert "ACTIVATION_STATE" not in js
