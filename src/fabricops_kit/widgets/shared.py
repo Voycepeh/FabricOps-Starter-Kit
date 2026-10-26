@@ -75,7 +75,7 @@ _FORM_STYLE = """<style>
 }
 .fabricops-form .fabricops-page-title { font-size:21px; font-weight:650; line-height:1.3; }
 .fabricops-form.fabricops-started .fabricops-page-title { display:none; }
-.fabricops-form.fabricops-started .fabricops-page-header { background:transparent; border:0; padding:0; }
+.fabricops-form.fabricops-started .fabricops-page-header { display:none; }
 .fabricops-form .fabricops-page-description { color:#526477; margin-top:5px; max-width:80ch; }
 .fabricops-form .fabricops-section {
     background:#fff; border:1px solid var(--form-border) !important; border-radius:8px;
@@ -212,6 +212,9 @@ def form_page(widgets: Any, *, title: str, description: str, children: Iterable[
             height=_FORM_PAGE_HEIGHT, overflow="auto",
         ),
     )
+    page.fabricops_page_title = title
+    page.fabricops_page_description = description
+    page.fabricops_page_tone = tone
     add_class = getattr(page, "add_class", None)
     if callable(add_class):
         add_class("fabricops-form")
@@ -285,8 +288,25 @@ class WidgetStartup:
             - self.phase_elapsed - self.timings["first_display_submitted"])
         self.mark("controls_constructed")
         if self.html_available:
-            # The static banner does not depend on widget-model creation. Keep the
-            # canonical header in the returned page, but hide its duplicate view.
+            # Keep the title and description together in the static banner while
+            # hiding the duplicate header embedded in the returned widget tree.
+            title = getattr(root, "fabricops_page_title", self.title)
+            tone = getattr(root, "fabricops_page_tone", "governance")
+            description = getattr(root, "fabricops_page_description", "")
+            accent, tint = (("#6750a4", "#f1edf8") if tone == "governance"
+                            else ("#0f6cbd", "#eaf3fb"))
+            subtitle = (
+                f'<div style="color:#526477;margin-top:5px;max-width:80ch">'
+                f'{_html_escape(description)}</div>'
+                if description else ""
+            )
+            self.banner = (
+                '<div style="font:13px/1.5 Segoe UI,Arial,sans-serif;color:#243449;'
+                f'background:{tint};border-left:4px solid {accent};padding:16px 20px;border-radius:6px">'
+                f'<div style="font-size:21px;font-weight:650">{_html_escape(title)}</div>'
+                f'{subtitle}</div>'
+            )
+            self.ip.update_display(self.ip.HTML(self.banner), display_id=self.display_id + "-banner")
             root.add_class("fabricops-started")
             if hasattr(root, "_view_count"):
                 root._view_count = 0
