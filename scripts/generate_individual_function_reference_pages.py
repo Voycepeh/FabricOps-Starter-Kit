@@ -4417,7 +4417,7 @@ def _metadata_type_cell(type_name: str, *, column: str) -> str:
     append_fields(nested[1])
     return (
         '<details class="metadata-structured-type">'
-        f'<summary>{nested[0]}</summary>'
+        f'<summary><code>{nested[0]}</code></summary>'
         f'<table class="metadata-nested-type" aria-label="Fields in {html_escape(column)}">'
         '<thead><tr><th scope="col">Field</th><th scope="col">Type</th></tr></thead>'
         f'<tbody>{"".join(field_rows)}</tbody></table></details>'
