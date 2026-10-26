@@ -23,6 +23,7 @@ GLOSSARY_GROUPS = [
             "data-agreement",
             "data-contract",
             "activated-pipeline",
+            "pipeline-registry",
             "pipeline-execution-plan",
             "testing",
             "live",
@@ -97,7 +98,6 @@ GLOSSARY_GROUPS = [
         [
             "configuration",
             "pipeline",
-            "pipeline-registry",
             "pipeline-run",
             "pyspark",
             "profile",

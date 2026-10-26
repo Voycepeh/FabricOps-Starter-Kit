@@ -18,7 +18,7 @@ from tests.unit.test_pipeline_run_evidence import runtime  # noqa: F401
 
 @pytest.fixture
 def authority(runtime, monkeypatch, tmp_path):
-    """Mock physical Fabric I/O only; keep fingerprints, run validation and dependency logic."""
+    """Mock physical Fabric I/O only; keep exact run validation and dependency logic."""
     make, operation, saved, writes, failure = runtime
     context = {"config": {}, "env": "canary", "notebook_id": "notebook", "notebook_name": "pipeline", "workspace_id": "workspace"}
     monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda identities, config, environment: config["bindings"])
@@ -26,9 +26,9 @@ def authority(runtime, monkeypatch, tmp_path):
     monkeypatch.setattr(pipeline, "resolve_fabric_context", service.resolve_fabric_context)
     monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **kw: {})
     contracts, diagnostics, registrations = [], [], []
-    monkeypatch.setattr(pipeline, "read_pipeline_registry", lambda **kw: ("registry-token", copy.deepcopy(registrations)))
+    monkeypatch.setattr(pipeline, "read_pipeline_registry", lambda **kw: (central["token"], copy.deepcopy(registrations)))
     agreement = {"agreement_id": "agreement", "agreement_version": "1", "start_date": "2020-01-01", "expiry_date": "2099-01-01"}
-    central = {"token": "initial", "state": json.loads(service.empty_activation_state()), "fail": False}
+    central = {"token": "initial", "state": {"environments": {}, "registrations": [], "profiling_claims": {}}, "fail": False}
     lock = Lock()
     def records(table, **kwargs):
         return {"METADATA_PIPELINE_RUN": list(saved.values()), "METADATA_DATA_CONTRACT": contracts,
@@ -46,8 +46,8 @@ def authority(runtime, monkeypatch, tmp_path):
             central["state"] = copy.deepcopy(state)
             central["token"] = str(int(central["token"]) + 1) if central["token"].isdigit() else "1"
             return central["token"]
-    monkeypatch.setattr(service, "read_activation_state", read)
-    monkeypatch.setattr(service, "commit_activation_state", commit)
+    monkeypatch.setattr(service, "read_pipeline_authority", read)
+    monkeypatch.setattr(service, "commit_pipeline_authority", commit)
     def candidate(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596", version=3, roles=("target",), env="canary", tables=None, destinations=None):
         plan = make(mode="testing", roles=roles)
         identities = json.loads(plan.participants_json)
@@ -60,20 +60,20 @@ def authority(runtime, monkeypatch, tmp_path):
                        "table": {"table_id": key, "columns": [], "processing": {"load_strategy": "overwrite"}}, "guardrails": [],
                        "profiling": {**pipeline.default_profiling_policy(), "standard": {"frequency": "interval", "days": 7, "trigger": "write"}}}
             contract = {"contract_id": "contract-" + key, "contract_version": selected_version, "status": "frozen", "table_id": key,
-                        "environment_name": "DEV", "contract_payload_json": pipeline.canonical_candidate_json(payload)}
+                        "environment_name": "DEV", "contract_payload_json": pipeline.canonical_pipeline_json(payload)}
             frozen[key] = contract
             if contract not in contracts:
                 contracts.append(contract)
             bindings[key] = (destinations or {}).get(key, {"workspace_id": env, "item_id": "lakehouse", "kind": "lakehouse", "schema": "physical", "table_name": key})
         # The operation fixture resolves physical table names to tableN IDs.
         assert tables == list(identities)
-        plan = replace(plan, environment=env, pipeline_id=pipeline_id, contracts_json=pipeline.canonical_candidate_json(frozen),
-                       participants_json=pipeline.canonical_candidate_json(identities), evidence={},
+        plan = replace(plan, environment=env, pipeline_id=pipeline_id, contracts_json=pipeline.canonical_pipeline_json(frozen),
+                       participants_json=pipeline.canonical_pipeline_json(identities), evidence={},
                        runtime_context={**context, "config": {"bindings": bindings}, "env": env, "_pipeline_bindings": bindings})
         pipeline.persist_pipeline_run(plan)
         with plan:
             for table_id in identities:
-                operation(plan, int(table_id.removeprefix("table")), stages=[{"stage": "Read" if identities[table_id]["roles"] == ["source"] else "Processing", "status": "passed"}])
+                operation(plan, int(table_id.removeprefix("table")), stages=[{"stage": "Read" if identities[table_id]["roles"] == ["source"] else "Processing", "status": "passed"}, {"stage": "Profile", "status": "passed"}])
         run = plan.run_result
         # Results are retained by the test reviewer, never committed by Test.
         saved[plan.plan_id] = run
@@ -85,7 +85,7 @@ def authority(runtime, monkeypatch, tmp_path):
         run.update(_workspace_id="workspace", _notebook_id="notebook")
         return plan, run
     def request(run, release=None):
-        return {"testing_run_id": run["run_id"], "candidate_fingerprint": run["candidate_fingerprint"],
+        return {"testing_run_id": run["run_id"],
                 "pipeline_name": run["pipeline_id"], "pipeline_version": release or run["run_id"],
             "agreement_id": "agreement", "agreement_version": "1"}
     def approve(*runs, env="canary"):
@@ -93,7 +93,9 @@ def authority(runtime, monkeypatch, tmp_path):
             run.setdefault("_workspace_id", "workspace")
             run.setdefault("_notebook_id", "notebook")
             saved[run["run_id"]] = run
-        return service.approve_pipeline_release([request(run) for run in runs], expected_token=central["token"],
+        requests = [request(run) for run in runs]
+        report = service.review_pipeline_release(requests, context={**context, "env": env})[3]
+        return service.approve_pipeline_release(requests, expected_token=central["token"], expected_review_digest=report["review_digest"],
             governance_confirmed=True, context={**context, "env": env})
     def current(env="canary"):
         return service.environment_activation(central["state"], env)
@@ -142,12 +144,12 @@ def test_v3_to_v4_requires_complete_coordinated_testing(authority):
     state.approve(a4, b4)
     assert state.current()["tables"]["table0"]["contract_version"] == 4
     assert set(state.current()["pipelines"]) == {"4c7ae400-85ab-4023-9427-e8fde20bd596", "f5ee4669-5b76-4baf-9875-6cfecba2e031"}
-    assert all(service.manifest_table_mappings(service.validate_manifest(row))["table0"]["contract_version"] == 4
+    assert all(service.pipeline_table_mappings(row)["table0"]["contract_version"] == 4
                for row in state.current()["pipelines"].values())
 
 
 @pytest.mark.parametrize("field,value", [("status", "failed"), ("status", "incomplete"), ("status", "ungoverned_completed"),
-                                         ("completed_at", None), ("candidate_fingerprint", "corrupt")])
+                                         ("completed_at", None)])
 def test_invalid_evidence_never_activates(authority, field, value):
     state = authority
     _, run = state.candidate()
@@ -198,9 +200,10 @@ def test_failed_commit_and_stale_review_expose_no_partial_state(authority):
     assert state.central["state"] == before
     state.central["fail"] = False
     token, snapshot = state.read()
+    report = service.review_pipeline_release([state.request(run)], context=state.context)[3]
     state.commit(snapshot, expected_token=token)
     with pytest.raises(ValueError, match="changed"):
-        service.approve_pipeline_release([state.request(run)], expected_token=token, governance_confirmed=True, context=state.context)
+        service.approve_pipeline_release([state.request(run)], expected_token=token, expected_review_digest=report["review_digest"], governance_confirmed=True, context=state.context)
     assert state.central["state"] == before
 
 
@@ -210,7 +213,7 @@ def test_concurrent_reviews_cannot_bypass_writer_consistency(authority):
     token = state.central["token"]
     def approve(run):
         try:
-            return service.approve_pipeline_release([state.request(run)], expected_token=token,
+            return service.approve_pipeline_release([state.request(run)], expected_token=token, expected_review_digest=service.review_pipeline_release([state.request(run)], context=state.context)[3]["review_digest"],
                 governance_confirmed=True, context=state.context)
         except ValueError:
             return None
@@ -278,7 +281,7 @@ def test_late_empty_boundary_cannot_authorize_previously_executed_operations(aut
     run = pipeline.persist_pipeline_run(plan)
     assert plan.plan_id not in state.saved
     assert run["status"] == "incomplete"
-    assert json.loads(run["operation_summary_json"])["boundary_completed"] is False
+    assert run["boundary_completed"] is False
     with pytest.raises(ValueError, match="complete successful"):
         state.approve(run)
     assert not state.current()["pipelines"]
@@ -293,11 +296,11 @@ def test_mutated_contract_cannot_authorize_activation(authority):
     state.contracts[0]["contract_payload_json"] = state.contracts[0]["contract_payload_json"].rstrip()
 
 
-def test_notebook_rename_preserves_pipeline_and_candidate_identity(authority):
+def test_notebook_rename_preserves_pipeline_and_operation_facts(authority):
     state = authority
     plan, _run = state.candidate()
     renamed = replace(plan, notebook_id="renamed-notebook", runtime_context={**plan.runtime_context, "notebook_name": "new-name"})
-    assert pipeline.pipeline_candidate(renamed)[1] == pipeline.pipeline_candidate(plan)[1]
+    assert pipeline.persist_pipeline_run(renamed)["operations"] == pipeline.persist_pipeline_run(plan)["operations"]
     assert renamed.pipeline_id == "4c7ae400-85ab-4023-9427-e8fde20bd596"
 
 
@@ -310,11 +313,11 @@ def test_downstream_retesting_follows_changed_output_expectations_only(authority
     _, a4 = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596", version=4)
     _, b4 = state.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", version={"table0": 4, "table1": 3}, roles=("source", "target"))
     state.approve(a4, b4)
-    c_before = state.current()["pipelines"]["967adc28-d152-4c40-8f4b-44934515a312"]["activated_pipeline_id"]
+    c_before = state.current()["pipelines"]["967adc28-d152-4c40-8f4b-44934515a312"]["approval_id"]
     _, changed_output = state.candidate("f5ee4669-5b76-4baf-9875-6cfecba2e031", version=4, roles=("source", "target"))
     with pytest.raises(ValueError, match="Missing replacement Testing candidate:"):
         state.approve(changed_output)
-    assert state.current()["pipelines"]["967adc28-d152-4c40-8f4b-44934515a312"]["activated_pipeline_id"] == c_before
+    assert state.current()["pipelines"]["967adc28-d152-4c40-8f4b-44934515a312"]["approval_id"] == c_before
     _, c4 = state.candidate("967adc28-d152-4c40-8f4b-44934515a312", version=4, roles=("source",), tables=["table1"])
     state.approve(changed_output, c4)
     assert state.current()["tables"]["table1"]["contract_version"] == 4
@@ -322,42 +325,34 @@ def test_downstream_retesting_follows_changed_output_expectations_only(authority
 
 
 
-def test_live_operational_differences_warn_and_unsafe_changes_fail(authority, monkeypatch):
+def test_live_ignores_diagnostics_and_rejects_changed_write_mode(authority, monkeypatch):
     state = authority
     plan, run = state.candidate()
     state.approve(run)
     monkeypatch.setattr(service, "resolve_pipeline_participants", lambda *a, **kw: json.loads(plan.participants_json))
     monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda *a, **kw: plan.runtime_context["_pipeline_bindings"])
     live = service.build_live_pipeline_plan(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596", context=state.context)
-    with pytest.warns(UserWarning, match="frequency_top_n"):
-        with live:
-            state.operation(live, 0, frequency_top_n=2)
-    summary = json.loads(live.run_result["operation_summary_json"])
-    assert summary["warnings"][0]["operational_parameters"] == ["frequency_top_n"]
+    with live:
+        state.operation(live, 0, dq_diagnostics="full")
+    summary = live.run_result
+    assert json.loads(summary["warnings_json"]) == []
     live = service.build_live_pipeline_plan(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596", context=state.context)
-    with pytest.raises(ValueError, match="configuration differs"):
+    with pytest.raises(ValueError, match="approved Test"):
         with live:
             state.operation(live, 0, write_mode="append")
     assert live.run_result["status"] == "failed"
 
 
-def test_testing_destination_bindings_are_part_of_exact_candidate_identity(authority):
+def test_live_destination_must_match_approved_test(authority, monkeypatch):
     state = authority
     plan, run = state.candidate()
-    summary = json.loads(run["operation_summary_json"])
-    summary["physical_bindings"]["table0"]["item_id"] = "different-lakehouse"
-    run["operation_summary_json"] = json.dumps(summary)
-    with pytest.raises(ValueError, match="destination bindings"):
-        state.approve(run)
+    state.approve(run)
+    monkeypatch.setattr(service, "resolve_pipeline_participants", lambda *a, **kw: json.loads(plan.participants_json))
     bindings = copy.deepcopy(plan.runtime_context["_pipeline_bindings"])
     bindings["table0"]["item_id"] = "different-lakehouse"
-    changed = replace(plan, runtime_context={**plan.runtime_context, "_pipeline_bindings": bindings})
-    original_candidate, original_fingerprint, _ = pipeline.pipeline_candidate(plan)
-    changed_candidate, changed_fingerprint, _ = pipeline.pipeline_candidate(changed)
-    assert original_fingerprint != changed_fingerprint
-    assert original_candidate["portable_fingerprint"] == changed_candidate["portable_fingerprint"]
-
-
+    monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda *a, **kw: bindings)
+    with pytest.raises(ValueError, match="physical destinations"):
+        service.build_live_pipeline_plan(pipeline_id=run["pipeline_id"], context=state.context)
 
 
 def test_standalone_consumer_does_not_choose_an_arbitrary_agreement(authority):
@@ -367,10 +362,7 @@ def test_standalone_consumer_does_not_choose_an_arbitrary_agreement(authority):
     state.approve(a); state.approve(b)
     assert service.resolve_approved_consumer_contract({}, "canary", "table0")["agreement_id"] == "agreement"
     row = state.current()["pipelines"]["f5ee4669-5b76-4baf-9875-6cfecba2e031"]
-    manifest = json.loads(row["manifest_json"])
-    manifest["agreement"]["agreement_id"] = "another-approved-agreement"
-    row.update(agreement_id="another-approved-agreement", manifest_json=pipeline.canonical_candidate_json(manifest),
-               activated_pipeline_id=service.manifest_digest(manifest))
+    row["agreement_id"] = "another-approved-agreement"
     with pytest.raises(ValueError, match="unambiguous"):
         service.resolve_approved_consumer_contract({}, "canary", "table0")
 
@@ -466,7 +458,7 @@ def test_live_resolves_approved_versions_after_mixed_testing(authority, monkeypa
     monkeypatch.setattr(service, "resolve_pipeline_participants", lambda *args, **kwargs: json.loads(previous.participants_json))
     live = service.build_live_pipeline_plan(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596", context=previous.runtime_context)
     assert {key: row["contract_version"] for key, row in json.loads(live.contracts_json).items()} == {"table0": 1, "table1": 2}
-    assert live.activated_pipeline_id == state.current()["pipelines"]["4c7ae400-85ab-4023-9427-e8fde20bd596"]["activated_pipeline_id"]
+    assert live.approval_id == state.current()["pipelines"]["4c7ae400-85ab-4023-9427-e8fde20bd596"]["approval_id"]
     with live:
         state.operation(live, 0)
         state.operation(live, 1)
@@ -488,9 +480,9 @@ def test_activation_preserves_exact_profiling_and_policy_changes_require_new_tes
     changed = copy.deepcopy(expected)
     payload = json.loads(changed['table0']['contract_payload_json'])
     payload['profiling']['standard']['days'] = 14
-    changed['table0']['contract_payload_json'] = pipeline.canonical_candidate_json(payload)
-    revised = replace(tested, contracts_json=pipeline.canonical_candidate_json(changed))
-    assert pipeline.pipeline_candidate(revised)[1] != pipeline.pipeline_candidate(tested)[1]
+    changed['table0']['contract_payload_json'] = pipeline.canonical_pipeline_json(payload)
+    revised = replace(tested, contracts_json=pipeline.canonical_pipeline_json(changed))
+    assert pipeline.persist_pipeline_run(revised)['operations'][0]['payload_sha256'] != pipeline.persist_pipeline_run(tested)['operations'][0]['payload_sha256']
     assert json.loads(live.contracts_json) == actual
 
 
@@ -503,3 +495,27 @@ def test_registered_pipeline_cannot_run_live_without_environment_approval(author
         service.build_live_pipeline_plan(pipeline_id=plan.pipeline_id, context=plan.runtime_context)
     assert state.central == before
     assert not state.current()['history'] and not state.current()['runs']
+
+
+def test_rebound_notebook_cannot_run_an_old_test_approval(authority, monkeypatch):
+    state = authority
+    plan, run = state.candidate()
+    state.approve(run)
+    monkeypatch.setattr(pipeline, "read_pipeline_registry", lambda **kw: (state.central["token"], [{
+        "pipeline_id": plan.pipeline_id, "environment_name": "canary", "registration_status": "Active",
+        "workspace_id": "workspace", "notebook_id": "replacement"}]))
+    with pytest.raises(ValueError, match="rerun Test and approve the new binding"):
+        service.build_live_pipeline_plan(pipeline_id=plan.pipeline_id, context={**state.context, "notebook_id": "replacement"})
+    assert not state.current()["runs"]
+
+
+def test_changed_test_results_require_a_new_review(authority):
+    """The review pins result content even though no configuration fingerprint exists."""
+    _, run = authority.candidate()
+    request = [authority.request(run)]
+    token, _state, _proposed, report = service.review_pipeline_release(request, context=authority.context)
+    run["operations"][0]["write_mode"] = "append"
+    with pytest.raises(ValueError, match="Reviewed Test results"):
+        service.approve_pipeline_release(request, expected_token=token, expected_review_digest=report["review_digest"],
+            governance_confirmed=True, context=authority.context)
+    assert not authority.current()["pipelines"]

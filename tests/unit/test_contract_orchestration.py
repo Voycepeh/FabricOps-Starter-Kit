@@ -123,8 +123,8 @@ def runtime(monkeypatch, spark_session):
         if not contracted:
             selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
         plan = setup_pipeline(execution_mode="testing" if mode == "live" else mode, sources=[SOURCE], targets=[TARGET],
-                                              selections=selections, context=context, spark_session=spark_session, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", configuration={})
-        return replace(plan, execution_mode="live", activated_pipeline_id="verified-by-boundary") if mode == "live" else plan
+                                              selections=selections, context=context, spark_session=spark_session, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+        return replace(plan, execution_mode="live", approval_id="verified-by-boundary") if mode == "live" else plan
     for name in ("orchestrate_read", "orchestrate_write"):
         monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline." + name), "schedule_table_profiling",
                             lambda *args, **kwargs: {"status": "passed", "row_count": 2})
@@ -584,11 +584,11 @@ def test_independent_contract_coverage_executes_and_records_every_table(runtime,
     assert finalized["status"] == "incomplete"
     assert not result["published"] and result["validation_passed"]
     assert json.loads(plan.selections_json) == choices
-    bindings = json.loads(finalized["operation_summary_json"])["frozen_contracts"]
+    bindings = finalized["operations"]
     assert {item["table_id"] for item in bindings} == set(choices)
     for item in bindings:
         table_id = item["table_id"]
-        assert item["contract"] == (None if table_id not in selected else {
+        assert {key: item[key] for key in ("contract_id", "contract_version", "payload_sha256")} == ({"contract_id": None, "contract_version": None, "payload_sha256": None} if table_id not in selected else {
             **choices[table_id], "payload_sha256": hashlib.sha256(
                 next(row for row in rows if row["table_id"] == table_id)["contract_payload_json"].encode()).hexdigest()})
     assert {row["table_id"] for row in plan.results} == selected

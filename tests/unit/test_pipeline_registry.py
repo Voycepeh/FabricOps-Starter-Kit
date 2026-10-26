@@ -84,7 +84,7 @@ def test_reupload_requires_explicit_expected_binding(registry):
     assert shared.resolve_pipeline_registration(context=uploaded)['pipeline_id'] == identity
 
 
-def test_failed_rebind_releases_live_start_barrier(registry, monkeypatch):
+def test_failed_atomic_rebind_preserves_binding(registry, monkeypatch):
     context, rows, *_ = registry
     identity = shared.resolve_pipeline_registration(context=context)['pipeline_id']
     from fabricops_kit.activated_pipeline import shared as activation
@@ -96,7 +96,7 @@ def test_failed_rebind_releases_live_start_barrier(registry, monkeypatch):
     with pytest.raises(RuntimeError, match='registry write failed'):
         shared.resolve_pipeline_registration(identity, context={**context, 'notebook_id': 'reuploaded'},
             previous_binding=(context['workspace_id'], context['notebook_id']))
-    assert released == [(identity, 'rebind-lease')]
+    assert released == []
     assert rows[0]['notebook_id'] == context['notebook_id']
 
 
@@ -149,6 +149,7 @@ def test_duplicate_bindings_fail_closed(monkeypatch, conflict):
             {'pipeline_id': identity if conflict == 'logical' else str(uuid4()), 'environment_name': 'Development',
              'workspace_id': 'w', 'notebook_id': 'n', 'registration_status': 'Active'}]
     monkeypatch.setattr(shared, 'resolve_fabric_context', lambda **kwargs: ({}, 'Development', {}))
-    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda *args, **kwargs: Mock(collect=lambda: rows))
+    from fabricops_kit.activated_pipeline import shared as authority
+    monkeypatch.setattr(authority, 'authority_records', lambda **kw: {'token': 'one', 'registrations': rows[1:]})
     with pytest.raises(ValueError, match='Ambiguous'):
         shared.read_pipeline_registry(context={})

@@ -16,7 +16,7 @@ def render(authority, monkeypatch):
     monkeypatch.setattr(ip, "display", lambda *_, **__: None)
     monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: ({}, "canary", authority.context))
     monkeypatch.setattr(module, "metadata_records", importlib.import_module("fabricops_kit.activated_pipeline.shared").metadata_records)
-    monkeypatch.setattr(module, "read_activation_state", authority.read)
+    monkeypatch.setattr(module, "read_pipeline_authority", authority.read)
     return lambda **kw: module.widget_activate_pipeline(context=authority.context, **kw)
 
 
@@ -85,9 +85,7 @@ def test_unchanged_shared_contract_keeps_coordination_controls_hidden(authority,
 def test_old_or_unbounded_evidence_is_excluded_before_rendering(authority, render):
     import json
     _, run = authority.candidate()
-    summary = json.loads(run["operation_summary_json"])
-    summary.pop("boundary_completed")
-    run["operation_summary_json"] = json.dumps(summary)
+    run.pop("boundary_completed")
     widget = render()
     assert widget["eligible_runs"] == [] and widget["activate"].disabled
 
@@ -144,20 +142,14 @@ def test_missing_coverage_notice_escapes_identifiers_and_handles_malformed_rows(
     """Run metadata is diagnostic text and never trusted HTML or approval authority."""
     import json
     _, run = authority.candidate()
-    candidate = json.loads(run['candidate_json'])
-    summary = json.loads(run['operation_summary_json'])
     table_id = '<script>example</script>'
-    candidate['participants'][0].update(table_id=table_id, contract=None)
-    summary['frozen_contracts'][0].update(table_id=table_id, contract=None)
-    run.update(candidate_json=json.dumps(candidate), operation_summary_json=json.dumps(summary))
+    run['operations'][0].update(table_id=table_id, contract_id=None, contract_version=None, payload_sha256=None)
     widget = render(pipeline_id='4c7ae400-85ab-4023-9427-e8fde20bd596')
     notice = next(child for child in widget['widget'].children if 'Testing completed, but these runs cannot activate.' in str(getattr(child, 'value', '')))
     assert '&lt;script&gt;example&lt;/script&gt;' in notice.value
     assert table_id not in notice.value
     assert widget['eligible_runs'] == [] and widget['activate'].disabled
-    candidate['participants'] = ['invalid']
-    summary['frozen_contracts'] = [None]
-    run.update(candidate_json=json.dumps(candidate), operation_summary_json=json.dumps(summary))
+    run['operations'] = [None]
     assert module._missing_contracts(run) == []
 
 
@@ -182,3 +174,15 @@ def test_committed_failure_after_review_prevents_activation(authority, render):
     with pytest.raises(ValueError, match='complete successful'):
         widget['perform_activation']()
     assert not authority.current()['pipelines']
+
+
+def test_changed_successful_test_after_review_cannot_silently_activate(authority, render):
+    _, run = authority.candidate()
+    widget = render()
+    widget["candidate_controls"][run["run_id"]]["version"].value = "1"
+    widget["review_release"]()
+    widget["confirmed"].value = True
+    run["operations"][0]["write_mode"] = "append"
+    with pytest.raises(ValueError, match="Reviewed Test results"):
+        widget["perform_activation"]()
+    assert not authority.current()["pipelines"]

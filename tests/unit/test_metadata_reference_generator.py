@@ -14,10 +14,19 @@ VALID_CARDINALITIES = {"1:1", "1:N", "N:1", "N:M"}
 
 
 def _schema_fields() -> dict[str, set[str]]:
-    return {
-        table_name: set(schema.fieldNames())
-        for table_name, schema in metadata_table_schema_registry().items()
-    }
+    def paths(schema, prefix=""):
+        result = set()
+        for field in getattr(schema, "fields", []):
+            path = prefix + field.name
+            result.add(path)
+            dtype = field.dataType
+            if hasattr(dtype, "elementType"):
+                result.update(paths(dtype.elementType, path + "[]."))
+            elif hasattr(dtype, "fields"):
+                result.update(paths(dtype, path + "."))
+        return result
+    return {name: paths(schema) for name, schema in metadata_table_schema_registry().items()}
+
 
 
 def test_metadata_model_contract_matches_implemented_schema() -> None:
@@ -101,9 +110,9 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "widget_register_data_contract.md" not in contract_page
     assert "[`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Data Contract authoring" in contract_page
     assert "`METADATA_DATA_AGREEMENT` **(N → 1)**" not in contract_page
-    activated_page = first_pages["metadata_activation_state.md"]
-    assert "`snapshot_json`" in activated_page and "`authority_id`" in activated_page
-    assert "atomic central authority" in activated_page
+    activated_page = first_pages["metadata_pipeline_registry.md"]
+    assert "`approvals`" in activated_page and "`authority_id`" in activated_page
+    assert "atomic native authority" in activated_page
     assert "via `agreement_id` + `agreement_version`" not in activated_page
     assert "`METADATA_DATA_CATALOGUE` **(N → 1)**" in contract_page
     assert "via `table_id`" in contract_page
@@ -148,8 +157,8 @@ def test_metadata_explorer_keeps_keys_readable_and_loads_canonical_details() -> 
     svg_source = diagram.read_text(encoding="utf-8")
     svg = ET.fromstring(svg_source)
     links = svg.findall(".//{http://www.w3.org/2000/svg}a")
-    assert len(links) == 13
-    assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 13
+    assert len(links) == 12
+    assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 12
     assert "metadata-explorer-approved-svg" in js
     assert "fabricops-metadata-approved.svg" in js
     assert ".metadata-explorer-approved-svg a.selected > rect" in css
@@ -336,7 +345,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         node.text
         for node in svg_tree.findall(f".//{namespace}a/{namespace}title")
     ]
-    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 13
+    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 12
     assert set(titles) == {
         f"Open metadata documentation: {name.removeprefix('METADATA_')}"
         for name in CANONICAL_METADATA_TABLES
@@ -345,23 +354,30 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     connectors = svg_tree.findall(
         f".//{namespace}g[@id='metadata-er-relationships']/{namespace}g"
     )
-    assert len(connectors) >= 16
+    assert len(connectors) >= 14
     actual = {
         (edge.get("data-from"), edge.get("data-to")): edge
         for edge in connectors
     }
     assert len(actual) == len(connectors)
     assert all(source != target for source, target in actual)
-    assert all(edge.get("data-cardinality") in {"1:N", ""} for edge in connectors)
+    assert all(edge.get("data-cardinality") in {"1-N", "N-N"} for edge in connectors)
     assert all(edge.find(f"{namespace}path") is not None for edge in connectors)
-    assert ("PIPELINE_REGISTRY", "ACTIVATION_STATE") in actual
-    assert ("ACTIVATION_STATE", "PIPELINE_RUN") in actual
-    assert ("ACTIVATION_STATE", "DATA_CONTRACT") in actual
-    assert actual[("PIPELINE_REGISTRY", "ACTIVATION_STATE")].get("data-kind") == "logical"
-    assert all(edge.get("data-cardinality") == "" for edge in connectors if edge.get("data-kind") == "logical")
-    assert all(edge.get("data-cardinality") == "1:N" for edge in connectors if edge.get("data-kind") == "physical")
+    assert ("PIPELINE_REGISTRY", "PIPELINE_RUN") in actual
+    assert ("PIPELINE_RUN", "DATA_CONTRACT") in actual
+    assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-kind") == "nested"
+    assert actual[("DATA_AGREEMENT", "PIPELINE_REGISTRY")].get("data-cardinality") == "1-N"
+    assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-cardinality") == "1-N"
+    assert actual[("PIPELINE_REGISTRY", "DATA_CONTRACT")].get("data-cardinality") == "N-N"
+    assert actual[("PIPELINE_RUN", "DATA_CONTRACT")].get("data-cardinality") == "N-N"
+    assert all(edge.get("data-cardinality") == "1-N" for edge in connectors if edge.get("data-kind") == "physical")
     assert all("arrow" not in (edge.find(f"{namespace}title").text or "").lower() for edge in connectors)
-    assert "stroke-dasharray" in svg.read_text(encoding="utf-8")
+    assert "stroke-dasharray" not in svg.read_text(encoding="utf-8")
+    registry = next(a for a in svg_tree.findall(f".//{namespace}a")
+                    if a.find(f"{namespace}title").text.endswith("PIPELINE_REGISTRY"))
+    assert registry.get("transform") is None
+    assert registry.find(f"{namespace}rect").get("y") == "78"
+    assert "Engineering home" in svg.read_text(encoding="utf-8")
     # Keep design asset, generated output and canonical reference in sync.
     script = generator_script.read_text(encoding="utf-8")
     assert "renderMetadataSvg(layout, models)" in script
@@ -408,7 +424,7 @@ def test_generated_svg_check_ignores_windows_line_endings_but_detects_real_drift
 
 
 def test_metadata_relationship_reference_label_does_not_overlap_table_name() -> None:
-    """Conceptual references are plain labels with enough room at all widths."""
+    """Identity references are plain labels with enough room at all widths."""
     from pathlib import Path
 
     root = Path(__file__).parents[2]
@@ -417,9 +433,30 @@ def test_metadata_relationship_reference_label_does_not_overlap_table_name() -> 
 
     assert "const referenceOnly = !edge[2];" in js
     assert "metadata-explorer-reference-label" in js
-    assert "Conceptual reference without a physical foreign key" in js
+    assert "Application-enforced identity reference" in js
     assert "grid-template-columns: 94px minmax(140px, 195px)" in css
     assert "grid-template-columns: 94px minmax(0,1fr)" in css
     assert ".metadata-explorer-reference-label {" in css
     assert "justify-self: start;" in css
     assert "max-width: 100%;" in css
+
+
+def test_metadata_explorer_navigation_matches_canonical_svg() -> None:
+    """Removed tables and stale relationship counts must not disable the interactive SVG."""
+    import re
+    import xml.etree.ElementTree as ET
+    from pathlib import Path
+
+    root = Path(__file__).parents[2]
+    js = (root / "docs/javascripts/metadata-explorer.js").read_text(encoding="utf-8")
+    definitions = js.split("const definitions = [", 1)[1].split("\n  ];", 1)[0]
+    names = re.findall(r'^    \["([A-Z_]+)"', definitions, re.MULTILINE)
+    assert len(names) == len(set(names)) == len(CANONICAL_METADATA_TABLES)
+    assert set(names) == {name.removeprefix("METADATA_") for name in CANONICAL_METADATA_TABLES}
+    links = js.split("const links = [", 1)[1].split("\n  ];", 1)[0]
+    relationships = set(re.findall(r'^    \["([A-Z_]+)", "([A-Z_]+)", "([1N-]+)"', links, re.MULTILINE))
+    svg = ET.parse(root / "docs/assets/fabricops-metadata-approved.svg")
+    edges = svg.findall(".//{http://www.w3.org/2000/svg}g[@class='metadata-er-relationship']")
+    assert relationships == {(edge.get("data-from"), edge.get("data-to"), edge.get("data-cardinality")) for edge in edges}
+    assert "Object.keys(buttons).length !== definitions.length" in js
+    assert "ACTIVATION_STATE" not in js

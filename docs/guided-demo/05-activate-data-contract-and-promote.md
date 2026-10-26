@@ -10,7 +10,7 @@ Run `finalize_pipeline(CONTRACTS)` after completing Testing in [Step 4](04-valid
 4. Choose **Review complete release**. Inspect the current/proposed table mappings, affected pipelines and readiness report.
 5. Confirm Governance approval and choose **Activate release** once. A stale review or metadata conflict requires refresh and another review.
 
-The backend revalidates complete Testing and exact Data Contract and processing configuration identities. It publishes all selected pipeline configurations and table mappings in one `METADATA_ACTIVATION_STATE` revision. No individual contract activation or manual multi-pipeline switching is needed.
+The backend revalidates complete Testing and exact Data Contract and processing configuration identities. It publishes all selected pipeline configurations and table mappings in one `METADATA_PIPELINE_REGISTRY` revision. No individual contract activation or manual multi-pipeline switching is needed.
 
 ## Deploy and execute Live
 
@@ -26,6 +26,10 @@ See the [complete lifecycle, failure policy and limits](https://github.com/Voyce
 
 ## Initialize metadata
 
-Run `setup_metadata_tables()` under controlled administration to initialize the Engineering Pipeline Registry and Governance Activation State. Carry the saved Pipeline UUID into Production, run Test there, and approve that environment explicitly. Registration never activates a pipeline.
+Run `setup_metadata_tables()` under controlled administration to initialize the consolidated Pipeline Registry and immutable Definition/Run tables. Carry the saved Pipeline UUID into Production, run Test there, and approve that environment explicitly. Registration never activates a pipeline.
 
 **Expected result:** one consistent approved environment revision with one table contract, at most one writer per table, and all affected pipelines tested together.
+
+??? info "What activation checks"
+
+    Registry selects an exact successful finalized Test Run for each pipeline and environment. Run operations record the tables, frozen contract versions, physical destinations and read/write modes. Live validates those facts before each orchestrator operation; contracts continue to control table rules, processing and profiling policies. No separate Definition/Configuration table or full argument snapshot is used. Approval does not scan future notebook cells or verify arbitrary transformation code.

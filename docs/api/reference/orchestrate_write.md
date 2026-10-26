@@ -144,7 +144,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 235 |
+| Live-critical dependencies | 244 |
 
 ### Release history
 
@@ -155,15 +155,23 @@ No related guides documented.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.activated_pipeline.shared.activation_impact</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.commit_activation_state</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.approval_record</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.authority_records</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.commit_pipeline_authority</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.empty_pipeline_authority</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.environment_activation</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.read_activation_state</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.pipeline_authority_row</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.pipeline_table_mappings</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.read_pipeline_authority</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.run_contracts</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.testing_run_evidence</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.validate_manifest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_authority_collections</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_live_plan</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
 <li><code>fabricops_kit.config.audit._context_get</code></li>
@@ -176,6 +184,7 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_field_names</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
@@ -247,7 +256,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._automatic_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._bucket_column</code></li>
 <li><code>fabricops_kit.pipeline.shared._build_token_mapping</code></li>
-<li><code>fabricops_kit.pipeline.shared._candidate_hash</code></li>
 <li><code>fabricops_kit.pipeline.shared._canonical_dq_rule_type</code></li>
 <li><code>fabricops_kit.pipeline.shared._canonical_profiled_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled</code></li>
@@ -276,6 +284,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._mask_column</code></li>
 <li><code>fabricops_kit.pipeline.shared._merge_pipeline_run_row</code></li>
 <li><code>fabricops_kit.pipeline.shared._merge_source_observation_records</code></li>
+<li><code>fabricops_kit.pipeline.shared._metadata_hash</code></li>
 <li><code>fabricops_kit.pipeline.shared._normalize_datatype</code></li>
 <li><code>fabricops_kit.pipeline.shared._normalize_dq_severity</code></li>
 <li><code>fabricops_kit.pipeline.shared._orchestration_status</code></li>
@@ -285,8 +294,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._persist_grain_candidates</code></li>
 <li><code>fabricops_kit.pipeline.shared._physical_target_has_publication</code></li>
 <li><code>fabricops_kit.pipeline.shared._pipeline_write_state_records</code></li>
-<li><code>fabricops_kit.pipeline.shared._portable_candidate_value</code></li>
-<li><code>fabricops_kit.pipeline.shared._portable_contract_payload</code></li>
 <li><code>fabricops_kit.pipeline.shared._previous_source_target_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared._processing_state_id</code></li>
 <li><code>fabricops_kit.pipeline.shared._processing_state_rows</code></li>
@@ -329,7 +336,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_pipeline_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
-<li><code>fabricops_kit.pipeline.shared.canonical_candidate_json</code></li>
+<li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
 <li><code>fabricops_kit.pipeline.shared.catalogue_authored_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.check_dq_runtime</code></li>
 <li><code>fabricops_kit.pipeline.shared.check_sensitive_data_rules</code></li>
@@ -356,10 +363,9 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.persist_lineage_participation</code></li>
 <li><code>fabricops_kit.pipeline.shared.persist_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
-<li><code>fabricops_kit.pipeline.shared.pipeline_candidate</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
-<li><code>fabricops_kit.pipeline.shared.pipeline_run_result</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_run_row</code></li>
 <li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_guardrail_result</code></li>
@@ -386,6 +392,9 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.stage_pipeline_write_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared.tested_contract_identities</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_registrations</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_processing_input</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>

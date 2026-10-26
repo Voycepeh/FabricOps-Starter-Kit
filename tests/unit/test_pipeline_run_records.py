@@ -6,12 +6,11 @@ import json
 import pytest
 
 from fabricops_kit.pipeline import shared
-from scripts.migrate_pipeline_runs import convert_run
 from tests.unit.test_pipeline_run_evidence import runtime  # noqa: F401
 
 
 @pytest.mark.parametrize('roles', [('source',), ('source', 'target'), ('source', 'source', 'target', 'target')])
-def test_typed_operations_roundtrip_and_query_fields(runtime, roles):
+def test_native_operations_expose_table_and_contract_versions(runtime, roles):
     """One run row contains the exact uniquely keyed Read/Write set."""
     make, operation, _, _, _ = runtime
     plan = make(mode='testing', roles=roles)
@@ -19,17 +18,16 @@ def test_typed_operations_roundtrip_and_query_fields(runtime, roles):
         operation(plan, index)
     plan.evidence['boundary_completed'] = True
     logical = shared.finalize_pipeline_run(plan)
-    record = shared.pipeline_run_row(logical)
+    record = shared.validate_pipeline_run(logical)
     assert len(record['operations']) == len(roles)
     assert len({item['operation_key'] for item in record['operations']}) == len(roles)
-    assert [item['table_id'] for item in record['operations']] == [f'table{i}' for i in range(len(roles))]
+    assert 'candidate_json' not in record and 'definition_id' not in record
+    assert all(item['contract_id'] and 'configuration_json' not in item for item in record['operations'])
     assert all(item['started_at'] and item['completed_at'] for item in record['operations'])
-    restored = shared.pipeline_run_result(record)
-    assert all(value == logical[key] for key, value in restored.items())
-    assert shared.pipeline_run_result(convert_run(restored)) == restored
 
 
-@pytest.mark.parametrize('defect', ['missing', 'duplicate', 'table', 'contract', 'configuration', 'failed', 'empty_stages',
+
+@pytest.mark.parametrize('defect', ['missing', 'duplicate', 'contract_reference', 'failed', 'empty_stages',
                                    'duplicate_stage', 'unresolved_stage', 'missing_boundary'])
 def test_incomplete_or_mismatched_operation_array_fails_closed(runtime, defect):
     """A typed but incomplete or foreign operation cannot support parent success."""
@@ -37,18 +35,14 @@ def test_incomplete_or_mismatched_operation_array_fails_closed(runtime, defect):
     plan = make(mode='testing', roles=('source',))
     operation(plan, 0)
     plan.evidence['boundary_completed'] = True
-    record = shared.pipeline_run_row(shared.finalize_pipeline_run(plan))
+    record = shared.finalize_pipeline_run(plan)
     item = record['operations'][0]
     if defect == 'missing':
         record['operations'].clear()
     elif defect == 'duplicate':
         record['operations'].append(copy.deepcopy(item))
-    elif defect == 'table':
-        item['table_id'] = 'foreign-table'
-    elif defect == 'contract':
-        item['contract_version'] = 999
-    elif defect == 'configuration':
-        item['configuration_json'] = '{}'
+    elif defect == 'contract_reference':
+        item['contract_version'] = None
     elif defect == 'failed':
         item['status'] = 'failed'
     elif defect == 'empty_stages':
@@ -59,21 +53,16 @@ def test_incomplete_or_mismatched_operation_array_fails_closed(runtime, defect):
         item['stages'][0]['status'] = 'pending'
     else:
         record['boundary_completed'] = False
-    with pytest.raises(ValueError):
-        shared.pipeline_run_result(record)
+    with pytest.raises((ValueError, KeyError)):
+        shared.validate_pipeline_run(record)
 
 
-def test_history_conversion_preserves_profiling_and_rejects_unknown_fields(runtime):
-    """Offline conversion retains all historical details or stops explicitly."""
+def test_native_run_preserves_profiling_without_configuration_join(runtime):
+    """Profile results remain Run facts alongside the operation array."""
     make, operation, _, _, _ = runtime
     plan = make(mode='testing', roles=('source',))
     operation(plan, 0)
     plan.evidence['profiling'] = [{'activity': 'grain', 'status': 'passed', 'context_key': 'physical'}]
-    logical = shared.pipeline_run_result(shared.pipeline_run_row(shared.finalize_pipeline_run(plan)))
-    converted = convert_run(logical)
-    assert json.loads(shared.pipeline_run_result(converted)['operation_summary_json'])['profiling'] == plan.evidence['profiling']
-    summary = json.loads(logical['operation_summary_json'])
-    next(iter(summary['operations'].values()))['unknown_historical_field'] = 'preserve-or-reject'
-    logical['operation_summary_json'] = json.dumps(summary)
-    with pytest.raises(ValueError, match='Unknown'):
-        convert_run(logical)
+    logical = shared.finalize_pipeline_run(plan)
+    assert logical['profiling'][0]['activity'] == 'grain'
+    assert 'definition_id' not in logical

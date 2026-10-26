@@ -152,9 +152,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:381`
+`fabricops_kit/config/setup_metadata_tables.py:379`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L381-L816">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L379-L809">View on GitHub</a>
 </div>
 
 
@@ -191,7 +191,7 @@ count.
 The current metadata tables created or validated from
 ``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
 ``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,
-``METADATA_ACTIVATION_STATE``, ``METADATA_PIPELINE_REGISTRY``, ``METADATA_PIPELINE_RUN``,
+``METADATA_PIPELINE_REGISTRY``, ``METADATA_PIPELINE_RUN``,
 ``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
 ``METADATA_DATA_PROFILED_FREQUENCY``, ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
 ``METADATA_GUARDRAIL_RESULTS``, and ``METADATA_PROCESSING_STATE``.
@@ -260,9 +260,10 @@ alerts and underlying I/O messages. A fresh Processing State table does not
 establish progress for populated targets; reconcile retained progress or
 deliberately rebuild/replay targets before resuming incremental work.
 
-``METADATA_PIPELINE_RUN`` requires one run row with a typed operations array.
-Old summary rows, multirow layouts and incomplete typed layouts require verified offline
-conversion; setup never adds columns to reinterpret existing run history.
+``METADATA_PIPELINE_REGISTRY`` requires one native authority row.
+``METADATA_PIPELINE_RUN`` requires native execution facts with exact table/contract references, bindings and operation modes.
+Old Registry/Run layouts and incomplete native layouts require explicit
+stopped-deployment reconciliation or a deliberate disposable Preview reset; setup never adds columns to reinterpret existing run history.
 
 Existing tables are validated by canonical column name and compatible
 Spark data type. Physical Spark/Delta nullability is intentionally not
@@ -277,8 +278,8 @@ because their schema differs. Processing continues for remaining metadata
 tables, and ``raise_on_failure=True`` raises only after all tables have
 been processed when failures exist.
 
-Activation State and Pipeline Registry are seeded with their control row
-using error-if-exists creation; repeat initialization validates existing rows
+Pipeline Registry is seeded with its native authority row using
+error-if-exists creation; repeat initialization validates the existing schema
 without replacing identity or approval history. A missing ordinary table is
 created by writing an empty Spark DataFrame with the
 required FabricOps table structure. This creates the metadata table structure but
@@ -297,7 +298,7 @@ their respective FabricOps workflows.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 48 |
+| Live-critical dependencies | 47 |
 
 ### Release history
 
@@ -310,7 +311,7 @@ their respective FabricOps workflows.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
-<li><code>fabricops_kit.activated_pipeline.shared.empty_activation_state</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.empty_pipeline_authority</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
 <li><code>fabricops_kit.config.audit._context_get</code></li>
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
@@ -357,7 +358,6 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
-<li><code>fabricops_kit.pipeline.shared.canonical_candidate_json</code></li>
 </ul>
 
 

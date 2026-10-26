@@ -436,7 +436,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     def read_table(table_name, *, store, schema=None, spark_session=None, context=None):
         assert store == "Metadata"
         assert schema == ("governance" if table_name in {
-            "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_ACTIVATION_STATE",
+            "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT",
         } else "engineering")
         assert context["env"] == "dev"
         if table_name not in spark.tables:
@@ -448,7 +448,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     ):
         assert store == "Metadata"
         assert schema in {"governance", "engineering"}
-        assert mode == ("errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CATALOGUE"} else "overwrite")
+        assert mode == ("errorifexists" if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_RUN", "METADATA_DATA_CATALOGUE"} else "overwrite")
         assert options is None
         assert verbose is False
         spark.created_tables.append(table_name)
@@ -935,7 +935,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
         return existing[table_name]
 
     def write_table(frame, table_name, **kwargs):
-        assert kwargs.get("mode") == ("errorifexists" if table_name in {"METADATA_ACTIVATION_STATE", "METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CATALOGUE"} else "overwrite")
+        assert kwargs.get("mode") == ("errorifexists" if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_RUN", "METADATA_DATA_CATALOGUE"} else "overwrite")
         created[table_name] = frame.schema
         existing[table_name] = frame
 

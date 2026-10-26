@@ -9,7 +9,6 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
-    "METADATA_ACTIVATION_STATE",
     "METADATA_DATA_CATALOGUE",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
@@ -24,9 +23,14 @@ CANONICAL_METADATA_TABLES = [
 # Intentional lifecycle declarations, independent of physical schema ownership.
 # Historical release manifests validate this registry in test_metadata_retirements.py.
 RETIRED_PREVIEW_METADATA_TABLES = {
+    "METADATA_ACTIVATION_STATE": {
+        "unreleased": True,
+        "retired_in": "0.3.0",
+        "guidance": "Authority is now in METADATA_PIPELINE_REGISTRY; drain and reconcile approvals and reservations before cutover. Never append old snapshots to the new Registry.",
+    },
     "METADATA_DATA_AGREEMENT_EVIDENCE": {
         "retired_in": "0.2.0",
-        "guidance": "Use exact Data Agreement and Testing references in METADATA_ACTIVATION_STATE where applicable.",
+        "guidance": "Use exact Data Agreement and Testing references in METADATA_PIPELINE_REGISTRY where applicable.",
     },
     "METADATA_DATA_LINEAGE_TABLE": {
         "retired_in": "0.2.0",
@@ -66,7 +70,6 @@ GOVERNANCE_METADATA_TABLES = (
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
-    "METADATA_ACTIVATION_STATE",
 )
 
 ENGINEERING_METADATA_TABLES = tuple(
@@ -112,6 +115,41 @@ AUDIT_SCHEMA_FIELDS = [
 ]
 
 
+
+# Native collections share a single authority commit. None contain hidden JSON authority.
+BINDING_FIELDS = [("table_id", "string", False), ("workspace_id", "string", False),
+                  ("item_id", "string", False), ("kind", "string", False),
+                  ("schema", "string", True), ("table_name", "string", False)]
+REGISTRATION_FIELDS = [("pipeline_id", "string", False), ("environment_name", "string", False),
+                       ("workspace_id", "string", False), ("notebook_id", "string", False),
+                       ("notebook_name", "string", False), ("registered_at", "timestamp", False),
+                       ("registered_by", "string", False), ("registration_status", "string", False), *AUDIT_SCHEMA_FIELDS]
+APPROVAL_FIELDS = [("approval_id", "string", False),
+                   ("pipeline_id", "string", False), ("environment_name", "string", False),
+                   ("pipeline_name", "string", False), ("pipeline_version", "string", False),
+                   ("testing_run_id", "string", False), ("testing_evidence_sha256", "string", False),
+                   ("agreement_id", "string", False), ("agreement_version", "string", False),
+                   ("agreement_sha256", "string", False), ("warnings", "strings", False), *AUDIT_SCHEMA_FIELDS]
+OWNERSHIP_FIELDS = [("environment_name", "string", False), ("table_id", "string", False),
+                    ("contract_id", "string", False), ("contract_version", "integer", False),
+                    ("payload_sha256", "string", False), ("writer", "string"),
+                    ("readers", "strings", False),
+                    ("destination", {"struct": [(n,t,z) for n,t,z in BINDING_FIELDS if n != "table_id"]}, False)]
+RESERVATION_FIELDS = [("environment_name", "string", False), ("reservation_id", "string", False),
+                      ("pipeline_id", "string", False), ("mode", "string", False),
+                      ("tables", "strings", False), ("revision", "string"),
+                      ("destinations", [(n,t,z) for n,t,z in BINDING_FIELDS if n != "table_id"])]
+CLAIM_FIELDS = [("claim_key", "string", False), ("token", "string", False), ("key", "string", False),
+                ("table_id", "string", False), ("environment", "string", False),
+                ("physical", {"struct": [(n,t,z) for n,t,z in BINDING_FIELDS if n != "table_id"]}, False),
+                ("activity", "string", False), ("trigger", "string", False),
+                ("expires_at", "string", False), ("execution_id", "string", False), ("completed_at", "string")]
+PROFILE_EVENT_FIELDS = [("context_key", "string", False), ("activity", "string", False),
+                        ("status", "string", False), ("results_persisted", "boolean"),
+                        ("empty_result", "boolean"), ("profile_snapshot_id", "string"),
+                        ("completed_at", "string"), ("reason", "string"), ("table_id", "string"),
+                        ("row_count", "long"), ("trigger", "string"), ("environment", "string"), ("pipeline_run_id", "string"), ("executed_at", "string"),
+                        ("physical", {"struct": [(n,t,z) for n,t,z in BINDING_FIELDS if n != "table_id"]})]
 # Dicts denote structs; tuples denote native arrays. Lists retain the existing
 # array-of-struct contract used by other metadata tables.
 CATALOGUE_NESTED_FIELDS = {
@@ -209,6 +247,7 @@ def build_metadata_schema(table_name: str, fields: list[tuple[str, Any] | tuple[
         raise ValueError(f"{table_name} schema contains duplicate column names: {detail}.")
     types = {
         "string": StringType(),
+        "strings": ArrayType(StringType(), False),
         "boolean": BooleanType(),
         "long": LongType(),
         "integer": IntegerType(),
@@ -221,7 +260,7 @@ def build_metadata_schema(table_name: str, fields: list[tuple[str, Any] | tuple[
         name, kind = field[0], field[1]
         nullable = bool(field[2]) if len(field) >= 3 else True
         if isinstance(kind, dict):
-            data_type = build_metadata_schema(table_name + "." + name, list(kind.items()))
+            data_type = build_metadata_schema(table_name + "." + name, kind["struct"] if "struct" in kind else list(kind.items()))
         elif isinstance(kind, list):
             data_type = ArrayType(build_metadata_schema(table_name + "." + name, kind), False)
         elif isinstance(kind, tuple) and kind[0] == "array":
@@ -262,11 +301,6 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                 ("status", "string", False),
                 *audit,
             ],
-        ),
-        "METADATA_ACTIVATION_STATE": build_metadata_schema(
-            "METADATA_ACTIVATION_STATE",
-            [("authority_id", "string", False), ("token", "string", False),
-             ("snapshot_json", "string", False), *audit],
         ),
         "METADATA_DATA_CATALOGUE": build_metadata_schema(
             "METADATA_DATA_CATALOGUE",
@@ -377,42 +411,35 @@ def metadata_table_schema_registry() -> dict[str, Any]:
         ),
         "METADATA_PIPELINE_REGISTRY": build_metadata_schema(
             "METADATA_PIPELINE_REGISTRY",
-            [("pipeline_id", "string", False), ("environment_name", "string", False),
-             ("workspace_id", "string"), ("notebook_id", "string"), ("notebook_name", "string"),
-             ("registered_at", "timestamp"), ("registered_by", "string"),
-             ("registration_status", "string", False), ("registry_token", "string"), *audit],
+            [("authority_id", "string", False), ("token", "string", False),
+             ("registrations", REGISTRATION_FIELDS, False),
+             ("revisions", [("environment_name", "string", False), ("revision", "string", False)], False),
+             ("approvals", APPROVAL_FIELDS, False),
+             ("selections", [("environment_name", "string", False), ("pipeline_id", "string", False),
+                             ("approval_id", "string", False)], False),
+             ("table_ownership", OWNERSHIP_FIELDS, False),
+             ("reservations", RESERVATION_FIELDS, False),
+             ("profiling_claims", CLAIM_FIELDS, False), *audit],
         ),
         "METADATA_PIPELINE_RUN": build_metadata_schema(
             "METADATA_PIPELINE_RUN",
-            [
-                ("run_id", "string", False),
-                ("activated_pipeline_id", "string"),
-                ("pipeline_id", "string", False),
-                ("execution_mode", "string", False),
-                ("environment_name", "string", False),
-                ("started_at", "timestamp", False),
-                ("completed_at", "timestamp"),
-                ("status", "string", False),
-                ("candidate_fingerprint", "string"),
-                ("candidate_json", "string", False),
-                ("boundary_completed", "boolean", False),
-                ("operations", [
-                    ("operation_key", "string", False),
-                    ("table_id", "string", False),
-                    ("status", "string", False),
-                    ("started_at", "timestamp"),
-                    ("completed_at", "timestamp"),
-                    ("configuration_sha256", "string"),
-                    ("configuration_json", "string"),
-                    ("contract_id", "string"),
-                    ("contract_version", "integer"),
-                    ("contract_payload_sha256", "string"),
-                    ("stages", [("stage", "string", False), ("status", "string", False),
-                                ("evaluation_status", "string")], False),
-                ], False),
-                ("run_details_json", "string", False),
-                *audit,
-            ],
+            [("run_id", "string", False), ("approval_id", "string"),
+             ("pipeline_id", "string", False),
+             ("execution_mode", "string", False), ("environment_name", "string", False),
+             ("started_at", "timestamp", False), ("completed_at", "timestamp"),
+             ("status", "string", False), ("activation_revision", "string"),
+             ("boundary_completed", "boolean", False),
+             ("operations", [("operation_key", "string", False),
+                 ("table_id", "string", False), ("pipeline_role", "string", False),
+                 ("contract_id", "string"), ("contract_version", "integer"), ("payload_sha256", "string"),
+                 ("destination", {"struct": [(n,t,z) for n,t,z in BINDING_FIELDS if n != "table_id"]}, False),
+                 ("read_mode", "string"), ("write_mode", "string"), ("query_sha256", "string"),
+                 ("source_table_ids", "strings", False), ("incremental_target_table_id", "string"),
+                 ("status", "string", False), ("started_at", "timestamp"), ("completed_at", "timestamp"),
+                 ("stages", [("stage", "string", False), ("status", "string", False),
+                             ("evaluation_status", "string")], False)], False),
+             ("profiling", PROFILE_EVENT_FIELDS, False), ("warnings_json", "string", False),
+             ("failures", [("code", "string", False), ("exception_type", "string")], False), *audit],
         ),
         "METADATA_GUARDRAIL_RESULTS": build_metadata_schema(
             "METADATA_GUARDRAIL_RESULTS",

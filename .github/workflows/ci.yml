@@ -130,16 +130,19 @@ jobs:
         env:
           SPARK_LOCAL_IP: "127.0.0.1"
           PYSPARK_PYTHON: "${{ github.workspace }}/.venv-delta/bin/python"
-          PYSPARK_SUBMIT_ARGS: "--jars /tmp/fabricops-delta-jars/delta-spark.jar,/tmp/fabricops-delta-jars/delta-storage.jar --conf spark.databricks.delta.snapshotPartitions=2 --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog pyspark-shell"
+          PYSPARK_SUBMIT_ARGS: "--driver-memory 3g --jars /tmp/fabricops-delta-jars/delta-spark.jar,/tmp/fabricops-delta-jars/delta-storage.jar --conf spark.databricks.delta.snapshotPartitions=2 --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog pyspark-shell"
         run: |
           .venv-delta/bin/python -m pytest -q tests/integration/test_catalogue_upgrade_delta.py --junitxml=/tmp/catalogue-regressions.xml
-          .venv-delta/bin/python -m pytest -q tests/integration/test_publication_batches.py tests/integration/test_activation_state_delta.py tests/integration/test_pipeline_registry_delta.py tests/integration/test_pipeline_run_delta.py --junitxml=/tmp/publication-regressions.xml
+          # Separate JVMs bound retained query/codegen history across the enlarged suites.
+          .venv-delta/bin/python -m pytest -q tests/integration/test_publication_batches.py --junitxml=/tmp/publication-regressions.xml
+          .venv-delta/bin/python -m pytest -q tests/integration/test_activation_state_delta.py tests/integration/test_pipeline_registry_delta.py tests/integration/test_pipeline_run_delta.py --junitxml=/tmp/pipeline-regressions.xml
+          .venv-delta/bin/python -m pytest -q tests/integration/test_joint_pipeline_metadata_delta.py --junitxml=/tmp/joint-pipeline-regressions.xml
           .venv-delta/bin/python - <<'PY'
           import xml.etree.ElementTree as ET
-          for report in ("/tmp/catalogue-regressions.xml", "/tmp/publication-regressions.xml"):
-              suites = ET.parse(report).getroot().findall("testsuite")
-              assert sum(int(suite.attrib["tests"]) for suite in suites) > 0
-              assert sum(int(suite.attrib["skipped"]) for suite in suites) == 0, "Persisted Delta regressions must run, not skip"
+          reports = ("catalogue-regressions", "publication-regressions", "pipeline-regressions", "joint-pipeline-regressions")
+          suites = [suite for report in reports for suite in ET.parse(f"/tmp/{report}.xml").getroot().findall("testsuite")]
+          assert sum(int(suite.attrib["tests"]) for suite in suites) > 0
+          assert sum(int(suite.attrib["skipped"]) for suite in suites) == 0, "Persisted Delta regressions must run, not skip"
           PY
 
   build:

@@ -212,26 +212,26 @@ METADATA_FIELD_DESCRIPTIONS = {
 }
 
 PIPELINE_REGISTRY_FIELD_DESCRIPTIONS = {
-    "pipeline_id": "Permanent system-generated UUIDv4 of the logical pipeline. The serialization control row uses central.",
-    "environment_name": "Resolved environment; together with pipeline_id identifies one notebook binding. The control row uses *.",
-    "workspace_id": "Workspace ID of the registered physical notebook; never part of the logical UUID.",
-    "notebook_id": "Current physical Fabric notebook ID; promotion or explicit rebinding preserves the UUID.",
-    "notebook_name": "Informational notebook display name; never used for identity matching or execution eligibility.",
-    "registered_at": "Timestamp when this environment binding was first registered; preserved by rebinding.",
-    "registered_by": "Principal that first registered this environment binding; preserved by rebinding.",
-    # Latest update time is supplied by the shared _committed_at audit description.
-    "registration_status": "Active or Retired for pipeline bindings; Authority identifies the single serialization control row.",
-    "registry_token": "Compare-and-swap token updated with each binding mutation in the same Serializable Delta transaction.",
+    "authority_id": "Singleton publication identity central; runtime writers never insert a missing authority.",
+    "token": "Shared compare-and-swap fence for registration, approval, admission, rebind and profiling mutations.",
 }
 
-
-PIPELINE_RUN_FIELD_DESCRIPTIONS = {
+PIPELINE_METADATA_FIELD_DESCRIPTIONS = {
     "run_id": "Unique execution attempt and physical merge key; one authoritative row contains every Read/Write.",
     "status": "Whole-run outcome: incomplete, failed, succeeded or ungoverned_completed; operation success alone never completes a run.",
-    "candidate_json": "Exact candidate identity, configuration and physical bindings retained for fingerprint verification.",
-    "run_details_json": "Frozen contract references, profiling events, warnings, sanitized failures and activation provenance; operations and completion authority are typed fields.",
+    "approval_id": "Exact Governance decision retained in the Registry authority; Live runs pin this decision.",
+    "registrations": "Native permanent Pipeline UUID and environment notebook bindings; registration never permits Live.",
+    "revisions": "Native environment activation revisions published with selections and ownership.",
+    "approvals": "Append-only decisions referencing complete finalized Test Runs and exact Agreement versions/hashes.",
+    "selections": "Current approved decision per pipeline and environment, published atomically with ownership.",
+    "table_ownership": "Native exact contract, physical destination, writer and readers per environment/table.",
+    "reservations": "Native Live reservations and transient rebind barriers protected by the shared authority token.",
+    "profiling_claims": "Renewable native claims with exact owner tokens, physical context and expiry.",
+    "profiling": "Typed per-table activity outcomes and physical result snapshot completion markers.",
+    "warnings_json": "Variable sanitized diagnostics; no configuration snapshots or activation authority.",
+    "failures": "Native safe failure codes and exception class names; never raw exception messages.",
     "boundary_completed": "Whether the explicit whole-run completion boundary finished; independent of operation success.",
-    "operations": "Native array of typed Read/Write structs: operation_key, table_id, status, timing, exact frozen contract, configuration identity/JSON and typed stages. Query with explode(operations); no operational JSON parsing is required.",
+    "operations": "Native Read/Write operation facts: table ID, role, exact contract version/hash, destination, modes, source associations, status, timing and stages. Query directly with explode(operations); no configuration join is required.",
 }
 
 PROCESSING_STATE_FIELD_DESCRIPTIONS = {
@@ -4322,8 +4322,8 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_PIPELINE_REGISTRY" and column_name in PIPELINE_REGISTRY_FIELD_DESCRIPTIONS:
         return PIPELINE_REGISTRY_FIELD_DESCRIPTIONS[column_name]
-    if table_name == "METADATA_PIPELINE_RUN" and column_name in PIPELINE_RUN_FIELD_DESCRIPTIONS:
-        return PIPELINE_RUN_FIELD_DESCRIPTIONS[column_name]
+    if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY"} and column_name in PIPELINE_METADATA_FIELD_DESCRIPTIONS:
+        return PIPELINE_METADATA_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_PROCESSING_STATE" and column_name in PROCESSING_STATE_FIELD_DESCRIPTIONS:
         return PROCESSING_STATE_FIELD_DESCRIPTIONS[column_name]
     if column_name in METADATA_FIELD_DESCRIPTIONS:
@@ -4561,6 +4561,15 @@ def generate_metadata_reference_pages() -> None:
                     f"**{relationship['logical_entity']} (logical entity; {_metadata_cardinality_display(relationship['cardinality'])}):** "
                     + relationship["statement"], "",
                 ])
+        nested = [fk for fk in table_models[table_name]["foreign_keys"]
+                  if "[]" in fk["local_field"] or "[]" in fk["referenced_field"]]
+        if nested:
+            rendered.extend(["**Nested references (application-enforced):**", "",
+                             "| Local field | Referenced field | Meaning |",
+                             "| --- | --- | --- |"])
+            for fk in nested:
+                rendered.append(f"| `{fk['local_field']}` | `{fk['referenced_table']}.{fk['referenced_field']}` | {fk['statement']} |")
+            rendered.append("")
         if rendered:
             rendered.pop()
         return rendered or ["No immediate table relationship is defined in the current implementation."]
@@ -4594,10 +4603,19 @@ def generate_metadata_reference_pages() -> None:
         raise RuntimeError("METADATA_REFERENCE_ORDER must contain every canonical metadata table exactly once")
 
     valid_cardinalities = {"1:1", "1:N", "N:1", "N:M"}
-    field_names_by_table = {
-        table_name: {row["name"] for row in metadata_table_schema_rows(schema)}
-        for table_name, schema in registry.items()
-    }
+    def schema_paths(schema, prefix=""):
+        paths = set()
+        for field in getattr(schema, "fields", []):
+            path = prefix + field.name
+            paths.add(path)
+            dtype = field.dataType
+            if hasattr(dtype, "elementType"):
+                paths.update(schema_paths(dtype.elementType, path + "[]."))
+            elif hasattr(dtype, "fields"):
+                paths.update(schema_paths(dtype, path + "."))
+        return paths
+
+    field_names_by_table = {name: schema_paths(schema) for name, schema in registry.items()}
     for table_name in canonical_tables:
         model = table_models[table_name]
         if not isinstance(model, dict):

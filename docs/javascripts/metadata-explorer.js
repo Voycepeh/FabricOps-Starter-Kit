@@ -7,9 +7,8 @@
     ["DATA_STEWARD", "governance", ["steward_id"], [], "metadata_data_steward/"],
     ["DATA_AGREEMENT", "governance", ["agreement_id", "agreement_version"], ["provider_steward_id", "recipient_steward_id"], "metadata_data_agreement/"],
     ["DATA_CONTRACT", "governance", ["contract_id", "contract_version"], ["table_id"], "metadata_data_contract/"],
-    ["ACTIVATION_STATE", "governance", ["authority_id"], [], "metadata_activation_state/", "Physical atomic activation authority"],
-    ["PIPELINE_REGISTRY", "engineering", ["pipeline_id", "environment_name"], [], "metadata_pipeline_registry/"],
-    ["PIPELINE_RUN", "engineering", ["run_id"], ["pipeline_id", "activated_pipeline_id"], "metadata_pipeline_run/"],
+    ["PIPELINE_REGISTRY", "engineering", ["authority_id"], ["approvals[].testing_run_id", "approvals[].agreement_id/version", "table_ownership[].contract_id/version"], "metadata_pipeline_registry/"],
+    ["PIPELINE_RUN", "engineering", ["run_id"], ["approval_id", "operations[].contract_id/version"], "metadata_pipeline_run/"],
     ["GUARDRAIL_RESULTS", "engineering", ["guardrail_result_id"], ["run_id", "contract_id", "contract_version"], "metadata_guardrail_results/"],
     ["DATA_CATALOGUE", "engineering", ["environment_name", "table_id", "column_id"], [], "metadata_data_catalogue/"],
     ["DATA_PROFILED", "engineering", ["profile_id"], ["table_id", "column_id"], "metadata_data_profiled/"],
@@ -19,37 +18,32 @@
     ["DATA_ACCESS", "engineering", ["access_id"], ["table_id"], "metadata_data_access/"]
   ];
 
-  // Direction is parent -> child; the inverse cardinality is shown when
-  // inspecting the child. Test-evidence and Live-release links are distinct.
-  // Dashed conceptual references deliberately have no physical-table cardinality.
+  // Cardinalities always follow the declared parent-to-child direction.
+  // Relationship tooltips identify that direction when inspecting either table.
+  // Registry cardinalities describe approvals; the physical authority is one row.
   const links = [
-    ["DATA_STEWARD", "DATA_AGREEMENT", "1:N", "Provider or recipient"],
-    ["DATA_AGREEMENT", "ACTIVATION_STATE", "", "Approved releases"],
-    ["PIPELINE_REGISTRY", "ACTIVATION_STATE", "", "Releases of a registered pipeline"],
-    ["ACTIVATION_STATE", "DATA_CONTRACT", "", "Frozen contracts in activated releases"],
-    ["ACTIVATION_STATE", "PIPELINE_RUN", "", "Live runs of approved releases"],
-    ["DATA_CATALOGUE", "DATA_CONTRACT", "1:N", "Contracts for a table"],
-    ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1:N", "Execution history"],
-    ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1:N", "Run evaluations"],
-    ["PIPELINE_RUN", "PROCESSING_STATE", "1:N", "Run processing state"],
-    ["DATA_CATALOGUE", "PROCESSING_STATE", "1:N", "Source and target processing state"],
-    ["DATA_CATALOGUE", "DATA_PROFILED", "1:N", "Profile snapshots"],
-    ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "", "Frequency snapshots"],
-    ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "1:N", "Optional statistical profile"],
-    ["DATA_CATALOGUE", "DATA_LINEAGE", "1:N", "Lineage records"],
-    ["DATA_CATALOGUE", "DATA_ACCESS", "1:N", "Access observations"],
-    ["DATA_CONTRACT", "GUARDRAIL_RESULTS", "1:N", "Contract evaluations"]
+    ["DATA_STEWARD", "DATA_AGREEMENT", "1-N", "Provider or recipient"],
+    ["DATA_AGREEMENT", "PIPELINE_REGISTRY", "1-N", "Exact approved Agreement versions"],
+    ["PIPELINE_REGISTRY", "DATA_CONTRACT", "N-N", "Exact table ownership contracts"],
+    ["PIPELINE_RUN", "DATA_CONTRACT", "N-N", "Exact operation contracts"],
+    ["DATA_CATALOGUE", "DATA_CONTRACT", "1-N", "Contracts for a table"],
+    ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1-N", "Live runs per approved pipeline release"],
+    ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1-N", "Run evaluations"],
+    ["PIPELINE_RUN", "PROCESSING_STATE", "1-N", "Run processing state"],
+    ["DATA_CATALOGUE", "PROCESSING_STATE", "1-N", "Source and target processing state"],
+    ["DATA_CATALOGUE", "DATA_PROFILED", "1-N", "Profile snapshots"],
+    ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "1-N", "Frequency snapshots"],
+    ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "1-N", "Optional statistical profile"],
+    ["DATA_CATALOGUE", "DATA_LINEAGE", "1-N", "Lineage records"],
+    ["DATA_CATALOGUE", "DATA_ACCESS", "1-N", "Access observations"],
+    ["DATA_CONTRACT", "GUARDRAIL_RESULTS", "1-N", "Contract evaluations"]
   ];
 
   const byName = new Map(definitions.map(row => [row[0], row]));
   const escapeHtml = value => String(value).replace(/[&<>"']/g, ch => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   })[ch]);
-  const cardinalityFrom = (edge, name) => {
-    const c = edge[2];
-    if (!c) return "Reference";
-    return edge[0] === name ? c : c === "1:N" ? "N:1" : c === "N:1" ? "1:N" : c;
-  };
+  const cardinalityFrom = edge => edge[2] || "Reference";
 
   const makeSvg = (tag, attributes) => {
     const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
@@ -163,7 +157,7 @@
     const approvedDiagram = new URL("../../assets/fabricops-metadata-approved.svg", document.baseURI);
     graph.style.width = "100%";
     graph.style.minWidth = "860px";
-    graph.style.aspectRatio = "1540 / 1220";
+    graph.style.aspectRatio = "1540 / 980";
     fetch(approvedDiagram).then(response => {
       if (!response.ok) throw new Error("Approved diagram returned " + response.status);
       return response.text();
@@ -201,7 +195,7 @@
         });
         buttons[name] = link;
       });
-      if (Object.keys(buttons).length !== 13) throw new Error("Unexpected approved diagram table count");
+      if (Object.keys(buttons).length !== definitions.length) throw new Error("Unexpected approved diagram table count");
       graph.replaceChildren(svg);
       select("DATA_AGREEMENT");
     }).catch(() => {
@@ -222,10 +216,6 @@
     }
 
     const logicalJoinKeys = {
-      "DATA_AGREEMENT|ACTIVATION_STATE": ["ACTIVATION_STATE.snapshot_json references agreement_id + agreement_version in each Activated Pipeline release (logical, not a physical FK)"],
-      "PIPELINE_REGISTRY|ACTIVATION_STATE": ["ACTIVATION_STATE.snapshot_json contains pipeline_id for each registered Activated Pipeline release (logical, not a physical FK)"],
-      "ACTIVATION_STATE|PIPELINE_RUN": ["PIPELINE_RUN.activated_pipeline_id identifies a release inside ACTIVATION_STATE.snapshot_json (logical release reference)"],
-      "ACTIVATION_STATE|DATA_CONTRACT": ["ACTIVATION_STATE.snapshot_json contains frozen contract_id + contract_version references (N:N logical manifest link)"],
       "DATA_CATALOGUE|DATA_PROFILED_FREQUENCY": ["DATA_PROFILED_FREQUENCY.table_id + column_id → DATA_CATALOGUE.table_id + column_id (logical table/column reference)"]
     };
     const keyJoinRows = (from, to) => {
@@ -239,11 +229,10 @@
           rows.push(child + "." + fk.local_field + " → " + other + "." + fk.referenced_field + suffix);
         }
       }
-      // Pipeline Registry identity is unique inside each environment, not
-      // globally on the pipeline_id alone.
+      // A registration is unique by pipeline and environment inside the authority.
       if ((from === "PIPELINE_REGISTRY" && to === "PIPELINE_RUN") ||
           (to === "PIPELINE_REGISTRY" && from === "PIPELINE_RUN")) {
-        rows.push("PIPELINE_RUN.environment_name → PIPELINE_REGISTRY.environment_name (environment scope)");
+        rows.push("PIPELINE_RUN.pipeline_id + environment_name → PIPELINE_REGISTRY.registrations[].pipeline_id + environment_name (registered pipeline and environment; Live approval must match both)");
       }
       if (rows.length) return rows;
       return logicalJoinKeys[from + "|" + to] || logicalJoinKeys[to + "|" + from] || ["Logical relationship; no physical FK declared"];
@@ -259,7 +248,7 @@
           return '<div class="metadata-explorer-related-row">' +
             '<span class="metadata-explorer-cardinality-text' +
             (referenceOnly ? ' metadata-explorer-reference-label' : '') +
-            '"' + (referenceOnly ? ' title="Conceptual reference without a physical foreign key"' : '') + '>' +
+            '" title="' + escapeHtml(edge[0] + ' → ' + edge[1] + ': ' + edge[3] + '; Application-enforced identity reference') + '">' +
             escapeHtml(cardinalityFrom(edge, name)) + '</span>' +
             '<button type="button" class="metadata-explorer-related-link" data-table="' + escapeHtml(other) + '">' +
             escapeHtml(other) + '</button>' +

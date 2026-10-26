@@ -22,7 +22,7 @@ Defines what a table means, how it should be processed, which Guardrails apply a
 
 **Relationships:**
 
-`METADATA_ACTIVATION_STATE` **(N → M)**
+`METADATA_PIPELINE_RUN` **(N → M)**
 via Not defined in the current implementation.
 
 `METADATA_DATA_CATALOGUE` **(N → 1)**

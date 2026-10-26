@@ -31,8 +31,13 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="activated-pipeline">
 <summary><strong>activated pipeline</strong> — An immutable approved version of a completely and successfully tested whole pipeline.</summary>
-<p>METADATA_ACTIVATION_STATE contains immutable approved pipeline manifests and the active configuration for each environment and pipeline_id. Each manifest binds successful whole-run Testing, an exact effective Agreement, global frozen contracts, transformation settings and physical destinations. Governance approves affected pipelines together; new Live runs resolve the coordinated revision automatically. Activation neither deploys notebooks nor writes business data.</p>
+<p>METADATA_PIPELINE_REGISTRY contains typed immutable approval references and the active selections for each environment and pipeline_id. Each decision binds a successful finalized Test, an exact Agreement version/hash and the table contracts, destinations and operation modes recorded by that Test. Governance approves affected pipelines together; new Live runs resolve the coordinated revision automatically. Activation neither deploys notebooks nor writes business data. Approval covers the recorded table contracts and operation modes; it does not verify arbitrary notebook transformation code.</p>
 <p><strong>Also known as:</strong> activated pipelines</p>
+</details>
+
+<details id="pipeline-registry">
+<summary><strong>Pipeline Registry</strong> — Atomic authority for pipeline registrations, immutable approval references, Live selections and reservations.</summary>
+<p>METADATA_PIPELINE_REGISTRY stores one native central authority row in Engineering. Typed collections separate Engineering notebook bindings, Governance decisions, Live selections, table ownership and execution/profiling reservations. All share one CAS token. Registration recovers a permanent UUIDv4 using exact workspace and notebook IDs and never grants Live authorization.</p>
 </details>
 
 <details id="pipeline-execution-plan">
@@ -47,7 +52,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="live">
 <summary><strong>Live</strong> — The deliberate pipeline-wide mode that permits governed publication and operational metadata commits.</summary>
-<p>Live automatically resolves an approved environment configuration from METADATA_ACTIVATION_STATE and pins its revision. Exact contracts, writer ownership, transformation settings and physical destinations are enforced. Affected running executions drain before coordinated activation.</p>
+<p>Live automatically resolves an approved environment configuration from METADATA_PIPELINE_REGISTRY and pins its revision. Exact contracts, writer ownership, transformation settings and physical destinations are enforced. Affected running executions drain before coordinated activation.</p>
 </details>
 
 <details id="enrichment">
@@ -174,7 +179,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="table-profiling-policy">
 <summary><strong>table profiling policy</strong> — Versioned Data Contract schedules for Standard Profiling, Grain Discovery and Frequency Profiling.</summary>
-<p>METADATA_DATA_CONTRACT.contract_payload_json stores independently versioned profiling policies. METADATA_PIPELINE_RUN records per-table activity outcomes and completion markers linked to persisted METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY snapshots. METADATA_ACTIVATION_STATE coordinates renewable claims. Schedules share successful history across pipelines for the same Table ID, environment and physical destination.</p>
+<p>METADATA_DATA_CONTRACT.contract_payload_json stores independently versioned profiling policies. METADATA_PIPELINE_RUN records per-table activity outcomes and completion markers linked to persisted METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY snapshots. METADATA_PIPELINE_REGISTRY coordinates renewable claims. Schedules share successful history across pipelines for the same Table ID, environment and physical destination.</p>
 </details>
 
 <details id="lineage">
@@ -336,14 +341,9 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p><strong>Also known as:</strong> pipelines</p>
 </details>
 
-<details id="pipeline-registry">
-<summary><strong>Pipeline Registry</strong> — Engineering registration of permanent Pipeline UUIDs and environment notebook bindings.</summary>
-<p>METADATA_PIPELINE_REGISTRY stores one logical pipeline binding per environment. Registration recovers a UUIDv4 using the exact workspace and notebook IDs. It never grants activation or Live authorization.</p>
-</details>
-
 <details id="pipeline-run">
 <summary><strong>pipeline run</strong> — One logical pipeline execution across every declared Read and Write.</summary>
-<p>METADATA_PIPELINE_RUN stores one authoritative row per run with a native typed operations array for every declared Read and Write. Typed operation and stage fields expose exact table/contract identity, configuration hash, status and timing within the same atomic row. Notebook cell events detect failure but do not establish whole-run success. finalize_pipeline records whole-run completion; unfinalized runs remain incomplete. Ungoverned Testing is excluded from approval evidence. Live references its exact activated_pipeline_id.</p>
+<p>METADATA_PIPELINE_RUN stores one authoritative row per execution with native Read/Write operations: table ID, role, exact contract version/hash, physical destination, read/write mode, SQL hash, source associations, status and timing. Explicit finalize_pipeline records whole-run completion; cell success does not establish completion. Registry approvals reference exact successful finalized Test Runs. Live pins approval_id and checks table bindings and operation modes before execution. No full argument snapshot, configuration fingerprint or notebook code snapshot is captured.</p>
 </details>
 
 <details id="pyspark">

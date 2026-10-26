@@ -78,7 +78,7 @@ class _DeltaTransport:
                     target.update(deepcopy(source))
                 elif self.updates:
                     for key, expression in self.updates.items():
-                        match = re.search(r"source\.(\w+)", expression)
+                        match = re.search(r"source\.`?(\w+)", expression)
                         assert match or expression in {"true", "false"}, expression
                         value = source.get(match.group(1)) if match else expression == "true"
                         if value is not None or not expression.startswith("coalesce("):
@@ -111,15 +111,7 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
     state = SimpleNamespace(config=config, context=context, metadata={name: [] for name in registry}, business={}, reads=[], commits={})
 
     from fabricops_kit.activated_pipeline import shared as activation
-    state.metadata["METADATA_ACTIVATION_STATE"] = [{"authority_id": "central", "token": "initial", "snapshot_json": activation.empty_activation_state()}]
-    def commit_authority(snapshot, *, expected_token, **kwargs):
-        row = state.metadata["METADATA_ACTIVATION_STATE"][0]
-        if row["token"] != expected_token:
-            raise ValueError("Concurrent approval")
-        from uuid import uuid4
-        row.update(token=str(uuid4()), snapshot_json=runtime.canonical_candidate_json(snapshot))
-        return row["token"]
-    monkeypatch.setattr(activation, "commit_activation_state", commit_authority)
+    state.metadata["METADATA_PIPELINE_REGISTRY"] = [{**activation.empty_pipeline_authority(), **audit}]
     activity_times = {}
     def audit_fields(**kwargs):
         activity = context["activity_id"]
@@ -174,8 +166,7 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         forPath=lambda spark, name: _DeltaTransport(state, name),
         isDeltaTable=lambda spark, name: name in state.business)))
     def persist_run(plan, row, **kwargs):
-        record = runtime.pipeline_run_row(row)
-        runtime.pipeline_run_result(record)
+        record = runtime.validate_pipeline_run(row)
         state.metadata['METADATA_PIPELINE_RUN'] = [item for item in state.metadata['METADATA_PIPELINE_RUN']
             if item['run_id'] != plan.plan_id] + [record]
     monkeypatch.setattr(runtime, '_merge_pipeline_run_row', persist_run)
@@ -268,7 +259,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     before = _activation(state)
     assert not before["eligible_runs"] and before["activate"].disabled
     assert not state.metadata["METADATA_DATA_LINEAGE"]
-    coordinates = {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "configuration": {}, "sources": [
+    coordinates = {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "sources": [
         {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
         {"store": "Bronze", "schema": "dbo", "table_name": "products"}],
         "targets": [{"store": "Silver", "schema": "dbo", "table_name": "curated_orders"}]}
