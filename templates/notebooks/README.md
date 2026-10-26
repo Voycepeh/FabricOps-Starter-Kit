@@ -24,7 +24,7 @@ For the end-to-end workflow, follow the [Guided Demo](https://voycepeh.github.io
 
 Deploy the same `00_env_config.ipynb` template in each workspace that runs FabricOps notebooks, named `00_env_config` in Fabric. Both Governance and Engineering load their current workspace's configuration by default.
 
-Populate `ENVIRONMENT_WORKSPACES` with one unique workspace ID per environment and fill the existing `FrameworkConfig` store mappings. Each workspace resolves its environment automatically; engineers do not select an environment. Keep every Metadata mapping pointed at the same central Metadata Lakehouse. Unknown workspace IDs and duplicate workspace assignments fail setup.
+Populate `ENGINEERING_WORKSPACE_IDS` with one unique workspace ID per environment and fill the existing `FrameworkConfig` store mappings. Each workspace resolves its environment automatically; engineers do not select an environment. Keep every Metadata mapping pointed at the same central Metadata Lakehouse. Unknown workspace IDs and duplicate workspace assignments fail setup.
 
 For advanced cross-workspace use, deploy a shared `00_env_config` in Central Engineering and pass its workspace ID explicitly:
 
@@ -37,7 +37,7 @@ pipeline = setup_pipeline(pipeline_mode="Test")
 PIPELINE_ID = pipeline.pipeline_id
 ```
 
-The shared deployment must register the caller workspace in `ENVIRONMENT_WORKSPACES`. The execution identity needs permission to run the remote notebook and access its configured stores. No environment variable or separate configuration file is required. Omitting `config_workspace_id` always uses the caller workspace.
+The shared deployment must register the caller workspace in `ENGINEERING_WORKSPACE_IDS`. The execution identity needs permission to run the remote notebook and access its configured stores. No environment variable or separate configuration file is required. Omitting `config_workspace_id` always uses the caller workspace.
 
 `setup_notebook()` passes Fabric `currentWorkspaceId` to the config notebook through `notebookutils.notebook.run(..., workspace=...)`. The config notebook resolves that caller ID and returns JSON using `notebookutils.notebook.exit()`. Setup reconstructs the existing `FrameworkConfig`, validates it, applies the audit timezone, and initializes the shared context using the caller's runtime identity.
 
@@ -79,13 +79,17 @@ See the [Microsoft Fabric Spark Warehouse connector documentation](https://learn
 
 ## Governance configuration
 
-Engineering environments resolve from the caller's registered workspace ID.
-The Governance workspace can run `00_env_config` directly without being registered
-as an Engineering workspace. With one Engineering environment, that environment
-is selected. With multiple environments, set `GOVERNANCE_ENVIRONMENT` in
-`00_env_config` to a registered environment key. Unknown caller workspaces remain
-rejected, including when the configuration notebook runs in another workspace.
-The central Metadata Lakehouse stays the same for every environment.
+Engineering environments resolve from the caller's registered workspace ID using
+`ENGINEERING_WORKSPACE_IDS`. The one central Governance workspace is configured by
+`GOVERNANCE_WORKSPACE_ID` and has no Engineering environment or selector.
+Running `00_env_config` there resolves the reserved `governance` metadata-only
+scope and displays only the central Metadata target. This routing key is internal,
+not another Governance workspace or a user-managed environment.
+The physical Metadata Lakehouse is shared by Governance and every Engineering
+environment. Unknown callers and overlapping Governance/Engineering workspace IDs
+are rejected. Data Contract authoring and Pipeline Activation widgets ask which
+Engineering environment's records to operate on when those widgets are opened,
+without assigning an Engineering environment to Governance itself.
 
 `01_governance` uses `setup_notebook(required_targets=["Metadata"])` and opens its
 widgets without Spark arguments. The target selection controls startup validation
