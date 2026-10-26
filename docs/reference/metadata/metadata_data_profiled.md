@@ -42,38 +42,36 @@ via `profile_id`
 
 ## Implemented schema
 
-<div class="metadata-schema-table" markdown="1">
-
-| Column | Data type | Description |
-| --- | --- | --- |
-| `profile_id` | `string` | Identifier stored for `profile_id`. |
-| `profile_snapshot_id` | `string` | Identifier stored for `profile_snapshot_id`. |
-| `table_id` | `string` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
-| `column_id` | `string` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
-| `environment_name` | `string` | Environment name recorded for the metadata row. |
-| `data_type` | `string` | Stable data type label recorded for the column. |
-| `table_name` | `string` | Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
-| `column_name` | `string` | Column name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it. |
-| `row_count` | `long` | Observed total row count in the profiled dataset snapshot. |
-| `non_null_count` | `long` | Observed non-null value count for the column. |
-| `null_count` | `long` | Observed null value count for the column. |
-| `null_percent` | `double` | Observed null percentage for the column. |
-| `distinct_count` | `long` | Observed distinct value count for the column. |
-| `distinct_percent` | `double` | Observed distinct percentage for the column. |
-| `mean_value` | `double` | Observed mean value for numeric columns when available. |
-| `stddev_value` | `double` | Observed standard deviation for numeric columns when available. |
-| `min_value` | `string` | Observed minimum value captured as text. |
-| `percentile_25_value` | `double` | Observed 25th percentile for numeric columns when available. |
-| `median_value` | `double` | Observed median value for numeric columns when available. |
-| `percentile_75_value` | `double` | Observed 75th percentile for numeric columns when available. |
-| `max_value` | `string` | Observed maximum value captured as text. |
-| `_committed_by` | `string` | User principal or runtime identity that committed the metadata row. |
-| `_committed_at` | `timestamp` | Timestamp when the metadata row was committed. |
-| `_workspace_id` | `string` | Fabric workspace identifier captured from runtime audit context. |
-| `_workspace_name` | `string` | Fabric workspace name captured from runtime audit context. |
-| `_notebook_id` | `string` | Fabric notebook identifier captured from runtime audit context. |
-| `_notebook_name` | `string` | Fabric notebook name captured from runtime audit context. |
-| `_metadata_lakehouse_name` | `string` | Configured metadata lakehouse name used for the write. |
-| `_activity_id` | `string` | Fabric execution activity identifier for the current notebook or pipeline run. |
-
+<div class="metadata-schema-table">
+<table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
+<tr><td><code>profile_id</code></td><td><code>string</code></td><td>Identifier stored for <code>profile_id</code>.</td></tr>
+<tr><td><code>profile_snapshot_id</code></td><td><code>string</code></td><td>Identifier stored for <code>profile_snapshot_id</code>.</td></tr>
+<tr><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across environment, dataset, and table context.</td></tr>
+<tr><td><code>column_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a column across environment, dataset, table, and column context.</td></tr>
+<tr><td><code>environment_name</code></td><td><code>string</code></td><td>Environment name recorded for the metadata row.</td></tr>
+<tr><td><code>data_type</code></td><td><code>string</code></td><td>Stable data type label recorded for the column.</td></tr>
+<tr><td><code>table_name</code></td><td><code>string</code></td><td>Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
+<tr><td><code>column_name</code></td><td><code>string</code></td><td>Column name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
+<tr><td><code>row_count</code></td><td><code>long</code></td><td>Observed total row count in the profiled dataset snapshot.</td></tr>
+<tr><td><code>non_null_count</code></td><td><code>long</code></td><td>Observed non-null value count for the column.</td></tr>
+<tr><td><code>null_count</code></td><td><code>long</code></td><td>Observed null value count for the column.</td></tr>
+<tr><td><code>null_percent</code></td><td><code>double</code></td><td>Observed null percentage for the column.</td></tr>
+<tr><td><code>distinct_count</code></td><td><code>long</code></td><td>Observed distinct value count for the column.</td></tr>
+<tr><td><code>distinct_percent</code></td><td><code>double</code></td><td>Observed distinct percentage for the column.</td></tr>
+<tr><td><code>mean_value</code></td><td><code>double</code></td><td>Observed mean value for numeric columns when available.</td></tr>
+<tr><td><code>stddev_value</code></td><td><code>double</code></td><td>Observed standard deviation for numeric columns when available.</td></tr>
+<tr><td><code>min_value</code></td><td><code>string</code></td><td>Observed minimum value captured as text.</td></tr>
+<tr><td><code>percentile_25_value</code></td><td><code>double</code></td><td>Observed 25th percentile for numeric columns when available.</td></tr>
+<tr><td><code>median_value</code></td><td><code>double</code></td><td>Observed median value for numeric columns when available.</td></tr>
+<tr><td><code>percentile_75_value</code></td><td><code>double</code></td><td>Observed 75th percentile for numeric columns when available.</td></tr>
+<tr><td><code>max_value</code></td><td><code>string</code></td><td>Observed maximum value captured as text.</td></tr>
+<tr><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
+<tr><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
+<tr><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
+<tr><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
+<tr><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
+<tr><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
+<tr><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>
+<tr><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
+</tbody></table>
 </div>
