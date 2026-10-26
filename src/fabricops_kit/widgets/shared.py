@@ -222,6 +222,49 @@ def form_page(widgets: Any, *, title: str, description: str, children: Iterable[
     return page
 
 
+def select_engineering_environment(*, startup, title: str, config, runtime_context, launch):
+    """Select the Engineering records for a Governance workflow at the point of use."""
+    widgets = require_ipywidgets()
+    environments = sorted(
+        env for env, stores in config.path_config.paths.items()
+        if env != "governance" and "Metadata" in stores
+    )
+    if not environments:
+        raise ValueError("No Engineering environment is configured for Governance workflows.")
+    selector = widgets.Dropdown(
+        options=[("Select an Engineering environment", ""), *((env, env) for env in environments)],
+        value="", description="Engineering environment",
+        layout=widgets.Layout(width="100%", min_width="0"),
+    )
+    button = widgets.Button(description=f"Open {title}", disabled=True, button_style="primary")
+    result_area = widgets.Output(layout=widgets.Layout(width="100%"))
+    state = {"environment": selector, "launch": button, "output": result_area, "active": None}
+
+    def update_button(change):
+        button.disabled = not bool(change["new"])
+
+    def open_selected(_):
+        selected = selector.value
+        if not selected:
+            raise ValueError("Select the Engineering environment for this workflow.")
+        scoped = {**dict(runtime_context or {}), "config": config, "env": selected}
+        with result_area:
+            result_area.clear_output(wait=True)
+            state["active"] = launch(scoped)
+
+    selector.observe(update_button, names="value")
+    button.on_click(open_selected)
+    page = form_page(
+        widgets, title=title,
+        description="Governance uses one central Metadata Lakehouse. Select which Engineering environment's records to work with.",
+        children=[widgets.VBox([selector, button, result_area])],
+        tone="governance",
+    )
+    state["widget"] = page
+    startup.display(page)
+    return state
+
+
 class WidgetStartup:
     """Publish plain HTML before blocking I/O, independently of widget comms.
 
