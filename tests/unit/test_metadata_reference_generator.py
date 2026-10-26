@@ -113,6 +113,10 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     activated_page = first_pages["metadata_pipeline_registry.md"]
     assert "`approvals`" in activated_page and "`authority_id`" in activated_page
     assert "atomic native authority" in activated_page
+    assert "{: .metadata-schema-table }" in activated_page
+    assert '<table class="metadata-nested-type" aria-label="Fields in registrations">' in activated_page
+    assert "<code>destination.workspace_id</code>" in activated_page
+    assert "`array<struct<" not in activated_page
     assert "via `agreement_id` + `agreement_version`" not in activated_page
     assert "`METADATA_DATA_CATALOGUE` **(N → 1)**" in contract_page
     assert "via `table_id`" in contract_page
@@ -126,6 +130,27 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         for path in sorted(metadata_dir.glob("*.md"))
     } == first_pages
     assert len(first_pages) == len(CANONICAL_METADATA_TABLES)
+
+
+
+def test_metadata_nested_types_are_rendered_as_field_tables() -> None:
+    """Deep structs remain readable without losing Spark field identities."""
+    schema_type = (
+        "array<struct<name:string,amount:decimal(18,2),"
+        "destination:struct<workspace_id:string,item_id:string>,"
+        "records:array<struct<record_id:string>>,tags:array<string>>>"
+    )
+    rendered = generator._metadata_type_cell(schema_type, column="registrations")
+    assert 'class="metadata-nested-type"' in rendered
+    assert 'aria-label="Fields in registrations"' in rendered
+    assert "Array of structs" in rendered
+    assert "<code>amount</code></td><td><code>decimal(18,2)</code>" in rendered
+    assert "<code>destination.workspace_id</code>" in rendered
+    assert "<code>records.record_id</code>" in rendered
+    assert "<code>array&lt;string&gt;</code>" in rendered
+    assert rendered.count("<tr>") == 9
+    assert generator._metadata_type_cell("timestamp", column="_committed_at") == chr(96) + "timestamp" + chr(96)
+
 
 
 def test_metadata_explorer_details_never_overlay_table_nodes() -> None:
