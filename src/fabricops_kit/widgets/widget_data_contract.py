@@ -730,6 +730,13 @@ def widget_data_contract(
     startup = shared.WidgetStartup("Data Contract")
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
         config, env, resolved = resolve_fabric_context(context=context)
+    if env == "governance":
+        return shared.select_engineering_environment(
+            startup=startup, title="Data Contract", config=config, runtime_context=resolved,
+            launch=lambda scoped: widget_data_contract(
+                table_id=table_id, contract_version=contract_version, context=scoped,
+            ),
+        )
     governance_config = getattr(config, "governance_config", None)
     ai_enrichment = dict(getattr(governance_config, "ai_enrichment", {}) or {})
     classification_levels = [
