@@ -1515,7 +1515,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -3192,7 +3192,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -4730,7 +4730,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -5565,7 +5565,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -5997,7 +5997,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6281,7 +6281,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -6473,11 +6473,10 @@
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
-            "Parameter removed: spark_session.",
-            "Parameter removed: testing_results."
+            "Parameter removed: spark_session."
           ],
           "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]",
-          "signature_before": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -8097,15 +8096,14 @@
         },
         {
           "change_type": "modified",
-          "classification": "potentially_breaking",
+          "classification": "nonbreaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
-            "Optional parameter added: spark_session.",
-            "Required parameter added: testing_results."
+            "Optional parameter added: spark_session."
           ],
-          "signature_after": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]"
         },
         {
@@ -8148,8 +8146,8 @@
       "summary": {
         "added": 0,
         "modified": 16,
-        "nonbreaking": 5,
-        "potentially_breaking": 11,
+        "nonbreaking": 6,
+        "potentially_breaking": 10,
         "removed": 0,
         "review_required": 0,
         "total": 16
@@ -15394,14 +15392,6 @@
           "parameters": [
             {
               "annotation": null,
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "testing_results",
-              "required": true
-            },
-            {
-              "annotation": null,
               "default": "None",
               "has_default": true,
               "kind": "keyword_only",
@@ -15427,7 +15417,7 @@
           ],
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "return_annotation": "dict[str, Any]",
-          "signature": "widget_activate_pipeline(*, testing_results, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
+          "signature": "widget_activate_pipeline(*, pipeline_id = None, spark_session = None, context = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/widgets/widget_activate_pipeline.py",
           "source_qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline"
         },
@@ -15535,7 +15525,7 @@
       "certainty": "certain",
       "lifecycle_source": "public_api_registry",
       "notes": [],
-      "revision": "5d13472555cba025abe41b43c459334e9a0010e4",
+      "revision": "5fe141f4213e6ded4ea93ec947095198e23556de",
       "source_kind": "git_branch",
       "version": "main"
     },
@@ -17120,7 +17110,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:e16750818168eba95583f32a4f4bc4bad6fe01dc8a591491950c34379e94606b",
+      "source_digest": "sha256:6512b6c4a9ccbe0293cc98e4d6eff330e9d47ff28a93e0d908e87ae31f0fa146",
       "source_kind": "working_tree",
       "version": "working-tree"
     }
