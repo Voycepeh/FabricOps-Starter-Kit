@@ -76,6 +76,32 @@ def test_public_widget_displays_before_services_without_duplicate_reads(name, mo
     root.close()
 
 
+def test_governance_environment_scope_is_selected_at_workflow_time(outputs):
+    """Governance remains unscoped until a specific Engineering-facing workflow."""
+    from fabricops_kit.widgets.shared import select_engineering_environment
+
+    config = framework_config()
+    config.path_config.paths["test"] = dict(config.path_config.paths["dev"])
+    config.path_config.paths["governance"] = {"Metadata": config.path_config.paths["dev"]["Metadata"]}
+    received = []
+    startup = WidgetStartup("Data Contract")
+    state = select_engineering_environment(
+        startup=startup, title="Data Contract", config=config,
+        runtime_context={"config": config, "env": "governance"},
+        launch=lambda scoped: received.append(scoped) or {"loaded": True},
+    )
+    assert state["environment"].value == ""
+    assert state["launch"].disabled
+    assert received == []
+    state["environment"].value = "test"
+    assert not state["launch"].disabled
+    state["launch"].click()
+    assert len(received) == 1
+    assert received[0]["env"] == "test"
+    assert state["active"] == {"loaded": True}
+    state["widget"].close()
+
+
 def test_pipeline_loading_precedes_initialization_and_collect(monkeypatch, outputs):
     """The Engineering path keeps metadata collection and session work on this thread."""
     import IPython
