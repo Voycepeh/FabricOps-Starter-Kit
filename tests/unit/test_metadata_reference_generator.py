@@ -204,7 +204,7 @@ def test_metadata_explorer_keeps_keys_readable_and_loads_canonical_details() -> 
     assert "white-space: normal" in css
     assert "overflow-wrap: anywhere" in css
     assert "DOMParser" in js and "fetch(url)" in js
-    assert "sectionDetails(implemented)" in js
+    assert 'sectionDetails(implemented, "metadata-explorer-implemented-schema")' in js
     assert 'document.createElement("section")' in js
     assert "metadata-explorer-viewport" in js
     assert "metadata-explorer-details" in js
@@ -284,8 +284,11 @@ def test_metadata_explorer_writer_and_schema_display() -> None:
     root = Path(__file__).parents[2]
     js = (root / "docs/javascripts/metadata-explorer.js").read_text(encoding="utf-8")
     css = (root / "docs/stylesheets/metadata-explorer.css").read_text(encoding="utf-8")
+    assert 'section.heading === "Column summary"' in js
     assert 'section.heading === "Implemented schema"' in js
-    assert 'sectionDetails(implemented)' in js
+    assert 'sectionDetails(summary, "metadata-explorer-column-summary")' in js
+    assert 'sectionDetails(implemented, "metadata-explorer-implemented-schema")' in js
+    assert js.index('content.appendChild(sectionDetails(summary,') < js.index('content.appendChild(sectionDetails(implemented,')
     assert 'detail.scrollIntoView({' in js
     assert 'detail.focus({ preventScroll: true })' in js
     assert 'select("DATA_AGREEMENT")' in js
@@ -296,6 +299,7 @@ def test_metadata_explorer_writer_and_schema_display() -> None:
     assert "metadata-explorer-summary" in js
     assert "metadata-explorer-detail-facts" in css
     assert ".metadata-explorer-implemented-schema" in css
+    assert ".metadata-explorer-column-summary" in css
     assert ".metadata-explorer-reference-content" in css
     assert 'document.createElement("details")' not in js
 
