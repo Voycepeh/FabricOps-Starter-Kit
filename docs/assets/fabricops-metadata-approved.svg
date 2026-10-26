@@ -118,7 +118,7 @@
 <text x="866" y="195" fill="#243550" font-size="12" font-family="Arial, sans-serif">approvals[].agreement_id/version</text>
 <text x="828" y="215" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
 <text x="866" y="215" fill="#243550" font-size="11" font-family="Arial, sans-serif">table_ownership[].contract_id/version</text>
-<text x="828" y="240" fill="#1168B6" font-size="12" font-family="Arial, sans-serif">Engineering home · shared authority</text>
+<text x="828" y="240" fill="#1168B6" font-size="12" font-family="Arial, sans-serif">Written by Engineering and Governance</text>
 <title>Open metadata documentation: PIPELINE_REGISTRY</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract/" target="_blank">
@@ -228,6 +228,4 @@
 <title>Open metadata documentation: DATA_ACCESS</title>
 </a>
 
-<text x="36" y="950" font-size="13" font-family="Arial, sans-serif" fill="#52647A">Solid lines: implemented references, enforced by application logic. PK: row key · UK: nested unique key · FK: scalar or nested reference · Composite keys must be joined together.</text>
-<text x="36" y="969" font-size="13" font-family="Arial, sans-serif" fill="#52647A">Registry cardinalities describe pipeline approvals, not its singleton authority row. N-N denotes shared Contract versions across approvals or runs.</text>
 </svg>

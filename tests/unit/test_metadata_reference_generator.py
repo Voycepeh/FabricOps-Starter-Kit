@@ -402,7 +402,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
                     if a.find(f"{namespace}title").text.endswith("PIPELINE_REGISTRY"))
     assert registry.get("transform") is None
     assert registry.find(f"{namespace}rect").get("y") == "78"
-    assert "Engineering home" in svg.read_text(encoding="utf-8")
+    assert "Written by Engineering and Governance" in svg.read_text(encoding="utf-8")
     # Keep design asset, generated output and canonical reference in sync.
     script = generator_script.read_text(encoding="utf-8")
     assert "renderMetadataSvg(layout, models)" in script

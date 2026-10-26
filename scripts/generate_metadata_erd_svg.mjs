@@ -61,7 +61,7 @@ function renderMetadataSvg(layout, models) {
       return label+`<text x="${x+51}" y="${baseline}" fill="#243550" font-size="${normalized.length > 35 ? 11 : normalized.length > 31 ? 12 : 14}" font-family="Arial, sans-serif">${esc(visible)}</text>`;
     }).join("\n");
     block=block.replace(/^<text (?![^>\n]*fill="white")[^\n]*\n/gm,"");
-    if (name === "PIPELINE_REGISTRY") lines += `\n<text x="${x+13}" y="${y+162}" fill="#1168B6" font-size="12" font-family="Arial, sans-serif">Engineering home · shared authority</text>`;
+    if (name === "PIPELINE_REGISTRY") lines += `\n<text x="${x+13}" y="${y+162}" fill="#1168B6" font-size="12" font-family="Arial, sans-serif">Written by Engineering and Governance</text>`;
     block=block.replace(/<title>Open metadata documentation:/,lines+(lines?"\n":"")+"<title>Open metadata documentation:");
     return block;
   });
