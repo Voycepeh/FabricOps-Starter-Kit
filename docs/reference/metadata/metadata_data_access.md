@@ -39,6 +39,8 @@ via `table_id`
 
 ## Implemented schema
 
+<div class="metadata-schema-table" markdown="1">
+
 | Column | Data type | Description |
 | --- | --- | --- |
 | `access_id` | `string` | Stable identifier for one observed SQL permission row. |
@@ -65,3 +67,5 @@ via `table_id`
 | `_notebook_name` | `string` | Fabric notebook name captured from runtime audit context. |
 | `_metadata_lakehouse_name` | `string` | Configured metadata lakehouse name used for the write. |
 | `_activity_id` | `string` | Fabric execution activity identifier for the current notebook or pipeline run. |
+
+</div>

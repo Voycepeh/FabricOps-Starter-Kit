@@ -57,6 +57,8 @@ via `table_ownership[].contract_id` + `table_ownership[].contract_version`
 
 ## Implemented schema
 
+<div class="metadata-schema-table" markdown="1">
+
 | Column | Data type | Description |
 | --- | --- | --- |
 | `authority_id` | `string` | Singleton publication identity central; runtime writers never insert a missing authority. |
@@ -76,4 +78,5 @@ via `table_ownership[].contract_id` + `table_ownership[].contract_version`
 | `_notebook_name` | `string` | Fabric notebook name captured from runtime audit context. |
 | `_metadata_lakehouse_name` | `string` | Configured metadata lakehouse name used for the write. |
 | `_activity_id` | `string` | Fabric execution activity identifier for the current notebook or pipeline run. |
-{: .metadata-schema-table }
+
+</div>

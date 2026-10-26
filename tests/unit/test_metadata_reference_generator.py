@@ -113,7 +113,8 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     activated_page = first_pages["metadata_pipeline_registry.md"]
     assert "`approvals`" in activated_page and "`authority_id`" in activated_page
     assert "atomic native authority" in activated_page
-    assert "{: .metadata-schema-table }" in activated_page
+    assert '<div class="metadata-schema-table" markdown="1">' in activated_page
+    assert "{: .metadata-schema-table }" not in activated_page
     assert '<table class="metadata-nested-type" aria-label="Fields in registrations">' in activated_page
     assert "<code>destination.workspace_id</code>" in activated_page
     assert "`array<struct<" not in activated_page
@@ -488,3 +489,15 @@ def test_metadata_explorer_navigation_matches_canonical_svg() -> None:
     assert relationships == {(edge.get("data-from"), edge.get("data-to"), edge.get("data-cardinality")) for edge in edges}
     assert "Object.keys(buttons).length !== definitions.length" in js
     assert "ACTIVATION_STATE" not in js
+
+
+def test_schema_layout_wrapper_survives_markdown_rendering() -> None:
+    """Attach layout to the rendered schema rather than an accidental table row."""
+    import pytest
+    markdown = pytest.importorskip("markdown")
+    from pathlib import Path
+    page = Path("docs/reference/metadata/metadata_data_catalogue.md").read_text()
+    rendered = markdown.markdown(page, extensions=["tables", "attr_list", "md_in_html"])
+    assert '<div class="metadata-schema-table">\n<table>' in rendered
+    assert "{: .metadata-schema-table }" not in rendered
+    assert 'aria-label="Fields in load_strategy_parameters_json"' in rendered
