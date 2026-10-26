@@ -145,7 +145,7 @@ def test_metadata_nested_types_are_rendered_as_field_tables() -> None:
     rendered = generator._metadata_type_cell(schema_type, column="registrations")
     assert 'class="metadata-nested-type"' in rendered
     assert 'aria-label="Fields in registrations"' in rendered
-    assert "<summary>Array</summary>" in rendered
+    assert "<summary><code>Array</code></summary>" in rendered
     assert '<details class="metadata-structured-type">' in rendered
     assert "<code>amount</code></td><td><code>decimal(18,2)</code>" in rendered
     assert "<code>destination.workspace_id</code>" in rendered
