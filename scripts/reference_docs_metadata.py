@@ -271,7 +271,8 @@ METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
     "METADATA_DATA_CONTRACT": ["widget_data_contract"],
-    "METADATA_PIPELINE_REGISTRY": ["widget_activate_pipeline", "setup_pipeline", "finalize_pipeline", "profile_table"],
+    # Scheduled Read/Write profiling acquires Registry claims; standalone profile_table does not.
+    "METADATA_PIPELINE_REGISTRY": ["widget_activate_pipeline", "setup_pipeline", "finalize_pipeline", "orchestrate_read", "orchestrate_write"],
     "METADATA_PIPELINE_RUN": ["finalize_pipeline"],
     "METADATA_DATA_CATALOGUE": ["orchestrate_read", "orchestrate_write", "profile_table"],
     "METADATA_DATA_PROFILED": ["orchestrate_read", "orchestrate_write", "profile_table"],
