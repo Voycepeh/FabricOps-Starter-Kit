@@ -51,7 +51,7 @@ def test_env_config_optional_dropdowns_use_supported_widget_type() -> None:
 
 def _path_config_source():
     notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text())
-    return next("".join(cell["source"]) for cell in notebook["cells"] if "ENV_ITEMS = {" in "".join(cell["source"]))
+    return next("".join(cell["source"]) for cell in notebook["cells"] if "ENGINEERING_ENVIRONMENT_ITEMS = {" in "".join(cell["source"]))
 
 
 def _substituted_config_source(unresolved=None):
@@ -71,10 +71,15 @@ def test_generic_config_preserves_physical_names_and_metadata_routing():
         assert stores["Gold"].workspace_id == "example_" + env.upper() + "_WORKSPACE_ID"
         assert stores["Metadata"].schema == "governance"
         assert stores["Metadata"].workspace_id == "example_GOVERNANCE_WORKSPACE_ID"
+    governance = namespace["PATH_CONFIG"].paths["governance"]
+    assert set(governance) == {"Metadata"}
+    assert governance["Metadata"].env == "governance"
+    assert governance["Metadata"].workspace_id == "example_GOVERNANCE_WORKSPACE_ID"
+    assert governance["Metadata"].item_id == "example_GOVERNANCE_METADATA_LAKEHOUSE_ID"
 
 
 @pytest.mark.parametrize("unresolved", ["<DEV_WORKSPACE_ID>", "<GOLD_NAME>", "<GOLD_ITEM_ID>",
-                                        "<GOVERNANCE_WORKSPACE_ID>", "<METADATA_ITEM_ID>"])
+                                        "<GOVERNANCE_WORKSPACE_ID>", "<GOVERNANCE_METADATA_LAKEHOUSE_ID>"])
 def test_generic_config_rejects_placeholders_before_io(unresolved):
     """Unresolved deployment values fail during configuration construction."""
     from fabricops_kit import FabricStore, PathConfig
@@ -90,10 +95,10 @@ def test_generic_config_supports_one_custom_environment_and_store():
     boundary = source.index("def _required_config_value")
     namespace = {"FabricStore": FabricStore, "PathConfig": PathConfig}
     exec(source[:boundary], namespace)
-    namespace["ENGINEERING_WORKSPACES"] = {"poc": "custom_workspace"}
-    namespace["ENV_ITEMS"] = {"poc": {"Product": {"name": "wh_Custom", "item_id": "custom_item", "kind": "warehouse"}}}
+    namespace["ENGINEERING_WORKSPACE_IDS"] = {"poc": "custom_workspace"}
+    namespace["ENGINEERING_ENVIRONMENT_ITEMS"] = {"poc": {"Product": {"name": "wh_Custom", "item_id": "custom_item", "kind": "warehouse"}}}
     exec(source[boundary:], namespace)
-    assert set(namespace["PATH_CONFIG"].paths) == {"poc"}
+    assert set(namespace["PATH_CONFIG"].paths) == {"poc", "governance"}
     assert set(namespace["PATH_CONFIG"].paths["poc"]) == {"Product", "Metadata"}
 
 
@@ -107,3 +112,7 @@ def test_generic_template_contains_no_deployment_identifiers_or_saved_outputs():
     assert all(not cell.get("outputs") for cell in notebook["cells"])
     assert 'caller_workspace_id = ""' in _env_config_source()
     assert 'INITIALIZE_METADATA = False' in _env_config_source()
+    assert "GOVERNANCE_ENVIRONMENT" not in _env_config_source()
+    assert "ENGINEERING_WORKSPACES" not in _env_config_source()
+    assert "METADATA_ITEM_ID" not in _env_config_source()
+    assert "ENGINEERING_WORKSPACE_IDS" in _env_config_source()
