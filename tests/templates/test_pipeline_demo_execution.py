@@ -1,5 +1,6 @@
 """Execute current demo cells with physical Fabric/Spark boundaries replaced."""
 import ast
+import inspect
 from pathlib import Path
 from unittest.mock import MagicMock, Mock
 
@@ -64,3 +65,27 @@ def test_notebooks_keep_user_owned_transform_surface(path):
     assert {arg.arg for arg in calls['setup_pipeline'][0].keywords} == {'pipeline_id','pipeline_mode'}
     transform = next(cell.source for cell in notebook.cells if cell.id == 'transform')
     assert 'orchestrate_' not in transform
+
+
+@pytest.mark.parametrize('path', DEMOS, ids=lambda path: path.stem)
+def test_notebook_orchestrator_calls_match_public_signatures(path):
+    """Keep runnable Read/Write templates synchronized with their real public APIs."""
+    from fabricops_kit.pipeline.orchestrate_read import orchestrate_read
+    from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
+
+    accepted = {
+        'orchestrate_read': set(inspect.signature(orchestrate_read).parameters),
+        'orchestrate_write': set(inspect.signature(orchestrate_write).parameters),
+    }
+    notebook = nbformat.read(path, as_version=4)
+    for cell in notebook.cells:
+        if cell.cell_type != 'code':
+            continue
+        for node in ast.walk(ast.parse(cell.source)):
+            if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name):
+                continue
+            valid = accepted.get(node.func.id)
+            if valid is None:
+                continue
+            invalid = {arg.arg for arg in node.keywords} - valid
+            assert not invalid, f"{path.name}:{cell.id} passes unsupported {node.func.id} options: {sorted(invalid)}"

@@ -81,7 +81,7 @@ def read_lakehouse_table(
         identity = resolve_catalogue_table_identity(
             config, env, table_id, spark_session=spark_session, context=resolved_context,
         )
-        if identity["store_type"] != "lakehouse":
+        if str(identity.get("store_type") or identity.get("store_kind") or "").lower() != "lakehouse":
             raise ValueError(f"table_id {table_id!r} does not identify a Lakehouse table.")
         table_name = identity["table_name"]
         store = identity["store"]
