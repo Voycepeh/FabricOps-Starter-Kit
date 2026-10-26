@@ -87,9 +87,11 @@ scope and displays only the central Metadata target. This routing key is interna
 not another Governance workspace or a user-managed environment.
 The physical Metadata Lakehouse is shared by Governance and every Engineering
 environment. Unknown callers and overlapping Governance/Engineering workspace IDs
-are rejected. Data Contract authoring and Pipeline Activation widgets ask which
-Engineering environment's records to operate on when those widgets are opened,
-without assigning an Engineering environment to Governance itself.
+are rejected. Data Contract authoring lists governed tables across all Engineering environments
+in one central view; Pipeline Activation lists successful Testing runs across them.
+Each entry displays its originating Engineering environment. Selecting a table or
+run routes the specific review/action to that record's Engineering context.
+There is no Governance-level Engineering environment selector or workspace switch.
 
 `01_governance` uses `setup_notebook(required_targets=["Metadata"])` and opens its
 widgets without Spark arguments. The target selection controls startup validation
