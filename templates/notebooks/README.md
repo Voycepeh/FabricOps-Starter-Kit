@@ -32,13 +32,14 @@ For advanced cross-workspace use, deploy a shared `00_env_config` in Central Eng
 # Optional: load configuration from another workspace.
 CONFIG_WORKSPACE_ID = "<configuration-workspace-id>"
 context = setup_notebook(config_workspace_id=CONFIG_WORKSPACE_ID)
-# Or in an Engineering pipeline:
-pipeline = setup_pipeline(config_workspace_id=CONFIG_WORKSPACE_ID)
+# Then, in an Engineering pipeline:
+pipeline = setup_pipeline(pipeline_mode="Test")
+PIPELINE_ID = pipeline.pipeline_id
 ```
 
 The shared deployment must register the caller workspace in `ENVIRONMENT_WORKSPACES`. The execution identity needs permission to run the remote notebook and access its configured stores. No environment variable or separate configuration file is required. Omitting `config_workspace_id` always uses the caller workspace.
 
-`setup_notebook()` passes Fabric `currentWorkspaceId` to the config notebook through `notebookutils.notebook.run(..., workspaceId=...)`. The config notebook resolves that caller ID and returns JSON using `notebookutils.notebook.exit()`. Setup reconstructs the existing `FrameworkConfig`, validates it, applies the audit timezone, and initializes the shared context using the caller's runtime identity.
+`setup_notebook()` passes Fabric `currentWorkspaceId` to the config notebook through `notebookutils.notebook.run(..., workspace=...)`. The config notebook resolves that caller ID and returns JSON using `notebookutils.notebook.exit()`. Setup reconstructs the existing `FrameworkConfig`, validates it, applies the audit timezone, and initializes the shared context using the caller's runtime identity.
 
 ```python
 # 01 Governance
@@ -46,13 +47,15 @@ from fabricops_kit import setup_notebook
 context = setup_notebook()
 
 # 02 Pipeline
-from fabricops_kit import setup_pipeline, finalize_pipeline
-pipeline = setup_pipeline()  # Notebook name supplies pipeline_id; Test is the default.
+from fabricops_kit import setup_notebook, setup_pipeline, finalize_pipeline
+context = setup_notebook()
+pipeline = setup_pipeline()  # Register or recover the notebook binding; default Test.
+PIPELINE_ID = pipeline.pipeline_id
 # Read → Transform → Write
 finalize_pipeline()
 ```
 
-Omit `pipeline_id` on first execution to register or recover a permanent UUIDv4. Save the displayed UUID as `PIPELINE_ID` and carry it into each environment; `pipeline_mode="Live"` retains the existing approved-manifest behavior. Neither requires an environment argument. Explicit `setup_notebook(CONFIG, env=...)` remains supported for local validation and advanced callers.
+Omit `pipeline_id` on first execution to register or recover a permanent UUIDv4. The notebook automatically assigns `PIPELINE_ID = pipeline.pipeline_id`; retain that UUID in source only for cross-workspace promotion; `pipeline_mode="Live"` retains the existing approved-manifest behavior. Neither requires an environment argument. Explicit `setup_notebook(CONFIG, env=...)` remains supported for local validation and advanced callers.
 
 Configuration loads do not create metadata tables. At deployment, run the Governance config notebook directly with `INITIALIZE_METADATA = True` once, then restore `False` before ordinary use.
 
@@ -91,15 +94,16 @@ workflows and the filter grants no permissions.
 
 ## Pipeline execution mode
 
-The pipeline flow is **Setup Pipeline → Read → Transform → Write**. Environment routing is resolved automatically from the caller workspace by the selected `00_env_config`. A stable `pipeline_id` identifies the logical pipeline independently of notebook names and paths.
+The pipeline flow is **Setup Notebook → Setup Pipeline → Read → Transform → Write → Finalize**. `setup_notebook()` initializes configuration and displays readiness; `setup_pipeline()` reuses that configuration and displays only pipeline details. Call notebook setup first; missing, failed or outdated setup produces an actionable error. Rerunning notebook setup closes the current pipeline and invalidates its old configuration before attempting a reload. Environment routing is resolved automatically from the caller workspace by the selected `00_env_config`. A stable `pipeline_id` identifies the logical pipeline independently of notebook names and paths.
 
 ```python
-CONTRACTS = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
+context = setup_notebook()
+pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
 source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 transformed = transform(source["dataframe"])
 result = orchestrate_write(transformed, store="Gold", schema="demo",
                            table_name="customer_summary", write_mode="overwrite")
-pipeline_result = finalize_pipeline(CONTRACTS)
+pipeline_result = finalize_pipeline(pipeline)
 ```
 
 `pipeline_mode` accepts exactly `Test` or `Live`. Test runs real reads, transformations and selected Guardrails without business or operational metadata commits during Read and Write. The explicit Finalize step commits the complete Test run and Guardrail results for activation review. In a notebook, choose exact frozen contracts or No Contract in the setup interface before the first operation. Headless Test starts with No Contract; its returned session supports explicit `select_contract(table_id, contract_id, contract_version)` for automated diagnostics. Choices lock when operations start. The displayed report updates automatically, with red Test and green Live mode treatment and textual operation/Guardrail status.
@@ -110,7 +114,7 @@ Live resolves participants, frozen contracts, project configuration and physical
 
 Every successful Read registers with the current execution instance. Every subsequent Write receives that execution's registered sources. These associations describe pipeline participation, not proven DataFrame transformation lineage. Context-local state and unique run IDs isolate executions; failure, repeated setup and shutdown clear source references.
 
-Run `finalize_pipeline(CONTRACTS)` after all Reads, transformations and Writes, including read-only pipelines. It records the complete outcome and releases Live reservations. Pass `failed=True` for a caught project exception. Test finalization commits the complete run and Guardrail results. Open `widget_activate_pipeline()` for explicit approval. Live outcome publication requires complete runtime audit identity. Repeating finalization with the same session is idempotent.
+Run `finalize_pipeline(pipeline)` after all Reads, transformations and Writes, including read-only pipelines. It records the complete outcome and releases Live reservations. Pass `failed=True` for a caught project exception. Test finalization commits the complete run and Guardrail results. Open `widget_activate_pipeline()` for explicit approval. Live outcome publication requires complete runtime audit identity. Repeating finalization with the same session is idempotent.
 
 A successful Write or Fabric cell does not prove whole-notebook completion. Observed errors seal failure; repeated setup and shutdown seal unfinalized runs as **incomplete**. A killed process may retain an incomplete Live record and reservation. Operators must confirm execution stopped before repairing a reservation. Headless code must call Finalize after its full transformation workflow, or use `failed=True` when it catches a project failure.
 
@@ -133,7 +137,8 @@ Live setup automatically resolves the approved environment configuration and res
 Deploy notebooks through Engineering source control, CI/CD and Microsoft Fabric tooling. Approval never deploys a notebook or writes business data. No FabricOps packaging or deployment verification call is required. Live validates exact global tables, environment destinations, Data Contract versions, ownership and transformation settings against central approval.
 
 ```python
-CONTRACTS = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Live")
+context = setup_notebook()
+pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Live")
 # Read → Transform → Write; approved authority is resolved internally.
 ```
 
@@ -178,8 +183,8 @@ The authority uses a single JSON snapshot to guarantee metadata atomicity, tradi
 
 ### Permanent pipeline identity
 
-`setup_pipeline(pipeline_mode="Test")` resolves the caller workspace and notebook IDs, recovers their exact Active registration, or allocates a UUIDv4 in `engineering.METADATA_PIPELINE_REGISTRY`. Registration is the only administrative Test write. Save the displayed UUID in `PIPELINE_ID`, then pass `pipeline_id=PIPELINE_ID` on subsequent runs and promotions. The returned session exposes `pipeline.pipeline_id`; its execution ID remains separate.
+`setup_pipeline(pipeline_mode="Test")` resolves the caller workspace and notebook IDs, recovers their exact Active registration, or allocates a UUIDv4 in `engineering.METADATA_PIPELINE_REGISTRY`. Registration is the only administrative Test write. Assign `PIPELINE_ID = pipeline.pipeline_id` immediately after setup, as the templates do. Read, Write and Finalize use the active session immediately. Subsequent execution of the same notebook recovers its UUID without source edits. Retain the UUID in source only when promoting across workspaces, and pass it explicitly to preserve the same logical identity across environments. An unregistered Live deployment must first register and test the intended identity; Live never allocates a fresh UUID. The returned session exposes `pipeline.pipeline_id`; its execution ID remains separate.
 
-Notebook names are informational. A rename preserves identity. After reupload, call `setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Test", previous_workspace_id=..., previous_notebook_id=...)` to approve moving the existing environment binding to the caller. For an independent notebook copy, omit the copied UUID and call `setup_pipeline(pipeline_mode="Test", new_pipeline=True)`; save its newly generated UUID. Neither action changes approved releases. Promotion adds an environment binding and requires fresh environment Testing and explicit activation before Live.
+Notebook names are informational. A rename preserves identity. After reupload, call `setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Test", previous_workspace_id=..., previous_notebook_id=...)` to approve moving the existing environment binding to the caller. For an independent notebook copy, omit the copied UUID and call `setup_pipeline(pipeline_mode="Test", new_pipeline=True)`; the returned session exposes its newly generated UUID. Neither action changes approved releases. Promotion adds an environment binding and requires fresh environment Testing and explicit activation before Live.
 
-`pipeline_result = finalize_pipeline(CONTRACTS)` commits the Test run and its Guardrail results to Engineering metadata. Governance reads those records directly; no dictionary handoff or manual run attestation is required. Approval validates the current workspace/notebook registration, complete operation outcomes, exact contracts per table, configuration and Agreement, then freezes the approved manifest in `governance.METADATA_ACTIVATION_STATE`. Test does not commit business tables; actual publication permissions and target transaction success are exercised in Live.
+`pipeline_result = finalize_pipeline(pipeline)` commits the Test run and its Guardrail results to Engineering metadata. Governance reads those records directly; no dictionary handoff or manual run attestation is required. Approval validates the current workspace/notebook registration, complete operation outcomes, exact contracts per table, configuration and Agreement, then freezes the approved manifest in `governance.METADATA_ACTIVATION_STATE`. Test does not commit business tables; actual publication permissions and target transaction success are exercised in Live.

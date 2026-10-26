@@ -11,7 +11,7 @@ Prepare Testing or resolve an approved environment configuration for Live.
 
 ## Usage notes
 
-Use once before Read, Transform and Write with pipeline_id and pipeline_mode.
+Call after setup_notebook() and before Read, Transform and Write. Test registers or recovers the Pipeline ID automatically.
 
 
 ## Example usage
@@ -19,7 +19,8 @@ Use once before Read, Transform and Write with pipeline_id and pipeline_mode.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-contracts = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
+context = setup_notebook()
+pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
 orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 independent_copy = setup_pipeline(pipeline_mode="Test", new_pipeline=True)
 reuploaded = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Test",
@@ -40,7 +41,6 @@ def setup_pipeline(
     *,
     pipeline_id: str | None=None,
     pipeline_mode: str='Test',
-    config_workspace_id: str | None=None,
     new_pipeline: bool=False,
     previous_workspace_id: str | None=None,
     previous_notebook_id: str | None=None,
@@ -59,9 +59,8 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `pipeline_id` | `str \| None` | No | `None` | Permanent UUIDv4. Omit to recover the exact notebook binding or register a new UUID. Save the displayed UUID in the notebook for promotion. A changed same-environment binding requires both previous notebook IDs. |
+| `pipeline_id` | `str \| None` | No | `None` | Permanent UUIDv4. Omit to recover the exact notebook binding or register a new UUID in Test. The session exposes pipeline.pipeline_id; retain it in source only for cross-workspace promotion. Live never allocates a new UUID. A changed same-environment binding requires both previous notebook IDs. |
 | `pipeline_mode` | `str` | No | `'Test'` | Evaluation-only operations or execution under an approved manifest. |
-| `config_workspace_id` | `str \| None` | No | `None` | Workspace hosting 00_env_config. Defaults to the current workspace. Supply an ID only when using a shared cross-workspace configuration. |
 | `new_pipeline` | `bool` | No | `False` | Explicitly create a new identity for an independent notebook copy. Omit pipeline_id when set. An already registered notebook is rejected. |
 | `previous_workspace_id` | `str \| None` | No | `None` | Supply both old binding IDs to explicitly rebind a reuploaded notebook. Rebinding requires Test mode and no active Live runs. |
 | `previous_notebook_id` | `str \| None` | No | `None` | Not documented yet |
@@ -77,7 +76,7 @@ PipelineSession
 
 ### Return interpretation
 
-Returns a context-local execution session with contract selection and automatic reporting; finalize_pipeline records completion and commits Test results; interrupted runs remain incomplete.
+Returns a context-local execution session exposing pipeline_id, contract selection and automatic reporting; finalize_pipeline records completion and commits Test results; interrupted runs remain incomplete.
 
 ## Raises / Errors
 
@@ -85,24 +84,27 @@ ValueError
     For an invalid UUIDv4, conflicting notebook binding, unsupported mode or
     missing Live approval.
 RuntimeError
-    For missing environment configuration or an unavailable Spark session.
+    If setup_notebook() has not completed successfully for the current
+    execution, or a Spark session is unavailable.
 
 ### Common failure causes
 
-- Missing explicit table choices or invalid frozen contract selections.
-- Unsafe Testing write destination.
-- Missing complete governed Testing for activation or approved Live configuration.
+- Missing, failed or outdated setup_notebook() initialization.
+- Invalid frozen contract selections.
+- Missing notebook registration or approved Live configuration.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-Workspace configuration is loaded through the same initialization as
-setup_notebook. Load the current workspace configuration by default, or
-supply config_workspace_id for a shared deployment. The caller workspace
-determines the environment in both cases. Initialization prints the FabricOps
-version, resolved configuration and targets, and startup readiness in the
-calling notebook.
+Call setup_notebook() first to initialize configuration and display notebook
+readiness. This function reuses that configuration without rerunning
+00_env_config or displaying the environment summary. Cross-workspace
+configuration is selected only through setup_notebook(config_workspace_id=...).
+Repeated pipeline setup closes the preceding execution owned by this task.
+Repeated notebook setup closes its pipeline and invalidates prior configuration,
+including when the new setup fails. Changed runtime identity requires fresh
+notebook setup.
 
 Fabric cell events identify failures, not successful notebook completion.
 Call finalize_pipeline after all Reads, transformations and Writes.
@@ -134,7 +136,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L219">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L221">View on GitHub</a>
 </div>
 
 

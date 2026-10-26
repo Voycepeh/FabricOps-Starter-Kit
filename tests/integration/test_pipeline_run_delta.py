@@ -21,7 +21,7 @@ pytestmark = pytest.mark.spark
 
 @pytest.fixture
 def runs_delta(monkeypatch, spark_session, tmp_path):
-    """Replace Fabric routing only; publish and read actual canonical Delta records."""
+    """Replace Fabric routing and notebook discovery; publish actual canonical Delta records."""
     pytest.importorskip('delta.tables')
     if 'DeltaSparkSessionExtension' not in spark_session.conf.get('spark.sql.extensions', ''):
         pytest.skip('requires Delta Spark extensions')
@@ -34,6 +34,8 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
     audit = {name: datetime.now() if name == '_committed_at' else 'test-runtime' for name, *_ in AUDIT_SCHEMA_FIELDS}
     audit.update(_workspace_id='workspace', _notebook_id='notebook')
     context = {'config': {}, 'env': 'DEV', 'workspace_id': 'workspace', 'notebook_id': 'notebook'}
+    # Explicit plans isolate Delta persistence from Fabric notebook initialization.
+    monkeypatch.setattr(shared, 'get_default_fabric_context', lambda **kwargs: context)
     pipeline_id = '4c7ae400-85ab-4023-9427-e8fde20bd596'
     for module in (shared, activation):
         monkeypatch.setattr(module, 'resolve_fabric_context', lambda context=None: (context['config'], context['env'], context))

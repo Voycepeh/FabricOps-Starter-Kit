@@ -14,6 +14,9 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     runs. Pass the session returned by setup_pipeline, or omit it to use the
     current execution. Set failed=True when a project exception was caught.
     A successful Write or cell never completes the whole pipeline by itself.
+    Open sessions require the current initialized notebook configuration and
+    runtime identity, whether passed explicitly or selected implicitly. Already
+    closed sessions retain their recorded outcome for repeat finalization.
 
     Test Read/Write operations do not commit business or operational metadata.
     Explicit finalization commits the complete Test run and Guardrail results
@@ -39,7 +42,8 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     ValueError
         If pipeline is not a setup_pipeline session or audit identity is missing.
     RuntimeError
-        If another task owns the execution or metadata publication fails. Retry
+        If notebook setup is invalid, runtime identity has changed, another task
+        owns the execution, or metadata publication fails. Retry
         with the same session after a publication failure; result IDs are stable.
 
     Examples
@@ -56,6 +60,7 @@ def finalize_pipeline(pipeline=None, *, failed=False):
         raise RuntimeError("This execution belongs to another task or thread.")
     with pipeline.plan.lock:
         if not pipeline.closed:
+            pipeline.validate_current_context()
             pipeline.plan.evidence["boundary_completed"] = not failed
             pipeline.close(failed=failed)
         if pipeline.plan.execution_mode == "testing":

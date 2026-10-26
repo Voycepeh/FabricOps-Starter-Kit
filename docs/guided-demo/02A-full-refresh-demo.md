@@ -27,8 +27,8 @@ Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite 
 
 | Notebook section | What happens |
 | --- | --- |
-| Environment | Imports the public APIs; `setup_pipeline()` loads workspace configuration in the following block. |
-| Setup Pipeline | Initialize context, declare participants and start execution tracking. |
+| Environment | Calls `setup_notebook()` to load configuration, resolve the environment and display readiness. |
+| Setup Pipeline | Reuse notebook configuration, register or recover the Pipeline ID and start execution tracking. |
 | Data Contract Configuration | Choose an exact frozen version or No Contract independently for each table in Testing. |
 | Governed Read | Reads Orders, Products, and Order History in full. |
 | PySpark Transform | Produces detailed orders and a customer summary. |
@@ -40,13 +40,17 @@ Bounded DataFrame previews also remain directly below each Read and Write call.
 Run **0. Environment** and **1. Setup Pipeline**. Reads and Writes define participants directly:
 
 ```python
-PIPELINE_ID = None  # First run: save the displayed UUID here before promotion.
-PIPELINE_MODE = "Test"  # Test or Live
-CONTRACTS = setup_pipeline(
-    pipeline_id=PIPELINE_ID,
-    pipeline_mode=PIPELINE_MODE,
+context = setup_notebook(
     # Optional shared config: config_workspace_id="<configuration-workspace-id>",
 )
+
+PIPELINE_ID = None  # Test registers or recovers this notebook automatically.
+PIPELINE_MODE = "Test"  # Test or Live
+pipeline = setup_pipeline(
+    pipeline_id=PIPELINE_ID,
+    pipeline_mode=PIPELINE_MODE,
+)
+PIPELINE_ID = pipeline.pipeline_id
 ```
 
 

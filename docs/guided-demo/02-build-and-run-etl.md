@@ -37,8 +37,8 @@ The notebook follows one visible lifecycle:
 
 | Notebook section | What happens |
 | --- | --- |
-| Environment | Imports the public APIs; `setup_pipeline()` loads workspace configuration in the following block. |
-| Setup Pipeline | Initializes context and resolves environment authority. |
+| Environment | Calls `setup_notebook()` to load configuration, resolve the environment and display readiness. |
+| Setup Pipeline | Reuses notebook configuration, registers or recovers the Pipeline ID and resolves pipeline authority. |
 | Data Contract Configuration | Defaults to interactive **Testing**; choose a frozen version or No Contract independently for each participant. |
 | Governed Read | Reads each configured source and runs the applicable source checks. |
 | PySpark Transform | Contains the joins, filters, derived columns, aggregations, or selections owned by your project. |
@@ -50,24 +50,28 @@ The template starts with one Read, one transformation, and one Write. Add more R
 
 ### Import required pipeline functions
 
-Run the Environment import cell first. The notebook does not need a separate configuration-loading code cell. The following Setup Pipeline block calls `setup_pipeline()`, which loads `00_env_config` from the current workspace. For shared deployments, optionally pass `config_workspace_id`; the import list can vary by demo.
+Run the Environment / Setup Notebook cell first. It calls `setup_notebook()` to load `00_env_config` and display readiness. Setup Pipeline then reuses that configuration. For shared deployments, pass `config_workspace_id` only to `setup_notebook()`; the import list can vary by demo.
 
 ![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
 
 ### Run the Data Contract block
 
 ```python
-PIPELINE_ID = None  # First run: save the displayed UUID here before promotion.
-PIPELINE_MODE = "Test"  # Test or Live
-CONTRACTS = setup_pipeline(
-    pipeline_id=PIPELINE_ID,
-    pipeline_mode=PIPELINE_MODE,
+context = setup_notebook(
     # Optional shared config: config_workspace_id="<configuration-workspace-id>",
 )
+
+PIPELINE_ID = None  # Test registers or recovers this notebook automatically.
+PIPELINE_MODE = "Test"  # Test or Live
+pipeline = setup_pipeline(
+    pipeline_id=PIPELINE_ID,
+    pipeline_mode=PIPELINE_MODE,
+)
+PIPELINE_ID = pipeline.pipeline_id
 ```
 
 
-Supply a stable `pipeline_id`. In Test, Read and Write do not publish business or operational metadata; finalize publishes the Test review outcome. FabricOps governs Data Contracts; Engineering and Microsoft Fabric own code integrity and deployment. Explicit real Testing writes require reviewed safe destinations; they can produce real data and ordinary metadata side effects. Headless Testing sets `interactive=False` and may supply saved exact selections. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
+The returned session is ready for Read and Write immediately. Retain its UUID in source only for cross-workspace promotion. In Test, Read and Write do not publish business or operational metadata; finalize publishes the Test review outcome. FabricOps governs Data Contracts; Engineering and Microsoft Fabric own code integrity and deployment. Explicit real Testing writes require reviewed safe destinations; they can produce real data and ordinary metadata side effects. Headless Testing sets `interactive=False` and may supply saved exact selections. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">

@@ -168,16 +168,15 @@ def run_pipeline_operation(function, *args, plan, sources=(), spark_session=None
     Production calls receive no plan or source arguments. These tests already
     replace physical planning and use their own operation-journal fixtures.
     """
-    from fabricops_kit.pipeline.shared import _ACTIVE_PIPELINE
+    from importlib import import_module
+    from unittest.mock import patch
+
     session = SimpleNamespace(closed=False, owns_current_execution=lambda: True, spark=spark_session, sources=list(sources),
                               operation_plan=lambda *unused: plan,
                               register_source=lambda result: result)
-    token = _ACTIVE_PIPELINE.set(session)
-    try:
+    with patch.object(import_module(function.__module__), "current_pipeline_session", return_value=session):
         kwargs.setdefault("verbose", True)
         return function(*args, **kwargs)
-    finally:
-        _ACTIVE_PIPELINE.reset(token)
 
 
 def call_with_spark(session, function, *args, **kwargs):

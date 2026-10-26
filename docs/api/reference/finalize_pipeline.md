@@ -65,7 +65,8 @@ dict
 ValueError
     If pipeline is not a setup_pipeline session or audit identity is missing.
 RuntimeError
-    If another task owns the execution or metadata publication fails. Retry
+    If notebook setup is invalid, runtime identity has changed, another task
+    owns the execution, or metadata publication fails. Retry
     with the same session after a publication failure; result IDs are stable.
 
 ## Behavior and scope
@@ -76,6 +77,9 @@ Call once after all Reads, transformations and Writes, including read-only
 runs. Pass the session returned by setup_pipeline, or omit it to use the
 current execution. Set failed=True when a project exception was caught.
 A successful Write or cell never completes the whole pipeline by itself.
+Open sessions require the current initialized notebook configuration and
+runtime identity, whether passed explicitly or selected implicitly. Already
+closed sessions retain their recorded outcome for repeat finalization.
 
 Test Read/Write operations do not commit business or operational metadata.
 Explicit finalization commits the complete Test run and Guardrail results
@@ -94,7 +98,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/finalize_pipeline.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L10-L65">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L10-L70">View on GitHub</a>
 </div>
 
 

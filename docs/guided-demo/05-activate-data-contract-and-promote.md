@@ -1,6 +1,6 @@
 # Step 5. Activate the tested pipeline and promote to Production
 
-Run `finalize_pipeline(CONTRACTS)` after completing Testing in [Step 4](04-validate-frozen-data-contract.md). It commits the complete Test run and Guardrail results for review. Activation requires complete successful Testing, frozen contracts for every participant, an effective Data Agreement and explicit Governance approval. Interactive diagnostics alone cannot activate a release.
+Run `finalize_pipeline(pipeline)` after completing Testing in [Step 4](04-validate-frozen-data-contract.md). It commits the complete Test run and Guardrail results for review. Activation requires complete successful Testing, frozen contracts for every participant, an effective Data Agreement and explicit Governance approval. Interactive diagnostics alone cannot activate a release.
 
 ## Review the affected release
 
@@ -16,7 +16,7 @@ The backend revalidates complete Testing and exact Data Contract and processing 
 
 Engineering and Microsoft Fabric own source control, executable checksums, CI/CD and deployment. Deploy the tested notebook with Fabric or CI tooling separately. FabricOps requires no packaging files or deployment verification call. Activation does not deploy artifacts or publish business data. Test and approve each execution environment explicitly against its configured physical destinations; global Data Contract definitions are shared, so DEV and PROD can adopt different frozen versions without copying contracts.
 
-Set `PIPELINE_MODE = "Live"`. `setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode=PIPELINE_MODE)` resolves approved environment participants, contracts, configuration and destinations automatically. Run Read → Transform → Write → Finalize. Changed table identities, destinations, strategies or frozen contracts fail before publication. Call `finalize_pipeline(CONTRACTS)` after the entire workflow to record completion and release its reservation; stopped notebooks remain incomplete.
+Run `setup_notebook()` in the destination workspace, retain the original UUID as `PIPELINE_ID`, and set `PIPELINE_MODE = "Live"`. `setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode=PIPELINE_MODE)` resolves approved environment participants, contracts, configuration and destinations automatically. Run Read → Transform → Write → Finalize. Changed table identities, destinations, strategies or frozen contracts fail before publication. Call `finalize_pipeline(pipeline)` after the entire workflow to record completion and release its reservation; stopped notebooks remain incomplete.
 
 ## Drain and cut over
 

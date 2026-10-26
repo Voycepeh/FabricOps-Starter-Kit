@@ -60,7 +60,7 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `config` | `FrameworkConfig \| dict[str, Any] \| None` | No | `None` | Explicit configuration for local or advanced use. When omitted, run 00_env_config in config_workspace_id (or the caller workspace when omitted), passing Fabric currentWorkspaceId. The notebook rejects unregistered workspaces and returns the environment and FrameworkConfig as JSON. This automatic path initializes the shared Fabric context and applies the configured Spark audit timezone. |
+| `config` | `FrameworkConfig \| dict[str, Any] \| None` | No | `None` | Explicit configuration for local or advanced use. When omitted, run 00_env_config in config_workspace_id (or the caller workspace when omitted), passing Fabric currentWorkspaceId. The notebook rejects unregistered workspaces and returns the environment and FrameworkConfig as JSON. Both configuration paths initialize the shared Fabric context and apply the configured Spark audit timezone. |
 | `env` | `str` | No | `'Sandbox'` | Environment section for explicit config only; automatic setup resolves it from the workspace. |
 | `required_targets` | `list[str] \| None` | No | `None` | Logical Fabric target names the notebook requires before execution can proceed. When omitted, all stores configured for the selected environment are required. |
 | `notebook_name` | `str \| None` | No | `None` | Explicit notebook name override used for display and runtime metadata. |
@@ -128,7 +128,12 @@ and run identity, resolved environment, audit timezone, metadata schemas,
 requested targets, readiness status, and any warning, skipped, or failed
 checks. This output is visible even when Fabric keeps the configuration
 notebook output in a separate execution snapshot. Explicit configuration
-also prints the summary.
+also prints the summary. Both paths publish configuration for setup_pipeline()
+and downstream IO. Rerunning notebook setup closes the current pipeline and
+invalidates the previous setup before loading configuration, including when
+initialization fails. Default I/O also rejects the invalidated configuration;
+explicit per-call configuration remains supported. Call setup_pipeline()
+again after successful setup.
 
 Startup flow:
 
@@ -180,7 +185,7 @@ the execution is a reference run, and whether Fabric runtime context is
 available. Local or non-Fabric execution may produce warnings or skipped
 checks rather than failing automatically.
 
-Validation and smoke checks are local to notebook startup. This helper does
+Validation and smoke checks are local to notebook startup. Startup validation does
 not read business data, write business data, persist metadata, provision
 workspaces, lakehouses, or warehouses, create missing Fabric resources,
 mutate the supplied configuration, or automatically stop notebook execution on failed
@@ -206,7 +211,7 @@ metadata registration functions that resolve Fabric targets or runtime
 context. It validates and resolves the same configuration and Fabric
 targets used by downstream FabricOps functions, then returns that
 information in a reusable ``NotebookSetupContext``. It
-initializes the shared context when configuration is loaded automatically.
+initializes the shared context for automatic and explicit configuration.
 
 </div>
 
@@ -220,7 +225,7 @@ initializes the shared context when configuration is loaded automatically.
 
 `fabricops_kit/config/setup_notebook.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L10-L172">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L10-L177">View on GitHub</a>
 </div>
 
 
@@ -236,7 +241,7 @@ initializes the shared context when configuration is loaded automatically.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 11 |
+| Live-critical dependencies | 12 |
 
 ### Release history
 
@@ -260,6 +265,7 @@ initializes the shared context when configuration is loaded automatically.
 <li><code>fabricops_kit.config.shared.initialize_notebook</code></li>
 <li><code>fabricops_kit.config.shared.validate_framework_config</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.pipeline.shared.close_current_pipeline_session</code></li>
 </ul>
 
 
