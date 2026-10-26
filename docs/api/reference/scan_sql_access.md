@@ -19,7 +19,7 @@ Use when you need the SQL endpoint path into governed table access for registere
 <div class="reference-example-usage" markdown="1">
 
 ```python
-result = scan_sql_access(catalogue_df, targets="warehouse", spark_session=spark)
+result = scan_sql_access(catalogue_df, targets="warehouse")
 ```
 
 </div>
@@ -39,7 +39,6 @@ def scan_sql_access(
     targets: str | list[str] | tuple[str, ...]='warehouse',
     environment_name: str | None=None,
     access_snapshot_id: str | None=None,
-    spark_session=None,
     persist: bool=True,
     context: dict[str, Any] | None=None,
 ) -> dict[str, Any]:
@@ -61,7 +60,6 @@ Required describes the Python signature. An optional parameter may still be need
 | `targets` | `str \| list[str] \| tuple[str, ...]` | No | `'warehouse'` | One or more configured Warehouse or Lakehouse target keys from ``00_env_config`` whose SQL endpoints expose the supported catalogue views. |
 | `environment_name` | `str \| None` | No | `None` | FabricOps configuration environment used for target resolution, catalogue filtering, and environment-labelled access rows. Defaults to the active FabricOps environment. Fabric authentication and execution identity continue to come from the active runtime. |
 | `access_snapshot_id` | `str \| None` | No | `None` | Identifier shared by all rows in this scan. A UUID is generated when omitted. |
-| `spark_session` | `object` | No | `None` | Spark session override used by the Fabric SQL connector. |
 | `persist` | `bool` | No | `True` | Append normalized access rows to METADATA_DATA_ACCESS when True. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active FabricOps context override. |
 
@@ -75,7 +73,6 @@ Required describes the Python signature. An optional parameter may still be need
 result = scan_sql_access(
     catalogue_df,
     targets=["warehouse", "curated_lakehouse"],
-    spark_session=spark,
 )
 result["access"].display()
 result["unmatched"].display()
@@ -122,6 +119,10 @@ pass persist=False for inspection-only scans. The scanner never changes permissi
 
 <div class="reference-docstring-intro" markdown="1">
 
+Spark is resolved automatically from the existing execution session (or the
+supplied DataFrame). No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
 The scanner reads SQL permission catalogue views through the existing
 read-only SQL endpoint connector. Each configured Warehouse or Lakehouse SQL
 analytics endpoint target is scanned separately, without dynamic
@@ -152,7 +153,7 @@ physical item identifier.
 
 `fabricops_kit/access_scanner/scan_sql_access.py:268`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_sql_access.py#L268-L395">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_sql_access.py#L268-L396">View on GitHub</a>
 </div>
 
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fabricops_kit.io.shared import get_spark_session
+
 from html import escape
 import uuid
 from typing import Any
@@ -34,13 +36,15 @@ from fabricops_kit.widgets.shared import (
 )
 
 
-def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
+def widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render append-only data steward create/update maintenance.
+
+    Spark is resolved automatically from the existing execution session.
+    No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     Parameters
     ----------
-    spark : pyspark.sql.SparkSession
-        Fabric Spark session used for metadata reads and append-only writes.
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
@@ -61,9 +65,10 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
 
     Examples
     --------
-    >>> state = widget_render_data_steward(spark=spark)
+    >>> state = widget_render_data_steward()
 
     """
+    spark = get_spark_session(context=context)
     startup = WidgetStartup("Data Steward")
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
         config, env, _context = resolve_fabric_context(context=context)

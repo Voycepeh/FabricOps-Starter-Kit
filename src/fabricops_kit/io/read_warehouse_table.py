@@ -12,11 +12,14 @@ def read_warehouse_table(
     table_name: str,
     *,
     store: str = "warehouse",
-    spark_session=None,
     context: dict[str, Any] | None = None,
     **options,
 ):
     """Read every row and every column from a Microsoft Fabric Warehouse table.
+
+    Spark is resolved automatically from the existing execution session.
+    No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     This is equivalent to ``SELECT * FROM schema.table_name``.
 
@@ -49,8 +52,6 @@ def read_warehouse_table(
         Logical Warehouse configuration name from ``00_env_config``. This
         identifies the configured Warehouse target, while ``schema`` and
         ``table_name`` identify the physical Warehouse table.
-    spark_session : object, optional
-        Spark session to use instead of the notebook global ``spark``.
     context : dict[str, Any], optional
         Active Fabric context override.
     **options
@@ -79,13 +80,14 @@ def read_warehouse_table(
     pushdown before Spark receives rows.
 
     """
+    spark_session = get_spark_session(context=context)
     database_name = store
     store_name = str(store)
     store, schema_value, table_value, object_name = resolve_configured_warehouse_table(
         store, schema, table_name, context=context
     )
     dataframe = read_warehouse_synapsesql(
-        get_spark_session(spark_session), store, object_name, database_name=database_name, options=options
+        spark_session, store, object_name, database_name=database_name, options=options
     )
     if not (context or {}).get("_fabricops_suppress_io_log"):
         print(

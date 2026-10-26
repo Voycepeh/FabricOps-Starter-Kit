@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fabricops_kit.io.shared import get_spark_session
+
 from datetime import date
 from html import escape
 import json
@@ -42,17 +44,18 @@ from fabricops_kit.widgets.shared import (
 )
 
 
-def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
+def widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render a wide, single-flow data-agreement editor.
+
+    Spark is resolved automatically from the existing execution session.
+    No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     The editor caches active data stewards, keeps one in-memory draft, and
     appends one complete agreement row only after final validation.
 
     Parameters
     ----------
-    spark : pyspark.sql.SparkSession
-        Fabric Spark session used for initial metadata reads, explicit steward
-        refreshes, and the final append-only write.
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
@@ -73,9 +76,10 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
 
     Examples
     --------
-    >>> state = widget_render_data_agreement(spark=spark)
+    >>> state = widget_render_data_agreement()
 
     """
+    spark = get_spark_session(context=context)
     startup = WidgetStartup("Data Agreement")
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
         config, env, _context = resolve_fabric_context(context=context)

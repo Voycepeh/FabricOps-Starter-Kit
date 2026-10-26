@@ -43,7 +43,6 @@ def read_lakehouse_table(
     table_id: str | None=None,
     store: str='Bronze',
     schema: str | None=None,
-    spark_session=None,
     context: dict[str, Any] | None=None,
     **options,
 ):
@@ -65,7 +64,6 @@ Required describes the Python signature. An optional parameter may still be need
 | `table_id` | `str \| None` | No | `None` | Canonical registered table identity. When supplied, FabricOps resolves ``table_name``, ``store``, and ``schema`` from the Catalogue. Do not combine with table_name, schema, or a non-default store. |
 | `store` | `str` | No | `'Bronze'` | Logical Lakehouse store key from ``00_env_config``, such as ``bronze`` or ``silver``. FabricOps resolves this store key to the configured physical Lakehouse and Delta table path. |
 | `schema` | `str \| None` | No | `None` | Optional schema override for schema-enabled Lakehouses. Supply it separately from ``table_name``: use ``schema="sales"`` and ``table_name="orders"`` rather than ``table_name="sales.orders"``. This is normally omitted for Lakehouses without schemas. |
-| `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
 | `**options` | `—` | No | `—` | Additional Spark Delta ``DataFrameReader`` options forwarded to the Delta reader. These options do not provide FabricOps-level filtering or projection. |
 
@@ -118,6 +116,10 @@ are forwarded to Spark Delta. The call does not register or profile data.
 
 <div class="reference-docstring-intro" markdown="1">
 
+Spark is resolved automatically from the existing execution session.
+No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
 Use for managed Delta tables. Apply selection and filtering with normal
 Spark transformations; Delta can push these into the eventual scan.
 
@@ -132,7 +134,7 @@ Spark transformations; Delta can push these into the eventual scan.
 
 `fabricops_kit/io/read_lakehouse_table.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L10-L102">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L10-L104">View on GitHub</a>
 </div>
 
 

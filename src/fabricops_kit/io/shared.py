@@ -114,14 +114,22 @@ def _require_fabric_connector() -> Any:
 # ---------------------------------------------------------------------------
 
 
-def get_spark_session(spark_session=None):
-    """Return the explicit or active Spark session."""
+def get_spark_session(spark_session=None, *, dataframe=None, context=None):
+    """Reuse the operation's session, active PySpark, or Fabric notebook session.
+
+    DataFrame ownership takes priority over internal injection and the current
+    execution context. No session is created or cached. Explicit sessions and
+    private context keys are reserved for implementation code and tests.
+    """
+    dataframe_session = getattr(dataframe, "sparkSession", None) if dataframe is not None else None
+    if dataframe_session is not None:
+        return dataframe_session
     if spark_session is not None:
         return spark_session
-
-    module_spark = globals().get("spark")
-    if module_spark is not None:
-        return module_spark
+    for key in ("_spark_session", "_pipeline_spark"):
+        candidate = (context or {}).get(key)
+        if candidate is not None:
+            return candidate
 
     try:
         spark_session_type = getattr(import_module("pyspark.sql"), "SparkSession")
@@ -131,9 +139,17 @@ def get_spark_session(spark_session=None):
     if active_session is not None:
         return active_session
 
+    try:
+        shell = import_module("IPython").get_ipython()
+    except (ImportError, AttributeError):
+        shell = None
+    notebook_session = getattr(shell, "user_ns", {}).get("spark")
+    if notebook_session is not None and callable(getattr(notebook_session, "sql", None)) and hasattr(notebook_session, "conf"):
+        return notebook_session
+
     raise RuntimeError(
-        "Spark session was not provided and no active Spark session was found. "
-        "Run this inside Fabric/Spark or pass spark_session explicitly."
+        "No active Spark session was found in PySpark or the Fabric notebook namespace. "
+        "Run this Spark-dependent operation in a notebook with a running Spark session."
     )
 
 

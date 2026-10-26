@@ -16,11 +16,14 @@ def read_warehouse_query(
     query: str,
     *,
     store: str = "warehouse",
-    spark_session=None,
     context: dict[str, Any] | None = None,
     **options,
 ):
     """Execute a read-only Warehouse SQL query and return the query result.
+
+    Spark is resolved automatically from the existing execution session.
+    No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     Use this instead of ``read_warehouse_table`` when filtering, projection,
     aggregation, joins, or row limits should be performed before data reaches
@@ -53,8 +56,6 @@ def read_warehouse_query(
         serving engine.
     store : str, default="warehouse"
         Logical Warehouse store key from ``00_env_config``.
-    spark_session : object, optional
-        Spark session to use instead of the notebook global ``spark``.
     context : dict[str, Any], optional
         Active Fabric context override.
     **options
@@ -91,12 +92,13 @@ def read_warehouse_query(
     Warehouse engine, and transfers only the resulting dataset to Spark.
 
     """
+    spark_session = get_spark_session(context=context)
     database_name = store
     store_name = str(store)
     store = resolve_configured_warehouse_query_store(store, context=context)
     sql = validate_select_query(query)
     dataframe = read_warehouse_synapsesql(
-        get_spark_session(spark_session),
+        spark_session,
         store,
         sql,
         database_name=database_name,

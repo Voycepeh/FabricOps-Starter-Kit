@@ -22,7 +22,7 @@ def test_table_id_reader_resolves_catalogue_and_pipeline_cached_identifiers(monk
     location = Mock(return_value=(object(), "orders", "demo", "abfss://test/orders"))
     monkeypatch.setattr(reader_module, "resolve_configured_lakehouse_table", location)
     session = object()
-    monkeypatch.setattr(reader_module, "get_spark_session", lambda _session: session)
+    monkeypatch.setattr(reader_module, "get_spark_session", lambda **_kwargs: session)
     read_delta = Mock(return_value=SimpleNamespace())
     monkeypatch.setattr(reader_module, "read_delta_path", read_delta)
 

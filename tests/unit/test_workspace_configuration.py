@@ -14,6 +14,7 @@ import pytest
 
 from fabricops_kit import setup_notebook, setup_pipeline
 from fabricops_kit.config.shared import resolve_fabric_context, resolve_runtime_context
+from fabricops_kit.io.shared import get_spark_session as central_spark_resolver
 from tests.unit.test_setup_notebook_store_keys import _config
 
 pytestmark = pytest.mark.unit
@@ -43,12 +44,14 @@ def configuration_runtime(monkeypatch, request):
     else:
         monkeypatch.delitem(sys.modules, 'notebookutils.runtime', raising=False)
     spark = SimpleNamespace(conf=SimpleNamespace(set=Mock()))
-    monkeypatch.setattr(importlib.import_module('fabricops_kit.io.shared'), 'get_spark_session', lambda: spark)
+    monkeypatch.setattr(importlib.import_module('fabricops_kit.io.shared'), 'get_spark_session', lambda *_args, **_kwargs: spark)
     cells = json.loads(Path('templates/notebooks/00_env_config.ipynb').read_text())['cells']
+
+    settings = SimpleNamespace(environments=None, governance_environment='')
 
     def run(name, timeout, arguments, *, workspace):
         assert name == '00_env_config'
-        assert workspace in {'central-ws', 'dev-ws', 'governance-ws'}
+        assert workspace in {'central-ws', 'dev-ws', 'metadata-ws'}
         namespace = {'spark': spark, **arguments}
         # Reference execution is hosted centrally, while the passed caller ID differs.
         original_workspace = runtime.context.get('currentWorkspaceId')
@@ -68,8 +71,13 @@ def configuration_runtime(monkeypatch, request):
                     source = source.replace(placeholder, value)
                 # This fixture exercises configuration loading, not metadata deployment.
                 source = source.replace('INITIALIZE_METADATA = True', 'INITIALIZE_METADATA = False')
-                if workspace == 'governance-ws':
-                    source = source.replace('"dev-ws"', '"governance-ws"')
+                source = source.replace('GOVERNANCE_ENVIRONMENT = ""',
+                                        f'GOVERNANCE_ENVIRONMENT = {settings.governance_environment!r}')
+                if settings.environments is not None:
+                    source = source.replace('ENVIRONMENT_WORKSPACES = ENGINEERING_WORKSPACES',
+                        f'ENGINEERING_WORKSPACES = {{k: v for k, v in ENGINEERING_WORKSPACES.items() if k in {settings.environments!r}}}\n'
+                        'ENV_ITEMS = {k: v for k, v in ENV_ITEMS.items() if k in ENGINEERING_WORKSPACES}\n'
+                        'ENVIRONMENT_WORKSPACES = ENGINEERING_WORKSPACES')
                 # Fabric keeps child output in its execution snapshot.
                 with redirect_stdout(StringIO()):
                     exec(compile(source, '<00_env_config>', 'exec'), namespace)
@@ -80,7 +88,7 @@ def configuration_runtime(monkeypatch, request):
         raise AssertionError('Config notebook must exit with JSON')
 
     nb.notebook.run = Mock(side_effect=run)
-    return SimpleNamespace(runtime=runtime, notebook=nb.notebook, spark=spark, cells=cells)
+    return SimpleNamespace(runtime=runtime, notebook=nb.notebook, spark=spark, cells=cells, settings=settings)
 
 
 @pytest.mark.parametrize('workspace, environment', [('dev-ws', 'dev'), ('prod-ws', 'prod')])
@@ -103,10 +111,11 @@ def test_engineering_loads_central_config_for_caller_workspace(configuration_run
 
 def test_governance_loads_its_separate_local_deployment(configuration_runtime):
     fabric = configuration_runtime
-    fabric.runtime.context.update(currentWorkspaceId='governance-ws', currentNotebookName='01_governance')
+    fabric.runtime.context.update(currentWorkspaceId='metadata-ws', currentNotebookName='01_governance')
+    fabric.settings.environments = ['dev']
     assert setup_notebook().environment == 'dev'
     fabric.notebook.run.assert_called_once_with(
-        '00_env_config', 120, {'caller_workspace_id': 'governance-ws'}, workspace='governance-ws')
+        '00_env_config', 120, {'caller_workspace_id': 'metadata-ws'}, workspace='metadata-ws')
 
 
 def test_unknown_workspace_is_rejected_by_central_notebook(configuration_runtime, monkeypatch):
@@ -140,7 +149,7 @@ def test_invalid_response_reuses_validation(configuration_runtime, change, messa
 def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeypatch, capsys, mode, config_workspace):
     shared = importlib.import_module('fabricops_kit.pipeline.shared')
     monkeypatch.setattr(shared, 'resolve_pipeline_registration', lambda identity, **kwargs: {'pipeline_id': '8f32a471-6c91-4b7e-9d13-2f0c947eab52', 'resolution': 'Recovered'})
-    monkeypatch.setattr(shared, 'get_spark_session', lambda: configuration_runtime.spark)
+    monkeypatch.setattr(shared, 'get_spark_session', lambda *_args, **_kwargs: configuration_runtime.spark)
     monkeypatch.setattr(shared.PipelineSession, 'refresh', lambda self: None)
     if mode == 'Live':
         live = importlib.import_module('fabricops_kit.activated_pipeline.shared')
@@ -380,3 +389,63 @@ def test_failed_config_load_does_not_print_success_summary(configuration_runtime
     with pytest.raises(RuntimeError, match='00_env_config execution failed'):
         setup_notebook()
     assert capsys.readouterr().out == ''
+
+
+@pytest.mark.parametrize("selected", ["", "test", "missing"])
+def test_governance_multiple_environments_require_configured_choice(configuration_runtime, selected):
+    fabric = configuration_runtime
+    fabric.runtime.context['currentWorkspaceId'] = 'metadata-ws'
+    fabric.settings.governance_environment = selected
+    if selected == 'test':
+        result = setup_notebook(required_targets=['Metadata'])
+        assert result.environment == 'test'
+        assert set(result.paths) == {'Metadata'}
+        assert resolve_fabric_context()[0].path_config.paths['test']['Silver'].workspace_id == 'test-ws'
+    else:
+        with pytest.raises(ValueError, match='GOVERNANCE_ENVIRONMENT'):
+            setup_notebook(required_targets=['Metadata'])
+
+
+def test_governance_summary_filters_targets_without_restricting_config(configuration_runtime, capsys):
+    fabric = configuration_runtime
+    fabric.runtime.context['currentWorkspaceId'] = 'metadata-ws'
+    fabric.settings.environments = ['dev']
+    result = setup_notebook(required_targets=['Metadata'])
+    output = capsys.readouterr().out
+    assert set(result.paths) == {'Metadata'}
+    assert '- Metadata:' in output
+    assert all(f'- {name}:' not in output for name in ['Bronze', 'Silver', 'Gold'])
+    assert set(resolve_fabric_context()[0].path_config.paths['dev']) == {'Bronze', 'Silver', 'Gold', 'Metadata'}
+
+
+def test_setup_uses_namespace_session_once_for_readiness_and_timezone(configuration_runtime, monkeypatch):
+    from fabricops_kit.io import shared as io
+    spark = configuration_runtime.spark
+    spark.sql = Mock()
+    import_module = Mock(side_effect=lambda name: SimpleNamespace(
+        SparkSession=SimpleNamespace(getActiveSession=lambda: None)) if name == 'pyspark.sql'
+        else SimpleNamespace(get_ipython=lambda: SimpleNamespace(user_ns={'spark': spark})))
+    monkeypatch.setattr(io, 'import_module', import_module)
+    actual_resolver = Mock(wraps=central_spark_resolver)
+    monkeypatch.setattr(io, 'get_spark_session', actual_resolver)
+    result = setup_notebook(required_targets=['Metadata'])
+    actual_resolver.assert_called_once_with()
+    check = next(c for c in result.validation_results if c.name == 'spark_session')
+    assert check.status == 'pass'
+    spark.conf.set.assert_called_once_with('spark.sql.session.timeZone', 'UTC')
+
+
+def test_governance_config_runs_directly_without_caller_parameter(configuration_runtime):
+    """Running 00_env_config in Governance uses its real runtime workspace."""
+    fabric = configuration_runtime
+    fabric.settings.environments = ['dev']
+    payload = json.loads(fabric.notebook.run('00_env_config', 120, {'caller_workspace_id': ''}, workspace='metadata-ws'))
+    assert payload['workspace_id'] == 'metadata-ws'
+    assert payload['env'] == 'dev'
+    assert payload['config']['path_config']['paths']['dev']['Metadata']['workspace_id'] == 'metadata-ws'
+
+
+def test_engineering_workspace_mapping_precedes_governance_choice(configuration_runtime):
+    """The Governance selector never redirects an Engineering caller."""
+    configuration_runtime.settings.governance_environment = 'prod'
+    assert setup_notebook(config_workspace_id='central-ws').environment == 'dev'

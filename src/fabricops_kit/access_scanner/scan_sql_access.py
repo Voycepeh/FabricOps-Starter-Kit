@@ -271,11 +271,14 @@ def scan_sql_access(
     targets: str | list[str] | tuple[str, ...] = "warehouse",
     environment_name: str | None = None,
     access_snapshot_id: str | None = None,
-    spark_session=None,
     persist: bool = True,
     context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Scan observable SQL permissions for registered governed physical tables.
+
+    Spark is resolved automatically from the existing execution session (or the
+    supplied DataFrame). No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     The scanner reads SQL permission catalogue views through the existing
     read-only SQL endpoint connector. Each configured Warehouse or Lakehouse SQL
@@ -313,8 +316,6 @@ def scan_sql_access(
     access_snapshot_id : str, optional
         Identifier shared by all rows in this scan. A UUID is generated when
         omitted.
-    spark_session : object, optional
-        Spark session override used by the Fabric SQL connector.
     persist : bool, default=True
         Append normalized access rows to METADATA_DATA_ACCESS when True.
     context : dict[str, Any], optional
@@ -342,12 +343,12 @@ def scan_sql_access(
     >>> result = scan_sql_access(
     ...     catalogue_df,
     ...     targets=["warehouse", "curated_lakehouse"],
-    ...     spark_session=spark,
     ... )
     >>> result["access"].display()
     >>> result["unmatched"].display()
 
     """
+    spark_session = get_spark_session(dataframe=catalogue_df, context=context)
     config, active_env, runtime_context = resolve_fabric_context(context=context)
     resolved_environment = str(active_env if environment_name is None else environment_name)
     scan_context = {

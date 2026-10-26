@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tests.helpers import call_with_spark
+
 import inspect
 import json
 import re
@@ -152,7 +154,7 @@ def test_config_setup_public_api_signatures_match_frozen_contract():
         "config_workspace_id: 'str | None' = None) -> 'NotebookSetupContext'"
     )
     assert str(inspect.signature(setup_metadata_tables)) == (
-        "(*, spark: 'Any', config: 'FrameworkConfig | dict[str, Any]', env: 'str', "
+        "(*, config: 'FrameworkConfig | dict[str, Any]', env: 'str', "
         "require_active_steward: 'bool' = False, verbose: 'bool' = True, "
         "raise_on_failure: 'bool' = False) -> 'dict[str, Any]'"
     )
@@ -458,7 +460,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     spark = Spark()
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
     monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
-    result = setup_metadata_tables(spark=spark, config=framework_config(), env="dev", require_active_steward=True)
+    result = call_with_spark(spark, setup_metadata_tables,  config=framework_config(), env="dev", require_active_steward=True)
 
     assert result["status"] == "ready"
     assert result["tables"] == CANONICAL_METADATA_TABLES
@@ -482,7 +484,7 @@ def test_setup_metadata_tables_requires_schema_enabled_metadata_lakehouse():
     )
 
     with pytest.raises(ValueError, match="FabricOps Metadata Lakehouse must be schema-enabled"):
-        setup_metadata_tables(spark=object(), config=cfg, env="dev")
+        call_with_spark(object(), setup_metadata_tables,  config=cfg, env="dev")
 
 
 def test_setup_metadata_tables_ready_without_active_steward_when_not_required(monkeypatch):
@@ -517,7 +519,7 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required(mo
         setup_module, "read_lakehouse_table", _canonical_metadata_reader(lambda table_name, **_kwargs: Table(spark.schemas[table_name]))
     )
 
-    result = setup_metadata_tables(spark=spark, config=framework_config(), env="dev")
+    result = call_with_spark(spark, setup_metadata_tables,  config=framework_config(), env="dev")
 
     assert result["status"] == "ready"
     assert result["data_agreement"]["status"] == "not_ready"
@@ -562,7 +564,7 @@ def test_setup_metadata_tables_reports_configured_ownership_schemas(monkeypatch)
     cfg = framework_config()
     object.__setattr__(cfg, "governance_metadata_schema", "governed")
     object.__setattr__(cfg, "engineering_metadata_schema", "operations")
-    result = setup_metadata_tables(spark=spark, config=cfg, env="dev")
+    result = call_with_spark(spark, setup_metadata_tables,  config=cfg, env="dev")
 
     assert result["metadata_schemas"] == {"governance": "governed", "engineering": "operations"}
     assert result["fully_qualified_tables"][0] == "governed.METADATA_DATA_STEWARD"
@@ -614,7 +616,7 @@ def test_setup_metadata_tables_ignores_store_default_schema_for_owned_tables(mon
         _canonical_metadata_reader(lambda table_name, *, schema=None, **_kwargs: Table(spark.schemas[table_name])),
     )
 
-    result = setup_metadata_tables(spark=spark, config=cfg, env="dev")
+    result = call_with_spark(spark, setup_metadata_tables,  config=cfg, env="dev")
 
     assert result["metadata_schemas"] == {"governance": "governance", "engineering": "engineering"}
     assert all(not name.startswith("dbo.") for name in result["fully_qualified_tables"])
@@ -654,7 +656,7 @@ def test_setup_metadata_tables_does_not_rewrite_compliant_tables(monkeypatch):
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
     monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
 
-    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), env="dev")
 
     assert result["status"] == "ready"
     assert result["created_tables"] == []
@@ -710,7 +712,7 @@ def test_setup_metadata_tables_accepts_existing_tables_with_nullable_physical_au
         lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be rewritten"),
     )
 
-    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
+    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), env="dev", verbose=False)
     assert result["status"] == "ready"
     assert result["failed_tables"] == []
     assert "METADATA_DATA_PROFILED" in result["validated_tables"]
@@ -771,7 +773,7 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type
         lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be rewritten"),
     )
 
-    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
+    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), env="dev", verbose=False)
     assert result["failed_tables"] == ["METADATA_DATA_PROFILED"]
     assert (
         "row_count type expected long but found string" in result["table_results"]["METADATA_DATA_PROFILED"]["message"]
@@ -874,7 +876,7 @@ def test_setup_evolves_existing_tables_with_new_readable_identity_columns(monkey
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
     monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
-    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", verbose=False)
+    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), env="dev", verbose=False)
     assert result["status"] == "ready"
     expected_evolved = {
         "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_DATA_PROFILED",
@@ -942,7 +944,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
     monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
 
-    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
+    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), env="dev")
 
     assert result["created_tables"] == list(registry)
     assert created["METADATA_DATA_ACCESS"].fieldNames() == registry["METADATA_DATA_ACCESS"].fieldNames()
@@ -962,7 +964,7 @@ def test_setup_metadata_tables_non_missing_read_error_includes_original_exceptio
         raise ValueError("Delta log is corrupt")
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
-    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", verbose=False)
+    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), env="dev", verbose=False)
     assert result["status"] == "failed"
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
 
@@ -1477,7 +1479,7 @@ def test_setup_metadata_tables_existing_tables_prints_compact_ready_summary(monk
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
 
-    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), env="dev")
     output = capsys.readouterr().out
     total = len(registry)
 
@@ -1536,7 +1538,7 @@ def test_setup_metadata_tables_missing_tables_prints_numbered_created_summary(mo
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
     monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
 
-    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
+    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), env="dev")
     output = capsys.readouterr().out
 
     assert result["created_tables"] == names[:2]
@@ -1596,7 +1598,7 @@ def test_setup_metadata_tables_adds_missing_columns_without_overwriting(monkeypa
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
     monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
 
-    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
+    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), env="dev")
     output = capsys.readouterr().out
 
     assert writes == [target]
@@ -1640,7 +1642,7 @@ def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeyp
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
 
-    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), env="dev")
     output = capsys.readouterr().out
 
     assert result["status"] == "partial_failure"
@@ -1671,8 +1673,8 @@ def test_setup_metadata_tables_raise_on_failure_waits_until_all_tables_attempted
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
 
     with pytest.raises(RuntimeError, match=f"FabricOps metadata setup failed for {len(names)} table"):
-        setup_metadata_tables(
-            spark=object(), config=framework_config(), env="dev", verbose=False, raise_on_failure=True
+        call_with_spark(object(), setup_metadata_tables,
+             config=framework_config(), env="dev", verbose=False, raise_on_failure=True
         )
 
     assert attempted[: len(names)] == names
@@ -1704,7 +1706,7 @@ def test_setup_metadata_tables_verbose_false_is_silent(monkeypatch, capsys):
         _canonical_metadata_reader(lambda table_name, **_kwargs: Table(registry[table_name].fieldNames())),
     )
 
-    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
+    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), env="dev", verbose=False)
 
     assert capsys.readouterr().out == ""
     assert result["status"] == "ready"

@@ -12,11 +12,14 @@ def read_lakehouse_excel(
     *,
     store: str = "Bronze",
     sheet_name=0,
-    spark_session=None,
     context: dict[str, Any] | None = None,
     **read_excel_kwargs,
 ):
     """Read an Excel workbook from a configured Fabric-resolved path.
+
+    Spark is resolved automatically from the existing execution session.
+    No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     Parameters
     ----------
@@ -26,8 +29,6 @@ def read_lakehouse_excel(
         Logical Lakehouse store key from ``00_env_config``.
     sheet_name : str or int, default=0
         Worksheet name or index to read.
-    spark_session : object, optional
-        Spark session to use instead of the notebook global ``spark``.
     context : dict[str, Any], optional
         Active Fabric context override.
     **read_excel_kwargs
@@ -47,9 +48,10 @@ def read_lakehouse_excel(
     when parsing raises an error.
 
     """
+    spark_session = get_spark_session(context=context)
     _store, _relative_path, lakehouse_path = resolve_configured_file_path(store, relative_path, context=context)
     dataframe = read_excel_file(
-        get_spark_session(spark_session), lakehouse_path, sheet_name=sheet_name, read_excel_kwargs=read_excel_kwargs
+        spark_session, lakehouse_path, sheet_name=sheet_name, read_excel_kwargs=read_excel_kwargs
     )
     if not (context or {}).get("_fabricops_suppress_io_log"):
         print(f"Read from → Object: Lakehouse | Store: {store} | Area: Files | Path: {_relative_path}")

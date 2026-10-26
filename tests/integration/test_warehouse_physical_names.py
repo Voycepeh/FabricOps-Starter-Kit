@@ -1,4 +1,6 @@
 """Physical Warehouse routing at the Fabric connector boundary."""
+
+from tests.helpers import call_with_spark
 # ruff: noqa: D103
 from dataclasses import asdict
 from importlib import import_module
@@ -36,7 +38,7 @@ def test_read_write_and_query_use_physical_name_with_legacy_fallback(connector, 
     runtime = context(alias, name)
     physical = name or alias
     spark, frame = _Spark(), _Frame()
-    result = io.read_warehouse_table('dbo', 'orders', store=alias, spark_session=spark, context=runtime)
+    result = call_with_spark(spark, io.read_warehouse_table, 'dbo', 'orders', store=alias,  context=runtime)
     io.write_warehouse_table(frame, 'dbo', 'orders', store=alias, context=runtime)
     assert result == {'synapsesql': f'{physical}.dbo.orders'}
     assert ('synapsesql', f'{physical}.dbo.orders') in frame.write.calls
@@ -45,7 +47,7 @@ def test_read_write_and_query_use_physical_name_with_legacy_fallback(connector, 
         assert ('option', 'item', 'item-id') in calls
     assert ('option', 'database', physical) in spark.read.calls
     spark.read.calls.clear()
-    io.read_warehouse_query('SELECT * FROM dbo.orders', store=alias, spark_session=spark, context=runtime)
+    call_with_spark(spark, io.read_warehouse_query, 'SELECT * FROM dbo.orders', store=alias,  context=runtime)
     assert ('option', 'database', physical) in spark.read.calls
     assert get_store(runtime['config'], 'poc', alias).key == alias
     identity = pipeline.resolve_physical_table_identity(runtime['config'], 'poc', store=alias, schema='dbo', table_name='orders')
@@ -73,7 +75,7 @@ def test_invalid_configuration_fails_before_connector_access(field, value):
 def test_lakehouse_paths_still_use_ids(connector):
     runtime = context(name='Physical Lakehouse', kind='lakehouse')
     spark, frame = _Spark(), _Frame()
-    io.read_lakehouse_table('orders', store='Gold', spark_session=spark, context=runtime)
+    call_with_spark(spark, io.read_lakehouse_table, 'orders', store='Gold',  context=runtime)
     io.write_lakehouse_table(frame, 'orders', store='Gold', context=runtime)
     expected = 'abfss://workspace-id@onelake.dfs.fabric.microsoft.com/item-id/Tables/orders'
     assert ('load', expected) in spark.read.calls
@@ -121,8 +123,8 @@ def test_incremental_query_database_and_schema_probe(connector):
     query = reader._warehouse_incremental_query({'schema': 'dbo', 'table_name': 'orders'}, {
         'type': 'watermark', 'column': 'sequence', 'after': 1, 'through': 10, 'has_data': True, 'first_run': False,
     })
-    io.read_warehouse_query(query, store='Gold', spark_session=spark, context=runtime)
-    io.read_warehouse_query('SELECT TOP (0) * FROM [dbo].[orders]', store='Gold', spark_session=spark, context=runtime)
+    call_with_spark(spark, io.read_warehouse_query, query, store='Gold',  context=runtime)
+    call_with_spark(spark, io.read_warehouse_query, 'SELECT TOP (0) * FROM [dbo].[orders]', store='Gold',  context=runtime)
     assert spark.read.calls.count(('option', 'database', 'wh_ODI_Product')) == 2
     store = get_store(runtime['config'], 'poc', 'Gold')
     assert shared.resolve_warehouse_table_location(store, 'dbo', 'orders', warehouse_name=store.key)[2] == 'wh_ODI_Product.dbo.orders'
@@ -138,8 +140,8 @@ def test_pipeline_reader_reaches_real_connector_with_physical_database(connector
     monkeypatch.setattr(reader, 'resolve_incremental_source_scope', lambda **_k: {
         'type': 'watermark', 'column': 'sequence', 'after': 1, 'through': 10, 'has_data': True, 'first_run': False,
     })
-    result = reader.pipeline_read(store='Gold', schema='dbo', table_name='orders',
-                                  spark_session=spark, verbose=False,
+    result = call_with_spark(spark, reader.pipeline_read, store='Gold', schema='dbo', table_name='orders',
+                                   verbose=False,
                                   **({'read_mode': 'incremental', 'target_table_id': 'target',
                                       'read_parameters': {'watermark_column': 'sequence'}} if incremental else {}))
     assert result['table_id'] == pipeline.resolve_physical_table_identity(
@@ -159,8 +161,8 @@ def test_pipeline_writer_preserves_logical_alias_at_real_connector(connector, mo
     writer = import_module('fabricops_kit.pipeline.pipeline_write')
     committed = Mock()
     monkeypatch.setattr(pipeline, 'commit_pipeline_write_success', committed)
-    result = writer.pipeline_write(frame, store='Gold', schema='dbo', table_name='students',
-                                   spark_session=_Spark(), context=runtime, verbose=False, source_table_ids=['source'])
+    result = call_with_spark(_Spark(), writer.pipeline_write, frame, store='Gold', schema='dbo', table_name='students',
+                                    context=runtime, verbose=False, source_table_ids=['source'])
     assert ('synapsesql', 'wh_ODI_Product.dbo.students') in frame.write.calls
     assert result['table_id'] == identity['table_id']
     assert committed.call_args.args[0]['target_table_id'] == identity['table_id']
@@ -179,7 +181,7 @@ def test_schema_validation_probes_physical_database_and_keeps_logical_metadata(c
     monkeypatch.setattr(checker, 'print_guardrail_result', lambda *_a, **_k: None)
     persisted = Mock()
     monkeypatch.setattr(checker, 'write_guardrail_result_row', persisted)
-    checker.check_schema(table_id=identity['table_id'], spark_session=spark, context=runtime, verbose=False)
+    call_with_spark(spark, checker.check_schema, table_id=identity['table_id'],  context=runtime, verbose=False)
     assert ('option', 'database', 'wh_ODI_Product') in spark.read.calls
     assert ('synapsesql', 'SELECT TOP (0) * FROM [dbo].[orders]') in spark.read.calls
     assert persisted.call_args.kwargs['layer'] == 'Gold'

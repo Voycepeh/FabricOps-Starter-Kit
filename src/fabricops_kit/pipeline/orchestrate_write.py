@@ -136,15 +136,15 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
         skipped = {"status": "skipped", "can_continue": True, "checks": []}
         sensitive = {**skipped, "dataframe": dataframe, "support_mapping": None}
         try:
-            schema_result = run("Schema", lambda: check_schema(dataframe, table_id=target_id, spark_session=spark_session, verbose=False, context=context)) if "schema" in active else dict(skipped)
+            schema_result = run("Schema", lambda: check_schema(dataframe, table_id=target_id, verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "schema" in active else dict(skipped)
             if "sensitive_data" in active:
-                sensitive = run("Sensitive Data", lambda: check_sensitive_data(dataframe, table_id=target_id, existing_mapping=existing_mapping, spark_session=spark_session, verbose=False, context=context))
+                sensitive = run("Sensitive Data", lambda: check_sensitive_data(dataframe, table_id=target_id, existing_mapping=existing_mapping, verbose=False, context={**(context or {}), "_spark_session": spark_session}))
             prepared = sensitive["dataframe"]
-            evaluated_drift = run("Source Drift", lambda: [check_source_drift(source_id, target_table_id=target_id, spark_session=spark_session, verbose=False, context=context) for source_id in drift_ids]) if drift_ids else []
+            evaluated_drift = run("Source Drift", lambda: [check_source_drift(source_id, target_table_id=target_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}) for source_id in drift_ids]) if drift_ids else []
             drift_by_source = dict(zip(drift_ids, evaluated_drift, strict=True))
             drift = [drift_by_source.get(source_id, dict(skipped)) for source_id in source_ids]
-            grain_result = run("Grain", lambda: check_grain(prepared, table_id=target_id, scope="write_prepared_input", spark_session=spark_session, verbose=False, context=context)) if "grain" in active else dict(skipped)
-            dq_result = run("Data Quality", lambda: check_dq(prepared, table_id=target_id, spark_session=spark_session, verbose=False, context=context, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
+            grain_result = run("Grain", lambda: check_grain(prepared, table_id=target_id, scope="write_prepared_input", verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "grain" in active else dict(skipped)
+            dq_result = run("Data Quality", lambda: check_dq(prepared, table_id=target_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
             common_results = {
                 "table_id": target_id,
                 **execution_result(context, target_id, stages=stages),
@@ -163,7 +163,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                         return pipeline_write(
                             prepared, store=store, schema=schema, table_name=table_name,
                             load_strategy=write_mode, load_strategy_parameters=write_parameters,
-                            source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False, context=context,
+                            source_table_ids=source_ids, repartition_by=repartition_by, verbose=False, context={**(context or {}), "_spark_session": spark_session},
                         )
                     except ValueError as exc:
                         return {"table_id": target_id, "strategy": write_mode, "published": False,
@@ -184,7 +184,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                         "validation_passed": passed, "testing_completed_at": datetime.now(UTC).isoformat(),
                         "tested_contracts": tested_contract_identities(context, [target_id, *source_ids]),
                         "total_duration_seconds": duration}
-            write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=write_mode, load_strategy_parameters=write_parameters, source_table_ids=source_ids, repartition_by=repartition_by, spark_session=spark_session, verbose=False, context=context))
+            write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=write_mode, load_strategy_parameters=write_parameters, source_table_ids=source_ids, repartition_by=repartition_by, verbose=False, context={**(context or {}), "_spark_session": spark_session}))
             published = write_result.get("published", True)
             publication_status = write_result.get("publication_status", "published")
             metrics = dict(write_result.get("write_metrics") or {})

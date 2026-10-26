@@ -109,7 +109,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
             result, record = _run_orchestration_stage(operation="READ", name=table_name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose, allow_blocked=not execution_plan.permits_persistence)
             stages.append(record)
             return result
-        source = run("Read", lambda: pipeline_read(store=store, schema=schema, table_name=table_name, read_mode=read_mode, query=query, read_parameters=read_parameters, target_table_id=target_table_id, spark_session=spark_session, verbose=False, context=context))
+        source = run("Read", lambda: pipeline_read(store=store, schema=schema, table_name=table_name, read_mode=read_mode, query=query, read_parameters=read_parameters, target_table_id=target_table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}))
         reader_name = source.pop("_reader_name", None)
         metrics = dict(source.get("read_metrics") or {})
         metrics.setdefault("rows_read", None)
@@ -122,10 +122,10 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
             summary.details([("Scope", "Empty incremental scope")])
         dataframe, table_id = source["dataframe"], source["table_id"]
         skipped = {"status": "skipped", "can_continue": True, "checks": []}
-        freshness = run("Freshness", lambda: check_freshness(table_id, spark_session=spark_session, verbose=False, context=context)) if "freshness" in active else dict(skipped)
-        schema_result = run("Schema", lambda: check_schema(dataframe, table_id=table_id, spark_session=spark_session, verbose=False, context=context)) if "schema" in active else dict(skipped)
-        grain_result = run("Grain", lambda: check_grain(dataframe, table_id=table_id, scope="read_full" if read_mode == "full" else "read_incremental_batch", spark_session=spark_session, verbose=False, context=context)) if "grain" in active else dict(skipped)
-        dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, spark_session=spark_session, verbose=False, context=context, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
+        freshness = run("Freshness", lambda: check_freshness(table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "freshness" in active else dict(skipped)
+        schema_result = run("Schema", lambda: check_schema(dataframe, table_id=table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "schema" in active else dict(skipped)
+        grain_result = run("Grain", lambda: check_grain(dataframe, table_id=table_id, scope="read_full" if read_mode == "full" else "read_incremental_batch", verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "grain" in active else dict(skipped)
+        dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
         profile = run("Profile", lambda: schedule_table_profiling(table_id, "read", context=context, spark_session=spark_session))
 
         if metrics["rows_read"] is None and read_mode == "full" and not source.get("is_query"):

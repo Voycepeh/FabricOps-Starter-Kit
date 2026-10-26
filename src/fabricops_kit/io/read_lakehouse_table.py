@@ -13,11 +13,14 @@ def read_lakehouse_table(
     table_id: str | None = None,
     store: str = "Bronze",
     schema: str | None = None,
-    spark_session=None,
     context: dict[str, Any] | None = None,
     **options,
 ):
     """Read a configured Lakehouse Delta table as a lazy Spark DataFrame.
+
+    Spark is resolved automatically from the existing execution session.
+    No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     Use for managed Delta tables. Apply selection and filtering with normal
     Spark transformations; Delta can push these into the eventual scan.
@@ -40,8 +43,6 @@ def read_lakehouse_table(
         separately from ``table_name``: use ``schema="sales"`` and
         ``table_name="orders"`` rather than ``table_name="sales.orders"``.
         This is normally omitted for Lakehouses without schemas.
-    spark_session : object, optional
-        Spark session to use instead of the notebook global ``spark``.
     context : dict[str, Any], optional
         Active Fabric context override.
     **options
@@ -68,6 +69,7 @@ def read_lakehouse_table(
     >>> recent = orders_df.where("order_date >= '2026-01-01'")
 
     """
+    spark_session = get_spark_session(context=context)
     resolved_table_id = table_id
     if table_id is not None:
         if table_name is not None or store != "Bronze" or schema is not None:
@@ -90,7 +92,7 @@ def read_lakehouse_table(
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
         store, table_name, schema, context=context
     )
-    dataframe = read_delta_path(get_spark_session(spark_session), path, options=options)
+    dataframe = read_delta_path(spark_session, path, options=options)
     if resolved_table_id is not None:
         dataframe._fabricops_table_id = str(resolved_table_id)
     if not (context or {}).get("_fabricops_suppress_io_log"):

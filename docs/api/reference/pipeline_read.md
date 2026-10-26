@@ -44,7 +44,6 @@ def pipeline_read(
     read_mode: str='full',
     read_parameters: dict[str, Any] | None=None,
     target_table_id: str | None=None,
-    spark_session=None,
     verbose: bool=True,
     context=None,
 ) -> dict[str, Any]:
@@ -70,7 +69,6 @@ Required describes the Python signature. An optional parameter may still be need
 | `read_mode` | `str` | No | `'full'` | Explicit source read behaviour. ``full`` preserves the complete-source read. ``incremental`` resolves unconsumed work from the last Source Observation committed for this exact source-to-target relationship. |
 | `read_parameters` | `dict[str, Any] \| None` | No | `None` | Incremental read configuration. Supports only watermark_column. If a Data Contract is selected, its watermark must match the requested one. For incremental mode, provide ``{"watermark_column": "modified_at"}`` when no selected contract supplies the watermark. None is valid only when the selected mode and contract provide the required configuration. |
 | `target_table_id` | `str \| None` | No | `None` | Canonical governed target being prepared. It is accepted for both read modes so target flows can use one consistent call shape, and is required when ``read_mode="incremental"``. |
-| `spark_session` | `object` | No | `None` | Spark session forwarded to the selected foundational reader instead of relying on notebook-global ``spark``. |
 | `verbose` | `bool` | No | `True` | Whether to print one concise orchestration message showing the resolved Fabric store type, physical table identity, and selected foundational reader. This makes the hidden routing understandable without exposing workspace IDs, SQL text, contract payloads, or runtime plumbing. |
 | `context` | `dict` | No | `None` | Call-scoped resolved contracts, rules, and Catalogue identities. |
 
@@ -171,6 +169,10 @@ RuntimeError
 
 <div class="reference-docstring-intro" markdown="1">
 
+Spark is resolved automatically from the existing execution session.
+No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
 ``pipeline_read`` is the governed pipeline-orchestration equivalent of the
 foundational :func:`read_lakehouse_table`, :func:`read_warehouse_table`,
 and :func:`read_warehouse_query` readers. Describe the governed source
@@ -188,9 +190,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_read.py:109`
+`fabricops_kit/pipeline/pipeline_read.py:111`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L109-L483">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L111-L486">View on GitHub</a>
 </div>
 
 

@@ -1,5 +1,7 @@
 """Behavioral regressions for the Ponytail public-function audit findings."""
 
+from tests.helpers import call_with_spark
+
 from importlib import import_module
 from pathlib import Path
 from types import SimpleNamespace
@@ -26,7 +28,7 @@ def test_warehouse_reader_rejects_mutations_before_connector(monkeypatch, sql):
     monkeypatch.setattr(reader, "resolve_configured_warehouse_query_store", lambda *a, **k: object())
     monkeypatch.setattr(reader, "read_warehouse_synapsesql", lambda *a, **k: pytest.fail("connector reached"))
     with pytest.raises(ValueError):
-        reader.read_warehouse_query(sql, spark_session=object())
+        call_with_spark(object(), reader.read_warehouse_query, sql)
 
 
 @pytest.mark.parametrize("sql", [
@@ -98,8 +100,8 @@ def test_scd_null_keys_are_rejected_before_any_mutation(monkeypatch, spark_sessi
                                                processing=definition, scope={"type": "full_dataset"})
 
 
-def test_profile_forwards_explicit_session_to_catalogue_and_reader(monkeypatch):
-    """Explicit-session profiling must not depend on an unrelated active session."""
+def test_profile_reuses_discovered_session_for_catalogue_and_reader(monkeypatch):
+    """Profiling uses one discovered session throughout its reads."""
     module = import_module("fabricops_kit.pipeline.shared")
     from fabricops_kit import profile_table
     session = object()
@@ -111,13 +113,13 @@ def test_profile_forwards_explicit_session_to_catalogue_and_reader(monkeypatch):
         return identity
 
     def physical_read(*args, **kwargs):
-        assert kwargs["spark_session"] is session
+        assert kwargs["context"]["_spark_session"] is session
         raise LookupError("stopped after forwarding")
 
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", resolve)
     monkeypatch.setattr(module, "read_lakehouse_table", physical_read)
     with pytest.raises(LookupError, match="stopped after forwarding"):
-        profile_table(table_id="orders", spark_session=session)
+        call_with_spark(session, profile_table, table_id="orders")
 
 
 @pytest.mark.parametrize("size", [0, 1000])
@@ -141,7 +143,7 @@ def test_empty_source_capture_and_scope_preserve_accepted_progress(monkeypatch, 
 
     identity = {"table_id": "source-orders", "store_kind": "lakehouse", "store": "Bronze", "schema": "dbo", "table_name": "orders"}
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda: (object(), "dev", {}))
-    monkeypatch.setattr(shared, "get_spark_session", lambda: spark_session)
+    monkeypatch.setattr(shared, "get_spark_session", lambda *_args, **_kwargs: spark_session)
     monkeypatch.setattr(shared, "resolve_physical_table_identity", lambda *a, **k: identity)
     monkeypatch.setattr(shared, "get_store", lambda *a, **k: SimpleNamespace(schema_enabled=False))
     monkeypatch.setattr(shared, "resolve_lakehouse_table_location", lambda *a: ("orders", "dbo", "path"))
@@ -186,6 +188,7 @@ def test_source_free_target_reaches_physical_publication(monkeypatch):
     writes, commits = [], []
     monkeypatch.setattr(package, "write_lakehouse_table", lambda *a, **k: writes.append(k))
     monkeypatch.setattr(shared, "commit_pipeline_write_success", lambda context: commits.append(context))
+    monkeypatch.setattr(module, "get_spark_session", lambda *_args, **kwargs: object())
     result = module.pipeline_write(object(), store="Silver", schema="dbo", table_name="mapping", source_table_ids=[], verbose=False)
     assert result["strategy"] == "append"
     assert len(writes) == 1

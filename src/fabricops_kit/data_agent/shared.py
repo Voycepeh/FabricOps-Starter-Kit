@@ -318,7 +318,7 @@ def provision_data_agent(
     }
 
 
-def configured_context(config: Any | None, context: Mapping[str, Any] | None) -> tuple[Any, Any]:
-    """Resolve package configuration and Spark from the normal FabricOps runtime context."""
+def configured_context(config: Any | None, context: Mapping[str, Any] | None) -> Any:
+    """Resolve package configuration from the normal FabricOps runtime context."""
     resolved_config, _, runtime = resolve_fabric_context(config=config, env="prod", context=dict(context or {}))
-    return resolved_config, runtime.get("spark")
+    return resolved_config

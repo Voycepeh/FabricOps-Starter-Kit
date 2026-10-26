@@ -21,12 +21,12 @@ from fabricops_kit.pipeline.shared import (
 def check_freshness(
     table_id: str,
     *,
-    spark_session=None,
     verbose: bool = True,
     context=None,
 ) -> dict:
     """Evaluate the resolved contract stage and return its continuation decision."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+    spark_session = get_spark_session(context=context)
     requested_table_id = str(table_id).strip()
     contract = resolve_pipeline_data_contract(
         config,
@@ -57,7 +57,6 @@ def check_freshness(
             print(f"  Reason {result['reason']}")
         return result
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
-    spark_session = get_spark_session() if spark_session is None else spark_session
     identity = resolve_catalogue_table_identity(
         config,
         env,

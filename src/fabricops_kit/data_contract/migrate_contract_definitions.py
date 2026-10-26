@@ -6,6 +6,8 @@ Pause Governance authoring and legacy writers while applying a reviewed report.
 
 from __future__ import annotations
 
+from fabricops_kit.io.shared import get_spark_session
+
 from copy import deepcopy
 import hashlib
 import json
@@ -219,23 +221,28 @@ def _plan_contract_definition_migration(
 
 
 def migrate_contract_definitions(
-    *, config: Any, env: str, spark_session: Any, dry_run: bool = True,
+    *, config: Any, env: str, dry_run: bool = True,
     reviewed_snapshot: str | None = None, authoring_paused: bool = False,
 ) -> dict[str, Any]:
     """Report retired table conflicts or append reviewed new draft versions.
+
+    Spark is resolved automatically from the existing execution session.
+    No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     Apply requires the dry-run snapshot fingerprint and paused Governance/legacy
     writers. Changed snapshots and any conflicts block all writes. One append
     commits all planned drafts to the configured contract table. The operation
     never updates or deletes an existing row and never deletes a physical table.
     """
+    spark_session = get_spark_session()
     context = {"config": config, "env": env, "_fabricops_suppress_io_log": True}
     schema = metadata_table_physical_schema(config, contracts.DATA_CONTRACT_TABLE)
     snapshots = []
     for name in (contracts.DATA_CONTRACT_TABLE, _LEGACY_ENRICHMENT, _LEGACY_GUARDRAIL):
         try:
             values = contracts.row_dicts(read_lakehouse_table(
-                name, store="Metadata", schema=schema, spark_session=spark_session, context=context,
+                name, store="Metadata", schema=schema, context={**(context or {}), "_spark_session": spark_session},
             ))
         except Exception as exc:
             if name == contracts.DATA_CONTRACT_TABLE or not is_table_not_found_error(exc):

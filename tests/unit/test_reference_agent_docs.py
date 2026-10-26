@@ -214,7 +214,7 @@ def test_setup_metadata_tables_reference_uses_keyword_only_example() -> None:
     example = _section_text(text, "Example usage")
     assert 'class="reference-example-usage"' in example
     assert "setup_result = setup_metadata_tables" in example
-    assert "spark=spark" in example
+    assert "spark=spark" not in example
     assert "config=CONFIG" in example
     assert "env=ENVIRONMENT_NAME" in example
 

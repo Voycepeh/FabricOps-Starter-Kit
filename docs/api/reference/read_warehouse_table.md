@@ -23,7 +23,7 @@ A complete-table read may transfer a large dataset from the Warehouse into Spark
 <div class="reference-example-usage" markdown="1">
 
 ```python
-student_df = read_warehouse_table("dbo", "student_enrolment", store="warehouse", spark_session=spark)
+student_df = read_warehouse_table("dbo", "student_enrolment", store="warehouse")
 ```
 
 </div>
@@ -41,7 +41,6 @@ def read_warehouse_table(
     table_name: str,
     *,
     store: str='warehouse',
-    spark_session=None,
     context: dict[str, Any] | None=None,
     **options,
 ):
@@ -62,7 +61,6 @@ Required describes the Python signature. An optional parameter may still be need
 | `schema` | `str` | Yes | `—` | Physical Warehouse schema name for the source table. |
 | `table_name` | `str` | Yes | `—` | Physical Warehouse table name for the source table. |
 | `store` | `str` | No | `'warehouse'` | Logical Warehouse configuration name from ``00_env_config``. This identifies the configured Warehouse target, while ``schema`` and ``table_name`` identify the physical Warehouse table. |
-| `spark_session` | `object` | No | `None` | Spark session to use instead of the notebook global ``spark``. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active Fabric context override. |
 | `**options` | `—` | No | `—` | Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
 
@@ -112,6 +110,10 @@ pushdown before Spark receives rows.
 
 <div class="reference-docstring-intro" markdown="1">
 
+Spark is resolved automatically from the existing execution session.
+No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
 This is equivalent to ``SELECT * FROM schema.table_name``.
 
 Use this callable only for intentional full-table extracts such as small
@@ -144,7 +146,7 @@ table because notebook cells can hit runtime limits.
 
 `fabricops_kit/io/read_warehouse_table.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L95">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L97">View on GitHub</a>
 </div>
 
 

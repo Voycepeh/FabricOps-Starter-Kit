@@ -35,7 +35,8 @@ def collect():
 m = importlib.import_module("fabricops_kit.widgets.widget_render_data_steward")
 m.resolve_fabric_context = lambda **kw: (agreement_config(), "dev", {})
 m.list_data_stewards = lambda *a, **kw: collect()
-state = m.widget_render_data_steward(spark=object())
+m.get_spark_session = lambda **kw: object()
+state = m.widget_render_data_steward()
 '''
         else:
             setup += '''
@@ -43,6 +44,7 @@ m = importlib.import_module("fabricops_kit.pipeline.shared")
 m.initialize_notebook = lambda **kw: SimpleNamespace(notebook_name="02_pipeline")
 m.resolve_fabric_context = lambda **kw: (framework_config(), "dev", {})
 m.get_spark_session = lambda: object()
+m.resolve_pipeline_registration = lambda identity, **kw: {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "resolution": "Recovered"}
 m.read_lakehouse_table = lambda *a, **kw: SimpleNamespace(collect=collect)
 state = m.start_pipeline_session("generic", "Test")
 state.close()

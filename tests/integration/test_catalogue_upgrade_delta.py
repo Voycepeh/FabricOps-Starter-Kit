@@ -1,4 +1,6 @@
 """Persisted Catalogue schema conversion, recovery and Delta conflict tests."""
+
+from tests.helpers import call_with_spark
 # ruff: noqa: F811
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -68,7 +70,7 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
         spark_session.createDataFrame(rows, physical).write.format('delta').save(path)
         spark_session.sql(f"ALTER TABLE delta.`{path}` SET TBLPROPERTIES ('owner_note'='retain this')")
     def run():
-        return setup.setup_metadata_tables(spark=spark_session, config=config, env='dev', verbose=False)
+        return call_with_spark(spark_session, setup.setup_metadata_tables,  config=config, env='dev', verbose=False)
     def upgrade():
         return setup._upgrade_catalogue(spark=spark_session, table=read(TABLE, schema='custom_engineering'),
             expected_schema=schema, metadata_schema='custom_engineering', context={'config': config, 'env': 'dev'})
@@ -328,7 +330,7 @@ def test_native_writers_merge_discovery_and_source_drift_after_upgrade(catalogue
         return value
     monkeypatch.setattr(drift, 'resolve_table_processing_definition', processing)
     monkeypatch.setattr(drift, 'check_source_drift_for_target', lambda **kw: {'can_continue': True})
-    assert drift.check_source_drift('table', target_table_id='table', spark_session=rt.spark,
+    assert call_with_spark(rt.spark, drift.check_source_drift, 'table', target_table_id='table',
                                     verbose=False, context=context)['can_continue']
     assert seen == [{'load_strategy': 'scd2', **parameters}]
 

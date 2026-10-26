@@ -74,7 +74,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
     monkeypatch.setattr(writer, 'resolve_physical_table_identity', identity)
     monkeypatch.setattr(shared, '_validated_observation_identity', lambda _c, _e, _t, ident: ident)
     monkeypatch.setattr(shared, 'build_runtime_audit_fields', audit)
-    monkeypatch.setattr(shared, 'get_spark_session', lambda: spark_session)
+    monkeypatch.setattr(shared, 'get_spark_session', lambda *_args, **_kwargs: spark_session)
     monkeypatch.setattr(writer, 'resolve_target_audit_fields', lambda _c: audit())
     monkeypatch.setattr(writer, 'resolve_table_processing_definition', lambda *a, **k: (
         state['processing'] if state.get('processing') else {'load_strategy': state['mode']} if state['mode'] == 'append' else

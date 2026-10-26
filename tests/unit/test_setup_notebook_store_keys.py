@@ -58,8 +58,12 @@ def test_setup_notebook_readiness_does_not_require_optional_store_name() -> None
     assert context.paths["Bronze"].name is None
 
 
-def test_explicit_setup_summary_reports_failed_checks(capsys) -> None:
+def test_explicit_setup_summary_reports_failed_checks(capsys, monkeypatch) -> None:
     """Make startup warnings and failures visible even when the result is discarded."""
+    from fabricops_kit.io import shared as io
+    def unavailable():
+        raise RuntimeError("No active Spark session")
+    monkeypatch.setattr(io, "get_spark_session", unavailable)
     setup_notebook(_config(), env="dev", notebook_name="invalid_name", config_workspace_id="ignored-workspace")
 
     output = capsys.readouterr().out

@@ -646,9 +646,13 @@ def _scheduled_refresh_html(discovery: Mapping[str, Any]) -> str:
 
 def widget_data_contract(
     *, table_id: str | None = None, contract_version: int | None = None,
-    spark_session: Any = None, context: Any = None,
+    context: Any = None,
 ) -> dict[str, Any]:
     """Open the unified governance authoring and lifecycle experience for Data Contracts.
+
+    Spark is resolved automatically from the existing execution session.
+    No session is created; Spark-dependent work raises
+    ``RuntimeError`` when no session is available.
 
     Parameters
     ----------
@@ -656,8 +660,6 @@ def widget_data_contract(
         Initial canonical governed table identity. If omitted, select it in the widget.
     contract_version : int, optional
         Initial exact lifecycle version. If omitted, the newest version is selected.
-    spark_session : object, optional
-        Active Microsoft Fabric Spark session. The configured session is used when omitted.
     context : object, optional
         FabricOps runtime context normally established by ``00_env_config``.
 
@@ -717,7 +719,7 @@ def widget_data_contract(
 
     Examples
     --------
-    >>> state = widget_data_contract(table_id="table-orders", spark_session=spark)
+    >>> state = widget_data_contract(table_id="table-orders")
     >>> state["refresh_manifest"]()
 
     See Also
@@ -737,7 +739,7 @@ def widget_data_contract(
     ] or ["Public", "Restricted", "Confidential", "Highly Sensitive"]
     classification_options = ("", *classification_levels)
     with startup.phase("spark_loading", "Resolving the Spark session…"):
-        spark = get_spark_session(spark_session)
+        spark = get_spark_session(context=context)
     with startup.phase("metadata_loading", "Loading configured metadata…"):
         catalogue = contracts.list_contract_governance_state(config=config, env=env, spark_session=spark)
         table_rows = catalogue["tables"]

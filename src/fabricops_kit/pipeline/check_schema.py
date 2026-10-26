@@ -23,13 +23,13 @@ def check_schema(
     dataframe=None,
     *,
     table_id: str,
-    spark_session=None,
     verbose: bool = True,
     context=None,
 ) -> dict:
     """Evaluate the resolved contract stage and return its continuation decision."""
     config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
-    spark = get_spark_session() if spark_session is None else spark_session
+    spark_session = get_spark_session(dataframe=dataframe, context=context)
+    spark = spark_session
     contract = resolve_pipeline_data_contract(
         config,
         env,
@@ -87,8 +87,7 @@ def check_schema(
             dataframe = read_warehouse_query(
                 f"SELECT TOP (0) * FROM [{schema_name}].[{resolved_table}]",
                 store=store_key,
-                spark_session=spark,
-                context=context,
+                context={**(context or {}), "_spark_session": spark},
             )
     elif store_type == "lakehouse":
         resolved_table, schema_name, _ = resolve_lakehouse_table_location(store, table_name, schema)
@@ -97,8 +96,7 @@ def check_schema(
                 resolved_table,
                 store=store_key,
                 schema=schema_name,
-                spark_session=spark,
-                context=context,
+                context={**(context or {}), "_spark_session": spark},
             ).limit(0)
     else:
         raise ValueError(f"Store {store_key!r} must resolve to a Lakehouse or Warehouse.")

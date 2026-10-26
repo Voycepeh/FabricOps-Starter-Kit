@@ -24,7 +24,7 @@ def metadata_records(table, *, context, spark_session=None, run_id=None):
     """Read domain metadata through its configured owner schema."""
     config, _env, _runtime = resolve_fabric_context(context=context)
     frame = read_lakehouse_table(table, store="Metadata", schema=metadata_table_physical_schema(config, table),
-                                spark_session=spark_session, context=context)
+                                context={**(context or {}), "_spark_session": spark_session})
     if table == "METADATA_PIPELINE_RUN":
         from pyspark.sql import functions as F
         frame = frame.filter(F.col("environment_name") == _env)
@@ -327,7 +327,7 @@ def commit_pipeline_authority(state, *, expected_token, context, spark_session=N
             if impact["tables"] != current["tables"] or impact["blocking_conflicts"]:
                 raise ValueError("Registry selections and table ownership are inconsistent.")
     wanted.update(token=str(uuid4()), **build_runtime_audit_fields(config=config, env=env, runtime_context=runtime))
-    spark = get_spark_session(spark_session)
+    spark = get_spark_session(spark_session, context=context)
     _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", table,
         metadata_table_physical_schema(config, table), context=context)
     frame = spark.createDataFrame([coerce_metadata_row_types(table, wanted)], metadata_table_schema_registry()[table])

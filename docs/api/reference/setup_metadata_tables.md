@@ -23,7 +23,7 @@ Use after setup_notebook in 00_env_config to create or validate the FabricOps me
 <div class="reference-example-usage" markdown="1">
 
 ```python
-setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT_NAME)
+setup_result = setup_metadata_tables(config=CONFIG, env=ENVIRONMENT_NAME)
 ```
 
 </div>
@@ -38,7 +38,6 @@ setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT
 ```python
 def setup_metadata_tables(
     *,
-    spark: Any,
     config: FrameworkConfig | dict[str, Any],
     env: str,
     require_active_steward: bool=False,
@@ -59,7 +58,6 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `spark` | `Any` | Yes | `—` | Spark session used to create empty schema DataFrames and read or write the metadata lakehouse tables. |
 | `config` | `FrameworkConfig \| dict[str, Any]` | Yes | `—` | FabricOps configuration used to find the selected environment and its metadata lakehouse. |
 | `env` | `str` | Yes | `—` | Environment whose configured metadata lakehouse should be initialized or validated. |
 | `require_active_steward` | `bool` | No | `False` | When ``True``, raise if ``METADATA_DATA_STEWARD`` contains no active steward rows after setup. This option does not create a steward record. |
@@ -120,6 +118,10 @@ RuntimeError
 
 <div class="reference-docstring-intro" markdown="1">
 
+Spark is resolved automatically from the existing execution session.
+No session is created; Spark-dependent work raises
+``RuntimeError`` when no session is available.
+
 Creates missing metadata tables, additively evolves existing metadata
 tables with missing canonical columns, and validates canonical column
 types against the registry for the installed FabricOps version. Existing
@@ -152,9 +154,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:392`
+`fabricops_kit/config/setup_metadata_tables.py:394`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L392-L822">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L394-L824">View on GitHub</a>
 </div>
 
 
@@ -298,7 +300,7 @@ their respective FabricOps workflows.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 47 |
+| Live-critical dependencies | 48 |
 
 ### Release history
 
@@ -355,6 +357,7 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
