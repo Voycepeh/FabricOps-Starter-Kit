@@ -31,6 +31,19 @@ via `approvals` + `reservations`
 `METADATA_DATA_AGREEMENT` **(N → M)**
 via `approvals`
 
+`METADATA_DATA_CONTRACT` **(N → 1)**
+via `table_ownership[].contract_id` + `table_ownership[].contract_version`
+
+**Nested references (application-enforced):**
+
+| Local field | Referenced field | Meaning |
+| --- | --- | --- |
+| `approvals[].testing_run_id` | `METADATA_PIPELINE_RUN.run_id` | Each nested approval retains one exact finalized Test Run; many approvals may reuse a Test. Application-enforced reference. |
+| `approvals[].agreement_id` | `METADATA_DATA_AGREEMENT.agreement_id` | Composite reference with approvals[].agreement_version to one exact Agreement version, verified with its content hash. |
+| `approvals[].agreement_version` | `METADATA_DATA_AGREEMENT.agreement_version` | Composite reference with approvals[].agreement_id; neither field is independently unique. |
+| `table_ownership[].contract_id` | `METADATA_DATA_CONTRACT.contract_id` | Composite reference with table_ownership[].contract_version; ownership retains the exact approved table contract and payload hash. |
+| `table_ownership[].contract_version` | `METADATA_DATA_CONTRACT.contract_version` | Composite reference with table_ownership[].contract_id; the referenced contract must match the owned table. |
+
 **Implementation details:** A matched-only Delta compare-and-swap publishes all typed collections together. Registration, approval, admission, rebind and profiling share one token; no snapshot JSON or child-row insertion is authoritative. Exact finalized Test runs and Agreements resolve by retained content-checked references. There is no separate configuration table.
 
 ## Column summary

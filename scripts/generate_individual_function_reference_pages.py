@@ -4558,6 +4558,15 @@ def generate_metadata_reference_pages() -> None:
                     f"**{relationship['logical_entity']} (logical entity; {_metadata_cardinality_display(relationship['cardinality'])}):** "
                     + relationship["statement"], "",
                 ])
+        nested = [fk for fk in table_models[table_name]["foreign_keys"]
+                  if "[]" in fk["local_field"] or "[]" in fk["referenced_field"]]
+        if nested:
+            rendered.extend(["**Nested references (application-enforced):**", "",
+                             "| Local field | Referenced field | Meaning |",
+                             "| --- | --- | --- |"])
+            for fk in nested:
+                rendered.append(f"| `{fk['local_field']}` | `{fk['referenced_table']}.{fk['referenced_field']}` | {fk['statement']} |")
+            rendered.append("")
         if rendered:
             rendered.pop()
         return rendered or ["No immediate table relationship is defined in the current implementation."]
@@ -4591,10 +4600,19 @@ def generate_metadata_reference_pages() -> None:
         raise RuntimeError("METADATA_REFERENCE_ORDER must contain every canonical metadata table exactly once")
 
     valid_cardinalities = {"1:1", "1:N", "N:1", "N:M"}
-    field_names_by_table = {
-        table_name: {row["name"] for row in metadata_table_schema_rows(schema)}
-        for table_name, schema in registry.items()
-    }
+    def schema_paths(schema, prefix=""):
+        paths = set()
+        for field in getattr(schema, "fields", []):
+            path = prefix + field.name
+            paths.add(path)
+            dtype = field.dataType
+            if hasattr(dtype, "elementType"):
+                paths.update(schema_paths(dtype.elementType, path + "[]."))
+            elif hasattr(dtype, "fields"):
+                paths.update(schema_paths(dtype, path + "."))
+        return paths
+
+    field_names_by_table = {name: schema_paths(schema) for name, schema in registry.items()}
     for table_name in canonical_tables:
         model = table_models[table_name]
         if not isinstance(model, dict):

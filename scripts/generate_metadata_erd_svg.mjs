@@ -7,18 +7,19 @@ const root = path.resolve(import.meta.dirname, "..");
 function renderMetadataSvg(layout, models) {
   const routes = [
     ["DATA_STEWARD","DATA_AGREEMENT","1:N","physical","M335 170H425",[335,170],[425,170],"One steward may participate in many agreements"],
-    ["DATA_AGREEMENT","PIPELINE_REGISTRY","","logical","M725 170H775V725H815",[725,170],[815,725],"Agreement to Activated Pipeline releases stored in the Registry"],
-    ["PIPELINE_RUN","DATA_CONTRACT","","logical","M725 464H765V388H1165V218H1205",[725,464],[1205,218],"Run operations reference exact table contract versions"],
-    ["PIPELINE_REGISTRY","PIPELINE_RUN","","logical","M900 675V635H575V598",[900,675],[575,598],"Approved Activated Pipeline releases authorize Live runs"],
+    ["DATA_AGREEMENT","PIPELINE_REGISTRY","","nested","M725 170H815",[725,170],[815,170],"Registry approvals reference Agreement ID plus version and content hash"],
+    ["PIPELINE_REGISTRY","DATA_CONTRACT","","nested","M1115 170H1205",[1115,170],[1205,170],"Registry table ownership retains exact Contract ID plus version and payload hash"],
+    ["PIPELINE_RUN","DATA_CONTRACT","","nested","M725 464H765V363H1145V194H1205",[725,464],[1205,194],"Run operations reference exact table contract versions"],
+    ["PIPELINE_REGISTRY","PIPELINE_RUN","","nested","M900 253V328H575V423",[900,253],[575,423],"Registry approvals retain Test run_id; Live runs pin Registry approvals[].approval_id. Cardinality applies to nested records, not the singleton authority row"],
     ["DATA_CATALOGUE","DATA_CONTRACT","1:N","physical","M1355 423V253",[1355,423],[1355,253],"Catalogue table to contract versions"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1:N","physical","M425 515H335",[425,515],[335,515],"Pipeline run to recorded guardrail outcomes"],
     ["PIPELINE_RUN","PROCESSING_STATE","1:N","physical","M725 504H815",[725,504],[815,504],"Pipeline run to typed processing state"],
     ["DATA_CATALOGUE","PROCESSING_STATE","1:N","physical","M1205 545H1115",[1205,545],[1115,545],"Catalogue table to source and target processing state"],
-    ["DATA_CATALOGUE","DATA_PROFILED","1:N","physical","M1250 598V902H575V995",[1250,598],[575,995],"Catalogue table to column statistics"],
-    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","","logical","M1290 598V877H185V995",[1290,598],[185,995],"Catalogue column to frequency observations"],
-    ["DATA_CATALOGUE","DATA_LINEAGE","1:N","physical","M1355 598V927H965V995",[1355,598],[965,995],"Catalogue table to source and target lineage"],
-    ["DATA_CATALOGUE","DATA_ACCESS","1:N","physical","M1430 598V963H1355V995",[1430,598],[1355,995],"Catalogue table to observed permissions"],
-    ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1:N","physical","M425 1081H335",[425,1081],[335,1081],"Optional statistical profile reference on frequency rows"],
+    ["DATA_CATALOGUE","DATA_PROFILED","1:N","physical","M1250 598V642H575V735",[1250,598],[575,735],"Catalogue table to column statistics"],
+    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","","logical","M1290 598V617H185V735",[1290,598],[185,735],"Catalogue column to frequency observations"],
+    ["DATA_CATALOGUE","DATA_LINEAGE","1:N","physical","M1355 598V667H965V735",[1355,598],[965,735],"Catalogue table to source and target lineage"],
+    ["DATA_CATALOGUE","DATA_ACCESS","1:N","physical","M1430 598V703H1355V735",[1430,598],[1355,735],"Catalogue table to observed permissions"],
+    ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1:N","physical","M425 821H335",[425,821],[335,821],"Optional statistical profile reference on frequency rows"],
     ["DATA_CONTRACT","GUARDRAIL_RESULTS","1:N","physical","M1205 218H1165V388H185V423",[1205,218],[185,423],"Contract versions to their Guardrail results"]
   ];
   const esc = value => String(value).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -36,20 +37,29 @@ function renderMetadataSvg(layout, models) {
     found.add(name);
     const rect=block.match(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/);
     if(!rect) throw Error("Missing table geometry for "+name);
-    const transform=block.match(/transform="translate\(\s*0\s+([\d.]+)\s*\)"/);
+    const transform=block.match(/transform="translate\(\s*0\s+(-?[\d.]+)\s*\)"/);
     boxes[name]=[Number(rect[1]),Number(rect[2])+(transform?Number(transform[1]):0),Number(rect[3]),Number(rect[4])];
     const pk=(model.primary_key||[]).map(value=>["PK",value]);
     const fk=(model.foreign_keys||[]).filter(row=>!pk.some(k=>k[1]===row.local_field)).map(row=>["FK",row.local_field]);
-    const all=[...pk,...fk], rows=all.length>5?[...all.slice(0,4),["",`+${all.length-4} more keys`]]:all;
+    // Show composite version references together without hiding either key.
+    const groupedFk = fk.filter(([, value]) => !value.endsWith("_version") ||
+      !fk.some(([, other]) => other === value.replace(/_version$/, "_id")))
+      .map(([kind, value]) => [kind, value.endsWith("_id") && fk.some(([, other]) => other === value.replace(/_id$/, "_version"))
+        ? value.replace(/_id$/, "_id/version") : value]);
+    const nestedKeys = [...new Set(Object.values(models).flatMap(other => (other.foreign_keys || [])
+      .filter(fk => fk.referenced_table === "METADATA_" + name && fk.referenced_field.includes("[]"))
+      .map(fk => fk.referenced_field)))].map(value => ["UK", value]);
+    const all=[...pk,...nestedKeys,...groupedFk], rows=all.length>5?[...all.slice(0,4),["",`+${all.length-4} more keys`]]:all;
     const x=Number(rect[1]), y=Number(rect[2]);
     let lines=rows.map(([kind,value],i)=>{
-      const baseline=y+57+24*i;
+      const baseline=y+57+(name === "PIPELINE_REGISTRY" ? 20 : 24)*i;
       const label=kind?`<text x="${x+13}" y="${baseline}" fill="${kind==="PK"?"#008064":"#0574C5"}" font-weight="700" font-size="14" font-family="Arial, sans-serif">${kind}</text>\n`:"";
       const normalized=String(value);
-      const visible=normalized.length>33?normalized.slice(0,30)+"…":normalized;
-      return label+`<text x="${x+51}" y="${baseline}" fill="#243550" font-size="14" font-family="Arial, sans-serif">${esc(visible)}</text>`;
+      const visible=normalized.length>42?normalized.slice(0,39)+"…":normalized;
+      return label+`<text x="${x+51}" y="${baseline}" fill="#243550" font-size="${normalized.length > 35 ? 11 : normalized.length > 31 ? 12 : 14}" font-family="Arial, sans-serif">${esc(visible)}</text>`;
     }).join("\n");
     block=block.replace(/^<text (?![^>\n]*fill="white")[^\n]*\n/gm,"");
+    if (name === "PIPELINE_REGISTRY") lines += `\n<text x="${x+13}" y="${y+162}" fill="#1168B6" font-size="12" font-family="Arial, sans-serif">Engineering home · shared authority</text>`;
     block=block.replace(/<title>Open metadata documentation:/,lines+(lines?"\n":"")+"<title>Open metadata documentation:");
     return block;
   });
@@ -93,7 +103,7 @@ function renderMetadataSvg(layout, models) {
       end=horiz?[end[0]+side*25,end[1]]:[end[0],end[1]+side*25];
     }
     const [one,many]=card ? card.split(":") : ["", ""];
-    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label)} (${card ? esc(card) + "; " : ""}${kind === "logical" ? "conceptual reference; no declared physical FK or table-row cardinality" : "physical keyed relationship"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round"${kind==="logical"?' stroke-dasharray="7 7"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}\n</g>`;
+    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "exact nested reference; application-enforced" : kind === "logical" ? "logical identity reference" : "keyed reference; application-enforced"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round"/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}\n</g>`;
   }).join("\n");
   return prefix+`<g id="metadata-er-relationships" aria-label="Metadata table relationships">\n${rendered}\n</g>\n`+body;
 }

@@ -111,3 +111,11 @@ Regression coverage exercises actual operation capture, selective Live rejection
 ## Metadata retirement guidance
 
 `RETIRED_PREVIEW_METADATA_TABLES` in `metadata_schemas.py` remains the source for advisory cleanup notices. Setup probes known names in the configured schemas without collecting old rows or migrating/deleting their data. Retired Preview tables do not authorize execution.
+
+### Logical keys and schema ownership
+
+Registry remains physically in the configured Engineering schema. Governance owns approval decisions; Engineering executes registration, admission, reservations and profiling coordination against the same atomic row. Its position beside Governance tables in the diagram shows that shared responsibility and does not introduce a third physical schema.
+
+Registry's row key is `authority_id` (the singleton `central`); Run's row key is `run_id`. Registry collection keys are validated separately: registrations and selections use `(environment_name, pipeline_id)`, approvals use `approval_id`, revisions use `environment_name`, ownership uses `(environment_name, table_id)`, reservations use `(environment_name, reservation_id)`, and profiling claims use `claim_key`. A Run operation is unique by both `operation_key` and `(table_id, pipeline_role)` within its Run.
+
+Registry approvals reference `Run.run_id` through `testing_run_id` and Agreement's composite `(agreement_id, agreement_version)`. Run's nullable `approval_id` references a nested Registry approval; Test runs have no approval. Run operations and Registry ownership reference Contract's composite `(contract_id, contract_version)`. Retained hashes verify content as well as identity. These are application-enforced references; Delta does not enforce SQL primary or foreign key constraints. Table IDs refer to logical table identities; Catalogue's physical row key also includes environment and column identity, so `table_id` alone is not a foreign key to its full row key.

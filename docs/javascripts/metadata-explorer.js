@@ -222,10 +222,6 @@
     }
 
     const logicalJoinKeys = {
-      "DATA_AGREEMENT|ACTIVATION_STATE": ["ACTIVATION_STATE.snapshot_json references agreement_id + agreement_version in each Activated Pipeline release (logical, not a physical FK)"],
-      "PIPELINE_REGISTRY|ACTIVATION_STATE": ["ACTIVATION_STATE.snapshot_json contains pipeline_id for each registered Activated Pipeline release (logical, not a physical FK)"],
-      "ACTIVATION_STATE|PIPELINE_RUN": ["PIPELINE_RUN.activated_pipeline_id identifies a release inside ACTIVATION_STATE.snapshot_json (logical release reference)"],
-      "ACTIVATION_STATE|DATA_CONTRACT": ["ACTIVATION_STATE.snapshot_json contains frozen contract_id + contract_version references (N:N logical manifest link)"],
       "DATA_CATALOGUE|DATA_PROFILED_FREQUENCY": ["DATA_PROFILED_FREQUENCY.table_id + column_id → DATA_CATALOGUE.table_id + column_id (logical table/column reference)"]
     };
     const keyJoinRows = (from, to) => {
@@ -239,11 +235,10 @@
           rows.push(child + "." + fk.local_field + " → " + other + "." + fk.referenced_field + suffix);
         }
       }
-      // Pipeline Registry identity is unique inside each environment, not
-      // globally on the pipeline_id alone.
+      // A registration is unique by pipeline and environment inside the authority.
       if ((from === "PIPELINE_REGISTRY" && to === "PIPELINE_RUN") ||
           (to === "PIPELINE_REGISTRY" && from === "PIPELINE_RUN")) {
-        rows.push("PIPELINE_RUN.environment_name → PIPELINE_REGISTRY.environment_name (environment scope)");
+        rows.push("PIPELINE_RUN.pipeline_id + environment_name → PIPELINE_REGISTRY.registrations[].pipeline_id + environment_name (registered pipeline and environment; Live approval must match both)");
       }
       if (rows.length) return rows;
       return logicalJoinKeys[from + "|" + to] || logicalJoinKeys[to + "|" + from] || ["Logical relationship; no physical FK declared"];

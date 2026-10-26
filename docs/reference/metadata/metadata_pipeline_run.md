@@ -23,10 +23,18 @@ No starter template or solution is traced for the public writer functions.
 **Relationships:**
 
 `METADATA_PIPELINE_REGISTRY` **(N → 1)**
-via Not defined in the current implementation.
+via `approval_id`
 
 `METADATA_DATA_CONTRACT` **(N → M)**
 via `operations`
+
+**Nested references (application-enforced):**
+
+| Local field | Referenced field | Meaning |
+| --- | --- | --- |
+| `approval_id` | `METADATA_PIPELINE_REGISTRY.approvals[].approval_id` | Live runs reference one nested immutable approval, not authority_id. Test runs have no approval. Pipeline and environment must match the approval. |
+| `operations[].contract_id` | `METADATA_DATA_CONTRACT.contract_id` | Each contracted operation references one exact Contract using contract_id plus contract_version and verifies the payload hash. Test operations may be uncontracted; activation requires all contracts. |
+| `operations[].contract_version` | `METADATA_DATA_CONTRACT.contract_version` | Composite reference with operations[].contract_id; neither field is independently unique. |
 
 **Implementation details:** Whole-row CAS atomically publishes the parent and all operations/stages. Native operations retain table_id, source/target role, exact contract version/hash, destination, read/write mode, SQL hash and source associations. Live pins approval_id and compares these fields before operations. Profiling completion joins physical result snapshots. warnings_json contains variable sanitized diagnostics only. No project settings, full argument snapshots or configuration fingerprints are stored.
 
