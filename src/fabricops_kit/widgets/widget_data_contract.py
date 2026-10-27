@@ -1177,13 +1177,13 @@ def widget_data_contract(
 
     selector = widgets.GridBox(
         [
+            selector_field("Workspace", workspace_selector["container"]),
             selector_field("Table", table_selector["container"]),
             selector_field("Contract", contract_selector["container"]),
-            selector_field("Workspace", workspace_selector["container"]),
         ],
         layout=widgets.Layout(
             width="100%",
-            grid_template_columns="minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)",
+            grid_template_columns="minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr)",
             grid_gap="16px 24px",
             overflow="visible",
         ),
@@ -5761,12 +5761,48 @@ def widget_data_contract(
         if state["_selector_refreshing"]:
             return
         options = contracts.observation_selector_options(table_rows, workspace_id=state.get("workspace_id"))
-        names = {str(row["table_id"]): str(row.get("table_name") or row["table_id"]) for row in table_rows}
+        eligible = [
+            row for row in table_rows
+            if str(row.get("table_id") or "") in options["tables"]
+            and (
+                not state.get("workspace_id")
+                or str(row.get("workspace_id") or "") == str(state["workspace_id"])
+            )
+        ]
+        rows_by_table_id: dict[str, dict[str, Any]] = {}
+        for row in eligible:
+            rows_by_table_id.setdefault(str(row["table_id"]), row)
+
+        def configured_item_name(row: Mapping[str, Any]) -> str:
+            workspace_id = str(row.get("workspace_id") or "")
+            store_key = str(row.get("layer") or "")
+            paths = getattr(getattr(config, "path_config", None), "paths", {}) or {}
+            configured = paths.get(workspace_id, {}).get(store_key)
+            if isinstance(configured, Mapping):
+                return str(configured.get("name") or store_key or configured.get("item_id") or "")
+            return str(getattr(configured, "name", None) or store_key or getattr(configured, "item_id", ""))
+
+        def table_identity_label(row: Mapping[str, Any]) -> str:
+            workspace_label = str(row.get("_workspace_name") or row.get("workspace_id") or "Unknown workspace")
+            store_type = str(row.get("store_type") or "Fabric item").title()
+            item_name = configured_item_name(row) or "Unknown item"
+            schema_name = str(row.get("schema_name") or "")
+            table_name = str(row.get("table_name") or row.get("table_id") or "")
+            return (
+                f"{workspace_label} · {store_type}: {item_name} · "
+                f"Schema: {schema_name or '—'} · Table: {table_name}"
+            )
+
         selected = str(state.get("pending_table_id") or "")
         state["_selector_refreshing"] = True
         try:
-            table_control.refresh_rows([{"label": names[value], "value": value} for value in options["tables"]],
-                                       selected if selected in options["tables"] else "")
+            table_control.refresh_rows(
+                [
+                    {"label": table_identity_label(rows_by_table_id[value]), "value": value}
+                    for value in options["tables"] if value in rows_by_table_id
+                ],
+                selected if selected in options["tables"] else "",
+            )
             workspaces = contracts.observation_selector_options(table_rows, table_id=selected)["workspaces"]
             labels = {str(row["workspace_id"]): str(row.get("_workspace_name") or row["workspace_id"]) for row in table_rows}
             workspace_control.refresh_rows([{"label": f"{labels[value]} ({value})", "value": value} for value in workspaces],
@@ -5778,20 +5814,36 @@ def widget_data_contract(
         if state["_selector_refreshing"]:
             return
         selected = str(change.get("new") or "")
+        preferred = (
+            str(state.get("pending_contract_version") or "")
+            if change.get("initial") else ""
+        )
         state["pending_table_id"] = selected or None
+        state["pending_contract_version"] = None
         valid = contracts.observation_selector_options(table_rows, table_id=selected)["workspaces"]
         if state.get("workspace_id") not in valid:
             state["workspace_id"] = None
         refresh_table_options()
-        matches = [row for row in state["contracts"] if str(row.get("table_id") or "") == selected]
+        matches = sorted(
+            [row for row in state["contracts"] if str(row.get("table_id") or "") == selected],
+            key=lambda row: -int(row.get("contract_version") or 0),
+        )
         rows = [{"label": f"v{row['contract_version']} · {str(row.get('status') or '').title()}",
                  "value": str(row["contract_version"])} for row in matches]
         if selected:
-            rows.append({"label": "New draft", "value": "new"})
-        preferred = str(state.get("pending_contract_version") or "")
+            rows.append({"label": "New Draft", "value": "new"})
+        available = {row["value"] for row in rows}
+        selected_contract = (
+            preferred if preferred in available
+            else str(matches[0]["contract_version"]) if matches
+            else "new" if selected else ""
+        )
         state["_selector_refreshing"] = True
         try:
-            contract_control.refresh_rows(rows, preferred if preferred in {row["value"] for row in rows} else "")
+            contract_control.refresh_rows(rows, selected_contract)
+            state["pending_contract_version"] = (
+                None if selected_contract in ("", "new") else int(selected_contract)
+            )
         finally:
             state["_selector_refreshing"] = False
 
@@ -5897,7 +5949,7 @@ def widget_data_contract(
 
     refresh_table_options()
     if state.get("pending_table_id"):
-        table_changed({"new": state["pending_table_id"]})
+        table_changed({"new": state["pending_table_id"], "initial": True})
     table_control.observe(table_changed, names="value")
     workspace_control.observe(workspace_changed, names="value")
     contract_control.observe(contract_changed, names="value")
