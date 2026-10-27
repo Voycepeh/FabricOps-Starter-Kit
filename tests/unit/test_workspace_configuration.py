@@ -60,7 +60,11 @@ def configuration_runtime(monkeypatch, request):
         namespace = {'spark': spark, **arguments}
         # Reference execution is hosted centrally, while the passed caller ID differs.
         original_workspace = runtime.context.get('currentWorkspaceId')
+        original_workspace_name = runtime.context.get('currentWorkspaceName')
         runtime.context['currentWorkspaceId'] = workspace
+        runtime.context['currentWorkspaceName'] = {
+            'central-ws': 'Shared Configuration', 'dev-ws': 'Engineering', 'metadata-ws': 'Governance',
+        }[workspace]
         try:
             for cell in cells:
                 if cell['cell_type'] != 'code' or 'parameters' in cell['metadata'].get('tags', []):
@@ -89,6 +93,7 @@ def configuration_runtime(monkeypatch, request):
             return exc.args[0]
         finally:
             runtime.context['currentWorkspaceId'] = original_workspace
+            runtime.context['currentWorkspaceName'] = original_workspace_name
         raise AssertionError('Config notebook must exit with JSON')
 
     nb.notebook.run = Mock(side_effect=run)
@@ -191,7 +196,8 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
         assert f'FabricOps v{__version__}' not in output
         assert session.plan.runtime_context['_notebook_setup']['result'] is notebook
         location = 'cross-workspace' if config_workspace else 'same-workspace'
-        assert f'Configuration: 00_env_config ({location}; workspace: {config_workspace or "dev-ws"})' in notebook_output
+        config_name = 'Shared Configuration' if config_workspace else 'Engineering'
+        assert f'Configuration: 00_env_config ({location}; workspace: {config_name} ({config_workspace or "dev-ws"}))' in notebook_output
         assert 'Workspace: dev-ws' in notebook_output
         assert 'Readiness: ready' in notebook_output
         assert 'Configuration:' not in output
@@ -364,7 +370,10 @@ def test_runtime_context_supports_object_and_getter_shapes(configuration_runtime
 
 @pytest.mark.parametrize('config_workspace', [None, 'central-ws'])
 @pytest.mark.parametrize('caller_workspace', ['dev-ws', ' DEV-WS '])
-def test_setup_summary_is_visible_without_child_notebook_output(configuration_runtime, capsys, config_workspace, caller_workspace):
+@pytest.mark.parametrize('reported_config_name', [None, 'Shared Configuration'])
+def test_setup_summary_is_visible_without_child_notebook_output(
+    configuration_runtime, capsys, config_workspace, caller_workspace, reported_config_name,
+):
     from fabricops_kit import __version__
 
     configuration_runtime.runtime.context['currentWorkspaceId'] = caller_workspace
@@ -374,9 +383,10 @@ def test_setup_summary_is_visible_without_child_notebook_output(configuration_ru
     stores['Gold']['name'] = 'wh_Gold'
     raw['audit_timezone'] = 'Asia/Singapore'
     configuration_runtime.notebook.run.side_effect = None
-    configuration_runtime.notebook.run.return_value = json.dumps({
-        'workspace_id': 'dev-ws', 'config': raw,
-    })
+    payload = {'workspace_id': 'dev-ws', 'config': raw}
+    if reported_config_name is not None:
+        payload['config_workspace_name'] = reported_config_name
+    configuration_runtime.notebook.run.return_value = json.dumps(payload)
 
     result = setup_notebook(config_workspace_id=config_workspace, required_targets=['Gold', 'Metadata'])
 
@@ -385,7 +395,11 @@ def test_setup_summary_is_visible_without_child_notebook_output(configuration_ru
     assert 'Docs, examples, releases & support:' in output
     assert 'https://github.com/Voycepeh/FabricOps-Starter-Kit' in output
     location = 'cross-workspace' if config_workspace else 'same-workspace'
-    assert f'Configuration: 00_env_config ({location}; workspace: {config_workspace or "dev-ws"})' in output
+    displayed_workspace = (
+        f'{reported_config_name} ({config_workspace or "dev-ws"})'
+        if reported_config_name else config_workspace or 'dev-ws'
+    )
+    assert f'Configuration: 00_env_config ({location}; workspace: {displayed_workspace})' in output
     assert 'Caller workspace: Engineering (dev-ws)' in output
     assert 'Notebook: 02_pipeline_orders' in output
     assert 'Run ID: caller-run' in output

@@ -929,6 +929,7 @@ def initialize_notebook(
     close_current_pipeline_session()
     runtime_meta = _get_fabric_runtime_metadata(notebook_name=notebook_name, local_fallback_name=local_fallback_name)
     automatic = config is None
+    configuration_workspace_name = None
     if automatic:
         if not runtime_meta["runtime_available"]:
             raise RuntimeError(runtime_meta["runtime_status"])
@@ -954,6 +955,11 @@ def initialize_notebook(
             raise ValueError("00_env_config returned an invalid configuration JSON response.") from None
         if payload["workspace_id"] != workspace_id:
             raise ValueError("Configuration response does not match the caller workspace ID.")
+        configuration_workspace_name = payload.get("config_workspace_name")
+        if isinstance(configuration_workspace_name, str):
+            configuration_workspace_name = configuration_workspace_name.strip() or None
+        else:
+            configuration_workspace_name = None
         active_workspace_id = payload["workspace_id"]
         raw = payload["config"]
         config = FrameworkConfig(
@@ -1033,7 +1039,12 @@ def initialize_notebook(
         runtime_metadata=runtime_meta,
         readiness_status=readiness_status,
     )
-    _print_notebook_setup_summary(result, config=normalized, config_workspace_id=config_workspace_id if automatic else None)
+    _print_notebook_setup_summary(
+        result,
+        config=normalized,
+        config_workspace_id=config_workspace_id if automatic else None,
+        config_workspace_name=configuration_workspace_name,
+    )
     active_context = {"config": normalized, "scope_workspace_id": active_workspace_id, "runtime_metadata": runtime_meta,
                       "_notebook_setup": {"config": normalized, "scope_workspace_id": active_workspace_id, "result": result}}
     builtins.FABRIC_CONTEXT = active_context
@@ -1044,6 +1055,7 @@ def initialize_notebook(
 
 def _print_notebook_setup_summary(
     context: NotebookSetupContext, *, config: FrameworkConfig, config_workspace_id: str | None,
+    config_workspace_name: str | None = None,
 ) -> None:
     """Show resolved startup details in the calling notebook output."""
     from fabricops_kit import __version__
@@ -1054,7 +1066,8 @@ def _print_notebook_setup_summary(
     caller_workspace = str(context.runtime_metadata.get("workspace_id") or "").strip().lower()
     if config_workspace_id is not None:
         location = "same-workspace" if config_workspace_id == caller_workspace else "cross-workspace"
-        lines.append(f"Configuration: 00_env_config ({location}; workspace: {config_workspace_id})")
+        workspace = f"{config_workspace_name} ({config_workspace_id})" if config_workspace_name else config_workspace_id
+        lines.append(f"Configuration: 00_env_config ({location}; workspace: {workspace})")
     else:
         lines.append("Configuration: explicit configuration")
     lines.append(f"Caller workspace: {context.workspace_name or 'unknown'} ({caller_workspace or 'unknown'})")
