@@ -101,8 +101,8 @@ def setup_notebook(
     metadata tables.
 
     Print a startup summary in the calling notebook with the installed FabricOps
-    version, documentation link, configuration source, caller workspace, notebook
-    and run identity, resolved workspace_id, audit timezone, metadata schemas,
+    version, documentation link, configuration source, and configuration workspace (name when available, ID),
+    caller workspace, notebook and run identity, resolved workspace_id, audit timezone, metadata schemas,
     requested targets, readiness status, and any warning, skipped, or failed
     checks. This output is visible even when Fabric keeps the configuration
     notebook output in a separate execution snapshot. Explicit configuration
