@@ -15,7 +15,7 @@ from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
 def delta_authority(monkeypatch):
     central = {"row": service.empty_pipeline_authority(), "after_commit": False, "before_commit": False}
     calls = []
-    context = {"config": {}, "env": "DEV"}
+    context = {"config": {}, "scope_workspace_id": "DEV"}
     monkeypatch.setattr(service, "resolve_fabric_context", lambda context=None: ({}, "DEV", context))
     monkeypatch.setattr(service, "resolve_configured_lakehouse_table", lambda *a, **kw: ("Metadata", service.PIPELINE_AUTHORITY_TABLE, "engineering", "configured/authority"))
     monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **kw: {})
@@ -51,21 +51,21 @@ def delta_authority(monkeypatch):
 
 def test_existing_singleton_updates_atomically_and_stale_token_fails(delta_authority):
     context, central, calls = delta_authority
-    proposed = {"environments": {}}
-    service.environment_activation(proposed, "DEV")["revision"] = "release-one"
+    proposed = {"workspaces": {}}
+    service.workspace_activation(proposed, "DEV")["revision"] = "release-one"
     service.commit_pipeline_authority(proposed, expected_token="initial", context=context)
     committed = copy.deepcopy(central["row"])
-    assert committed["revisions"] == [{"environment_name": "DEV", "revision": "release-one"}]
+    assert committed["revisions"] == [{"workspace_id": "DEV", "revision": "release-one"}]
     assert calls == ["merge"]
     with pytest.raises(ValueError, match="Stale"):
-        service.commit_pipeline_authority({"environments": {}}, expected_token="initial", context=context)
+        service.commit_pipeline_authority({"workspaces": {}}, expected_token="initial", context=context)
     assert central["row"] == committed
 
 
 def test_failure_exposes_no_partial_snapshot_and_lost_acknowledgement_is_confirmed(delta_authority):
     context, central, _calls = delta_authority
-    proposed = {"environments": {}}
-    service.environment_activation(proposed, "DEV")["revision"] = "release-one"
+    proposed = {"workspaces": {}}
+    service.workspace_activation(proposed, "DEV")["revision"] = "release-one"
     original = copy.deepcopy(central["row"])
     central["before_commit"] = True
     with pytest.raises(OSError): service.commit_pipeline_authority(proposed, expected_token="initial", context=context)

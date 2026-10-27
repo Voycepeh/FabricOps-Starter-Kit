@@ -69,7 +69,7 @@ dict
 
 ### Return interpretation
 
-The returned state remains pinned to the draft created or reopened for the requested table_id and active environment; saves delegate to contract-authoring services.
+The returned state remains pinned to the draft created or reopened for the requested table_id and active workspace; saves delegate to contract-authoring services.
 
 ## Raises / Errors
 
@@ -149,7 +149,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:647`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L647-L5982">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L647-L5926">View on GitHub</a>
 </div>
 
 

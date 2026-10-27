@@ -48,17 +48,17 @@ def _canonical_metadata_reader(reader):
 
 def test_fabric_store_preserves_physical_name_and_logical_key():
     """Physical names are optional; configured aliases retain exact lookup semantics."""
-    configured = FabricStore(env="poc", workspace_id="workspace", item_id="item", kind="warehouse", name=" wh_Example ")
+    configured = FabricStore( workspace_id="workspace", item_id="item", kind="warehouse", name=" wh_Example ")
     resolved = get_store(PathConfig(paths={"poc": {"Product": configured}}), "poc", "Product")
     assert resolved.key == "Product"
     assert configured.name == resolved.name == "wh_Example"
-    assert FabricStore("poc", "workspace", "item", "warehouse").name is None
+    assert FabricStore("workspace", "item", "warehouse").name is None
 
 
 
 def test_get_store_requires_exact_canonical_metadata_case():
     """Metadata resolves only when callers use the configured exact-case key."""
-    configured = FabricStore(env="dev", workspace_id="workspace", item_id="item", kind="lakehouse")
+    configured = FabricStore( workspace_id="workspace", item_id="item", kind="lakehouse")
     config = PathConfig(
         paths={
             "dev": {
@@ -73,7 +73,7 @@ def test_get_store_requires_exact_canonical_metadata_case():
     with pytest.raises(
         ValueError,
         match=(
-            r"Store 'Metadata' was not found under environment 'dev'\. "
+            r"Store 'Metadata' was not found under workspace_id 'dev'\. "
             r"Available stores: Bronze, Gold, metadata, Silver\."
         ),
     ):
@@ -92,26 +92,26 @@ def test_env_config_uses_physical_item_keys_without_duplicate_names():
 
     for key in ("Bronze", "Silver", "Gold"):
         assert f'"{key}": {{' in source
-    assert 'ENV_PATHS[env][alias] = FabricStore(' in source
-    assert 'ENV_PATHS[env]["Metadata"] = FabricStore(' in source
+    assert 'WORKSPACE_PATHS[registered_id][alias] = FabricStore(' in source
+    assert 'WORKSPACE_PATHS[registered_id] = {"Metadata": METADATA_STORE}' in source
     for removed_alias in ("source", "unified", "product"):
         assert f'"{removed_alias}": FabricStore(' not in source
     assert 'name=_required_config_value(item.get("name")' in source
 
 
 def test_framework_config_allows_shared_metadata_store_across_environments():
-    """Environment-specific store objects may route to one shared Metadata Lakehouse."""
+    """Workspace-specific store objects may route to one shared Metadata Lakehouse."""
     metadata_dev = FabricStore(
-        env="dev", workspace_id="metadata-workspace", item_id="metadata-item", kind="lakehouse"
+         workspace_id="metadata-workspace", item_id="metadata-item", kind="lakehouse"
     )
     metadata_prod = FabricStore(
-        env="prod", workspace_id="metadata-workspace", item_id="metadata-item", kind="lakehouse"
+         workspace_id="metadata-workspace", item_id="metadata-item", kind="lakehouse"
     )
     config = FrameworkConfig(
         path_config=PathConfig(
             paths={
-                "dev": {"Bronze": store(env="dev"), "Metadata": metadata_dev},
-                "prod": {"Bronze": store(env="prod"), "Metadata": metadata_prod},
+                "dev": {"Bronze": store(active_workspace_id="dev"), "Metadata": metadata_dev},
+                "prod": {"Bronze": store(active_workspace_id="prod"), "Metadata": metadata_prod},
             }
         )
     )
@@ -120,18 +120,18 @@ def test_framework_config_allows_shared_metadata_store_across_environments():
 
 
 def test_framework_config_rejects_different_metadata_stores_across_environments():
-    """Governance requires one physical Metadata Lakehouse across the environment registry."""
+    """Governance requires one physical Metadata Lakehouse across the workspace_id registry."""
     config = FrameworkConfig(
         path_config=PathConfig(
             paths={
                 "dev": {
                     "Metadata": FabricStore(
-                        env="dev", workspace_id="metadata-workspace", item_id="metadata-dev", kind="lakehouse"
+                         workspace_id="metadata-workspace", item_id="metadata-dev", kind="lakehouse"
                     )
                 },
                 "prod": {
                     "Metadata": FabricStore(
-                        env="prod", workspace_id="metadata-workspace", item_id="metadata-prod", kind="lakehouse"
+                         workspace_id="metadata-workspace", item_id="metadata-prod", kind="lakehouse"
                     )
                 },
             }
@@ -140,7 +140,7 @@ def test_framework_config_rejects_different_metadata_stores_across_environments(
 
     with pytest.raises(
         ValueError,
-        match="All configured environments must use the same physical FabricOps Metadata Lakehouse",
+        match="All configured workspaces must use the same physical FabricOps Metadata Lakehouse",
     ):
         validate_framework_config(config)
 
@@ -148,13 +148,13 @@ def test_framework_config_rejects_different_metadata_stores_across_environments(
 def test_config_setup_public_api_signatures_match_frozen_contract():
     """Verify config setup public API signatures match the frozen contract."""
     assert str(inspect.signature(setup_notebook)) == (
-        "(config: 'FrameworkConfig | dict[str, Any] | None' = None, env: 'str' = 'Sandbox', "
+        "(config: 'FrameworkConfig | dict[str, Any] | None' = None, workspace_id: 'str | None' = None, "
         "required_targets: 'list[str] | None' = None, notebook_name: 'str | None' = None, "
         "run_id_prefix: 'str' = 'run', local_fallback_name: 'str | None' = None, *, "
         "config_workspace_id: 'str | None' = None) -> 'NotebookSetupContext'"
     )
     assert str(inspect.signature(setup_metadata_tables)) == (
-        "(*, config: 'FrameworkConfig | dict[str, Any]', env: 'str', "
+        "(*, config: 'FrameworkConfig | dict[str, Any]', workspace_id: 'str', "
         "require_active_steward: 'bool' = False, verbose: 'bool' = True, "
         "raise_on_failure: 'bool' = False) -> 'dict[str, Any]'"
     )
@@ -163,27 +163,27 @@ def test_config_setup_public_api_signatures_match_frozen_contract():
 
 
 def test_default_fabric_context_requires_env(monkeypatch):
-    """Verify active contexts expose env without legacy aliases."""
+    """Verify active contexts expose active_workspace_id without legacy aliases."""
     import builtins
 
     config = object()
-    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": config, "env": "dev"}, raising=False)
+    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": config, "scope_workspace_id": "dev"}, raising=False)
 
     context = get_default_fabric_context()
 
-    assert context["env"] == "dev"
+    assert context["scope_workspace_id"] == "dev"
     assert context["config"] is config
 
 
 def test_resolve_fabric_context_uses_env_only():
-    """Verify context resolution uses env as the single environment key."""
+    """Verify context resolution uses active_workspace_id as the single workspace_id key."""
     config = object()
 
-    resolved_config, env, context = resolve_fabric_context(context={"config": config, "env": "dev"})
+    resolved_config, active_workspace_id, context = resolve_fabric_context(context={"config": config, "scope_workspace_id": "dev"})
 
     assert resolved_config is config
-    assert env == "dev"
-    assert context["env"] == "dev"
+    assert active_workspace_id == "dev"
+    assert context["scope_workspace_id"] == "dev"
 
 
 def test_runtime_context_resolver_normalizes_fabric_keys_and_precedence(fake_notebookutils):
@@ -338,15 +338,15 @@ def test_removed_config_classes_are_not_exported_from_root():
 
 
 def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(fake_notebookutils):
-    """Verify setup notebook resolves environment paths and reports invalid targets."""
+    """Verify setup notebook resolves workspace_id paths and reports invalid targets."""
     config = framework_config()
 
     required_targets = ["Bronze", "Silver", "Gold", "Metadata"]
     context = setup_notebook(
-        config=config, env="dev", required_targets=required_targets, notebook_name="99_explore_orders"
+        config=config, workspace_id="dev", required_targets=required_targets, notebook_name="99_explore_orders"
     )
 
-    assert context.environment == "dev"
+    assert context.workspace_id == "dev"
     assert set(context.paths) == set(required_targets)
     assert context.paths["Bronze"].key == "Bronze"
     assert context.paths["Silver"].key == "Silver"
@@ -354,15 +354,15 @@ def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(f
     assert context.paths["Metadata"].key == "Metadata"
     assert context.readiness_status in {"ready", "not_ready"}
     with pytest.raises(ValueError, match="Store 'missing' was not found"):
-        setup_notebook(config=config, env="dev", required_targets=["missing"])
+        setup_notebook(config=config, workspace_id="dev", required_targets=["missing"])
 
 
 def test_setup_notebook_names_are_informational(fake_notebookutils):
     """Accept arbitrary notebook names while retaining runtime validation."""
     config = framework_config()
 
-    governance = setup_notebook(config=config, env="dev", required_targets=["Bronze"], notebook_name="01_governance_orders")
-    legacy = setup_notebook(config=config, env="dev", required_targets=["Bronze"], notebook_name="03_governance_orders")
+    governance = setup_notebook(config=config, workspace_id="dev", required_targets=["Bronze"], notebook_name="01_governance_orders")
+    legacy = setup_notebook(config=config, workspace_id="dev", required_targets=["Bronze"], notebook_name="03_governance_orders")
 
     assert all(check.name != "notebook_naming" for context in (governance, legacy) for check in context.validation_results)
     assert governance.readiness_status == legacy.readiness_status
@@ -440,7 +440,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
         assert schema == ("governance" if table_name in {
             "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT",
         } else "engineering")
-        assert context["env"] == "dev"
+        assert context["scope_workspace_id"] == "dev"
         if table_name not in spark.tables:
             raise RuntimeError(f"Table {table_name} does not exist")
         return Table(spark.tables[table_name])
@@ -460,7 +460,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     spark = Spark()
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
     monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
-    result = call_with_spark(spark, setup_metadata_tables,  config=framework_config(), env="dev", require_active_steward=True)
+    result = call_with_spark(spark, setup_metadata_tables,  config=framework_config(), workspace_id="dev", require_active_steward=True)
 
     assert result["status"] == "ready"
     assert result["tables"] == CANONICAL_METADATA_TABLES
@@ -477,14 +477,14 @@ def test_setup_metadata_tables_requires_schema_enabled_metadata_lakehouse():
     cfg = framework_config()
     metadata_store = cfg.path_config.paths["dev"]["Metadata"]
     cfg.path_config.paths["dev"]["Metadata"] = FabricStore(
-        env=metadata_store.env,
+
         workspace_id=metadata_store.workspace_id,
         item_id=metadata_store.item_id,
         kind=metadata_store.kind,
     )
 
     with pytest.raises(ValueError, match="FabricOps Metadata Lakehouse must be schema-enabled"):
-        call_with_spark(object(), setup_metadata_tables,  config=cfg, env="dev")
+        call_with_spark(object(), setup_metadata_tables,  config=cfg, workspace_id="dev")
 
 
 def test_setup_metadata_tables_ready_without_active_steward_when_not_required(monkeypatch):
@@ -519,7 +519,7 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required(mo
         setup_module, "read_lakehouse_table", _canonical_metadata_reader(lambda table_name, **_kwargs: Table(spark.schemas[table_name]))
     )
 
-    result = call_with_spark(spark, setup_metadata_tables,  config=framework_config(), env="dev")
+    result = call_with_spark(spark, setup_metadata_tables,  config=framework_config(), workspace_id="dev")
 
     assert result["status"] == "ready"
     assert result["data_agreement"]["status"] == "not_ready"
@@ -564,7 +564,7 @@ def test_setup_metadata_tables_reports_configured_ownership_schemas(monkeypatch)
     cfg = framework_config()
     object.__setattr__(cfg, "governance_metadata_schema", "governed")
     object.__setattr__(cfg, "engineering_metadata_schema", "operations")
-    result = call_with_spark(spark, setup_metadata_tables,  config=cfg, env="dev")
+    result = call_with_spark(spark, setup_metadata_tables,  config=cfg, workspace_id="dev")
 
     assert result["metadata_schemas"] == {"governance": "governed", "engineering": "operations"}
     assert result["fully_qualified_tables"][0] == "governed.METADATA_DATA_STEWARD"
@@ -578,7 +578,7 @@ def test_setup_metadata_tables_ignores_store_default_schema_for_owned_tables(mon
     cfg = framework_config()
     metadata_store = cfg.path_config.paths["dev"]["Metadata"]
     cfg.path_config.paths["dev"]["Metadata"] = FabricStore(
-        env=metadata_store.env,
+
         workspace_id=metadata_store.workspace_id,
         item_id=metadata_store.item_id,
         kind=metadata_store.kind,
@@ -616,7 +616,7 @@ def test_setup_metadata_tables_ignores_store_default_schema_for_owned_tables(mon
         _canonical_metadata_reader(lambda table_name, *, schema=None, **_kwargs: Table(spark.schemas[table_name])),
     )
 
-    result = call_with_spark(spark, setup_metadata_tables,  config=cfg, env="dev")
+    result = call_with_spark(spark, setup_metadata_tables,  config=cfg, workspace_id="dev")
 
     assert result["metadata_schemas"] == {"governance": "governance", "engineering": "engineering"}
     assert all(not name.startswith("dbo.") for name in result["fully_qualified_tables"])
@@ -656,7 +656,7 @@ def test_setup_metadata_tables_does_not_rewrite_compliant_tables(monkeypatch):
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
     monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
 
-    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), env="dev")
+    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), workspace_id="dev")
 
     assert result["status"] == "ready"
     assert result["created_tables"] == []
@@ -712,7 +712,7 @@ def test_setup_metadata_tables_accepts_existing_tables_with_nullable_physical_au
         lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be rewritten"),
     )
 
-    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), env="dev", verbose=False)
+    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), workspace_id="dev", verbose=False)
     assert result["status"] == "ready"
     assert result["failed_tables"] == []
     assert "METADATA_DATA_PROFILED" in result["validated_tables"]
@@ -773,7 +773,7 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type
         lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be rewritten"),
     )
 
-    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), env="dev", verbose=False)
+    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), workspace_id="dev", verbose=False)
     assert result["failed_tables"] == ["METADATA_DATA_PROFILED"]
     assert (
         "row_count type expected long but found string" in result["table_results"]["METADATA_DATA_PROFILED"]["message"]
@@ -876,7 +876,7 @@ def test_setup_evolves_existing_tables_with_new_readable_identity_columns(monkey
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
     monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
-    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), env="dev", verbose=False)
+    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev", verbose=False)
     assert result["status"] == "ready"
     expected_evolved = {
         "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_DATA_PROFILED",
@@ -944,7 +944,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
     monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
 
-    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), env="dev")
+    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev")
 
     assert result["created_tables"] == list(registry)
     assert created["METADATA_DATA_ACCESS"].fieldNames() == registry["METADATA_DATA_ACCESS"].fieldNames()
@@ -964,7 +964,7 @@ def test_setup_metadata_tables_non_missing_read_error_includes_original_exceptio
         raise ValueError("Delta log is corrupt")
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
-    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), env="dev", verbose=False)
+    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev", verbose=False)
     assert result["status"] == "failed"
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
 
@@ -1001,7 +1001,7 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
         "metadata_level",
         "table_id",
         "column_id",
-        "environment_name",
+        "workspace_id",
         "store_type",
         "layer",
         "schema_name",
@@ -1030,7 +1030,7 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
     assert (profiling_fields - {"data_type"}).isdisjoint(catalogue_names)
     assert {"metadata_level", "table_id", "column_id", "column_name", "first_profiled_at", "last_profiled_at", "is_active"}.issubset(catalogue_names)
     assert profiling_fields.issubset(profiled_names)
-    assert {"profile_id", "profile_snapshot_id", "table_id", "column_id", "environment_name", "data_type"}.issubset(profiled_names)
+    assert {"profile_id", "profile_snapshot_id", "table_id", "column_id", "workspace_id", "data_type"}.issubset(profiled_names)
     assert len(catalogue_names) == len(set(catalogue_names))
     assert len(profiled_names) == len(set(profiled_names))
     audit_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
@@ -1058,7 +1058,7 @@ def test_framework_config_and_get_current_audit_timestamp_use_configured_timezon
 
 
 def test_env_config_template_exposes_audit_timezone_setting():
-    """Verify env config template exposes audit timezone setting."""
+    """Verify active_workspace_id config template exposes audit timezone setting."""
     notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
     source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
 
@@ -1383,7 +1383,7 @@ def test_lineage_schema_has_only_lineage_fields_and_canonical_audit_context():
         "lineage_id",
         "table_id",
         "table_name",
-        "environment_name",
+        "workspace_id",
         "pipeline_role",
         *audit_names,
     ]
@@ -1392,7 +1392,6 @@ def test_lineage_schema_has_only_lineage_fields_and_canonical_audit_context():
         "activity_id",
         "notebook_id",
         "notebook_name",
-        "workspace_id",
         "workspace_name",
         "committed_by",
         "metadata_lakehouse_name",
@@ -1417,7 +1416,7 @@ def test_metadata_audit_schema_nullability_contract():
         "user_principal",
         "table_id",
         "table_name",
-        "environment_name",
+        "workspace_id",
         "access_level",
         "access_value",
         "access_state",
@@ -1479,7 +1478,7 @@ def test_setup_metadata_tables_existing_tables_prints_compact_ready_summary(monk
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
 
-    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), env="dev")
+    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), workspace_id="dev")
     output = capsys.readouterr().out
     total = len(registry)
 
@@ -1538,7 +1537,7 @@ def test_setup_metadata_tables_missing_tables_prints_numbered_created_summary(mo
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
     monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
 
-    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), env="dev")
+    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev")
     output = capsys.readouterr().out
 
     assert result["created_tables"] == names[:2]
@@ -1598,7 +1597,7 @@ def test_setup_metadata_tables_adds_missing_columns_without_overwriting(monkeypa
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
     monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
 
-    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), env="dev")
+    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev")
     output = capsys.readouterr().out
 
     assert writes == [target]
@@ -1642,7 +1641,7 @@ def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeyp
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
 
-    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), env="dev")
+    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), workspace_id="dev")
     output = capsys.readouterr().out
 
     assert result["status"] == "partial_failure"
@@ -1674,7 +1673,7 @@ def test_setup_metadata_tables_raise_on_failure_waits_until_all_tables_attempted
 
     with pytest.raises(RuntimeError, match=f"FabricOps metadata setup failed for {len(names)} table"):
         call_with_spark(object(), setup_metadata_tables,
-             config=framework_config(), env="dev", verbose=False, raise_on_failure=True
+             config=framework_config(), workspace_id="dev", verbose=False, raise_on_failure=True
         )
 
     assert attempted[: len(names)] == names
@@ -1706,7 +1705,7 @@ def test_setup_metadata_tables_verbose_false_is_silent(monkeypatch, capsys):
         _canonical_metadata_reader(lambda table_name, **_kwargs: Table(registry[table_name].fieldNames())),
     )
 
-    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), env="dev", verbose=False)
+    result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), workspace_id="dev", verbose=False)
 
     assert capsys.readouterr().out == ""
     assert result["status"] == "ready"

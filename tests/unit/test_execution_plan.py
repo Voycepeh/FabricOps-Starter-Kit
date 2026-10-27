@@ -1,4 +1,4 @@
-"""Environment-neutral explicit plan validation and frozen contract authority."""
+"""Workspace-neutral explicit plan validation and frozen contract authority."""
 
 import importlib
 import json
@@ -18,9 +18,9 @@ def plan_runtime(monkeypatch):
     monkeypatch.setattr(shared, "persist_pipeline_run", lambda *a, **kw: None)
     monkeypatch.setattr(shared, "pipeline_physical_bindings", lambda identities, **kw: {key: {"workspace_id": "test", "item_id": "lakehouse", "kind": "lakehouse", "schema": item.get("schema"), "table_name": item["table_name"]} for key, item in identities.items()})
     rows = []
-    runtime = {"config": object(), "env": "canary-east", "notebook_id": "notebook"}
+    runtime = {"config": object(), "scope_workspace_id": "canary-east", "notebook_id": "notebook"}
     def resolve(context=None):
-        return runtime["config"], runtime["env"], dict(context or runtime)
+        return runtime["config"], runtime["scope_workspace_id"], dict(context or runtime)
     monkeypatch.setattr(module, "resolve_fabric_context", resolve)
     monkeypatch.setattr(shared, "resolve_fabric_context", resolve)
     monkeypatch.setattr(module, "resolve_physical_table_identity", lambda c, e, **kw: {
@@ -35,19 +35,19 @@ def plan_runtime(monkeypatch):
             context=runtime, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
     def row(table_id="source", version=1, active=False):
         result = frozen(table_id, version=version, active=active)
-        result["environment_name"] = runtime["env"]
+        result["workspace_id"] = runtime["scope_workspace_id"]
         return result
     return rows, runtime, make, row
 
 
-@pytest.mark.parametrize("environment", ["dev", "test", "uat", "prod", "production", "canary-east", "sandbox42"])
+@pytest.mark.parametrize("workspace_id", ["dev", "test", "uat", "prod", "production", "canary-east", "sandbox42"])
 @pytest.mark.parametrize("mode", ["testing"])
-def test_arbitrary_environment_has_identical_explicit_bootstrap_policy(plan_runtime, environment, mode):
-    """Environment identity routes execution and never decides persistence or contracts."""
+def test_arbitrary_environment_has_identical_explicit_bootstrap_policy(plan_runtime, workspace_id, mode):
+    """Workspace identity routes execution and never decides persistence or contracts."""
     _, runtime, make, _ = plan_runtime
-    runtime["env"] = environment
+    runtime["scope_workspace_id"] = workspace_id
     plan = make(mode)
-    assert plan.environment == environment
+    assert plan.workspace_id == workspace_id
     assert plan.permits_persistence is False
     assert json.loads(plan.selections_json)["target"] == {"no_contract": True}
 
@@ -95,12 +95,12 @@ def test_corrupt_and_ambiguous_contracts_are_errors(plan_runtime, corruption):
 
 
 def test_global_contracts_are_available_across_environments(plan_runtime):
-    """A frozen contract is shared globally rather than copied per environment."""
+    """A frozen contract is shared globally rather than copied per workspace_id."""
     rows, runtime, make, row = plan_runtime
-    rows.extend([{**row(), "environment_name": "DEV"}, {**row(table_id="target"), "environment_name": "DEV"}])
-    runtime["env"] = "PROD"
+    rows.extend([{**row(), "workspace_id": "DEV"}, {**row(table_id="target"), "workspace_id": "DEV"}])
+    runtime["scope_workspace_id"] = "PROD"
     plan = make(selections={key: {"contract_id": "contract-" + key, "contract_version": 1} for key in ("source", "target")})
-    assert json.loads(plan.contracts_json)["source"]["environment_name"] == "DEV"
+    assert json.loads(plan.contracts_json)["source"]["workspace_id"] == "DEV"
 
 
 def test_missing_and_unrelated_choices_rejected(plan_runtime):

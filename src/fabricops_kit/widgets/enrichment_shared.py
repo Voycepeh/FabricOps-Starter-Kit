@@ -1,4 +1,4 @@
-"""Focused helpers for environment-aware metadata enrichment."""
+"""Focused helpers for workspace-aware metadata enrichment."""
 
 from __future__ import annotations
 
@@ -771,11 +771,11 @@ def _rows(value: Any) -> list[dict[str, Any]]:
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in (source or [])]
 
 
-def catalogue_table_options(catalogue_rows: Any, *, environment_name: str) -> list[dict[str, str]]:
-    """Return current table-level Catalogue options for one environment."""
+def catalogue_table_options(catalogue_rows: Any, *, workspace_id: str) -> list[dict[str, str]]:
+    """Return current table-level Catalogue options for one workspace_id."""
     latest: dict[str, dict[str, Any]] = {}
     for row in _rows(catalogue_rows):
-        if str(row.get("environment_name") or "") != str(environment_name):
+        if str(row.get("workspace_id") or "") != str(workspace_id):
             continue
         if str(row.get("metadata_level") or "").lower() != "table":
             continue
@@ -799,11 +799,11 @@ def catalogue_table_options(catalogue_rows: Any, *, environment_name: str) -> li
     return sorted(options, key=lambda row: (row["label"].casefold(), row["table_id"]))
 
 
-def latest_enrichment_values(rows: Any, *, environment_name: str) -> dict[tuple[str, str, int, str, str], dict[str, Any]]:
+def latest_enrichment_values(rows: Any, *, workspace_id: str) -> dict[tuple[str, str, int, str, str], dict[str, Any]]:
     """Return latest enrichment by level, contract version, column, and type."""
     latest: dict[tuple[str, str, int, str, str], dict[str, Any]] = {}
     for row in _rows(rows):
-        if str(row.get("environment_name") or "") != str(environment_name):
+        if str(row.get("workspace_id") or "") != str(workspace_id):
             continue
         level = str(row.get("enrichment_level") or "").lower()
         contract_id = str(row.get("contract_id") or "")
@@ -847,23 +847,23 @@ def catalogue_table_browser_state(
     catalogue_rows: Any,
     table_id: str,
     *,
-    environment_name: str,
+    workspace_id: str,
     contract_id: str,
     contract_version: int,
     current_values: dict[tuple[str, str, int, str, str], dict[str, Any]],
 ) -> dict[str, Any]:
-    """Return one environment-specific Catalogue table and its column history."""
+    """Return one workspace-specific Catalogue table and its column history."""
     rows = [
         row
         for row in _rows(catalogue_rows)
-        if str(row.get("environment_name") or "") == str(environment_name)
+        if str(row.get("workspace_id") or "") == str(workspace_id)
         and str(row.get("table_id") or "") == str(table_id)
     ]
     if not rows:
-        raise ValueError(f"No Catalogue rows found for table_id={table_id!r} in environment {environment_name!r}.")
+        raise ValueError(f"No Catalogue rows found for table_id={table_id!r} in workspace_id {workspace_id!r}.")
     table_rows = [row for row in rows if str(row.get("metadata_level") or "").lower() == "table"]
     if not table_rows:
-        raise ValueError(f"Catalogue table identity {table_id!r} has no table-level row in environment {environment_name!r}.")
+        raise ValueError(f"Catalogue table identity {table_id!r} has no table-level row in workspace_id {workspace_id!r}.")
     table_row = max(
         table_rows,
         key=lambda row: (metadata_timestamp_sort_key(row.get("last_profiled_at")), str(row.get("_activity_id") or "")),
@@ -903,7 +903,7 @@ def catalogue_table_browser_state(
         "table_id": table_id,
         "contract_id": contract_id,
         "contract_version": contract_version,
-        "environment_name": environment_name,
+        "workspace_id": workspace_id,
         "table_name": str(table_row.get("table_name") or table_id),
         "table_row": dict(table_row),
         "current_columns": [row for row in columns if row["status"] == "current"],

@@ -50,13 +50,13 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--engineering"><td><code>guardrail_result_id</code></td><td><code>string</code></td><td>Stable identifier for the aggregate Guardrail result row.</td></tr>
 <tr class="metadata-column--engineering"><td><code>guardrail_rule_id</code></td><td><code>string</code></td><td>Stable authored Guardrail identifier, or the synthetic completion-record identifier when rule_type is contract_validation.</td></tr>
 <tr class="metadata-column--engineering"><td><code>guardrail_version</code></td><td><code>integer</code></td><td>Metadata Guardrail Results field <code>guardrail_version</code>.</td></tr>
-<tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across environment, dataset, and table context.</td></tr>
+<tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across workspace, dataset, and table context.</td></tr>
 <tr class="metadata-column--engineering"><td><code>table_name</code></td><td><code>string</code></td><td>Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
 <tr class="metadata-column--engineering"><td><code>contract_id</code></td><td><code>string</code></td><td>Stable identifier for the contract row.</td></tr>
 <tr class="metadata-column--engineering"><td><code>contract_version</code></td><td><code>integer</code></td><td>Version recorded for the contract row.</td></tr>
 <tr class="metadata-column--engineering"><td><code>execution_type</code></td><td><code>string</code></td><td>Whether the runtime record came from Testing or Live contract execution. Testing results remain in memory; Live appends Guardrail Results. Historical validate records remain readable.</td></tr>
 <tr class="metadata-column--engineering"><td><code>run_id</code></td><td><code>string</code></td><td>Identifier stored for <code>run_id</code>.</td></tr>
-<tr class="metadata-column--engineering"><td><code>environment_name</code></td><td><code>string</code></td><td>Environment name recorded for the metadata row.</td></tr>
+<tr class="metadata-column--engineering"><td><code>workspace_id</code></td><td><code>string</code></td><td>Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.</td></tr>
 <tr class="metadata-column--engineering"><td><code>status</code></td><td><code>string</code></td><td>Pipeline run status recorded with the run summary.</td></tr>
 <tr class="metadata-column--engineering"><td><code>can_continue</code></td><td><code>boolean</code></td><td>Metadata Guardrail Results field <code>can_continue</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>severity</code></td><td><code>string</code></td><td>Severity recorded for a Guardrail result.</td></tr>

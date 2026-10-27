@@ -39,7 +39,7 @@ def _catalogue(spark_session):
             {
                 "metadata_level": "table",
                 "table_id": build_table_id("warehouse", "warehouse", "sales", "orders"),
-                "environment_name": "dev",
+                "workspace_id": "dev",
                 "store_type": "Warehouse",
                 "layer": "Gold",
                 "schema_name": "sales",
@@ -49,7 +49,7 @@ def _catalogue(spark_session):
             {
                 "metadata_level": "table",
                 "table_id": build_table_id("warehouse", "warehouse", "sales", "customers"),
-                "environment_name": "dev",
+                "workspace_id": "dev",
                 "store_type": "Warehouse",
                 "layer": "Gold",
                 "schema_name": "sales",
@@ -59,7 +59,7 @@ def _catalogue(spark_session):
             {
                 "metadata_level": "table",
                 "table_id": build_table_id("warehouse", "warehouse", "archive", "orders_archive"),
-                "environment_name": "dev",
+                "workspace_id": "dev",
                 "store_type": "Warehouse",
                 "layer": "Gold",
                 "schema_name": "archive",
@@ -69,7 +69,7 @@ def _catalogue(spark_session):
             {
                 "metadata_level": "table",
                 "table_id": build_table_id("lakehouse", "curated_lakehouse", "sales", "orders"),
-                "environment_name": "dev",
+                "workspace_id": "dev",
                 "store_type": "Lakehouse",
                 "layer": "Silver",
                 "schema_name": "sales",
@@ -190,7 +190,7 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",
-        lambda **kwargs: ({"config": "test"}, "dev", {"config": {"config": "test"}, "env": "dev"}),
+        lambda **kwargs: ({"config": "test"}, "dev", {"config": {"config": "test"}, "scope_workspace_id": "dev"}),
     )
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: dict(AUDIT_FIELDS))
     monkeypatch.setattr(module, "target_store_kinds", lambda *args: {"warehouse": "warehouse"})
@@ -199,7 +199,7 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
         _catalogue(spark_session),
         targets="warehouse",
         access_snapshot_id="snapshot-1",
-        context={"env": "dev"},
+        context={"scope_workspace_id": "dev"},
         persist=False,
     )
 
@@ -225,7 +225,7 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
     assert principal_types["fabricops-application"] == "EXTERNAL_LOGIN"
 
     assert {row["access_snapshot_id"] for row in access_rows} == {"snapshot-1"}
-    assert {row["environment_name"] for row in access_rows} == {"dev"}
+    assert {row["workspace_id"] for row in access_rows} == {"dev"}
     assert all(row["access_id"] for row in access_rows)
     assert all(row["_committed_by"] == "tester@example.com" for row in access_rows)
 
@@ -261,7 +261,7 @@ def test_scan_sql_access_scans_each_unique_target(monkeypatch, spark_session):
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",
-        lambda **kwargs: ({}, "dev", {"config": {}, "env": "dev"}),
+        lambda **kwargs: ({}, "dev", {"config": {}, "scope_workspace_id": "dev"}),
     )
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: dict(AUDIT_FIELDS))
     monkeypatch.setattr(
@@ -283,7 +283,7 @@ def test_scan_sql_access_scans_each_unique_target(monkeypatch, spark_session):
 
 
 def test_scan_sql_access_uses_environment_override_for_targets_and_catalogue(monkeypatch):
-    """Use an explicit environment consistently when active and requested environments differ."""
+    """Use an explicit workspace_id consistently when active and requested workspaces differ."""
     module = importlib.import_module("fabricops_kit.access_scanner.scan_sql_access")
     config = object()
     catalogue_df = object()
@@ -294,13 +294,13 @@ def test_scan_sql_access_uses_environment_override_for_targets_and_catalogue(mon
         "resolve_fabric_context",
         lambda **kwargs: (
             config,
-            "active-env",
-            {"config": config, "env": "active-env", "user_name": "runtime-user"},
+            "active-active_workspace_id",
+            {"config": config, "scope_workspace_id": "active-active_workspace_id", "user_name": "runtime-user"},
         ),
     )
 
-    def faketarget_store_kinds(resolved_config, environment, targets):
-        calls["target_resolution"] = (resolved_config, environment, targets)
+    def faketarget_store_kinds(resolved_config, workspace_id, targets):
+        calls["target_resolution"] = (resolved_config, workspace_id, targets)
         return {"warehouse": "warehouse"}
 
     monkeypatch.setattr(module, "target_store_kinds", faketarget_store_kinds)
@@ -311,8 +311,8 @@ def test_scan_sql_access_uses_environment_override_for_targets_and_catalogue(mon
 
     monkeypatch.setattr(module, "_scan_targets", fake_scan_targets)
 
-    def fakecatalogue_tables(frame, *, environment_name, target_store_kinds):
-        calls["catalogue"] = (frame, environment_name, target_store_kinds)
+    def fakecatalogue_tables(frame, *, workspace_id, target_store_kinds):
+        calls["catalogue"] = (frame, workspace_id, target_store_kinds)
         return "catalogue_tables"
 
     monkeypatch.setattr(module, "catalogue_tables", fakecatalogue_tables)
@@ -334,34 +334,34 @@ def test_scan_sql_access_uses_environment_override_for_targets_and_catalogue(mon
     result = module.scan_sql_access(
         catalogue_df,
         targets="warehouse",
-        environment_name="requested-env",
+        workspace_id="requested-active_workspace_id",
         access_snapshot_id="snapshot",
         persist=False,
     )
 
-    assert calls["target_resolution"] == (config, "requested-env", ["warehouse"])
+    assert calls["target_resolution"] == (config, "requested-active_workspace_id", ["warehouse"])
     assert calls["catalogue"] == (
         catalogue_df,
-        "requested-env",
+        "requested-active_workspace_id",
         {"warehouse": "warehouse"},
     )
     expected_context = {
         "config": config,
-        "env": "requested-env",
+        "scope_workspace_id": "requested-active_workspace_id",
         "user_name": "runtime-user",
     }
     assert calls["scan"]["context"] == expected_context
     assert calls["audit"] == {
         "config": config,
-        "env": "requested-env",
+        "active_workspace_id": "requested-active_workspace_id",
         "runtime_context": expected_context,
     }
-    assert calls["access"]["environment_name"] == "requested-env"
+    assert calls["access"]["workspace_id"] == "requested-active_workspace_id"
     assert result == {"access": "access_df", "unmatched": "unmatched_df"}
 
 
 def test_scan_sql_access_uses_active_environment_when_override_is_omitted(monkeypatch):
-    """Use the active environment throughout when no override is supplied."""
+    """Use the active workspace_id throughout when no override is supplied."""
     module = importlib.import_module("fabricops_kit.access_scanner.scan_sql_access")
     config = object()
     calls = {}
@@ -372,14 +372,14 @@ def test_scan_sql_access_uses_active_environment_when_override_is_omitted(monkey
         lambda **kwargs: (
             config,
             "dev",
-            {"config": config, "env": "dev", "user_name": "runtime-user"},
+            {"config": config, "scope_workspace_id": "dev", "user_name": "runtime-user"},
         ),
     )
     monkeypatch.setattr(
         module,
         "target_store_kinds",
-        lambda resolved_config, environment, targets: (
-            calls.update(target_resolution=(resolved_config, environment, targets)) or {"warehouse": "warehouse"}
+        lambda resolved_config, workspace_id, targets: (
+            calls.update(target_resolution=(resolved_config, workspace_id, targets)) or {"warehouse": "warehouse"}
         ),
     )
     monkeypatch.setattr(
@@ -401,31 +401,31 @@ def test_scan_sql_access_uses_active_environment_when_override_is_omitted(monkey
 
     expected_context = {
         "config": config,
-        "env": "dev",
+        "scope_workspace_id": "dev",
         "user_name": "runtime-user",
     }
     assert calls["target_resolution"] == (config, "dev", ["warehouse"])
     assert calls["scan"]["context"] == expected_context
     assert calls["audit"] == {
         "config": config,
-        "env": "dev",
+        "active_workspace_id": "dev",
         "runtime_context": expected_context,
     }
 
 
 def test_scan_sql_access_rejects_unknown_requested_environment(monkeypatch):
-    """Fail clearly instead of reverting to the active environment."""
+    """Fail clearly instead of reverting to the active workspace_id."""
     module = importlib.import_module("fabricops_kit.access_scanner.scan_sql_access")
     config = SimpleNamespace(paths={"dev": {}})
 
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",
-        lambda **kwargs: (config, "dev", {"config": config, "env": "dev"}),
+        lambda **kwargs: (config, "dev", {"config": config, "scope_workspace_id": "dev"}),
     )
 
-    with pytest.raises(ValueError, match="Environment 'prod' was not found"):
-        module.scan_sql_access(object(), environment_name="prod")
+    with pytest.raises(ValueError, match="Workspace 'prod' was not found"):
+        module.scan_sql_access(object(), workspace_id="prod")
 
 
 def test_catalogue_includes_registered_lakehouse_sql_endpoint_tables(spark_session):
@@ -434,7 +434,7 @@ def test_catalogue_includes_registered_lakehouse_sql_endpoint_tables(spark_sessi
 
     tables = module.catalogue_tables(
         _catalogue(spark_session),
-        environment_name="dev",
+        workspace_id="dev",
         target_store_kinds={"curated_lakehouse": "lakehouse"},
     )
 
@@ -449,7 +449,7 @@ def test_catalogue_relates_mixed_targets_by_canonical_physical_identity(spark_se
 
     tables = module.catalogue_tables(
         _catalogue(spark_session),
-        environment_name="dev",
+        workspace_id="dev",
         target_store_kinds={"warehouse": "warehouse", "curated_lakehouse": "lakehouse"},
     )
 
@@ -473,7 +473,7 @@ def test_sql_endpoint_reader_supports_access_scan_targets(monkeypatch, capsys, k
     store = SimpleNamespace(kind=kind)
     calls = []
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **kwargs: (object(), "dev", {}))
-    monkeypatch.setattr(module, "get_store", lambda config, env, target: store)
+    monkeypatch.setattr(module, "get_store", lambda config, active_workspace_id, target: store)
     monkeypatch.setattr(module, "validate_select_query", lambda query: query)
     monkeypatch.setattr(module, "get_spark_session", lambda spark_session=None, *_args, **_kwargs: 'spark')
     monkeypatch.setattr(
@@ -495,7 +495,7 @@ def test_sql_endpoint_reader_rejects_unsupported_target(monkeypatch):
     """Reject configured targets that cannot expose the access catalogue views."""
     module = importlib.import_module("fabricops_kit.access_scanner.scan_sql_access")
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **kwargs: (object(), "dev", {}))
-    monkeypatch.setattr(module, "get_store", lambda config, env, target: SimpleNamespace(kind="files"))
+    monkeypatch.setattr(module, "get_store", lambda config, active_workspace_id, target: SimpleNamespace(kind="files"))
 
     with pytest.raises(ValueError, match="expected a warehouse or lakehouse store"):
         module._read_sql_endpoint_query("SELECT 1", store="unsupported", context={})

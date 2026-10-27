@@ -1,5 +1,10 @@
 # How FabricOps works
 
+**Observe locally → Govern globally → Test locally → Activate locally.**
+
+A global `table_id` has one immutable Data Contract version history. Engineering workspaces keep separate current observations, profiles, Tests and activation choices. Governance selects a workspace as its evidence source; that workspace does not own the resulting contract. Workspace names are labels. Different workspaces may use different frozen versions, with no required deployment order.
+
+
 ## The Big Picture
 
 **Governance defines the expectations. Engineering validates and runs the pipeline. Consumers use approved Production data.**
@@ -31,15 +36,15 @@
 
 ??? info "Detailed explanation"
 
-    Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, environments, AI capabilities, and many other building blocks. The harder question is how a team uses those building blocks repeatedly without every project inventing a different engineering and governance pattern.
+    Fabric already gives teams notebooks, Lakehouses, Warehouses, pipelines, workspaces, AI capabilities, and many other building blocks. The harder question is how a team uses those building blocks repeatedly without every project inventing a different engineering and governance pattern.
 
     **How Governance and Engineering work hand in hand within Microsoft Fabric**
 
     - **Microsoft Fabric building blocks**
-      FabricOps operates inside Microsoft Fabric using its native building blocks: Workspaces to separate responsibilities and environments, Notebooks running PySpark for engineering and governance logic, Deployment Pipelines for promotion, Lakehouses and Warehouses for Bronze, Silver, Gold, and Metadata storage, and Fabric environments and object configuration to keep Development and Production aligned.
+      FabricOps operates inside Microsoft Fabric using its native building blocks: Workspaces to separate responsibilities and execution scopes, Notebooks running PySpark for engineering and governance logic, Deployment Pipelines for promotion, Lakehouses and Warehouses for Bronze, Silver, Gold, and Metadata storage, and Fabric workspaces and object configuration to keep Development and Production aligned.
 
     - **Governance Workspace**
-      Owns the governed definition of the data. `00_env_config` stores the Governance environment configuration and Fabric object paths. `01_governance` manages Data Agreements, Stewards, Enrichment, Guardrails, Data Contracts, and access metadata.
+      Owns the governed definition of the data. `00_env_config` stores the Governance workspace configuration and Fabric object paths. `01_governance` manages Data Agreements, Stewards, Enrichment, Guardrails, Data Contracts, and access metadata.
 
     - **Shared Metadata Lakehouse**
       Lives in the Governance Workspace and connects Governance with Engineering. It stores the shared FabricOps metadata used across the lifecycle, including Catalogue, profiling, contracts, lineage, Guardrail Results, and related governance metadata.
@@ -50,10 +55,10 @@
     - **Engineering Production Workspace**
       Runs the same validated `02_pipeline` using Production configuration. Its `00_env_config` resolves its workspace ID to the equivalent Production Lakehouses, Warehouses, schemas, and Fabric object paths, while the pipeline resolves the approved Test Run and table contracts and produces governed Production outputs.
 
-      One reusable `00_env_config` template is deployed in each execution workspace by default. Advanced deployments can share a central copy by passing `config_workspace_id` to setup. Setup passes the caller workspace ID across the notebook boundary and receives the resolved environment and existing resource mappings as JSON. Unknown workspaces fail setup before pipeline execution.
+      One reusable `00_env_config` template is deployed in each execution workspace by default. Advanced deployments can share a central copy by passing `config_workspace_id` to setup. Setup passes the caller workspace ID across the notebook boundary and receives the resolved workspace and existing resource mappings as JSON. Unknown workspaces fail setup before pipeline execution.
 
-    - **Aligned environments and promotion**
-      Development and Production keep the same logical Bronze, Silver, and Gold architecture, whether those stores are implemented as Lakehouses or Warehouses. The physical Fabric objects differ by environment, but their roles and structure stay aligned 1:1. Once `02_pipeline` is validated in Development against the frozen Data Contract, that validated notebook is promoted to the Engineering Production Workspace through the deployment flow.
+    - **Aligned workspaces and promotion**
+      Development and Production keep the same logical Bronze, Silver, and Gold architecture, whether those stores are implemented as Lakehouses or Warehouses. The physical Fabric objects differ by workspace, but their roles and structure stay aligned 1:1. Once `02_pipeline` is validated in Development against the frozen Data Contract, that validated notebook is promoted to the Engineering Production Workspace through the deployment flow.
 
     - **Project-Specific Consumer Workspace**
       Consumers receive approved Production access through native Fabric controls and can use the Fabric interface appropriate to their work. Consumers can query centralized metadata directly through PySpark or SQL and use project-specific notebooks for analytics and AI. Data Agent publishing is the first automated target; direct analytics and future Power BI/reporting paths reuse the same governed foundation.
@@ -69,7 +74,7 @@
 
         ??? info "What happens when Spark reads a Warehouse?"
 
-            A Fabric notebook can read a Warehouse through the supported Spark SQL connector, for example `spark.read.synapsesql("ConsumptionWH.dbo.sales_orders")`. The connector uses the Warehouse access path, but its generated requests and their visibility in Query Insights should be verified in the target Fabric environment. Query history does not expose subsequent PySpark transformations or the original notebook code.
+            A Fabric notebook can read a Warehouse through the supported Spark SQL connector, for example `spark.read.synapsesql("ConsumptionWH.dbo.sales_orders")`. The connector uses the Warehouse access path, but its generated requests and their visibility in Query Insights should be verified in the target Fabric workspace. Query history does not expose subsequent PySpark transformations or the original notebook code.
 
             Direct Spark access to Lakehouse Delta tables bypasses the Warehouse SQL endpoint. Power BI Direct Lake and other non-SQL access paths may also bypass Warehouse query history. Therefore, routing consumers through a Warehouse improves the opportunity for SQL activity monitoring **only when alternative access paths are appropriately restricted**.
 
@@ -96,7 +101,7 @@ Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read
 
     `01_governance` creates the Governance side: `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT`, and the versioned `METADATA_DATA_CONTRACT`. Engineering selects that contract, validates and enforces its Guardrails, and records the outcomes in `METADATA_GUARDRAIL_RESULTS`.
 
-    If the implementation or governed definition needs refinement, Governance creates the next contract version and Engineering validates it again. Once the tested version is approved, Governance activates it for Production and the same `02_pipeline` resolves the approved environment activation revision.
+    If the implementation or governed definition needs refinement, Governance creates the next contract version and Engineering validates it again. Once the tested version is approved, Governance activates it for Production and the same `02_pipeline` resolves the approved workspace activation revision.
 
     **For the notebook-level implementation, browse the [FabricOps notebook templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks). For the schema, purpose, and relationships of each metadata table, see the [Metadata reference](reference/metadata.md).**
 

@@ -48,7 +48,7 @@ def frozen(table_id, *, version=1, active=False, strategy="overwrite", parameter
         ],
     }
     return {"table_id": table_id, "contract_id": contract_id, "contract_version": version,
-            "environment_name": "dev", "status": "frozen", "is_active": active,
+            "workspace_id": "dev", "status": "frozen", "is_active": active,
             "agreement_id": "agreement", "agreement_version": "1", "contract_payload_json": json.dumps(payload)}
 
 
@@ -76,7 +76,7 @@ def runtime(monkeypatch, spark_session):
     run_rows = []
     monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=SimpleNamespace(forPath=lambda *a: Merge())))
     config = framework_config()
-    context = {"config": config, "env": "dev", "notebook_id": "notebook", "notebook_name": "Pipeline",
+    context = {"config": config, "scope_workspace_id": "dev", "notebook_id": "notebook", "notebook_name": "Pipeline",
                "workspace_id": "workspace", "workspace_name": "Workspace", "user_name": "tester", "activity_id": "activity"}
     rows = []
     source = spark_session.createDataFrame([(1,), (2,)], "id long")
@@ -401,7 +401,8 @@ def test_empty_or_disabled_contract_checks_do_not_require_minimum_coverage(runti
         monkeypatch.setattr(orchestrator, "schedule_table_profiling", lambda *args, **kw: {"row_count": 2})
     result = write(plan, read(plan, spark_session), spark_session)
     assert result["published"] is (mode == "live")
-    assert result["source_guardrail_results"] == [] and plan.results == []
+    assert all(row.get("guardrail_type") == "schema" for row in result["source_guardrail_results"])
+    assert all(row.get("guardrail_type") == "schema" for row in plan.results)
     assert "coverage_result" not in result
     assert not any("Coverage" in stage["stage"] for stage in result["orchestration_stages"])
     assert [row["contract_payload_json"] for row in rows] == originals
@@ -519,7 +520,7 @@ def test_legacy_setting_names_are_valid_column_names_in_schema_mappings(column_n
     payload["guardrails"][0]["rule_parameters"]["data_types"] = {column_name: "bigint"}
     original = json.dumps(payload, sort_keys=True)
     validate_contract_definitions(payload)
-    rows = shared.contract_guardrail_rows({"contract_payload": payload}, environment_name="dev", table_id=TARGET_ID)
+    rows = shared.contract_guardrail_rows({**payload["contract"], "contract_payload": payload}, workspace_id="dev", table_id=TARGET_ID)
     assert json.loads(rows[0]["rule_parameters_json"])["data_types"] == {column_name: "bigint"}
     assert json.dumps(payload, sort_keys=True) == original
 

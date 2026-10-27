@@ -54,7 +54,7 @@ For `orders`, enable **Freshness**, **Schema**, and **Source Drift**. Use `modif
 
 For `products`, `order_history`, and the `customer_summary` target, a Schema rule is sufficient for this exercise. Their purpose is to make both source → target paths Guardrail-ready without inventing unrelated business rules.
 
-For `curated_orders`, enable **Schema**, add one **Sensitive Data** treatment on `customer_id` (Mask is the easiest treatment to inspect), and author the complete DQ rules below. Keep DQ on **Warn** for the first dirty run. Schema always blocks missing Required columns and datatype mismatches; additional columns warn and continue. Sensitive Data treatment failures always block. Sensitive Data is a treatment guardrail: the integration proof is that the treatment is actually applied before DQ/publication, not that valid sensitive data is rejected.
+For `curated_orders`, enable **Schema**, add one **Sensitive Data** treatment on `customer_id` (Mask is the easiest treatment to inspect), and author the complete DQ rules below. Keep DQ on **Warn** for the first dirty run. Schema always blocks missing Required columns, uncontracted additional columns and normalized datatype mismatches. Sensitive Data treatment failures always block. Sensitive Data is a treatment guardrail: the integration proof is that the treatment is actually applied before DQ/publication, not that valid sensitive data is rejected.
 
 For this walkthrough, keep every DQ rule **Enabled** but leave **Block on failure** off. Step 4 intentionally breaks every DQ behavior in one validation run; Warn lets FabricOps report all of them instead of stopping at the first blocking failure.
 
@@ -199,7 +199,7 @@ Freeze the three source contracts and both target contracts (`curated_orders` an
 
 Open **Manifest & Freeze** and review the complete contract, including the DQ rules above.
 
-If a column disappears from the Catalogue, its inherited definitions remain visible for review. In the **Table** workspace, review the unavailable definitions and choose **Remove unavailable definitions** to stage their removal. Correct any remaining references, such as Grain keys, before saving. Frozen versions remain unchanged. If another session freezes the draft before Save or Freeze completes, the operation reports a conflict and retains pending edits.
+A saved draft keeps the schema captured when it was created. A new draft excludes columns removed from the latest workspace observation. In the **Table** workspace, review the unavailable definitions and choose **Remove unavailable definitions** to stage their removal. Correct any remaining references, such as Grain keys, before saving. Frozen versions remain unchanged. If another session freezes the draft before Save or Freeze completes, the operation reports a conflict and retains pending edits.
 
 Choose **Save Data Contract** while the version is still a draft. Close and reopen that exact draft to confirm its descriptions, classifications, key selection, Processing, and configured Guardrails hydrate from the saved payload. Pending sidebar edits are not saved until Save succeeds. When it is ready for Engineering validation, choose **Freeze** and reopen the exact frozen version to review its immutable manifest.
 
@@ -207,72 +207,7 @@ Choose **Save Data Contract** while the version is still a draft. Close and reop
 
 The frozen version is an immutable data contract and becomes the exact candidate Engineering selects in Step 4. Freezing does not activate it for Production.
 
-??? warning "Upgrading from separate definition tables"
-    These governance features are Preview. Setup no longer creates or requires
-    `METADATA_ENRICHMENT` or `METADATA_GUARDRAIL`, and standalone definition
-    readers/writers have been removed. Existing physical tables are left intact.
+!!! warning "Breaking workspace architecture"
+    This Unreleased architecture uses workspace-scoped metadata and intentionally breaks earlier layouts. Start with fresh Metadata for this design; no compatibility layer or in-place migration is supplied. Frozen release documentation retains the earlier contracts.
 
-    Before resuming Governance authoring, pause authoring and legacy definition
-    writers, back up the contract and old definition tables, and run the explicit
-    maintenance operation in the configured metadata environment:
-
-    ```python
-    from fabricops_kit.data_contract.migrate_contract_definitions import migrate_contract_definitions
-
-    report = migrate_contract_definitions(config=CONFIG, env=ENV)
-    report["conflicts"], report["drafts"]
-    ```
-
-    Supply the active configuration object and environment from `00_env_config`
-    in place of `CONFIG` and `ENV`. The default is report-only. Review all proposed
-    drafts and conflicts, then apply the exact reviewed snapshot while writers
-    remain paused:
-
-    ```python
-    result = migrate_contract_definitions(
-        config=CONFIG, env=ENV, dry_run=False,
-        reviewed_snapshot=report["snapshot_fingerprint"], authoring_paused=True,
-    )
-    ```
-
-    Any conflict blocks every write and identifies the contract, source version,
-    rule or Enrichment field, and disagreeing values. Orphans, malformed payloads,
-    unsupported definitions, conflicts between old versions and the newest frozen
-    definition, and existing drafts requiring a merge must be resolved explicitly;
-    finish or discard an open draft before retrying. The migration does not guess
-    a parent, choose conflicting values, or rewrite a frozen payload. Blank or
-    malformed historical payloads require recovery from an authoritative backup
-    before this operation can proceed.
-
-    Definitions already represented in their exact payload need no new version.
-    Side-table-only definitions are copied into a new inactive, agreement-free
-    draft seeded from the latest frozen version, with all definition ownership
-    rebound to the new version. Missing Enrichment IDs receive stable distinct IDs
-    so each field survives subsequent saves. A provenance fingerprint makes repeat runs of the
-    same source records a no-op. Missing old tables count as empty; other read
-    failures propagate. A changed snapshot requires a new dry-run review.
-
-    The paused-writer requirement is operational: this maintenance operation does
-    not acquire a distributed lock. Apply appends all proposed drafts in one write
-    to `METADATA_DATA_CONTRACT`; it never activates them. Review, save, freeze,
-    validate, and activate each candidate through the normal lifecycle before use.
-    Existing Production execution continues to use its exact frozen version.
-
-    Only after verifying the report, exported definitions, new drafts, and
-    consumers should you manually remove the old physical tables if desired.
-    Never remove `METADATA_GUARDRAIL_RESULTS` or other execution-history tables.
-    Historical release manifests retain the schemas shipped in those releases;
-    they do not define the current setup inventory.
-
-### Expected result
-
-You now have frozen contracts for the complete demo pipeline. `curated_orders` represents all nine DQ rule types, `orders` supplies the source-side Freshness and Source Drift expectations, Schema is represented across the pipeline, and Sensitive Data treatment is configured on the governed target. Step 4 exercises the configured checks, validates the second target separately, and includes a focused Grain exercise when enforcement is enabled.
-
-**Previous:** [Step 2A. Run the Full Refresh Demo](02A-full-refresh-demo.md)
-**Next:** [Step 4. Select and validate the Data Contract](04-validate-frozen-data-contract.md)
-
-### Configure profiling in the draft
-
-The Table tab includes **Profiling** for Standard Profiling, Grain Discovery and Frequency Profiling. Each has its own frequency and Read/Write trigger in the selected Data Contract draft. Standard defaults to the first eligible Read or Write every one elapsed day; Grain Discovery and Frequency Profiling default to their first eligible operation only.
-
-Use the normal **Save** action to persist profiling policies in the draft. Frozen versions are read-only. Freeze, complete Testing and activate a new version to change Live behavior. Grain Discovery finds candidates; the contract's Grain Guardrail continues to enforce authored keys independently. See [shared table profiling](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#shared-table-profiling) for interval, persistence and concurrency behavior.
+**Next:** [Step 4. Test the frozen Data Contract](04-validate-frozen-data-contract.md).

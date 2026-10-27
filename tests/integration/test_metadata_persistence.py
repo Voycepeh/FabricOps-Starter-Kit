@@ -52,7 +52,7 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
     monkeypatch.setattr(setup_module, "read_lakehouse_table", read_table)
     monkeypatch.setattr(setup_module, "write_lakehouse_table", write_table)
 
-    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), env="dev")
+    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev")
 
     assert result["status"] == "ready"
     assert result["tables"] == CANONICAL_METADATA_TABLES
@@ -81,7 +81,7 @@ def test_central_metadata_setup_rejects_known_legacy_schema(monkeypatch):
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table", read_table)
 
-    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), env="dev", verbose=False)
+    result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev", verbose=False)
     assert result["status"] == "partial_failure"
     assert result["failed_tables"] == ["METADATA_DATA_PROFILED"]
     assert "frequency_json" in result["table_results"]["METADATA_DATA_PROFILED"]["message"]

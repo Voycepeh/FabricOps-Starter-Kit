@@ -15,7 +15,12 @@ import pytest
 from fabricops_kit import setup_notebook, setup_pipeline
 from fabricops_kit.config.shared import resolve_fabric_context, resolve_runtime_context
 from fabricops_kit.io.shared import get_spark_session as central_spark_resolver
-from tests.unit.test_setup_notebook_store_keys import _config
+from tests.unit.test_setup_notebook_store_keys import _config as _base_config
+
+def _config():
+    config = _base_config()
+    config.path_config.paths["dev-ws"] = config.path_config.paths.pop("dev")
+    return config
 
 pytestmark = pytest.mark.unit
 
@@ -34,7 +39,7 @@ def configuration_runtime(monkeypatch, request):
     runtime = ModuleType('notebookutils.runtime')
     runtime.context = {'currentWorkspaceId': 'dev-ws', 'currentNotebookName': '02_pipeline_orders',
                        'currentRunId': 'caller-run', 'currentNotebookId': 'caller-notebook',
-                       'currentWorkspaceName': 'Engineering', 'environmentWorkspaceId': 'environment-ws'}
+                       'currentWorkspaceName': 'Engineering', 'environmentWorkspaceId': 'workspace_id-ws'}
     nb = ModuleType('notebookutils')
     nb.runtime = runtime
     nb.notebook = SimpleNamespace(exit=lambda payload: (_ for _ in ()).throw(NotebookExit(payload)))
@@ -47,7 +52,7 @@ def configuration_runtime(monkeypatch, request):
     monkeypatch.setattr(importlib.import_module('fabricops_kit.io.shared'), 'get_spark_session', lambda *_args, **_kwargs: spark)
     cells = json.loads(Path('templates/notebooks/00_env_config.ipynb').read_text())['cells']
 
-    settings = SimpleNamespace(environments=None, conflicting_governance_workspace=False)
+    settings = SimpleNamespace(workspaces=None, conflicting_governance_workspace=False)
 
     def run(name, timeout, arguments, *, workspace):
         assert name == '00_env_config'
@@ -62,19 +67,20 @@ def configuration_runtime(monkeypatch, request):
                     continue
                 source = ''.join(cell['source'])
                 for placeholder, value in {
-                    '<DEV_WORKSPACE_ID>': 'metadata-ws' if settings.conflicting_governance_workspace else 'dev-ws', '<TEST_WORKSPACE_ID>': 'test-ws',
+                    '<ENGINEERING_WORKSPACE_ID>': 'metadata-ws' if settings.conflicting_governance_workspace else 'dev-ws', '<TEST_WORKSPACE_ID>': 'test-ws',
                     '<PROD_WORKSPACE_ID>': 'prod-ws', '<GOVERNANCE_WORKSPACE_ID>': 'metadata-ws',
                     '<GOVERNANCE_METADATA_LAKEHOUSE_ID>': 'metadata-item', '<BRONZE_ITEM_ID>': 'bronze-item',
                     '<SILVER_ITEM_ID>': 'silver-item', '<GOLD_ITEM_ID>': 'gold-item',
-                    '<BRONZE_NAME>': 'lh_Bronze', '<SILVER_NAME>': 'lh_Silver', '<GOLD_NAME>': 'wh_Gold',
+                    '<METADATA_LAKEHOUSE_NAME>': 'lh_Metadata', '<BRONZE_NAME>': 'lh_Bronze', '<SILVER_NAME>': 'lh_Silver', '<GOLD_NAME>': 'wh_Gold',
                 }.items():
                     source = source.replace(placeholder, value)
                 # This fixture exercises configuration loading, not metadata deployment.
                 source = source.replace('INITIALIZE_METADATA = True', 'INITIALIZE_METADATA = False')
-                if settings.environments is not None:
+                if 'ENGINEERING_WORKSPACES = {' in source:
+                    selected = settings.workspaces or ['dev-ws', 'test-ws', 'prod-ws']
+                    ids = ['metadata-ws'] if settings.conflicting_governance_workspace else selected
                     source = source.replace('def _required_config_value(value, label):',
-                        f'ENGINEERING_WORKSPACE_IDS = {{k: v for k, v in ENGINEERING_WORKSPACE_IDS.items() if k in {settings.environments!r}}}\n'
-                        'ENGINEERING_ENVIRONMENT_ITEMS = {k: v for k, v in ENGINEERING_ENVIRONMENT_ITEMS.items() if k in ENGINEERING_WORKSPACE_IDS}\n\n'
+                        f'ENGINEERING_WORKSPACES = {{key: dict(next(iter(ENGINEERING_WORKSPACES.values()))) for key in {ids!r}}}\n'
                         'def _required_config_value(value, label):')
                 # Fabric keeps child output in its execution snapshot.
                 with redirect_stdout(StringIO()):
@@ -89,19 +95,19 @@ def configuration_runtime(monkeypatch, request):
     return SimpleNamespace(runtime=runtime, notebook=nb.notebook, spark=spark, cells=cells, settings=settings)
 
 
-@pytest.mark.parametrize('workspace, environment', [('dev-ws', 'dev'), ('prod-ws', 'prod')])
-def test_engineering_loads_central_config_for_caller_workspace(configuration_runtime, monkeypatch, workspace, environment):
+@pytest.mark.parametrize('workspace, workspace_id', [('dev-ws', 'dev-ws'), ('prod-ws', 'prod-ws')])
+def test_engineering_loads_central_config_for_caller_workspace(configuration_runtime, monkeypatch, workspace, workspace_id):
     fabric = configuration_runtime
     fabric.runtime.context['currentWorkspaceId'] = workspace
     result = setup_notebook(config_workspace_id="central-ws")
-    assert result.environment == environment
+    assert result.workspace_id == workspace_id
     assert set(result.paths) == {'Bronze', 'Silver', 'Gold', 'Metadata'}
-    assert result.paths['Silver'].env == environment
+    assert result.paths['Silver'].workspace_id == workspace_id
     assert result.paths['Gold'].name == 'wh_Gold'
     assert result.paths['Metadata'].workspace_id == 'metadata-ws'
     assert result.run_id == 'caller-run'
-    config, env, context = resolve_fabric_context()
-    assert env == environment and config.path_config.paths[env]['Gold'].kind == 'warehouse'
+    config, active_workspace_id, context = resolve_fabric_context()
+    assert active_workspace_id == workspace_id and config.path_config.paths[active_workspace_id]['Gold'].kind == 'warehouse'
     assert context['runtime_metadata']['workspace_id'] == workspace
     fabric.notebook.run.assert_called_once_with('00_env_config', 120, {'caller_workspace_id': workspace}, workspace='central-ws')
     fabric.spark.conf.set.assert_called_once_with('spark.sql.session.timeZone', config.audit_timezone)
@@ -110,7 +116,7 @@ def test_engineering_loads_central_config_for_caller_workspace(configuration_run
 def test_governance_loads_its_separate_local_deployment(configuration_runtime):
     fabric = configuration_runtime
     fabric.runtime.context.update(currentWorkspaceId='metadata-ws', currentNotebookName='01_governance')
-    assert setup_notebook().environment == 'governance'
+    assert setup_notebook().workspace_id == 'metadata-ws'
     fabric.notebook.run.assert_called_once_with(
         '00_env_config', 120, {'caller_workspace_id': 'metadata-ws'}, workspace='metadata-ws')
 
@@ -130,12 +136,15 @@ def test_missing_runtime_workspace_fails_before_notebook_execution(configuration
 
 @pytest.mark.parametrize('change, message', [
     ({'workspace_id': 'other'}, 'does not match'),
-    ({'env': 'missing'}, 'No configured paths'),
+    ({'configured_workspace': 'missing'}, 'No configured paths'),
 ])
 def test_invalid_response_reuses_validation(configuration_runtime, change, message):
     configuration_runtime.notebook.run.side_effect = None
+    raw = asdict(_config())
+    if 'configured_workspace' in change:
+        raw['path_config']['paths']['missing'] = raw['path_config']['paths'].pop('dev-ws')
     configuration_runtime.notebook.run.return_value = json.dumps({
-        'workspace_id': 'dev-ws', 'env': 'dev', 'config': asdict(_config()), **change,
+        'workspace_id': 'dev-ws', 'config': raw, **change,
     })
     with pytest.raises(ValueError, match=message):
         setup_notebook()
@@ -151,8 +160,8 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
     if mode == 'Live':
         live = importlib.import_module('fabricops_kit.activated_pipeline.shared')
         def approved(**kwargs):
-            config, env, runtime = resolve_fabric_context()
-            return shared.PipelineExecutionPlan('live', env, 'caller-notebook', 'approved-run',
+            config, active_workspace_id, runtime = resolve_fabric_context()
+            return shared.PipelineExecutionPlan('live', active_workspace_id, 'caller-notebook', 'approved-run',
                                                '{}', '{}', '{}', runtime, pipeline_id=kwargs['pipeline_id'])
         monkeypatch.setattr(live, 'build_live_pipeline_plan', approved)
     import IPython
@@ -163,9 +172,9 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
         notebook = setup_notebook(config_workspace_id=config_workspace)
         notebook_output = capsys.readouterr().out
         session = setup_pipeline(pipeline_mode=mode)
-        assert session.plan.environment == 'dev'
+        assert session.plan.workspace_id == 'dev-ws'
         assert session.plan.pipeline_id == '8f32a471-6c91-4b7e-9d13-2f0c947eab52'
-        assert session.plan.runtime_context['config'].path_config.paths['dev']['Metadata'].workspace_id == 'metadata-ws'
+        assert session.plan.runtime_context['config'].path_config.paths['dev-ws']['Metadata'].workspace_id == 'metadata-ws'
         configuration_runtime.notebook.run.assert_called_once_with(
             '00_env_config', 120, {'caller_workspace_id': 'dev-ws'}, workspace=config_workspace or 'dev-ws')
         assert session.plan.runtime_context['runtime_metadata']['workspace_id'] == 'dev-ws'
@@ -183,7 +192,7 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
         assert session.plan.runtime_context['_notebook_setup']['result'] is notebook
         location = 'cross-workspace' if config_workspace else 'same-workspace'
         assert f'Configuration: 00_env_config ({location}; workspace: {config_workspace or "dev-ws"})' in notebook_output
-        assert 'Environment: dev' in notebook_output
+        assert 'Workspace: dev-ws' in notebook_output
         assert 'Readiness: ready' in notebook_output
         assert 'Configuration:' not in output
         assert 'Readiness:' not in output
@@ -196,26 +205,27 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
 
 def test_duplicate_workspace_assignments_are_rejected(configuration_runtime):
     for cell in configuration_runtime.cells:
-        cell['source'] = [line.replace('<PROD_WORKSPACE_ID>', '<DEV_WORKSPACE_ID>')
-                          for line in cell['source']]
-    with pytest.raises(ValueError, match='strict 1:1 mapping'):
+        cell['source'] = [line.replace('for registered_id, definition in ENGINEERING_WORKSPACES.items():',
+            'ENGINEERING_WORKSPACES["DEV-WS"] = dict(next(iter(ENGINEERING_WORKSPACES.values())))\n'
+            'for registered_id, definition in ENGINEERING_WORKSPACES.items():') for line in cell['source']]
+    with pytest.raises(ValueError, match='Workspace IDs must be unique'):
         setup_notebook()
 
 
 def test_setup_replaces_stale_notebook_namespace_context(configuration_runtime, monkeypatch):
     import IPython
 
-    shell = SimpleNamespace(user_ns={'FABRIC_CONTEXT': {'config': _config(), 'env': 'stale'}})
+    shell = SimpleNamespace(user_ns={'FABRIC_CONTEXT': {'config': _config(), 'scope_workspace_id': 'stale'}})
     monkeypatch.setattr(IPython, 'get_ipython', lambda: shell)
     result = setup_notebook()
-    assert result.environment == 'dev'
-    assert resolve_fabric_context()[1] == 'dev'
+    assert result.workspace_id == 'dev-ws'
+    assert resolve_fabric_context()[1] == 'dev-ws'
     assert shell.user_ns['FABRIC_CONTEXT']['runtime_metadata']['workspace_id'] == 'dev-ws'
 
 
 def test_default_loading_uses_current_workspace(configuration_runtime):
     result = setup_notebook()
-    assert result.environment == 'dev'
+    assert result.workspace_id == 'dev-ws'
     configuration_runtime.notebook.run.assert_called_once_with(
         '00_env_config', 120, {'caller_workspace_id': 'dev-ws'}, workspace='dev-ws')
 
@@ -242,7 +252,7 @@ def test_unavailable_or_empty_runtime_context(configuration_runtime, context):
         setup_notebook()
     configuration_runtime.notebook.run.assert_not_called()
     # Explicit configuration remains usable outside automatic workspace loading.
-    assert setup_notebook(_config(), env='dev').environment == 'dev'
+    assert setup_notebook(_config(), workspace_id='dev-ws').workspace_id == 'dev-ws'
 
 
 def test_environment_workspace_never_substitutes_for_caller(configuration_runtime):
@@ -256,7 +266,7 @@ def test_outside_fabric_has_distinct_error(monkeypatch):
     monkeypatch.setitem(sys.modules, 'notebookutils', None)
     with pytest.raises(RuntimeError, match='Outside Microsoft Fabric'):
         setup_notebook()
-    result = setup_notebook(_config(), env='dev')
+    result = setup_notebook(_config(), workspace_id='dev-ws')
     assert result.runtime_metadata['runtime_available'] is False
 
 
@@ -346,7 +356,7 @@ def test_runtime_context_supports_object_and_getter_shapes(configuration_runtime
         context = SimpleNamespace(get=values.get)
     configuration_runtime.runtime.context = context
     # Explicit config isolates metadata extraction from the notebook-boundary simulation.
-    result = setup_notebook(_config(), env='dev')
+    result = setup_notebook(_config(), workspace_id='dev-ws')
     assert result.runtime_metadata['workspace_id'] == 'dev-ws'
     assert result.workspace_name == 'Engineering'
     assert resolve_runtime_context(active_context={})['workspace_id'] == 'dev-ws'
@@ -359,15 +369,13 @@ def test_setup_summary_is_visible_without_child_notebook_output(configuration_ru
 
     configuration_runtime.runtime.context['currentWorkspaceId'] = caller_workspace
     raw = asdict(_config())
-    stores = raw['path_config']['paths'].pop('dev')
-    raw['path_config']['paths']['POC'] = stores
-    for store in stores.values():
-        store['env'] = 'POC'
+    stores = raw['path_config']['paths'].pop('dev-ws')
+    raw['path_config']['paths']['dev-ws'] = stores
     stores['Gold']['name'] = 'wh_Gold'
     raw['audit_timezone'] = 'Asia/Singapore'
     configuration_runtime.notebook.run.side_effect = None
     configuration_runtime.notebook.run.return_value = json.dumps({
-        'workspace_id': 'dev-ws', 'env': 'POC', 'config': raw,
+        'workspace_id': 'dev-ws', 'config': raw,
     })
 
     result = setup_notebook(config_workspace_id=config_workspace, required_targets=['Gold', 'Metadata'])
@@ -381,7 +389,7 @@ def test_setup_summary_is_visible_without_child_notebook_output(configuration_ru
     assert 'Caller workspace: Engineering (dev-ws)' in output
     assert 'Notebook: 02_pipeline_orders' in output
     assert 'Run ID: caller-run' in output
-    assert 'Environment: POC' in output
+    assert 'Workspace: dev-ws' in output
     assert 'Audit timezone: Asia/Singapore' in output
     assert 'Metadata schemas: governance=governance, engineering=engineering' in output
     assert '- Gold: wh_Gold (warehouse;' in output
@@ -390,7 +398,7 @@ def test_setup_summary_is_visible_without_child_notebook_output(configuration_ru
     assert 'Readiness: ready' in output
     assert 'abfss://' not in output
     assert 'path_config' not in output
-    assert result.environment == 'POC'
+    assert result.workspace_id == 'dev-ws'
     configuration_runtime.spark.conf.set.assert_called_once_with('spark.sql.session.timeZone', 'Asia/Singapore')
 
 
@@ -401,34 +409,34 @@ def test_failed_config_load_does_not_print_success_summary(configuration_runtime
     assert capsys.readouterr().out == ''
 
 
-@pytest.mark.parametrize("environments", [None, ["dev"]])
-def test_governance_is_metadata_only_with_one_or_multiple_engineering_environments(configuration_runtime, environments):
+@pytest.mark.parametrize("workspaces", [None, ["dev-ws"]])
+def test_governance_is_metadata_only_with_one_or_multiple_engineering_environments(configuration_runtime, workspaces):
     fabric = configuration_runtime
     fabric.runtime.context['currentWorkspaceId'] = 'metadata-ws'
-    fabric.settings.environments = environments
+    fabric.settings.workspaces = workspaces
     result = setup_notebook()
-    assert result.environment == 'governance'
+    assert result.workspace_id == 'metadata-ws'
     assert set(result.paths) == {'Metadata'}
     assert result.paths['Metadata'].workspace_id == 'metadata-ws'
-    assert result.paths['Metadata'].env == 'governance'
-    config, env, _context = resolve_fabric_context()
-    assert env == 'governance'
-    assert set(config.path_config.paths['governance']) == {'Metadata'}
-    assert config.path_config.paths['dev']['Silver'].workspace_id == 'dev-ws'
+    assert result.paths['Metadata'].workspace_id == 'metadata-ws'
+    config, active_workspace_id, _context = resolve_fabric_context()
+    assert active_workspace_id == 'metadata-ws'
+    assert set(config.path_config.paths['metadata-ws']) == {'Metadata'}
+    assert config.path_config.paths['dev-ws']['Silver'].workspace_id == 'dev-ws'
 
 
 def test_governance_summary_filters_targets_without_restricting_config(configuration_runtime, capsys):
     fabric = configuration_runtime
     fabric.runtime.context['currentWorkspaceId'] = 'metadata-ws'
-    fabric.settings.environments = ['dev']
+    fabric.settings.workspaces = ['dev-ws']
     result = setup_notebook(required_targets=['Metadata'])
     output = capsys.readouterr().out
     assert set(result.paths) == {'Metadata'}
-    assert result.environment == 'governance'
-    assert 'Environment: governance' in output
+    assert result.workspace_id == 'metadata-ws'
+    assert 'Workspace: metadata-ws' in output
     assert '- Metadata:' in output
     assert all(f'- {name}:' not in output for name in ['Bronze', 'Silver', 'Gold'])
-    assert set(resolve_fabric_context()[0].path_config.paths['dev']) == {'Bronze', 'Silver', 'Gold', 'Metadata'}
+    assert set(resolve_fabric_context()[0].path_config.paths['dev-ws']) == {'Bronze', 'Silver', 'Gold', 'Metadata'}
 
 
 def test_setup_uses_namespace_session_once_for_readiness_and_timezone(configuration_runtime, monkeypatch):
@@ -451,23 +459,23 @@ def test_setup_uses_namespace_session_once_for_readiness_and_timezone(configurat
 def test_governance_config_runs_directly_without_caller_parameter(configuration_runtime):
     """Running 00_env_config in Governance uses its real runtime workspace."""
     fabric = configuration_runtime
-    fabric.settings.environments = ['dev']
+    fabric.settings.workspaces = ['dev-ws']
     payload = json.loads(fabric.notebook.run('00_env_config', 120, {'caller_workspace_id': ''}, workspace='metadata-ws'))
     assert payload['workspace_id'] == 'metadata-ws'
-    assert payload['env'] == 'governance'
-    assert list(payload['config']['path_config']['paths']['governance']) == ['Metadata']
-    assert payload['config']['path_config']['paths']['governance']['Metadata']['workspace_id'] == 'metadata-ws'
+    assert 'scope_workspace_id' not in payload
+    assert list(payload['config']['path_config']['paths']['metadata-ws']) == ['Metadata']
+    assert payload['config']['path_config']['paths']['metadata-ws']['Metadata']['workspace_id'] == 'metadata-ws'
 
 
 def test_engineering_workspace_mapping_is_unchanged(configuration_runtime):
     """Engineering resolves from its workspace ID, not the central Governance scope."""
-    assert setup_notebook(config_workspace_id='central-ws').environment == 'dev'
+    assert setup_notebook(config_workspace_id='central-ws').workspace_id == 'dev-ws'
 
 
 def test_governance_workspace_must_not_alias_an_engineering_workspace(configuration_runtime):
     """Ambiguous workspace ownership must fail configuration loading."""
     configuration_runtime.settings.conflicting_governance_workspace = True
-    with pytest.raises(ValueError, match='must not also be an Engineering workspace'):
+    with pytest.raises(ValueError, match='Governance cannot also be Engineering'):
         setup_notebook()
 
 
@@ -477,7 +485,7 @@ def test_pipeline_requires_setup_notebook_even_with_manual_config(configuration_
     shared = importlib.import_module('fabricops_kit.pipeline.shared')
     registration = Mock()
     monkeypatch.setattr(shared, 'resolve_pipeline_registration', registration)
-    monkeypatch.setattr(builtins, 'FABRIC_CONTEXT', {'config': _config(), 'env': 'dev'})
+    monkeypatch.setattr(builtins, 'FABRIC_CONTEXT', {'config': _config(), 'scope_workspace_id': 'dev-ws'})
     with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
         setup_pipeline()
     configuration_runtime.notebook.run.assert_not_called()
@@ -498,9 +506,9 @@ def test_pipeline_rejects_context_from_a_previous_execution(configuration_runtim
     registration.assert_not_called()
 
 
-@pytest.mark.parametrize('change', ['env', 'config', 'readiness'])
+@pytest.mark.parametrize('change', ['scope_workspace_id', 'config', 'readiness'])
 def test_pipeline_rejects_invalid_initialized_configuration(configuration_runtime, change):
-    """A replaced environment, configuration or failed readiness requires fresh setup."""
+    """A replaced workspace_id, configuration or failed readiness requires fresh setup."""
     result = setup_notebook()
     from fabricops_kit.config.shared import get_default_fabric_context
     context = get_default_fabric_context()
@@ -529,10 +537,10 @@ def test_explicit_setup_publishes_configuration_without_loading_notebook(configu
     """Local and advanced explicit configuration publishes the same initialized state."""
     from fabricops_kit.config.shared import get_default_fabric_context
     supplied = _config()
-    result = setup_notebook(supplied, env='dev', config_workspace_id='ignored')
+    result = setup_notebook(supplied, workspace_id='dev-ws', config_workspace_id='ignored')
     active = get_default_fabric_context(require_notebook_setup=True)
     assert active['config'] is supplied
-    assert active['env'] == 'dev'
+    assert active['scope_workspace_id'] == 'dev-ws'
     assert active['_notebook_setup']['result'] is result
     configuration_runtime.notebook.run.assert_not_called()
 
@@ -551,7 +559,7 @@ def test_failed_setup_output_does_not_publish_a_ready_context(configuration_runt
     config = importlib.import_module('fabricops_kit.config.shared')
     monkeypatch.setattr(config, '_print_notebook_setup_summary', Mock(side_effect=RuntimeError('display failed')))
     with pytest.raises(RuntimeError, match='display failed'):
-        setup_notebook(_config(), env='dev')
+        setup_notebook(_config(), workspace_id='dev-ws')
     with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
         setup_pipeline()
     assert configuration_runtime.notebook.run.call_count == 1
@@ -569,10 +577,10 @@ def test_failed_setup_blocks_all_default_io_without_blocking_explicit_context(
     from fabricops_kit.io.shared import resolve_configured_lakehouse_table
 
     supplied = _config()
-    shell = SimpleNamespace(user_ns={'CONFIG': supplied, 'ENV': 'dev'}) if notebook_namespace else None
+    shell = SimpleNamespace(user_ns={'CONFIG': supplied, 'ENV': 'dev-ws'}) if notebook_namespace else None
     monkeypatch.setattr(IPython, 'get_ipython', lambda: shell)
     monkeypatch.setattr(config_shared, '_print_notebook_setup_summary', Mock())
-    setup_notebook(supplied, env='dev')
+    setup_notebook(supplied, workspace_id='dev-ws')
     # Keep distinct copies to ensure both publication locations are invalidated.
     builtins.FABRIC_CONTEXT = dict(builtins.FABRIC_CONTEXT)
     if failure == 'display':
@@ -580,17 +588,17 @@ def test_failed_setup_blocks_all_default_io_without_blocking_explicit_context(
     if failure == 'session_close':
         monkeypatch.setattr(pipeline_shared, 'close_current_pipeline_session', Mock(side_effect=RuntimeError('close failed')))
     with pytest.raises((ValueError, RuntimeError)):
-        setup_notebook(supplied, env='dev', required_targets=['missing'] if failure == 'validation' else None)
+        setup_notebook(supplied, workspace_id='dev-ws', required_targets=['missing'] if failure == 'validation' else None)
     with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
         config_shared.get_default_fabric_context()
     with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
         resolve_fabric_context()
     with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
         resolve_configured_lakehouse_table('Bronze', 'orders', None)
-    # Advanced callers can still deliberately supply config and environment.
-    config, env, _ = resolve_fabric_context(config=supplied, env='dev')
-    assert config is supplied and env == 'dev'
+    # Advanced callers can still deliberately supply config and workspace_id.
+    config, active_workspace_id, _ = resolve_fabric_context(config=supplied, active_workspace_id='dev-ws')
+    assert config is supplied and active_workspace_id == 'dev-ws'
     store, _, _, _ = resolve_configured_lakehouse_table('Bronze', 'orders', None,
-        context={'config': supplied, 'env': 'dev'})
+        context={'config': supplied, 'scope_workspace_id': 'dev-ws'})
     assert store.workspace_id == 'workspace'
     configuration_runtime.notebook.run.assert_not_called()

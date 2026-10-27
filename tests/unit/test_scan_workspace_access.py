@@ -155,8 +155,8 @@ def test_shared_access_persistence_always_appends_to_metadata(monkeypatch):
     shared.persist_access_rows(
         frame,
         config={"config": "value"},
-        environment_name="dev",
-        context={"env": "dev"},
+        workspace_id="dev",
+        context={"scope_workspace_id": "dev"},
         persist=True,
     )
 
@@ -180,7 +180,7 @@ def test_shared_access_persistence_can_be_disabled(monkeypatch):
     shared.persist_access_rows(
         object(),
         config={},
-        environment_name="dev",
+        workspace_id="dev",
         context={},
         persist=False,
     )

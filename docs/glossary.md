@@ -25,13 +25,13 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="data-contract">
 <summary><strong>Data Contract</strong> — A versioned set of governed expectations for one table.</summary>
-<p>A globally versioned table-centric Data Contract freezes Schema, processing, Enrichment and Guardrails. Draft becomes Frozen and stays immutable and reusable across environments. An Activated Pipeline references exact versions and payload hashes. Environment activation can differ while sharing one central contract history; contracts have no individual activation step.</p>
+<p>A globally versioned table-centric Data Contract freezes Schema, processing, Enrichment and Guardrails. Draft becomes Frozen and stays immutable and reusable across workspaces. An Activated Pipeline references exact versions and payload hashes. Environment activation can differ while sharing one central contract history; contracts have no individual activation step.</p>
 <p><strong>Also known as:</strong> data contracts</p>
 </details>
 
 <details id="activated-pipeline">
 <summary><strong>activated pipeline</strong> — An immutable approved version of a completely and successfully tested whole pipeline.</summary>
-<p>METADATA_PIPELINE_REGISTRY contains typed immutable approval references and the active selections for each environment and pipeline_id. Each decision binds a successful finalized Test, an exact Agreement version/hash and the table contracts, destinations and operation modes recorded by that Test. Governance approves affected pipelines together; new Live runs resolve the coordinated revision automatically. Activation neither deploys notebooks nor writes business data. Approval covers the recorded table contracts and operation modes; it does not verify arbitrary notebook transformation code.</p>
+<p>METADATA_PIPELINE_REGISTRY contains typed immutable approval references and the active selections for each workspace and pipeline_id. Each decision binds a successful finalized Test, an exact Agreement version/hash and the table contracts, destinations and operation modes recorded by that Test. Governance approves affected pipelines together; new Live runs resolve the coordinated revision automatically. Activation neither deploys notebooks nor writes business data. Approval covers the recorded table contracts and operation modes; it does not verify arbitrary notebook transformation code.</p>
 <p><strong>Also known as:</strong> activated pipelines</p>
 </details>
 
@@ -42,7 +42,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-execution-plan">
 <summary><strong>pipeline execution plan</strong> — The validated execution decisions shared by every Read and Write in one pipeline run.</summary>
-<p>Internal run authority fixes exact table contracts, stable pipeline identity and environment destinations. Test discovers participants from operations; Live pins an approved manifest and revision. Public Read and Write calls use the execution session automatically.</p>
+<p>Internal run authority fixes exact table contracts, stable pipeline identity and workspace destinations. Test discovers participants from operations; Live pins an approved manifest and revision. Public Read and Write calls use the execution session automatically.</p>
 </details>
 
 <details id="testing">
@@ -52,7 +52,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="live">
 <summary><strong>Live</strong> — The deliberate pipeline-wide mode that permits governed publication and operational metadata commits.</summary>
-<p>Live automatically resolves an approved environment configuration from METADATA_PIPELINE_REGISTRY and pins its revision. Exact contracts, writer ownership, transformation settings and physical destinations are enforced. Affected running executions drain before coordinated activation.</p>
+<p>Live automatically resolves an approved workspace configuration from METADATA_PIPELINE_REGISTRY and pins its revision. Exact contracts, writer ownership, transformation settings and physical destinations are enforced. Affected running executions drain before coordinated activation.</p>
 </details>
 
 <details id="enrichment">
@@ -85,8 +85,8 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="configuration-driven-engineering">
-<summary><strong>Configuration-driven Engineering</strong> — Keeping reusable pipeline logic separate from environment-specific Fabric configuration.</summary>
-<p>00_env_config maps logical stores to the Fabric items for the active environment. The same 02_pipeline can therefore move between environments without hard-coded workspace IDs, item IDs, paths, or endpoints throughout the notebook.</p>
+<summary><strong>Configuration-driven Engineering</strong> — Keeping reusable pipeline logic separate from workspace-specific Fabric configuration.</summary>
+<p>00_env_config maps logical stores to the Fabric items for the active workspace. The same 02_pipeline can therefore move between workspaces without hard-coded workspace IDs, item IDs, paths, or endpoints throughout the notebook.</p>
 <p><strong>Also known as:</strong> config-driven engineering</p>
 </details>
 
@@ -109,7 +109,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="source-drift">
 <summary><strong>Source Drift</strong> — A check for unexpected changes to source data already consumed by a target.</summary>
-<p>FabricOps compares the current source observation with the last committed observation for the same source, target, and environment. A new observation is committed only after the target write succeeds.</p>
+<p>FabricOps compares the current source observation with the last committed observation for the same source, target, and workspace. A new observation is committed only after the target write succeeds.</p>
 </details>
 
 <details id="writer-ownership">
@@ -179,7 +179,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="table-profiling-policy">
 <summary><strong>table profiling policy</strong> — Versioned Data Contract schedules for Standard Profiling, Grain Discovery and Frequency Profiling.</summary>
-<p>METADATA_DATA_CONTRACT.contract_payload_json stores independently versioned profiling policies. METADATA_PIPELINE_RUN records per-table activity outcomes and completion markers linked to persisted METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY snapshots. METADATA_PIPELINE_REGISTRY coordinates renewable claims. Schedules share successful history across pipelines for the same Table ID, environment and physical destination.</p>
+<p>METADATA_DATA_CONTRACT.contract_payload_json stores independently versioned profiling policies. METADATA_PIPELINE_RUN records per-table activity outcomes and completion markers linked to persisted METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY snapshots. METADATA_PIPELINE_REGISTRY coordinates renewable claims. Schedules share successful history across pipelines for the same Table ID, workspace and physical destination.</p>
 </details>
 
 <details id="lineage">
@@ -216,7 +216,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="workspace">
 <summary><strong>Workspace</strong> — A collaborative container that brings related Fabric items together and controls access to them.</summary>
-<p>A Microsoft Fabric Workspace is a collection of items in a shared environment designed for collaboration. It acts as a container for items such as lakehouses, warehouses, notebooks, semantic models, and reports, and provides controls for who can access them.</p>
+<p>A Microsoft Fabric Workspace is a collection of items in a shared environment designed for collaboration. It acts as a container for items such as lakehouses, warehouses, notebooks, semantic models, and reports, and provides controls for who can access them. FabricOps uses stable workspace_id for local observations, profiling, Testing and activation. Names are labels; global Data Contract identity does not include workspace.</p>
 <p><strong>Microsoft Learn:</strong> <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/workspaces">Official documentation</a></p>
 <p><strong>Also known as:</strong> workspaces</p>
 </details>
@@ -331,7 +331,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="configuration">
 <summary><strong>Configuration</strong> — Named settings that control system or pipeline behaviour without changing the underlying implementation.</summary>
-<p>FabricOps uses configuration to resolve environment-specific Fabric items and repeatable pipeline settings without embedding them throughout project logic.</p>
+<p>FabricOps uses configuration to resolve workspace-specific Fabric items and repeatable pipeline settings without embedding them throughout project logic.</p>
 <p><strong>Also known as:</strong> config</p>
 </details>
 

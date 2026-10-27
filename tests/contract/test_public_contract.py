@@ -327,7 +327,7 @@ def test_required_v1_imports_remain_available_and_prompt_helpers_are_not_exporte
 def test_individual_reference_generation_script_succeeds_without_module_docs():
     """Verify individual reference generation succeeds without restoring removed pages."""
     root = Path(__file__).parents[2]
-    env = {**os.environ, "PYTHONPATH": str(root / "src")}
+    active_workspace_id = {**os.environ, "PYTHONPATH": str(root / "src")}
     call_flow_json = root / "docs" / "reference" / "_data" / "public-function-call-flows.json"
     dashboard_html = root / "docs" / "assets" / "public-function-call-flows-dashboard.html"
     call_flow_before = call_flow_json.read_text(encoding="utf-8")
@@ -335,7 +335,7 @@ def test_individual_reference_generation_script_succeeds_without_module_docs():
     result = subprocess.run(
         [sys.executable, "scripts/generate_individual_function_reference_pages.py"],
         cwd=root,
-        env=env,
+        env=active_workspace_id,
         text=True,
         capture_output=True,
         check=False,
@@ -435,8 +435,8 @@ assert callable(value)
 assert fabricops_kit.__dict__["widget_render_data_agreement"] is value
 assert "fabricops_kit.widgets.widget_render_data_agreement" in sys.modules
 """
-    env = os.environ.copy()
-    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[2] / "src")
-    result = subprocess.run([sys.executable, "-c", code], env=env, text=True, capture_output=True, check=False)
+    active_workspace_id = os.environ.copy()
+    active_workspace_id["PYTHONPATH"] = str(Path(__file__).resolve().parents[2] / "src")
+    result = subprocess.run([sys.executable, "-c", code], env=active_workspace_id, text=True, capture_output=True, check=False)
 
     assert result.returncode == 0, result.stderr or result.stdout

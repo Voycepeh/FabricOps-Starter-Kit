@@ -59,7 +59,7 @@ def _persist_target_processing(
     scheduled_refresh: dict[str, Any],
     audit: dict[str, Any],
     config: Any,
-    env: str,
+    active_workspace_id: str,
     dataframe: Any,
     context: dict[str, Any] | None = None,
     spark_session=None,
@@ -86,7 +86,7 @@ def _persist_target_processing(
     }
     metadata_audit = build_runtime_audit_fields(
         config=config,
-        env=env,
+        active_workspace_id=active_workspace_id,
         committed_by=audit["_committed_by"],
         committed_at=audit["_committed_at"],
         runtime_context=runtime_context,
@@ -97,7 +97,7 @@ def _persist_target_processing(
             "metadata_level": "table",
             "table_id": str(identity["table_id"]),
             "column_id": None,
-            "environment_name": env,
+            "workspace_id": active_workspace_id,
             "store_type": str(identity.get("store_type") or identity.get("store_kind") or "").lower(),
             "layer": str(identity["store"]),
             "schema_name": identity.get("schema"),
@@ -123,14 +123,14 @@ def _persist_target_processing(
         "Metadata",
         CATALOGUE_TABLE,
         metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        context={"config": config, "env": env},
+        context={"config": config, "scope_workspace_id": active_workspace_id},
     )
     target = DeltaTable.forPath(spark_session, path)
     (
         target.alias("target")
         .merge(
             source.alias("source"),
-            "target.environment_name = source.environment_name "
+            "target.workspace_id = source.workspace_id "
             "AND target.metadata_level = 'table' "
             "AND target.table_id = source.table_id "
             "AND target.column_id IS NULL",
@@ -415,7 +415,7 @@ def pipeline_write(
     keeps multiple target writes in one activity exact and independent.
 
     Retries identify the exact prepared business-row multiset, processing definition,
-    source membership, environment and target. The pipeline plan ID scopes transient
+    source membership, workspace_id and target. The pipeline plan ID scopes transient
     source state and is persisted as Source Observation run_id. The original writer
     run_id is retained in the batch receipt, allowing verified cross-run recovery
     while preserving the real Fabric activity audit. Before publication, target-specific
@@ -502,7 +502,7 @@ def pipeline_write(
         validate_processing_input,
     )
 
-    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+    config, active_workspace_id, context = resolve_fabric_context() if context is None else (context["config"], context["scope_workspace_id"], context)
     spark_session = get_spark_session(dataframe=df, context=context)
     context = {**context, "_pipeline_spark": spark_session}
     coordinates = (store, schema, table_name)
@@ -512,19 +512,19 @@ def pipeline_write(
         raise ValueError("Provide table_id or both store and table_name.")
 
     if table_id:
-        identity = resolve_catalogue_table_identity(config, env, table_id, context=context)
+        identity = resolve_catalogue_table_identity(config, active_workspace_id, table_id, context=context)
         authored = (
             {"load_strategy": load_strategy, **(load_strategy_parameters or {})}
             if load_strategy is not None
             else catalogue_authored_processing(identity)
         )
     else:
-        identity = resolve_physical_table_identity(config, env, store=store, schema=schema, table_name=table_name)
+        identity = resolve_physical_table_identity(config, active_workspace_id, store=store, schema=schema, table_name=table_name)
         identity["store_type"] = identity["store_kind"]
         authored = {"load_strategy": load_strategy, **(load_strategy_parameters or {})}
 
     processing = resolve_table_processing_definition(
-        config, env, str(identity["table_id"]), context=context, authored_processing=authored
+        config, active_workspace_id, str(identity["table_id"]), context=context, authored_processing=authored
     )
     publication_source_ids = _source_table_ids(source_table_ids)
     audit = resolve_target_audit_fields(context)
@@ -533,7 +533,7 @@ def pipeline_write(
     target_table_id = str(identity["table_id"])
     strategy = str(processing.get("load_strategy") or "")
     incremental_scopes = incremental_publication_scopes(
-        environment_name=env,
+        workspace_id=active_workspace_id,
         activity_id=execution_id,
         target_table_id=target_table_id,
         source_table_ids=publication_source_ids,
@@ -576,7 +576,7 @@ def pipeline_write(
         "notebook_id": audit["_notebook_id"],
         "context": context,
         "observation_snapshot": snapshot_pipeline_write_observations(
-            environment_name=env, activity_id=execution_id, target_table_id=target_table_id,
+            workspace_id=active_workspace_id, activity_id=execution_id, target_table_id=target_table_id,
             source_table_ids=publication_source_ids,
         ),
     }
@@ -747,7 +747,7 @@ def pipeline_write(
                 scheduled_refresh=scheduled_refresh,
                 audit=audit,
                 config=config,
-                env=env,
+                active_workspace_id=active_workspace_id,
                 dataframe=df,
                 context=context,
                 spark_session=spark_session,

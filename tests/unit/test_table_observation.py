@@ -15,23 +15,23 @@ def test_observe_table_is_not_public() -> None:
 
 def test_current_observations_are_tracked_independently_by_table_id() -> None:
     shared.set_current_source_observation(
-        environment_name="dev", activity_id="run", table_id="source-a", observation=[{"source": "a"}]
+        workspace_id="dev", activity_id="run", table_id="source-a", observation=[{"source": "a"}]
     )
     shared.set_current_source_observation(
-        environment_name="dev", activity_id="run", table_id="source-b", observation=[{"source": "b"}]
+        workspace_id="dev", activity_id="run", table_id="source-b", observation=[{"source": "b"}]
     )
     assert shared.get_current_source_observation(
-        environment_name="dev", activity_id="run", table_id="source-a"
+        workspace_id="dev", activity_id="run", table_id="source-a"
     ) == [{"source": "a"}]
     assert shared.get_current_source_observation(
-        environment_name="dev", activity_id="run", table_id="source-b"
+        workspace_id="dev", activity_id="run", table_id="source-b"
     ) == [{"source": "b"}]
 
 
 def test_missing_current_observation_requires_orchestrate_read() -> None:
     with pytest.raises(ValueError, match=r"call orchestrate_read\(\) first"):
         shared.get_current_source_observation(
-            environment_name="dev", activity_id="missing", table_id="source-a"
+            workspace_id="dev", activity_id="missing", table_id="source-a"
         )
 
 
@@ -118,14 +118,14 @@ def test_incremental_observation_allows_new_source_without_catalogue_or_contract
 
 
 def test_observation_rejects_identity_mismatch_across_environments(monkeypatch) -> None:
-    """Never silently use a source identity from another environment."""
+    """Never silently use a source identity from another workspace_id."""
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(shared, "get_spark_session", lambda *args, **_kwargs: object())
     monkeypatch.setattr(
         shared, "resolve_physical_table_identity",
-        lambda *args, **kwargs: {"table_id": "different-environment-table"},
+        lambda *args, **kwargs: {"table_id": "different-workspace_id-table"},
     )
-    with pytest.raises(ValueError, match="does not match environment"):
+    with pytest.raises(ValueError, match="does not match workspace_id"):
         shared.capture_source_observation(
             table_id="source-id",
             source_identity={"store": "Bronze", "schema": "demo", "table_name": "orders"},

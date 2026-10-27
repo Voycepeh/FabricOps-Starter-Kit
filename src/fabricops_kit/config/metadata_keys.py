@@ -6,8 +6,8 @@ import hashlib
 from typing import Any
 
 
-def _build_dq_rule_key(environment_name: Any, dataset_name: Any, table_name: Any, rule_id: Any) -> str:
+def _build_dq_rule_key(workspace_id: Any, dataset_name: Any, table_name: Any, rule_id: Any) -> str:
     normalized = "|".join(
-        str(part or "").strip().lower() for part in (environment_name, dataset_name, table_name, rule_id)
+        str(part or "").strip().lower() for part in (workspace_id, dataset_name, table_name, rule_id)
     )
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()

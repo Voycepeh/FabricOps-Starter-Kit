@@ -40,7 +40,7 @@ def runtime(monkeypatch):
     monkeypatch.setattr(shared, "resolve_configured_lakehouse_table", lambda store, table, schema, **kw:
                         (store, table, schema, f"configured/{schema}/{table}"))
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kw: {})
-    monkeypatch.setattr(shared, "resolve_physical_table_identity", lambda config, env, **kw:
+    monkeypatch.setattr(shared, "resolve_physical_table_identity", lambda config, active_workspace_id, **kw:
                         {**kw, "table_id": kw["table_name"]})
     monkeypatch.setattr(shared, "pipeline_physical_bindings", lambda identities, **kw: {
         key: {"workspace_id": "workspace", "item_id": item["store"], "kind": "lakehouse", "schema": item.get("schema"), "table_name": item["table_name"]}
@@ -67,7 +67,7 @@ def runtime(monkeypatch):
                       for i, role in enumerate(roles)}
         plan = shared.PipelineExecutionPlan(mode, "canary", "notebook", f"run-{len(saved)}", json.dumps(identities),
                                             "{}", json.dumps({key: {"table_id": key, "contract_id": "contract-" + key, "contract_version": 1,
-                            "status": "frozen", "contract_payload_json": json.dumps({"table": {"table_id": key, "columns": []}})} for key in identities}), {"config": {}, "env": "canary", "activity_id": activity, "notebook_name": notebook_name,
+                            "status": "frozen", "contract_payload_json": json.dumps({"table": {"table_id": key, "columns": []}})} for key in identities}), {"config": {}, "scope_workspace_id": "canary", "activity_id": activity, "notebook_name": notebook_name,
                             "_pipeline_bindings": {key: {"workspace_id": "workspace", "item_id": item["store"], "kind": "lakehouse", "schema": item.get("schema"), "table_name": item["table_name"]}
                                                    for key, item in identities.items()}},
                                             pipeline_id="orders")
@@ -226,7 +226,7 @@ def test_failed_guardrail_persistence_links_diagnostics_but_cannot_qualify(runti
     with pytest.raises(OSError):
         with shared.PipelineOperation(plan, "source", {"store": "Bronze", "schema": "physical", "table_name": "table0"}):
             shared.write_guardrail_result_row(
-                spark_session=shared.get_spark_session(), config={}, env="canary", run_id="wrong-run",
+                spark_session=shared.get_spark_session(), config={}, active_workspace_id="canary", run_id="wrong-run",
                 dataset_name="demo", table_name="table0", store_type="lakehouse", layer="Bronze",
                 guardrail_type="schema", rule_type="required_columns", table_id="table0",
                 result={"guardrail_rule_id": "schema-rule", "guardrail_version": 1, "can_continue": True,
@@ -275,7 +275,7 @@ def test_distinct_attempts_keep_activity_identity_and_survive_notebook_rename(ru
         plan = make(roles=("source",), activity="same-fabric-activity", notebook_name=name)
         operation(plan, 0)
         shared.write_guardrail_result_row(
-            spark_session=shared.get_spark_session(), config={}, env="canary", run_id="ignored",
+            spark_session=shared.get_spark_session(), config={}, active_workspace_id="canary", run_id="ignored",
             dataset_name="demo", table_name="table0", store_type="lakehouse", layer="Bronze",
             guardrail_type="schema", rule_type="required_columns", table_id="table0",
             result={"guardrail_rule_id": "schema-rule", "guardrail_version": 1, "can_continue": True,
@@ -436,19 +436,19 @@ def test_operation_cannot_switch_to_case_alias_store_in_another_physical_item(ru
     make, _, saved, _, _ = runtime
     config = framework_config()
     config.path_config.paths["dev"]["silver"] = FabricStore(
-        env="dev", workspace_id="other-workspace", item_id="live-item", kind="lakehouse",
+         workspace_id="dev", item_id="live-item", kind="lakehouse",
     )
     declared = resolve_physical_table_identity(config, "dev", store="Silver", schema=None, table_name="employees")
     actual = resolve_physical_table_identity(config, "dev", store="silver", schema=None, table_name="employees")
     assert declared["table_id"] == actual["table_id"]
     identities = {declared["table_id"]: {**declared, "logical_id": "employees", "roles": [role]}}
-    bindings = pipeline_physical_bindings(identities, config=config, environment="dev")
-    assert bindings != pipeline_physical_bindings({actual["table_id"]: actual}, config=config, environment="dev")
+    bindings = pipeline_physical_bindings(identities, config=config, workspace_id="dev")
+    assert bindings != pipeline_physical_bindings({actual["table_id"]: actual}, config=config, workspace_id="dev")
     original = make(roles=(role,))
     contracts = {declared["table_id"]: json.loads(original.contracts_json)["table0"]}
-    plan = replace(original, execution_mode=mode, environment="dev", participants_json=json.dumps(identities),
+    plan = replace(original, execution_mode=mode, workspace_id="dev", participants_json=json.dumps(identities),
                    contracts_json=json.dumps({key: None for key in contracts}), evidence={}, approved_operations_json="[]",
-                   runtime_context={"config": config, "env": "dev", "_pipeline_bindings": bindings})
+                   runtime_context={"config": config, "scope_workspace_id": "dev", "_pipeline_bindings": bindings})
     monkeypatch.setattr(shared, "resolve_physical_table_identity", resolve_physical_table_identity)
     monkeypatch.setattr(shared, "pipeline_physical_bindings", pipeline_physical_bindings)
     with pytest.raises(ValueError, match="physical destination"):

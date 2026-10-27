@@ -196,7 +196,7 @@ def test_profile_audit_uses_instant_type_even_with_ntz_session_default(spark_ses
     monkeypatch.setattr(profiler, "build_runtime_audit_fields", lambda **kw: audit)
     try:
         spark_session.conf.set("spark.sql.timestampType", "TIMESTAMP_NTZ")
-        columns = profiler._audit_literal_columns(config={}, env="dev", runtime_context={})
+        columns = profiler._audit_literal_columns(config={}, active_workspace_id="dev", runtime_context={})
         frame = spark_session.range(1).select(columns["_committed_at"].alias("_committed_at"))
         assert frame.schema["_committed_at"].dataType.typeName() == "timestamp"
         assert shared._max_column_value(frame, "_committed_at") == audit["_committed_at"]

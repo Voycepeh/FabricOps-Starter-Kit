@@ -18,9 +18,9 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One registered table or column in one environment.
+**Grain:** One current table or column observation in one workspace.
 
-**Primary key:** `environment_name` + `table_id` + `column_id`
+**Primary key:** `workspace_id` + `table_id` + `column_id`
 
 **Relationships:**
 
@@ -44,9 +44,9 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <div class="metadata-schema-table">
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
 <tr class="metadata-column--engineering"><td><code>metadata_level</code></td><td><code>string</code></td><td>Metadata Data Catalogue field <code>metadata_level</code>.</td></tr>
-<tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across environment, dataset, and table context.</td></tr>
-<tr class="metadata-column--engineering"><td><code>column_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a column across environment, dataset, table, and column context.</td></tr>
-<tr class="metadata-column--engineering"><td><code>environment_name</code></td><td><code>string</code></td><td>Environment name recorded for the metadata row.</td></tr>
+<tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across workspace, dataset, and table context.</td></tr>
+<tr class="metadata-column--engineering"><td><code>column_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a column across workspace, dataset, table, and column context.</td></tr>
+<tr class="metadata-column--engineering"><td><code>workspace_id</code></td><td><code>string</code></td><td>Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.</td></tr>
 <tr class="metadata-column--engineering"><td><code>store_type</code></td><td><code>string</code></td><td>Configured Fabric store type recorded for the profiled dataset.</td></tr>
 <tr class="metadata-column--engineering"><td><code>layer</code></td><td><code>string</code></td><td>The configured medallion layer where the table is stored.</td></tr>
 <tr class="metadata-column--engineering"><td><code>schema_name</code></td><td><code>string</code></td><td>Lakehouse or warehouse schema name recorded for the dataset when available.</td></tr>

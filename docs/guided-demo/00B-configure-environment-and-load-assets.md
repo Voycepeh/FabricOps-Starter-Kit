@@ -36,7 +36,7 @@ The Governance workspace contains the `metadata` Lakehouse, its Fabric Environme
 
 The Engineering Development workspace contains `bronze`, `silver`, `gold`, its Fabric Environment, `00_env_config`, the reusable `02_pipeline`, and the demo notebooks. Production uses the same config template with its own registered workspace ID. Advanced deployments may instead load a shared config notebook from Central Engineering.
 
-Consumers can use SQL or other native Fabric interfaces directly. For a project-specific consumer notebook using FabricOps, import the config template locally or explicitly select a shared config workspace, register its workspace, and grant access to the existing stores. Each registered workspace must have its own environment key.
+Consumers can use SQL or other native Fabric interfaces directly. For a project-specific consumer notebook using FabricOps, import the config template locally or explicitly select a shared config workspace, register its workspace, and grant access to the existing stores. Each registered workspace uses its workspace ID as the configuration key.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
@@ -71,7 +71,7 @@ Use the same FabricOps wheel version across the workspace-specific Environments 
 
 ## Configure `00_env_config`
 
-In each deployment of `00_env_config`, replace the Fabric ID placeholders with the IDs for the items created in 0A. Set `ENGINEERING_WORKSPACE_IDS` to one unique Engineering workspace ID per environment. The central Governance workspace uses `GOVERNANCE_WORKSPACE_ID` without an Engineering environment. Keep all Metadata stores pointed at the same Governance Lakehouse.
+In each deployment of `00_env_config`, replace the Fabric ID placeholders with the IDs for the items created in 0A. Configure `ENGINEERING_WORKSPACES` using stable workspace IDs as keys and each workspace’s business stores as values. The central Governance workspace uses `GOVERNANCE_WORKSPACE_ID` with Metadata only. Development and Production are example workspace roles; they do not control FabricOps identity or activation order. Keep all Metadata stores pointed at the same Governance Lakehouse.
 
 By default, `setup_notebook()` loads `00_env_config` from the current workspace. Advanced callers can pass `config_workspace_id="<configuration-workspace-id>"` to `setup_notebook()` to load a shared deployment. The remote config must register the caller workspace, and cross-workspace execution and store permissions are required. See [Workspace configuration](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#workspace-configuration).
 
@@ -126,13 +126,9 @@ In the Governance workspace, set `INITIALIZE_METADATA = True` and run `00_env_co
 
 ![Setup Metadata Tables](../assets/00B/00_config_metadata_tables_setup_code.png)
 
-This prepares the metadata Lakehouse before `01_governance` starts creating Data Stewards, Data Agreements, and later Data Contracts. Authored Enrichment and Guardrails live in `METADATA_DATA_CONTRACT.contract_payload_json`; separate definition tables are no longer setup requirements. Existing installations should follow the [report-first migration instructions](03-author-and-freeze-data-contract.md#manifest-freeze) before resuming authoring.
+This initializes the central governance and engineering metadata schemas before `01_governance` creates Stewards and Agreements. Contract Enrichment and Guardrails live in `METADATA_DATA_CONTRACT.contract_payload_json`.
 
-Fresh metadata and demo targets can start normally. Retired Preview tables may remain and produce advisory alerts in `setup_metadata_tables()["warnings"]`; only `verbose=True` prints them. Setup does not migrate or delete their data.
-
-??? info "Existing metadata and populated targets"
-
-    Preserve required definitions, progress or history before cleanup; use the [maintainer cutover guidance](../maintainer/metadata-v2-target-model.md#processing-state-upgrade) for explicit mapping/migration or a deliberate target rebuild/replay. Existing populated targets still require valid operational progress; an empty Processing State table does not make incremental continuation safe. Supported Live tables and rows are preserved, with compatible additive evolution; structural changes require supported migrations when introduced.
+This intentionally breaking workspace model requires a fresh metadata installation; no migration is supplied. Do not combine an empty Processing State table with existing incremental or SCD targets. Use fresh demo targets or perform a separately reviewed rebuild/replay.
 
 ![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
 

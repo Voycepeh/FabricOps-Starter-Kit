@@ -12,7 +12,6 @@ from uuid import uuid4
 from fabricops_kit.config import FabricStore
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
 
-DEFAULT_ENV = "Sandbox"
 DEFAULT_STORE = "Source"
 
 
@@ -64,16 +63,16 @@ def _normalize_schema_name(schema: str | None) -> str | None:
     return value
 
 
-def _validate_lakehouse_store(configured_store: FabricStore, env: str, store: str) -> None:
+def _validate_lakehouse_store(configured_store: FabricStore, active_workspace_id: str, store: str) -> None:
     """Validate that a resolved store is a lakehouse."""
     if configured_store.kind != "lakehouse":
-        raise ValueError(f"Store '{env}/{store}' is not a lakehouse store.")
+        raise ValueError(f"Store '{active_workspace_id}/{store}' is not a lakehouse store.")
 
 
-def _validate_warehouse_store(configured_store: FabricStore, env: str, store: str) -> None:
+def _validate_warehouse_store(configured_store: FabricStore, active_workspace_id: str, store: str) -> None:
     """Validate that a resolved store is a warehouse."""
     if configured_store.kind != "warehouse":
-        raise ValueError(f"Store '{env}/{store}' is not a warehouse store.")
+        raise ValueError(f"Store '{active_workspace_id}/{store}' is not a warehouse store.")
 
 
 def _validate_relative_path(relative_path: str) -> str:
@@ -157,15 +156,15 @@ def resolve_store(
     store: str, expected_kind: str, *, context: dict[str, Any] | None = None
 ) -> tuple[FabricStore, str]:
     """Resolve and validate a configured FabricStore."""
-    config, env, _context = resolve_fabric_context(context=context)
-    configured_store = get_store(config, env, store)
+    config, active_workspace_id, _context = resolve_fabric_context(context=context)
+    configured_store = get_store(config, active_workspace_id, store)
     if expected_kind == "lakehouse":
-        _validate_lakehouse_store(configured_store, env, store)
+        _validate_lakehouse_store(configured_store, active_workspace_id, store)
     elif expected_kind == "warehouse":
-        _validate_warehouse_store(configured_store, env, store)
+        _validate_warehouse_store(configured_store, active_workspace_id, store)
     else:
         raise ValueError("expected_kind must be one of: lakehouse, warehouse.")
-    return configured_store, env
+    return configured_store, active_workspace_id
 
 
 def resolve_configured_file_path(
@@ -181,7 +180,7 @@ def resolve_configured_lakehouse_table(
     store: str, table_name: str, schema: str | None, *, context: dict[str, Any] | None = None
 ) -> tuple[FabricStore, str, str | None, str]:
     """Resolve a logical store key and table through configured lakehouse metadata."""
-    config, env, resolved_context = resolve_fabric_context(context=context)
+    config, active_workspace_id, resolved_context = resolve_fabric_context(context=context)
     configured_store, _env = resolve_store(store, "lakehouse", context=resolved_context)
     if store == "Metadata":
         from fabricops_kit.config.metadata_schemas import METADATA_TABLE_OWNERSHIP, metadata_table_physical_schema
@@ -493,10 +492,10 @@ class DeltaCommitMetrics:
                     pass
         return None
 
-def configured_lakehouse_schema(config: Any, env: str, store: str) -> str | None:
+def configured_lakehouse_schema(config: Any, active_workspace_id: str, store: str) -> str | None:
     """Return the configured schema for a schema-enabled Lakehouse store."""
     try:
-        configured_store = get_store(config, env, store)
+        configured_store = get_store(config, active_workspace_id, store)
     except ValueError:
         return None
     if configured_store.kind != "lakehouse" or not getattr(configured_store, "schema_enabled", False):

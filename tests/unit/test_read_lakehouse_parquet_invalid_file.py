@@ -15,7 +15,7 @@ def _context():
         paths={
             "dev": {
                 "Bronze": FabricStore(
-                    env="dev",
+
                     workspace_id="dev-bronze-workspace",
                     item_id="dev-bronze-item",
                     kind="lakehouse",
@@ -23,7 +23,7 @@ def _context():
             }
         }
     )
-    return {"config": config, "env": "dev"}
+    return {"config": config, "scope_workspace_id": "dev"}
 
 
 def test_invalid_parquet_footer_skips_tsus_fallback():

@@ -17,7 +17,7 @@ def test_table_id_reader_resolves_catalogue_and_pipeline_cached_identifiers(monk
         "table_id": table_id, "store": "Source", "schema": "demo",
         "table_name": "orders", kind_field: "lakehouse",
     }
-    context = {"config": object(), "env": "poc", "_pipeline_identities": {table_id: identity}}
+    context = {"config": object(), "scope_workspace_id": "poc", "_pipeline_identities": {table_id: identity}}
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda **_kwargs: (context["config"], "poc", context))
     location = Mock(return_value=(object(), "orders", "demo", "abfss://test/orders"))
     monkeypatch.setattr(reader_module, "resolve_configured_lakehouse_table", location)
@@ -40,7 +40,7 @@ def test_table_id_reader_still_rejects_non_lakehouse_tables(monkeypatch, kind_fi
     shared = import_module("fabricops_kit.pipeline.shared")
     table_id = "warehouse-table-id"
     context = {
-        "config": object(), "env": "poc",
+        "config": object(), "scope_workspace_id": "poc",
         "_pipeline_identities": {table_id: {
             "table_id": table_id, "store": "Gold", "schema": "demo",
             "table_name": "orders", kind_field: "warehouse",

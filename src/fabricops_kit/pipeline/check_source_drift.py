@@ -20,11 +20,11 @@ def check_source_drift(
     context=None,
 ) -> dict:
     """Evaluate the resolved contract stage and return its continuation decision."""
-    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+    config, active_workspace_id, context = resolve_fabric_context() if context is None else (context["config"], context["scope_workspace_id"], context)
     spark_session = get_spark_session(context=context)
     contract = resolve_pipeline_data_contract(
         config,
-        env,
+        active_workspace_id,
         str(source_table_id).strip(),
         spark_session=spark_session,
         context=context,
@@ -37,7 +37,7 @@ def check_source_drift(
             "reason": "Explicit No Contract selected.",
             "source_table_id": str(source_table_id).strip(),
             "target_table_id": str(target_table_id).strip(),
-            "environment_name": env,
+            "workspace_id": active_workspace_id,
         }
         print_guardrail_result(
             "Source Drift",
@@ -46,7 +46,7 @@ def check_source_drift(
             source_table_id=str(source_table_id).strip(),
             target_table_id=str(target_table_id).strip(),
             config=config,
-            env=env,
+            active_workspace_id=active_workspace_id,
             spark_session=spark_session,
             context=context,
         )
@@ -54,10 +54,10 @@ def check_source_drift(
             print(f"  Reason {result['reason']}")
         return result
     source = resolve_catalogue_table_identity(
-        config, env, source_table_id, spark_session=spark_session, context=context
+        config, active_workspace_id, source_table_id, spark_session=spark_session, context=context
     )
     target = resolve_catalogue_table_identity(
-        config, env, target_table_id, spark_session=spark_session, context=context
+        config, active_workspace_id, target_table_id, spark_session=spark_session, context=context
     )
     source_load_strategy = str(source.get("load_strategy") or "").strip().lower()
     processing_origin = "FabricOps Catalogue"
@@ -67,7 +67,7 @@ def check_source_drift(
         authored_processing = {"load_strategy": source_load_strategy, **parameters}
         source_processing = resolve_table_processing_definition(
             config,
-            env,
+            active_workspace_id,
             str(source["table_id"]),
             spark_session=spark_session,
             context=context,
@@ -102,7 +102,7 @@ def check_source_drift(
         source_table_id=source_table_id,
         target_table_id=str(target["table_id"]),
         config=config,
-        env=env,
+        active_workspace_id=active_workspace_id,
         spark_session=spark_session,
         context=context,
     )

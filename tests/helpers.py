@@ -14,12 +14,12 @@ from fabricops_kit.config import (
 from fabricops_kit.config import FabricStore
 
 
-def store(kind: str = "lakehouse", *, env: str = "dev") -> FabricStore:
+def store(kind: str = "lakehouse", *, active_workspace_id: str = "dev") -> FabricStore:
     """Return store."""
     return FabricStore(
-        env=env,
-        workspace_id=f"{env}-workspace",
-        item_id=f"{env}-{kind}-item",
+
+        workspace_id=active_workspace_id,
+        item_id=f"{active_workspace_id}-{kind}-item",
         kind=kind,
     )
 
@@ -34,7 +34,7 @@ def framework_config() -> FrameworkConfig:
                     "Silver": store("lakehouse"),
                     "Gold": store("warehouse"),
                     "Metadata": FabricStore(
-                        env="dev",
+
                         workspace_id="dev-workspace",
                         item_id="dev-lakehouse-item",
                         kind="lakehouse",
@@ -152,7 +152,7 @@ class FakeSpark:
 
 def execution_plan_stub(mode="live"):
     """Provide explicit authority for isolated orchestrator stage-order tests."""
-    return SimpleNamespace(execution_mode=mode, permits_persistence=mode == "live", plan_id="test-plan", runtime_context={}, environment="dev", results=[], simulations=[])
+    return SimpleNamespace(execution_mode=mode, permits_persistence=mode == "live", plan_id="test-plan", runtime_context={}, workspace_id="dev", results=[], simulations=[])
 
 
 def execution_context_stub(contracts, rules=None, *, mode="live"):

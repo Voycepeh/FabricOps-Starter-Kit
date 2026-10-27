@@ -37,7 +37,7 @@ def scan_sql_access(
     catalogue_df,
     *,
     targets: str | list[str] | tuple[str, ...]='warehouse',
-    environment_name: str | None=None,
+    workspace_id: str | None=None,
     access_snapshot_id: str | None=None,
     persist: bool=True,
     context: dict[str, Any] | None=None,
@@ -58,7 +58,7 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `catalogue_df` | `pyspark.sql.DataFrame` | Yes | `—` | ``METADATA_DATA_CATALOGUE`` rows used to resolve observed SQL objects to canonical FabricOps ``table_id`` values. |
 | `targets` | `str \| list[str] \| tuple[str, ...]` | No | `'warehouse'` | One or more configured Warehouse or Lakehouse target keys from ``00_env_config`` whose SQL endpoints expose the supported catalogue views. |
-| `environment_name` | `str \| None` | No | `None` | FabricOps configuration environment used for target resolution, catalogue filtering, and environment-labelled access rows. Defaults to the active FabricOps environment. Fabric authentication and execution identity continue to come from the active runtime. |
+| `workspace_id` | `str \| None` | No | `None` | FabricOps configuration workspace_id used for target resolution, catalogue filtering, and workspace_id-labelled access rows. Defaults to the active FabricOps workspace_id. Fabric authentication and execution identity continue to come from the active runtime. |
 | `access_snapshot_id` | `str \| None` | No | `None` | Identifier shared by all rows in this scan. A UUID is generated when omitted. |
 | `persist` | `bool` | No | `True` | Append normalized access rows to METADATA_DATA_ACCESS when True. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active FabricOps context override. |

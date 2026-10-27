@@ -29,7 +29,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
     merge_processing_state = shared._merge_source_observation_records
     history = []
     state = {"activity": "interactive", "fail": None, "target": "target", "mode": "append"}
-    context = {"config": object(), "env": "dev", "execution_plan": SimpleNamespace(permits_persistence=True, simulations=[])}
+    context = {"config": object(), "scope_workspace_id": "dev", "execution_plan": SimpleNamespace(permits_persistence=True, simulations=[])}
 
     def identity(*_args, **kwargs):
         name = kwargs.get("table_name", state["target"])
@@ -106,7 +106,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
         if incremental:
             maximum = 8 if day == 1 else 12
             observation = [{'observation_id': str(uuid4()), 'source_table_id': 'source', 'target_table_id': '',
-                            'environment_name': 'dev', 'partition_value': '', 'row_count': len(rows),
+                            'workspace_id': 'dev', 'partition_value': '', 'row_count': len(rows),
                             'min_change_value': '1', 'max_change_value': str(maximum), 'is_present': True,
                             'partition_column': 'id', 'change_column': 'id', 'watermark_type': 'bigint', **audit()}]
             scope = shared.resolve_incremental_source_scope(source_table_id='source', target_table_id=state['target'], observation=observation)
@@ -322,12 +322,12 @@ def test_concurrent_exact_append_accepts_only_winning_transaction(publication_ru
         if durable_winner:
             winner["run_id"] = "competing-run"
             origin = shared.source_observation_run_id(run.context) or run.state["activity"]
-            snapshot = shared.snapshot_pipeline_write_observations(environment_name="dev", activity_id=origin,
+            snapshot = shared.snapshot_pipeline_write_observations(workspace_id="dev", activity_id=origin,
                 target_table_id="target", source_table_ids=["source"])
             winner_context = {**run.context, "execution_plan": SimpleNamespace(permits_persistence=True, plan_id="competing-run")}
             staged = shared._pipeline_write_state_records({"target_table_id": "target", "source_table_ids": ["source"],
                 "publication": winner, "observation_snapshot": snapshot, "context": winner_context},
-                audit={**writer.resolve_target_audit_fields(run.context), "_activity_id": winner["activity_id"]}, env="dev", status="staged")
+                audit={**writer.resolve_target_audit_fields(run.context), "_activity_id": winner["activity_id"]}, active_workspace_id="dev", status="staged")
             shared._merge_source_observation_records(staged, config=run.context["config"], context=run.context)
         competing = df.withColumn('_activity_id', F.lit(winner['activity_id'])).withColumn('_committed_at', F.lit(datetime.fromisoformat(winner['committed_at'])))
         write(competing, name, **{**kwargs, 'options': {**attempted, 'userMetadata': json.dumps(winner, sort_keys=True)}})
@@ -384,7 +384,7 @@ def test_02b_inventory_snapshots_through_incremental_read(publication_runtime, m
 
     def capture(*, dataframe, **_kwargs):
         audit = writer.resolve_target_audit_fields(run.context)
-        return [{**row, **audit, 'observation_id': str(uuid4()), 'environment_name': 'dev',
+        return [{**row, **audit, 'observation_id': str(uuid4()), 'workspace_id': 'dev',
                  'source_table_id': 'source', 'target_table_id': '',
                  'partition_column': 'modified_datetime', 'change_column': 'modified_datetime'}
                 for row in shared._observe_dataframe(dataframe, 'modified_datetime', 'modified_datetime', watermark_only=True)]
@@ -685,7 +685,7 @@ def test_durable_multi_source_recovery_is_one_transaction(durable_processing_sta
     shared._PENDING_SOURCE_OBSERVATIONS.clear()
     shared._PENDING_SOURCE_DRIFT_OBSERVATIONS.clear()
     run.context["execution_plan"].plan_id = "restarted-run"
-    shared._recover_completed_source_observations(run.read("METADATA_PROCESSING_STATE"), config=run.context["config"], env="dev",
+    shared._recover_completed_source_observations(run.read("METADATA_PROCESSING_STATE"), config=run.context["config"], active_workspace_id="dev",
                                                 context=run.context, source_table_id="source", target_table_id="target")
     table = run.delta.forPath(run.spark, str(run.path / "METADATA_PROCESSING_STATE"))
     assert table.history(1).first().version == before + 1
@@ -733,7 +733,7 @@ def test_captured_observation_is_typed_but_never_accepted_progress(durable_proce
     assert row.watermark_type == "bigint" and row.change_column == "id"
     assert row.max_change_value == "8" and row.row_count == 8
     assert row.observed_at and row.accepted_at is None and row.publication_id is None
-    assert shared._latest_source_target_observation(persisted, source_table_id="source", target_table_id="target", environment_name="dev") == []
+    assert shared._latest_source_target_observation(persisted, source_table_id="source", target_table_id="target", workspace_id="dev") == []
     shared._PENDING_SOURCE_OBSERVATIONS.clear()
     shared._INCREMENTAL_SOURCE_SCOPES.clear()
     scope = shared.resolve_incremental_source_scope(source_table_id="source", target_table_id="target", observation=evidence, context=run.context)
@@ -741,9 +741,9 @@ def test_captured_observation_is_typed_but_never_accepted_progress(durable_proce
     run.publish(frame)
     accepted = run.read("METADATA_PROCESSING_STATE")
     assert {r.record_type for r in accepted.collect()} == {"source_observation", "incremental_checkpoint", "publication_receipt"}
-    assert shared._latest_source_target_observation(accepted, source_table_id="source", target_table_id="target", environment_name="prod") == []
-    assert shared._latest_source_target_observation(accepted, source_table_id="other-source", target_table_id="target", environment_name="dev") == []
-    checkpoint = shared._latest_source_target_observation(accepted, source_table_id="source", target_table_id="target", environment_name="dev")[0]
+    assert shared._latest_source_target_observation(accepted, source_table_id="source", target_table_id="target", workspace_id="prod") == []
+    assert shared._latest_source_target_observation(accepted, source_table_id="other-source", target_table_id="target", workspace_id="dev") == []
+    checkpoint = shared._latest_source_target_observation(accepted, source_table_id="source", target_table_id="target", workspace_id="dev")[0]
     assert checkpoint["watermark_type"] == "bigint" and checkpoint["max_change_value"] == "8"
 
 
@@ -787,7 +787,7 @@ def test_exact_retry_without_volatile_snapshots_accepts_all_original_members(dur
     assert {row["run_id"] for row in accepted} == {"original-run"}
     assert len({row["accepted_at"] for row in accepted}) == 1
     for source_id in ("source", "other-source"):
-        checkpoint = shared._latest_source_target_observation(accepted, source_table_id=source_id, target_table_id="target", environment_name="dev")
+        checkpoint = shared._latest_source_target_observation(accepted, source_table_id=source_id, target_table_id="target", workspace_id="dev")
         assert len(checkpoint) == 1 and checkpoint[0]["max_change_value"] == "8"
     publish(run.read("source"))
     assert {row["record_id"]: row for row in shared.observation_rows(run.read("METADATA_PROCESSING_STATE"))} == {
@@ -810,7 +810,7 @@ def test_recovery_includes_a_previously_acknowledged_receipt(durable_processing_
     table = run.delta.forPath(run.spark, str(run.path / "METADATA_PROCESSING_STATE"))
     receipt = next(row for row in shared.observation_rows(table.toDF()) if row["record_type"] == "publication_receipt")
     before = table.history(1).first().version
-    recovered = shared._recover_completed_source_observations(table.toDF(), config=run.context["config"], env="dev",
+    recovered = shared._recover_completed_source_observations(table.toDF(), config=run.context["config"], active_workspace_id="dev",
         context=run.context, source_table_id="source", target_table_id="target")
     assert table.history(1).first().version == before + 1
     assert {row["status"] for row in recovered} == {"committed"}
@@ -826,7 +826,7 @@ def test_empty_drift_snapshot_has_unique_durable_partition_keys(durable_processi
     import json
     run = durable_processing_state
     run.state["processing"] = {"load_strategy": "overwrite"}
-    source_rule = {"table_id": "source", "environment_name": "dev", "guardrail_type": "source_drift", "rule_type": "historical_mutation",
+    source_rule = {"table_id": "source", "workspace_id": "dev", "guardrail_type": "source_drift", "rule_type": "historical_mutation",
                    "action": "Block", "is_active": True, "guardrail_rule_id": "source-drift",
                    "rule_parameters_json": json.dumps({"partition_column": "partition", "change_column": "modified"})}
     monkeypatch.setattr(shared, "get_store", lambda *a, **kw: SimpleNamespace(schema_enabled=False))
@@ -846,7 +846,7 @@ def test_empty_drift_snapshot_has_unique_durable_partition_keys(durable_processi
         assert metadata.groupBy("record_id").count().where("count > 1").count() == 0
     assert run.read("target").count() == 0
     baseline = shared._previous_source_target_observation(run.read("METADATA_PROCESSING_STATE"), source_table_id="source",
-        target_table_id="target", environment_name="dev", committed_at=datetime.now(UTC).replace(tzinfo=None))
+        target_table_id="target", workspace_id="dev", committed_at=datetime.now(UTC).replace(tzinfo=None))
     assert len(baseline) == len(partitions) + 1
     assert len([row for row in baseline if row["is_present"] is None]) == 1
     removed = [row for row in baseline if row["is_present"] is False]

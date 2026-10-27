@@ -28,7 +28,7 @@ def catalogue_row(table_id: str, table_name: str, *, active=True, level="table")
         "metadata_level": level,
         "table_id": table_id,
         "column_id": None,
-        "environment_name": "dev",
+        "workspace_id": "dev",
         "store_type": "lakehouse",
         "layer": "Silver",
         "schema_name": "sales",
@@ -69,7 +69,7 @@ def test_catalogue_resolver_suppresses_internal_io_log(monkeypatch):
         object(),
         "dev",
         "table-a",
-        context={"config": "config", "env": "dev"},
+        context={"config": "config", "scope_workspace_id": "dev"},
     )
 
     assert captured["context"]["_fabricops_suppress_io_log"] is True

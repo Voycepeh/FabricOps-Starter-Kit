@@ -38,9 +38,31 @@ ENRICHMENT_TYPES_BY_LEVEL = {
 _CONTRACT_NAMESPACE = uuid.UUID("8383c7ec-23f5-4ad8-92ea-0871045c310c")
 
 
-def _metadata_io_context(config: Any, env: str) -> dict[str, Any]:
+def _metadata_io_context(config: Any, active_workspace_id: str) -> dict[str, Any]:
     """Return quiet internal metadata IO context for Data Contract services."""
-    return {"config": config, "env": env, "_fabricops_suppress_io_log": True}
+    return {"config": config, "scope_workspace_id": active_workspace_id, "_fabricops_suppress_io_log": True}
+
+
+def current_catalogue_observations(rows):
+    """Return current active assets without reviving older inactive columns."""
+    latest = _latest(row_dicts(rows), ("workspace_id", "table_id", "metadata_level", "column_id"))
+    active_tables = {(str(row.get("workspace_id") or ""), str(row.get("table_id") or ""))
+                     for row in latest if row.get("is_active") is not False
+                     and str(row.get("metadata_level") or "").lower() == "table"}
+    return [row for row in latest if row.get("is_active") is not False
+            and (str(row.get("workspace_id") or ""), str(row.get("table_id") or "")) in active_tables]
+
+
+def observation_selector_options(rows, *, table_id=None, workspace_id=None):
+    """Filter global Table and Workspace choices in either direction, without defaults."""
+    tables = [row for row in current_catalogue_observations(rows)
+              if str(row.get("metadata_level") or "").lower() == "table"]
+    return {
+        "tables": sorted({str(row["table_id"]) for row in tables
+                          if not workspace_id or str(row["workspace_id"]) == workspace_id}),
+        "workspaces": sorted({str(row["workspace_id"]) for row in tables
+                              if not table_id or str(row["table_id"]) == table_id}),
+    }
 
 
 def contract_lifecycle_id(table_id: str) -> str:
@@ -52,14 +74,14 @@ def contract_lifecycle_id(table_id: str) -> str:
 
 
 def create_contract_draft(
-    *, table_id: str, config: Any, env: str, spark_session: Any,
+    *, table_id: str, config: Any, active_workspace_id: str, spark_session: Any,
     context: Mapping[str, Any] | None = None, store: str = "Metadata",
     schema: str | None = None,
 ) -> dict[str, Any]:
     """Create or reopen the one mutable draft for a governed table."""
     lifecycle_id = contract_lifecycle_id(table_id)
     runtime_context = {
-        "config": config, "env": env, **dict(context or {}),
+        "config": config, "scope_workspace_id": active_workspace_id, **dict(context or {}),
         "_fabricops_suppress_io_log": True,
     }
     catalogue_rows = row_dicts(read_lakehouse_table(
@@ -68,9 +90,9 @@ def create_contract_draft(
         context={**(runtime_context or {}), "_spark_session": spark_session},
     ))
     active_catalogue = [
-        row for row in catalogue_rows
+        row for row in current_catalogue_observations(catalogue_rows)
         if str(row.get("table_id") or "") == str(table_id).strip()
-        and str(row.get("environment_name") or "") == env
+        and str(row.get("workspace_id") or "") == active_workspace_id
         and row.get("is_active") is not False
     ]
     current = _latest(active_catalogue, ("table_id", "column_id"))
@@ -79,7 +101,7 @@ def create_contract_draft(
         if str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id")
     ]
     if not table_rows:
-        raise ValueError("table_id has no active table-level Catalogue row in the authoring environment.")
+        raise ValueError("table_id has no active table-level Catalogue row in the authoring workspace_id.")
     table = table_rows[-1]
     observed_columns = [
         _fields(row, ("column_id", "column_name", "data_type"))
@@ -120,15 +142,29 @@ def create_contract_draft(
         for item in (seed.get("table", {}).get("columns", []) if seed else [])
         if item.get("column_id")
     }
-    columns = [
-        {
-            **column,
-            "data_type": str(previous_columns.get(str(column.get("column_id") or ""), {}).get(
-                "data_type"
-            ) or column.get("data_type") or ""),
-        }
-        for column in observed_columns
-    ]
+    changed_ids = {str(column["column_id"]) for column in observed_columns
+                   if str(column["column_id"]) in previous_columns
+                   and str(previous_columns[str(column["column_id"])].get("data_type") or "").strip().lower()
+                   != str(column.get("data_type") or "").strip().lower()}
+    columns = [{**column, "presence": previous_columns.get(str(column.get("column_id") or ""), {}).get("presence", "required"),
+                "review_status": "changed" if str(column["column_id"]) in changed_ids else
+                                 "inherited" if str(column["column_id"]) in previous_columns else "unreviewed"}
+               for column in observed_columns]
+    retained_ids = {str(column["column_id"]) for column in columns}
+    if seed:
+        seed["enrichment"]["columns"] = [row for row in seed.get("enrichment", {}).get("columns", [])
+                                           if str(row.get("column_id") or "") in retained_ids]
+        names = {str(column["column_name"]) for column in columns}
+        changed_names = {str(column["column_name"]) for column in columns if str(column["column_id"]) in changed_ids}
+        seed["guardrails"] = [rule for rule in seed.get("guardrails", [])
+                              if (not rule.get("column_id") or str(rule["column_id"]) in retained_ids - changed_ids)
+                              and not (set(rule.get("rule_parameters", {}).get("columns", [])) - retained_ids - names)
+                              and not (set(rule.get("rule_parameters", {}).get("columns", [])) & (changed_ids | changed_names))]
+        for rule in seed["guardrails"]:
+            if rule.get("guardrail_type") == "schema":
+                rule.update(rule_type="strict", action="Block", is_active=True,
+                    rule_parameters={"required_columns": [str(column["column_id"]) for column in columns
+                                                          if column.get("presence", "required") == "required"]})
 
     strategy = str(table.get("load_strategy") or "").strip()
     if strategy:
@@ -153,7 +189,8 @@ def create_contract_draft(
         },
         "table": {
             **dict(seed.get("table") or {}),
-            **_fields(table, ("table_id", "environment_name", "store_type", "layer", "schema_name", "table_name")),
+            **_fields(table, ("table_id", "store_type", "layer", "schema_name", "table_name")),
+            "evidence_workspace_id": active_workspace_id,
             "columns": columns,
             "processing": processing,
             "processing_source": processing_source,
@@ -175,13 +212,13 @@ def create_contract_draft(
         item["contract_id"] = lifecycle_id
         item["contract_version"] = version
 
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+    audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context)
     row = coerce_metadata_row_types(DATA_CONTRACT_TABLE, {
         "contract_id": lifecycle_id,
         "contract_version": version,
         "table_id": str(table_id).strip(),
         "table_name": payload_table_name,
-        "environment_name": env,
+        "evidence_workspace_id": active_workspace_id,
         "contract_payload_json": json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
         "status": "draft",
         **audit,
@@ -318,6 +355,9 @@ def validate_contract_definitions(
     columns = table.get("columns", [])
     if not isinstance(columns, list) or any(not isinstance(item, dict) for item in columns):
         raise ValueError("Data Contract table.columns must be a list of objects.")
+    for column in columns:
+        if column.get("presence", "required") not in {"required", "optional"}:
+            raise ValueError("Column presence must be required or optional; nullability is separate.")
     column_ids = {str(item.get("column_id") or "") for item in columns}
     seen = set()
     for group, level in (("table", "table"), ("columns", "column")):
@@ -372,7 +412,7 @@ def validate_contract_definitions(
 
 
 def _payload_authoring_rows(
-    payload: Mapping[str, Any], *, contract_id: str, contract_version: int, environment_name: str,
+    payload: Mapping[str, Any], *, contract_id: str, contract_version: int, workspace_id: str,
     allow_unresolved_columns: bool = False,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Convert one draft payload into the row shapes used by the authoring widget."""
@@ -387,7 +427,7 @@ def _payload_authoring_rows(
             **dict(item),
             "contract_id": contract_id,
             "contract_version": contract_version,
-            "environment_name": environment_name,
+            "workspace_id": workspace_id,
         }
         for item in enrichment_items
     ]
@@ -396,7 +436,7 @@ def _payload_authoring_rows(
         row = dict(item)
         row["contract_id"] = contract_id
         row["contract_version"] = contract_version
-        row["environment_name"] = environment_name
+        row["workspace_id"] = workspace_id
         row["rule_parameters_json"] = json.dumps(
             dict(row.pop("rule_parameters", {}) or {}),
             sort_keys=True,
@@ -409,7 +449,7 @@ def _payload_authoring_rows(
 
 
 def _confirm_contract_mutation(
-    expected: Mapping[str, Any], *, config: Any, env: str, spark_session: Any,
+    expected: Mapping[str, Any], *, config: Any, active_workspace_id: str, spark_session: Any,
     context: Mapping[str, Any], store: str, schema: str | None,
 ) -> dict[str, Any]:
     """Reject skipped or superseded mutations before the widget clears pending edits."""
@@ -423,7 +463,7 @@ def _confirm_contract_mutation(
             f"contract_version = {int(expected['contract_version'])}",
         ),
         contract_id=expected["contract_id"], contract_version=expected["contract_version"],
-        environment_name=env,
+        workspace_id=active_workspace_id,
     )
     fields = ("status", "contract_payload_json", "_activity_id", "_committed_at")
     if len(matches) != 1 or any(matches[0].get(name) != expected.get(name) for name in fields):
@@ -439,7 +479,7 @@ def save_contract_draft(
     draft: Mapping[str, Any],
     payload: Mapping[str, Any],
     config: Any,
-    env: str,
+    active_workspace_id: str,
     spark_session: Any,
     context: Mapping[str, Any] | None = None,
     store: str = "Metadata",
@@ -469,10 +509,10 @@ def save_contract_draft(
     validate_contract_definitions(canonical)
     validate_grain_contract(canonical)
     runtime_context = {
-        "config": config, "env": env, **dict(context or {}),
+        "config": config, "scope_workspace_id": active_workspace_id, **dict(context or {}),
         "_fabricops_suppress_io_log": True,
     }
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+    audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context)
     updated = coerce_metadata_row_types(DATA_CONTRACT_TABLE, {
         **dict(draft),
         "contract_payload_json": json.dumps(
@@ -493,7 +533,7 @@ def save_contract_draft(
         store,
         DATA_CONTRACT_TABLE,
         metadata_table_physical_schema(config, DATA_CONTRACT_TABLE)
-        if store == "Metadata" else schema or configured_lakehouse_schema(config, env, store),
+        if store == "Metadata" else schema or configured_lakehouse_schema(config, active_workspace_id, store),
         context=runtime_context,
     )
     (
@@ -508,7 +548,7 @@ def save_contract_draft(
         .execute()
     )
     return _confirm_contract_mutation(
-        updated, config=config, env=env, spark_session=spark_session,
+        updated, config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
         context=runtime_context, store=store, schema=schema,
     )
 
@@ -618,11 +658,11 @@ def validate_sensitive_data_parameters(parameters: Mapping[str, Any]) -> dict[st
     return normalized
 
 
-def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, env: str) -> dict[str, Any]:
+def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, active_workspace_id: str) -> dict[str, Any]:
     """Build one canonical, exact-contract-version Guardrail authoring row."""
     import json
 
-    audit = build_runtime_audit_fields(config=config, env=env)
+    audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id)
     contract_id, contract_version = validate_contract_identity(
         record.get("contract_id"), record.get("contract_version")
     )
@@ -650,7 +690,7 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, e
     contract_rows = [] if record.get("table_name") or record.get("table_id") else row_dicts(read_lakehouse_table(
         DATA_CONTRACT_TABLE, store="Metadata",
         schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-        context=_metadata_io_context(config, env), missing_ok=True,
+        context=_metadata_io_context(config, active_workspace_id), missing_ok=True,
     ))
     contract = next((row for row in contract_rows
                      if str(row.get("contract_id") or "") == contract_id
@@ -671,7 +711,7 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, e
         "table_name": str(table.get("table_name") or "") if isinstance(table, dict) else "",
         "column_id": column_id,
         "column_name": column_name,
-        "environment_name": str(record.get("environment_name") or env),
+        "workspace_id": str(record.get("workspace_id") or active_workspace_id),
         "guardrail_type": guardrail_type,
         "rule_id": str(record.get("rule_id") or "").strip(),
         "rule_type": str(record.get("rule_type") or "").strip(),
@@ -687,13 +727,13 @@ def contract_version_records(
     *,
     contract_id: str,
     contract_version: int,
-    environment_name: str,
+    workspace_id: str,
 ) -> list[dict[str, Any]]:
-    """Return rows owned by one global contract version; environment is provenance."""
+    """Return rows owned by one global contract version; workspace_id is provenance."""
     identity, version = validate_contract_identity(contract_id, contract_version)
-    env = str(environment_name or "").strip()
-    if not env:
-        raise ValueError("environment_name is required for contract authoring.")
+    active_workspace_id = str(workspace_id or "").strip()
+    if not active_workspace_id:
+        raise ValueError("workspace_id is required for contract authoring.")
     return [
         row for row in row_dicts(rows)
         if str(row.get("contract_id") or "") == identity
@@ -721,7 +761,7 @@ def canonical_enrichment_state(rows: Any) -> list[dict[str, Any]]:
 def get_contract_authoring_state(
     *,
     config: Any,
-    env: str,
+    active_workspace_id: str,
     spark_session: Any,
     contract_id: str,
     contract_version: int,
@@ -729,7 +769,7 @@ def get_contract_authoring_state(
 ) -> dict[str, Any]:
     """Load one exact Data Contract version for editing or review."""
     identity, version = validate_contract_identity(contract_id, contract_version)
-    context = _metadata_io_context(config, env)
+    context = _metadata_io_context(config, active_workspace_id)
     if contract is None:
         contract_frame = read_lakehouse_table(
             DATA_CONTRACT_TABLE, store="Metadata",
@@ -744,7 +784,7 @@ def get_contract_authoring_state(
             ),
             contract_id=identity,
             contract_version=version,
-            environment_name=env,
+            workspace_id=active_workspace_id,
         )
         if len(matches) != 1:
             raise ValueError("The exact global Data Contract version is missing or duplicated.")
@@ -754,7 +794,7 @@ def get_contract_authoring_state(
             [contract],
             contract_id=identity,
             contract_version=version,
-            environment_name=env,
+            workspace_id=active_workspace_id,
         )
         if not matches:
             raise ValueError("The supplied Data Contract row does not match the requested version.")
@@ -769,7 +809,7 @@ def get_contract_authoring_state(
     catalogue_rows = _scoped_rows(
         catalogue_frame,
         f"table_id = {_sql_literal(table_id)}",
-        f"environment_name = {_sql_literal(env)}",
+        f"workspace_id = {_sql_literal(active_workspace_id)}",
     )
     payload = _json_value(
         draft.get("contract_payload_json"), field="contract_payload_json", default=None
@@ -780,7 +820,7 @@ def get_contract_authoring_state(
         payload,
         contract_id=identity,
         contract_version=version,
-        environment_name=env,
+        workspace_id=active_workspace_id,
         allow_unresolved_columns=str(draft.get("status") or "").lower() == "draft",
     )
     state = {
@@ -788,58 +828,34 @@ def get_contract_authoring_state(
         "contract_id": identity,
         "contract_version": version,
         "table_id": table_id,
-        "environment_name": env,
+        "workspace_id": active_workspace_id,
         "catalogue_rows": [
             row for row in row_dicts(catalogue_rows)
-            if str(row.get("environment_name") or "") == env
+            if str(row.get("workspace_id") or "") == active_workspace_id
             and str(row.get("table_id") or "") == table_id
         ],
         "enrichment": canonical_enrichment_state(enrichment_rows),
         "guardrails": guardrail_rows,
         "payload": payload,
     }
-    state["available_columns"] = [
-        dict(row) for row in state["catalogue_rows"]
-        if str(row.get("metadata_level") or "").lower() == "column"
-        and row.get("is_active") is not False
-    ]
+    state["available_columns"] = [dict(column) for column in payload.get("table", {}).get("columns", [])]
     return state
 
-def list_contract_governance_state(
-    *, config: Any, env: str, spark_session: Any
-) -> dict[str, list[dict[str, Any]]]:
-    """Return governed tables and Data Contract versions for the authoring selector."""
-    context = _metadata_io_context(config, env)
-    catalogue = _scoped_rows(
-        read_lakehouse_table(
-            "METADATA_DATA_CATALOGUE", store="Metadata",
-            schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
-            context={**(context or {}), "_spark_session": spark_session},
-        ),
-        f"environment_name = {_sql_literal(env)}",
-    )
-    contracts = _scoped_rows(
-        read_lakehouse_table(
-            DATA_CONTRACT_TABLE, store="Metadata",
-            schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-            context={**(context or {}), "_spark_session": spark_session},
-        ),
-    )
-    tables = _latest([
-        row for row in catalogue
-        if str(row.get("environment_name") or "") == env
-        and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
-        and row.get("is_active") is not False
-    ], ("table_id",))
-    versions = sorted(
-        contracts,
-        key=lambda row: (str(row.get("table_id") or ""), -int(row.get("contract_version") or 0)),
-    )
-    return {"tables": tables, "contracts": versions}
+def list_contract_governance_state(*, config: Any, active_workspace_id: str, spark_session: Any) -> dict[str, list[dict[str, Any]]]:
+    """Return all current workspace observations and global Contract histories."""
+    context = {**_metadata_io_context(config, active_workspace_id), "_spark_session": spark_session}
+    observations = current_catalogue_observations(read_lakehouse_table(
+        "METADATA_DATA_CATALOGUE", store="Metadata",
+        schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"), context=context))
+    contracts = row_dicts(read_lakehouse_table(DATA_CONTRACT_TABLE, store="Metadata",
+        schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE), context=context))
+    return {"observations": observations,
+            "tables": [row for row in observations if str(row.get("metadata_level") or "").lower() == "table"],
+            "contracts": sorted(contracts, key=lambda row: (str(row.get("table_id") or ""), -int(row.get("contract_version") or 0)))}
 
 
 def get_contract_review_state(
-    *, config: Any, env: str, spark_session: Any, contract_id: str, contract_version: int
+    *, config: Any, active_workspace_id: str, spark_session: Any, contract_id: str, contract_version: int
 ) -> dict[str, Any]:
     """Load an exact draft or immutable Data Contract version for governance review."""
     identity, version = validate_contract_identity(contract_id, contract_version)
@@ -847,7 +863,7 @@ def get_contract_review_state(
         read_lakehouse_table(
             DATA_CONTRACT_TABLE, store="Metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-            context={**(_metadata_io_context(config, env) or {}), "_spark_session": spark_session},
+            context={**(_metadata_io_context(config, active_workspace_id) or {}), "_spark_session": spark_session},
         ),
         f"contract_id = {_sql_literal(identity)}",
         f"contract_version = {version}",
@@ -856,14 +872,14 @@ def get_contract_review_state(
         rows,
         contract_id=identity,
         contract_version=version,
-        environment_name=env,
+        workspace_id=active_workspace_id,
     )
     if len(matches) != 1:
         raise ValueError("The exact global Data Contract version is missing or duplicated.")
     contract = matches[0]
     if str(contract.get("status") or "").lower() == "draft":
         return get_contract_authoring_state(
-            config=config, env=env, spark_session=spark_session,
+            config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
             contract_id=identity, contract_version=version, contract=contract,
         )
     payload = _json_value(contract.get("contract_payload_json"), field="contract_payload_json", default=None)
@@ -871,7 +887,7 @@ def get_contract_review_state(
         raise ValueError("Immutable Data Contract version has no valid canonical payload.")
     return {
         "contract": contract, "contract_id": identity, "contract_version": version,
-        "table_id": str(contract.get("table_id") or ""), "environment_name": env,
+        "table_id": str(contract.get("table_id") or ""), "workspace_id": active_workspace_id,
         "payload": payload, "catalogue_rows": [], "available_columns": payload.get("table", {}).get("columns", []),
         "enrichment": [*payload.get("enrichment", {}).get("table", []), *payload.get("enrichment", {}).get("columns", [])],
         "guardrails": payload.get("guardrails", []),
@@ -879,13 +895,13 @@ def get_contract_review_state(
 
 
 def get_table_runtime_context(
-    *, config: Any, env: str, spark_session: Any, table_id: str
+    *, config: Any, active_workspace_id: str, spark_session: Any, table_id: str
 ) -> dict[str, Any]:
-    """Return latest profile provenance and cross-environment pipeline usage for one table."""
+    """Return latest profile provenance and cross-workspace pipeline usage for one table."""
     table_identity = str(table_id or "").strip()
     if not table_identity:
         raise ValueError("table_id is required to load table runtime context.")
-    context = _metadata_io_context(config, env)
+    context = _metadata_io_context(config, active_workspace_id)
 
     def table_rows(table_name: str) -> list[dict[str, Any]]:
         try:
@@ -906,6 +922,7 @@ def get_table_runtime_context(
                 frame, f"table_id = {_sql_literal(table_identity)}"
             ))
             if str(row.get("table_id") or "") == table_identity
+            and (table_name == "METADATA_DATA_LINEAGE" or str(row.get("workspace_id") or "") == active_workspace_id)
         ]
 
     profiled = table_rows("METADATA_DATA_PROFILED")
@@ -923,7 +940,7 @@ def get_table_runtime_context(
     if latest_profile_row is not None:
         latest_profile = {
             "profile_snapshot_id": str(latest_profile_row.get("profile_snapshot_id") or ""),
-            "environment_name": str(latest_profile_row.get("environment_name") or ""),
+            "workspace_id": str(latest_profile_row.get("workspace_id") or ""),
             "pipeline_name": str(
                 latest_profile_row.get("_notebook_name")
                 or latest_profile_row.get("_notebook_id")
@@ -941,8 +958,8 @@ def get_table_runtime_context(
         else:
             latest_profile_rows = [
                 row for row in profiled
-                if str(row.get("environment_name") or "")
-                == str(latest_profile_row.get("environment_name") or "")
+                if str(row.get("workspace_id") or "")
+                == str(latest_profile_row.get("workspace_id") or "")
                 and metadata_timestamp_sort_key(row.get("_committed_at"))
                 == metadata_timestamp_sort_key(latest_profile_row.get("_committed_at"))
                 and str(row.get("_activity_id") or "")
@@ -975,6 +992,8 @@ def get_table_runtime_context(
             frequency_rows = row_dicts(_scoped_rows(
                 frequency_frame,
                 f"profile_snapshot_id = {_sql_literal(latest_snapshot_id)}",
+                f"workspace_id = {_sql_literal(active_workspace_id)}",
+                f"table_id = {_sql_literal(table_identity)}",
             ))
         except Exception as exc:
             if any(
@@ -988,6 +1007,8 @@ def get_table_runtime_context(
             row for row in frequency_rows
             if str(row.get("profile_snapshot_id") or "") == latest_snapshot_id
             and str(row.get("profile_id") or "") in profile_columns
+            and str(row.get("workspace_id") or "") == active_workspace_id
+            and str(row.get("table_id") or "") == table_identity
         ]
         frequency_rows.sort(
             key=lambda row: (
@@ -1012,8 +1033,8 @@ def get_table_runtime_context(
         if not relationship:
             continue
         pipeline_name = str(row.get("_notebook_name") or row.get("_notebook_id") or "").strip()
-        environment_name = str(row.get("environment_name") or "").strip()
-        key = (environment_name, relationship, pipeline_name)
+        workspace_id = str(row.get("workspace_id") or "").strip()
+        key = (workspace_id, relationship, pipeline_name)
         previous = grouped.get(key)
         rank = (metadata_timestamp_sort_key(row.get("_committed_at")), str(row.get("_activity_id") or ""))
         previous_rank = (
@@ -1022,7 +1043,7 @@ def get_table_runtime_context(
         ) if previous else None
         if previous_rank is None or rank >= previous_rank:
             grouped[key] = {
-                "environment_name": environment_name,
+                "workspace_id": workspace_id,
                 "relationship": relationship,
                 "pipeline_name": pipeline_name or "Unknown pipeline",
                 "last_seen": row.get("_committed_at"),
@@ -1034,7 +1055,7 @@ def get_table_runtime_context(
         for row in sorted(
             grouped.values(),
             key=lambda row: (
-                str(row.get("environment_name") or ""),
+                str(row.get("workspace_id") or ""),
                 str(row.get("relationship") or ""),
                 str(row.get("pipeline_name") or "").casefold(),
             ),
@@ -1058,10 +1079,10 @@ def get_table_runtime_context(
 
 
 def get_column_profile_context(
-    *, config: Any, env: str, spark_session: Any, table_id: str, column_id: str
+    *, config: Any, active_workspace_id: str, spark_session: Any, table_id: str, column_id: str
 ) -> dict[str, Any]:
     """Return the latest column profile with optional top frequency evidence."""
-    context = _metadata_io_context(config, env)
+    context = _metadata_io_context(config, active_workspace_id)
     profiled = _scoped_rows(
         read_lakehouse_table(
             "METADATA_DATA_PROFILED", store="Metadata",
@@ -1070,17 +1091,17 @@ def get_column_profile_context(
         ),
         f"table_id = {_sql_literal(table_id)}",
         f"column_id = {_sql_literal(column_id)}",
-        f"environment_name = {_sql_literal(env)}",
+        f"workspace_id = {_sql_literal(active_workspace_id)}",
     )
     candidates = [
         row for row in profiled
         if str(row.get("table_id") or "") == str(table_id)
         and str(row.get("column_id") or "") == str(column_id)
-        and str(row.get("environment_name") or env) == env
+        and str(row.get("workspace_id") or "") == active_workspace_id
         and str(row.get("status") or "completed").lower() == "completed"
     ]
     if not candidates:
-        return {"kind": "unavailable", "message": "No profile values available."}
+        return {"kind": "unavailable", "message": "Not yet profiled."}
 
     latest = max(
         candidates,
@@ -1098,6 +1119,9 @@ def get_column_profile_context(
                 context={**(context or {}), "_spark_session": spark_session},
             ),
             *frequency_filters,
+            f"workspace_id = {_sql_literal(active_workspace_id)}",
+            f"table_id = {_sql_literal(table_id)}",
+            f"column_id = {_sql_literal(column_id)}",
         )
     except Exception as exc:
         if not any(
@@ -1131,12 +1155,12 @@ def get_column_profile_context(
 
 
 def build_enrichment_records(
-    records: Iterable[Mapping[str, Any]], *, config: Any = None, env: str
+    records: Iterable[Mapping[str, Any]], *, config: Any = None, active_workspace_id: str
 ) -> list[dict[str, Any]]:
     """Build canonical exact-version Enrichment rows, omitting blank values."""
     import uuid
 
-    audit = build_runtime_audit_fields(config=config, env=env)
+    audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id)
     built = []
     identity_cache: dict[tuple[str, int], tuple[str, str, dict[str, str]]] = {}
     for raw_value in records:
@@ -1145,9 +1169,9 @@ def build_enrichment_records(
         if level not in {"table", "column"}:
             raise ValueError("enrichment_level must be 'table' or 'column'.")
         contract_id, contract_version = validate_contract_identity(raw.get("contract_id"), raw.get("contract_version"))
-        row_env = str(raw.get("environment_name") or env).strip()
-        if row_env != str(env):
-            raise ValueError("Enrichment environment_name must match the authoring environment.")
+        row_env = str(raw.get("workspace_id") or active_workspace_id).strip()
+        if row_env != str(active_workspace_id):
+            raise ValueError("Enrichment workspace_id must match the authoring workspace_id.")
         column_id = str(raw.get("column_id") or "").strip()
         if level == "column" and not column_id:
             raise ValueError("Column enrichment rows require column_id.")
@@ -1175,7 +1199,7 @@ def build_enrichment_records(
             contract = next((row for row in row_dicts(read_lakehouse_table(
                 DATA_CONTRACT_TABLE, store="Metadata",
                 schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-                context=_metadata_io_context(config, env), missing_ok=True,
+                context=_metadata_io_context(config, active_workspace_id), missing_ok=True,
             )) if str(row.get("contract_id") or "") == contract_id
                 and int(row.get("contract_version") or 0) == contract_version), {})
             payload = _json_value(contract.get("contract_payload_json"), field="contract_payload_json", default={})
@@ -1196,7 +1220,7 @@ def build_enrichment_records(
             "table_id": table_identity, "table_name": table_name,
             "column_id": column_id if level == "column" else "",
             "column_name": column_names.get(column_id, "") if level == "column" else "",
-            "environment_name": row_env, "enrichment_level": level,
+            "workspace_id": row_env, "enrichment_level": level,
             "enrichment_type": canonical_type, "value": value,
             **{name: raw.get(name, default) for name, default in audit.items()},
         })
@@ -1255,7 +1279,7 @@ def assemble_contract_payload(
     catalogue_rows: Any,
     enrichment_rows: Any,
     guardrail_rows: Any,
-    environment_name: str,
+    workspace_id: str,
     scheduled_refresh: Mapping[str, Any] | None = None,
     allow_incomplete_grain: bool = False,
 ) -> tuple[dict[str, Any], list[str]]:
@@ -1268,10 +1292,13 @@ def assemble_contract_payload(
         draft.get("contract_id"), draft.get("contract_version")
     )
     table_id = str(draft.get("table_id") or "")
+    draft_payload = _json_value(
+        draft.get("contract_payload_json"), field="contract_payload_json", default={}
+    )
     catalogue = [
         row for row in row_dicts(catalogue_rows)
         if str(row.get("table_id") or "") == table_id
-        and str(row.get("environment_name") or "") == environment_name
+        and str(row.get("workspace_id") or "") == workspace_id
         and row.get("is_active") is not False
     ]
     current = _latest(catalogue, ("table_id", "column_id"))
@@ -1279,33 +1306,17 @@ def assemble_contract_payload(
         row for row in current
         if str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id")
     ]
-    if not table_rows:
+    captured_table = draft_payload.get("table") or {}
+    if not table_rows and "columns" not in captured_table:
         raise ValueError("Select one valid active METADATA_DATA_CATALOGUE table_id.")
-    table = table_rows[-1]
+    table = table_rows[-1] if table_rows else captured_table
     columns = [row for row in current if row.get("column_id")]
     observed_column_docs = [
         _fields(row, ("column_id", "column_name", "data_type")) for row in columns
     ]
-    draft_payload = _json_value(
-        draft.get("contract_payload_json"), field="contract_payload_json", default={}
-    )
-    draft_columns = {
-        str(item.get("column_id") or ""): dict(item)
-        for item in (
-            draft_payload.get("table", {}).get("columns", [])
-            if isinstance(draft_payload, dict) else []
-        )
-        if item.get("column_id")
-    }
-    column_docs = [
-        {
-            **column,
-            "data_type": str(draft_columns.get(str(column.get("column_id") or ""), {}).get(
-                "data_type"
-            ) or column.get("data_type") or ""),
-        }
-        for column in observed_column_docs
-    ]
+    column_docs = [dict(column) for column in draft_payload.get("table", {}).get("columns", [])]
+    if "columns" not in draft_payload.get("table", {}):
+        column_docs = [{**column, "presence": "required"} for column in observed_column_docs]
     incomplete = [
         str(row.get("column_name") or row.get("column_id") or "<blank>")
         for row in column_docs
@@ -1328,7 +1339,7 @@ def assemble_contract_payload(
         return (
             str(row.get("contract_id") or "") == contract_id
             and int(row.get("contract_version") or 0) == contract_version
-            and str(row.get("environment_name") or "") == environment_name
+            and str(row.get("workspace_id") or "") == workspace_id
         )
 
     enrichment = _latest(
@@ -1353,10 +1364,10 @@ def assemble_contract_payload(
         if not isinstance(parameters, dict):
             raise ValueError("rule_parameters_json must contain a JSON object.")
         if str(row.get("guardrail_type") or "").strip().lower() == "schema":
-            parameters = {
-                name: value for name, value in parameters.items()
-                if name not in {"columns", "data_types", "selected_columns", "expected_data_types"}
-            }
+            item["rule_type"] = "strict"
+            item["is_active"] = True
+            parameters = {"required_columns": [str(column["column_id"]) for column in column_docs
+                                                if column.get("presence", "required") == "required"]}
         item["rule_parameters"] = parameters
         guardrail_docs.append(item)
 
@@ -1376,12 +1387,14 @@ def assemble_contract_payload(
             "status": str(draft.get("status") or "draft").lower(),
         },
         "table": {
-            **_fields(table, ("table_id", "environment_name", "store_type", "layer", "schema_name", "table_name")),
+            **dict(draft_payload.get("table") or _fields(table, ("table_id", "store_type", "layer", "schema_name", "table_name"))),
+            "table_id": table_id,
+            "evidence_workspace_id": draft.get("evidence_workspace_id") or workspace_id,
             "columns": column_docs,
             "processing": processing,
             "processing_source": contract_processing_source(draft),
             **({"scheduled_refresh": canonical_scheduled_refresh(scheduled_refresh)} if scheduled_refresh is not None else {}),
-            "writer": {
+            "writer": dict(draft_payload["table"]["writer"]) if "writer" in draft_payload.get("table", {}) else {
                 "notebook_id": str(table.get("_notebook_id") or "").strip(),
                 "notebook_name": str(table.get("_notebook_name") or "").strip(),
             },
@@ -1410,7 +1423,7 @@ def freeze_contract(
     *,
     draft: Mapping[str, Any],
     config: Any,
-    env: str,
+    active_workspace_id: str,
     spark_session: Any,
     context: Mapping[str, Any] | None = None,
     store: str = "Metadata",
@@ -1431,8 +1444,8 @@ def freeze_contract(
         raise ValueError("Saved Data Contract payload does not match the draft table_id.")
     validated_processing(dict(table.get("processing") or {}))
 
-    runtime_context = {"config": config, "env": env, **dict(context or {})}
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+    runtime_context = {"config": config, "scope_workspace_id": active_workspace_id, **dict(context or {})}
+    audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context)
     frozen = coerce_metadata_row_types(
         DATA_CONTRACT_TABLE,
         {**freeze_contract_record(draft=draft, audit=audit), "table_name": str(table.get("table_name") or "")},
@@ -1446,7 +1459,7 @@ def freeze_contract(
         (
             metadata_table_physical_schema(config, DATA_CONTRACT_TABLE)
             if store == "Metadata"
-            else schema or configured_lakehouse_schema(config, env, store)
+            else schema or configured_lakehouse_schema(config, active_workspace_id, store)
         ),
         context=runtime_context,
     )
@@ -1462,7 +1475,7 @@ def freeze_contract(
         .execute()
     )
     frozen = _confirm_contract_mutation(
-        frozen, config=config, env=env, spark_session=spark_session,
+        frozen, config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
         context=runtime_context, store=store, schema=schema,
     )
     frozen_payload = _json_value(

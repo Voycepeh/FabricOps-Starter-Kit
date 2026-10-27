@@ -1,4 +1,4 @@
-"""Coordinated environment activation using real validation and simulated Delta transport."""
+"""Coordinated workspace_id activation using real validation and simulated Delta transport."""
 # ruff: noqa: D103, F811
 from __future__ import annotations
 
@@ -20,15 +20,15 @@ from tests.unit.test_pipeline_run_evidence import runtime  # noqa: F401
 def authority(runtime, monkeypatch, tmp_path):
     """Mock physical Fabric I/O only; keep exact run validation and dependency logic."""
     make, operation, saved, writes, failure = runtime
-    context = {"config": {}, "env": "canary", "notebook_id": "notebook", "notebook_name": "pipeline", "workspace_id": "workspace"}
-    monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda identities, config, environment: config["bindings"])
-    monkeypatch.setattr(service, "resolve_fabric_context", lambda context=None: (context["config"], context["env"], dict(context)))
+    context = {"config": {}, "scope_workspace_id": "canary", "notebook_id": "notebook", "notebook_name": "pipeline", "workspace_id": "canary"}
+    monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda identities, config, workspace_id: config["bindings"])
+    monkeypatch.setattr(service, "resolve_fabric_context", lambda context=None: (context["config"], context["scope_workspace_id"], dict(context)))
     monkeypatch.setattr(pipeline, "resolve_fabric_context", service.resolve_fabric_context)
     monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **kw: {})
     contracts, diagnostics, registrations = [], [], []
     monkeypatch.setattr(pipeline, "read_pipeline_registry", lambda **kw: (central["token"], copy.deepcopy(registrations)))
     agreement = {"agreement_id": "agreement", "agreement_version": "1", "start_date": "2020-01-01", "expiry_date": "2099-01-01"}
-    central = {"token": "initial", "state": {"environments": {}, "registrations": [], "profiling_claims": {}}, "fail": False}
+    central = {"token": "initial", "state": {"workspaces": {}, "registrations": [], "profiling_claims": {}}, "fail": False}
     lock = Lock()
     def records(table, **kwargs):
         return {"METADATA_PIPELINE_RUN": list(saved.values()), "METADATA_DATA_CONTRACT": contracts,
@@ -48,7 +48,7 @@ def authority(runtime, monkeypatch, tmp_path):
             return central["token"]
     monkeypatch.setattr(service, "read_pipeline_authority", read)
     monkeypatch.setattr(service, "commit_pipeline_authority", commit)
-    def candidate(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596", version=3, roles=("target",), env="canary", tables=None, destinations=None):
+    def candidate(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596", version=3, roles=("target",), active_workspace_id="canary", tables=None, destinations=None):
         plan = make(mode="testing", roles=roles)
         identities = json.loads(plan.participants_json)
         frozen, bindings = {}, {}
@@ -60,45 +60,55 @@ def authority(runtime, monkeypatch, tmp_path):
                        "table": {"table_id": key, "columns": [], "processing": {"load_strategy": "overwrite"}}, "guardrails": [],
                        "profiling": {**pipeline.default_profiling_policy(), "standard": {"frequency": "interval", "days": 7, "trigger": "write"}}}
             contract = {"contract_id": "contract-" + key, "contract_version": selected_version, "status": "frozen", "table_id": key,
-                        "environment_name": "DEV", "contract_payload_json": pipeline.canonical_pipeline_json(payload)}
+                        "evidence_workspace_id": "DEV", "contract_payload_json": pipeline.canonical_pipeline_json(payload)}
             frozen[key] = contract
             if contract not in contracts:
                 contracts.append(contract)
-            bindings[key] = (destinations or {}).get(key, {"workspace_id": env, "item_id": "lakehouse", "kind": "lakehouse", "schema": "physical", "table_name": key})
+            bindings[key] = (destinations or {}).get(key, {"workspace_id": active_workspace_id, "item_id": "lakehouse", "kind": "lakehouse", "schema": "physical", "table_name": key})
         # The operation fixture resolves physical table names to tableN IDs.
         assert tables == list(identities)
-        plan = replace(plan, environment=env, pipeline_id=pipeline_id, contracts_json=pipeline.canonical_pipeline_json(frozen),
+        plan = replace(plan, workspace_id=active_workspace_id, pipeline_id=pipeline_id, contracts_json=pipeline.canonical_pipeline_json(frozen),
                        participants_json=pipeline.canonical_pipeline_json(identities), evidence={},
-                       runtime_context={**context, "config": {"bindings": bindings}, "env": env, "_pipeline_bindings": bindings})
+                       runtime_context={**context, "workspace_id": active_workspace_id, "config": {"bindings": bindings}, "scope_workspace_id": active_workspace_id, "_pipeline_bindings": bindings})
         pipeline.persist_pipeline_run(plan)
         with plan:
             for table_id in identities:
-                operation(plan, int(table_id.removeprefix("table")), stages=[{"stage": "Read" if identities[table_id]["roles"] == ["source"] else "Processing", "status": "passed"}, {"stage": "Profile", "status": "passed"}])
+                operation(plan, int(table_id.removeprefix("table")), stages=[{"stage": "Read" if identities[table_id]["roles"] == ["source"] else "Processing", "status": "passed"}, {"stage": "Profile", "status": "passed"}, {"stage": "Schema", "status": "passed"}])
         run = plan.run_result
+        run.update(_workspace_id=active_workspace_id, _notebook_id="notebook")
+        for item in run["operations"]:
+            contract = frozen[item["table_id"]]
+            rule = pipeline.contract_guardrail_rows(contract, workspace_id=active_workspace_id, table_id=item["table_id"])[0]
+            diagnostics.append({"guardrail_result_id": run["run_id"] + ":" + item["operation_key"],
+                "run_id": run["run_id"], "table_id": item["table_id"], "contract_id": contract["contract_id"],
+                "contract_version": contract["contract_version"], "guardrail_rule_id": rule["guardrail_rule_id"],
+                "guardrail_version": 1, "execution_type": "testing", "workspace_id": active_workspace_id,
+                "status": "passed", "can_continue": True,
+                **{key: run.get(key) for key in ("_workspace_id", "_notebook_id", "_activity_id")}})
         # Results are retained by the test reviewer, never committed by Test.
         saved[plan.plan_id] = run
         run['guardrail_results'] = copy.deepcopy(diagnostics)
-        run['testing_notebook_binding'] = {'workspace_id': 'workspace', 'notebook_id': 'notebook', 'activity_id': 'fabric-test-run'}
-        registrations[:] = [row for row in registrations if (row['pipeline_id'], row['environment_name']) != (pipeline_id, env)]
-        registrations.append({'pipeline_id': pipeline_id, 'environment_name': env, 'registration_status': 'Active',
-                              'workspace_id': 'workspace', 'notebook_id': 'notebook'})
-        run.update(_workspace_id="workspace", _notebook_id="notebook")
+        run['testing_notebook_binding'] = {'workspace_id': active_workspace_id, 'notebook_id': 'notebook', 'activity_id': 'fabric-test-run'}
+        registrations[:] = [row for row in registrations if (row['pipeline_id'], row['workspace_id']) != (pipeline_id, active_workspace_id)]
+        registrations.append({'pipeline_id': pipeline_id, 'workspace_id': active_workspace_id, 'registration_status': 'Active',
+                              'notebook_id': 'notebook'})
+        run.update(_workspace_id=active_workspace_id, _notebook_id="notebook")
         return plan, run
     def request(run, release=None):
         return {"testing_run_id": run["run_id"],
                 "pipeline_name": run["pipeline_id"], "pipeline_version": release or run["run_id"],
             "agreement_id": "agreement", "agreement_version": "1"}
-    def approve(*runs, env="canary"):
+    def approve(*runs, active_workspace_id="canary"):
         for run in runs:
-            run.setdefault("_workspace_id", "workspace")
+            run.setdefault("_workspace_id", active_workspace_id)
             run.setdefault("_notebook_id", "notebook")
             saved[run["run_id"]] = run
         requests = [request(run) for run in runs]
-        report = service.review_pipeline_release(requests, context={**context, "env": env})[3]
+        report = service.review_pipeline_release(requests, context={**context, "scope_workspace_id": active_workspace_id})[3]
         return service.approve_pipeline_release(requests, expected_token=central["token"], expected_review_digest=report["review_digest"],
-            governance_confirmed=True, context={**context, "env": env})
-    def current(env="canary"):
-        return service.environment_activation(central["state"], env)
+            governance_confirmed=True, context={**context, "scope_workspace_id": active_workspace_id})
+    def current(active_workspace_id="canary"):
+        return service.workspace_activation(central["state"], active_workspace_id)
     return SimpleNamespace(candidate=candidate, approve=approve, request=request, current=current, central=central,
                            context=context, saved=saved, contracts=contracts, diagnostics=diagnostics,
                            operation=operation, commit=commit, read=read)
@@ -182,12 +192,12 @@ def test_affected_failed_evidence_blocks_entire_release(authority):
 def test_environment_isolation_shares_global_frozen_versions(authority):
     state = authority
     _, prod = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596", version=3)
-    _, dev = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596", version=4, env="DEV")
-    state.approve(prod); state.approve(dev, env="DEV")
+    _, dev = state.candidate("4c7ae400-85ab-4023-9427-e8fde20bd596", version=4, active_workspace_id="DEV")
+    state.approve(prod); state.approve(dev, active_workspace_id="DEV")
     assert state.current()["tables"]["table0"]["contract_version"] == 3
     assert state.current("DEV")["tables"]["table0"]["contract_version"] == 4
-    assert {row["environment_name"] for row in state.contracts} == {"DEV"}
-    with pytest.raises(ValueError, match="activation environment"):
+    assert {row["evidence_workspace_id"] for row in state.contracts} == {"DEV"}
+    with pytest.raises(ValueError, match="activation workspace_id"):
         state.approve(dev)
 
 
@@ -392,10 +402,11 @@ def test_manual_finalization_qualifies_without_executable_integrity(authority, m
     previous, _ = state.candidate()
     plan = replace(previous, plan_id=previous.plan_id + '-manual', evidence={}, results=[])
     pipeline.persist_pipeline_run(plan)
-    state.operation(plan, 0, stages=[{"stage": "Processing", "status": "passed"}])
+    state.operation(plan, 0, stages=[{"stage": "Processing", "status": "passed"}, {"stage": "Schema", "status": "passed"}])
     plan.evidence["boundary_completed"] = True
     run = finalize_pipeline(plan)
     assert run['status'] == 'succeeded'
+    state.diagnostics.extend([{**row, "run_id": run["run_id"], "guardrail_result_id": row["guardrail_result_id"] + "-manual"} for row in list(state.diagnostics) if row["run_id"] == previous.plan_id])
     state.approve(run)
     assert state.current()['pipelines'][plan.pipeline_id]['testing_run_id'] == plan.plan_id
 
@@ -502,8 +513,7 @@ def test_rebound_notebook_cannot_run_an_old_test_approval(authority, monkeypatch
     plan, run = state.candidate()
     state.approve(run)
     monkeypatch.setattr(pipeline, "read_pipeline_registry", lambda **kw: (state.central["token"], [{
-        "pipeline_id": plan.pipeline_id, "environment_name": "canary", "registration_status": "Active",
-        "workspace_id": "workspace", "notebook_id": "replacement"}]))
+        "pipeline_id": plan.pipeline_id, "workspace_id": "canary", "registration_status": "Active", "notebook_id": "replacement"}]))
     with pytest.raises(ValueError, match="rerun Test and approve the new binding"):
         service.build_live_pipeline_plan(pipeline_id=plan.pipeline_id, context={**state.context, "notebook_id": "replacement"})
     assert not state.current()["runs"]

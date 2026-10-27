@@ -74,7 +74,7 @@ They help users write values into the correct underlying metadata tables without
 
 SETUP_NOTEBOOK_USAGE_NOTE = """Use this at notebook startup to load configuration for the current workspace and capture the runtime information required by downstream Starter Kit notebooks.
 
-This helps confirm the active environment, configured stores, notebook context, and runtime values before later notebooks depend on them."""
+This helps confirm the active workspace, configured stores, notebook context, and runtime values before later notebooks depend on them."""
 
 SETUP_METADATA_USAGE_NOTE = """Use this during setup to create the required metadata tables in the configured metadata lakehouse using predefined Starter Kit schemas.
 
@@ -82,7 +82,7 @@ This prepares the metadata store so downstream notebooks, widgets, lineage loggi
 
 CONFIG_USAGE_NOTE = """Use config helpers when notebook setup or downstream helpers need consistent runtime configuration, configured stores, paths, or audit context.
 
-This keeps Starter Kit notebooks aligned on the same environment and config contract instead of each notebook calculating those values differently."""
+This keeps Starter Kit notebooks aligned on the same workspace and config contract instead of each notebook calculating those values differently."""
 
 PIPELINE_USAGE_NOTE = """Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
 
@@ -144,11 +144,11 @@ METADATA_TABLE_MODELS = {
         "implementation_notes": "Whole-row CAS atomically publishes the parent and all operations/stages. Native operations retain table_id, source/target role, exact contract version/hash, destination, read/write mode, SQL hash and source associations. Live pins approval_id and compares these fields before operations. Profiling completion joins physical result snapshots. warnings_json contains variable sanitized diagnostics only. No project settings, full argument snapshots or configuration fingerprints are stored.",
         "primary_key": ["run_id"],
         "foreign_keys": [
-            {"local_field": "approval_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "approvals[].approval_id", "cardinality": "N:1", "statement": "Live runs reference one nested immutable approval, not authority_id. Test runs have no approval. Pipeline and environment must match the approval."},
+            {"local_field": "approval_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "approvals[].approval_id", "cardinality": "N:1", "statement": "Live runs reference one nested immutable approval, not authority_id. Test runs have no approval. Pipeline and workspace must match the approval."},
             {"local_field": "operations[].contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Each contracted operation references one exact Contract using contract_id plus contract_version and verifies the payload hash. Test operations may be uncontracted; activation requires all contracts."},
             {"local_field": "operations[].contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "Composite reference with operations[].contract_id; neither field is independently unique."},
         ],
-        "relationships": [{"related_table": "METADATA_PIPELINE_REGISTRY", "fields": ["approval_id"], "cardinality": "N:1", "statement": "Live runs pin an exact native approval and environment revision in the Registry authority."},
+        "relationships": [{"related_table": "METADATA_PIPELINE_REGISTRY", "fields": ["approval_id"], "cardinality": "N:1", "statement": "Live runs pin an exact native approval and workspace revision in the Registry authority."},
                           {"related_table": "METADATA_DATA_CONTRACT", "fields": ["operations"], "cardinality": "N:M", "statement": "Actual operations record exact table contract IDs, versions and hashes; authored payloads remain in Data Contract."}],
     },
     "METADATA_DATA_STEWARD": {
@@ -174,18 +174,18 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_CONTRACT": {
-        "purpose": "Defines what a table means, how it should be processed, which Guardrails apply and when it should be profiled. Frozen versions can be reused but not changed.",
+        "purpose": "Defines one global immutable table contract history. Workspace observations supply authoring evidence; workspace activation selects exact frozen versions.",
         "grain": "One Draft or Frozen version of a Data Contract for a table.",
-        "implementation_notes": "Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. Agreement linkage belongs to Activated Pipeline.",
+        "implementation_notes": "Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. table_id is a global logical reference across workspace observations, not a unique physical Catalogue foreign key. Agreement linkage belongs to Activated Pipeline.",
         "primary_key": ["contract_id", "contract_version"],
-        "foreign_keys": [{"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "A contract defines one Catalogue table."}],
-        "relationships": [{"cardinality": "N:M", "related_table": "METADATA_PIPELINE_RUN", "statement": "Many approvals may reuse this exact frozen table contract through the operations of their retained Test runs."}],
+        "foreign_keys": [],
+        "relationships": [{"cardinality": "N:M", "related_table": "METADATA_DATA_CATALOGUE", "fields": ["table_id"], "statement": "Global logical table_id relates Contract versions to workspace observations; table_id alone is not a unique physical Catalogue key."}, {"cardinality": "N:M", "related_table": "METADATA_PIPELINE_RUN", "statement": "Many approvals may reuse this exact frozen table contract through the operations of their retained Test runs."}],
     },
     "METADATA_DATA_CATALOGUE": {
         "purpose": "Lists registered tables and columns, where they are stored, their data types and whether they are still active.",
-        "grain": "One registered table or column in one environment.",
+        "grain": "One current table or column observation in one workspace.",
         "implementation_notes": "The current structural registry of known table and column assets. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.",
-        "primary_key": ["environment_name", "table_id", "column_id"],
+        "primary_key": ["workspace_id", "table_id", "column_id"],
         "foreign_keys": [],
         "relationships": [
             {"cardinality": "1:N", "statement": "A Catalogue table identity can be referenced by many Profile, Lineage, Processing State, Enrichment, Access and Guardrail rows over time."},
@@ -221,7 +221,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_DATA_PROFILED_FREQUENCY": {
         "purpose": "Shows which values appear most often in a column and how frequently they occur.",
         "grain": "One recorded value and its frequency for a column in a profiling snapshot.",
-        "implementation_notes": "Frequency distributions retain Table ID, Column ID, environment, captured names and datatype. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.",
+        "implementation_notes": "Frequency distributions retain Table ID, Column ID, workspace, captured names and datatype. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.",
         "primary_key": ["frequency_id"],
         "foreign_keys": [
             {"local_field": "profile_id", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profile_id", "cardinality": "N:1", "statement": "Combined standalone profiling links Frequency rows to their parent statistical Profile through profile_id. Independently scheduled Frequency Profiling leaves profile_id null and retains Table ID, Column ID and its own activity snapshot."},
@@ -246,7 +246,7 @@ METADATA_TABLE_MODELS = {
         "implementation_notes": "See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.",
         "primary_key": ["access_id"],
         "foreign_keys": [
-            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many observed SQL permission rows can reference the same logical Catalogue table identity in an environment."},
+            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many observed SQL permission rows can reference the same logical Catalogue table identity in a workspace."},
         ],
         "relationships": [],
     },
@@ -408,7 +408,7 @@ METADATA_COLUMN_OWNERS = {
         "table_name": ["fabricops_kit.pipeline.shared._frequency_metadata_dataframe"],
         "column_name": ["fabricops_kit.pipeline.shared._frequency_metadata_dataframe"],
         "data_type": ["fabricops_kit.pipeline.shared._frequency_metadata_dataframe"],
-        "environment_name": ["fabricops_kit.pipeline.shared._frequency_metadata_dataframe"],
+        "workspace_id": ["fabricops_kit.pipeline.shared._frequency_metadata_dataframe"],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.shared._canonical_profiled_dataframe",
         ],
@@ -520,7 +520,7 @@ METADATA_COLUMN_OWNERS = {
         "action": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "guardrail_rule_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "run_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
-        "environment_name": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
+        "workspace_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "status": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "can_continue": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "severity": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
@@ -563,9 +563,9 @@ MODULE_DOCS_METADATA = [
  {'module_name': 'consumption.create_data_agent', 'visibility': 'public', 'module_summary': 'Creates and configures a native single-table Microsoft Fabric Data Agent from governed context.', 'sidebar_group': '7. Consumption', 'sidebar_include': False},
  {'module_name': 'config',
   'visibility': 'public',
-  'module_summary': 'Owns environment setup, runtime initialization, paths, and notebook-wide '
+  'module_summary': 'Owns workspace setup, runtime initialization, paths, and notebook-wide '
                     'configuration.',
-  'sidebar_group': '0. Environment setup',
+  'sidebar_group': '0. Workspace setup',
   'sidebar_include': True},
  {'module_name': 'widgets.shared',
   'visibility': 'public',
@@ -628,9 +628,9 @@ MODULE_DOCS_METADATA = [
 # intentionally excluded from this registry.
 TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
   'notebook_label': '`00_env_config`',
-  'segment_intro': 'Shared environment bootstrap and metadata table setup.',
+  'segment_intro': 'Shared workspace bootstrap and metadata table setup.',
   'segments': [{'symbols': ['FabricStore', 'PathConfig', 'GovernanceConfig', 'DataAgreementConfig', 'FrameworkConfig', 'setup_metadata_tables'],
-                'title': 'Environment setup'}],
+                'title': 'Workspace setup'}],
   'template_path': 'templates/notebooks/00_env_config.ipynb'},
  {'notebook_key': '00C_demo_setup',
   'notebook_label': '`00C_demo_setup`',
@@ -723,7 +723,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Access inventory',
   'use_when': 'Use when you need the workspace-role path into governed table access for configured Fabric items.',
   'do_not_use_when': 'Do not use as an effective-access resolver; OneLake and SQL access are scanned separately.',
-  'parameters': 'catalogue_df, configured target keys, optional environment_name, optional access_snapshot_id, optional access_token, persist flag, and optional FabricOps context.',
+  'parameters': 'catalogue_df, configured target keys, optional workspace_id, optional access_snapshot_id, optional access_token, persist flag, and optional FabricOps context.',
   'returns': 'Dictionary with raw workspace observations, normalized METADATA_DATA_ACCESS rows, and unmatched role assignments.',
   'raises': 'Raises for invalid targets, Fabric REST authentication or permission failures, and Spark mapping or persistence failures.',
   'side_effects': 'Reads Fabric workspace role assignments and appends normalized rows to METADATA_DATA_ACCESS by default; it never changes workspace permissions.',
@@ -747,7 +747,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Access inventory',
   'use_when': 'Use when you need the OneLake Security path into governed Lakehouse table access.',
   'do_not_use_when': 'Do not use for Warehouse targets or as a full effective-access resolver.',
-  'parameters': 'catalogue_df, configured Lakehouse target keys, optional environment_name, optional access_snapshot_id, optional access_token, persist flag, and optional FabricOps context.',
+  'parameters': 'catalogue_df, configured Lakehouse target keys, optional workspace_id, optional access_snapshot_id, optional access_token, persist flag, and optional FabricOps context.',
   'returns': 'Dictionary with raw OneLake observations, normalized METADATA_DATA_ACCESS rows, and unmatched paths.',
   'raises': 'Raises for non-Lakehouse targets, Fabric REST authentication or permission failures, unsafe continuation hosts, and Spark mapping or persistence failures.',
   'side_effects': 'Reads OneLake Security role definitions and appends normalized rows to METADATA_DATA_ACCESS by default; it never changes OneLake permissions.',
@@ -771,11 +771,11 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Access inventory',
   'use_when': 'Use when you need the SQL endpoint path into governed table access for registered Warehouse or Lakehouse tables.',
   'do_not_use_when': 'Do not use as a complete Fabric authorization inventory; workspace and OneLake access are scanned separately.',
-  'parameters': 'catalogue_df, one or more configured workspace data item target keys, optional environment_name, optional access_snapshot_id, persist flag, and optional FabricOps context.',
+  'parameters': 'catalogue_df, one or more configured workspace data item target keys, optional workspace_id, optional access_snapshot_id, persist flag, and optional FabricOps context.',
   'returns': 'Dictionary with normalized METADATA_DATA_ACCESS rows and unmatched observed SQL permissions.',
   'raises': 'Raises ValueError when no valid workspace data item target is supplied and propagates configured SQL endpoint read, Spark, or persistence errors.',
   'side_effects': 'Reads SQL permission catalogue views and appends normalized rows to METADATA_DATA_ACCESS by default; it never changes SQL permissions.',
-  'fabric_context': 'Requires configured workspace data item targets and a Catalogue DataFrame for the same FabricOps environment.',
+  'fabric_context': 'Requires configured workspace data item targets and a Catalogue DataFrame for the same FabricOps workspace.',
   'ai_verification': 'Confirm configured targets resolve to the physical items represented by canonical Catalogue table_id values, inspect unmatched observations, and use one shared access_snapshot_id when combining scans.',
   'preferred_example': 'result = scan_sql_access(catalogue_df, targets="warehouse")',
   'related_functions': ['scan_workspace_access', 'scan_onelake_access', 'read_warehouse_query'],
@@ -793,7 +793,7 @@ PUBLIC_SYMBOL_DOCS = [
   'symbol_name': 'FabricStore',
   'use_when': 'Use in 00_env_config path mappings to define lakehouse or warehouse targets.',
   'when_to_use': ['Use through the supported FabricOps root import surface.'],
-  'parameters': 'env, workspace_id, item_id, kind, schema_enabled, schema, and optional keyword-only name (physical Fabric item name; defaults to the logical alias for Warehouse execution).',
+  'parameters': 'workspace_id, item_id, kind, schema_enabled, schema, and optional keyword-only name (physical Fabric item name; defaults to the logical alias for Warehouse execution).',
   'returns': 'Validated FabricStore configuration object.',
   'raises': 'ValueError for missing identifiers, unsupported store kind, or invalid schema names.',
   'side_effects': 'None.',
@@ -806,17 +806,17 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'class',
   'module': 'config.shared',
   'function_type': 'class',
-  'summary_override': 'Environment-to-target mapping used for lakehouse and warehouse routing.',
-  'purpose': 'Group configured Fabric stores by environment and target name.',
+  'summary_override': 'Workspace-to-target mapping used for lakehouse and warehouse routing.',
+  'purpose': 'Group configured Fabric stores by workspace and target name.',
   'symbol_name': 'PathConfig',
   'use_when': 'Use in 00_env_config to define source, unified, product, and metadata targets.',
   'when_to_use': ['Use through the supported FabricOps root import surface.'],
-  'parameters': 'paths mapping environments to target FabricStore objects.',
+  'parameters': 'paths mapping workspaces to target FabricStore objects.',
   'returns': 'Validated PathConfig object.',
   'raises': 'ValueError when paths is empty or not a mapping.',
   'side_effects': 'None.',
   'fabric_context': 'Metadata targets must be configured explicitly rather than inferred from the attached lakehouse.',
-  'ai_verification': 'Check every required environment target exists before downstream helpers run.',
+  'ai_verification': 'Check every required workspace target exists before downstream helpers run.',
   'glossary_terms': ['metadata lakehouse'],
   'expanded_purpose': 'Supports the public root import contract for FabricOps notebook configuration.',
   'common_failure_causes': ['Required configuration values are missing or invalid.'],
@@ -901,7 +901,7 @@ PUBLIC_SYMBOL_DOCS = [
   'symbol_name': 'NotebookSetupContext',
   'use_when': 'Use after setup_notebook to inspect validated runtime context.',
   'when_to_use': ['Use through the supported FabricOps root import surface.'],
-  'parameters': 'run_id, notebook_name, workspace_name, user_name, environment, paths, validation_results, runtime_metadata, and readiness_status.',
+  'parameters': 'run_id, notebook_name, workspace_name, user_name, workspace, paths, validation_results, runtime_metadata, and readiness_status.',
   'returns': 'NotebookSetupContext value object.',
   'raises': 'None.',
   'side_effects': 'None.',
@@ -975,21 +975,21 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'config.setup_notebook',
   'function_type': 'callable',
-  'summary_override': 'Shared environment setup and runtime validation for notebook templates.',
-  'purpose': 'Prepare a FabricOps notebook by validating configuration, resolving environment '
+  'summary_override': 'Shared workspace setup and runtime validation for notebook templates.',
+  'purpose': 'Prepare a FabricOps notebook by validating configuration, resolving workspace '
              'targets, and returning reusable runtime context.',
   'symbol_name': 'setup_notebook',
   'template_notebook': '00_env_config',
-  'template_segment': 'Environment bootstrap',
+  'template_segment': 'Workspace bootstrap',
   'use_when': 'Use at the start of a Governance notebook to load and validate FabricOps '
               'configuration, resolve required targets, and capture runtime context before other '
               'helpers run.',
   'when_to_use': ['Starting a FabricOps notebook with workspace configuration',
-                  'Validating configured environment targets before downstream helpers run',
+                  'Validating configured workspace targets before downstream helpers run',
                   'Capturing runtime metadata for later lineage, review, or handover steps'],
   'do_not_use_when': 'Do not use as a replacement for metadata table setup or per-table governance '
                      'writes; call setup_metadata_tables for metadata storage preparation.',
-  'parameters': 'config, env, optional required_targets, notebook_name, run_id_prefix, and '
+  'parameters': 'config, optional workspace_id and required_targets, notebook_name, run_id_prefix, and '
                 'local_fallback_name that define the runtime setup context.',
   'returns': 'NotebookSetupContext with resolved configuration paths, runtime metadata, '
              'smoke-check results, and readiness status.',
@@ -1000,18 +1000,18 @@ PUBLIC_SYMBOL_DOCS = [
   'fabric_context': 'Automatic setup requires Fabric currentWorkspaceId and access to 00_env_config. '
                     'config_workspace_id optionally selects a remote notebook workspace; loading defaults locally.',
   'ai_verification': 'Verify the returned context is ready before generating downstream notebook '
-                     'code and confirm required targets resolve for the selected env.',
-  'preferred_example': 'context = setup_notebook(CONFIG, env="Sandbox", '
+                     'code and confirm required targets resolve for the selected active_workspace_id.',
+  'preferred_example': 'context = setup_notebook(CONFIG, workspace_id="<workspace-id>", '
                        'required_targets=["Bronze", "Silver", "Gold", "Metadata"], notebook_name="00_env_config")',
   'related_functions': ['setup_metadata_tables'],
-  'expanded_purpose': 'Validates the selected FabricOps environment, resolves configured runtime '
+  'expanded_purpose': 'Validates the selected FabricOps workspace, resolves configured runtime '
                       'targets, and returns the notebook context that downstream helpers depend '
                       'on.',
   'glossary_terms': ['notebook template', 'metadata lakehouse'],
   'return_interpretation': 'A ready context means required targets resolved and runtime checks '
                            'passed. Review validation messages before running downstream cells '
                            'when readiness is not successful.',
-  'common_failure_causes': ['The environment name is not present in CONFIG.',
+  'common_failure_causes': ['The workspace name is not present in CONFIG.',
                             'Required targets are missing from path configuration.',
                             'Fabric runtime metadata is unavailable and no local fallback was '
                             'provided.',
@@ -1026,13 +1026,13 @@ PUBLIC_SYMBOL_DOCS = [
   'summary_override': 'Create missing FabricOps metadata tables and check existing table columns and Spark data types.',
   'symbol_name': 'setup_metadata_tables',
   'template_notebook': '00_env_config',
-  'template_segment': 'Environment bootstrap',
+  'template_segment': 'Workspace bootstrap',
   'use_when': 'Use after setup_notebook in 00_env_config to create or validate the FabricOps '
               'metadata tables required by agreement, profiling, lineage, stability, and '
               'governance workflows.',
   'do_not_use_when': 'Do not use for writing business data or pipeline target tables; use '
                      'write_lakehouse_table or write_warehouse_table for data outputs.',
-  'parameters': 'config, env, and optional require_active_steward controls used to prepare '
+  'parameters': 'config, workspace_id, and optional require_active_steward controls used to prepare '
                 'metadata storage through configured metadata routing.',
   'returns': 'Setup result describing metadata table creation or validation status.',
   'raises': 'Raises configuration, Spark, or storage errors when metadata routing or table '
@@ -1046,21 +1046,21 @@ PUBLIC_SYMBOL_DOCS = [
                      'lineage, stability, or governance workflows that persist evidence.',
   'preferred_example': 'setup_metadata_tables(\n'
                        '    config=CONFIG,\n'
-                       '    env="Sandbox",\n'
+                       '    active_workspace_id="<workspace-id>",\n'
                        ')',
   'related_functions': ['setup_notebook'],
   'expanded_purpose': 'Prepares FabricOps metadata tables through configured metadata target ABFSS '
                       'paths, not Spark partial namespaces or an attached default lakehouse.',
   'when_to_use': 'Use after setup_notebook in 00_env_config when bootstrapping or validating the '
-                 'metadata store for an environment.',
+                 'metadata store for a workspace.',
   'glossary_terms': ['metadata lakehouse', 'evidence'],
   'return_interpretation': 'The returned setup status tells you which metadata tables were created '
-                           'or validated and whether the environment is ready for workflows that '
+                           'or validated and whether the workspace is ready for workflows that '
                            'write evidence.',
   'common_failure_causes': ['The configured metadata lakehouse ABFSS path is missing or invalid.',
                             'Spark cannot create or inspect metadata tables through the configured '
                             'ABFSS paths.',
-                            'The selected environment does not include metadata routing.',
+                            'The selected workspace does not include metadata routing.',
                             'The caller lacks permission to create or update metadata tables.'],
   'related_guides': [{'title': 'Templates',
                       'path': 'https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks'},
@@ -1132,7 +1132,7 @@ PUBLIC_SYMBOL_DOCS = [
   'when_to_use': 'Use near the start of a notebook when Spark processing needs a full Lakehouse table DataFrame.',
   'glossary_terms': ['source data', 'metadata lakehouse'],
   'return_interpretation': 'The returned DataFrame represents the resolved Lakehouse table.',
-  'common_failure_causes': ['The target or table name is misspelled.', 'The selected environment does not define the requested lakehouse target.', 'Spark cannot access the table.', 'The caller lacks permission to read the lakehouse.'],
+  'common_failure_causes': ['The target or table name is misspelled.', 'The selected workspace does not define the requested lakehouse target.', 'Spark cannot access the table.', 'The caller lacks permission to read the lakehouse.'],
   'related_guides': [{'title': 'Templates',
                       'path': 'https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks'}]},
  {'kind': 'function',
@@ -1156,7 +1156,7 @@ PUBLIC_SYMBOL_DOCS = [
   'when_to_use': 'Use after transformations and guardrail checks when the destination is a Lakehouse table.',
   'glossary_terms': ['target table', 'guardrails', 'metadata lakehouse'],
   'return_interpretation': 'No value is returned; successful completion means the configured Lakehouse write was submitted.',
-  'common_failure_causes': ['Guardrails were skipped before a target write.', 'The target lakehouse is not configured for the environment.', 'The write mode is unsupported for the destination.', 'The caller lacks write permission or Spark cannot create the table.'],
+  'common_failure_causes': ['Guardrails were skipped before a target write.', 'The target lakehouse is not configured for the workspace.', 'The write mode is unsupported for the destination.', 'The caller lacks write permission or Spark cannot create the table.'],
   'related_guides': [{'title': 'Templates',
                       'path': 'https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks'}]},
  {'kind': 'function',
@@ -1175,7 +1175,7 @@ PUBLIC_SYMBOL_DOCS = [
             'cannot be read.',
   'side_effects': 'Reads from the configured Fabric-resolved path; it does not write metadata, tables, or files.',
   'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
-                    'intended env name; never hardcode Fabric workspace or item identifiers.',
+                    'intended active_workspace_id name; never hardcode Fabric workspace or item identifiers.',
   'ai_verification': 'Verify relative_path is a configured Fabric-resolved file path, then check row count and schema '
                      'after reading.',
   'preferred_example': 'orders_df = read_lakehouse_csv("incoming/orders.csv", inferSchema=True)',
@@ -1189,7 +1189,7 @@ PUBLIC_SYMBOL_DOCS = [
   'common_failure_causes': ['The file path is wrong or outside the configured Fabric target.',
                             'CSV options do not match the file shape.',
                             'Spark cannot access the file.',
-                            'The selected environment is missing the source lakehouse target.'],
+                            'The selected workspace is missing the source lakehouse target.'],
   'related_guides': [{'title': 'Templates',
                       'path': 'https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks'}]},
  {'kind': 'function',
@@ -1205,7 +1205,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Lazy Spark DataFrame backed by the Fabric-resolved JSON path.',
   'raises': 'Raises ValueError for invalid file paths and configuration/Spark errors when the path cannot be read.',
   'side_effects': 'Constructs a Spark JSON read plan; it does not write metadata, tables, or files.',
-  'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name.',
+  'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended active_workspace_id name.',
   'ai_verification': 'Verify the configured target and relative path, then check schema and rows when an action evaluates the DataFrame.',
   'preferred_example': 'df = read_lakehouse_json(relative_path="incoming/events.json", store="Bronze", multiLine=True)',
   'related_functions': ['read_lakehouse_csv', 'read_lakehouse_parquet', 'read_lakehouse_table'],
@@ -1234,7 +1234,7 @@ PUBLIC_SYMBOL_DOCS = [
   'side_effects': 'Reads from the configured Fabric-resolved path and may create a local timestamp-converted fallback '
                   'for single-file Parquet precision issues; it does not write metadata tables.',
   'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
-                    'intended env name; never hardcode Fabric workspace or item identifiers.',
+                    'intended active_workspace_id name; never hardcode Fabric workspace or item identifiers.',
   'ai_verification': 'Verify the file path is resolved by the Fabric resolver and check row '
                      'count/schema after reading.',
   'preferred_example': 'orders_df = read_lakehouse_parquet("curated/orders/")',
@@ -1263,14 +1263,14 @@ PUBLIC_SYMBOL_DOCS = [
               'inputs.',
   'do_not_use_when': 'Do not use for Delta tables, CSV files, Parquet files, or warehouse SQL '
                      'tables.',
-  'parameters': 'config, env, store, relative_path, optional sheet_name, '
+  'parameters': 'config, active_workspace_id, store, relative_path, optional sheet_name, '
                 'and pandas read_excel keyword arguments.',
   'returns': 'Spark DataFrame converted from the selected Excel worksheet.',
   'raises': 'Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors when '
             'the file cannot be read.',
   'side_effects': 'Reads from lakehouse Files through a temporary local Excel file; it does not '
                   'write metadata, tables, or files.',
-  'fabric_context': 'Requires 00_env_config config/env/target context for resolving the configured '
+  'fabric_context': 'Requires 00_env_config config/active_workspace_id/target context for resolving the configured '
                     'lakehouse Files path.',
   'ai_verification': 'Verify the DataFrame row count and schema after reading, and confirm the '
                      'Excel file is appropriate for a small reference-style input.',
@@ -1306,7 +1306,7 @@ PUBLIC_SYMBOL_DOCS = [
             'cannot be resolved/read.',
   'side_effects': 'Reads from a warehouse table; it does not write metadata, tables, or files.',
   'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
-                    'intended env name; never hardcode Fabric workspace or item identifiers.',
+                    'intended active_workspace_id name; never hardcode Fabric workspace or item identifiers.',
   'ai_verification': 'Verify the warehouse target/schema/table are configured and inspect the '
                      'resulting DataFrame schema before downstream use.',
   'preferred_example': 'df = read_warehouse_table('
@@ -1364,7 +1364,7 @@ PUBLIC_SYMBOL_DOCS = [
             'target/table cannot be written.',
   'side_effects': 'Writes data to a Fabric warehouse table using the selected mode.',
   'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
-                    'intended env name; never hardcode Fabric workspace or item identifiers.',
+                    'intended active_workspace_id name; never hardcode Fabric workspace or item identifiers.',
   'ai_verification': 'Verify guardrails passed, confirm schema/table routing from CONFIG, and '
                      'check the intended write mode before calling.',
   'preferred_example': 'write_warehouse_table(orders_df, "dbo", "orders", mode="append")',
@@ -1547,7 +1547,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Catalogue evidence',
   'use_when': 'Use after source or target profiles and guardrail results are available to persist '
               'evidence through the configured metadata route.',
-  'parameters': 'profiles, dataset definitions, config, env, run_id, agreement context, notebook '
+  'parameters': 'profiles, dataset definitions, config, active_workspace_id, run_id, agreement context, notebook '
                 'context, and optional guardrail results.',
   'returns': 'Dictionary of write statuses keyed by dataset alias.',
   'side_effects': 'Writes METADATA_DATA_PROFILED through the configured metadata lakehouse '
@@ -1615,7 +1615,7 @@ PUBLIC_SYMBOL_DOCS = [
   'when_to_use': 'Use after Engineering registers a table to create or reopen its agreement-free draft and author descriptive Enrichment plus normalized Schema, Grain, Freshness, Source Drift, Data Quality, and Sensitive Data Guardrails.',
   'do_not_use_when': 'Do not use for pipeline-time immutable contract selection; use setup_pipeline.',
   'glossary_terms': ['data contract', 'guardrails', 'enrichment', 'metadata lakehouse'],
-  'return_interpretation': 'The returned state remains pinned to the draft created or reopened for the requested table_id and active environment; saves delegate to contract-authoring services.',
+  'return_interpretation': 'The returned state remains pinned to the draft created or reopened for the requested table_id and active workspace; saves delegate to contract-authoring services.',
   'common_failure_causes': ['The table_id has no active Catalogue row.',
                             'The metadata target cannot be read or written.',
                             'A subtype-specific Guardrail value is invalid.']},
@@ -1634,7 +1634,7 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
  'module': 'pipeline.setup_pipeline',
  'function_type': 'callable',
- 'summary_override': 'Prepare Testing or resolve an approved environment configuration for Live.',
+ 'summary_override': 'Prepare Testing or resolve an approved workspace configuration for Live.',
  'symbol_name': 'setup_pipeline', 'template_notebook': '02_pipeline',
  'template_segment': 'Configure the pipeline and whole-run boundary',
  'use_when': 'Call after setup_notebook() and before Read, Transform and Write. Test registers or recovers the Pipeline ID automatically.',
@@ -1651,19 +1651,19 @@ PUBLIC_SYMBOL_DOCS = [
 FOCUSED_FUNCTION_DOC_UPDATES = {
     "setup_metadata_tables": {
         "expanded_purpose": "Creates, additively evolves, or validates the FabricOps metadata tables required by the framework in the configured metadata lakehouse. Missing canonical columns are added without rewriting existing rows, while incompatible canonical types and known legacy schemas still fail validation. Physical nullability is not compared or migrated.",
-        "when_to_use": "Run during initial environment setup, after deploying a FabricOps version with metadata schema changes, or when recreating a development metadata environment. Do not use it as a substitute for setup_notebook, which resolves notebook execution context and configuration.",
-        "parameters": "config is the FabricOps configuration used to resolve the selected env, metadata lakehouse target, governance metadata schema, and engineering metadata schema; env selects the environment; require_active_steward enforces existing active steward readiness; verbose controls setup output; raise_on_failure raises after all tables are processed if any table fails.",
+        "when_to_use": "Run during initial workspace setup, after deploying a FabricOps version with metadata schema changes, or when recreating a development metadata workspace. Do not use it as a substitute for setup_notebook, which resolves notebook execution context and configuration.",
+        "parameters": "config is the FabricOps configuration used to resolve the selected active_workspace_id, metadata lakehouse target, governance metadata schema, and engineering metadata schema; active_workspace_id selects the workspace; require_active_steward enforces existing active steward readiness; verbose controls setup output; raise_on_failure raises after all tables are processed if any table fails.",
         "returns": "dict[str, Any] setup report after all managed metadata tables have been created, additively evolved, or validated, including status, metadata_schemas, fully_qualified_tables, created_tables, evolved_tables, validated_tables, failed_tables, table_results, data_agreement, governance, engineering, and active metadata counts.",
         "side_effects": "Performs metadata-layer table creation, additive missing-column evolution, and schema validation in the configured metadata lakehouse. Missing tables are created as empty Delta tables; missing canonical columns are added through an empty append with Delta mergeSchema; existing rows and extra physical columns are preserved.",
         "return_interpretation": "Use the returned status and per-table results to confirm that the physical metadata layer is ready and to distinguish tables that were created, evolved, validated, or failed. The function does not register business datasets.",
         "common_failure_causes": ["Missing, invalid, or non-schema-enabled Metadata Lakehouse configuration.", "Spark or Fabric lakehouse context is unavailable.", "The caller lacks permission to create or inspect metadata tables.", "An existing canonical field has an incompatible Spark field type or a known legacy schema requires explicit migration.", "Missing canonical fields are added automatically; nullability and field order are not validated.", "One table can fail while later tables are still processed; raise_on_failure raises only after processing all tables."],
-        "preferred_example": "setup_result = setup_metadata_tables(config=CONFIG, env=ENVIRONMENT_NAME)",
+        "preferred_example": "setup_result = setup_metadata_tables(config=CONFIG, workspace_id=WORKSPACE_ID)",
     },
     "setup_notebook": {
-        "expanded_purpose": "Prepares a Fabric notebook to use FabricOps consistently by validating environment configuration, resolving required data and metadata targets, collecting runtime identity, and returning a normalized NotebookSetupContext for downstream cells.",
+        "expanded_purpose": "Prepares a Fabric notebook to use FabricOps consistently by validating workspace configuration, resolving required data and metadata targets, collecting runtime identity, and returning a normalized NotebookSetupContext for downstream cells.",
         "when_to_use": "Call near the beginning of an operational FabricOps notebook to load workspace configuration before source reads, metadata setup, profiling, guardrails, or writes. It is normally called once per notebook execution and does not replace setup_metadata_tables.",
-        "parameters": "config optionally supplies explicit FabricOps configuration; otherwise the caller workspace selects the environment through 00_env_config. config_workspace_id optionally locates a remote config notebook; otherwise loading uses the current workspace; env applies only to explicit config; required_targets identifies the configured data or metadata targets that must resolve; notebook_name overrides automatic runtime notebook-name resolution; run_id_prefix is used only when Fabric does not provide a run id; local_fallback_name supports local tests when Fabric runtime context is unavailable.",
-        "returns": "NotebookSetupContext with run_id, notebook_name, workspace_name, user_name, environment, paths, validation_results, runtime_metadata, and readiness_status.",
+        "parameters": "config optionally supplies explicit FabricOps configuration; otherwise the caller workspace selects the workspace through 00_env_config. config_workspace_id optionally locates a remote config notebook; otherwise loading uses the current workspace; active_workspace_id applies only to explicit config; required_targets identifies the configured data or metadata targets that must resolve; notebook_name overrides automatic runtime notebook-name resolution; run_id_prefix is used only when Fabric does not provide a run id; local_fallback_name supports local tests when Fabric runtime context is unavailable.",
+        "returns": "NotebookSetupContext with run_id, notebook_name, workspace_name, user_name, workspace, paths, validation_results, runtime_metadata, and readiness_status.",
         "side_effects": "With no config, runs 00_env_config for the caller workspace, loads JSON, applies the audit timezone and initializes the shared context. Explicit config retains validation-only behavior. It does not write business data, provision resources or persist metadata.",
         "return_interpretation": "A ready context means required targets resolved and startup checks did not fail. Review validation_results when readiness_status is not ready before running downstream notebook cells.",
         "common_failure_causes": ["Missing required configuration sections or target names.", "No active Spark session, which is reported as a warning when validating local configuration.", "Fabric notebook runtime utilities are unavailable outside Fabric.", "Workspace, lakehouse, warehouse, or notebook context cannot be resolved.", "Invalid target names or required store identity fields.", "Explicit notebook_name or local_fallback_name is needed when automatic Fabric context is not available."],
@@ -1672,7 +1672,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     "read_lakehouse_csv": {
         "expanded_purpose": "Reads one CSV file or a compatible collection of CSV files from a Fabric lakehouse Files location into a Spark DataFrame using FabricOps target and path resolution. It does not profile, register, display, cache, or write the data automatically.",
         "when_to_use": "Use when source data is stored as CSV under a lakehouse Files path. Use read_lakehouse_table for registered Delta tables, read_lakehouse_parquet for Parquet files, and read_lakehouse_excel for Excel workbooks.",
-        "parameters": "relative_path is the file, folder, or wildcard-style Lakehouse Files path resolved under the store; store is the logical Lakehouse store; header controls first-row column names; context can provide resolved FabricOps config/env; additional keyword options are passed to Spark CSV reader, including inferSchema, sep, encoding, schema-related options, recursiveFileLookup, and malformed-row handling.",
+        "parameters": "relative_path is the file, folder, or wildcard-style Lakehouse Files path resolved under the store; store is the logical Lakehouse store; header controls first-row column names; context can provide resolved FabricOps config/active_workspace_id; additional keyword options are passed to Spark CSV reader, including inferSchema, sep, encoding, schema-related options, recursiveFileLookup, and malformed-row handling.",
         "returns": "Spark DataFrame representing rows parsed from the selected CSV file or files. Columns and data types depend on the supplied schema and CSV reader options.",
         "side_effects": "Constructs a Spark CSV read plan only; it does not write files, tables, or metadata.",
         "return_interpretation": "The returned DataFrame is a normal lazy Spark DataFrame until an action such as count, display, collect, or write is executed.",
@@ -1690,7 +1690,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     "read_lakehouse_table": {
         "expanded_purpose": "Loads a registered lakehouse Delta table into a Spark DataFrame using FabricOps target, schema, and table-name resolution so notebooks do not hardcode fully qualified table paths.",
         "when_to_use": "Use for Delta tables registered in a Fabric lakehouse. Use file readers for CSV, Parquet, or Excel files, and read_warehouse_table for Fabric Warehouse tables.",
-        "parameters": "table_name is the logical table name, not a qualified schema.table string; store selects the configured Lakehouse; schema optionally qualifies schema-enabled lakehouses; context supplies reusable FabricOps config/env; reader options are passed to Spark Delta reader.",
+        "parameters": "table_name is the logical table name, not a qualified schema.table string; store selects the configured Lakehouse; schema optionally qualifies schema-enabled lakehouses; context supplies reusable FabricOps config/active_workspace_id; reader options are passed to Spark Delta reader.",
         "returns": "Spark DataFrame containing the current rows and columns of the resolved lakehouse table. The DataFrame preserves the table Spark schema and remains lazy until an action is executed.",
         "common_failure_causes": ["The target cannot be resolved or is not a lakehouse.", "The table is not found, exists under another lakehouse or schema, or the schema argument is incorrect.", "The caller lacks read permissions or no Spark session is available.", "Spark Delta read failures may be deferred until an action evaluates the DataFrame."],
         "preferred_example": 'orders_df = read_lakehouse_table("orders", store="Bronze", schema="demo")',
@@ -1698,7 +1698,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     "read_warehouse_query": {
         "expanded_purpose": "Executes caller-supplied read-only SQL against a Fabric Warehouse and returns the result as a Spark DataFrame. Filtering, joins, grouping, and projection run in the Warehouse before rows are transferred to Spark.",
         "when_to_use": "Use when the Warehouse dataset is best expressed as SQL, especially when joins, filters, aggregations, or projections should execute before transfer. Use read_warehouse_table for a straightforward full-table read.",
-        "parameters": "query is a read-only SELECT statement or WITH CTE ending in SELECT; store resolves the configured Warehouse connection; context supplies reusable FabricOps config/env; options are passed to the Fabric Warehouse Spark connector. Parameter binding is not implemented, so do not interpolate untrusted values.",
+        "parameters": "query is a read-only SELECT statement or WITH CTE ending in SELECT; store resolves the configured Warehouse connection; context supplies reusable FabricOps config/active_workspace_id; options are passed to the Fabric Warehouse Spark connector. Parameter binding is not implemented, so do not interpolate untrusted values.",
         "returns": "Spark DataFrame containing the rows and columns produced by the Warehouse query. The output schema is determined by the SQL projection and Warehouse result types.",
         "common_failure_causes": ["Invalid, blank, or non-read-only SQL.", "Unknown tables or columns, unresolved Warehouse connection, or permission failure.", "Unsupported Warehouse-to-Spark type conversion.", "Very large result transfers can be slow or fail; empty result sets are successful DataFrames with zero rows."],
         "usage_notes": "Apply selective filters, projections, joins, and aggregations in the SQL query where practical so the Warehouse processes them before rows are transferred into Spark. Avoid SELECT * for very large tables when only a subset of fields is required.",
@@ -1707,7 +1707,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     "read_warehouse_table": {
         "expanded_purpose": "Reads a complete Fabric Warehouse table into a Spark DataFrame using the configured Warehouse connection, schema, and table identity. The table remains owned by the Warehouse and is not copied, profiled, registered, or modified.",
         "when_to_use": "Use for a straightforward read of one Warehouse table. Use read_warehouse_query when columns, rows, joins, or aggregations should be reduced in the Warehouse before transfer to Spark.",
-        "parameters": "schema is the physical Warehouse schema; table_name is the physical table; store resolves the configured Warehouse; context supplies FabricOps config/env; options are passed to the Fabric Warehouse Spark connector.",
+        "parameters": "schema is the physical Warehouse schema; table_name is the physical table; store resolves the configured Warehouse; context supplies FabricOps config/active_workspace_id; options are passed to the Fabric Warehouse Spark connector.",
         "returns": "Spark DataFrame containing the rows and columns of the resolved Warehouse table.",
         "common_failure_causes": ["The Warehouse connection cannot be resolved.", "The schema or table is not found, the caller lacks permission, or identifiers are invalid.", "The table contains unsupported data types for transfer to Spark.", "Complete-table reads may transfer large datasets; an empty table returns a valid zero-row DataFrame."],
         "usage_notes": "A complete-table read may transfer a large dataset from the Warehouse into Spark. Use read_warehouse_query when the workload can be reduced through SQL projection, filtering, joins, or aggregation.",
@@ -1716,7 +1716,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     "write_lakehouse_table": {
         "expanded_purpose": "Writes a Spark DataFrame to a Fabric lakehouse table using the configured FabricOps target, schema, table name, and write settings. Spark-side repartitioning can be applied before the physical Delta write so large datasets can be processed by multiple Spark tasks concurrently; physical Delta partitioning is separate and only occurs when partition_by is supplied.",
         "when_to_use": "Use after a pipeline DataFrame has been prepared and passed required validation or guardrail checks. Small datasets usually need the default write path; large datasets may use repartition_by for additional Spark write parallelism. Use partition_by only for persisted Delta layout based on stable, commonly filtered columns.",
-        "parameters": "df is the Spark DataFrame to write and is not mutated; table_name is the unqualified Lakehouse table; store resolves the Lakehouse; schema optionally qualifies schema-enabled lakehouses; mode controls append/overwrite/errorifexists/ignore behavior; partition_by physically partitions Delta files and folders; repartition_by accepts a positive integer, one column name, a non-empty string-only list/tuple of column names, or a list/tuple beginning with a positive integer followed by column names and calls Spark repartitioning before writing; options are forwarded to the Delta writer; verbose prints the resolved path; context supplies FabricOps config/env.",
+        "parameters": "df is the Spark DataFrame to write and is not mutated; table_name is the unqualified Lakehouse table; store resolves the Lakehouse; schema optionally qualifies schema-enabled lakehouses; mode controls append/overwrite/errorifexists/ignore behavior; partition_by physically partitions Delta files and folders; repartition_by accepts a positive integer, one column name, a non-empty string-only list/tuple of column names, or a list/tuple beginning with a positive integer followed by column names and calls Spark repartitioning before writing; options are forwarded to the Delta writer; verbose prints the resolved path; context supplies FabricOps config/active_workspace_id.",
         "returns": "None. The function validates routing and write settings, optionally repartitions the DataFrame, performs the Spark Delta write, and returns after the write completes or Spark raises an error.",
         "common_failure_causes": ["Zero or negative repartition counts, unsupported repartition_by types, empty lists/tuples, non-string column values after any leading partition count, or missing repartition columns.", "Invalid partition_by columns, schema mismatch, append-versus-overwrite conflicts, or unintended destructive overwrite.", "Insufficient write permissions, concurrent writes to the same target table, partial or failed Delta commits, empty DataFrame handling, small-file risk, or Spark shuffle failure."],
         "usage_notes": "Parallel processing is Spark distributed execution over DataFrame partitions, not Python threading, multiprocessing, parallel submission of separate tables, or a separate orchestration helper. repartition_by changes Spark execution partitions for the current write; partition_by changes the persisted Delta layout.",
@@ -1725,7 +1725,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
     "write_warehouse_table": {
         "expanded_purpose": "Writes a Spark DataFrame to a Fabric Warehouse table through the configured Warehouse write path. Spark-side repartitioning can be applied before connector transfer so large datasets can use multiple Spark tasks concurrently; it does not create physical Warehouse table partitions.",
         "when_to_use": "Use when a prepared and validated Spark DataFrame must be stored in a Fabric Warehouse. Small datasets normally use the default write path; large datasets may use repartition_by when the DataFrame has too few partitions or needs more balanced Spark-side write concurrency. Use write_lakehouse_table for Delta lakehouse targets or physical Delta partitioning.",
-        "parameters": "df is the Spark DataFrame to transfer and is not mutated; schema is the Warehouse schema such as dbo; table_name is the Warehouse table; store resolves the Warehouse connection; mode is passed to the connector; repartition_by accepts a positive integer, one column name, a non-empty string-only list/tuple of column names, or a list/tuple beginning with a positive integer followed by column names and calls Spark repartitioning before connector transfer; options are forwarded to the connector after required identity options; context supplies FabricOps config/env. No partition_by parameter exists for Warehouse writes.",
+        "parameters": "df is the Spark DataFrame to transfer and is not mutated; schema is the Warehouse schema such as dbo; table_name is the Warehouse table; store resolves the Warehouse connection; mode is passed to the connector; repartition_by accepts a positive integer, one column name, a non-empty string-only list/tuple of column names, or a list/tuple beginning with a positive integer followed by column names and calls Spark repartitioning before connector transfer; options are forwarded to the connector after required identity options; context supplies FabricOps config/active_workspace_id. No partition_by parameter exists for Warehouse writes.",
         "returns": "None. The function validates repartitioning, optionally writes a repartitioned DataFrame through the Warehouse connector, and returns after connector execution completes or raises an error.",
         "common_failure_causes": ["Zero or negative repartition counts, missing repartition columns, unsupported repartition_by value types, empty lists/tuples, or non-string column values after any leading partition count.", "Schema or table not found, unsupported write mode, authentication or connector failure, Warehouse permission failure, or unsupported Spark-to-Warehouse type conversion.", "Connector-managed transfer or staging failure, transaction or lock conflict, empty DataFrame behaviour, large transfer timeout/resource exhaustion, or accidentally writing the original DataFrame instead of the repartitioned one."],
         "usage_notes": "Parallel Spark tasks within one write_warehouse_table call are not the same as several notebooks or jobs writing to the same Warehouse table concurrently. The function does not coordinate independent writers or guarantee safe simultaneous overwrite operations, and it must not be documented with lakehouse-style partition_by behaviour.",
@@ -1757,7 +1757,7 @@ for _row in PUBLIC_SYMBOL_DOCS:
         _row.update(_update)
 
 
-PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Validates the selected FabricOps environment, resolves '
+PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Validates the selected FabricOps workspace, resolves '
                                         'configured runtime targets, and returns the notebook '
                                         'context that downstream helpers depend on.',
                     'glossary_terms': ['notebook template', 'metadata lakehouse'],
@@ -1765,7 +1765,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                              'runtime checks passed. Review validation messages '
                                              'before running downstream cells when readiness is '
                                              'not successful.',
-                    'common_failure_causes': ['The environment name is not present in CONFIG.',
+                    'common_failure_causes': ['The workspace name is not present in CONFIG.',
                                               'Required targets are missing from path '
                                               'configuration.',
                                               'Fabric runtime metadata is unavailable and no local '
@@ -1778,17 +1778,17 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                'lakehouse.',
                            'when_to_use': 'Use after setup_notebook in 00_env_config when '
                                           'bootstrapping or validating the metadata store for an '
-                                          'environment.',
+                                          'workspace.',
                            'glossary_terms': ['metadata lakehouse', 'evidence'],
                            'return_interpretation': 'The returned setup status tells you which '
                                                     'metadata tables were created or validated and '
-                                                    'whether the environment is ready for '
+                                                    'whether the workspace is ready for '
                                                     'workflows that write evidence.',
                            'common_failure_causes': ['The configured metadata lakehouse ABFSS path '
                                                      'is missing or invalid.',
                                                      'Spark cannot create or inspect metadata '
                                                      'tables through the configured ABFSS paths.',
-                                                     'The selected environment does not include '
+                                                     'The selected workspace does not include '
                                                      'metadata routing.',
                                                      'The caller lacks permission to create or '
                                                      'update metadata tables.']},
@@ -1845,7 +1845,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                    'schema before relying on it for guardrails or '
                                                    'writes.',
                           'common_failure_causes': ['The target or table name is misspelled.',
-                                                    'The selected environment does not define the '
+                                                    'The selected workspace does not define the '
                                                     'requested lakehouse target.',
                                                     'Spark cannot access the table.',
                                                     'The caller lacks permission to read the '
@@ -1867,7 +1867,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                            'common_failure_causes': ['Guardrails were skipped before a target '
                                                      'write.',
                                                      'The target lakehouse is not configured for '
-                                                     'the environment.',
+                                                     'the workspace.',
                                                      'The write mode is unsupported for the '
                                                      'destination.',
                                                      'The caller lacks write permission or Spark '
@@ -1884,7 +1884,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                   'configured lakehouse.',
                                                   'CSV options do not match the file shape.',
                                                   'Spark cannot access the file.',
-                                                  'The selected environment is missing the source '
+                                                  'The selected workspace is missing the source '
                                                   'lakehouse target.']},
  'read_lakehouse_parquet': {'expanded_purpose': 'Reads a Parquet file or folder from the Files '
                                                 'area of a configured Fabric lakehouse into a '

@@ -56,8 +56,8 @@ def governed(monkeypatch):
 
 
 def test_context_is_deterministic_and_projects_safe_governed_values(governed):
-    first = shared.consumer_context(_config(), "orders-id")
-    second = shared.consumer_context(_config(), "orders-id")
+    first = shared.consumer_context(_config(), "orders-id", workspace_id="prod")
+    second = shared.consumer_context(_config(), "orders-id", workspace_id="prod")
     assert first == second
     assert first["description"] == "Approved customer orders"
     assert first["grain"] == "One row per order"
@@ -72,14 +72,14 @@ def test_context_is_deterministic_and_projects_safe_governed_values(governed):
 def test_context_rejects_missing_table(monkeypatch):
     monkeypatch.setattr(shared, "resolve_catalogue_table_identity", lambda *_a, **_k: (_ for _ in ()).throw(ValueError("missing table")))
     with pytest.raises(ValueError, match="missing table"):
-        shared.consumer_context(_config(), "missing")
+        shared.consumer_context(_config(), "missing", workspace_id="source-workspace")
 
 
 def test_context_rejects_missing_active_contract(monkeypatch):
     monkeypatch.setattr(shared, "resolve_catalogue_table_identity", lambda *_a, **_k: {"table_id": "x", "layer": "Production", "store_type": "lakehouse", "table_name": "x"})
     monkeypatch.setattr(shared, "resolve_approved_consumer_contract", lambda *_a, **_k: (_ for _ in ()).throw(ValueError("No approved pipeline contract")))
     with pytest.raises(ValueError, match="No approved pipeline contract"):
-        shared.consumer_context(_config(), "x")
+        shared.consumer_context(_config(), "x", workspace_id="source-workspace")
 
 
 def test_context_rejects_invalid_source(monkeypatch):
@@ -87,11 +87,11 @@ def test_context_rejects_invalid_source(monkeypatch):
     monkeypatch.setattr(shared, "resolve_approved_consumer_contract", lambda *_a, **_k: _contract())
     monkeypatch.setattr(shared, "get_store", lambda *_a, **_k: SimpleNamespace(workspace_id="w", item_id="i", kind="eventhouse"))
     with pytest.raises(ValueError, match="unsupported"):
-        shared.consumer_context(_config(), "orders-id")
+        shared.consumer_context(_config(), "orders-id", workspace_id="prod")
 
 
 def test_renderer_is_stable_and_omits_absent_optional_values(governed):
-    context = shared.consumer_context(_config(), "orders-id")
+    context = shared.consumer_context(_config(), "orders-id", workspace_id="prod")
     assert shared.instruction_text(context) == shared.instruction_text(context)
     rendered = shared.instruction_text(context)
     assert "dbo.orders" in rendered["datasource"]

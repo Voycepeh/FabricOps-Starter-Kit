@@ -35,8 +35,8 @@ Use the finder below to search 27 public functions. Config classes stay out of t
     Maintainer inventory metrics:
 
     - Source Python files count: 52
-    - Total callables: 737
-    - Supporting functions: 382
+    - Total callables: 739
+    - Supporting functions: 384
     - Private helpers to review: 321
 
     - [Function Call Graph](../function-call-graph.md): explanatory page for the v4 normalized public-function call-flow architecture contract.
@@ -68,9 +68,9 @@ Expand a group to browse its public functions. Standard Orchestration is open by
   <p class="reference-catalogue-item-purpose">Run the observable standard governed target lifecycle.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.5</span><span class="reference-chip">02_pipeline</span></p>
 </article>
-<article id="pipeline.setup_pipeline-setup_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_pipeline" data-callable-module="pipeline.setup_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Prepare Testing or resolve an approved environment configuration for Live.">
+<article id="pipeline.setup_pipeline-setup_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_pipeline" data-callable-module="pipeline.setup_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Prepare Testing or resolve an approved workspace configuration for Live.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_pipeline/"><code>setup_pipeline</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Prepare Testing or resolve an approved environment configuration for Live.</p>
+  <p class="reference-catalogue-item-purpose">Prepare Testing or resolve an approved workspace configuration for Live.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 </div>
@@ -107,9 +107,9 @@ Expand a group to browse its public functions. Standard Orchestration is open by
   <p class="reference-catalogue-item-purpose">Create missing FabricOps metadata tables and check existing table columns and Spark data types.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span><span class="reference-chip">00_env_config</span></p>
 </article>
-<article id="config.setup_notebook-setup_notebook" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_notebook" data-callable-module="config" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Prepare a FabricOps notebook by validating configuration, resolving environment targets, and returning reusable runtime context.">
+<article id="config.setup_notebook-setup_notebook" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_notebook" data-callable-module="config" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Prepare a FabricOps notebook by validating configuration, resolving workspace targets, and returning reusable runtime context.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_notebook/"><code>setup_notebook</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Prepare a FabricOps notebook by validating configuration, resolving environment targets, and returning reusable runtime context.</p>
+  <p class="reference-catalogue-item-purpose">Prepare a FabricOps notebook by validating configuration, resolving workspace targets, and returning reusable runtime context.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">01_governance</span></p>
 </article>
 <article id="widgets.widget_activate_pipeline-widget_activate_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_activate_pipeline" data-callable-module="widgets.widget_activate_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Review complete persisted Testing and activate an exact whole pipeline.">

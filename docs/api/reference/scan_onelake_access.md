@@ -37,7 +37,7 @@ def scan_onelake_access(
     catalogue_df,
     *,
     targets: str | list[str] | tuple[str, ...],
-    environment_name: str | None=None,
+    workspace_id: str | None=None,
     access_snapshot_id: str | None=None,
     access_token: str | None=None,
     persist: bool=True,
@@ -57,9 +57,9 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `catalogue_df` | `pyspark.sql.DataFrame` | Yes | `—` | Active Data Catalogue rows for the configured environment. Its Spark session is used for mapping and persistence. |
+| `catalogue_df` | `pyspark.sql.DataFrame` | Yes | `—` | Active Data Catalogue rows for the configured workspace_id. Its Spark session is used for mapping and persistence. |
 | `targets` | `str \| list[str] \| tuple[str, ...]` | Yes | `—` | Configured Lakehouse keys whose permissions should be inventoried. |
-| `environment_name` | `str \| None` | No | `None` | Catalogue and configured-store environment; defaults to the active environment. |
+| `workspace_id` | `str \| None` | No | `None` | Catalogue and configured-store workspace_id; defaults to the active workspace_id. |
 | `access_snapshot_id` | `str \| None` | No | `None` | Shared scan identifier; a new UUID is generated when omitted. |
 | `access_token` | `str \| None` | No | `None` | Fabric API token override; normally resolved from the notebook identity. |
 | `persist` | `bool` | No | `True` | Append normalized rows to METADATA_DATA_ACCESS. Use False to inspect only. |

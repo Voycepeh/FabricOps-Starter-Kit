@@ -40,7 +40,7 @@ def get_default_fabric_context(*, require_notebook_setup: bool = False) -> dict[
     -------
     dict[str, Any]
         Active FabricOps runtime context containing at least ``config`` and
-        ``env``.
+        ``scope_workspace_id``.
 
     Raises
     ------
@@ -52,7 +52,7 @@ def get_default_fabric_context(*, require_notebook_setup: bool = False) -> dict[
     -----
     The helper first checks the IPython notebook namespace, then ``builtins``.
     When ``00_env_config`` is still constructing the active context, it can
-    also assemble the minimal context from ``CONFIG`` and ``ENV`` in the
+    also assemble the minimal context from ``CONFIG`` and ``WORKSPACE_ID`` in the
     notebook namespace. This keeps common notebooks simple while still
     allowing tests and advanced workflows to inject an explicit context.
 
@@ -79,22 +79,22 @@ def get_default_fabric_context(*, require_notebook_setup: bool = False) -> dict[
 
     if context is None and shell_user_ns is not None:
         shell_config = shell_user_ns.get("CONFIG")
-        shell_env = shell_user_ns.get("ENV")
-        if shell_config is not None and shell_env is not None:
-            context = {"config": shell_config, "env": shell_env}
+        shell_scope = shell_user_ns.get("WORKSPACE_ID")
+        if shell_config is not None and shell_scope is not None:
+            context = {"config": shell_config, "scope_workspace_id": shell_scope}
             run_context = shell_user_ns.get("RUN_CONTEXT")
             if run_context is not None:
                 context["workspace_name"] = getattr(run_context, "workspace_name", None)
                 context["runtime_metadata"] = getattr(run_context, "runtime_metadata", None)
 
-    has_environment = isinstance(context, dict) and context.get("env")
-    if not isinstance(context, dict) or not context.get("config") or not has_environment:
+    has_workspace = isinstance(context, dict) and context.get("scope_workspace_id")
+    if not isinstance(context, dict) or not context.get("config") or not has_workspace:
         raise RuntimeError(_DEFAULT_CONTEXT_ERROR)
     if require_notebook_setup:
         setup = context.get("_notebook_setup")
         result = setup.get("result") if isinstance(setup, dict) else None
         if (not isinstance(result, NotebookSetupContext) or setup.get("config") is not context["config"]
-                or setup.get("env") != context["env"] or result.readiness_status != "ready"):
+                or setup.get("scope_workspace_id") != context["scope_workspace_id"] or result.readiness_status != "ready"):
             raise RuntimeError("Call setup_notebook() successfully before setup_pipeline(); notebook configuration is missing or invalid.")
         live = _get_fabric_runtime_metadata(notebook_name=None, local_fallback_name=None)
         recorded = result.runtime_metadata
@@ -108,24 +108,24 @@ def get_default_fabric_context(*, require_notebook_setup: bool = False) -> dict[
 def resolve_fabric_context(
     *,
     config: Any = None,
-    env: str | None = None,
+    active_workspace_id: str | None = None,
     context: dict[str, Any] | None = None,
 ) -> tuple[Any, str, dict[str, Any]]:
-    """Resolve explicit or default FabricOps config and environment values."""
+    """Resolve explicit or default FabricOps config and workspace_id values."""
     resolved = dict(context or {})
     if config is None:
         config = resolved.get("config")
-    resolved_env = env or resolved.get("env")
-    if config is None or resolved_env is None:
+    resolved_scope = active_workspace_id or resolved.get("scope_workspace_id")
+    if config is None or resolved_scope is None:
         active = get_default_fabric_context()
         if config is None:
             config = active["config"]
-        if resolved_env is None:
-            resolved_env = active["env"]
+        if resolved_scope is None:
+            resolved_scope = active["scope_workspace_id"]
         resolved = {**active, **resolved}
     resolved["config"] = config
-    resolved["env"] = str(resolved_env)
-    return config, str(resolved_env), resolved
+    resolved["scope_workspace_id"] = str(resolved_scope)
+    return config, str(resolved_scope), resolved
 
 
 def resolve_runtime_context(
@@ -315,7 +315,6 @@ class FabricStore:
     Workspace/item IDs continue to route Lakehouse storage independently of name.
     """
 
-    env: str
     workspace_id: str
     item_id: str
     kind: str
@@ -325,7 +324,7 @@ class FabricStore:
 
     def __post_init__(self) -> None:
         """Validate and normalize initialized values."""
-        for field_name in ("env", "workspace_id", "item_id", "kind"):
+        for field_name in ("workspace_id", "item_id", "kind"):
             value = getattr(self, field_name)
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f"{field_name} must be a non-empty string.")
@@ -358,7 +357,7 @@ class FabricStore:
 
 @dataclass(frozen=True)
 class ResolvedFabricStore(FabricStore):
-    """Configured Fabric store paired with its environment mapping key."""
+    """Configured Fabric store paired with its workspace_id mapping key."""
 
     key: str = ""
 
@@ -371,12 +370,12 @@ class ResolvedFabricStore(FabricStore):
 
 @dataclass(frozen=True)
 class PathConfig:
-    """Environment-to-target mapping used for lakehouse/warehouse routing.
+    """Workspace-to-target mapping used for lakehouse/warehouse routing.
 
     Parameters
     ----------
     paths : dict[str, dict[str, Any]]
-        Mapping from environment name (for example ``"dev"``) to one or more
+        Mapping from Fabric workspace ID to one or more
         target names and their configured Housepath-like objects.
 
     Examples
@@ -391,7 +390,7 @@ class PathConfig:
     def __post_init__(self) -> None:
         """Validate and normalize initialized values."""
         if not isinstance(self.paths, dict) or not self.paths:
-            raise ValueError("paths must be a non-empty mapping of environments to targets.")
+            raise ValueError("paths must be a non-empty mapping of workspaces to targets.")
 
 
 DEFAULT_AI_ENRICHMENT = {
@@ -601,7 +600,7 @@ class FrameworkConfig:
     Parameters
     ----------
     path_config : PathConfig
-        Environment and target routing definitions.
+        Workspace and target routing definitions.
     governance_config : GovernanceConfig, optional
         Default governance-policy settings. Uses package defaults when omitted.
     data_agreement_config : DataAgreementConfig, optional
@@ -663,10 +662,10 @@ class NotebookSetupContext:
         Fabric workspace name when runtime context is available.
     user_name : str | None
         Active Fabric user name when runtime context is available.
-    environment : str
-        Selected environment key used for path resolution.
+    workspace_id : str
+        Selected workspace_id key used for path resolution.
     paths : dict[str, Any]
-        Resolved environment target mappings keyed by target name.
+        Resolved workspace_id target mappings keyed by target name.
     validation_results : list[ConfigSmokeCheckResult]
         Startup validation checks executed during setup.
     runtime_metadata : dict[str, Any]
@@ -680,7 +679,7 @@ class NotebookSetupContext:
     notebook_name: str | None
     workspace_name: str | None
     user_name: str | None
-    environment: str
+    workspace_id: str
     paths: dict[str, Any]
     validation_results: list[ConfigSmokeCheckResult]
     runtime_metadata: dict[str, Any]
@@ -745,20 +744,20 @@ def validate_framework_config(config: Any | dict[str, Any]) -> Any:
     _validate_audit_timezone(normalized.audit_timezone)
 
     metadata_targets: dict[tuple[str, str], list[str]] = {}
-    for env, targets in normalized.path_config.paths.items():
+    for active_workspace_id, targets in normalized.path_config.paths.items():
         if not isinstance(targets, dict) or not targets:
-            raise ValueError(f"Environment '{env}' must contain at least one target.")
+            raise ValueError(f"Workspace '{active_workspace_id}' must contain at least one target.")
         for target_name, housepath in targets.items():
             required = ("workspace_id", "item_id", "kind")
             if not all(hasattr(housepath, attr) for attr in required):
-                raise ValueError(f"Target '{env}/{target_name}' must provide FabricStore fields: {required}.")
+                raise ValueError(f"Target '{active_workspace_id}/{target_name}' must provide FabricStore fields: {required}.")
         metadata_store = targets.get("Metadata")
         if metadata_store is not None:
             identity = (
                 str(getattr(metadata_store, "workspace_id", "")),
                 str(getattr(metadata_store, "item_id", "")),
             )
-            metadata_targets.setdefault(identity, []).append(str(env))
+            metadata_targets.setdefault(identity, []).append(str(active_workspace_id))
 
     if len(metadata_targets) > 1:
         configured = "; ".join(
@@ -766,7 +765,7 @@ def validate_framework_config(config: Any | dict[str, Any]) -> Any:
             for (workspace_id, item_id), envs in sorted(metadata_targets.items())
         )
         raise ValueError(
-            "All configured environments must use the same physical FabricOps Metadata Lakehouse "
+            "All configured workspaces must use the same physical FabricOps Metadata Lakehouse "
             f"(workspace_id + item_id). Configured targets: {configured}."
         )
 
@@ -821,18 +820,18 @@ def _normalize_path_config(config: Any | None, *, require_paths: bool = True) ->
     return PathConfig(paths={"__missing__": {}})
 
 
-def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> ResolvedFabricStore:
-    """Resolve a configured FabricStore for an environment and logical store key.
+def get_store(config: Any | dict[str, Any] | None, active_workspace_id: str, store: str) -> ResolvedFabricStore:
+    """Resolve a configured FabricStore for a workspace ID and logical store key.
 
     Parameters
     ----------
-    env : str
-        Environment key such as ``Sandbox``, ``DE``, or ``Prod``.
+    active_workspace_id : str
+        Stable Fabric workspace ID selecting one configured store set.
     store : str
         Logical configured store key, such as ``Bronze`` or ``Gold``.
         The optional FabricStore.name supplies a different physical item name.
     config : FrameworkConfig | PathConfig | None
-        Configuration that contains environment-to-store mappings.
+        Configuration that contains workspace_id-to-store mappings.
 
     Returns
     -------
@@ -842,7 +841,7 @@ def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> Reso
     Raises
     ------
     ValueError
-        If config is missing, or if the environment/store mapping does not exist.
+        If config is missing, or if the workspace_id/store mapping does not exist.
 
     Examples
     --------
@@ -851,21 +850,21 @@ def get_store(config: Any | dict[str, Any] | None, env: str, store: str) -> Reso
 
     """
     paths = _normalize_path_config(config).paths
-    if env not in paths:
-        available_envs = ", ".join(sorted(paths.keys())) or "<none>"
+    if active_workspace_id not in paths:
+        available_workspaces = ", ".join(sorted(paths.keys())) or "<none>"
         raise ValueError(
-            f"Environment '{env}' was not found in Fabric config. Available environments: {available_envs}."
+            f"Workspace '{active_workspace_id}' was not found in Fabric config. Available workspaces: {available_workspaces}."
         )
-    if store not in paths[env]:
-        available_targets = ", ".join(sorted(paths[env].keys(), key=str.casefold)) or "<none>"
+    if store not in paths[active_workspace_id]:
+        available_targets = ", ".join(sorted(paths[active_workspace_id].keys(), key=str.casefold)) or "<none>"
         raise ValueError(
-            f"Store '{store}' was not found under environment '{env}'. Available stores: {available_targets}."
+            f"Store '{store}' was not found under workspace_id '{active_workspace_id}'. Available stores: {available_targets}."
         )
-    configured_store = paths[env][store]
+    configured_store = paths[active_workspace_id][store]
     if not isinstance(configured_store, FabricStore):
-        raise ValueError(f"Store '{env}/{store}' must be configured as a FabricStore.")
+        raise ValueError(f"Store '{active_workspace_id}/{store}' must be configured as a FabricStore.")
     return ResolvedFabricStore(
-        env=configured_store.env,
+
         workspace_id=configured_store.workspace_id,
         item_id=configured_store.item_id,
         kind=configured_store.kind,
@@ -899,17 +898,17 @@ def stable_metadata_id(*parts: Any) -> str:
 
 
 def build_table_id(store_type: Any, layer: Any, schema_name: Any, table_name: Any) -> str:
-    """Return the environment-independent logical identity for a table asset."""
+    """Return the workspace-independent logical identity for a table asset."""
     return stable_metadata_id(store_type, layer, schema_name, table_name)
 
 
 def build_column_id(table_id: Any, column_name: Any) -> str:
-    """Return the environment-independent logical identity for a column asset."""
+    """Return the workspace-independent logical identity for a column asset."""
     return stable_metadata_id(table_id, column_name)
 
 
 def initialize_notebook(
-    config=None, env="Sandbox", required_targets=None, notebook_name=None,
+    config=None, active_workspace_id=None, required_targets=None, notebook_name=None,
     run_id_prefix="run", local_fallback_name=None, *, config_workspace_id=None,
 ) -> NotebookSetupContext:
     """Load workspace configuration and reuse notebook startup validation."""
@@ -922,7 +921,7 @@ def initialize_notebook(
         shell = None
     else:
         shell = get_ipython()
-    # An empty published context blocks both older bindings and CONFIG/ENV
+    # An empty published context blocks both older bindings and CONFIG/WORKSPACE_ID
     # fallback until every initialization stage has completed successfully.
     builtins.FABRIC_CONTEXT = {}
     if shell is not None:
@@ -955,21 +954,25 @@ def initialize_notebook(
             raise ValueError("00_env_config returned an invalid configuration JSON response.") from None
         if payload["workspace_id"] != workspace_id:
             raise ValueError("Configuration response does not match the caller workspace ID.")
-        env = payload["env"]
+        active_workspace_id = payload["workspace_id"]
         raw = payload["config"]
         config = FrameworkConfig(
             **{key: value for key, value in raw.items()
                if key not in {"path_config", "governance_config", "data_agreement_config"}},
-            path_config=PathConfig(paths={environment: {name: FabricStore(**store) for name, store in stores.items()}
-                                         for environment, stores in raw["path_config"]["paths"].items()}),
+            path_config=PathConfig(paths={workspace_id: {name: FabricStore(**store) for name, store in stores.items()}
+                                         for workspace_id, stores in raw["path_config"]["paths"].items()}),
             governance_config=GovernanceConfig(**raw["governance_config"]),
             data_agreement_config=DataAgreementConfig(**raw["data_agreement_config"]),
         )
+    if active_workspace_id is None:
+        active_workspace_id = str(runtime_meta.get("workspace_id") or "").strip().lower()
+    if not active_workspace_id:
+        raise ValueError("Explicit local setup requires workspace_id when Fabric runtime is unavailable.")
     normalized = validate_framework_config(config)
-    if automatic and env not in normalized.path_config.paths:
-        raise ValueError(f"No configured paths for environment: {env}")
-    targets = required_targets if required_targets is not None else list(normalized.path_config.paths.get(env, {}))
-    resolved_paths = {store_name: get_store(config=normalized, env=env, store=store_name) for store_name in targets}
+    if automatic and active_workspace_id not in normalized.path_config.paths:
+        raise ValueError(f"No configured paths for workspace_id: {active_workspace_id}")
+    targets = required_targets if required_targets is not None else list(normalized.path_config.paths.get(active_workspace_id, {}))
+    resolved_paths = {store_name: get_store(config=normalized, active_workspace_id=active_workspace_id, store=store_name) for store_name in targets}
 
     resolved_notebook_name = runtime_meta.get("notebook_name")
     user_name = runtime_meta.get("user_name") or runtime_meta.get("user_id") or "unknown"
@@ -1024,15 +1027,15 @@ def initialize_notebook(
         notebook_name=resolved_notebook_name,
         workspace_name=runtime_meta.get("workspace_name"),
         user_name=str(user_name),
-        environment=env,
+        workspace_id=active_workspace_id,
         paths=resolved_paths,
         validation_results=checks,
         runtime_metadata=runtime_meta,
         readiness_status=readiness_status,
     )
     _print_notebook_setup_summary(result, config=normalized, config_workspace_id=config_workspace_id if automatic else None)
-    active_context = {"config": normalized, "env": env, "runtime_metadata": runtime_meta,
-                      "_notebook_setup": {"config": normalized, "env": env, "result": result}}
+    active_context = {"config": normalized, "scope_workspace_id": active_workspace_id, "runtime_metadata": runtime_meta,
+                      "_notebook_setup": {"config": normalized, "scope_workspace_id": active_workspace_id, "result": result}}
     builtins.FABRIC_CONTEXT = active_context
     if shell is not None:
         shell.user_ns["FABRIC_CONTEXT"] = active_context
@@ -1057,7 +1060,7 @@ def _print_notebook_setup_summary(
     lines.append(f"Caller workspace: {context.workspace_name or 'unknown'} ({caller_workspace or 'unknown'})")
     lines.append(f"Notebook: {context.notebook_name or 'unknown'}")
     lines.append(f"Run ID: {context.run_id}")
-    lines.append(f"Environment: {context.environment}")
+    lines.append(f"Workspace: {context.workspace_id}")
     lines.append(f"Audit timezone: {config.audit_timezone}")
     lines.append(f"Metadata schemas: governance={config.governance_metadata_schema}, engineering={config.engineering_metadata_schema}")
     lines.append("Targets:")

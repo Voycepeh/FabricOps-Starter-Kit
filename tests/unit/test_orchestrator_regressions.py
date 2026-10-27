@@ -79,7 +79,7 @@ def test_internal_reader_normalizes_before_incremental_parameter_checks(monkeypa
     with pytest.raises(RuntimeError, match="reached identity resolution"):
         module.pipeline_read(store="Bronze", table_name="orders", read_mode=" INCREMENTAL ",
                              read_parameters={"watermark_column": "modified_at"}, target_table_id="target",
-                             context={"config": object(), "env": "dev"})
+                             context={"config": object(), "scope_workspace_id": "dev"})
     resolve.assert_called_once()
 
 

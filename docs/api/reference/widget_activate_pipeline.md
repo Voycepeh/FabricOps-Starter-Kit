@@ -62,7 +62,7 @@ Spark is resolved automatically from the existing execution session.
 No session is created; Spark-dependent work raises
 ``RuntimeError`` when no session is available.
 
-Displays environment, current/proposed table contracts, writer ownership,
+Displays workspace_id, current/proposed table contracts, writer ownership,
 affected pipelines, missing tests, conflicts and complete release readiness.
 Completed Testing runs missing contracts are listed by table ID and excluded
 from review. Extra candidate controls appear for shared-table dependencies.
@@ -70,7 +70,7 @@ Supply an immutable release version for
 every selected pipeline. The backend revalidates complete Testing, exact
 contracts, Agreement, locations and operation modes at review and again at approval.
 
-One explicit approval publishes the entire environment revision atomically.
+One explicit approval publishes the entire workspace_id revision atomically.
 Stale review, missing tests, competing writers, contract conflicts or affected
 running executions block approval. Approval never deploys or writes business
 data. Failed commits cannot expose a partial release. Returns widget state,
@@ -88,7 +88,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_activate_pipeline.py:67`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L67-L230">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L67-L278">View on GitHub</a>
 </div>
 
 

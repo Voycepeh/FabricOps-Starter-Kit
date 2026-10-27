@@ -34,20 +34,20 @@ def _text(value: Any) -> str:
     return str(value or "").strip()
 
 
-def consumer_context(config: Any, table_id: str, *, spark_session: Any = None) -> dict[str, Any]:
-    """Assemble safe consumer context from one active Production contract."""
-    identity = resolve_catalogue_table_identity(config, "prod", table_id, spark_session=spark_session)
-    contract = resolve_approved_consumer_contract(config, "prod", table_id, spark_session=spark_session)
+def consumer_context(config: Any, table_id: str, *, workspace_id: str, spark_session: Any = None) -> dict[str, Any]:
+    """Assemble safe consumer context from one approved contract in the selected workspace."""
+    identity = resolve_catalogue_table_identity(config, workspace_id, table_id, spark_session=spark_session)
+    contract = resolve_approved_consumer_contract(config, workspace_id, table_id, spark_session=spark_session)
     payload = contract["contract_payload"]
     table = payload["table"]
     if _text(table.get("table_id")) != _text(identity.get("table_id")):
-        raise RuntimeError("Active Data Contract and Production Catalogue identity do not match.")
+        raise RuntimeError("Active Data Contract and workspace Catalogue identity do not match.")
 
-    store = get_store(config, "prod", _text(identity.get("layer")))
+    store = get_store(config, workspace_id, _text(identity.get("layer")))
     if store.kind not in {"lakehouse", "warehouse"}:
         raise ValueError(f"Data Agent source type {store.kind!r} is unsupported.")
     if store.kind != _text(identity.get("store_type")).casefold():
-        raise ValueError("Configured Production store type does not match the governed Catalogue asset.")
+        raise ValueError("Configured workspace store type does not match the governed Catalogue asset.")
 
     enrichments = [
         dict(row) for group in (payload.get("enrichment") or {}).values() for row in group
@@ -83,7 +83,7 @@ def consumer_context(config: Any, table_id: str, *, spark_session: Any = None) -
 
     return {
         "table_id": _text(table_id),
-        "environment": "prod",
+        "workspace_id": workspace_id,
         "contract": {
             "contract_id": _text(contract.get("contract_id")),
             "contract_version": int(contract.get("contract_version") or 0),
@@ -320,5 +320,5 @@ def provision_data_agent(
 
 def configured_context(config: Any | None, context: Mapping[str, Any] | None) -> Any:
     """Resolve package configuration from the normal FabricOps runtime context."""
-    resolved_config, _, runtime = resolve_fabric_context(config=config, env="prod", context=dict(context or {}))
-    return resolved_config
+    resolved_config, source_workspace, runtime = resolve_fabric_context(config=config, context=dict(context or {}))
+    return resolved_config, source_workspace, runtime

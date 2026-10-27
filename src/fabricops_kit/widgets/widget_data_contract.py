@@ -6,7 +6,7 @@ import html
 import traceback
 import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any, Mapping
 
 from fabricops_kit.config.shared import metadata_timestamp_sort_key, resolve_fabric_context
@@ -540,12 +540,12 @@ def _manifest_html(payload: dict[str, Any]) -> str:
 def _profile_html(context: dict[str, Any]) -> str:
     """Render a compact datatype-aware summary of governed profile evidence."""
     if context.get("kind") == "unavailable":
-        return "<p>No profile values available.</p>"
+        return "<p>Not yet profiled.</p>"
 
     profile = dict(context.get("profile") or {})
     values = list(context.get("values") or [])
     if not profile:
-        return "<p>No profile values available.</p>"
+        return "<p>Not yet profiled.</p>"
 
     def shown(value: Any) -> str:
         if value is None:
@@ -729,7 +729,8 @@ def widget_data_contract(
     """
     startup = shared.WidgetStartup("Data Contract")
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
-        config, env, resolved = resolve_fabric_context(context=context)
+        config, active_workspace_id, resolved = resolve_fabric_context(context=context)
+        routing_workspace_id = active_workspace_id
     governance_config = getattr(config, "governance_config", None)
     ai_enrichment = dict(getattr(governance_config, "ai_enrichment", {}) or {})
     classification_levels = [
@@ -741,12 +742,12 @@ def widget_data_contract(
     with startup.phase("spark_loading", "Resolving the Spark session…"):
         spark = get_spark_session(context=context)
     with startup.phase("metadata_loading", "Loading configured metadata…"):
-        catalogue = contracts.list_contract_governance_state(config=config, env=env, spark_session=spark)
+        catalogue = contracts.list_contract_governance_state(config=config, active_workspace_id=active_workspace_id, spark_session=spark)
         table_rows = catalogue["tables"]
         if table_id is not None and str(table_id) not in {str(row.get("table_id")) for row in table_rows}:
-            raise ValueError("table_id has no active table-level Catalogue row in the authoring environment.")
+            raise ValueError("table_id has no active table-level Catalogue row in the authoring workspace_id.")
     state: dict[str, Any] = {
-        "environment_name": env, "table_id": None, "contract_version": None,
+        "workspace_id": None, "table_id": None, "contract_version": None,
         "pending_table_id": table_id, "pending_contract_version": contract_version,
         "contracts": catalogue["contracts"], "tables": table_rows, "current": None,
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
@@ -863,7 +864,7 @@ def widget_data_contract(
                 catalogue_rows=current.get("catalogue_rows", []),
                 enrichment_rows=current.get("enrichment", []),
                 guardrail_rows=current.get("guardrails", []),
-                environment_name=env,
+                workspace_id=active_workspace_id,
                 scheduled_refresh=contract_schedule,
                 allow_incomplete_grain=True,
             )
@@ -905,7 +906,7 @@ def widget_data_contract(
                 )
         state["contract_version"] = int(chosen["contract_version"])
         state["current"] = contracts.get_contract_review_state(
-            config=config, env=env, spark_session=spark,
+            config=config, active_workspace_id=active_workspace_id, spark_session=spark,
             contract_id=str(chosen["contract_id"]), contract_version=state["contract_version"],
         )
         state["_saved_payload"] = json.loads(
@@ -922,11 +923,11 @@ def widget_data_contract(
         return state["current"]
 
     def new_draft() -> dict[str, Any]:
-        if not state.get("table_id"):
-            raise ValueError("Select one governed table before creating a draft.")
+        if not state.get("table_id") or not state.get("workspace_id"):
+            raise ValueError("Select a table and workspace before creating a draft.")
         draft = contracts.create_contract_draft(
-            table_id=str(state["table_id"]), config=config, env=env,
-            spark_session=spark, context=resolved,
+            table_id=str(state["table_id"]), config=config, active_workspace_id=active_workspace_id,
+            spark_session=spark, context={**resolved, "scope_workspace_id": active_workspace_id},
         )
         state["contracts"] = [draft, *[
             row for row in state["contracts"]
@@ -1013,13 +1014,6 @@ def widget_data_contract(
         prepare_save = state.get("_prepare_data_contract_save")
         if callable(prepare_save):
             prepare_save()
-        schema_required = {
-            str(column_id)
-            for rule in current.get("guardrails", [])
-            if str(rule.get("guardrail_type") or "").lower() == "schema"
-            and bool(rule.get("is_active", True))
-            for column_id in _parameters(rule).get("required_columns", [])
-        }
         removed_column_ids = {
             str(rule.get("column_id") or "")
             for rule in current.get("guardrails", [])
@@ -1034,10 +1028,7 @@ def widget_data_contract(
             str(column.get("column_name") or column.get("column_id") or "")
             for column in contract_columns
             if str(column.get("column_id") or "") in removed_column_ids
-            and (
-                str(column.get("column_id") or "") in schema_required
-                or str(column.get("column_name") or "") in schema_required
-            )
+            and column.get("presence", "required") == "required"
         })
         if conflicting_columns:
             raise ValueError(
@@ -1052,7 +1043,7 @@ def widget_data_contract(
             draft=current["contract"],
             payload=payload,
             config=config,
-            env=env,
+            active_workspace_id=active_workspace_id,
             spark_session=spark,
             context=resolved,
         )
@@ -1097,7 +1088,7 @@ def widget_data_contract(
         profile_cache: dict[tuple[str, str], dict[str, Any]] = state["_profile_cache"]
         if cache_key not in profile_cache:
             profile_cache[cache_key] = contracts.get_column_profile_context(
-                config=config, env=env, spark_session=spark,
+                config=config, active_workspace_id=active_workspace_id, spark_session=spark,
                 table_id=selected_table, column_id=selected_column,
             )
         profile = profile_cache[cache_key]
@@ -1116,11 +1107,11 @@ def widget_data_contract(
         if state.get("dirty"):
             raise ValueError("Save the Data Contract before freezing this version.")
         result = contracts.freeze_contract(
-            draft=current["contract"], config=config, env=env,
-            spark_session=spark, context=resolved, scheduled_refresh=contract_schedule,
+            draft=current["contract"], config=config, active_workspace_id=active_workspace_id,
+            spark_session=spark, context={**resolved, "scope_workspace_id": active_workspace_id}, scheduled_refresh=contract_schedule,
         )
         latest = contracts.list_contract_governance_state(
-            config=config, env=env, spark_session=spark,
+            config=config, active_workspace_id=active_workspace_id, spark_session=spark,
         )
         state["contracts"] = latest["contracts"]
         select(str(state["table_id"]), int(state["contract_version"]))
@@ -1152,20 +1143,6 @@ def widget_data_contract(
             return state["_ai_unavailable"]
         return str(exc)
 
-    configured_stores = dict(getattr(getattr(config, "path_config", None), "paths", {}).get(env, {}))
-    store_options = [
-        (
-            f"{name} · {str(getattr(store, 'kind', '') or '').title()}" if getattr(store, "kind", None) else str(name),
-            str(name),
-        )
-        for name, store in configured_stores.items()
-        if str(name).strip().lower() != "metadata"
-    ]
-    selector_dropdown_layout = widgets.Layout(
-        width="100%", min_width="0", max_width="100%",
-    )
-    store_control = widgets.Dropdown(options=store_options, layout=selector_dropdown_layout)
-
     def dynamic_selector(*, placeholder: str, empty_label: str | None = None) -> dict[str, Any]:
         return shared.render_searchable_selector(
             widgets=widgets,
@@ -1177,13 +1154,13 @@ def widget_data_contract(
             empty_label=empty_label,
         )
 
-    schema_selector = dynamic_selector(placeholder="Search schemas...")
     table_selector = dynamic_selector(
         placeholder="Search governed tables...",
         empty_label="Select governed table",
     )
-    contract_selector = dynamic_selector(placeholder="Search contract versions...")
-    schema_control = schema_selector["selector"]
+    contract_selector = dynamic_selector(placeholder="Search contract versions...", empty_label="Select contract")
+    workspace_selector = dynamic_selector(placeholder="Search workspaces...", empty_label="Select workspace")
+    workspace_control = workspace_selector["selector"]
     table_control = table_selector["selector"]
     contract_control = contract_selector["selector"]
 
@@ -1200,14 +1177,13 @@ def widget_data_contract(
 
     selector = widgets.GridBox(
         [
-            selector_field("Fabric store", store_control),
-            selector_field("Schema", schema_selector["container"]),
             selector_field("Table", table_selector["container"]),
             selector_field("Contract", contract_selector["container"]),
+            selector_field("Workspace", workspace_selector["container"]),
         ],
         layout=widgets.Layout(
             width="100%",
-            grid_template_columns="repeat(4, minmax(0, 1fr))",
+            grid_template_columns="minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)",
             grid_gap="16px 24px",
             overflow="visible",
         ),
@@ -1244,7 +1220,7 @@ def widget_data_contract(
             "contract_id": current["contract_id"], "contract_version": current["contract_version"],
             "table_id": str(table_payload.get("table_id") or current["contract"].get("table_id") or ""),
             "table_name": str(table_payload.get("table_name") or ""),
-            "environment_name": env, "enrichment_level": level,
+            "workspace_id": active_workspace_id, "enrichment_level": level,
             "column_id": column_id,
             "column_name": next((str(item.get("column_name") or "") for item in current.get("available_columns", []) if str(item.get("column_id") or "") == column_id), "") if column_id else "",
             "enrichment_type": kind, "value": value,
@@ -1271,7 +1247,7 @@ def widget_data_contract(
             "contract_id": current["contract_id"], "contract_version": current["contract_version"],
             "table_id": str(table_payload.get("table_id") or current["contract"].get("table_id") or ""),
             "table_name": str(table_payload.get("table_name") or ""),
-            "environment_name": env, "column_id": column_id,
+            "workspace_id": active_workspace_id, "column_id": column_id,
             "column_name": next((str(item.get("column_name") or "") for item in current.get("available_columns", []) if str(item.get("column_id") or "") == column_id), "") if column_id else "",
             "guardrail_type": guardrail_type, "rule_id": old.get("rule_id") or rule_type,
             "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters),
@@ -1363,6 +1339,11 @@ def widget_data_contract(
         table = next((item for item in current.get("catalogue_rows", []) if not item.get("column_id")), {})
         if not table:
             table = (state.get("manifest") or {}).get("table", {})
+        observed_names = {str(item.get("column_name")) for item in current.get("catalogue_rows", [])
+                          if item.get("column_id") and item.get("is_active") is not False}
+        contracted_names = {str(item.get("column_name")) for item in columns}
+        state["observation_difference"] = {"unaccounted_columns": sorted(observed_names - contracted_names),
+                                           "missing_contracted_columns": sorted(contracted_names - observed_names)}
         suggestion_scope = (str(current["contract_id"]), int(current["contract_version"]))
         ai_state = state["_ai_suggestions"].setdefault(
             suggestion_scope, {"table": {}, "columns": {}}
@@ -2210,7 +2191,7 @@ def widget_data_contract(
             refresh_frequency = "Unavailable"
 
         runtime_context = contracts.get_table_runtime_context(
-            config=config, env=env, spark_session=spark,
+            config=config, active_workspace_id=active_workspace_id, spark_session=spark,
             table_id=str(state.get("table_id") or ""),
         )
 
@@ -2229,22 +2210,27 @@ def widget_data_contract(
         def runtime_context_html() -> str:
             profile = runtime_context.get("latest_profile")
             if profile:
-                environment_name = str(profile.get("environment_name") or "Unknown environment")
+                workspace_id = str(profile.get("workspace_id") or "Unknown workspace_id")
                 pipeline_name = str(profile.get("pipeline_name") or "Unknown pipeline")
                 committed_by = str(profile.get("committed_by") or "Unknown")
+                rank, instant = metadata_timestamp_sort_key(profile.get("committed_at"))
+                age = f"{max(0, (datetime.now(UTC) - instant).days)} days" if rank and isinstance(instant, datetime) else "Unknown"
+                row_count = next((item.get("row_count") for item in runtime_context.get("column_profiles", {}).values()
+                                  if item.get("row_count") is not None), "Unknown")
                 profile_html = (
                     "<div style='margin-top:14px;'>"
                     "<div style='color:#667085;font-size:11px;'>Latest profile</div>"
-                    f"<div style='font-weight:600;margin-top:3px;'>{html.escape(environment_name)} · "
+                    f"<div style='font-weight:600;margin-top:3px;'>{html.escape(workspace_id)} · "
                     f"{html.escape(pipeline_name)}</div>"
                     f"<div style='color:#667085;font-size:12px;margin-top:2px;'>{html.escape(committed_by)} · "
-                    f"{html.escape(context_timestamp(profile.get('committed_at')))}</div></div>"
+                    f"{html.escape(context_timestamp(profile.get('committed_at')))}</div>"
+                    f"<div style='color:#667085;font-size:12px;'>Age: {html.escape(age)} · Rows: {html.escape(str(row_count))}</div></div>"
                 )
             else:
                 profile_html = (
                     "<div style='margin-top:14px;'>"
                     "<div style='color:#667085;font-size:11px;'>Latest profile</div>"
-                    "<div style='color:#667085;font-size:12px;margin-top:3px;'>No profile available</div></div>"
+                    "<div style='color:#667085;font-size:12px;margin-top:3px;'>Not yet profiled</div></div>"
                 )
 
             writer_count = int(runtime_context.get("writer_count") or 0)
@@ -2255,7 +2241,7 @@ def widget_data_contract(
             if lineage_rows:
                 rows_html = "".join(
                     "<tr>"
-                    f"<td style='padding:5px 8px;'>{html.escape(str(item.get('environment_name') or ''))}</td>"
+                    f"<td style='padding:5px 8px;'>{html.escape(str(item.get('workspace_id') or ''))}</td>"
                     f"<td style='padding:5px 8px;'>{html.escape(str(item.get('pipeline_name') or ''))}</td>"
                     f"<td style='padding:5px 8px;'>{html.escape(('Read' if str(item.get('relationship') or '').lower() in {'reader', 'read'} else 'Write' if str(item.get('relationship') or '').lower() in {'writer', 'write'} else str(item.get('relationship') or '')))}</td>"
                     f"<td style='padding:5px 8px;white-space:nowrap;'>{html.escape(context_timestamp(item.get('last_seen')))}</td>"
@@ -2411,7 +2397,7 @@ def widget_data_contract(
                 enabled = rule.get("is_active", True)
                 if kind == "schema":
                     required_names = list(dict.fromkeys(names_by_id.get(str(name), str(name)) for name in params.get("required_columns", [])))
-                    detail = [("Required columns", required_names or "None"), ("Frozen type expectations", ", ".join(f"{name}: {dtype}" for name, dtype in types.items()) or "None"), ("Policy", "Block missing Required columns and contracted type mismatches; additional columns Warn and allow continuation")]
+                    detail = [("Required columns", required_names or "None"), ("Frozen type expectations", ", ".join(f"{name}: {dtype}" for name, dtype in types.items()) or "None"), ("Policy", "Block missing required columns, extra columns and contracted datatype mismatches")]
                 elif kind == "grain":
                     detail = [("Description", table_grain.value or "Not defined"), ("Key combination", affected_names), ("Policy", policy), ("Scope", "Read: returned rows, including incremental batches. Write: prepared input after Sensitive Data treatment. No resulting-table uniqueness guarantee for Append or SCD."), ("Null and missing keys", "Null in any component fails. Blank strings are values. Missing columns or invalid configuration block."), ("SCD2 history", "Use a version-aware row key, such as business key + effective timestamp; business keys can repeat across history.")]
                 else:
@@ -2526,6 +2512,12 @@ def widget_data_contract(
                 "<div style='color:#667085;font-size:11px;'>Guardrails</div>"
                 "</div>"
             )
+            if state.get("workspace_id"):
+                difference = state.get("observation_difference", {})
+                for key, label in (("unaccounted_columns", "New / unaccounted columns"),
+                                   ("missing_contracted_columns", "Missing contracted columns")):
+                    if difference.get(key):
+                        table_summary.value += f"<p><b>{label}:</b> {html.escape(', '.join(difference[key]))}</p>"
             render_guardrail_sidebar()
 
         table_grain.observe(render_table_summary, names="value")
@@ -2819,10 +2811,7 @@ def widget_data_contract(
 
 
         # Columns: one editor, hydrated on selection, with profile evidence isolated from payload.
-        required_rule = next(
-            (r for r in guardrails if str(r.get("guardrail_type") or "").lower() == "schema"), {}
-        )
-        required_columns = set(_parameters(required_rule).get("required_columns", []))
+        required_columns = {str(column["column_id"]) for column in columns if column.get("presence", "required") == "required"}
         render_table_summary()
         saved_payload = json.loads(
             str(current["contract"].get("contract_payload_json") or "{}")
@@ -2834,8 +2823,9 @@ def widget_data_contract(
         }
         observed_types = {
             str(item.get("column_id") or ""): str(item.get("data_type") or "")
-            for item in columns
+            for item in current.get("catalogue_rows", []) if item.get("column_id") and item.get("is_active") is not False
         }
+        observed_types = {str(column["column_id"]): observed_types.get(str(column["column_id"]), "") for column in columns}
         contracted_types = {
             cid: str(contracted_columns.get(cid, {}).get("data_type") or observed_type)
             for cid, observed_type in observed_types.items()
@@ -2859,7 +2849,7 @@ def widget_data_contract(
         accept_column_description = widgets.Button(description="Apply", disabled=not editable, button_style="info")
         rerun_column_description = widgets.Button(description="Re-run", disabled=not editable)
         state["_ai_buttons"].extend([accept_column_description, rerun_column_description])
-        required = widgets.Checkbox(description="Required", disabled=not editable, layout=widgets.Layout(width="auto", min_width="0", margin="0"))
+        required = widgets.Checkbox(description="Required presence", tooltip="Controls whether the column must exist; null values are a separate concern.", disabled=not editable, layout=widgets.Layout(width="auto", min_width="0", margin="0"))
         required.add_class("fabricops-column-required")
         required_hint = widgets.HTML()
         column_header = widgets.VBox(
@@ -3142,7 +3132,7 @@ def widget_data_contract(
             try:
                 live_enrichments, live_guardrails = current_rows()
                 selected = next((c for c in columns if str(c.get("column_id") or "") == column_id), {})
-                observed_type = str(selected.get("data_type") or "")
+                observed_type = observed_types.get(column_id, "")
                 contract_type = str(contracted_types.get(column_id) or observed_type)
                 mismatch = bool(contract_type and observed_type and contract_type != observed_type)
                 column_name = html.escape(str(selected.get("column_name") or ""))
@@ -3185,6 +3175,11 @@ def widget_data_contract(
                         column_name=str(selected.get("column_name") or ""),
                     )
                     datatype_choice.layout.display = "none"
+                if editable and selected.get("review_status") in {"unreviewed", "changed"}:
+                    label = "New column" if selected["review_status"] == "unreviewed" else "Changed datatype"
+                    column_context.value += f"<div style='color:var(--form-accent);font-size:12px;'>{label} · Review before freezing</div>"
+                if state.get("workspace_id") and not observed_type:
+                    column_context.value += "<div style='font-size:12px;'>Missing from the selected current observation</div>"
                 column_description.value = enrichment_value(live_enrichments, "column", "Description", column_id)
                 _set_selection_value(
                     column_classification,
@@ -3882,36 +3877,28 @@ def widget_data_contract(
                 set_validation_error(key, exc)
 
         def build_required_record() -> dict[str, Any]:
-            selected = selected_column()
-            cid = str(selected.get("column_id") or "")
-            current_rule = next((
-                rule for rule in session_guardrails()
-                if str(rule.get("guardrail_type") or "").lower() == "schema"
-            ), required_rule)
-            updated = set(_parameters(current_rule).get("required_columns", []))
-            name = str(selected.get("column_name") or "")
-            if required.value:
-                updated.add(cid or name)
-            else:
-                updated.difference_update((cid, name))
-            return guardrail_record(
-                "schema", "required_columns", {"required_columns": sorted(updated)},
-                existing=current_rule,
-            )
+            payload = json.loads(str(current["contract"]["contract_payload_json"]))
+            required_ids = [str(column["column_id"]) for column in payload.get("table", {}).get("columns", [])
+                            if column.get("presence", "required") == "required"]
+            current_rule = next((rule for rule in session_guardrails() if rule.get("guardrail_type") == "schema"), {})
+            return guardrail_record("schema", "strict", {"required_columns": required_ids}, existing=current_rule, action="Block")
 
         def sync_required(_change: dict[str, Any] | None = None) -> None:
             if hydrating["active"] or not editable:
                 return
             cid = str(column_select.value or "")
-            if not cid:
-                return
-            key = f"column.{cid}.required"
-            try:
-                stage_guardrails([build_required_record()])
-                set_validation_error(key)
-                mark_column_hydrated("required")
-            except (TypeError, ValueError, RuntimeError) as exc:
-                set_validation_error(key, exc)
+            payload = json.loads(str(current["contract"]["contract_payload_json"]))
+            for column in payload.get("table", {}).get("columns", []):
+                if str(column.get("column_id") or "") == cid:
+                    column["presence"] = "required" if required.value else "optional"
+            current["contract"]["contract_payload_json"] = json.dumps(payload, sort_keys=True)
+            for column in current.get("available_columns", []):
+                if str(column.get("column_id") or "") == cid:
+                    column["presence"] = "required" if required.value else "optional"
+            stage_guardrails([build_required_record()])
+            state["dirty"] = True
+            refresh_manifest()
+            mark_column_hydrated("required")
 
         def build_sensitive_record() -> dict[str, Any] | None:
             cid = str(column_select.value or "")
@@ -5773,86 +5760,54 @@ def widget_data_contract(
     def refresh_table_options(*_args: Any) -> None:
         if state["_selector_refreshing"]:
             return
-        selected_store = str(store_control.value or "")
-        selected_schema = str(schema_control.value or "")
-        rows = [
-            row for row in table_rows
-            if str(row.get("layer") or "") == selected_store
-            and str(row.get("schema_name") or "") == selected_schema
-        ]
-        pending = str(state.get("pending_table_id") or "")
-        selector_rows = [
-            {
-                "label": str(row.get("table_name") or row.get("table_id")),
-                "value": str(row["table_id"]),
-            }
-            for row in rows
-        ]
-        values = [str(row["value"]) for row in selector_rows]
+        options = contracts.observation_selector_options(table_rows, workspace_id=state.get("workspace_id"))
+        names = {str(row["table_id"]): str(row.get("table_name") or row["table_id"]) for row in table_rows}
+        selected = str(state.get("pending_table_id") or "")
         state["_selector_refreshing"] = True
         try:
-            table_control.refresh_rows(
-                selector_rows,
-                pending if pending in values else "",
-            )
+            table_control.refresh_rows([{"label": names[value], "value": value} for value in options["tables"]],
+                                       selected if selected in options["tables"] else "")
+            workspaces = contracts.observation_selector_options(table_rows, table_id=selected)["workspaces"]
+            labels = {str(row["workspace_id"]): str(row.get("_workspace_name") or row["workspace_id"]) for row in table_rows}
+            workspace_control.refresh_rows([{"label": f"{labels[value]} ({value})", "value": value} for value in workspaces],
+                                           state.get("workspace_id") or "")
         finally:
             state["_selector_refreshing"] = False
-        table_changed({"new": table_control.value})
-
-    def refresh_schema_options(*_args: Any) -> None:
-        if state["_selector_refreshing"]:
-            return
-        selected_store = str(store_control.value or "")
-        schemas = list(dict.fromkeys(
-            str(row.get("schema_name") or "")
-            for row in table_rows
-            if str(row.get("layer") or "") == selected_store
-        ))
-        pending_row = next(
-            (row for row in table_rows if str(row.get("table_id") or "") == str(state.get("pending_table_id") or "")),
-            None,
-        )
-        preferred = str((pending_row or {}).get("schema_name") or "")
-        selected_schema = preferred if preferred in schemas else (schemas[0] if schemas else None)
-        state["_selector_refreshing"] = True
-        try:
-            schema_control.refresh_rows(
-                [{"label": schema_name, "value": schema_name} for schema_name in schemas],
-                selected_schema,
-            )
-        finally:
-            state["_selector_refreshing"] = False
-        refresh_table_options()
 
     def table_changed(change: dict[str, Any]) -> None:
         if state["_selector_refreshing"]:
             return
         selected = str(change.get("new") or "")
         state["pending_table_id"] = selected or None
+        valid = contracts.observation_selector_options(table_rows, table_id=selected)["workspaces"]
+        if state.get("workspace_id") not in valid:
+            state["workspace_id"] = None
+        refresh_table_options()
         matches = [row for row in state["contracts"] if str(row.get("table_id") or "") == selected]
-        contract_rows = [
-            {
-                "label": f"v{row['contract_version']} · {str(row.get('status') or '').title()}",
-                "value": str(row["contract_version"]),
-            }
-            for row in matches
-        ]
-        contract_rows.append({"label": "New draft", "value": "new"})
-        preferred = state.get("pending_contract_version")
-        preferred_value = str(preferred) if preferred is not None else None
-        available = [str(row["contract_version"]) for row in matches]
-        if preferred_value in available:
-            selected_contract = preferred_value
-        elif matches:
-            selected_contract = str(matches[0]["contract_version"])
-        else:
-            selected_contract = "new"
+        rows = [{"label": f"v{row['contract_version']} · {str(row.get('status') or '').title()}",
+                 "value": str(row["contract_version"])} for row in matches]
+        if selected:
+            rows.append({"label": "New draft", "value": "new"})
+        preferred = str(state.get("pending_contract_version") or "")
         state["_selector_refreshing"] = True
         try:
-            contract_control.refresh_rows(contract_rows, selected_contract)
+            contract_control.refresh_rows(rows, preferred if preferred in {row["value"] for row in rows} else "")
         finally:
             state["_selector_refreshing"] = False
-        contract_changed({"new": contract_control.value})
+
+    def workspace_changed(change: dict[str, Any]) -> None:
+        nonlocal active_workspace_id
+        if state["_selector_refreshing"]:
+            return
+        selected = str(change.get("new") or "")
+        state["workspace_id"] = selected or None
+        active_workspace_id = selected or routing_workspace_id
+        valid = contracts.observation_selector_options(table_rows, workspace_id=selected)["tables"]
+        if state.get("pending_table_id") not in valid:
+            state["pending_table_id"] = None
+            state["pending_contract_version"] = None
+        refresh_table_options()
+        table_changed({"new": state.get("pending_table_id")})
 
     def contract_changed(change: dict[str, Any]) -> None:
         if state["_selector_refreshing"]:
@@ -5872,6 +5827,8 @@ def widget_data_contract(
         set_open_progress("Opening contract…", 20)
         try:
             if selected_contract == "new":
+                if not state.get("workspace_id"):
+                    raise ValueError("Select a workspace observation before creating a draft.")
                 state["table_id"] = selected_table
                 new_draft()
             else:
@@ -5938,23 +5895,11 @@ def widget_data_contract(
     cancel_exit.on_click(cancel_exit_clicked)
     confirm_exit_discard.on_click(confirm_exit_clicked)
 
-    pending_row = next(
-        (row for row in table_rows if str(row.get("table_id") or "") == str(state.get("pending_table_id") or "")),
-        None,
-    )
-    preferred_store = str((pending_row or {}).get("layer") or "")
-    store_values = [item[1] if isinstance(item, tuple) else item for item in store_control.options]
-    if preferred_store in store_values:
-        store_control.value = preferred_store
-    elif store_values:
-        store_control.value = store_values[0]
-    refresh_schema_options()
-    if table_control.value:
-        table_changed({"new": table_control.value})
-
-    store_control.observe(refresh_schema_options, names="value")
-    schema_control.observe(refresh_table_options, names="value")
+    refresh_table_options()
+    if state.get("pending_table_id"):
+        table_changed({"new": state["pending_table_id"]})
     table_control.observe(table_changed, names="value")
+    workspace_control.observe(workspace_changed, names="value")
     contract_control.observe(contract_changed, names="value")
     render()
     page = shared.form_page(
@@ -5966,9 +5911,8 @@ def widget_data_contract(
     page.children[0].value += _CONTRACT_STYLE
     state["_controls"].update({
         "page": page, "selector_panel": selector_panel, "editor_shell": editor_shell,
-        "store": store_control, "schema": schema_control,
-        "schema_search": schema_selector["search"],
         "table": table_control, "table_search": table_selector["search"],
+        "workspace_select": workspace_control, "workspace_search": workspace_selector["search"],
         "contract": contract_control, "contract_search": contract_selector["search"],
         "open_with_ai": open_with_ai_button, "open_without_ai": open_without_ai_button,
         "open": open_without_ai_button, "open_progress": open_progress,

@@ -12,10 +12,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Breaking changes
 
+- **Major breaking architecture change:** FabricOps now uses stable workspace IDs for configuration, physical observations, profiling, Processing State, Testing and activation. Environment is removed as an identity/routing namespace. This work is unreleased; the major version will be selected in a separate release PR.
+- Replace environment-keyed configuration with workspace-keyed paths. `FabricStore.env`, `setup_notebook(env=...)`, `setup_metadata_tables(env=...)`, scanner `environment_name` arguments and returned environment fields are removed/replaced. Ordinary no-argument setup and Read/Write orchestration calls retain their calling patterns. No compatibility aliases or metadata migration are supplied; use a fresh workspace-model metadata installation.
+- Contract column definitions enforce required presence by default, explicit optional presence and exact normalized datatypes. Unexpected columns block. Structural Schema checking is mandatory and cannot be disabled by omitting an authored rule.
+
 - Removed the separate Coverage Gate stage and `coverage_result` return field from the Live public `orchestrate_write()` interface. Both orchestrators use selected Data Contract Guardrails; no minimum active-check count is required. Their shared execution-plan signatures are unchanged. The internal `check_guardrail_coverage()` implementation is removed; it was already excluded from the supported public API. The Preview `widget_select_data_contract()` inspector adds available execution results and a `refresh` callback.
-- Existing canonical Data Contracts remain usable without changing policies. Legacy Coverage Gate settings require a new draft that expresses required protections as configured Guardrails, followed by Freeze → Testing → Activation. Frozen payloads are never rewritten. See [the migration guidance](src/README.md#contract-driven-guardrails-migration).
+- Frozen released documentation and notebook snapshots remain unchanged. The new workspace metadata layout starts fresh; a separate release PR will select the major version.
 
 ### Changed
+
+- **Observe locally → Govern globally → Test locally → Activate locally.** Data Contract histories remain global per table ID. Governance selects workspace evidence; different workspaces can independently activate different frozen versions. New profiles never alter contracts.
+- Data Contract and Pipeline Activation selectors filter Table/Pipeline and Workspace in either order. Workspace appears at the far right; optional selections have no arbitrary defaults. New drafts capture current observation columns once and keep profile evidence separate.
 
 - Configured blocking failures and checks that cannot execute prevent Live publication. Warn decisions, intentionally disabled checks, contract integrity, writer ownership, SCD and incremental safeguards remain enforced. Testing retains diagnostics without persistent data or metadata writes.
 - Living Pipeline 02 and 02A–02C demos, contract inspection, glossary and current API guidance reflect contract-driven Guardrails. Frozen release references and notebook snapshots retain historical behavior.

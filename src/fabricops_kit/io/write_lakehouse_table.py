@@ -61,7 +61,7 @@ def write_lakehouse_table(
         ``table_name``.
     store : str, default="Silver"
         Logical Lakehouse store key from ``00_env_config``. FabricOps resolves
-        the selected environment, workspace, Lakehouse item, optional schema,
+        the selected workspace_id, workspace, Lakehouse item, optional schema,
         table name, and OneLake Delta path under the Lakehouse ``Tables``
         area.
     schema : str or None, default=None

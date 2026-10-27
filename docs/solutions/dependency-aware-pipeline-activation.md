@@ -16,10 +16,10 @@ The same problem extends downstream when a replacement pipeline changes its outp
 
 <div class="fabricops-mascot-callout">
   <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="eager">
-  <div><p><strong>Author → Test → Activate → Live.</strong> Review the affected pipelines together and publish one consistent environment activation revision.</p></div>
+  <div><p><strong>Author → Test → Activate → Live.</strong> Review the affected pipelines together and publish one consistent workspace activation revision.</p></div>
 </div>
 
-FabricOps stores global Data Contract versions centrally and approves pipeline configurations separately for each environment. [`widget_activate_pipeline()`](../api/reference/widget_activate_pipeline.md) discovers affected active pipelines, checks their selected Testing candidates, and presents one coordinated approval.
+FabricOps stores global Data Contract versions centrally and approves pipeline configurations separately for each workspace. [`widget_activate_pipeline()`](../api/reference/widget_activate_pipeline.md) discovers affected active pipelines, checks their selected Testing candidates, and presents one coordinated approval.
 
 **This workflow is implemented on `main`; its lifecycle APIs remain Preview.** See the [public API lifecycle registry](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/public_api.py) for the current callable status.
 
@@ -45,7 +45,7 @@ In FabricOps, Data Contracts provide the governance rules used to validate pipel
 | Function | What the user does | Implementation |
 | --- | --- | --- |
 | [`widget_data_contract()`](../api/reference/widget_data_contract.md) | Author, review and freeze a global table Data Contract. | [Contract widget](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L603) |
-| [`setup_pipeline()`](../api/reference/setup_pipeline.md) | Declare a stable `pipeline_id`, sources and targets. Choose frozen versions interactively in Testing; resolve the approved environment configuration headlessly in Live. | [Pipeline setup](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130) |
+| [`setup_pipeline()`](../api/reference/setup_pipeline.md) | Declare a stable `pipeline_id`, sources and targets. Choose frozen versions interactively in Testing; resolve the approved workspace configuration headlessly in Live. | [Pipeline setup](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130) |
 | [`orchestrate_read()`](../api/reference/orchestrate_read.md) | Read each source with its applicable Freshness, Schema, Grain, Data Quality and Profile checks. | [Read orchestrator](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L22) |
 | [`orchestrate_write()`](../api/reference/orchestrate_write.md) | Evaluate prepared targets and optionally publish them. Write-side checks include Sensitive Data, Source Drift and required source Guardrail coverage. | [Write orchestrator](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L26) |
 | [`widget_activate_pipeline()`](../api/reference/widget_activate_pipeline.md) | Select successful Testing candidates, review affected dependencies, choose an effective Data Agreement and approve the complete release once. | [Activation widget](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L65) |
@@ -80,23 +80,23 @@ Testing evaluates without business publication by default. Explicit `testing_wri
     | Central metadata | What it supplies |
     | --- | --- |
     | [`METADATA_DATA_CONTRACT`](../reference/metadata/metadata_data_contract.md) | Global frozen table contract versions and immutable payloads. |
-    | [`METADATA_PIPELINE_RUN`](../reference/metadata/metadata_pipeline_run.md) | Whole-run completion, participants, exact contract mappings, physical bindings and operation modes, operation outcomes and environment. |
+    | [`METADATA_PIPELINE_RUN`](../reference/metadata/metadata_pipeline_run.md) | Whole-run completion, participants, exact contract mappings, physical bindings and operation modes, operation outcomes and workspace. |
     | [`METADATA_GUARDRAIL_RESULTS`](../reference/metadata/metadata_guardrail_results.md) | Rule-level diagnostics linked to the Testing run. |
     | [`METADATA_DATA_AGREEMENT`](../reference/metadata/metadata_data_agreement.md) | The exact effective Agreement selected for approval. |
-    | [`METADATA_PIPELINE_REGISTRY`](../reference/metadata/metadata_pipeline_registry.md) | One native authority row containing environment revisions, active pipelines, contract/writer mappings, immutable approval history and running reservations. |
+    | [`METADATA_PIPELINE_REGISTRY`](../reference/metadata/metadata_pipeline_registry.md) | One native authority row containing workspace revisions, active pipelines, contract/writer mappings, immutable approval history and running reservations. |
 
 ??? info "Shared-table rules and safe cutover"
 
     - One global `table_id` and centrally managed Data Contract version history.
-    - One active contract version per environment and table.
-    - One active writer per environment and table; multiple readers are allowed.
-    - One active configuration per environment and pipeline.
+    - One active contract version per workspace and table.
+    - One active writer per workspace and table; multiple readers are allowed.
+    - One active configuration per workspace and pipeline.
     - Testing may select any frozen version associated with the table.
     - An activatable Testing run requires frozen contracts for every participating table; contract-free exploratory Testing is not eligible.
 
     Every directly affected active pipeline needs complete successful Testing evidence for compatible mappings. Downstream pipelines require replacement evidence when their effective input expectations change; unchanged output expectations stop propagation. FabricOps does not infer compatibility with AI.
 
-    Live runs reserve and pin a revision. Activation affecting a running pipeline or reserved destination blocks until the execution drains; a notebook does not silently switch configurations midway through its run. Physical reservations are checked across environments and logical table aliases. Crashed runs retain reservations until reviewed administrative cleanup.
+    Live runs reserve and pin a revision. Activation affecting a running pipeline or reserved destination blocks until the execution drains; a notebook does not silently switch configurations midway through its run. Physical reservations are checked across workspaces and logical table aliases. Crashed runs retain reservations until reviewed administrative cleanup.
 
     Approval commits governance metadata only. Notebook deployment and business-table writes are separate operations. See the [execution, cutover and recovery guidance](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#live-cutover-and-deployment) for the operating policy and snapshot limitations.
 
@@ -114,7 +114,7 @@ Testing evaluates without business publication by default. Explicit `testing_wri
 
     **Blocked case:** A passes v4 Testing but B remains Live on v3 without compatible Testing evidence. A cannot activate alone.
 
-    **Environment boundary:** DEV and PROD can use different versions from the same global history. A successful DEV run alone does not authorize PROD: the current backend requires Testing evidence from the activation environment with its exact physical destinations. Evaluation-only Testing can validate those configurations without publishing to Live-owned tables.
+    **Environment boundary:** DEV and PROD can use different versions from the same global history. A successful DEV run alone does not authorize PROD: the current backend requires Testing evidence from the activation workspace with its exact physical destinations. Evaluation-only Testing can validate those configurations without publishing to Live-owned tables.
 
 ## Go deeper
 

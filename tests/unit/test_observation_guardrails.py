@@ -321,7 +321,7 @@ def test_static_source_skips_freshness_evidence_capture(monkeypatch) -> None:
     assert shared.capture_source_observation(table_id="source-a", dataframe=[]) is None
     with pytest.raises(ValueError, match="No current freshness evidence"):
         shared.get_current_freshness_evidence(
-            environment_name="dev", activity_id="run-1", table_id="source-a"
+            workspace_id="dev", activity_id="run-1", table_id="source-a"
         )
 
 
@@ -334,7 +334,7 @@ def test_freshness_capture_uses_freshness_rule_column(monkeypatch) -> None:
         dataframe=[{"arrived_at": "2026-09-20", "changed_at": "2020-01-01"}],
     ) is None
     evidence = shared.get_current_freshness_evidence(
-        environment_name="dev", activity_id="run-1", table_id="source-a"
+        workspace_id="dev", activity_id="run-1", table_id="source-a"
     )
     assert evidence["freshness_column"] == "arrived_at"
     assert evidence["latest_value"] == "2026-09-20"

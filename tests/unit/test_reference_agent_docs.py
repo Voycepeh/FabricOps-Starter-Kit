@@ -216,7 +216,7 @@ def test_setup_metadata_tables_reference_uses_keyword_only_example() -> None:
     assert "setup_result = setup_metadata_tables" in example
     assert "spark=spark" not in example
     assert "config=CONFIG" in example
-    assert "env=ENVIRONMENT_NAME" in example
+    assert "workspace_id=WORKSPACE_ID" in example
 
 
 def test_write_io_reference_pages_render_docstring_examples(tmp_path, monkeypatch) -> None:

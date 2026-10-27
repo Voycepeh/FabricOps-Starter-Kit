@@ -106,7 +106,7 @@ class _Frame:
 def test_lakehouse_read_and_write_helpers_route_to_configured_paths():
     """Verify lakehouse read and write helpers route to configured paths."""
     config = framework_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
     spark = _Spark()
     frame = _Frame()
 
@@ -124,7 +124,7 @@ def test_lakehouse_read_and_write_helpers_route_to_configured_paths():
 def test_metadata_lakehouse_table_helpers_use_abfss_paths_without_registered_tables():
     """Verify metadata lakehouse table helpers use abfss paths without registered tables."""
     config = framework_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
     spark = _Spark()
     frame = _Frame()
 
@@ -143,7 +143,7 @@ def test_metadata_lakehouse_table_helpers_use_abfss_paths_without_registered_tab
 def test_lakehouse_table_helpers_reject_nested_table_paths():
     """Verify lakehouse table helpers reject nested table paths."""
     config = framework_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
 
     with pytest.raises(ValueError, match="simple table name"):
         io.write_lakehouse_table(_Frame(), "METADATA_DATA_CONTRACT/Unidentified", store="Metadata", schema=None, mode="ignore", verbose=False, context=context)
@@ -164,11 +164,11 @@ def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeyp
     )
 
     with pytest.raises(ValueError, match="relative_path"):
-        call_with_spark(spark, io.read_lakehouse_csv, "", store="Bronze",  context={"config": config, "env": "dev"})
-    call_with_spark(spark, io.read_lakehouse_parquet, "customers.parquet", store="Bronze",  verbose=False, context={"config": config, "env": "dev"})
+        call_with_spark(spark, io.read_lakehouse_csv, "", store="Bronze",  context={"config": config, "scope_workspace_id": "dev"})
+    call_with_spark(spark, io.read_lakehouse_parquet, "customers.parquet", store="Bronze",  verbose=False, context={"config": config, "scope_workspace_id": "dev"})
     assert any(call[0] == "parquet" and call[1].endswith("/Files/customers.parquet") for call in spark.read.calls)
 
-    call_with_spark(spark, io.read_lakehouse_excel, "Files/reference/map.xlsx", store="Bronze", sheet_name="Sheet1",  context={"config": config, "env": "dev"}, skiprows=1)
+    call_with_spark(spark, io.read_lakehouse_excel, "Files/reference/map.xlsx", store="Bronze", sheet_name="Sheet1",  context={"config": config, "scope_workspace_id": "dev"}, skiprows=1)
     assert captured["kwargs"] == {"skiprows": 1}
 
 
@@ -177,6 +177,6 @@ def test_warehouse_helpers_fail_clearly_outside_fabric_runtime():
     config = framework_config()
 
     with pytest.raises(RuntimeError, match="Microsoft Fabric Spark"):
-        call_with_spark(_Spark(), io.read_warehouse_table, "dbo", "orders", store="Gold",  context={"config": config, "env": "dev"})
+        call_with_spark(_Spark(), io.read_warehouse_table, "dbo", "orders", store="Gold",  context={"config": config, "scope_workspace_id": "dev"})
     with pytest.raises(RuntimeError, match="Microsoft Fabric Spark"):
-        io.write_warehouse_table(_Frame(), "dbo", "orders", store="Gold", context={"config": config, "env": "dev"})
+        io.write_warehouse_table(_Frame(), "dbo", "orders", store="Gold", context={"config": config, "scope_workspace_id": "dev"})

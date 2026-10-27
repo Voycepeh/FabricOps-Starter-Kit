@@ -140,7 +140,7 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "metadata_level",
         "table_id",
         "column_id",
-        "environment_name",
+        "workspace_id",
         "store_type",
         "layer",
         "schema_name",

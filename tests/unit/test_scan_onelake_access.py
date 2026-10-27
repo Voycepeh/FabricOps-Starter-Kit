@@ -243,7 +243,7 @@ def test_scan_onelake_access_rejects_warehouse_target_before_auth(monkeypatch):
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",
-        lambda **kwargs: (object(), "dev", {"config": object(), "env": "dev"}),
+        lambda **kwargs: (object(), "dev", {"config": object(), "scope_workspace_id": "dev"}),
     )
     monkeypatch.setattr(module, "target_store_kinds", lambda *args: {"Gold": "warehouse"})
     monkeypatch.setattr(

@@ -28,8 +28,8 @@ def connector(monkeypatch):
 
 def context(alias='Gold', name='wh_ODI_Product', kind='warehouse'):
     return {'config': FrameworkConfig(path_config=PathConfig(paths={'poc': {
-        alias: FabricStore('poc', 'workspace-id', 'item-id', kind, name=name),
-    }})), 'env': 'poc'}
+        alias: FabricStore('workspace-id', 'item-id', kind, name=name),
+    }})), 'scope_workspace_id': 'poc'}
 
 
 @pytest.mark.parametrize('alias', ['Gold', 'Product', 'Source', 'Unified', 'Bronze', 'Silver'])
@@ -55,9 +55,9 @@ def test_read_write_and_query_use_physical_name_with_legacy_fallback(connector, 
 
 
 def test_legacy_positional_constructors_and_json_round_trip():
-    legacy = ResolvedFabricStore('poc', 'workspace-id', 'item-id', 'warehouse', True, 'dbo', 'Product')
+    legacy = ResolvedFabricStore('workspace-id', 'item-id', 'warehouse', True, 'dbo', 'Product')
     assert legacy.key == 'Product' and legacy.name is None
-    configured = FabricStore('poc', 'workspace-id', 'item-id', 'warehouse', True, 'dbo', name=' wh_ODI_Product ')
+    configured = FabricStore('workspace-id', 'item-id', 'warehouse', True, 'dbo', name=' wh_ODI_Product ')
     decoded = FabricStore(**json.loads(json.dumps(asdict(configured))))
     resolved = get_store(PathConfig(paths={'custom': {'Product': decoded}}), 'custom', 'Product')
     assert resolved.name == 'wh_ODI_Product' and resolved.key == 'Product'
@@ -66,7 +66,7 @@ def test_legacy_positional_constructors_and_json_round_trip():
 
 @pytest.mark.parametrize('field,value', [('name', ''), ('name', '  '), ('name', 123), ('item_id', ''), ('workspace_id', '')])
 def test_invalid_configuration_fails_before_connector_access(field, value):
-    values = dict(env='poc', workspace_id='workspace', item_id='item', kind='warehouse')
+    values = dict(active_workspace_id='poc', workspace_id='workspace', item_id='item', kind='warehouse')
     values[field] = value
     with pytest.raises(ValueError, match=field):
         FabricStore(**values)

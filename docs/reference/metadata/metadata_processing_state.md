@@ -61,7 +61,7 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--engineering"><td><code>source_table_name</code></td><td><code>string</code></td><td>Physical source table name captured with the observation; null on publication receipts.</td></tr>
 <tr class="metadata-column--engineering"><td><code>target_table_id</code></td><td><code>string</code></td><td>Identifier stored for <code>target_table_id</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>target_table_name</code></td><td><code>string</code></td><td>Physical target table name captured at publication; null on unbound observations.</td></tr>
-<tr class="metadata-column--engineering"><td><code>environment_name</code></td><td><code>string</code></td><td>Environment name recorded for the metadata row.</td></tr>
+<tr class="metadata-column--engineering"><td><code>workspace_id</code></td><td><code>string</code></td><td>Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.</td></tr>
 <tr class="metadata-column--engineering"><td><code>observed_at</code></td><td><code>timestamp</code></td><td>Original source capture timestamp; distinct from acknowledgement time.</td></tr>
 <tr class="metadata-column--engineering"><td><code>accepted_at</code></td><td><code>timestamp</code></td><td>Timestamp of successful metadata acknowledgement, shared by the receipt and all members accepted in one merge; null before acceptance.</td></tr>
 <tr class="metadata-column--engineering"><td><code>partition_column</code></td><td><code>string</code></td><td>Column defining observed source partitions, or the incremental watermark column.</td></tr>

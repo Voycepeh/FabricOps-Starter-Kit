@@ -95,7 +95,7 @@ def test_retirement_alerts_are_presence_only_and_nonblocking(monkeypatch, capsys
     monkeypatch.setattr(setup, 'read_lakehouse_table', read)
     monkeypatch.setattr(setup, 'write_lakehouse_table', write)
     result = call_with_spark(SimpleNamespace(createDataFrame=lambda rows, schema: Frame(schema)), setup.setup_metadata_tables,
-        config=cfg, env='dev', verbose=verbose, raise_on_failure=True,
+        config=cfg, workspace_id='dev', verbose=verbose, raise_on_failure=True,
     )
     assert result['status'] == 'ready'
     assert result['failed_tables'] == []

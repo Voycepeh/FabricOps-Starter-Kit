@@ -30,7 +30,7 @@ def test_lakehouse_reader_uses_resolved_delta_path(monkeypatch):
 
 def test_warehouse_reader_uses_resolved_object_name(monkeypatch):
     owner = importlib.import_module("fabricops_kit.io.read_warehouse_table")
-    store = FabricStore(env="dev", workspace_id="w", item_id="i", kind="warehouse")
+    store = FabricStore( workspace_id="w", item_id="i", kind="warehouse")
     calls = []
     monkeypatch.setattr(
         owner,

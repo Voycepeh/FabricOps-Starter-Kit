@@ -23,7 +23,7 @@ def _audit_fields():
 
 
 def test_build_enrichment_records_uses_ids_and_environment(monkeypatch):
-    """Build column enrichment with Stage 3 asset IDs and environment."""
+    """Build column enrichment with Stage 3 asset IDs and workspace_id."""
     monkeypatch.setattr(contract_shared, "build_runtime_audit_fields", lambda **kwargs: _audit_fields())
     monkeypatch.setattr(contract_shared, "read_lakehouse_table", lambda *args, **kwargs: [{
         "contract_id": "contract-id", "contract_version": 2,
@@ -36,13 +36,13 @@ def test_build_enrichment_records_uses_ids_and_environment(monkeypatch):
                 "contract_id": "contract-id",
                 "contract_version": 2,
                 "column_id": "column-id",
-                "environment_name": "dev",
+                "workspace_id": "dev",
                 "enrichment_type": "Description",
                 "value": "Student identifier",
             }
         ],
         config=types.SimpleNamespace(),
-        env="dev",
+        active_workspace_id="dev",
     )
     assert len(rows) == 1
     row = rows[0]
@@ -52,7 +52,7 @@ def test_build_enrichment_records_uses_ids_and_environment(monkeypatch):
     assert row["table_name"] == "orders"
     assert row["column_id"] == "column-id"
     assert row["column_name"] == "order_id"
-    assert row["environment_name"] == "dev"
+    assert row["workspace_id"] == "dev"
     assert "metadata_key" not in row
 
 
@@ -75,7 +75,7 @@ def test_table_enrichment_clears_column_id(monkeypatch):
             }
         ],
         config=types.SimpleNamespace(),
-        env="dev",
+        active_workspace_id="dev",
     )[0]
     assert row["column_id"] == ""
 
@@ -95,7 +95,7 @@ def test_column_enrichment_requires_column_id(monkeypatch):
                 }
             ],
             config=types.SimpleNamespace(),
-            env="dev",
+            active_workspace_id="dev",
         )
     except ValueError as exc:
         assert "column_id" in str(exc)

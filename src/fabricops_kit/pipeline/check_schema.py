@@ -27,12 +27,12 @@ def check_schema(
     context=None,
 ) -> dict:
     """Evaluate the resolved contract stage and return its continuation decision."""
-    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+    config, active_workspace_id, context = resolve_fabric_context() if context is None else (context["config"], context["scope_workspace_id"], context)
     spark_session = get_spark_session(dataframe=dataframe, context=context)
     spark = spark_session
     contract = resolve_pipeline_data_contract(
         config,
-        env,
+        active_workspace_id,
         table_id,
         spark_session=spark,
         context=context,
@@ -44,7 +44,7 @@ def check_schema(
             "checks": [],
             "reason": "Explicit No Contract selected.",
             "table_id": table_id,
-            "environment_name": env,
+            "workspace_id": active_workspace_id,
         }
         print_guardrail_result(
             "Schema",
@@ -52,7 +52,7 @@ def check_schema(
             verbose=verbose,
             table_id=table_id,
             config=config,
-            env=env,
+            active_workspace_id=active_workspace_id,
             spark_session=spark,
             context=context,
         )
@@ -61,7 +61,7 @@ def check_schema(
         return result
     identity = resolve_catalogue_table_identity(
         config,
-        env,
+        active_workspace_id,
         table_id,
         spark_session=spark,
         context=context,
@@ -69,7 +69,7 @@ def check_schema(
     store_key = identity["store"]
     schema = identity["schema"]
     table_name = identity["table_name"]
-    store = get_store(config, env, store_key)
+    store = get_store(config, active_workspace_id, store_key)
     store_type = str(store.kind).lower()
     if store_type != identity["store_type"]:
         raise ValueError(
@@ -102,7 +102,7 @@ def check_schema(
         raise ValueError(f"Store {store_key!r} must resolve to a Lakehouse or Warehouse.")
     rules_df = load_table_guardrail_rules(
         config,
-        env,
+        active_workspace_id,
         spark_session=spark,
         table_id=table_id,
         context=context,
@@ -111,7 +111,7 @@ def check_schema(
         rules_df,
         guardrail_type="schema",
         table_id=table_id,
-        environment_name=env,
+        workspace_id=active_workspace_id,
     )
     if selected_rule is None:
         raise ValueError(f"No active approved schema rule exists for {table_id!r}.")
@@ -119,7 +119,7 @@ def check_schema(
         dataframe,
         rules_df=rules_df,
         table_name=resolved_table,
-        environment_name=env,
+        workspace_id=active_workspace_id,
         table_id=table_id,
     )
     result.setdefault("guardrail_rule_id", str(selected_rule.get("guardrail_rule_id") or ""))
@@ -131,7 +131,7 @@ def check_schema(
     write_guardrail_result_row(
         spark_session=spark,
         config=config,
-        env=env,
+        active_workspace_id=active_workspace_id,
         run_id="",
         dataset_name="",
         table_name=table_name,
@@ -153,7 +153,7 @@ def check_schema(
         verbose=verbose,
         table_id=table_id,
         config=config,
-        env=env,
+        active_workspace_id=active_workspace_id,
         spark_session=spark,
         context=context,
     )

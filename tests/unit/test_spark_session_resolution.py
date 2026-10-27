@@ -124,7 +124,7 @@ def test_local_configuration_warns_accurately_without_spark(monkeypatch):
     from fabricops_kit import setup_notebook
     from tests.unit.test_setup_notebook_store_keys import _config
     monkeypatch.setattr(shared, "get_spark_session", lambda *_args: (_ for _ in ()).throw(RuntimeError('No active Spark session')))
-    result = setup_notebook(_config(), env="dev", required_targets=["Metadata"])
+    result = setup_notebook(_config(), workspace_id="dev", required_targets=["Metadata"])
     check = next(c for c in result.validation_results if c.name == "spark_session")
     assert check.status == "warn"
     assert "Spark-dependent operations are unavailable" in check.message

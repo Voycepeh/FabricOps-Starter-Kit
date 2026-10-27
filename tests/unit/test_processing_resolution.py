@@ -1,4 +1,4 @@
-"""Tests for environment-aware processing definition resolution."""
+"""Tests for workspace_id-aware processing definition resolution."""
 # ruff: noqa: D101, D102, D103, D107
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ def contract(strategy="scd1", *, version=3):
 
 def catalogue(strategy="overwrite"):
     return Frame([{
-        "metadata_level": "table", "table_id": "students", "environment_name": "dev",
+        "metadata_level": "table", "table_id": "students", "workspace_id": "dev",
         "is_active": True, "load_strategy": strategy,
         "load_strategy_parameters_json": {},
     }])

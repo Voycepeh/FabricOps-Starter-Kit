@@ -71,7 +71,7 @@ def widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict
     spark = get_spark_session(context=context)
     startup = WidgetStartup("Data Steward")
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
-        config, env, _context = resolve_fabric_context(context=context)
+        config, active_workspace_id, _context = resolve_fabric_context(context=context)
     widgets = require_ipywidgets()
 
     kind = "data_steward_widget"
@@ -88,7 +88,7 @@ def widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict
         row_lookup.update({_row_id(row): row for row in rows if _row_id(row)})
 
     with startup.phase("metadata_loading", "Loading configured metadata…"):
-        existing_rows = [row for row in list_data_stewards(config, env, spark_session=spark, active_only=False, missing_ok=True) if _row_id(row)]
+        existing_rows = [row for row in list_data_stewards(config, active_workspace_id, spark_session=spark, active_only=False, missing_ok=True) if _row_id(row)]
     _refresh_lookup(existing_rows)
     selected_selector = render_searchable_selector(
         widgets=widgets,
@@ -109,7 +109,7 @@ def widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict
     custom = render_custom_fields(widget_config)
 
     def _refresh_existing_options(selected_id: str | None = None) -> None:
-        rows = [row for row in list_data_stewards(config, env, spark_session=spark, active_only=False, missing_ok=True) if _row_id(row)]
+        rows = [row for row in list_data_stewards(config, active_workspace_id, spark_session=spark, active_only=False, missing_ok=True) if _row_id(row)]
         _refresh_lookup(rows)
         selected.refresh_rows(rows, selected_id if selected_id in row_lookup else "")
 
@@ -200,7 +200,7 @@ def widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict
             if selected.value:
                 values["steward_id"] = selected.value
                 values["_existing_steward_role"] = row_lookup.get(selected.value, {}).get("steward_role", "")
-            row = _create_or_update_data_steward(spark=spark, config=config, env=env, values=values, custom_fields=extras)
+            row = _create_or_update_data_steward(spark=spark, config=config, active_workspace_id=active_workspace_id, values=values, custom_fields=extras)
         except Exception as exc:
             _set_status(f"Data steward was not saved: {exc}", error=True)
             print(f"Error: {exc}")
@@ -280,7 +280,7 @@ def _steward_label(row: dict[str, Any]) -> str:
     return " | ".join(part for part in parts if part) or str(row.get("steward_id") or "Unnamed steward")
 
 
-def _create_or_update_data_steward(*, spark: Any, config: Any, env: str, values: dict[str, Any], custom_fields: dict[str, Any] | None = None, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> dict[str, Any]:
+def _create_or_update_data_steward(*, spark: Any, config: Any, active_workspace_id: str, values: dict[str, Any], custom_fields: dict[str, Any] | None = None, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> dict[str, Any]:
     row = {
         field: value.strip() if isinstance(value := values.get(field), str) else value
         for field in DATA_STEWARD_VISIBLE_FIELDS
@@ -301,7 +301,7 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env: str, values:
     explicit_active = values.get("is_active")
     row["is_active"] = False if explicit_active not in (None, "") and not to_bool(explicit_active) else bool(active_steward({**row, "is_active": row.get("is_active", "")}, config))
     row["custom_fields_json"] = serialize_custom_fields(custom_fields)
-    row.update(build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
+    row.update(build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
-    write_widget_metadata_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), row=row)
+    write_widget_metadata_row(spark=spark, config=config, active_workspace_id=active_workspace_id, table=str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), row=row)
     return row

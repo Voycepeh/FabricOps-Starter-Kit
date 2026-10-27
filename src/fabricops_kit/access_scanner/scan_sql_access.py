@@ -120,11 +120,11 @@ def _read_sql_endpoint_query(
     context: dict[str, Any],
 ):
     """Read one configured Warehouse or Lakehouse SQL endpoint for access scanning."""
-    config, env, _runtime_context = resolve_fabric_context(context=context)
-    configured_store = get_store(config, env, store)
+    config, active_workspace_id, _runtime_context = resolve_fabric_context(context=context)
+    configured_store = get_store(config, active_workspace_id, store)
     if configured_store.kind not in {"warehouse", "lakehouse"}:
         raise ValueError(
-            f"Store '{env}/{store}' cannot expose the supported SQL permission catalogue views; "
+            f"Store '{active_workspace_id}/{store}' cannot expose the supported SQL permission catalogue views; "
             "expected a warehouse or lakehouse store."
         )
     dataframe = read_warehouse_synapsesql(
@@ -189,7 +189,7 @@ def _map_to_catalogue(observations, catalogue_tables):
 def _access_rows(
     mapped,
     *,
-    environment_name: str,
+    workspace_id: str,
     access_snapshot_id: str,
     audit_fields: dict[str, Any],
 ):
@@ -218,7 +218,7 @@ def _access_rows(
             F.col("user_name").alias("user_principal"),
             F.col("_catalogue_table_id").alias("table_id"),
             F.col("_catalogue_table_name").alias("table_name"),
-            F.lit(environment_name).alias("environment_name"),
+            F.lit(workspace_id).alias("workspace_id"),
             F.col("class_desc").alias("access_level"),
             F.col("permission_name").alias("access_value"),
             F.col("state_desc").alias("access_state"),
@@ -269,7 +269,7 @@ def scan_sql_access(
     catalogue_df,
     *,
     targets: str | list[str] | tuple[str, ...] = "warehouse",
-    environment_name: str | None = None,
+    workspace_id: str | None = None,
     access_snapshot_id: str | None = None,
     persist: bool = True,
     context: dict[str, Any] | None = None,
@@ -308,10 +308,10 @@ def scan_sql_access(
         One or more configured Warehouse or Lakehouse target keys from
         ``00_env_config`` whose SQL endpoints expose the supported catalogue
         views.
-    environment_name : str, optional
-        FabricOps configuration environment used for target resolution,
-        catalogue filtering, and environment-labelled access rows. Defaults to
-        the active FabricOps environment. Fabric authentication and execution
+    workspace_id : str, optional
+        FabricOps configuration workspace_id used for target resolution,
+        catalogue filtering, and workspace_id-labelled access rows. Defaults to
+        the active FabricOps workspace_id. Fabric authentication and execution
         identity continue to come from the active runtime.
     access_snapshot_id : str, optional
         Identifier shared by all rows in this scan. A UUID is generated when
@@ -349,15 +349,15 @@ def scan_sql_access(
 
     """
     spark_session = get_spark_session(dataframe=catalogue_df, context=context)
-    config, active_env, runtime_context = resolve_fabric_context(context=context)
-    resolved_environment = str(active_env if environment_name is None else environment_name)
+    config, active_workspace_id, runtime_context = resolve_fabric_context(context=context)
+    resolved_workspace_id = str(active_workspace_id if workspace_id is None else workspace_id)
     scan_context = {
         **runtime_context,
         "config": config,
-        "env": resolved_environment,
+        "scope_workspace_id": resolved_workspace_id,
     }
     resolved_targets = normalise_targets(targets)
-    resolved_store_kinds = target_store_kinds(config, resolved_environment, resolved_targets)
+    resolved_store_kinds = target_store_kinds(config, resolved_workspace_id, resolved_targets)
     snapshot_id = str(access_snapshot_id or uuid4())
 
     observations = _scan_targets(
@@ -367,26 +367,26 @@ def scan_sql_access(
     )
     registered_tables = catalogue_tables(
         catalogue_df,
-        environment_name=resolved_environment,
+        workspace_id=resolved_workspace_id,
         target_store_kinds=resolved_store_kinds,
     )
     mapped = _map_to_catalogue(observations, registered_tables)
     audit_fields = build_runtime_audit_fields(
         config=config,
-        env=resolved_environment,
+        active_workspace_id=resolved_workspace_id,
         runtime_context=scan_context,
     )
 
     access = _access_rows(
         mapped,
-        environment_name=resolved_environment,
+        workspace_id=resolved_workspace_id,
         access_snapshot_id=snapshot_id,
         audit_fields=audit_fields,
     )
     persist_access_rows(
         access,
         config=config,
-        environment_name=resolved_environment,
+        workspace_id=resolved_workspace_id,
         context=scan_context,
         persist=persist,
     )
