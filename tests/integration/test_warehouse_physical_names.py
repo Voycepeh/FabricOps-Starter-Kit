@@ -27,9 +27,9 @@ def connector(monkeypatch):
 
 
 def context(alias='Gold', name='wh_ODI_Product', kind='warehouse'):
-    return {'config': FrameworkConfig(path_config=PathConfig(paths={'poc': {
+    return {'config': FrameworkConfig(path_config=PathConfig(paths={'workspace-id': {
         alias: FabricStore('workspace-id', 'item-id', kind, name=name),
-    }})), 'scope_workspace_id': 'poc'}
+    }})), 'scope_workspace_id': 'workspace-id'}
 
 
 @pytest.mark.parametrize('alias', ['Gold', 'Product', 'Source', 'Unified', 'Bronze', 'Silver'])
@@ -49,8 +49,8 @@ def test_read_write_and_query_use_physical_name_with_legacy_fallback(connector, 
     spark.read.calls.clear()
     call_with_spark(spark, io.read_warehouse_query, 'SELECT * FROM dbo.orders', store=alias,  context=runtime)
     assert ('option', 'database', physical) in spark.read.calls
-    assert get_store(runtime['config'], 'poc', alias).key == alias
-    identity = pipeline.resolve_physical_table_identity(runtime['config'], 'poc', store=alias, schema='dbo', table_name='orders')
+    assert get_store(runtime['config'], 'workspace-id', alias).key == alias
+    identity = pipeline.resolve_physical_table_identity(runtime['config'], 'workspace-id', store=alias, schema='dbo', table_name='orders')
     assert identity['store'] == alias
 
 
@@ -66,7 +66,7 @@ def test_legacy_positional_constructors_and_json_round_trip():
 
 @pytest.mark.parametrize('field,value', [('name', ''), ('name', '  '), ('name', 123), ('item_id', ''), ('workspace_id', '')])
 def test_invalid_configuration_fails_before_connector_access(field, value):
-    values = dict(active_workspace_id='poc', workspace_id='workspace', item_id='item', kind='warehouse')
+    values = dict(workspace_id='workspace', item_id='item', kind='warehouse')
     values[field] = value
     with pytest.raises(ValueError, match=field):
         FabricStore(**values)
@@ -126,7 +126,7 @@ def test_incremental_query_database_and_schema_probe(connector):
     call_with_spark(spark, io.read_warehouse_query, query, store='Gold',  context=runtime)
     call_with_spark(spark, io.read_warehouse_query, 'SELECT TOP (0) * FROM [dbo].[orders]', store='Gold',  context=runtime)
     assert spark.read.calls.count(('option', 'database', 'wh_ODI_Product')) == 2
-    store = get_store(runtime['config'], 'poc', 'Gold')
+    store = get_store(runtime['config'], 'workspace-id', 'Gold')
     assert shared.resolve_warehouse_table_location(store, 'dbo', 'orders', warehouse_name=store.key)[2] == 'wh_ODI_Product.dbo.orders'
 
 
@@ -134,7 +134,7 @@ def test_incremental_query_database_and_schema_probe(connector):
 def test_pipeline_reader_reaches_real_connector_with_physical_database(connector, monkeypatch, incremental):
     runtime, spark = context(), _Spark()
     reader = import_module('fabricops_kit.pipeline.pipeline_read')
-    monkeypatch.setattr(reader, 'resolve_fabric_context', lambda: (runtime['config'], 'poc', runtime))
+    monkeypatch.setattr(reader, 'resolve_fabric_context', lambda: (runtime['config'], 'workspace-id', runtime))
     monkeypatch.setattr(reader, 'resolve_pipeline_data_contract', lambda *_a, **_k: None)
     monkeypatch.setattr(reader, 'capture_source_observation', lambda **_k: {})
     monkeypatch.setattr(reader, 'resolve_incremental_source_scope', lambda **_k: {
@@ -145,7 +145,7 @@ def test_pipeline_reader_reaches_real_connector_with_physical_database(connector
                                   **({'read_mode': 'incremental', 'target_table_id': 'target',
                                       'read_parameters': {'watermark_column': 'sequence'}} if incremental else {}))
     assert result['table_id'] == pipeline.resolve_physical_table_identity(
-        runtime['config'], 'poc', store='Gold', schema='dbo', table_name='orders')['table_id']
+        runtime['config'], 'workspace-id', store='Gold', schema='dbo', table_name='orders')['table_id']
     assert ('option', 'database', 'wh_ODI_Product') in spark.read.calls
     if not incremental:
         assert ('synapsesql', 'wh_ODI_Product.dbo.orders') in spark.read.calls
@@ -171,7 +171,7 @@ def test_pipeline_writer_preserves_logical_alias_at_real_connector(connector, mo
 def test_schema_validation_probes_physical_database_and_keeps_logical_metadata(connector, monkeypatch):
     runtime, spark = context(), _Spark()
     checker = import_module('fabricops_kit.pipeline.check_schema')
-    identity = pipeline.resolve_physical_table_identity(runtime['config'], 'poc', store='Gold', schema='dbo', table_name='orders')
+    identity = pipeline.resolve_physical_table_identity(runtime['config'], 'workspace-id', store='Gold', schema='dbo', table_name='orders')
     identity['store_type'] = 'warehouse'
     monkeypatch.setattr(checker, 'resolve_pipeline_data_contract', lambda *_a, **_k: {'contract_id': 'contract', 'contract_version': 1})
     monkeypatch.setattr(checker, 'resolve_catalogue_table_identity', lambda *_a, **_k: identity)
